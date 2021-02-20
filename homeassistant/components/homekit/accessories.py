@@ -436,10 +436,7 @@ class HomeAccessory(Accessory):
 
     @ha_callback
     def async_call_service(self, domain, service, service_data, value=None):
-        """Fire event and call service for changes from HomeKit.
-
-        This method must be run in the event loop.
-        """
+        """Fire event and call service for changes from HomeKit."""
         event_data = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_DISPLAY_NAME: self.display_name,
