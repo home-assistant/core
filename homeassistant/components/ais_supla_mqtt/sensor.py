@@ -3,6 +3,8 @@ from datetime import timedelta
 import logging
 
 import paho.mqtt.client as supla_mqtt
+from paho.mqtt.packettypes import PacketTypes
+import paho.mqtt.properties as properties
 
 from homeassistant.components.ais_dom import ais_global
 import homeassistant.components.mqtt as hass_mqtt
@@ -63,11 +65,24 @@ class SuplaMqttSoftBridge(Entity):
             self._hostname, port=self._port, keepalive=self._keepalive
         )
         self._supla_mqtt_client.loop_start()
+        self._ignore_supla_topic = ""
+        self._ignore_supla_payload = ""
 
     async def async_publish_to_supla(self, topic, payload):
         if self._supla_mqtt_connection_code == 0:
+            # remember to ignore own message when received from SUPLA mqtt
+            self._ignore_supla_topic = topic
+            self._ignore_supla_payload = payload
+            # add source == AIS as user properties to prevent the echo
+            publish_properties = properties.Properties(PacketTypes.PUBLISH)
+            publish_properties.UserProperty = [("source", "AIS")]
+
             self._supla_mqtt_client.publish(
-                topic, payload=payload, qos=self._qos, retain=False
+                topic,
+                payload=payload,
+                qos=self._qos,
+                retain=False,
+                properties=publish_properties,
             )
 
     @callback
@@ -189,9 +204,20 @@ class SuplaMqttSoftBridge(Entity):
     def on_supla_message(self, client, userdata, msg):
         """The callback for when a message is received from SUPLA broker."""
         _LOGGER.debug(f"on_message {msg.topic} / {msg.payload}")
-        payload = msg.payload.decode("utf-8")
-        hass_mqtt.async_publish(self.hass, msg.topic, payload)
-        self._supla_received = self._supla_received + 1
+        # 1. echo reduction check if source is AIS
+        if hasattr(msg.properties, "UserProperty"):
+            user_properties = msg.properties.UserProperty
+            if ("source", "AIS") in user_properties:
+                _LOGGER.debug("on_supla_message ignore!")
+                return
+
+        # 2. echo reduction check if this message was send by AIS
+        if msg.topic != self._ignore_supla_topic or msg.payload != msg.payload:
+            payload = msg.payload.decode("utf-8")
+            hass_mqtt.async_publish(self.hass, msg.topic, payload)
+            self._supla_received = self._supla_received + 1
+        else:
+            _LOGGER.debug("on_supla_message ignore!")
 
     def on_supla_publish(self, client, userdata, mid):
         """The callback for when a message is published to SUPLA broker."""
