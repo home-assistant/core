@@ -8,13 +8,24 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import device_registry, entity_registry
 
-from tests.common import MockConfigEntry, flush_store, mock_device_registry
+from tests.common import (
+    MockConfigEntry,
+    flush_store,
+    mock_area_registry,
+    mock_device_registry,
+)
 
 
 @pytest.fixture
 def registry(hass):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
+
+
+@pytest.fixture
+def area_registry(hass):
+    """Return an empty, loaded, registry."""
+    return mock_area_registry(hass)
 
 
 @pytest.fixture
@@ -31,7 +42,9 @@ def update_events(hass):
     return events
 
 
-async def test_get_or_create_returns_same_entry(hass, registry, update_events):
+async def test_get_or_create_returns_same_entry(
+    hass, registry, area_registry, update_events
+):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -41,6 +54,7 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
         name="name",
         manufacturer="manufacturer",
         model="model",
+        suggested_area="Game Room",
     )
     entry2 = registry.async_get_or_create(
         config_entry_id="1234",
@@ -48,21 +62,31 @@ async def test_get_or_create_returns_same_entry(hass, registry, update_events):
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
+        suggested_area="Game Room",
     )
     entry3 = registry.async_get_or_create(
         config_entry_id="1234",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
+    game_room_area = area_registry.async_get_area_by_name("Game Room")
+    assert game_room_area is not None
+    assert len(area_registry.areas) == 1
+
     assert len(registry.devices) == 1
+    assert entry.area_id == game_room_area.id
     assert entry.id == entry2.id
     assert entry.id == entry3.id
     assert entry.identifiers == {("bridgeid", "0123")}
+
+    assert entry2.area_id == game_room_area.id
 
     assert entry3.manufacturer == "manufacturer"
     assert entry3.model == "model"
     assert entry3.name == "name"
     assert entry3.sw_version == "sw-version"
+    assert entry3.suggested_area == "Game Room"
+    assert entry3.area_id == game_room_area.id
 
     await hass.async_block_till_done()
 
@@ -154,6 +178,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "area_id": "12345A",
                     "name_by_user": "Test Friendly Name",
                     "disabled_by": "user",
+                    "suggested_area": "Kitchen",
                 }
             ],
             "deleted_devices": [
@@ -444,7 +469,7 @@ async def test_specifying_via_device_update(registry):
     assert light.via_device_id == via.id
 
 
-async def test_loading_saving_data(hass, registry):
+async def test_loading_saving_data(hass, registry, area_registry):
     """Test that we load/save data correctly."""
     orig_via = registry.async_get_or_create(
         config_entry_id="123",
@@ -506,7 +531,18 @@ async def test_loading_saving_data(hass, registry):
 
     assert orig_light4.id == orig_light3.id
 
-    assert len(registry.devices) == 3
+    orig_kitchen_light = registry.async_get_or_create(
+        config_entry_id="999",
+        connections=set(),
+        identifiers={("hue", "999")},
+        manufacturer="manufacturer",
+        model="light",
+        via_device=("hue", "0123"),
+        disabled_by="user",
+        suggested_area="Kitchen",
+    )
+
+    assert len(registry.devices) == 4
     assert len(registry.deleted_devices) == 1
 
     orig_via = registry.async_update_device(
@@ -529,6 +565,16 @@ async def test_loading_saving_data(hass, registry):
     assert orig_via == new_via
     assert orig_light == new_light
     assert orig_light4 == new_light4
+
+    # Ensure a save/load cycle does not keep suggested area
+    new_kitchen_light = registry2.async_get_device({("hue", "999")})
+    assert orig_kitchen_light.suggested_area == "Kitchen"
+
+    orig_kitchen_light_witout_suggested_area = registry.async_update_device(
+        orig_kitchen_light.id, suggested_area=None
+    )
+    orig_kitchen_light_witout_suggested_area.suggested_area is None
+    assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
 
 
 async def test_no_unnecessary_changes(registry):
@@ -704,6 +750,33 @@ async def test_update_sw_version(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.sw_version == sw_version
+
+
+async def test_update_suggested_area(registry, area_registry):
+    """Verify that we can update the suggested area version of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bla", "123")},
+    )
+    assert not entry.suggested_area
+    assert entry.area_id is None
+
+    suggested_area = "Pool"
+
+    with patch.object(registry, "async_schedule_save") as mock_save:
+        updated_entry = registry.async_update_device(
+            entry.id, suggested_area=suggested_area
+        )
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.suggested_area == suggested_area
+
+    pool_area = area_registry.async_get_area_by_name("Pool")
+    assert pool_area is not None
+    assert updated_entry.area_id == pool_area.id
+    assert len(area_registry.areas) == 1
 
 
 async def test_cleanup_device_registry(hass, registry):
@@ -1104,3 +1177,35 @@ async def test_get_or_create_sets_default_values(hass, registry):
     assert entry.name == "default name 1"
     assert entry.model == "default model 1"
     assert entry.manufacturer == "default manufacturer 1"
+
+
+async def test_verify_suggested_area_does_not_overwrite_area_id(
+    hass, registry, area_registry
+):
+    """Make sure suggested area does not override a set area id."""
+    game_room_area = area_registry.async_create("Game Room")
+
+    original_entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+    )
+    entry = registry.async_update_device(original_entry.id, area_id=game_room_area.id)
+
+    assert entry.area_id == game_room_area.id
+
+    entry2 = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="New Game Room",
+    )
+    assert entry2.area_id == game_room_area.id
