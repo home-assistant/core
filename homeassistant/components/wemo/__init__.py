@@ -20,7 +20,7 @@ from homeassistant.util.async_ import gather_with_concurrency
 from .const import DOMAIN
 
 # Max number of devices to initialize at once. This limit is in place to
-# avoid tying up too many asyncio executors with WeMo device setup.
+# avoid tying up too many executor threads with WeMo device setup.
 MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
