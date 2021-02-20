@@ -55,10 +55,14 @@ class MatrixNotificationService(BaseNotificationService):
         target_rooms = kwargs.get(ATTR_TARGET) or [self._default_room]
 
         if kwargs.get(ATTR_DATA):
-            markdown = (
-                kwargs.get(ATTR_DATA).get(ATTR_MARKDOWN) or self._default_markdown
-            )
-            notice = kwargs.get(ATTR_DATA).get(ATTR_NOTICE) or self._default_notice
+            if "markdown" in kwargs.get(ATTR_DATA):
+                markdown = kwargs.get(ATTR_DATA).get(ATTR_MARKDOWN)
+            else:
+                markdown = self._default_markdown
+            if "notice" in kwargs.get(ATTR_DATA):
+                notice = kwargs.get(ATTR_DATA).get(ATTR_NOTICE)
+            else:
+                notice = self._default_notice
         else:
             markdown = self._default_markdown
             notice = self._default_notice

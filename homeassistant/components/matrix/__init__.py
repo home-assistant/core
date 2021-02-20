@@ -268,10 +268,10 @@ class MatrixBot:
             if not _command.get(CONF_ROOMS):
                 for _room_id in await self.get_listening_room_ids():
                     if (
-                        self._conversation[CONF_ROOMS]
+                        self._conversation
                         and _room_id not in self._conversation[CONF_ROOMS]
                     ):
-                        _command[CONF_ROOMS] = await self.get_listening_room_ids()
+                        _command[CONF_ROOMS].append(_room_id)
 
             if _command.get(CONF_WORD):
                 for _room_id in _command[CONF_ROOMS]:
@@ -752,7 +752,7 @@ class Callbacks:
 
         if _msg[0] == "!":
             # Could trigger a single-word command
-            _LOGGER.debug("Type word.")
+            _LOGGER.debug("Type word: %s", str(_msg))
             pieces = _msg.split(" ")
             cmd = pieces[0][1:]
 
