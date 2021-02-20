@@ -1,0 +1,12 @@
+{
+  "domain": "rituals_perfume_genie",
+  "name": "Rituals Perfume Genie",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rituals_perfume_genie",
+  "requirements": [
+    "pyrituals==0.0.2"
+  ],
+  "codeowners": [
+    "@milanmeu"
+  ]
+}
