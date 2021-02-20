@@ -264,6 +264,9 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
         on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+        create_temperature_sensors=config.get(
+            ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
+        ),
     )
 
 
@@ -332,7 +335,7 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         knx_module,
         name=config[CONF_NAME],
         sync_state=config[WeatherSchema.CONF_SYNC_STATE],
-        expose_sensors=config[WeatherSchema.CONF_KNX_EXPOSE_SENSORS],
+        create_sensors=config[WeatherSchema.CONF_KNX_CREATE_SENSORS],
         group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
         group_address_brightness_south=config.get(
             WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS
@@ -347,6 +350,9 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
             WeatherSchema.CONF_KNX_BRIGHTNESS_NORTH_ADDRESS
         ),
         group_address_wind_speed=config.get(WeatherSchema.CONF_KNX_WIND_SPEED_ADDRESS),
+        group_address_wind_bearing=config.get(
+            WeatherSchema.CONF_KNX_WIND_BEARING_ADDRESS
+        ),
         group_address_rain_alarm=config.get(WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS),
         group_address_frost_alarm=config.get(
             WeatherSchema.CONF_KNX_FROST_ALARM_ADDRESS
