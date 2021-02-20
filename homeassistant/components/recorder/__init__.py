@@ -321,9 +321,6 @@ class Recorder(threading.Thread):
         self.hass.add_job(register)
         result = hass_started.result()
 
-        self.event_session = self.get_session()
-        self.event_session.expire_on_commit = False
-
         # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             # Make sure we cleanly close the run if

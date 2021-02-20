@@ -207,4 +207,4 @@ def test_combined_checks(hass_recorder):
     cursor.execute("DROP TABLE events;")
 
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor, True)
