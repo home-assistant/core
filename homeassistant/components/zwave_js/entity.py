@@ -1,38 +1,21 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
+from .helpers import get_device_id
 
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
-
-
-@callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
-
-
-@callback
-def get_home_and_node_id_from_device_id(device_id: Tuple[str, str]) -> List[str]:
-    """
-    Get home ID and node ID for Z-Wave device registry entry.
-
-    Returns [home_id, node_id]
-    """
-    return device_id[1].split("-")
 
 
 class ZWaveBaseEntity(Entity):
