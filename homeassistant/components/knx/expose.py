@@ -18,6 +18,7 @@ from homeassistant.helpers.typing import ConfigType
 from .schema import ExposeSchema
 
 
+@callback
 def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> Union["KNXExposeSensor", "KNXExposeTime"]:
@@ -77,6 +78,7 @@ class KNXExposeSensor:
             self.hass, [self.entity_id], self._async_entity_changed
         )
 
+    @callback
     def shutdown(self) -> None:
         """Prepare for deletion."""
         if self._remove_listener is not None:
@@ -143,6 +145,7 @@ class KNXExposeTime:
             group_address=self.address,
         )
 
+    @callback
     def shutdown(self):
         """Prepare for deletion."""
         if self.device is not None:
