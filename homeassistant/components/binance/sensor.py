@@ -45,8 +45,8 @@ class Ticker(CoordinatorEntity):
         # self._currency = self._symbol.split("-")[0]
         # self._unit_of_measurement = self._symbol.split("-")[1]
 
-        self._name = f"Ticker - {self._symbol}"
-        self._unique_id = f"ticker_{self._symbol})"
+        self._name = f"BIN Ticker - {self._symbol}"
+        self._unique_id = f"bin_ticker_{self._symbol})"
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -99,8 +99,8 @@ class Balance(CoordinatorEntity):
         super().__init__(coordinator)
         self._balance = balance
 
-        self._name = f"Balance - {self._balance}"
-        self._unique_id = f"balance_{self._balance})"
+        self._name = f"BIN Balance - {self._balance}"
+        self._unique_id = f"bin_balance_{self._balance})"
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -175,8 +175,8 @@ class OpenOrder(Order):
         """Initialize the sensor."""
         super().__init__(coordinator, order)
 
-        self._name = "Binance Orders - Open"
-        self._unique_id = "binance_orders_open"
+        self._name = "BIN Orders - Open"
+        self._unique_id = "bin_orders_open"
 
     def _get_data(self):
         """Return the data from self.coordinator.data."""
@@ -205,8 +205,8 @@ class ClosedOrder(Order):
         """Initialize the sensor."""
         super().__init__(coordinator, order)
 
-        self._name = "Binance Orders - Closed"
-        self._unique_id = "binance_orders_closed"
+        self._name = "BIN Orders - Closed"
+        self._unique_id = "bin_orders_closed"
 
     def _get_data(self):
         """Return the data from self.coordinator.data."""
