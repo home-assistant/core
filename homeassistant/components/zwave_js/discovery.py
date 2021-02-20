@@ -141,6 +141,14 @@ DISCOVERY_SCHEMAS = [
         product_type={0x4353},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # iBlinds v2 window blind motor
+    ZWaveDiscoverySchema(
+        platform="cover",
+        manufacturer_id={0x0287},
+        product_id={0x000D},
+        product_type={0x0003},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
     ZWaveDiscoverySchema(
