@@ -340,7 +340,7 @@ class DSMREntity(SensorEntity):
         value = self.get_dsmr_object_attr("value")
 
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
-            return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
+            return self.translate_tariff(value)
 
         with suppress(TypeError):
             value = round(float(value), self._config[CONF_PRECISION])
@@ -379,21 +379,12 @@ class DSMREntity(SensorEntity):
         return False
 
     @staticmethod
-    def translate_tariff(value, dsmr_version):
-        """Convert 2/1 to normal/low depending on DSMR version."""
-        # DSMR V5B: Note: In Belgium values are swapped:
-        # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version in ("5B",):
-            if value == "0001":
-                value = "0002"
-            elif value == "0002":
-                value = "0001"
-        # DSMR V2.2: Note: Rate code 1 is used for low rate and rate code 2 is
-        # used for normal rate.
-        if value == "0002":
-            return "normal"
+    def translate_tariff(value):
+        """Convert to 1 or 2. Meaning is not consistently in all countries, leave interpretation to the user."""
         if value == "0001":
-            return "low"
+            return "1"
+        if value == "0002":
+            return "2"
 
         return None
 

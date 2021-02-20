@@ -140,7 +140,7 @@ async def test_default_setup(hass, dsmr_connection_fixture):
 
     # tariff should be translated in human readable and have no unit
     energy_tariff = hass.states.get("sensor.energy_tariff")
-    assert energy_tariff.state == "low"
+    assert energy_tariff.state == "1"
     assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
@@ -269,7 +269,7 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
 
     # tariff should be translated in human readable and have no unit
     energy_tariff = hass.states.get("sensor.energy_tariff")
-    assert energy_tariff.state == "low"
+    assert energy_tariff.state == "1"
     assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
@@ -329,7 +329,7 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
 
     # tariff should be translated in human readable and have no unit
     energy_tariff = hass.states.get("sensor.energy_tariff")
-    assert energy_tariff.state == "low"
+    assert energy_tariff.state == "1"
     assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
@@ -458,7 +458,7 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
 
     # tariff should be translated in human readable and have no unit
     energy_tariff = hass.states.get("sensor.energy_tariff")
-    assert energy_tariff.state == "normal"
+    assert energy_tariff.state == "1"
     assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
     # check if gas consumption is parsed correctly
@@ -507,7 +507,7 @@ async def test_belgian_meter_low(hass, dsmr_connection_fixture):
 
     # tariff should be translated in human readable and have no unit
     energy_tariff = hass.states.get("sensor.energy_tariff")
-    assert energy_tariff.state == "low"
+    assert energy_tariff.state == "2"
     assert energy_tariff.attributes.get("unit_of_measurement") == ""
 
 
