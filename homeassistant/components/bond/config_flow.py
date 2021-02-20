@@ -1,6 +1,6 @@
 """Config flow for Bond integration."""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import Bond
@@ -25,13 +25,12 @@ DATA_SCHEMA_USER = vol.Schema(
 DATA_SCHEMA_DISCOVERY = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 
 
-async def _validate_input(data: Dict[str, Any]) -> str:
+async def _validate_input(data: Dict[str, Any]) -> Tuple[str, Optional[str]]:
     """Validate the user input allows us to connect."""
 
     try:
         bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
         version = await bond.version()
-        bridge = await bond.bridge()
         # call to non-version API is needed to validate authentication
         await bond.devices()
     except ClientConnectionError as error:
@@ -49,7 +48,12 @@ async def _validate_input(data: Dict[str, Any]) -> str:
     if not bond_id:
         raise InputValidationError("old_firmware")
 
-    return bond_id, bridge.get("location")
+    try:
+        # Smart by bond devices do not have a bridge api call
+        bridge = await bond.bridge()
+        return bond_id, bridge.get("name") or bridge.get("location")
+    except ClientResponseError:
+        return bond_id, None
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
