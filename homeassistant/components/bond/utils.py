@@ -142,7 +142,7 @@ class BondHub:
         return self._version.get("make", BRIDGE_MAKE)
 
     @property
-    def name(self) -> str:
+    def name(self) -> Optional[str]:
         """Get the name of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].name
