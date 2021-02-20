@@ -1,4 +1,6 @@
 """Define tests for the Flux LED/Magic Home config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.flux_led.const import (
     CONF_AUTOMATIC_ADD,
@@ -10,7 +12,6 @@ from homeassistant.components.flux_led.const import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -33,7 +34,7 @@ async def test_setup_automatic_add(hass):
     )
 
     with patch(
-        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -42,7 +43,7 @@ async def test_setup_automatic_add(hass):
             }
         ],
     ), patch(
-        "homeassistant.components.flux_led.light.BulbScanner.getBulbInfo",
+        "homeassistant.components.flux_led.BulbScanner.getBulbInfo",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -135,7 +136,16 @@ async def test_import_automatic_add(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        "homeassistant.components.flux_led.BulbScanner.scan",
+        return_value=[
+            {
+                "ipaddr": "1.1.1.1",
+                "id": "test_id",
+                "model": "test_model",
+            }
+        ],
+    ), patch(
+        "homeassistant.components.flux_led.BulbScanner.getBulbInfo",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -161,7 +171,7 @@ async def test_import_automatic_add(hass):
     assert result2["data"] == {
         CONF_AUTOMATIC_ADD: True,
         CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
-        CONF_DEVICES: {},
+        CONF_DEVICES: {"1_1_1_1": {CONF_NAME: "1.1.1.1", CONF_HOST: "1.1.1.1"}},
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -182,7 +192,7 @@ async def test_import_automatic_add_already_setup(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
-        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -299,7 +309,7 @@ async def test_options_set_global_options(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -307,6 +317,9 @@ async def test_options_set_global_options(hass):
                 "model": "test_model",
             }
         ],
+    ), patch(
+        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
+        return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -350,7 +363,7 @@ async def test_options_add_and_remove_new_light(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -358,6 +371,9 @@ async def test_options_add_and_remove_new_light(hass):
                 "model": "test_model",
             }
         ],
+    ), patch(
+        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
+        return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -374,7 +390,6 @@ async def test_options_add_and_remove_new_light(hass):
 
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
-        "1_1_1_2": {CONF_EFFECT_SPEED: 50},
         "global": {
             CONF_AUTOMATIC_ADD: False,
             CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED,
@@ -447,7 +462,7 @@ async def test_options_configure_light(hass):
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.flux_led.light.BulbScanner.scan",
+        "homeassistant.components.flux_led.BulbScanner.scan",
         return_value=[
             {
                 "ipaddr": "1.1.1.1",
@@ -455,6 +470,9 @@ async def test_options_configure_light(hass):
                 "model": "test_model",
             }
         ],
+    ), patch(
+        "homeassistant.components.flux_led.light.WifiLedBulb.connect",
+        return_value=True,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
