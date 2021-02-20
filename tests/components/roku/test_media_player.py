@@ -78,6 +78,7 @@ TV_MODEL = ""
 TV_SERIAL = "YN00H5555555"
 TV_SW_VERSION = "9.2.0"
 
+
 async def test_setup(
     hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
 ) -> None:
