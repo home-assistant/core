@@ -72,7 +72,7 @@ def music_library_fixture():
 def speaker_info_fixture():
     """Create speaker_info fixture."""
     return {
-        "zone_name": "Kitchen",
+        "zone_name": "Zone A",
         "model_name": "Model Name",
         "software_version": "49.2-64250",
         "mac_address": "00-11-22-33-44-55",
