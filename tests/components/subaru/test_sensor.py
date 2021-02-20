@@ -1,12 +1,5 @@
 """Test Subaru sensors."""
-from unittest.mock import patch
-
-from homeassistant.components.subaru.const import (
-    DOMAIN,
-    REMOTE_SERVICE_FETCH,
-    VEHICLE_NAME,
-    VEHICLE_VIN,
-)
+from homeassistant.components.subaru.const import VEHICLE_NAME
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
     EV_SENSORS,
@@ -20,31 +13,26 @@ from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 from .api_responses import (
     EXPECTED_STATE_EV_IMPERIAL,
     EXPECTED_STATE_EV_METRIC,
+    EXPECTED_STATE_EV_UNAVAILABLE,
     TEST_VIN_2_EV,
     VEHICLE_DATA,
     VEHICLE_STATUS_EV,
 )
 
-from tests.components.subaru.conftest import MOCK_API_FETCH, MOCK_API_GET_GET_DATA
+from tests.components.subaru.conftest import setup_subaru_integration
 
 VEHICLE_NAME = VEHICLE_DATA[TEST_VIN_2_EV][VEHICLE_NAME]
 
 
-async def test_sensors_ev_imperial(hass, ev_entry):
+async def test_sensors_ev_imperial(hass):
     """Test sensors supporting imperial units."""
-    with patch(MOCK_API_FETCH), patch(
-        MOCK_API_GET_GET_DATA,
-        return_value=VEHICLE_STATUS_EV,
-    ):
-        hass.config.units = IMPERIAL_SYSTEM
-        await hass.services.async_call(
-            DOMAIN,
-            REMOTE_SERVICE_FETCH,
-            {VEHICLE_VIN: TEST_VIN_2_EV},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
+    hass.config.units = IMPERIAL_SYSTEM
+    await setup_subaru_integration(
+        hass,
+        vehicle_list=[TEST_VIN_2_EV],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
+        vehicle_status=VEHICLE_STATUS_EV,
+    )
     _assert_data(hass, EXPECTED_STATE_EV_IMPERIAL)
 
 
@@ -53,19 +41,15 @@ async def test_sensors_ev_metric(hass, ev_entry):
     _assert_data(hass, EXPECTED_STATE_EV_METRIC)
 
 
-async def test_sensors_missing_vin_data(hass, ev_entry):
+async def test_sensors_missing_vin_data(hass):
     """Test for missing VIN dataset."""
-    with patch(MOCK_API_FETCH), patch(
-        MOCK_API_GET_GET_DATA,
-        return_value=None,
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            REMOTE_SERVICE_FETCH,
-            {VEHICLE_VIN: TEST_VIN_2_EV},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+    await setup_subaru_integration(
+        hass,
+        vehicle_list=[TEST_VIN_2_EV],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
+        vehicle_status=None,
+    )
+    _assert_data(hass, EXPECTED_STATE_EV_UNAVAILABLE)
 
 
 def _assert_data(hass, expected_state):

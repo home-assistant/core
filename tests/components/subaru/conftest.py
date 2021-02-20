@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from subarulink.const import COUNTRY_USA
 
+from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.components.subaru.const import (
     CONF_COUNTRY,
     CONF_UPDATE_ENABLED,
@@ -63,6 +64,8 @@ TEST_OPTIONS = {
     CONF_UPDATE_ENABLED: True,
 }
 
+TEST_ENTITY_ID = "sensor.test_vehicle_2_odometer"
+
 
 async def setup_subaru_integration(
     hass,
@@ -70,8 +73,10 @@ async def setup_subaru_integration(
     vehicle_data=None,
     vehicle_status=None,
     connect_effect=None,
+    fetch_effect=None,
 ):
     """Create Subaru entry."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
     assert await async_setup_component(hass, DOMAIN, {})
 
     config_entry = MockConfigEntry(
@@ -110,7 +115,7 @@ async def setup_subaru_integration(
     ), patch(
         MOCK_API_UPDATE,
     ), patch(
-        MOCK_API_FETCH,
+        MOCK_API_FETCH, side_effect=fetch_effect
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

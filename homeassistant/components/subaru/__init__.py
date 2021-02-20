@@ -5,13 +5,12 @@ import logging
 import time
 
 from subarulink import Controller as SubaruAPI, InvalidCredentials, SubaruException
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -23,7 +22,6 @@ from .const import (
     ENTRY_COORDINATOR,
     ENTRY_VEHICLES,
     FETCH_INTERVAL,
-    REMOTE_SERVICE_FETCH,
     SUPPORTED_PLATFORMS,
     UPDATE_INTERVAL,
     VEHICLE_API_GEN,
@@ -37,8 +35,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-REMOTE_SERVICE_SCHEMA = vol.Schema({vol.Required(VEHICLE_VIN): cv.string})
 
 
 async def async_setup(hass, base_config):
@@ -102,21 +98,6 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
-
-    async def async_fetch_service(call):
-        """Force refresh of data from Subaru."""
-        vin = call.data[VEHICLE_VIN].upper()
-        if vin not in vehicle_info.keys():
-            hass.components.persistent_notification.async_create(
-                f"ERROR - Invalid VIN provided while calling {call.service}", "Subaru"
-            )
-        else:
-            if call.service == REMOTE_SERVICE_FETCH:
-                await coordinator.async_refresh()
-
-    hass.services.async_register(
-        DOMAIN, REMOTE_SERVICE_FETCH, async_fetch_service, schema=REMOTE_SERVICE_SCHEMA
-    )
 
     return True
 

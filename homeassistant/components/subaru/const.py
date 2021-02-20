@@ -29,7 +29,6 @@ VEHICLE_STATUS = "status"
 API_GEN_1 = "g1"
 API_GEN_2 = "g2"
 MANUFACTURER = "Subaru Corp."
-REMOTE_SERVICE_FETCH = "fetch"
 
 SUPPORTED_PLATFORMS = [
     "sensor",

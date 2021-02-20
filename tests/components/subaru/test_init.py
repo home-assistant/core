@@ -3,17 +3,18 @@ from unittest.mock import patch
 
 from subarulink import InvalidCredentials, SubaruException
 
-from homeassistant.components.subaru.const import (
-    DOMAIN,
-    REMOTE_SERVICE_FETCH,
-    VEHICLE_VIN,
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.subaru.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .api_responses import (
@@ -25,10 +26,9 @@ from .api_responses import (
     VEHICLE_STATUS_G2,
 )
 from .conftest import (
-    MOCK_API_CONNECT,
     MOCK_API_FETCH,
-    MOCK_API_GET_GET_DATA,
     MOCK_API_UPDATE,
+    TEST_ENTITY_ID,
     setup_subaru_integration,
 )
 
@@ -106,9 +106,9 @@ async def test_update_skip_unsubscribed(hass):
 
     with patch(MOCK_API_FETCH) as mock_fetch:
         await hass.services.async_call(
-            DOMAIN,
-            REMOTE_SERVICE_FETCH,
-            {VEHICLE_VIN: TEST_VIN_1_G1},
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID},
             blocking=True,
         )
 
@@ -122,47 +122,27 @@ async def test_update_disabled(hass, ev_entry):
         MOCK_API_UPDATE,
     ) as mock_update:
         await hass.services.async_call(
-            DOMAIN,
-            REMOTE_SERVICE_FETCH,
-            {VEHICLE_VIN: TEST_VIN_2_EV},
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID},
             blocking=True,
         )
         await hass.async_block_till_done()
         mock_update.assert_not_called()
 
 
-async def test_update_failed(hass, ev_entry):
-    """Tests when coordinator update fails."""
-    with patch(
-        MOCK_API_FETCH,
-        side_effect=SubaruException("403 Error"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            REMOTE_SERVICE_FETCH,
-            {VEHICLE_VIN: TEST_VIN_2_EV},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
+async def test_fetch_failed(hass):
+    """Tests when fetch fails."""
+    await setup_subaru_integration(
+        hass,
+        vehicle_list=[TEST_VIN_2_EV],
+        vehicle_data=VEHICLE_DATA[TEST_VIN_2_EV],
+        vehicle_status=VEHICLE_STATUS_EV,
+        fetch_effect=SubaruException("403 Error"),
+    )
 
-        odometer = hass.states.get("sensor.test_vehicle_2_odometer")
-        assert odometer.state == "unavailable"
-
-
-async def test_fetch_service_invalid_vin(hass, ev_entry):
-    """Tests fetch service called with an invalid VIN."""
-    with patch(MOCK_API_CONNECT) as mock_fetch, patch(
-        MOCK_API_GET_GET_DATA
-    ) as mock_get_data:
-        await hass.services.async_call(
-            DOMAIN,
-            REMOTE_SERVICE_FETCH,
-            {VEHICLE_VIN: "ABC123"},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-        mock_fetch.assert_not_called()
-        mock_get_data.assert_not_called()
+    test_entity = hass.states.get(TEST_ENTITY_ID)
+    assert test_entity.state == "unavailable"
 
 
 async def test_unload_entry(hass, ev_entry):
