@@ -235,9 +235,11 @@ class _ScriptRun:
             msg, *args, level=level, **kwargs
         )
 
-    def _step_log(self, default_message, delay=None):
+    def _step_log(self, default_message, timeout=None):
         self._script.last_action = self._action.get(CONF_ALIAS, default_message)
-        _timeout = "" if delay is None else f" (timeout: {timedelta(seconds=delay)})"
+        _timeout = (
+            "" if timeout is None else f" (timeout: {timedelta(seconds=timeout)})"
+        )
         self._log("Executing step %s%s", self._script.last_action, _timeout)
 
     async def async_run(self) -> None:
