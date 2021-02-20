@@ -121,7 +121,7 @@ class BondHub:
         _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
 
     @property
-    def bond_id(self) -> str:
+    def bond_id(self) -> Optional[str]:
         """Return unique Bond ID for this hub."""
         # Old firmwares are missing the bondid
         return self._version.get("bondid")
