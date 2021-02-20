@@ -3,6 +3,7 @@ import logging
 
 from pycomfoconnect import (
     SENSOR_BYPASS_STATE,
+    SENSOR_CURRENT_RMOT,
     SENSOR_DAYS_TO_REPLACE_FILTER,
     SENSOR_FAN_EXHAUST_DUTY,
     SENSOR_FAN_EXHAUST_FLOW,
@@ -15,7 +16,9 @@ from pycomfoconnect import (
     SENSOR_HUMIDITY_OUTDOOR,
     SENSOR_HUMIDITY_SUPPLY,
     SENSOR_POWER_CURRENT,
+    SENSOR_POWER_TOTAL,
     SENSOR_PREHEATER_POWER_CURRENT,
+    SENSOR_PREHEATER_POWER_TOTAL,
     SENSOR_TEMPERATURE_EXHAUST,
     SENSOR_TEMPERATURE_EXTRACT,
     SENSOR_TEMPERATURE_OUTDOOR,
@@ -27,9 +30,11 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     CONF_RESOURCES,
+    DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -46,6 +51,7 @@ ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
 ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
 ATTR_BYPASS_STATE = "bypass_state"
 ATTR_CURRENT_HUMIDITY = "current_humidity"
+ATTR_CURRENT_RMOT = "current_rmot"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_DAYS_TO_REPLACE_FILTER = "days_to_replace_filter"
 ATTR_EXHAUST_FAN_DUTY = "exhaust_fan_duty"
@@ -55,7 +61,9 @@ ATTR_EXHAUST_TEMPERATURE = "exhaust_temperature"
 ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
 ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
 ATTR_POWER_CURRENT = "power_usage"
+ATTR_POWER_TOTAL = "power_total"
 ATTR_PREHEATER_POWER_CURRENT = "preheater_power_usage"
+ATTR_PREHEATER_POWER_TOTAL = "preheater_power_total"
 ATTR_SUPPLY_FAN_DUTY = "supply_fan_duty"
 ATTR_SUPPLY_FAN_SPEED = "supply_fan_speed"
 ATTR_SUPPLY_HUMIDITY = "supply_humidity"
@@ -74,7 +82,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_LABEL: "Inside Temperature",
         ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: "mdi:thermometer",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_TEMPERATURE_EXTRACT,
         ATTR_MULTIPLIER: 0.1,
     },
@@ -82,14 +90,22 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Inside Humidity",
         ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:water-percent",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_HUMIDITY_EXTRACT,
+    },
+    ATTR_CURRENT_RMOT: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+        ATTR_LABEL: "Current RMOT",
+        ATTR_UNIT: TEMP_CELSIUS,
+        ATTR_ICON: None,
+        ATTR_ID: SENSOR_CURRENT_RMOT,
+        ATTR_MULTIPLIER: 0.1,
     },
     ATTR_OUTSIDE_TEMPERATURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_LABEL: "Outside Temperature",
         ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: "mdi:thermometer",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_TEMPERATURE_OUTDOOR,
         ATTR_MULTIPLIER: 0.1,
     },
@@ -97,14 +113,14 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Outside Humidity",
         ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:water-percent",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_HUMIDITY_OUTDOOR,
     },
     ATTR_SUPPLY_TEMPERATURE: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_LABEL: "Supply Temperature",
         ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: "mdi:thermometer",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_TEMPERATURE_SUPPLY,
         ATTR_MULTIPLIER: 0.1,
     },
@@ -112,7 +128,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Supply Humidity",
         ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:water-percent",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_HUMIDITY_SUPPLY,
     },
     ATTR_SUPPLY_FAN_SPEED: {
@@ -147,7 +163,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_LABEL: "Exhaust Temperature",
         ATTR_UNIT: TEMP_CELSIUS,
-        ATTR_ICON: "mdi:thermometer",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_TEMPERATURE_EXHAUST,
         ATTR_MULTIPLIER: 0.1,
     },
@@ -155,7 +171,7 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
         ATTR_LABEL: "Exhaust Humidity",
         ATTR_UNIT: PERCENTAGE,
-        ATTR_ICON: "mdi:water-percent",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_HUMIDITY_EXHAUST,
     },
     ATTR_AIR_FLOW_SUPPLY: {
@@ -190,8 +206,15 @@ SENSOR_TYPES = {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
         ATTR_LABEL: "Power usage",
         ATTR_UNIT: POWER_WATT,
-        ATTR_ICON: "mdi:flash",
+        ATTR_ICON: None,
         ATTR_ID: SENSOR_POWER_CURRENT,
+    },
+    ATTR_POWER_TOTAL: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_LABEL: "Power total",
+        ATTR_UNIT: ENERGY_KILO_WATT_HOUR,
+        ATTR_ICON: None,
+        ATTR_ID: SENSOR_POWER_TOTAL,
     },
     ATTR_PREHEATER_POWER_CURRENT: {
         ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
@@ -199,6 +222,13 @@ SENSOR_TYPES = {
         ATTR_UNIT: POWER_WATT,
         ATTR_ICON: None,
         ATTR_ID: SENSOR_PREHEATER_POWER_CURRENT,
+    },
+    ATTR_PREHEATER_POWER_TOTAL: {
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
+        ATTR_LABEL: "Preheater power total",
+        ATTR_UNIT: ENERGY_KILO_WATT_HOUR,
+        ATTR_ICON: None,
+        ATTR_ID: SENSOR_PREHEATER_POWER_TOTAL,
     },
 }
 

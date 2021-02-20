@@ -18,7 +18,7 @@
                 "title": "deCONZ Zigbee v\u00e4rav Hass.io pistikprogrammi kaudu"
             },
             "link": {
-                "description": "Home Assistanti registreerumiseks ava deCONZ-i l\u00fc\u00fcs.\n\n 1. Minge deCONZ Settings - > Gateway - > Advanced\n 2. Vajutage nuppu \"Authenticate app\"",
+                "description": "Home Assistanti registreerumiseks ava deCONZ-i l\u00fc\u00fcs.\n\n 1. Mine deCONZ Settings - > Gateway - > Advanced\n 2. Vajuta nuppu \"Authenticate app\"",
                 "title": "\u00dchenda deCONZ-iga"
             },
             "manual_input": {

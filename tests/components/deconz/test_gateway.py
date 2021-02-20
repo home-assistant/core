@@ -29,21 +29,25 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import CONN_CLASS_LOCAL_PUSH, SOURCE_SSDP
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
 
 API_KEY = "1234567890ABCDEF"
 BRIDGEID = "01234E56789A"
+HOST = "1.2.3.4"
+PORT = 80
 
-ENTRY_CONFIG = {CONF_API_KEY: API_KEY, CONF_HOST: "1.2.3.4", CONF_PORT: 80}
+DEFAULT_URL = f"http://{HOST}:{PORT}/api/{API_KEY}"
+
+ENTRY_CONFIG = {CONF_API_KEY: API_KEY, CONF_HOST: HOST, CONF_PORT: PORT}
 
 ENTRY_OPTIONS = {}
 
 DECONZ_CONFIG = {
     "bridgeid": BRIDGEID,
-    "ipaddress": "1.2.3.4",
+    "ipaddress": HOST,
     "mac": "00:11:22:33:44:55",
     "modelid": "deCONZ",
     "name": "deCONZ mock gateway",
@@ -60,12 +64,41 @@ DECONZ_WEB_REQUEST = {
 }
 
 
+def mock_deconz_request(aioclient_mock, config, data):
+    """Mock a deCONZ get request."""
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    api_key = config[CONF_API_KEY]
+
+    aioclient_mock.get(
+        f"http://{host}:{port}/api/{api_key}",
+        json=deepcopy(data),
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+
+def mock_deconz_put_request(aioclient_mock, config, path):
+    """Mock a deCONZ put request."""
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+    api_key = config[CONF_API_KEY]
+
+    aioclient_mock.put(
+        f"http://{host}:{port}/api/{api_key}{path}",
+        json={},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+
 async def setup_deconz_integration(
     hass,
+    aioclient_mock=None,
+    *,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
     get_state_response=DECONZ_WEB_REQUEST,
     entry_id="1",
+    unique_id=BRIDGEID,
     source="user",
 ):
     """Create the deCONZ gateway."""
@@ -76,25 +109,27 @@ async def setup_deconz_integration(
         connection_class=CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),
         entry_id=entry_id,
+        unique_id=unique_id,
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "pydeconz.DeconzSession.request", return_value=deepcopy(get_state_response)
-    ), patch("pydeconz.DeconzSession.start", return_value=True):
+    if aioclient_mock:
+        mock_deconz_request(aioclient_mock, config, get_state_response)
+
+    with patch("pydeconz.DeconzSession.start", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     return config_entry
 
 
-async def test_gateway_setup(hass):
+async def test_gateway_setup(hass, aioclient_mock):
     """Successful setup."""
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         return_value=True,
     ) as forward_entry_setup:
-        config_entry = await setup_deconz_integration(hass)
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
         gateway = get_gateway_from_config_entry(hass, config_entry)
         assert gateway.bridgeid == BRIDGEID
         assert gateway.master is True
@@ -138,9 +173,9 @@ async def test_gateway_setup_fails(hass):
     assert not hass.data[DECONZ_DOMAIN]
 
 
-async def test_connection_status_signalling(hass):
+async def test_connection_status_signalling(hass, aioclient_mock):
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     event_call = Mock()
@@ -155,9 +190,9 @@ async def test_connection_status_signalling(hass):
     unsub()
 
 
-async def test_update_address(hass):
+async def test_update_address(hass, aioclient_mock):
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     gateway = get_gateway_from_config_entry(hass, config_entry)
     assert gateway.api.host == "1.2.3.4"
 
@@ -181,9 +216,21 @@ async def test_update_address(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reset_after_successful_setup(hass):
+async def test_gateway_trigger_reauth_flow(hass):
+    """Failed authentication trigger a reauthentication flow."""
+    with patch(
+        "homeassistant.components.deconz.gateway.get_gateway",
+        side_effect=AuthenticationRequired,
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
+        await setup_deconz_integration(hass)
+        mock_flow_init.assert_called_once()
+
+    assert hass.data[DECONZ_DOMAIN] == {}
+
+
+async def test_reset_after_successful_setup(hass, aioclient_mock):
     """Make sure that connection status triggers a dispatcher send."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     result = await gateway.async_reset()

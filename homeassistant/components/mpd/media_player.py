@@ -281,20 +281,22 @@ class MpdDevice(MediaPlayerEntity):
             try:
                 response = await self._client.readpicture(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `readpicture` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `readpicture` command failed: %s",
+                        error,
+                    )
 
         # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 response = await self._client.albumart(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `albumart` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `albumart` command failed: %s",
+                        error,
+                    )
 
         if not response:
             return None, None

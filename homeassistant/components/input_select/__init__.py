@@ -1,4 +1,6 @@
 """Support to select an option from a list."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -29,10 +31,13 @@ CONF_OPTIONS = "options"
 
 ATTR_OPTION = "option"
 ATTR_OPTIONS = "options"
+ATTR_CYCLE = "cycle"
 
 SERVICE_SELECT_OPTION = "select_option"
 SERVICE_SELECT_NEXT = "select_next"
 SERVICE_SELECT_PREVIOUS = "select_previous"
+SERVICE_SELECT_FIRST = "select_first"
+SERVICE_SELECT_LAST = "select_last"
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -91,8 +96,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, InputSelect.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect.from_yaml
     )
 
     storage_collection = InputSelectStorageCollection(
@@ -100,8 +105,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputSelect
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputSelect
     )
 
     await yaml_collection.async_load(
@@ -112,9 +117,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -141,14 +143,26 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     component.async_register_entity_service(
         SERVICE_SELECT_NEXT,
-        {},
-        callback(lambda entity, call: entity.async_offset_index(1)),
+        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        "async_next",
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_PREVIOUS,
+        {vol.Optional(ATTR_CYCLE, default=True): bool},
+        "async_previous",
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_FIRST,
         {},
-        callback(lambda entity, call: entity.async_offset_index(-1)),
+        callback(lambda entity, call: entity.async_select_index(0)),
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_LAST,
+        {},
+        callback(lambda entity, call: entity.async_select_index(-1)),
     )
 
     component.async_register_entity_service(
@@ -195,7 +209,7 @@ class InputSelect(RestoreEntity):
         self._current_option = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputSelect":
+    def from_yaml(cls, config: typing.Dict) -> InputSelect:
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -263,12 +277,36 @@ class InputSelect(RestoreEntity):
         self.async_write_ha_state()
 
     @callback
-    def async_offset_index(self, offset):
-        """Offset current index."""
-        current_index = self._options.index(self._current_option)
-        new_index = (current_index + offset) % len(self._options)
+    def async_select_index(self, idx):
+        """Select new option by index."""
+        new_index = idx % len(self._options)
         self._current_option = self._options[new_index]
         self.async_write_ha_state()
+
+    @callback
+    def async_offset_index(self, offset, cycle):
+        """Offset current index."""
+        current_index = self._options.index(self._current_option)
+        new_index = current_index + offset
+        if cycle:
+            new_index = new_index % len(self._options)
+        else:
+            if new_index < 0:
+                new_index = 0
+            elif new_index >= len(self._options):
+                new_index = len(self._options) - 1
+        self._current_option = self._options[new_index]
+        self.async_write_ha_state()
+
+    @callback
+    def async_next(self, cycle):
+        """Select next option."""
+        self.async_offset_index(1, cycle)
+
+    @callback
+    def async_previous(self, cycle):
+        """Select previous option."""
+        self.async_offset_index(-1, cycle)
 
     @callback
     def async_set_options(self, options):

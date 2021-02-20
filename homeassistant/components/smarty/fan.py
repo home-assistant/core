@@ -1,26 +1,25 @@
 """Platform to control a Salda Smarty XP/XV ventilation unit."""
 
 import logging
+import math
+from typing import Optional
 
-from homeassistant.components.fan import (
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.percentage import (
+    int_states_in_range,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
 from . import DOMAIN, SIGNAL_UPDATE_SMARTY
 
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_LIST = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-
-SPEED_MAPPING = {1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
-SPEED_TO_MODE = {v: k for k, v in SPEED_MAPPING.items()}
+DEFAULT_ON_PERCENTAGE = 66
+SPEED_RANGE = (1, 3)  # off is not included
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -37,8 +36,7 @@ class SmartyFan(FanEntity):
     def __init__(self, name, smarty):
         """Initialize the entity."""
         self._name = name
-        self._speed = SPEED_OFF
-        self._state = None
+        self._smarty_fan_speed = 0
         self._smarty = smarty
 
     @property
@@ -62,68 +60,63 @@ class SmartyFan(FanEntity):
         return SUPPORT_SET_SPEED
 
     @property
-    def speed_list(self):
-        """List of available fan modes."""
-        return SPEED_LIST
-
-    @property
     def is_on(self):
         """Return state of the fan."""
-        return self._state
+        return bool(self._smarty_fan_speed)
 
     @property
-    def speed(self) -> str:
-        """Return speed of the fan."""
-        return self._speed
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        _LOGGER.debug("Set the fan speed to %s", speed)
-        if speed == SPEED_OFF:
+    @property
+    def percentage(self) -> str:
+        """Return speed percentage of the fan."""
+        if self._smarty_fan_speed == 0:
+            return 0
+        return ranged_value_to_percentage(SPEED_RANGE, self._smarty_fan_speed)
+
+    def set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        _LOGGER.debug("Set the fan percentage to %s", percentage)
+        if percentage == 0:
             self.turn_off()
-        else:
-            self._smarty.set_fan_speed(SPEED_TO_MODE.get(speed))
-            self._speed = speed
-            self._state = True
+            return
 
-    def turn_on(self, speed=None, **kwargs):
+        fan_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
+        if not self._smarty.set_fan_speed(fan_speed):
+            raise HomeAssistantError(
+                f"Failed to set the fan speed percentage to {percentage}"
+            )
+
+        self._smarty_fan_speed = fan_speed
+        self.schedule_update_ha_state()
+
+    def turn_on(self, speed=None, percentage=None, preset_mode=None, **kwargs):
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. Speed is %s", speed)
-        if speed is None:
-            if self._smarty.turn_on(SPEED_TO_MODE.get(self._speed)):
-                self._state = True
-                self._speed = SPEED_MEDIUM
-        else:
-            if self._smarty.set_fan_speed(SPEED_TO_MODE.get(speed)):
-                self._speed = speed
-                self._state = True
-
-        self.schedule_update_ha_state()
+        self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
     def turn_off(self, **kwargs):
         """Turn off the fan."""
         _LOGGER.debug("Turning off fan")
-        if self._smarty.turn_off():
-            self._state = False
+        if not self._smarty.turn_off():
+            raise HomeAssistantError("Failed to turn off the fan")
 
+        self._smarty_fan_speed = 0
         self.schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Call to update fan."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_SMARTY, self._update_callback)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_SMARTY, self._update_callback
+            )
+        )
 
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state(True)
-
-    def update(self):
-        """Update state."""
         _LOGGER.debug("Updating state")
-        result = self._smarty.fan_speed
-        if result:
-            self._speed = SPEED_MAPPING[result]
-            _LOGGER.debug("Speed is %s, Mode is %s", self._speed, result)
-            self._state = True
-        else:
-            self._state = False
+        self._smarty_fan_speed = self._smarty.fan_speed
+        self.async_write_ha_state()

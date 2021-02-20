@@ -25,6 +25,10 @@ class TemplateError(HomeAssistantError):
         super().__init__(f"{exception.__class__.__name__}: {exception}")
 
 
+class ConditionError(HomeAssistantError):
+    """Error during condition evaluation."""
+
+
 class PlatformNotReady(HomeAssistantError):
     """Error to indicate that platform is not ready."""
 

@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Fallo en la obtenci\u00f3n de la informaci\u00f3n de descubrimiento del complemento Z-Wave JS.",
+            "addon_info_failed": "No se pudo obtener la informaci\u00f3n del complemento Z-Wave JS.",
+            "addon_install_failed": "No se ha podido instalar el complemento Z-Wave JS.",
+            "addon_missing_discovery_info": "Falta informaci\u00f3n de descubrimiento del complemento Z-Wave JS.",
+            "addon_set_config_failed": "Fallo en la configuraci\u00f3n de Z-Wave JS.",
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "error": {
+            "addon_start_failed": "No se pudo iniciar el complemento Z-Wave JS. Comprueba la configuraci\u00f3n.",
+            "cannot_connect": "No se pudo conectar",
+            "invalid_ws_url": "URL de websocket no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "progress": {
+            "install_addon": "Espera mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Puede tardar varios minutos."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "Configurar la integraci\u00f3n de Z-Wave JS con el complemento Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "La instalaci\u00f3n del complemento Z-Wave JS ha comenzado"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Usar el complemento Z-Wave JS Supervisor"
+                },
+                "description": "\u00bfQuieres utilizar el complemento Z-Wave JS Supervisor?",
+                "title": "Selecciona el m\u00e9todo de conexi\u00f3n"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Clave de red",
+                    "usb_path": "Ruta del dispositivo USB"
+                },
+                "title": "Introduzca la configuraci\u00f3n del complemento Z-Wave JS"
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

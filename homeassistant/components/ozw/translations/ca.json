@@ -26,7 +26,7 @@
                 "data": {
                     "use_addon": "Utilitza el complement OpenZWave Supervisor"
                 },
-                "description": "Voleu utilitzar el complement OpenZWave Supervisor?",
+                "description": "Vols utilitzar el complement Supervisor d'OpenZWave?",
                 "title": "Selecciona el m\u00e8tode de connexi\u00f3"
             },
             "start_addon": {

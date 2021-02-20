@@ -96,6 +96,11 @@ ZEROCONF = {
             "name": "gateway*"
         }
     ],
+    "_leap._tcp.local.": [
+        {
+            "domain": "lutron_caseta"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"
@@ -179,6 +184,7 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",

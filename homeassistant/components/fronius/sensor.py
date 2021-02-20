@@ -2,6 +2,7 @@
 import copy
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from pyfronius import Fronius
 import voluptuous as vol
@@ -130,6 +131,7 @@ class FroniusAdapter:
         self._name = name
         self._device = device
         self._fetched = {}
+        self._available = True
 
         self.sensors = set()
         self._registered_sensors = set()
@@ -145,21 +147,32 @@ class FroniusAdapter:
         """Return the state attributes."""
         return self._fetched
 
+    @property
+    def available(self):
+        """Whether the fronius device is active."""
+        return self._available
+
     async def async_update(self):
         """Retrieve and update latest state."""
-        values = {}
         try:
             values = await self._update()
         except ConnectionError:
-            _LOGGER.error("Failed to update: connection error")
+            # fronius devices are often powered by self-produced solar energy
+            # and henced turned off at night.
+            # Therefore we will not print multiple errors when connection fails
+            if self._available:
+                self._available = False
+                _LOGGER.error("Failed to update: connection error")
+            return
         except ValueError:
             _LOGGER.error(
                 "Failed to update: invalid response returned."
                 "Maybe the configured device is not supported"
             )
-
-        if not values:
             return
+
+        self._available = True  # reset connection failure
+
         attributes = self._fetched
         # Copy data of current fronius device
         for key, entry in values.items():
@@ -182,7 +195,7 @@ class FroniusAdapter:
         for sensor in self._registered_sensors:
             sensor.async_schedule_update_ha_state(True)
 
-    async def _update(self):
+    async def _update(self) -> Dict:
         """Return values of interest."""
 
     async def register(self, sensor):
@@ -267,6 +280,11 @@ class FroniusTemplateSensor(Entity):
     def should_poll(self):
         """Device should not be polled, returns False."""
         return False
+
+    @property
+    def available(self):
+        """Whether the fronius device is active."""
+        return self.parent.available
 
     async def async_update(self):
         """Update the internal state."""

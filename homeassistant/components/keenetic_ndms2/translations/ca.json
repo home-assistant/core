@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Configuraci\u00f3 del router Keenetic NDMS2"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Interval per considerar a casa",
+                    "include_arp": "Utilitza dades d'ARP (s'ignorar\u00e0 si s'utilitzen dades de 'punt d'acc\u00e9s')",
+                    "include_associated": "Utilitza dades d'associacions d'AP WiFi (s'ignorar\u00e0 si s'utilitzen dades de 'punt d'acc\u00e9s')",
+                    "interfaces": "Escull les interf\u00edcies a escanejar",
+                    "scan_interval": "Interval d'escaneig",
+                    "try_hotspot": "Utilitza dades de 'punt d'acc\u00e9s IP' (m\u00e9s precisi\u00f3)"
+                }
+            }
+        }
+    }
+}

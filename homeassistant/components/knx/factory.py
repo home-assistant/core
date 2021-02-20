@@ -8,6 +8,7 @@ from xknx.devices import (
     ClimateMode as XknxClimateMode,
     Cover as XknxCover,
     Device as XknxDevice,
+    Fan as XknxFan,
     Light as XknxLight,
     Notification as XknxNotification,
     Scene as XknxScene,
@@ -24,6 +25,7 @@ from .schema import (
     BinarySensorSchema,
     ClimateSchema,
     CoverSchema,
+    FanSchema,
     LightSchema,
     SceneSchema,
     SensorSchema,
@@ -64,6 +66,9 @@ def create_knx_device(
 
     if platform is SupportedPlatforms.weather:
         return _create_weather(knx_module, config)
+
+    if platform is SupportedPlatforms.fan:
+        return _create_fan(knx_module, config)
 
 
 def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
@@ -259,6 +264,9 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
         on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
+        create_temperature_sensors=config.get(
+            ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
+        ),
     )
 
 
@@ -327,7 +335,7 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         knx_module,
         name=config[CONF_NAME],
         sync_state=config[WeatherSchema.CONF_SYNC_STATE],
-        expose_sensors=config[WeatherSchema.CONF_KNX_EXPOSE_SENSORS],
+        create_sensors=config[WeatherSchema.CONF_KNX_CREATE_SENSORS],
         group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
         group_address_brightness_south=config.get(
             WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS
@@ -342,6 +350,9 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
             WeatherSchema.CONF_KNX_BRIGHTNESS_NORTH_ADDRESS
         ),
         group_address_wind_speed=config.get(WeatherSchema.CONF_KNX_WIND_SPEED_ADDRESS),
+        group_address_wind_bearing=config.get(
+            WeatherSchema.CONF_KNX_WIND_BEARING_ADDRESS
+        ),
         group_address_rain_alarm=config.get(WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS),
         group_address_frost_alarm=config.get(
             WeatherSchema.CONF_KNX_FROST_ALARM_ADDRESS
@@ -353,3 +364,20 @@ def _create_weather(knx_module: XKNX, config: ConfigType) -> XknxWeather:
         ),
         group_address_humidity=config.get(WeatherSchema.CONF_KNX_HUMIDITY_ADDRESS),
     )
+
+
+def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
+    """Return a KNX Fan device to be used within XKNX."""
+
+    fan = XknxFan(
+        knx_module,
+        name=config[CONF_NAME],
+        group_address_speed=config.get(CONF_ADDRESS),
+        group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
+        group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
+        group_address_oscillation_state=config.get(
+            FanSchema.CONF_OSCILLATION_STATE_ADDRESS
+        ),
+        max_step=config.get(FanSchema.CONF_MAX_STEP),
+    )
+    return fan

@@ -1,6 +1,7 @@
 {
   "domain": "fritzbox_callmonitor",
   "name": "AVM FRITZ!Box Call Monitor",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fritzbox_callmonitor",
   "requirements": ["fritzconnection==1.4.0"],
   "codeowners": []
