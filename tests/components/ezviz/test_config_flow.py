@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from pyezviz.client import PyEzvizError
 
+from homeassistant import exceptions
 from homeassistant.components.ezviz.const import (
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
@@ -46,36 +47,9 @@ async def test_user_form(hass, ezviz_config_flow):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_form_cannot_connect(hass, ezviz_config_flow):
-    """Test we handle errors that should trigger the cannot connect error."""
-    ezviz_config_flow.side_effect = PyEzvizError()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    ezviz_config_flow.side_effect = PyEzvizError()
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_user_form_unexpected_exception(hass, ezviz_config_flow):
     """Test we handle unexpected exception."""
-    ezviz_config_flow.side_effect = Exception()
+    ezviz_config_flow.side_effect = PyEzvizError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -125,3 +99,7 @@ async def test_options_flow(hass, ezviz):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
     assert result["data"][CONF_TIMEOUT] == 15
+
+
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
