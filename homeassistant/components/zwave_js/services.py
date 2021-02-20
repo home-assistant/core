@@ -54,8 +54,8 @@ class ZWaveServices:
             self.async_set_config_parameter,
             schema=vol.All(
                 {
-                    vol.Exclusive(ATTR_DEVICE_ID, "id"): cv.string,
-                    vol.Exclusive(ATTR_ENTITY_ID, "id"): cv.entity_ids,
+                    vol.Optional(ATTR_DEVICE_ID, "id"): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID, "id"): cv.entity_ids,
                     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                         vol.Coerce(int), cv.string
                     ),
@@ -73,17 +73,17 @@ class ZWaveServices:
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        nodes: List[ZwaveNode]
+        nodes: List[ZwaveNode] = []
         if ATTR_ENTITY_ID in service.data:
-            nodes = [
-                async_get_node_from_entity_id(self._hass, entity_id)
-                for entity_id in service.data[ATTR_ENTITY_ID]
-            ]
-        else:
-            nodes = [
-                async_get_node_from_device_id(self._hass, service.data[ATTR_DEVICE_ID])
-            ]
-
+            for entity_id in service.data[ATTR_ENTITY_ID]:
+                node = async_get_node_from_entity_id(self._hass, entity_id)
+                if node not in nodes:
+                    nodes.append(node)
+        if ATTR_DEVICE_ID in service.data:
+            for device_id in service.data[ATTR_DEVICE_ID]:
+                node = async_get_node_from_device_id(self._hass, device_id)
+                if node not in nodes:
+                    nodes.append(node)
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]

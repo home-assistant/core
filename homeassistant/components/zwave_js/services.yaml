@@ -41,23 +41,19 @@ set_lock_usercode:
 
 set_config_parameter:
   description: Set a configuration parameter to a Z-Wave device. You can provide either an entity_id or device_id.
+  target:
+    integration: zwave_js
   fields:
     entity_id:
       name: Entity ID
       description: One of the entity_id's of the device you want to configure.
       example: light.zwave_dimmer
       required: false
-      selector:
-        entity:
-          integration: zwave_js
     device_id:
       name: Device ID
       description: The device ID of the device you want to configure.
       example: 336bef715bf7d370934564d4d8ef8457
       required: false
-      selector:
-        device:
-          integration: zwave_js
     parameter:
       name: Parameter
       description: The (name or id of the) configuration parameter you want to configure.
