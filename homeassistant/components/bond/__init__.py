@@ -53,12 +53,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
 
+    hub_name = f"{hub.name} ({hub.bond_id})" if hub.name else hub.bond_id
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, hub.bond_id)},
         manufacturer=BRIDGE_MAKE,
-        name=hub.bond_id,
+        name=hub_name,
         model=hub.target,
         sw_version=hub.fw_ver,
         suggested_area=hub.location,

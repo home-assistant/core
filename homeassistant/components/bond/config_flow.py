@@ -51,7 +51,7 @@ async def _validate_input(data: Dict[str, Any]) -> Tuple[str, Optional[str]]:
     try:
         # Smart by bond devices do not have a bridge api call
         bridge = await bond.bridge()
-        return bond_id, bridge.get("name") or bridge.get("location")
+        return bond_id, bridge.get("name")
     except ClientResponseError:
         return bond_id, None
 
