@@ -2,6 +2,6 @@
   "domain": "matrix",
   "name": "Matrix",
   "documentation": "https://www.home-assistant.io/integrations/matrix",
-  "requirements": ["matrix-client==0.3.2"],
-  "codeowners": ["@tinloaf"]
+  "requirements": ["matrix-nio==0.16.0","markdown==3.3.3","pillow==8.1.0","python_magic==0.4.18"],
+  "codeowners": ["@tinloaf","@szimszon"]
 }
