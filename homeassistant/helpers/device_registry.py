@@ -502,8 +502,6 @@ class DeviceRegistry:
                     name_by_user=device.get("name_by_user"),
                     # Introduced in 0.119
                     disabled_by=device.get("disabled_by"),
-                    # Introduced in 2021.3
-                    suggested_area=device.get("suggested_area"),
                 )
             # Introduced in 0.111
             for device in data.get("deleted_devices", []):
@@ -546,7 +544,6 @@ class DeviceRegistry:
                 "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
                 "disabled_by": entry.disabled_by,
-                "suggested_area": entry.suggested_area,
             }
             for entry in self.devices.values()
         ]
