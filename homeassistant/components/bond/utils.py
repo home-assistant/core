@@ -97,6 +97,7 @@ class BondHub:
     def __init__(self, bond: Bond):
         """Initialize Bond Hub."""
         self.bond: Bond = bond
+        self._bridge: Optional[dict] = None
         self._version: Optional[dict] = None
         self._devices: Optional[List[BondDevice]] = None
 
@@ -104,7 +105,7 @@ class BondHub:
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
-
+        self._bridge = await self.bond.bridge()
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
         self._devices = [
@@ -137,6 +138,16 @@ class BondHub:
     def make(self) -> str:
         """Return this hub make."""
         return self._version.get("make", BRIDGE_MAKE)
+
+    @property
+    def name(self) -> str:
+        """Get the name of this bridge."""
+        return self._bridge.get("name")
+
+    @property
+    def location(self) -> str:
+        """Get the location of this bridge."""
+        return self._bridge.get("location")
 
     @property
     def fw_ver(self) -> str:

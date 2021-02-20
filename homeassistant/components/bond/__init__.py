@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=hub.bond_id,
         model=hub.target,
         sw_version=hub.fw_ver,
+        suggested_area=hub.location,
     )
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
