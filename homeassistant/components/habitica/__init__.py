@@ -170,5 +170,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        hass.components.webhook.async_unregister(SERVICE_API_CALL)
+        hass.services.async_remove(DOMAIN, SERVICE_API_CALL)
     return unload_ok
