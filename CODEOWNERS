@@ -508,6 +508,7 @@ homeassistant/components/vera/* @vangorra
 homeassistant/components/verisure/* @frenck
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff @ludeeus
+homeassistant/components/vestaboard/* @robbiet480
 homeassistant/components/vesync/* @markperdue @webdjoe @thegardenmonkey
 homeassistant/components/vicare/* @oischinger
 homeassistant/components/vilfo/* @ManneW
