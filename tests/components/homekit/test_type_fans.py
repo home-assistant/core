@@ -6,6 +6,7 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN,
@@ -13,7 +14,7 @@ from homeassistant.components.fan import (
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
 )
-from homeassistant.components.homekit.const import ATTR_VALUE
+from homeassistant.components.homekit.const import ATTR_VALUE, PROP_MIN_STEP
 from homeassistant.components.homekit.type_fans import Fan
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -254,6 +255,7 @@ async def test_fan_speed(hass, hk_driver, events):
         {
             ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
             ATTR_PERCENTAGE: 0,
+            ATTR_PERCENTAGE_STEP: 25,
         },
     )
     await hass.async_block_till_done()
@@ -263,6 +265,7 @@ async def test_fan_speed(hass, hk_driver, events):
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
+    assert acc.char_speed.properties[PROP_MIN_STEP] == 25
 
     await acc.run_handler()
     await hass.async_block_till_done()
