@@ -106,12 +106,6 @@ class BondHub:
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
-        try:
-            # Smart by bond devices do not have a bridge api call
-            self._bridge = await self.bond.bridge()
-        except ClientResponseError:
-            self._bridge = {}
-        _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
         # Fetch all available devices using Bond API.
         device_ids = await self.bond.devices()
         self._devices = [
@@ -122,8 +116,13 @@ class BondHub:
             )
             for device_id in device_ids
         ]
-
         _LOGGER.debug("Discovered Bond devices: %s", self._devices)
+        try:
+            # Smart by bond devices do not have a bridge api call
+            self._bridge = await self.bond.bridge()
+        except ClientResponseError:
+            self._bridge = {}
+        _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
 
     @property
     def bond_id(self) -> str:
@@ -148,11 +147,15 @@ class BondHub:
     @property
     def name(self) -> str:
         """Get the name of this bridge."""
+        if not self.is_bridge and self._devices:
+            return self._devices[0].name
         return self._bridge.get("name")
 
     @property
     def location(self) -> str:
         """Get the location of this bridge."""
+        if not self.is_bridge and self._devices:
+            return self._devices[0].location
         return self._bridge.get("location")
 
     @property
@@ -168,5 +171,4 @@ class BondHub:
     @property
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
-        # If False, it means that it is a Smart by Bond product. Assumes that it is if the model is not available.
-        return self._version.get("model", "BD-").startswith("BD-")
+        return bool(self._bridge)
