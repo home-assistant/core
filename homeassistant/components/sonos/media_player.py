@@ -589,6 +589,7 @@ class SonosEntity(MediaPlayerEntity):
             "sw_version": self._sw_version,
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
+            "suggested_area": self._name,
         }
 
     @property
