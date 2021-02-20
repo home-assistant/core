@@ -26,7 +26,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 SmartTubState(controller.coordinator, spa),
                 SmartTubFlowSwitch(controller.coordinator, spa),
                 SmartTubOzone(controller.coordinator, spa),
-                SmartTubUV(controller.coordinator, spa),
                 SmartTubBlowoutCycle(controller.coordinator, spa),
                 SmartTubCleanupCycle(controller.coordinator, spa),
                 SmartTubPrimaryFiltration(controller.coordinator, spa),
@@ -58,11 +57,6 @@ class SmartTubFlowSwitch(SmartTubEntity):
         super().__init__(coordinator, spa, "flow_switch")
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
-
-    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
         return self.get_spa_status("flowSwitch").lower()
@@ -76,32 +70,9 @@ class SmartTubOzone(SmartTubEntity):
         super().__init__(coordinator, spa, "ozone")
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
-
-    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
         return self.get_spa_status("ozone").lower()
-
-
-class SmartTubUV(SmartTubEntity):
-    """The state of the UV system."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "uv")
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
-
-    @property
-    def state(self) -> str:
-        """Return the current state of the sensor."""
-        return self.get_spa_status("uv").lower()
 
 
 class SmartTubBlowoutCycle(SmartTubEntity):
@@ -110,11 +81,6 @@ class SmartTubBlowoutCycle(SmartTubEntity):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "blowout_cycle")
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
 
     @property
     def state(self) -> str:
@@ -130,11 +96,6 @@ class SmartTubCleanupCycle(SmartTubEntity):
         super().__init__(coordinator, spa, "cleanup_cycle")
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
-
-    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
         return self.get_spa_status("cleanupCycle").lower()
@@ -146,11 +107,6 @@ class SmartTubPrimaryFiltration(SmartTubEntity):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "primary_filtration")
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
 
     @property
     def state(self) -> str:
@@ -175,11 +131,6 @@ class SmartTubSecondaryFiltration(SmartTubEntity):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "secondary_filtration")
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id for the entity."""
-        return f"{self.spa.id}-{self._entity_type}"
 
     @property
     def state(self) -> str:

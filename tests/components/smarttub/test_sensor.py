@@ -22,6 +22,21 @@ async def test_sensors(spa, setup_entry, hass, smarttub_api):
     assert state is not None
     assert state.state == "open"
 
+    entity_id = f"sensor.{spa.brand}_{spa.model}_ozone"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    entity_id = f"sensor.{spa.brand}_{spa.model}_blowout_cycle"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "inactive"
+
+    entity_id = f"sensor.{spa.brand}_{spa.model}_cleanup_cycle"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "inactive"
+
     entity_id = f"sensor.{spa.brand}_{spa.model}_primary_filtration"
     state = hass.states.get(entity_id)
     assert state is not None
