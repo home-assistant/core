@@ -1,5 +1,5 @@
 addon_start:
-  description: Start a Hass.io docker add-on.
+  description: Start add-on.
   fields:
     addon:
       name: Add-on
@@ -9,7 +9,7 @@ addon_start:
         addon:
 
 addon_restart:
-  description: Restart a Hass.io docker add-on.
+  description: Restart add-on.
   fields:
     addon:
       name: Add-on
@@ -19,7 +19,7 @@ addon_restart:
         addon:
 
 addon_stdin:
-  description: Write data to a Hass.io docker add-on stdin .
+  description: Write data to add-on stdin .
   fields:
     addon:
       name: Add-on
@@ -29,7 +29,7 @@ addon_stdin:
         addon:
 
 addon_stop:
-  description: Stop a Hass.io docker add-on.
+  description: Stop add-on.
   fields:
     addon:
       name: Add-on
@@ -37,13 +37,6 @@ addon_stop:
       example: core_ssh
       selector:
         addon:
-
-homeassistant_update:
-  description: Update the Home Assistant docker image.
-  fields:
-    version:
-      description: Optional or it will be use the latest version.
-      example: 0.40.1
 
 host_reboot:
   description: Reboot the host system.
