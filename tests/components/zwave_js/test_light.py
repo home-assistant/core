@@ -203,17 +203,21 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
                 "property": "currentColor",
                 "newValue": 255,
                 "prevValue": 0,
+                "propertyKey": 2,
                 "propertyKeyName": "Red",
             },
         },
     )
     green_event = deepcopy(red_event)
-    green_event.data["args"].update({"newValue": 76, "propertyKeyName": "Green"})
+    green_event.data["args"].update(
+        {"newValue": 76, "propertyKey": 3, "propertyKeyName": "Green"}
+    )
     blue_event = deepcopy(red_event)
+    blue_event.data["args"]["propertyKey"] = 4
     blue_event.data["args"]["propertyKeyName"] = "Blue"
     warm_white_event = deepcopy(red_event)
     warm_white_event.data["args"].update(
-        {"newValue": 0, "propertyKeyName": "Warm White"}
+        {"newValue": 0, "propertyKey": 0, "propertyKeyName": "Warm White"}
     )
     node.receive_event(warm_white_event)
     node.receive_event(red_event)
@@ -316,23 +320,25 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
                 "property": "currentColor",
                 "newValue": 0,
                 "prevValue": 255,
+                "propertyKey": 2,
                 "propertyKeyName": "Red",
             },
         },
     )
     green_event = deepcopy(red_event)
     green_event.data["args"].update(
-        {"newValue": 0, "prevValue": 76, "propertyKeyName": "Green"}
+        {"newValue": 0, "prevValue": 76, "propertyKey": 3, "propertyKeyName": "Green"}
     )
     blue_event = deepcopy(red_event)
+    blue_event.data["args"]["propertyKey"] = 4
     blue_event.data["args"]["propertyKeyName"] = "Blue"
     warm_white_event = deepcopy(red_event)
     warm_white_event.data["args"].update(
-        {"newValue": 20, "propertyKeyName": "Warm White"}
+        {"newValue": 20, "propertyKey": 0, "propertyKeyName": "Warm White"}
     )
     cold_white_event = deepcopy(red_event)
     cold_white_event.data["args"].update(
-        {"newValue": 235, "propertyKeyName": "Cold White"}
+        {"newValue": 235, "propertyKey": 1, "propertyKeyName": "Cold White"}
     )
     node.receive_event(red_event)
     node.receive_event(green_event)

@@ -3,7 +3,7 @@ import logging
 from typing import Any, Callable, Optional, Tuple
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import ColorComponent, CommandClass
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -200,10 +200,18 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
     async def _async_set_color(self, color_name: str, new_value: int) -> None:
         """Set defined color to given value."""
+        try:
+            property_key = ColorComponent[color_name.upper().replace(" ", "_")].value
+        except KeyError:
+            raise ValueError(
+                "Illegal color name specified, color must be one of "
+                f"{','.join([color.name for color in ColorComponent])}"
+            ) from None
         cur_zwave_value = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key_name=color_name,
+            value_property_key=property_key.key,
+            value_property_key_name=property_key.name,
         )
         # guard for unsupported command
         if cur_zwave_value is None:
@@ -212,7 +220,8 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         target_zwave_value = self.get_zwave_value(
             "targetColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key_name=color_name,
+            value_property_key=property_key.key,
+            value_property_key_name=property_key.name,
         )
         if target_zwave_value is None:
             return
@@ -276,13 +285,22 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
         # RGB support
         red_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Red"
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.RED.value.key,
+            value_property_key_name=ColorComponent.RED.value.name,
         )
         green_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Green"
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.GREEN.value.key,
+            value_property_key_name=ColorComponent.GREEN.value.name,
         )
         blue_val = self.get_zwave_value(
-            "currentColor", CommandClass.SWITCH_COLOR, value_property_key_name="Blue"
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.BLUE.value.key,
+            value_property_key_name=ColorComponent.BLUE.value.name,
         )
         if red_val and green_val and blue_val:
             self._supports_color = True
@@ -300,12 +318,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         ww_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key_name="Warm White",
+            value_property_key=ColorComponent.WARM_WHITE.value.key,
+            value_property_key_name=ColorComponent.WARM_WHITE.value.name,
         )
         cw_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key_name="Cold White",
+            value_property_key=ColorComponent.COLD_WHITE.value.key,
+            value_property_key_name=ColorComponent.COLD_WHITE.value.name,
         )
         if ww_val and cw_val:
             # Color temperature (CW + WW) Support
