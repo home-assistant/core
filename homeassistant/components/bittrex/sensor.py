@@ -48,7 +48,7 @@ class Ticker(CoordinatorEntity):
         self._unit_of_measurement = self._symbol.split("-")[1]
 
         self._name = f"Ticker - {self._symbol}"
-        self._unique_id = f"ticker_{self._symbol})"
+        self._unique_id = f"btx_ticker_{self._symbol})"
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -102,7 +102,7 @@ class Balance(CoordinatorEntity):
         self._balance = balance
 
         self._name = f"Balance - {self._balance}"
-        self._unique_id = f"balance_{self._balance})"
+        self._unique_id = f"btx_balance_{self._balance})"
 
     def _get_data_property(self, property_name):
         """Return the property from self.coordinator.data."""
@@ -178,7 +178,7 @@ class OpenOrder(Order):
         super().__init__(coordinator, order)
 
         self._name = "Bittrex Orders - Open"
-        self._unique_id = "bittrex_orders_open"
+        self._unique_id = "btx_orders_open"
 
     def _get_data(self):
         """Return the data from self.coordinator.data."""
@@ -208,7 +208,7 @@ class ClosedOrder(Order):
         super().__init__(coordinator, order)
 
         self._name = "Bittrex Orders - Closed"
-        self._unique_id = "bittrex_orders_closed"
+        self._unique_id = "btx_orders_closed"
 
     def _get_data(self):
         """Return the data from self.coordinator.data."""
