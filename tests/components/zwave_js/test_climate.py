@@ -456,7 +456,6 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
                 "commandClass": 67,
                 "endpoint": 0,
                 "property": "setpoint",
-                "propertyKey": 1,
                 "propertyKeyName": "Heating",
                 "propertyName": "setpoint",
                 "newValue": 23,
