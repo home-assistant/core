@@ -16,7 +16,6 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.distance import convert as dist_convert
 from homeassistant.util.unit_system import (
     IMPERIAL_SYSTEM,
@@ -189,29 +188,9 @@ class SubaruSensor(SubaruEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return (
-            self.sensor_class
-            if self.sensor_class in DEVICE_CLASSES
-            else super().device_class
-        )
-
-    @property
-    def icon(self):
-        """Return icon for sensor."""
-        if not (
-            self.entity_type == "EV Battery Level"
-            and self.coordinator.data.get(self.vin)
-        ):
-            return super().icon
-        charge_status = (
-            self.coordinator.data[self.vin][VEHICLE_STATUS].get(
-                sc.EV_CHARGER_STATE_TYPE
-            )
-            == sc.CHARGING
-        )
-        return icon_for_battery_level(
-            battery_level=self.current_value, charging=charge_status
-        )
+        if self.sensor_class in DEVICE_CLASSES:
+            return self.sensor_class
+        return super().device_class
 
     @property
     def state(self):

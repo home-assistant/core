@@ -36,7 +36,6 @@ SUPPORTED_PLATFORMS = [
 ]
 
 ICONS = {
-    "12V Battery Voltage": "mdi:car-battery",
     "Avg Fuel Consumption": "mdi:leaf",
     "EV Time to Full Charge": "mdi:car-electric",
     "EV Range": "mdi:ev-station",

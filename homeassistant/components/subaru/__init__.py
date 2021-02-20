@@ -107,7 +107,7 @@ async def async_setup_entry(hass, entry):
         """Force refresh of data from Subaru."""
         vin = call.data[VEHICLE_VIN].upper()
         if vin not in vehicle_info.keys():
-            hass.components.persistent_notification.create(
+            hass.components.persistent_notification.async_create(
                 f"ERROR - Invalid VIN provided while calling {call.service}", "Subaru"
             )
         else:
