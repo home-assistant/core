@@ -1,4 +1,5 @@
 """Config flow for Flux LED/MagicLight."""
+import copy
 import logging
 
 from flux_led import BulbScanner
@@ -7,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_AUTOMATIC_ADD,
@@ -16,6 +18,8 @@ from .const import (
     CONF_REMOVE_DEVICE,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    SIGNAL_ADD_DEVICE,
+    SIGNAL_REMOVE_DEVICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,9 +107,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         self._config_entry = config_entry
         self._global_options = None
-        self._device_registry = None
         self._configure_device = None
-        self._title = "FluxLED/MagicHome"
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -128,11 +130,15 @@ class OptionsFlow(config_entries.OptionsFlow):
 
             if CONF_REMOVE_DEVICE in user_input:
                 device_id = user_input[CONF_REMOVE_DEVICE]
-                config_data = self._config_entry.data.copy()
+                config_data = copy.deepcopy(dict(self._config_entry.data))
                 del config_data[CONF_DEVICES][device_id]
 
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=config_data
+                )
+
+                async_dispatcher_send(
+                    self.hass, SIGNAL_REMOVE_DEVICE, {"device_id": device_id}
                 )
 
                 options_data = self._config_entry.options.copy()
@@ -153,18 +159,16 @@ class OptionsFlow(config_entries.OptionsFlow):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_NAME: device_name,
                 }
-
-                config_data = self._config_entry.data.copy()
+                config_data = copy.deepcopy(dict(self._config_entry.data))
                 config_data[CONF_DEVICES][device_id] = device_data
 
                 self.hass.config_entries.async_update_entry(
                     self._config_entry, data=config_data
                 )
 
-                options_data = self._config_entry.options.copy()
-                options_data["global"] = self._global_options
-                options_data[device_id] = {CONF_EFFECT_SPEED: DEFAULT_EFFECT_SPEED}
-                return self.async_create_entry(title="", data=options_data)
+                async_dispatcher_send(
+                    self.hass, SIGNAL_ADD_DEVICE, {device_id: device_data}
+                )
 
             options_data = self._config_entry.options.copy()
             options_data["global"] = self._global_options
