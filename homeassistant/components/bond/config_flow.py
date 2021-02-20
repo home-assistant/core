@@ -1,6 +1,6 @@
 """Config flow for Bond integration."""
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import Bond
@@ -16,6 +16,7 @@ from homeassistant.const import (
 
 from .const import CONF_BOND_ID
 from .const import DOMAIN  # pylint:disable=unused-import
+from .utils import BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +26,13 @@ DATA_SCHEMA_USER = vol.Schema(
 DATA_SCHEMA_DISCOVERY = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 
 
-async def _validate_input(data: Dict[str, Any]) -> str:
+async def _validate_input(data: Dict[str, Any]) -> Tuple[str, Optional[str]]:
     """Validate the user input allows us to connect."""
 
+    bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
     try:
-        bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
-        version = await bond.version()
-        # call to non-version API is needed to validate authentication
-        await bond.devices()
+        hub = BondHub(bond)
+        await hub.setup(max_devices=1)
     except ClientConnectionError as error:
         raise InputValidationError("cannot_connect") from error
     except ClientResponseError as error:
@@ -44,11 +44,10 @@ async def _validate_input(data: Dict[str, Any]) -> str:
         raise InputValidationError("unknown") from error
 
     # Return unique ID from the hub to be stored in the config entry.
-    bond_id = version.get("bondid")
-    if not bond_id:
+    if not hub.bond_id:
         raise InputValidationError("old_firmware")
 
-    return bond_id
+    return hub.bond_id, hub.name
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -113,10 +112,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _try_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        bond_id = await _validate_input(data)
+        bond_id, name = await _validate_input(data)
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=bond_id, data=data)
+        hub_name = name or bond_id
+        return self.async_create_entry(title=hub_name, data=data)
 
 
 class InputValidationError(exceptions.HomeAssistantError):

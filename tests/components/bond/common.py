@@ -29,13 +29,16 @@ async def setup_bond_entity(
     patch_version=False,
     patch_device_ids=False,
     patch_platforms=False,
+    patch_bridge=False,
 ):
     """Set up Bond entity."""
     config_entry.add_to_hass(hass)
 
-    with patch_start_bpup(), patch_bond_version(
-        enabled=patch_version
-    ), patch_bond_device_ids(enabled=patch_device_ids), patch_setup_entry(
+    with patch_start_bpup(), patch_bond_bridge(
+        enabled=patch_bridge
+    ), patch_bond_version(enabled=patch_version), patch_bond_device_ids(
+        enabled=patch_device_ids
+    ), patch_setup_entry(
         "cover", enabled=patch_platforms
     ), patch_setup_entry(
         "fan", enabled=patch_platforms
@@ -56,6 +59,7 @@ async def setup_platform(
     bond_version: Dict[str, Any] = None,
     props: Dict[str, Any] = None,
     state: Dict[str, Any] = None,
+    bridge: Dict[str, Any] = None,
 ):
     """Set up the specified Bond platform."""
     mock_entry = MockConfigEntry(
@@ -65,7 +69,9 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.bond.PLATFORMS", [platform]):
-        with patch_bond_version(return_value=bond_version), patch_bond_device_ids(
+        with patch_bond_version(return_value=bond_version), patch_bond_bridge(
+            return_value=bridge
+        ), patch_bond_device_ids(
             return_value=[bond_device_id]
         ), patch_start_bpup(), patch_bond_device(
             return_value=discovered_device
@@ -92,6 +98,27 @@ def patch_bond_version(
 
     return patch(
         "homeassistant.components.bond.Bond.version",
+        return_value=return_value,
+        side_effect=side_effect,
+    )
+
+
+def patch_bond_bridge(
+    enabled: bool = True, return_value: Optional[dict] = None, side_effect=None
+):
+    """Patch Bond API bridge endpoint."""
+    if not enabled:
+        return nullcontext()
+
+    if return_value is None:
+        return_value = {
+            "name": "bond-name",
+            "location": "bond-location",
+            "bluelight": 127,
+        }
+
+    return patch(
+        "homeassistant.components.bond.Bond.bridge",
         return_value=return_value,
         side_effect=side_effect,
     )
