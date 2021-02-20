@@ -668,28 +668,18 @@ class MatrixBot:
                 str(repr),
             )
 
-        # TODO compute thumbnail, upload thumbnail to Server
-        # TODO add thumbnail info to `content`
-
         content = {
             "body": os.path.basename(image),  # descriptive title
             "info": {
                 "size": file_stat.st_size,
                 "mimetype": mime_type,
-                "thumbnail_info": None,  # TODO
+                "thumbnail_info": None,
                 "w": width,  # width in pixel
                 "h": height,  # height in pixel
-                "thumbnail_url": None,  # TODO
-                # "thumbnail_file": None,
+                "thumbnail_url": None,
             },
             "msgtype": "m.image",
             "url": resp.content_uri,
-            # "file": {
-            #    # image/jpeg
-            #    "mimetype": mime_type,
-            #    # e.g. "mxc://example.com/someStrangeUriKey",
-            #    "url": resp.content_uri,
-            #    "v": "v2"
         }
 
         for _room_id in room_ids:

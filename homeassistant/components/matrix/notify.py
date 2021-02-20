@@ -83,10 +83,11 @@ class MatrixNotificationService(BaseNotificationService):
         else:
             _send_image = None
 
+        _response = None
         if _send_image:
             service_data = {ATTR_TARGET: target_rooms, _send_image: _image}
 
-            self.hass.services.call(
+            _response = self.hass.services.call(
                 DOMAIN, SERVICE_SEND_IMAGE, service_data=service_data
             )
 
@@ -98,8 +99,7 @@ class MatrixNotificationService(BaseNotificationService):
                 ATTR_NOTICE: notice,
             }
 
-            self.hass.services.call(
+            _response = self.hass.services.call(
                 DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data
             )
-
-        return
+        return _response
