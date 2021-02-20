@@ -1,6 +1,7 @@
 """The Bond integration."""
 import asyncio
 from asyncio import TimeoutError as AsyncIOTimeoutError
+import logging
 
 from aiohttp import ClientError, ClientTimeout
 from bond_api import Bond, BPUPSubscriptions, start_bpup
@@ -17,6 +18,7 @@ from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -36,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await hub.setup()
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        _LOGGER.exception("error")
         raise ConfigEntryNotReady from error
 
     bpup_subs = BPUPSubscriptions()
