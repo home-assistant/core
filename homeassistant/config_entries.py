@@ -783,7 +783,9 @@ class ConfigEntries:
 
         return await self.async_setup(entry_id)
 
-    async def async_disable(self, entry_id: str, disabled_by: Optional[str]) -> bool:
+    async def async_set_disabled_by(
+        self, entry_id: str, disabled_by: Optional[str]
+    ) -> bool:
         """Disable an entry.
 
         If disabled_by is changed, the config entry will be reloaded.
@@ -796,7 +798,7 @@ class ConfigEntries:
         if entry.disabled_by == disabled_by:
             return True
 
-        entry.disabled_by = cast(str, disabled_by)
+        entry.disabled_by = disabled_by
         self._async_schedule_save()
 
         return await self.async_reload(entry_id)

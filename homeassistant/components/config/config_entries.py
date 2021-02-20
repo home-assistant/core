@@ -321,7 +321,9 @@ async def config_entry_disable(hass, connection, msg):
 
     result = False
     try:
-        result = await hass.config_entries.async_disable(msg["entry_id"], disabled_by)
+        result = await hass.config_entries.async_set_disabled_by(
+            msg["entry_id"], disabled_by
+        )
     except config_entries.OperationNotAllowed:
         # Failed to unload the config entry
         pass
