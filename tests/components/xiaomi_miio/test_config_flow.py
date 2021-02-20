@@ -288,6 +288,8 @@ async def test_config_flow_step_device_manual_model_succes(hass):
     ), patch(
         "homeassistant.components.xiaomi_miio.config_flow.get_mac_address",
         return_value=TEST_MAC,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
