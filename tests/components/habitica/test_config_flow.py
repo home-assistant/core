@@ -1,11 +1,10 @@
 """Test the habitica config flow."""
-from asyncio import Future
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientResponseError
+
 from homeassistant import config_entries, setup
-from homeassistant.components.habitica.config_flow import InvalidAuth
 from homeassistant.components.habitica.const import DEFAULT_URL, DOMAIN
-from homeassistant.const import HTTP_OK
 
 from tests.common import MockConfigEntry
 
@@ -19,12 +18,8 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    request_mock = MagicMock()
-    type(request_mock).status_code = HTTP_OK
-
     mock_obj = MagicMock()
-    mock_obj.user.get.return_value = Future()
-    mock_obj.user.get.return_value.set_result(None)
+    mock_obj.user.get = AsyncMock()
 
     with patch(
         "homeassistant.components.habitica.config_flow.HabitipyAsync",
@@ -58,9 +53,12 @@ async def test_form_invalid_credentials(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    mock_obj = MagicMock()
+    mock_obj.user.get = AsyncMock(side_effect=ClientResponseError(MagicMock(), ()))
+
     with patch(
-        "habitipy.aio.HabitipyAsync",
-        side_effect=InvalidAuth,
+        "homeassistant.components.habitica.config_flow.HabitipyAsync",
+        return_value=mock_obj,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -81,9 +79,12 @@ async def test_form_unexpected_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    mock_obj = MagicMock()
+    mock_obj.user.get = AsyncMock(side_effect=Exception)
+
     with patch(
         "homeassistant.components.habitica.config_flow.HabitipyAsync",
-        side_effect=Exception,
+        return_value=mock_obj,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -98,7 +99,7 @@ async def test_form_unexpected_exception(hass):
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_manual_flow_config_exist(hass, aioclient_mock):
+async def test_manual_flow_config_exist(hass):
     """Test config flow discovers only already configured config."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -114,9 +115,7 @@ async def test_manual_flow_config_exist(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     mock_obj = MagicMock()
-    mock_obj.user.get.side_effect = AsyncMock(
-        return_value={"api_user": "test-api-user"}
-    )
+    mock_obj.user.get = AsyncMock(return_value={"api_user": "test-api-user"})
 
     with patch(
         "homeassistant.components.habitica.config_flow.HabitipyAsync",
