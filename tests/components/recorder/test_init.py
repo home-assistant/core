@@ -6,6 +6,7 @@ from unittest.mock import patch
 from sqlalchemy.exc import OperationalError
 
 from homeassistant.components.recorder import (
+    CONF_DB_URL,
     CONFIG_SCHEMA,
     DOMAIN,
     Recorder,
@@ -13,7 +14,7 @@ from homeassistant.components.recorder import (
     run_information_from_instance,
     run_information_with_session,
 )
-from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
@@ -26,7 +27,7 @@ from homeassistant.core import Context, CoreState, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import async_wait_recording_done, corrupt_db_file, wait_recording_done
 
 from tests.common import (
     async_init_recorder_component,
@@ -519,3 +520,52 @@ def test_run_information(hass_recorder):
 
 class CannotSerializeMe:
     """A class that the JSONEncoder cannot serialize."""
+
+
+async def test_database_corruption_while_running(hass, tmpdir, caplog):
+    """Test we can recover from sqlite3 db corruption."""
+
+    def _create_tmpdir_for_test_db():
+        return tmpdir.mkdir("sqlite").join("test.db")
+
+    test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    await hass.async_block_till_done()
+    caplog.clear()
+
+    hass.states.async_set("test.lost", "on", {})
+
+    await async_wait_recording_done(hass)
+    await hass.async_add_executor_job(corrupt_db_file, test_db_file)
+    await async_wait_recording_done(hass)
+
+    # This state will not be recorded because
+    # the database corruption will be discovered
+    # and we will have to rollback to recover
+    hass.states.async_set("test.one", "off", {})
+    await async_wait_recording_done(hass)
+
+    assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
+    assert "The system will rename the corrupt database file" in caplog.text
+    assert "Connected to recorder database" in caplog.text
+
+    # This state should go into the new database
+    hass.states.async_set("test.two", "on", {})
+    await async_wait_recording_done(hass)
+
+    def _get_last_state():
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(States))
+            assert len(db_states) == 1
+            assert db_states[0].event_id > 0
+            return db_states[0].to_native()
+
+    state = await hass.async_add_executor_job(_get_last_state)
+    assert state.entity_id == "test.two"
+    assert state.state == "on"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    hass.stop()
