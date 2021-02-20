@@ -14,7 +14,7 @@
         "flow_title": "Arcam FMJ na {host}",
         "step": {
             "confirm": {
-                "description": "Czy chcesz doda\u0107 Arcam FMJ na \"{host}\" do Home Assistant?"
+                "description": "Czy chcesz doda\u0107 Arcam FMJ na \"{host}\" do Home Assistanta?"
             },
             "user": {
                 "data": {

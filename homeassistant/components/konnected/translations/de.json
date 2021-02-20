@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsfluss f\u00fcr das Ger\u00e4t wird bereits ausgef\u00fchrt.",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "not_konn_panel": "Kein anerkanntes Konnected.io-Ger\u00e4t",
-            "unknown": "Unbekannter Fehler ist aufgetreten"
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Es konnte keine Verbindung zu einem Konnected-Panel unter {host}:{port} hergestellt werden."
@@ -43,7 +43,7 @@
                     "name": "Name (optional)",
                     "type": "Bin\u00e4rer Sensortyp"
                 },
-                "description": "Bitte w\u00e4hlen Sie die Optionen f\u00fcr den an {zone} angeschlossenen Bin\u00e4rsensor",
+                "description": "Bitte w\u00e4hle die Optionen f\u00fcr den an {zone} angeschlossenen Bin\u00e4rsensor",
                 "title": "Konfigurieren Sie den Bin\u00e4rsensor"
             },
             "options_digital": {
@@ -52,7 +52,7 @@
                     "poll_interval": "Abfrageintervall (Minuten) (optional)",
                     "type": "Sensortyp"
                 },
-                "description": "Bitte w\u00e4hlen Sie die Optionen f\u00fcr den an {zone} angeschlossenen digitalen Sensor aus",
+                "description": "Bitte w\u00e4hle die Optionen f\u00fcr den an {zone} angeschlossenen digitalen Sensor aus",
                 "title": "Konfigurieren Sie den digitalen Sensor"
             },
             "options_io": {
@@ -98,9 +98,9 @@
                     "more_states": "Konfigurieren Sie zus\u00e4tzliche Zust\u00e4nde f\u00fcr diese Zone",
                     "name": "Name (optional)",
                     "pause": "Pause zwischen Impulsen (ms) (optional)",
-                    "repeat": "Zeit zum Wiederholen (-1 = unendlich) (optional)"
+                    "repeat": "Mal wiederholen (-1 = unendlich) (optional)"
                 },
-                "description": "Bitte w\u00e4hlen Sie die Ausgabeoptionen f\u00fcr {zone} : Status {state}",
+                "description": "Bitte w\u00e4hlen die Ausgabeoptionen f\u00fcr {zone} : Status {state}",
                 "title": "Konfigurieren Sie den schaltbaren Ausgang"
             }
         }

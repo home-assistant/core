@@ -23,6 +23,9 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
         "error": {
             "dev_multi_type": "Flere valgte enheter som skal konfigureres, m\u00e5 v\u00e6re av samme type",
             "dev_not_config": "Enhetstype kan ikke konfigureres",
@@ -37,8 +40,10 @@
                     "max_temp": "Maks m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
                     "min_kelvin": "Min fargetemperatur st\u00f8ttet i kelvin",
                     "min_temp": "Min m\u00e5ltemperatur (bruk min og maks = 0 for standard)",
+                    "set_temp_divided": "Bruk delt temperaturverdi for innstilt temperaturkommando",
                     "support_color": "Tving fargest\u00f8tte",
                     "temp_divider": "Deler temperaturverdier (0 = bruk standard)",
+                    "temp_step_override": "Trinn for m\u00e5ltemperatur",
                     "tuya_max_coltemp": "Maks fargetemperatur rapportert av enheten",
                     "unit_of_measurement": "Temperaturenhet som brukes av enheten"
                 },

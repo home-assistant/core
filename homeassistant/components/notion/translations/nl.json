@@ -4,6 +4,7 @@
             "already_configured": "Deze gebruikersnaam is al in gebruik."
         },
         "error": {
+            "invalid_auth": "Ongeldige authenticatie",
             "no_devices": "Geen apparaten gevonden in account"
         },
         "step": {

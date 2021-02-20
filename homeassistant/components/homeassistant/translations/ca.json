@@ -3,7 +3,7 @@
         "info": {
             "arch": "Arquitectura de la CPU",
             "chassis": "Xass\u00eds",
-            "dev": "Desenvolupament",
+            "dev": "Desenvolupador",
             "docker": "Docker",
             "docker_version": "Docker",
             "hassio": "Supervisor",

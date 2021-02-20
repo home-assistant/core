@@ -1,6 +1,7 @@
 """The tests for the Prometheus exporter."""
 from dataclasses import dataclass
 import datetime
+import unittest.mock as mock
 
 import pytest
 
@@ -18,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-import tests.async_mock as mock
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
 

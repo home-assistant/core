@@ -4,6 +4,7 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autentificacion invalida",
+            "no_uuid": "La instancia de Kodi no tiene un identificador \u00fanico. Esto probablemente es debido a una versi\u00f3n antigua Kodi (17.x o inferior). Puedes configurar la integraci\u00f3n manualmente o actualizar a una versi\u00f3n m\u00e1s reciente de Kodi.",
             "unknown": "Error inesperado"
         },
         "error": {

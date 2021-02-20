@@ -39,7 +39,7 @@ class UniFiBase(Entity):
             self.key,
         )
         for signal, method in (
-            (self.controller.signal_reachable, self.async_update_callback),
+            (self.controller.signal_reachable, self.async_signal_reachable_callback),
             (self.controller.signal_options_update, self.options_updated),
             (self.controller.signal_remove, self.remove_item),
         ):
@@ -56,6 +56,11 @@ class UniFiBase(Entity):
         )
         self._item.remove_callback(self.async_update_callback)
         self.controller.entities[self.DOMAIN][self.TYPE].remove(self.key)
+
+    @callback
+    def async_signal_reachable_callback(self) -> None:
+        """Call when controller connection state change."""
+        self.async_update_callback()
 
     @callback
     def async_update_callback(self) -> None:
@@ -86,7 +91,7 @@ class UniFiBase(Entity):
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
-            await self.async_remove()
+            await self.async_remove(force_remove=True)
             return
 
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
@@ -95,7 +100,16 @@ class UniFiBase(Entity):
             entity_registry.async_remove(self.entity_id)
             return
 
-        if len(async_entries_for_device(entity_registry, entity_entry.device_id)) == 1:
+        if (
+            len(
+                async_entries_for_device(
+                    entity_registry,
+                    entity_entry.device_id,
+                    include_disabled_entities=True,
+                )
+            )
+            == 1
+        ):
             device_registry.async_remove_device(device_entry.id)
             return
 

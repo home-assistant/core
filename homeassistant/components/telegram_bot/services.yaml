@@ -13,7 +13,7 @@ send_message:
       description: An array of pre-authorized chat_ids to send the notification to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
@@ -55,6 +55,9 @@ send_photo:
     target:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
+    parse_mode:
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
+      example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -78,10 +81,10 @@ send_sticker:
   description: Send a sticker.
   fields:
     url:
-      description: Remote path to an webp sticker.
+      description: Remote path to a static .webp or animated .tgs sticker.
       example: "http://example.org/path/to/the/sticker.webp"
     file:
-      description: Local path to an webp sticker.
+      description: Local path to a static .webp or animated .tgs sticker.
       example: "/path/to/the/sticker.webp"
     username:
       description: Username for a URL which require HTTP basic authentication.
@@ -111,6 +114,46 @@ send_sticker:
       description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
       example: "msg_to_edit"
 
+send_animation:
+  description: Send an anmiation.
+  fields:
+    url:
+      description: Remote path to a GIF or H.264/MPEG-4 AVC video without sound.
+      example: "http://example.org/path/to/the/animation.gif"
+    file:
+      description: Local path to a GIF or H.264/MPEG-4 AVC video without sound.
+      example: "/path/to/the/animation.gif"
+    caption:
+      description: The title of the animation.
+      example: "My animation"
+    username:
+      description: Username for a URL which require HTTP basic authentication.
+      example: myuser
+    password:
+      description: Password for a URL which require HTTP basic authentication.
+      example: myuser_pwd
+    target:
+      description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
+      example: "[12345, 67890] or 12345"
+    parse_mode:
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
+      example: "html"
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+    verify_ssl:
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      example: false
+    timeout:
+      description: Timeout for send sticker. Will help with timeout errors (poor internet connection, etc)
+      example: "1000"
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
 send_video:
   description: Send a video.
   fields:
@@ -118,11 +161,54 @@ send_video:
       description: Remote path to a video.
       example: "http://example.org/path/to/the/video.mp4"
     file:
-      description: Local path to an image.
+      description: Local path to a video.
       example: "/path/to/the/video.mp4"
     caption:
       description: The title of the video.
       example: "My video"
+    username:
+      description: Username for a URL which require HTTP basic authentication.
+      example: myuser
+    password:
+      description: Password for a URL which require HTTP basic authentication.
+      example: myuser_pwd
+    target:
+      description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
+      example: "[12345, 67890] or 12345"
+    parse_mode:
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
+      example: "html"
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+    verify_ssl:
+      description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
+      example: false
+    timeout:
+      description: Timeout for send video. Will help with timeout errors (poor internet connection, etc)
+      example: "1000"
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+    message_tag:
+      description: 'Tag for sent message. In telegram_sent event data: {{trigger.event.data.message_tag}}'
+      example: "msg_to_edit"
+
+send_voice:
+  description: Send a voice message.
+  fields:
+    url:
+      description: Remote path to a voice message.
+      example: "http://example.org/path/to/the/voice.opus"
+    file:
+      description: Local path to a voice message.
+      example: "/path/to/the/voice.opus"
+    caption:
+      description: The title of the voice message.
+      example: "My microphone recording"
     username:
       description: Username for a URL which require HTTP basic authentication.
       example: myuser
@@ -139,7 +225,7 @@ send_video:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
     timeout:
-      description: Timeout for send video. Will help with timeout errors (poor internet connection, etc)
+      description: Timeout for send voice. Will help with timeout errors (poor internet connection, etc)
       example: "1000"
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
@@ -172,6 +258,9 @@ send_document:
     target:
       description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
       example: "[12345, 67890] or 12345"
+    parse_mode:
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
+      example: "html"
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
@@ -235,7 +324,7 @@ edit_message:
       description: Optional title for your notification. Will be composed as '%title\n%message'
       example: "Your Garage Door Friend"
     parse_mode:
-      description: "Parser for the message text: `html` or `markdown`."
+      description: "Parser for the message text: `markdownv2`, `html` or `markdown`."
       example: "html"
     disable_web_page_preview:
       description: Disables link previews for links in the message.
@@ -285,6 +374,9 @@ answer_callback_query:
     show_alert:
       description: Show a permanent notification.
       example: true
+    timeout:
+      description: Timeout for sending the answer. Will help with timeout errors (poor internet connection, etc)
+      example: "1000"
 
 delete_message:
   description: Delete a previously sent message.

@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "relay_inclusive": "R\u00f6le Adresi ve R\u00f6le Kanal\u0131 birbirine ba\u011fl\u0131d\u0131r ve birlikte eklenmelidir."
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternatif Gece Modu"
+                }
+            },
+            "init": {
+                "data": {
+                    "edit_select": "D\u00fczenle"
+                }
+            },
+            "zone_details": {
+                "data": {
+                    "zone_name": "B\u00f6lge Ad\u0131",
+                    "zone_relayaddr": "R\u00f6le Adresi",
+                    "zone_relaychan": "R\u00f6le Kanal\u0131"
+                }
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "B\u00f6lge Numaras\u0131"
+                },
+                "title": "AlarmDecoder'\u0131 yap\u0131land\u0131r\u0131n"
+            }
+        }
+    }
+}

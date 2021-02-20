@@ -1,6 +1,7 @@
 """The tests for the wake on lan switch platform."""
 import platform
 import subprocess
+from unittest.mock import patch
 
 import pytest
 
@@ -14,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 

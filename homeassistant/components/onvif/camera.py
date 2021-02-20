@@ -136,7 +136,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                 )
 
         if image is None:
-            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary)
             image = await asyncio.shield(
                 ffmpeg.get_image(
                     self._stream_uri,
@@ -154,7 +154,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)
 
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
-        stream = CameraMjpeg(ffmpeg_manager.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(ffmpeg_manager.binary)
 
         await stream.open_camera(
             self._stream_uri,

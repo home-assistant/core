@@ -67,6 +67,7 @@ from .const import (
     CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
     ERR_ALREADY_DISARMED,
+    ERR_ALREADY_STOPPED,
     ERR_CHALLENGE_NOT_SETUP,
     ERR_NOT_SUPPORTED,
     ERR_UNSUPPORTED_INPUT,
@@ -564,24 +565,49 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
-        return domain == vacuum.DOMAIN
+        if domain == vacuum.DOMAIN:
+            return True
+
+        if domain == cover.DOMAIN and features & cover.SUPPORT_STOP:
+            return True
+
+        return False
 
     def sync_attributes(self):
         """Return StartStop attributes for a sync request."""
-        return {
-            "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            & vacuum.SUPPORT_PAUSE
-            != 0
-        }
+        domain = self.state.domain
+        if domain == vacuum.DOMAIN:
+            return {
+                "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                & vacuum.SUPPORT_PAUSE
+                != 0
+            }
+        if domain == cover.DOMAIN:
+            return {}
 
     def query_attributes(self):
         """Return StartStop query attributes."""
-        return {
-            "isRunning": self.state.state == vacuum.STATE_CLEANING,
-            "isPaused": self.state.state == vacuum.STATE_PAUSED,
-        }
+        domain = self.state.domain
+        state = self.state.state
+
+        if domain == vacuum.DOMAIN:
+            return {
+                "isRunning": state == vacuum.STATE_CLEANING,
+                "isPaused": state == vacuum.STATE_PAUSED,
+            }
+
+        if domain == cover.DOMAIN:
+            return {"isRunning": state in (cover.STATE_CLOSING, cover.STATE_OPENING)}
 
     async def execute(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        domain = self.state.domain
+        if domain == vacuum.DOMAIN:
+            return await self._execute_vacuum(command, data, params, challenge)
+        if domain == cover.DOMAIN:
+            return await self._execute_cover(command, data, params, challenge)
+
+    async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"]:
@@ -617,6 +643,38 @@ class StartStopTrait(_Trait):
                     blocking=True,
                     context=data.context,
                 )
+
+    async def _execute_cover(self, command, data, params, challenge):
+        """Execute a StartStop command."""
+        if command == COMMAND_STARTSTOP:
+            if params["start"] is False:
+                if (
+                    self.state.state
+                    in (
+                        cover.STATE_CLOSING,
+                        cover.STATE_OPENING,
+                    )
+                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
+                ):
+                    await self.hass.services.async_call(
+                        self.state.domain,
+                        cover.SERVICE_STOP_COVER,
+                        {ATTR_ENTITY_ID: self.state.entity_id},
+                        blocking=True,
+                        context=data.context,
+                    )
+                else:
+                    raise SmartHomeError(
+                        ERR_ALREADY_STOPPED, "Cover is already stopped"
+                    )
+            else:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED, "Starting a cover is not supported"
+                )
+        else:
+            raise SmartHomeError(
+                ERR_NOT_SUPPORTED, f"Command {command} is not supported"
+            )
 
 
 @register_trait
@@ -1218,6 +1276,7 @@ class FanSpeedTrait(_Trait):
         return {
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
             "reversible": reversible,
+            "supportsFanSpeedPercent": True,
         }
 
     def query_attributes(self):
@@ -1231,9 +1290,11 @@ class FanSpeedTrait(_Trait):
                 response["currentFanSpeedSetting"] = speed
         if domain == fan.DOMAIN:
             speed = attrs.get(fan.ATTR_SPEED)
+            percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+                response["currentFanSpeedPercent"] = percent
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -1251,13 +1312,20 @@ class FanSpeedTrait(_Trait):
                 context=data.context,
             )
         if domain == fan.DOMAIN:
+            service_params = {
+                ATTR_ENTITY_ID: self.state.entity_id,
+            }
+            if "fanSpeedPercent" in params:
+                service = fan.SERVICE_SET_PERCENTAGE
+                service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
+            else:
+                service = fan.SERVICE_SET_SPEED
+                service_params[fan.ATTR_SPEED] = params["fanSpeed"]
+
             await self.hass.services.async_call(
                 fan.DOMAIN,
-                fan.SERVICE_SET_SPEED,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_SPEED: params["fanSpeed"],
-                },
+                service,
+                service_params,
                 blocking=True,
                 context=data.context,
             )
@@ -1617,17 +1685,17 @@ class OpenCloseTrait(_Trait):
             else:
                 position = params["openPercent"]
 
-            if features & cover.SUPPORT_SET_POSITION:
-                service = cover.SERVICE_SET_COVER_POSITION
-                if position > 0:
-                    should_verify = True
-                svc_params[cover.ATTR_POSITION] = position
-            elif position == 0:
+            if position == 0:
                 service = cover.SERVICE_CLOSE_COVER
                 should_verify = False
             elif position == 100:
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
+            elif features & cover.SUPPORT_SET_POSITION:
+                service = cover.SERVICE_SET_COVER_POSITION
+                if position > 0:
+                    should_verify = True
+                svc_params[cover.ATTR_POSITION] = position
             else:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "No support for partial open close"
@@ -1870,12 +1938,10 @@ class TransportControlTrait(_Trait):
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
-
         return {}
 
     async def execute(self, command, data, params, challenge):
         """Execute a media command."""
-
         service_attrs = {ATTR_ENTITY_ID: self.state.entity_id}
 
         if command == COMMAND_MEDIA_SEEK_RELATIVE:

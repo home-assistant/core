@@ -1,4 +1,6 @@
 """Support to set a numeric value from a slider or text box."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -7,11 +9,11 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_MODE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
 from homeassistant.core import callback
@@ -67,7 +69,7 @@ CREATE_FIELDS = {
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
     vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
     vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In([MODE_BOX, MODE_SLIDER]),
 }
 
@@ -78,7 +80,7 @@ UPDATE_FIELDS = {
     vol.Optional(CONF_INITIAL): vol.Coerce(float),
     vol.Optional(CONF_STEP): vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
     vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_MODE): vol.In([MODE_BOX, MODE_SLIDER]),
 }
 
@@ -95,7 +97,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Coerce(float), vol.Range(min=1e-3)
                     ),
                     vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                     vol.Optional(CONF_MODE, default=MODE_SLIDER): vol.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
@@ -119,8 +121,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, InputNumber.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputNumber.from_yaml
     )
 
     storage_collection = NumberStorageCollection(
@@ -128,8 +130,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputNumber
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputNumber
     )
 
     await yaml_collection.async_load(
@@ -140,9 +142,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -205,7 +204,7 @@ class InputNumber(RestoreEntity):
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputNumber":
+    def from_yaml(cls, config: typing.Dict) -> InputNumber:
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -250,7 +249,7 @@ class InputNumber(RestoreEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._config.get(ATTR_UNIT_OF_MEASUREMENT)
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def unique_id(self) -> typing.Optional[str]:

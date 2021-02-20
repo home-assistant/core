@@ -45,6 +45,11 @@ class AbstractConfig(ABC):
         """Return if proactive mode is enabled."""
         return self._unsub_proactive_report is not None
 
+    @callback
+    @abstractmethod
+    def user_identifier(self):
+        """Return an identifier for the user that represents this config."""
+
     async def async_enable_proactive_mode(self):
         """Enable proactive mode."""
         if self._unsub_proactive_report is None:

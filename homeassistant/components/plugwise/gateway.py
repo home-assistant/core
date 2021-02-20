@@ -12,7 +12,6 @@ from plugwise.exceptions import (
     XMLDataMissingError,
 )
 from plugwise.smile import Smile
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -45,8 +44,6 @@ from .const import (
     SENSOR_PLATFORMS,
     UNDO_UPDATE_LISTENER,
 )
-
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -206,7 +203,6 @@ class SmileGateway(CoordinatorEntity):
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
-
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},
             "name": self._entity_name,

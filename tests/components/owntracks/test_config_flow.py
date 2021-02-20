@@ -1,4 +1,6 @@
 """Tests for OwnTracks config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -9,7 +11,6 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONF_WEBHOOK_URL = "webhook_url"

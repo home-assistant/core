@@ -15,6 +15,13 @@
     },
     "options": {
         "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Naam van het gebied",
+                    "mode": "Berekening",
+                    "show_on_map": "Toon op kaart"
+                }
+            },
             "public_weather_areas": {
                 "description": "Configureer openbare weersensoren."
             }

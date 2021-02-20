@@ -1,4 +1,4 @@
-"""Define Recollect Waste constants."""
+"""Define ReCollect Waste constants."""
 import logging
 
 DOMAIN = "recollect_waste"

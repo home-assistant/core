@@ -1,4 +1,6 @@
 """Test OpenZWave Websocket API."""
+from unittest.mock import patch
+
 from openzwavemqtt.const import (
     ATTR_CODE_SLOT,
     ATTR_LABEL,
@@ -39,8 +41,6 @@ from homeassistant.components.websocket_api.const import (
 )
 
 from .common import MQTTMessage, setup_ozw
-
-from tests.async_mock import patch
 
 
 async def test_websocket_api(hass, generic_data, hass_ws_client):

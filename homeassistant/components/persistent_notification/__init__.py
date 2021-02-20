@@ -6,6 +6,7 @@ from typing import Any, Mapping, MutableMapping, Optional
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
@@ -125,6 +126,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 title = title.template
 
             attr[ATTR_TITLE] = title
+            attr[ATTR_FRIENDLY_NAME] = title
 
         try:
             message.hass = hass

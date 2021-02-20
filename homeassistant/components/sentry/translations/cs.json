@@ -22,7 +22,8 @@
             "init": {
                 "data": {
                     "environment": "Voliteln\u00e9 jm\u00e9no prost\u0159ed\u00ed.",
-                    "tracing": "Povolit sledov\u00e1n\u00ed v\u00fdkonu"
+                    "tracing": "Povolit sledov\u00e1n\u00ed v\u00fdkonu",
+                    "tracing_sample_rate": "Vzorkovac\u00ed frekvence trasov\u00e1n\u00ed; mezi 0.0 a 1.0 (1.0 = 100 %)"
                 }
             }
         }

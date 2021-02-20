@@ -1,6 +1,7 @@
 """Tests for the yandex transport platform."""
 
 import json
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +10,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import assert_setup_component, load_fixture
 
 REPLY = json.loads(load_fixture("yandex_transport_reply.json"))

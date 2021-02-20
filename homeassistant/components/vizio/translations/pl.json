@@ -19,7 +19,7 @@
                 "title": "Ko\u0144czenie procesu parowania"
             },
             "pairing_complete": {
-                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistant.",
+                "description": "Twoje urz\u0105dzenie VIZIO SmartCast jest teraz po\u0142\u0105czone z Home Assistantem.",
                 "title": "Parowanie zako\u0144czone"
             },
             "pairing_complete_import": {

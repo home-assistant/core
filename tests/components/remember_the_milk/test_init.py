@@ -1,9 +1,9 @@
 """Tests for the Remember The Milk component."""
+from unittest.mock import Mock, mock_open, patch
+
 import homeassistant.components.remember_the_milk as rtm
 
 from .const import JSON_STRING, PROFILE, TOKEN
-
-from tests.async_mock import Mock, mock_open, patch
 
 
 def test_create_new(hass):

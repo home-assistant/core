@@ -2,6 +2,7 @@
 import copy
 from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from hatasmota.utils import (
     get_topic_stat_result,
@@ -34,7 +35,6 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 

@@ -4,6 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "no_uuid": "La inst\u00e0ncia de Kodi no t\u00e9 un identificador \u00fanic. Probablement, aix\u00f2 es deu a una versi\u00f3 antiga de Kodi (17.x o inferior). Pots configurar la integraci\u00f3 manualment o actualitzar Kodi a una versi\u00f3 m\u00e9s recent.",
             "unknown": "Error inesperat"
         },
         "error": {

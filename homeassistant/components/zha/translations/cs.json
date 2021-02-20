@@ -51,20 +51,20 @@
             "device_rotated": "Za\u0159\u00edzen\u00ed oto\u010deno \"{subtype}\"",
             "device_shaken": "Za\u0159\u00edzen\u00ed se zat\u0159\u00e1slo",
             "device_tilted": "Za\u0159\u00edzen\u00ed naklon\u011bno",
-            "remote_button_alt_double_press": "Dvakr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_double_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto dvakr\u00e1t (alternativn\u00ed re\u017eim)",
             "remote_button_alt_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku (alternativn\u00ed re\u017eim)",
-            "remote_button_alt_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
-            "remote_button_alt_quintuple_press": "P\u011btkr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
-            "remote_button_alt_short_press": "Stiknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_quadruple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_quintuple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto p\u011btkr\u00e1t (alternativn\u00ed re\u017eim)",
+            "remote_button_alt_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto (alternativn\u00ed re\u017eim)",
             "remote_button_alt_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
-            "remote_button_alt_triple_press": "T\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\" (alternativn\u00ed re\u017eim)",
-            "remote_button_double_press": "Dvakr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_alt_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t (alternativn\u00ed re\u017eim)",
+            "remote_button_double_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto dvakr\u00e1t",
             "remote_button_long_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\" po dlouh\u00e9m stisku",
-            "remote_button_quadruple_press": "\u010cty\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
-            "remote_button_quintuple_press": "P\u011btkr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\"",
-            "remote_button_short_press": "Stiknuto tla\u010d\u00edtko \"{subtype}\"",
+            "remote_button_quadruple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto \u010dty\u0159ikr\u00e1t",
+            "remote_button_quintuple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto p\u011btkr\u00e1t",
+            "remote_button_short_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto",
             "remote_button_short_release": "Uvoln\u011bno tla\u010d\u00edtko \"{subtype}\"",
-            "remote_button_triple_press": "T\u0159ikr\u00e1t stisknuto tla\u010d\u00edtko \"{subtype}\""
+            "remote_button_triple_press": "Tla\u010d\u00edtko \"{subtype}\" stisknuto t\u0159ikr\u00e1t"
         }
     }
 }

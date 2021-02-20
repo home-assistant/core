@@ -82,10 +82,14 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_VOLUME_SET
 )
 
-REPEAT_MODE_MAPPING = {
+REPEAT_MODE_MAPPING_TO_HA = {
     "context": REPEAT_MODE_ALL,
     "off": REPEAT_MODE_OFF,
     "track": REPEAT_MODE_ONE,
+}
+
+REPEAT_MODE_MAPPING_TO_SPOTIFY = {
+    value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
 }
 
 BROWSE_LIMIT = 48
@@ -390,7 +394,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def repeat(self) -> Optional[str]:
         """Return current repeat mode."""
         repeat_state = self._currently_playing.get("repeat_state")
-        return REPEAT_MODE_MAPPING.get(repeat_state)
+        return REPEAT_MODE_MAPPING_TO_HA.get(repeat_state)
 
     @property
     def supported_features(self) -> int:
@@ -469,9 +473,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     @spotify_exception_handler
     def set_repeat(self, repeat: str) -> None:
         """Set repeat mode."""
-        for spotify, home_assistant in REPEAT_MODE_MAPPING.items():
-            if home_assistant == repeat:
-                self._spotify.repeat(spotify)
+        if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
+            raise ValueError(f"Unsupported repeat mode: {repeat}")
+        self._spotify.repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
 
     @spotify_exception_handler
     def update(self) -> None:

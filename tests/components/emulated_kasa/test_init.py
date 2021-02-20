@@ -1,5 +1,6 @@
 """Tests for emulated_kasa library bindings."""
 import math
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import (
@@ -28,8 +29,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 ENTITY_SWITCH = "switch.ac"
 ENTITY_SWITCH_NAME = "A/C"

@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import SCAN_INTERVAL, SENSOR_TYPES
+from .const import DOMAIN, SCAN_INTERVAL, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the solarlog platform."""
     _LOGGER.warning(
-        "Configuration of the solarlog platform in configuration.yaml is deprecated in Home Assistant 0.119. Please remove entry from your configuration"
+        "Configuration of the solarlog platform in configuration.yaml is deprecated "
+        "in Home Assistant 0.119. Please remove entry from your configuration"
     )
-    return True
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -95,6 +95,15 @@ class SolarlogSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self.entry_id)},
+            "name": self.device_name,
+            "manufacturer": "Solar-Log",
+        }
 
     def update(self):
         """Get the latest data from the sensor and update the state."""

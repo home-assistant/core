@@ -8,5 +8,10 @@
                 "description": "Vil du sette opp mobilapp-komponenten?"
             }
         }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Send et varsel"
+        }
     }
 }

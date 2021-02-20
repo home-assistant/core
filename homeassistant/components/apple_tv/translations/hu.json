@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Nincs eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "invalid_auth": "Azonos\u00edt\u00e1s nem siker\u00fclt",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "step": {
+            "confirm": {
+                "title": "Apple TV sikeresen hozz\u00e1adva"
+            },
+            "pair_no_pin": {
+                "title": "P\u00e1ros\u00edt\u00e1s"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN K\u00f3d"
+                },
+                "title": "P\u00e1ros\u00edt\u00e1s"
+            },
+            "reconfigure": {
+                "title": "Eszk\u00f6z \u00fajrakonfigur\u00e1l\u00e1sa"
+            },
+            "service_problem": {
+                "title": "Nem siker\u00fclt hozz\u00e1adni a szolg\u00e1ltat\u00e1st"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Eszk\u00f6z"
+                },
+                "title": "\u00daj Apple TV be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

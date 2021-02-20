@@ -19,5 +19,10 @@
                 "title": ""
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u00dchendus Airly serveriga"
+        }
     }
 }

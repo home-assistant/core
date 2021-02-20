@@ -50,11 +50,11 @@ async def test_device_registry(hass, config_entry, config, soco):
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
     reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")},
-        connections=set(),
+        identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device.model == "Model Name"
     assert reg_device.sw_version == "49.2-64250"
     assert reg_device.connections == {("mac", "00:11:22:33:44:55")}
     assert reg_device.manufacturer == "Sonos"
+    assert reg_device.suggested_area == "Zone A"
     assert reg_device.name == "Zone A"

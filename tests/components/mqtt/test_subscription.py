@@ -1,11 +1,12 @@
 """The tests for the MQTT subscription component."""
+from unittest.mock import ANY
+
 from homeassistant.components.mqtt.subscription import (
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
 from homeassistant.core import callback
 
-from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 

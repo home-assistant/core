@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Es ist nur eine einzige Konfiguration von ZHA zul\u00e4ssig."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
-            "cannot_connect": "Kein Verbindung zu ZHA-Ger\u00e4t m\u00f6glich"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "pick_radio": {

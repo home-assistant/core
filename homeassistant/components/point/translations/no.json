@@ -2,21 +2,22 @@
     "config": {
         "abort": {
             "already_setup": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "authorize_url_fail": "Ukjent feil ved oppretting av godkjenningsadresse.",
-            "authorize_url_timeout": "Tidsavbrudd som genererer autorer URL-adresse.",
+            "authorize_url_fail": "Ukjent feil under generering av en autoriserings-URL.",
+            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse",
             "external_setup": "Punktet er konfigurert fra en annen flyt.",
-            "no_flows": "Komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen."
+            "no_flows": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",
+            "unknown_authorize_url_generation": "Ukjent feil under generering av en autoriserings-URL."
         },
         "create_entry": {
             "default": "Vellykket godkjenning"
         },
         "error": {
-            "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker p\u00e5 Send",
+            "follow_link": "Vennligst f\u00f8lg lenken og godkjenn f\u00f8r du trykker send",
             "no_token": "Ugyldig tilgangstoken"
         },
         "step": {
             "auth": {
-                "description": "Vennligst f\u00f8lg lenken nedenfor og **Godta** tilgang til Minut-kontoen din, kom tilbake og trykk **Send inn** nedenfor. \n\n [Link]({authorization_url})",
+                "description": "Vennligst f\u00f8lg lenken nedenfor og **Godta** tilgang til Minut-kontoen din, kom tilbake og trykk **Send inn** nedenfor\n\n [Link]({authorization_url})",
                 "title": "Godkjenn Point"
             },
             "user": {

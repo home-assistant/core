@@ -1,6 +1,7 @@
 """The test for the min/max sensor platform."""
 from os import path
 import statistics
+from unittest.mock import patch
 
 from homeassistant import config as hass_config
 from homeassistant.components.min_max import DOMAIN
@@ -14,8 +15,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 VALUES = [17, 20, 15.3]
 COUNT = len(VALUES)

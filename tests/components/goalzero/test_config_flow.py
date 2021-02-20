@@ -1,4 +1,6 @@
 """Test Goal Zero Yeti config flow."""
+from unittest.mock import patch
+
 from goalzero import exceptions
 
 from homeassistant.components.goalzero.const import DOMAIN
@@ -19,7 +21,6 @@ from . import (
     _patch_config_flow_yeti,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

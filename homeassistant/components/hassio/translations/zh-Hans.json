@@ -12,7 +12,7 @@
             "supervisor_version": "Supervisor \u7248\u672c",
             "supported": "\u53d7\u652f\u6301",
             "update_channel": "\u66f4\u65b0\u901a\u9053",
-            "version_api": "API\u7248\u672c"
+            "version_api": "API \u7248\u672c"
         }
     },
     "title": "Hass.io"
