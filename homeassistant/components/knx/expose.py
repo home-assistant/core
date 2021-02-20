@@ -91,18 +91,19 @@ class KNXExposeSensor:
         if new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             return
 
-        if self.expose_attribute is not None:
-            new_attribute = new_state.attributes.get(self.expose_attribute)
-            old_state = event.data.get("old_state")
-
-            if old_state is not None:
-                old_attribute = old_state.attributes.get(self.expose_attribute)
-                if old_attribute == new_attribute:
-                    # don't send same value sequentially
-                    return
-            await self._async_set_knx_value(new_attribute)
-        else:
+        if self.expose_attribute is None:
             await self._async_set_knx_value(new_state.state)
+            return
+
+        new_attribute = new_state.attributes.get(self.expose_attribute)
+        old_state = event.data.get("old_state")
+
+        if old_state is not None:
+            old_attribute = old_state.attributes.get(self.expose_attribute)
+            if old_attribute == new_attribute:
+                # don't send same value sequentially
+                return
+        await self._async_set_knx_value(new_attribute)
 
     async def _async_set_knx_value(self, value):
         """Set new value on xknx ExposeSensor."""
