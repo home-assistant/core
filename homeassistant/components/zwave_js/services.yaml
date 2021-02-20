@@ -36,6 +36,8 @@ set_lock_usercode:
       description: Code to set.
       required: true
       example: 1234
+      selector:
+        text:
 
 set_config_parameter:
   description: Set a configuration parameter to a Z-Wave device. You can provide either an entity_id or device_id.
