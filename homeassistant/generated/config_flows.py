@@ -26,11 +26,7 @@ FLOWS = [
     "atag",
     "august",
     "aurora",
-<<<<<<< HEAD
     "automate",
-    "avri",
-=======
->>>>>>> upstream/dev
     "awair",
     "axis",
     "azure_devops",
