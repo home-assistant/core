@@ -1,7 +1,7 @@
 """Reusable utilities for the Bond component."""
 import asyncio
 import logging
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from aiohttp import ClientResponseError
 from bond_api import Action, Bond
@@ -58,31 +58,39 @@ class BondDevice:
         """Check if Trust State is turned on."""
         return self.props.get("trust_state", False)
 
+    def _has_any_action(self, actions: Set[str]):
+        """Check to see if the device supports any of the actions."""
+        supported_actions: List[str] = self._attrs["actions"]
+        for action in supported_actions:
+            if action in actions:
+                return True
+        return False
+
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""
-        actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Action.SET_SPEED]])
+        return self._has_any_action({Action.SET_SPEED})
 
     def supports_direction(self) -> bool:
         """Return True if this device supports any of the direction related commands."""
-        actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Action.SET_DIRECTION]])
+        return self._has_any_action({Action.SET_DIRECTION})
 
     def supports_light(self) -> bool:
         """Return True if this device supports any of the light related commands."""
-        actions: List[str] = self._attrs["actions"]
-        return bool(
-            [
-                action
-                for action in actions
-                if action in [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF]
-            ]
+        return self._has_any_action({Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF})
+
+    def supports_up_light(self) -> bool:
+        """Return true if the device has an up light."""
+        return self._has_any_action({Action.TURN_UP_LIGHT_ON, Action.TURN_UP_LIGHT_OFF})
+
+    def supports_down_light(self) -> bool:
+        """Return true if the device has a down light."""
+        return self._has_any_action(
+            {Action.TURN_DOWN_LIGHT_ON, Action.TURN_DOWN_LIGHT_OFF}
         )
 
     def supports_set_brightness(self) -> bool:
         """Return True if this device supports setting a light brightness."""
-        actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Action.SET_BRIGHTNESS]])
+        return self._has_any_action({Action.SET_BRIGHTNESS})
 
 
 class BondHub:
