@@ -7,3 +7,22 @@ send_message:
     target:
       description: A list of room(s) to send the message to.
       example: "#hasstest:matrix.org"
+    markdown:
+      description: The message have markdown formatting
+      example: true
+    notice:
+      description: This message is a notice or a regular message
+      example: false
+
+send_image:
+  description: Send a photo.
+  fields:
+    url:
+      description: Remote path to an image.
+      example: "http://example.org/path/to/the/image.png"
+    file:
+      description: Local path to an image.
+      example: "/path/to/the/image.png"
+    target:
+      description: A list of room(s) to send the image to.
+      example: "#hasstest:matrix.org"
