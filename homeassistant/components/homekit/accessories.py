@@ -300,10 +300,7 @@ class HomeAccessory(Accessory):
         return state is not None and state.state != STATE_UNAVAILABLE
 
     async def run(self):
-        """Handle accessory driver started event.
-
-        Run inside the Home Assistant event loop.
-        """
+        """Handle accessory driver started event."""
         state = self.hass.states.get(self.entity_id)
         self.async_update_state_callback(state)
         self._subscriptions.append(
