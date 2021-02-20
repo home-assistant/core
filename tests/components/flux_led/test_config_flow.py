@@ -1,4 +1,6 @@
 """Define tests for the Flux LED/Magic Home config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.flux_led.const import (
     CONF_AUTOMATIC_ADD,
@@ -10,7 +12,6 @@ from homeassistant.components.flux_led.const import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
