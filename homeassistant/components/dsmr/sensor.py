@@ -340,7 +340,7 @@ class DSMREntity(SensorEntity):
         value = self.get_dsmr_object_attr("value")
 
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
-            return self.translate_tariff(value)
+            value = int(value)
         else:
             with suppress(TypeError):
                 value = round(float(value), self._config[CONF_PRECISION])
