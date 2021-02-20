@@ -1,8 +1,9 @@
 """Provide functionality to record stream."""
+from collections import deque
 import logging
 import os
 import threading
-from typing import List
+from typing import Deque, List
 
 import av
 
@@ -19,7 +20,7 @@ def async_setup_recorder(hass):
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: List[Segment], container_format):
+def recorder_save_worker(file_out: str, segments: Deque[Segment], container_format):
     """Handle saving stream."""
     if not os.path.exists(os.path.dirname(file_out)):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
@@ -88,7 +89,7 @@ class RecorderOutput(StreamOutput):
         """Initialize recorder output."""
         super().__init__(hass)
         self.video_path = None
-        self._segments = []
+        self._segments = deque()
 
     def _async_put(self, segment: Segment) -> None:
         """Store output."""
@@ -96,7 +97,7 @@ class RecorderOutput(StreamOutput):
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
-        self._segments = segments + self._segments
+        self._segments.extendleft(reversed(segments))
 
     def save(self):
         """Write recording and clean up."""
@@ -107,4 +108,4 @@ class RecorderOutput(StreamOutput):
             args=(self.video_path, self._segments, OUTPUT_CONTAINER_FORMAT),
         )
         thread.start()
-        self._segments = []
+        self._segments = deque()
