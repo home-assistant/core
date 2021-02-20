@@ -11,6 +11,7 @@ import zigpy.zcl.foundation as zcl_f
 from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
     DOMAIN,
@@ -20,6 +21,7 @@ from homeassistant.components.fan import (
     SPEED_LOW,
     SPEED_MEDIUM,
     SPEED_OFF,
+    NotValidPresetModeError,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.zha.core.discovery import GROUP_PROBE
@@ -187,6 +189,14 @@ async def test_fan(hass, zha_device_joined_restored, zigpy_device):
     await async_set_preset_mode(hass, entity_id, preset_mode=PRESET_MODE_ON)
     assert len(cluster.write_attributes.mock_calls) == 1
     assert cluster.write_attributes.call_args == call({"fan_mode": 4})
+
+    # set invalid preset_mode from HA
+    cluster.write_attributes.reset_mock()
+    with pytest.raises(NotValidPresetModeError):
+        await async_set_preset_mode(
+            hass, entity_id, preset_mode="invalid does not exist"
+        )
+    assert len(cluster.write_attributes.mock_calls) == 0
 
     # test adding new fan to the network and HA
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
@@ -450,6 +460,7 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_OFF
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 0
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 1
 
     await async_setup_component(hass, "homeassistant", {})
@@ -470,4 +481,5 @@ async def test_fan_update_entity(
     assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == 33
     assert hass.states.get(entity_id).attributes[ATTR_SPEED] == SPEED_LOW
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] is None
+    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE_STEP] == 100 / 3
     assert cluster.read_attributes.await_count == 3
