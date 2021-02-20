@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
@@ -17,6 +18,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_WHITE_VALUE,
     LightEntity,
@@ -47,6 +49,17 @@ SUPPORT_FLUX_LED = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR
 MODE_RGB = "rgb"
 MODE_WHITE = "w"
 
+<<<<<<< HEAD
+=======
+# This mode enables white value to be controlled by brightness.
+# RGB value is ignored when this mode is specified.
+MODE_WHITE = "w"
+
+# Constant color temp values for 2 flux_led special modes
+# Warm-white and Cool-white modes
+COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF = 285
+
+>>>>>>> Added back color temp. Catch for rgbwprotocol type. Fix pylint issue.
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = "red_fade"
 EFFECT_GREEN_FADE = "green_fade"
@@ -396,7 +409,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
     def supported_features(self):
         """Return the supported features for this light."""
         if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE | SUPPORT_COLOR_TEMP
 
         return SUPPORT_FLUX_LED
 
@@ -451,6 +464,17 @@ class FluxLight(CoordinatorEntity, LightEntity):
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
+        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+
+        # handle special modes
+        if color_temp is not None:
+            if brightness is None:
+                brightness = self.brightness
+            if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
+                self._bulb.setRgbw(w=brightness)
+            else:
+                self._bulb.setRgbw(w2=brightness)
+            return
 
         if effect == EFFECT_RANDOM:
             color_red = random.randint(0, 255)
@@ -503,7 +527,7 @@ class FluxLight(CoordinatorEntity, LightEntity):
 =======
 >>>>>>> Addressed PR comments.
 
-        if not rgb:
+        if not rgb and self._last_hs_color:
             rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
 
         self._hs_color = color_util.color_RGB_to_hs(*tuple(rgb))
