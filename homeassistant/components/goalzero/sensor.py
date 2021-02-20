@@ -54,3 +54,8 @@ class YetiSensor(YetiEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SENSOR_DICT[self._condition][2]
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return SENSOR_DICT[self._condition][3]

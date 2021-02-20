@@ -44,26 +44,23 @@ BINARY_SENSOR_DICT = {
 }
 
 SENSOR_DICT = {
-    "wattsIn": ["Watts In", DEVICE_CLASS_POWER, POWER_WATT],
-    "ampsIn": ["Amps In", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
-    "wattsOut": ["Watts Out", DEVICE_CLASS_POWER, POWER_WATT],
-    "ampsOut": ["Amps Out", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE],
-    "whOut": [
-        "WH Out",
-        DEVICE_CLASS_ENERGY,
-        ENERGY_WATT_HOUR,
-    ],
-    "whStored": ["WH Stored", DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR],
-    "volts": ["Volts", DEVICE_CLASS_VOLTAGE, VOLT],
-    "socPercent": ["State of Charge Percent", DEVICE_CLASS_BATTERY, PERCENTAGE],
-    "timeToEmptyFull": ["Time to Empty/Full", TIME_MINUTES, TIME_MINUTES],
-    "temperature": ["Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS],
+    "wattsIn": ["Watts In", DEVICE_CLASS_POWER, POWER_WATT, True],
+    "ampsIn": ["Amps In", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE, False],
+    "wattsOut": ["Watts Out", DEVICE_CLASS_POWER, POWER_WATT, True],
+    "ampsOut": ["Amps Out", DEVICE_CLASS_CURRENT, ELECTRICAL_CURRENT_AMPERE, False],
+    "whOut": ["WH Out", DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, False],
+    "whStored": ["WH Stored", DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, True],
+    "volts": ["Volts", DEVICE_CLASS_VOLTAGE, VOLT, False],
+    "socPercent": ["State of Charge Percent", DEVICE_CLASS_BATTERY, PERCENTAGE, True],
+    "timeToEmptyFull": ["Time to Empty/Full", TIME_MINUTES, TIME_MINUTES, True],
+    "temperature": ["Temperature", DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, True],
     "wifiStrength": [
         "Wifi Strength",
         DEVICE_CLASS_SIGNAL_STRENGTH,
         SIGNAL_STRENGTH_DECIBELS,
+        True,
     ],
-    "timestamp": ["Up Time", TIME_SECONDS, TIME_SECONDS],
+    "timestamp": ["Up Time", TIME_SECONDS, TIME_SECONDS, False],
 }
 
 SWITCH_DICT = {
