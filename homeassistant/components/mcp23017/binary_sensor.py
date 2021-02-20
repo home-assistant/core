@@ -72,8 +72,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, config_entry, binary_sensor_entity
     )
 
-    # FIXME: Not clear what exception should be raised to avoid the config flow
-    #        'succes' message when configure message is not successful
     if await hass.async_add_executor_job(binary_sensor_entity.configure_device):
         async_add_entities([binary_sensor_entity])
 

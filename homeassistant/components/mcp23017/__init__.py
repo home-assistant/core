@@ -190,7 +190,7 @@ class MCP23017(threading.Thread):
                 self.unique_id,
                 error,
             )
-            raise ValueError(error)
+            raise ValueError(error) from error
 
         self._device_lock = threading.Lock()
         self._run = False
