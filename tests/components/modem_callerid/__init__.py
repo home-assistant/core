@@ -12,9 +12,9 @@ CONF_DATA = {
 
 
 async def _create_mocked_modem(raise_exception=False):
-    mocked_yeti = AsyncMock()
-    mocked_yeti.get_state = AsyncMock()
-    return mocked_yeti
+    mocked_modem = AsyncMock()
+    mocked_modem.get_state = AsyncMock()
+    return mocked_modem
 
 
 def _patch_config_flow_modem(mocked_modem):

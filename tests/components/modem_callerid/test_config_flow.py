@@ -21,14 +21,6 @@ from . import CONF_DATA, _create_mocked_modem, _patch_config_flow_modem
 from tests.common import MockConfigEntry
 
 
-def _flow_next(hass, flow_id):
-    return next(
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == flow_id
-    )
-
-
 def _patch_setup():
     return patch(
         "homeassistant.components.modem_callerid.async_setup_entry",
