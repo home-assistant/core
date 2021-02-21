@@ -11,7 +11,10 @@ from homeassistant.components.sensor import (
 from homeassistant.components.utility_meter.const import (
     ATTR_TARIFF,
     ATTR_VALUE,
+    DAILY,
     DOMAIN,
+    HOURLY,
+    QUARTER_HOURLY,
     SERVICE_CALIBRATE_METER,
     SERVICE_SELECT_TARIFF,
 )
@@ -27,6 +30,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
@@ -156,6 +160,26 @@ async def test_state(hass):
         SERVICE_CALIBRATE_METER,
         {ATTR_ENTITY_ID: "sensor.energy_bill_midpeak", ATTR_VALUE: "0.123"},
         blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0.123"
+
+    # test invalid state
+    entity_id = config[DOMAIN]["energy_bill"]["source"]
+    hass.states.async_set(
+        entity_id, "*", {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill_midpeak")
+    assert state is not None
+    assert state.state == "0.123"
+
+    # test unavailable source
+    entity_id = config[DOMAIN]["energy_bill"]["source"]
+    hass.states.async_set(
+        entity_id, STATE_UNAVAILABLE, {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR}
     )
     await hass.async_block_till_done()
     state = hass.states.get("sensor.energy_bill_midpeak")
@@ -421,21 +445,43 @@ async def _test_self_reset(hass, config, start_time, expect_reset=True):
         start_time_str = dt_util.parse_datetime(start_time).isoformat()
         assert state.attributes.get("last_reset") == start_time_str
 
+    # Check next day when nothing should happen for weekly, monthly, bimonthly and yearly
+    if config["utility_meter"]["energy_bill"].get("cycle") in [
+        QUARTER_HOURLY,
+        HOURLY,
+        DAILY,
+    ]:
+        now += timedelta(minutes=5)
+    else:
+        now += timedelta(days=5)
+    with alter_time(now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            entity_id,
+            10,
+            {ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+    state = hass.states.get("sensor.energy_bill")
+    if expect_reset:
+        assert state.attributes.get("last_period") == "2"
+        assert state.state == "7"
+    else:
+        assert state.attributes.get("last_period") == 0
+        assert state.state == "9"
+
 
 async def test_self_reset_cron_pattern(hass, legacy_patchable_time):
     """Test cron pattern reset of meter."""
-    config = gen_config("yearly")  # ignored because cron is defined
-    config["utility_meter"]["energy_bill"]["cron"] = "0 0 1 * *"
+    config = {
+        "utility_meter": {
+            "energy_bill": {"source": "sensor.energy", "cron": "0 0 1 * *"}
+        }
+    }
 
     await _test_self_reset(hass, config, "2017-01-31T23:59:00.000000+00:00")
-
-
-async def test_bad_cron_pattern(hass, legacy_patchable_time):
-    """Test cron pattern reset of meter."""
-    config = gen_config("hourly")
-    config["utility_meter"]["energy_bill"]["cron"] = "trash"
-
-    assert not await async_setup_component(hass, DOMAIN, config)
 
 
 async def test_self_reset_quarter_hourly(hass, legacy_patchable_time):

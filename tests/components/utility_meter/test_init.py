@@ -16,8 +16,40 @@ from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
+
+from tests.common import mock_restore_cache
+
+
+async def test_restore_state(hass):
+    """Test utility sensor restore state."""
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "tariffs": ["onpeak", "midpeak", "offpeak"],
+            }
+        }
+    }
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                "utility_meter.energy_bill",
+                "midpeak",
+            ),
+        ],
+    )
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, SENSOR_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # restore from cache
+    state = hass.states.get("utility_meter.energy_bill")
+    assert state.state == "midpeak"
 
 
 async def test_services(hass):
@@ -81,6 +113,13 @@ async def test_services(hass):
     assert state.state == "1"
 
     # Change tariff
+    data = {ATTR_ENTITY_ID: "utility_meter.energy_bill", ATTR_TARIFF: "wrong_tariff"}
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
+    await hass.async_block_till_done()
+
+    # Inexisting tariff, ignoring
+    assert hass.states.get("utility_meter.energy_bill").state != "wrong_tariff"
+
     data = {ATTR_ENTITY_ID: "utility_meter.energy_bill", ATTR_TARIFF: "peak"}
     await hass.services.async_call(DOMAIN, SERVICE_SELECT_TARIFF, data)
     await hass.async_block_till_done()
@@ -111,3 +150,44 @@ async def test_services(hass):
 
     state = hass.states.get("sensor.energy_bill_offpeak")
     assert state.state == "0"
+
+
+async def test_cron_and_meter(hass, legacy_patchable_time):
+    """Test cron pattern and meter type fails."""
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "cycle": "hourly",
+                "cron": "0 0 1 * *",
+            }
+        }
+    }
+
+    assert not await async_setup_component(hass, DOMAIN, config)
+
+
+async def test_cron_and_offset(hass, legacy_patchable_time):
+    """Test cron pattern and offset fails."""
+
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "offset": {"days": 1},
+                "cron": "0 0 1 * *",
+            }
+        }
+    }
+
+    assert not await async_setup_component(hass, DOMAIN, config)
+
+
+async def test_bad_cron(hass, legacy_patchable_time):
+    """Test bad cron pattern."""
+
+    config = {
+        "utility_meter": {"energy_bill": {"source": "sensor.energy", "cron": "*"}}
+    }
+
+    assert not await async_setup_component(hass, DOMAIN, config)

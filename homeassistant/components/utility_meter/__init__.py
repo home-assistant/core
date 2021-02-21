@@ -49,18 +49,40 @@ def validate_cron_pattern(pattern):
     raise vol.Invalid("Invalid pattern")
 
 
+def period_or_cron(config):
+    """Check that if cron pattern is used, then meter type and offsite must be removed."""
+    if CONF_CRON_PATTERN in config and CONF_METER_TYPE in config:
+        raise vol.Invalid(
+            f"You can either use <{CONF_CRON_PATTERN}> or <{CONF_METER_TYPE}>"
+        )
+    if (
+        CONF_CRON_PATTERN in config
+        and CONF_METER_OFFSET in config
+        and config[CONF_METER_OFFSET] != DEFAULT_OFFSET
+    ):
+        raise vol.Invalid(
+            f"When <{CONF_CRON_PATTERN}> is used <{CONF_METER_OFFSET}> has no meaning and must be removed"
+        )
+    return config
+
+
 METER_CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
-        vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
-            cv.time_period, cv.positive_timedelta
-        ),
-        vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
-        vol.Optional(CONF_TARIFFS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
-    }
+    vol.All(
+        {
+            vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
+            vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+            vol.Optional(CONF_METER_NET_CONSUMPTION, default=False): cv.boolean,
+            vol.Optional(CONF_TARIFFS, default=[]): vol.All(
+                cv.ensure_list, [cv.string]
+            ),
+            vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+        },
+        period_or_cron,
+    )
 )
 
 CONFIG_SCHEMA = vol.Schema(
