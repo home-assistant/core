@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
-            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub428. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "select_single": "\ud558\ub098\uc758 \uc635\uc158\uc744 \uc120\ud0dd\ud558\uc2ed\uc2dc\uc624."
         },
         "step": {
@@ -20,9 +20,9 @@
             "hubv2": {
                 "data": {
                     "host": "IP \uc8fc\uc18c",
-                    "password": "\uc554\ud638",
+                    "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
-                    "username": "\uc0ac\uc6a9\uc790\uba85"
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
                 },
                 "description": "Insteon Hub \ubc84\uc804 2\ub97c \uad6c\uc131\ud569\ub2c8\ub2e4.",
                 "title": "Insteon Hub \ubc84\uc804 2"
@@ -43,7 +43,7 @@
     },
     "options": {
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "select_single": "\uc635\uc158 \uc120\ud0dd"
         },
         "step": {
@@ -58,6 +58,14 @@
                     "unitcode": "\ub2e8\uc704 \ucf54\ub4dc (1-16)"
                 },
                 "description": "Insteon Hub \ube44\ubc00\ubc88\ud638\ub97c \ubcc0\uacbd\ud569\ub2c8\ub2e4."
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
             },
             "init": {
                 "data": {

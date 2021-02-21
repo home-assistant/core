@@ -2,25 +2,29 @@
     "config": {
         "abort": {
             "auth_fail": "\uc0ac\uc6a9\uc790\uba85\uacfc \uc554\ud638\uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-            "connection_error": "ZoneMinder \uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "connection_error": "ZoneMinder \uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "create_entry": {
             "default": "ZoneMinder \uc11c\ubc84\uac00 \ucd94\uac00\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
         "error": {
             "auth_fail": "\uc0ac\uc6a9\uc790\uba85\uacfc \uc554\ud638\uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-            "connection_error": "ZoneMinder \uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "connection_error": "ZoneMinder \uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4.",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "flow_title": "ZoneMinder",
         "step": {
             "user": {
                 "data": {
                     "host": "\ud638\uc2a4\ud2b8 \ubc0f \ud3ec\ud2b8(\uc608: 10.10.0.4:8010)",
-                    "password": "\uc554\ud638",
+                    "password": "\ube44\ubc00\ubc88\ud638",
                     "path": "ZMS \uacbd\ub85c",
                     "path_zms": "ZMS \uacbd\ub85c",
-                    "ssl": "ZoneMinder \uc5f0\uacb0\uc5d0 SSL \uc0ac\uc6a9",
-                    "username": "\uc0ac\uc6a9\uc790\uba85",
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
                     "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "title": "ZoneMinder \uc11c\ubc84\ub97c \ucd94\uac00\ud558\uc138\uc694."
