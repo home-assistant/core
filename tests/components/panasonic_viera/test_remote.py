@@ -10,8 +10,7 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 
-from .test_init import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_ENCRYPTION_DATA
-from .test_init import mock_remote_fixture  # noqa: F401
+from .conftest import MOCK_CONFIG_DATA, MOCK_DEVICE_INFO, MOCK_ENCRYPTION_DATA
 
 from tests.common import MockConfigEntry
 

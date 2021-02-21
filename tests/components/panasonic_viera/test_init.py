@@ -1,93 +1,24 @@
 """Test the Panasonic Viera setup process."""
-from unittest.mock import AsyncMock, Mock, patch
-
-import pytest
+from unittest.mock import patch
 
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
-    ATTR_FRIENDLY_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL_NUMBER,
     ATTR_UDN,
-    CONF_APP_ID,
-    CONF_ENCRYPTION_KEY,
-    CONF_ON_ACTION,
-    DEFAULT_MANUFACTURER,
-    DEFAULT_MODEL_NUMBER,
     DEFAULT_NAME,
-    DEFAULT_PORT,
     DOMAIN,
 )
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_UNAVAILABLE
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 
+from .conftest import (
+    MOCK_CONFIG_DATA,
+    MOCK_DEVICE_INFO,
+    MOCK_ENCRYPTION_DATA,
+    get_mock_remote_entity,
+)
+
 from tests.common import MockConfigEntry
-
-MOCK_CONFIG_DATA = {
-    CONF_HOST: "0.0.0.0",
-    CONF_NAME: DEFAULT_NAME,
-    CONF_PORT: DEFAULT_PORT,
-    CONF_ON_ACTION: None,
-}
-
-MOCK_ENCRYPTION_DATA = {
-    CONF_APP_ID: "mock-app-id",
-    CONF_ENCRYPTION_KEY: "mock-encryption-key",
-}
-
-MOCK_DEVICE_INFO = {
-    ATTR_FRIENDLY_NAME: DEFAULT_NAME,
-    ATTR_MANUFACTURER: DEFAULT_MANUFACTURER,
-    ATTR_MODEL_NUMBER: DEFAULT_MODEL_NUMBER,
-    ATTR_UDN: "mock-unique-id",
-}
-
-
-def get_mock_remote(device_info=MOCK_DEVICE_INFO):
-    """Return a mock remote."""
-    mock_remote = Mock()
-
-    async def async_create_remote_control(during_setup=False):
-        return
-
-    mock_remote.async_create_remote_control = AsyncMock(
-        side_effect=async_create_remote_control
-    )
-
-    async def async_get_device_info():
-        return device_info
-
-    mock_remote.async_get_device_info = AsyncMock(side_effect=async_get_device_info)
-
-    async def async_turn_on():
-        return
-
-    mock_remote.async_turn_on = AsyncMock(side_effect=async_turn_on)
-
-    async def async_turn_off():
-        return
-
-    mock_remote.async_turn_on = AsyncMock(side_effect=async_turn_off)
-
-    async def async_send_key(key):
-        return
-
-    mock_remote.async_send_key = AsyncMock(side_effect=async_send_key)
-
-    return mock_remote
-
-
-@pytest.fixture(name="mock_remote")
-def mock_remote_fixture():
-    """Mock the remote."""
-    mock_remote = get_mock_remote()
-
-    with patch(
-        "homeassistant.components.panasonic_viera.Remote",
-        return_value=mock_remote,
-    ):
-        yield mock_remote
 
 
 async def test_setup_entry_encrypted(hass, mock_remote):
@@ -149,7 +80,7 @@ async def test_setup_entry_encrypted_missing_device_info_none(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote(device_info=None)
+    mock_remote = get_mock_remote_entity(device_info=None)
 
     with patch(
         "homeassistant.components.panasonic_viera.Remote",
@@ -230,7 +161,7 @@ async def test_setup_entry_unencrypted_missing_device_info_none(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote(device_info=None)
+    mock_remote = get_mock_remote_entity(device_info=None)
 
     with patch(
         "homeassistant.components.panasonic_viera.Remote",
