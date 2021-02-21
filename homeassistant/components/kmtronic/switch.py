@@ -14,18 +14,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await hub.async_get_relays()
 
     async_add_entities(
-        [KMtronicSwitch(coordinator, host, relay) for relay in hub.relays]
+        [
+            KMtronicSwitch(coordinator, host, relay, entry.unique_id)
+            for relay in hub.relays
+        ]
     )
 
 
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
-    def __init__(self, coordinator, host, relay):
+    def __init__(self, coordinator, host, relay, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._host = host
         self._relay = relay
+        self._config_entry_id = config_entry_id
 
     @property
     def available(self) -> bool:
