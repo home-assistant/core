@@ -165,6 +165,7 @@ async def _async_try_get_token_for_host(host):
     """
     bond = Bond(host, "")
     try:
-        return await bond.__get("/v2/token").get("token")
+        response = await bond.__get("/v2/token")
+        return response.get("token")
     except (ClientConnectionError, ClientResponseError):
         return None
