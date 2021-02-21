@@ -1,6 +1,8 @@
 """The Litter-Robot integration."""
 import asyncio
 
+from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,7 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hub = hass.data[DOMAIN][entry.entry_id] = LitterRobotHub(hass, entry.data)
     try:
         await hub.login(load_robots=True)
-    except Exception as ex:
+    except LitterRobotLoginException:
+        return False
+    except LitterRobotException as ex:
         raise ConfigEntryNotReady from ex
 
     for component in PLATFORMS:

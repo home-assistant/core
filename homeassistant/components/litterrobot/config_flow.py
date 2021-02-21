@@ -4,7 +4,7 @@ import logging
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -48,10 +48,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
 
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except LitterRobotException:
-                errors["base"] = "cannot_connect"
             except LitterRobotLoginException:
                 errors["base"] = "invalid_auth"
+            except LitterRobotException:
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

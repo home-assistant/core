@@ -1,5 +1,4 @@
 """A wrapper 'hub' for the Litter-Robot API and base entity for common attributes."""
-import asyncio
 from datetime import time, timedelta
 import logging
 from types import MethodType
@@ -10,6 +9,7 @@ from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginExcepti
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -49,8 +49,8 @@ class LitterRobotHub:
     async def login(self, load_robots: bool = False):
         """Login to Litter-Robot."""
         self.logged_in = False
+        self.account = Account()
         try:
-            self.account = Account()
             await self.account.connect(
                 username=self._data[CONF_USERNAME],
                 password=self._data[CONF_PASSWORD],
@@ -87,39 +87,36 @@ class LitterRobotEntity(CoordinatorEntity):
         return f"{self.robot.serial}-{self.entity_type}"
 
     @property
-    def available(self):
-        """Return availability."""
-        return self.hub.logged_in
-
-    @property
     def device_info(self):
         """Return the device information for a Litter-Robot."""
+        model = "Litter-Robot 3 Connect"
+        if not self.robot.serial.startswith("LR3C"):
+            model = "Other Litter-Robot Connected Device"
         return {
             "identifiers": {(DOMAIN, self.robot.serial)},
             "name": self.robot.name,
             "manufacturer": "Litter-Robot",
-            "model": "Litter-Robot 3 Connect"
-            if self.robot.serial.startswith("LR3C")
-            else "Other Litter-Robot Connected Device",
+            "model": model,
         }
 
     async def perform_action_and_refresh(self, action: MethodType, *args: Any):
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
         await action(*args)
-        await asyncio.sleep(REFRESH_WAIT_TIME)
-        await self.hub.coordinator.async_refresh()
+        async_call_later(
+            self.hass, REFRESH_WAIT_TIME, self.hub.coordinator.async_request_refresh
+        )
 
     @staticmethod
     def parse_time_at_default_timezone(time_str: str) -> Optional[time]:
         """Parse a time string and add default timezone."""
         parsed_time = dt_util.parse_time(time_str)
-        return (
-            None
-            if parsed_time is None
-            else time(
-                hour=parsed_time.hour,
-                minute=parsed_time.minute,
-                second=parsed_time.second,
-                tzinfo=dt_util.DEFAULT_TIME_ZONE,
-            )
+
+        if parsed_time is None:
+            return None
+
+        return time(
+            hour=parsed_time.hour,
+            minute=parsed_time.minute,
+            second=parsed_time.second,
+            tzinfo=dt_util.DEFAULT_TIME_ZONE,
         )

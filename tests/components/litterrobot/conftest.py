@@ -1,5 +1,5 @@
 """Configure pytest for Litter-Robot tests."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from pylitterbot import Robot
 import pytest
@@ -7,14 +7,7 @@ import pytest
 from homeassistant.components import litterrobot
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import BASE_PATH, ROBOT_DATA
-
-
-@pytest.fixture(autouse=True)
-def no_refresh_wait_time():
-    """Make the refresh wait time 0 for instant tests."""
-    with patch(f"{BASE_PATH}.hub.REFRESH_WAIT_TIME", 0):
-        yield
+from .common import ROBOT_DATA
 
 
 def create_mock_robot(hass):
@@ -37,5 +30,6 @@ def mock_hub(hass):
         coordinator=MagicMock(spec=DataUpdateCoordinator),
         spec=litterrobot.LitterRobotHub,
     )
+    hub.coordinator.last_update_success = True
     hub.account.robots = [create_mock_robot(hass)]
     return hub

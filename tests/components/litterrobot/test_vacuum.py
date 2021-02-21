@@ -1,7 +1,11 @@
 """Test the Litter-Robot vacuum entity."""
+from datetime import timedelta
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import litterrobot
+from homeassistant.components.litterrobot.hub import REFRESH_WAIT_TIME
 from homeassistant.components.vacuum import (
     ATTR_PARAMS,
     DOMAIN as PLATFORM_DOMAIN,
@@ -12,10 +16,11 @@ from homeassistant.components.vacuum import (
     STATE_DOCKED,
 )
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID
+from homeassistant.util.dt import utcnow
 
 from .common import CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 ENTITY_ID = "vacuum.test_litter_box"
 
@@ -27,9 +32,10 @@ async def setup_hub(hass, mock_hub):
         domain=litterrobot.DOMAIN,
         data=CONFIG[litterrobot.DOMAIN],
     )
-    hass.data[litterrobot.DOMAIN] = {entry.entry_id: mock_hub}
-    await hass.config_entries.async_forward_entry_setup(entry, PLATFORM_DOMAIN)
-    await hass.async_block_till_done()
+
+    with patch.dict(hass.data, {litterrobot.DOMAIN: {entry.entry_id: mock_hub}}):
+        await hass.config_entries.async_forward_entry_setup(entry, PLATFORM_DOMAIN)
+        await hass.async_block_till_done()
 
 
 async def test_vacuum(hass, mock_hub):
@@ -81,4 +87,6 @@ async def test_commands(hass, mock_hub, service, command, extra):
         data,
         blocking=True,
     )
+    future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME)
+    async_fire_time_changed(hass, future)
     getattr(mock_hub.account.robots[0], command).assert_called_once()

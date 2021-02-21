@@ -2,6 +2,8 @@
 from homeassistant.components import litterrobot
 from homeassistant.setup import async_setup_component
 
+from .common import CONFIG
+
 from tests.common import MockConfigEntry
 
 
@@ -9,7 +11,7 @@ async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     entry = MockConfigEntry(
         domain=litterrobot.DOMAIN,
-        data={"username": "test-username", "password": "test-password"},
+        data=CONFIG[litterrobot.DOMAIN],
     )
     entry.add_to_hass(hass)
 
