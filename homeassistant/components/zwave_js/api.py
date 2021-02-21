@@ -319,12 +319,11 @@ async def websocket_set_config_parameter(
             node, value, property_, property_key=property_key
         )
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
+        code = ERR_UNKNOWN_ERROR
         if isinstance(err, NotFoundError):
             code = ERR_NOT_FOUND
-        elif isinstance(err, InvalidNewValue) or isinstance(err, NotImplementedError):
+        elif isinstance(err, (InvalidNewValue, NotImplementedError)):
             code = ERR_NOT_SUPPORTED
-        else:
-            code = ERR_UNKNOWN_ERROR
 
         connection.send_error(
             msg[ID],
