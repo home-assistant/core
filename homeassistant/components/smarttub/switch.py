@@ -51,9 +51,9 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         """Return a name for this pump entity."""
         spa_name = get_spa_name(self.spa)
         if self.pump_type == SpaPump.PumpType.CIRCULATION:
-            return f"{spa_name} circulation pump"
+            return f"{spa_name} Circulation Pump"
         if self.pump_type == SpaPump.PumpType.JET:
-            return f"{spa_name} jet {self.pump_id}"
+            return f"{spa_name} Jet {self.pump_id}"
         return f"{spa_name} pump {self.pump_id}"
 
     @property
