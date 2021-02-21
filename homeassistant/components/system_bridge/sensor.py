@@ -19,8 +19,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import BridgeDeviceEntity
 from .const import DOMAIN
 
-# _LOGGER = logging.getLogger(__name__)
-
 ATTR_ARCH = "arch"
 ATTR_BRAND = "brand"
 ATTR_BUILD = "build"
@@ -34,6 +32,10 @@ ATTR_DISTRO = "distro"
 ATTR_FQDN = "fqdn"
 ATTR_GOVERNOR = "governor"
 ATTR_KERNEL = "kernel"
+ATTR_LOAD_AVERAGE = "load_average"
+ATTR_LOAD_IDLE = "load_idle"
+ATTR_LOAD_SYSTEM = "load_system"
+ATTR_LOAD_USER = "load_user"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_PLATFORM = "platform"
@@ -64,6 +66,7 @@ async def async_setup_entry(
             BridgeCpuSpeedSensor(coordinator, bridge),
             BridgeCpuTemperatureSensor(coordinator, bridge),
             BridgeOsSensor(coordinator, bridge),
+            BridgeProcessesLoadSensor(coordinator, bridge),
         ],
         True,
     )
@@ -115,7 +118,7 @@ class BridgeBatterySensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.battery.percent
@@ -153,7 +156,7 @@ class BridgeCpuSpeedSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.cpu.currentSpeed.avg
@@ -194,7 +197,7 @@ class BridgeCpuTemperatureSensor(BridgeSensor):
         )
 
     @property
-    def state(self) -> str:
+    def state(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
         return bridge.cpu.temperature.main
@@ -246,4 +249,37 @@ class BridgeOsSensor(BridgeSensor):
             ATTR_RELEASE: bridge.os.release,
             ATTR_SERIAL: bridge.os.serial,
             ATTR_SERVICE_PACK: bridge.os.servicepack,
+        }
+
+
+class BridgeProcessesLoadSensor(BridgeSensor):
+    """Defines a Processes Load sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            "processes_load",
+            "Load",
+            "mdi:percent",
+            None,
+            PERCENTAGE,
+        )
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return round(bridge.processes.load.currentLoad, 2)
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the entity."""
+        bridge: Bridge = self.coordinator.data
+        return {
+            ATTR_LOAD_AVERAGE: round(bridge.processes.load.avgLoad, 2),
+            ATTR_LOAD_USER: round(bridge.processes.load.currentLoadUser, 2),
+            ATTR_LOAD_SYSTEM: round(bridge.processes.load.currentLoadSystem, 2),
+            ATTR_LOAD_IDLE: round(bridge.processes.load.currentLoadIdle, 2),
         }

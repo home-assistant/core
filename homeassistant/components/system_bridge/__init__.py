@@ -48,15 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         """Fetch data from Bridge."""
         try:
             async with async_timeout.timeout(10):
-                # await client.async_get_audio()
                 await client.async_get_battery()
-                # await client.async_get_bluetooth()
                 await client.async_get_cpu()
-                await client.async_get_filesystem()
-                await client.async_get_graphics()
-                await client.async_get_memory()
                 await client.async_get_network()
                 await client.async_get_os()
+                await client.async_get_processes()
                 await client.async_get_system()
             return client
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
