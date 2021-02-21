@@ -36,7 +36,7 @@ async def test_thermostat_update(spa, setup_entry, hass):
 
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
-    spa.get_status.return_value["heater"] = "OFF"
+    spa.get_status.return_value.heater = "OFF"
     await trigger_update(hass)
     state = hass.states.get(entity_id)
 
