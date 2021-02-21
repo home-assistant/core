@@ -71,7 +71,7 @@ class TahomaBinarySensor(TahomaEntity, BinarySensorEntity):
         """Return the state of the sensor."""
 
         return (
-            self.select_state(
+            self.executor.select_state(
                 CORE_ASSEMBLY_STATE,
                 CORE_BUTTON_STATE,
                 CORE_CONTACT_STATE,
