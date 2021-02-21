@@ -217,6 +217,7 @@ FLOWS = [
     "squeezebox",
     "srp_energy",
     "starline",
+    "subaru",
     "syncthru",
     "synology_dsm",
     "tado",

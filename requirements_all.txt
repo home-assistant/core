@@ -2145,6 +2145,9 @@ streamlabswater==1.0.1
 # homeassistant.components.traccar
 stringcase==1.2.0
 
+# homeassistant.components.subaru
+subarulink==0.3.12
+
 # homeassistant.components.ecovacs
 sucks==0.9.4
 
