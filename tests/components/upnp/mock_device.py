@@ -16,14 +16,14 @@ import homeassistant.util.dt as dt_util
 class MockDevice(Device):
     """Mock device for Device."""
 
-    def __init__(self, udn):
+    def __init__(self, udn: str) -> None:
         """Initialize mock device."""
         igd_device = object()
         super().__init__(igd_device)
         self._udn = udn
 
     @classmethod
-    async def async_create_device(cls, hass, ssdp_location):
+    async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
         """Return self."""
         return cls("UDN")
 
@@ -51,6 +51,11 @@ class MockDevice(Device):
     def device_type(self) -> str:
         """Get the device type."""
         return "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+
+    @property
+    def hostname(self) -> str:
+        """Get the hostname."""
+        return "mock-hostname"
 
     async def async_get_traffic_data(self) -> Mapping[str, any]:
         """Get traffic data."""

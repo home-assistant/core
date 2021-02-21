@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from ipaddress import IPv4Address
 from typing import List, Mapping
+from urllib.parse import urlparse
 
 from async_upnp_client import UpnpFactory
 from async_upnp_client.aiohttp import AiohttpSessionRequester
@@ -17,6 +18,7 @@ from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     CONF_LOCAL_IP,
+    DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -66,10 +68,10 @@ class Device:
         cls, hass: HomeAssistantType, discovery: Mapping
     ) -> Mapping:
         """Get additional data from device and supplement discovery."""
-        device = await Device.async_create_device(hass, discovery[DISCOVERY_LOCATION])
+        location = discovery[DISCOVERY_LOCATION]
+        device = await Device.async_create_device(hass, location)
         discovery[DISCOVERY_NAME] = device.name
-
-        # Set unique_id.
+        discovery[DISCOVERY_HOSTNAME] = device.hostname
         discovery[DISCOVERY_UNIQUE_ID] = discovery[DISCOVERY_USN]
 
         return discovery
@@ -125,6 +127,13 @@ class Device:
     def unique_id(self) -> str:
         """Get the unique id."""
         return self.usn
+
+    @property
+    def hostname(self) -> str:
+        """Get the hostname."""
+        url = self._igd_device.device.device_url
+        parsed = urlparse(url)
+        return parsed.hostname
 
     def __str__(self) -> str:
         """Get string representation."""

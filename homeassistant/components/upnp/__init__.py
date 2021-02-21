@@ -13,6 +13,7 @@ from homeassistant.util import get_local_ip
 
 from .const import (
     CONF_LOCAL_IP,
+    CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DISCOVERY_LOCATION,
@@ -31,7 +32,13 @@ NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string)})},
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
+            },
+        )
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -113,6 +120,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass.config_entries.async_update_entry(
             entry=config_entry,
             unique_id=device.unique_id,
+        )
+
+    # Ensure entry has a hostname, for older entries.
+    if CONFIG_ENTRY_HOSTNAME not in config_entry.data:
+        hass.config_entries.async_update_entry(
+            entry=config_entry,
+            data={CONFIG_ENTRY_HOSTNAME: device.hostname, **config_entry.data},
         )
 
     # Create device registry entry.
