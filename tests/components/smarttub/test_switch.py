@@ -3,7 +3,7 @@
 from smarttub import SpaPump
 
 
-async def test_pumps(spa, setup_entry, hass, smarttub_api):
+async def test_pumps(spa, setup_entry, hass):
     """Test pump entities."""
 
     for pump in spa.get_pumps.return_value:

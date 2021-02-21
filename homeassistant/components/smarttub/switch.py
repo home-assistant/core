@@ -32,26 +32,28 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     def __init__(self, coordinator, pump: SpaPump):
         """Initialize the entity."""
         super().__init__(coordinator, pump.spa, "pump")
-        self.pump = pump
+        self.pump_id = pump.id
+        self.pump_type = pump.type
+
+    @property
+    def pump(self) -> SpaPump:
+        """Return the underlying SpaPump object for this entity."""
+        return self.coordinator.data[self.spa.id]["pumps"][self.pump_id]
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this pump entity."""
-        return super().unique_id + f"-{self.pump.id}"
+        return super().unique_id + f"-{self.pump_id}"
 
     @property
     def name(self) -> str:
         """Return a name for this pump entity."""
         spa_name = get_spa_name(self.spa)
-        if self.pump.type == SpaPump.PumpType.CIRCULATION:
+        if self.pump_type == SpaPump.PumpType.CIRCULATION:
             return f"{spa_name} circulation pump"
-        if self.pump.type == SpaPump.PumpType.JET:
-            return f"{spa_name} jet {self.pump.id}"
-        return f"{spa_name} pump {self.pump.id}"
-
-    def update_pump(self, pump: SpaPump) -> None:
-        """Update the SpaPump object with new state."""
-        self.pump = pump
+        if self.pump_type == SpaPump.PumpType.JET:
+            return f"{spa_name} jet {self.pump_id}"
+        return f"{spa_name} pump {self.pump_id}"
 
     @property
     def is_on(self) -> bool:
