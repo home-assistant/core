@@ -1,6 +1,7 @@
 """Test the Somfy TaHoma config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientError
-from asynctest import patch
 from pyhoma.exceptions import (
     BadCredentialsException,
     MaintenanceException,

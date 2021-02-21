@@ -29,7 +29,7 @@ class TahomaEntity(CoordinatorEntity, Entity):
         """Initialize the device."""
         super().__init__(coordinator)
         self.device_url = device_url
-        self.executor = OverkizExecutor(coordinator, device_url)
+        self.executor = OverkizExecutor(device_url, coordinator)
 
     @property
     def device(self) -> Device:
