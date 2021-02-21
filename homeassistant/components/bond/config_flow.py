@@ -163,7 +163,8 @@ async def _async_try_get_token_for_host(host):
     online longer then the allowed setup period, and we will
     instead ask them to manually enter the token.
     """
+    bond = Bond(host, "")
     try:
-        return await Bond(host, "").__get("/v2/token").get("token")
+        return await bond.__get("/v2/token").get("token")
     except (ClientConnectionError, ClientResponseError):
         return None
