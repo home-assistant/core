@@ -318,17 +318,10 @@ async def websocket_set_config_parameter(
         result = await async_set_config_parameter(
             node, value, property_, property_key=property_key
         )
-    except NotFoundError as err:
-        connection.send_error(
-            msg[ID],
-            ERR_NOT_FOUND,
-            err.args,
-        )
-        return
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
-        if type(err) == NotFoundError:
+        if isinstance(err, NotFoundError):
             code = ERR_NOT_FOUND
-        elif type(err) in (InvalidNewValue, NotImplementedError):
+        elif isinstance(err, InvalidNewValue) or isinstance(err, NotImplementedError):
             code = ERR_NOT_SUPPORTED
         else:
             code = ERR_UNKNOWN_ERROR

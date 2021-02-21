@@ -301,7 +301,6 @@ async def test_set_config_parameter(
 
         assert len(client.async_send_command.call_args_list) == 0
         assert not msg["success"] and msg["error"]["code"] == "unknown_error"
-    assert False
 
 
 async def test_dump_view(integration, hass_client):
