@@ -67,7 +67,7 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
             # get brightness from HA data
             brightness = int(kwargs[ATTR_BRIGHTNESS])
             # convert to percent that vesync api expects
-            brightness = math.round((brightness / 255) * 100)
+            brightness = round((brightness / 255) * 100)
             # clamp to 1-100
             brightness = max(1, min(brightness, 100))
             self.dimmer.set_brightness(brightness)
@@ -83,4 +83,4 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
     @property
     def brightness(self):
         """Get dimmer brightness."""
-        return math.round((int(self.dimmer.brightness) / 100) * 255)
+        return round((int(self.dimmer.brightness) / 100) * 255)
