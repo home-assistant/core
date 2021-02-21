@@ -15,18 +15,11 @@ DEVICETYPE = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive thermostat.
-
-    No longer in use.
-    """
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN][entry.entry_id]
-    devices = hive.devices.get("sensor")
+    hive = hass.data[DOMAIN]["entries"][entry.entry_id]
+    devices = hive.session.devices.get("sensor")
     entities = []
     if devices:
         for dev in devices:
