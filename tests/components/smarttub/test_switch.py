@@ -27,6 +27,8 @@ async def test_pumps(spa, setup_entry, hass):
             )
             pump.toggle.assert_called()
         else:
+            assert state.state == "on"
+
             await hass.services.async_call(
                 "switch",
                 "turn_off",
