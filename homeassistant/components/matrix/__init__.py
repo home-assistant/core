@@ -139,7 +139,7 @@ async def async_setup(hass, config):
 
         hass.data[DOMAIN] = bot
 
-    except Exception as exception:
+    except ProtocolError as exception:
         _LOGGER.error("Matrix failed to log in: %s", str(exception))
         return False
 
@@ -343,7 +343,7 @@ class MatrixBot:
         )
 
         # Check if login failed
-        if type(login_response) == LoginError:
+        if isinstance(login_response, LoginError):
             _LOGGER.error("Failed to login: %s", login_response.message)
             raise ProtocolError
 
@@ -374,9 +374,10 @@ class MatrixBot:
         while True:
             try:
                 await self._client.sync_forever(timeout=30000, full_state=True)
-            except Exception as e:
+            except ProtocolError as exception:
                 _LOGGER.warning(
-                    "Unable to connect to homeserver (%s), retrying in 15s...", str(e)
+                    "Unable to connect to homeserver (%s), retrying in 15s...",
+                    str(exception),
                 )
 
                 # Sleep so we don't bombard the server with login requests
@@ -420,9 +421,9 @@ class MatrixBot:
             async with aiohttp.ClientSession() as session:
                 async with session.get(service.data[ATTR_URL]) as _resp:
                     if _resp.status == 200:
-                        f = await aiofiles.open(_file_path, mode="wb")
-                        await f.write(await _resp.read())
-                        await f.close()
+                        file_object = await aiofiles.open(_file_path, mode="wb")
+                        await file_object.write(await _resp.read())
+                        await file_object.close()
                     else:
                         _LOGGER.warning(
                             "Downloading the url %s failed with response code: %s",
@@ -468,7 +469,7 @@ class MatrixBot:
             _LOGGER.debug("Resolv room id from room alias: %s", room_id_or_alias)
             room_id = await self._client.room_resolve_alias(room_id_or_alias)
 
-            if type(room_id) != RoomResolveAliasResponse:
+            if not isinstance(room_id, RoomResolveAliasResponse):
                 _LOGGER.error("The room id can't be found: %s", str(room_id))
                 return False
 
@@ -503,7 +504,7 @@ class MatrixBot:
             _LOGGER.debug("Joining to room: %s", str(room_id))
             _response = await self._client.join(room_id)
 
-            if type(_response) != JoinResponse:
+            if not isinstance(_response, JoinResponse):
                 _LOGGER.error("Unable to join to the room: %s", str(_response))
                 return False
             _LOGGER.debug("Joined into the room: %s", str(room_id))
@@ -557,7 +558,7 @@ class MatrixBot:
                 _content,
                 ignore_unverified_devices=True,
             )
-            if type(_response) != RoomSendResponse:
+            if not isinstance(_response, RoomSendResponse):
                 _LOGGER.error("Unable to send message response: %s", str(_response))
                 return False
             _LOGGER.debug("Response: %s", str(_response))
@@ -633,21 +634,25 @@ class MatrixBot:
             )
             return
 
-        im = Image.open(image)
-        (width, height) = im.size  # im.size returns (width,height) tuple
+        image_object = Image.open(image)
+        (
+            width,
+            height,
+        ) = image_object.size  # image_object.size returns (width,height) tuple
 
         # first do an upload of image, see upload() documentation
         # http://matrix-nio.readthedocs.io/en/latest/nio.html#nio.AsyncClient.upload
         # then send URI of upload to room
 
         file_stat = await aiofiles.os.stat(image)
-        async with aiofiles.open(image, "r+b") as f:
+        async with aiofiles.open(image, "r+b") as file_object:
             resp, maybe_keys = await self._client.upload(
-                f,
+                file_object,
                 content_type=mime_type,  # image/jpeg
                 filename=os.path.basename(image),
                 filesize=file_stat.st_size,
             )
+        del maybe_keys
         if isinstance(resp, UploadResponse):
             _LOGGER.debug(
                 "Image was uploaded successfully to server. " "Response is: %s",
@@ -692,9 +697,11 @@ class MatrixBot:
                     str(image),
                     str(_room_id),
                 )
-            except Exception as e:
+            except ProtocolError as exception:
                 _LOGGER.warning(
-                    "Image send of file %s failed. Sorry. (%s)", str(image), str(e)
+                    "Image send of file %s failed. Sorry. (%s)",
+                    str(image),
+                    str(exception),
                 )
 
 
