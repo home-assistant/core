@@ -574,6 +574,9 @@ eternalegypt==0.0.12
 # homeassistant.components.evohome
 evohome-async==0.3.5.post1
 
+# homeassistant.components.faa_delays
+faadelays==0.0.6
+
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify
 # face_recognition==1.2.3
