@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up climate entity for the thermostat in the tub."""
+    """Set up sensor entities for the sensors in the tub."""
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
 
