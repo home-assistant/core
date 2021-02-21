@@ -181,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with timeout(CONNECT_TIMEOUT):
             await client.connect()
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+        LOGGER.error("Failed to connect: %s", err)
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
@@ -268,8 +269,8 @@ async def client_listen(
         await client.listen(driver_ready)
     except asyncio.CancelledError:
         should_reload = False
-    except BaseZwaveJSServerError:
-        pass
+    except BaseZwaveJSServerError as err:
+        LOGGER.error("Failed to listen: %s", err)
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
