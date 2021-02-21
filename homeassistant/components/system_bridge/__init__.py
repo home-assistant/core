@@ -8,8 +8,14 @@ import aiohttp
 import async_timeout
 from systembridge import Bridge
 
+from homeassistant.components.mqtt.mixins import (
+    CONF_CONNECTIONS,
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_SW_VERSION,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
@@ -20,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async with async_timeout.timeout(10):
                 # await client.async_get_audio()
                 await client.async_get_battery()
-                await client.async_get_bluetooth()
+                # await client.async_get_bluetooth()
                 await client.async_get_cpu()
                 await client.async_get_filesystem()
                 await client.async_get_graphics()
@@ -69,10 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_COORDINATOR: coordinator,
-    }
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
@@ -150,11 +153,11 @@ class BridgeDeviceEntity(BridgeEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this System Bridge instance."""
         return {
-            "connections": {
+            CONF_CONNECTIONS: {
                 (dr.CONNECTION_NETWORK_MAC, self._default_interface["mac"])
             },
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-            "name": self._hostname,
-            "sw_version": self._version,
+            CONF_MANUFACTURER: self._manufacturer,
+            CONF_MODEL: self._model,
+            CONF_NAME: self._hostname,
+            CONF_SW_VERSION: self._version,
         }
