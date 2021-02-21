@@ -13,7 +13,6 @@ CONF_DATA = {
 
 async def _create_mocked_modem(raise_exception=False):
     mocked_modem = AsyncMock()
-    mocked_modem.get_state = AsyncMock()
     return mocked_modem
 
 
