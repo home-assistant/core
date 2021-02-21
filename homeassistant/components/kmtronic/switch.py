@@ -40,7 +40,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
-        return f"{self._host}_relay{self._relay.id}"
+        return f"{self._config_entry_id}_relay{self._relay.id}"
 
     @property
     def entity_registry_enabled_default(self) -> bool:
