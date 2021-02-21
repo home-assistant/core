@@ -112,7 +112,7 @@ async def async_attach_trigger(
                 armed_entities.add(entity_id)
         except exceptions.ConditionError as ex:
             _LOGGER.warning(
-                "Error initializing 'numeric_state' trigger for '%s': %s",
+                "Error initializing '%s' trigger: %s",
                 automation_info["name"],
                 ex,
             )

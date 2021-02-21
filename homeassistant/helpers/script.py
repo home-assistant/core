@@ -516,7 +516,7 @@ class _ScriptRun:
         try:
             check = cond(self._hass, self._variables)
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'condition' evaluation: %s", ex)
+            _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
             check = False
 
         self._log("Test condition %s: %s", self._script.last_action, check)
@@ -575,7 +575,7 @@ class _ScriptRun:
                     ):
                         break
                 except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'while' evaluation: %s", ex)
+                    _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
                     break
 
                 await async_run_sequence(iteration)
@@ -593,7 +593,7 @@ class _ScriptRun:
                     ):
                         break
                 except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'until' evaluation: %s", ex)
+                    _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
                     break
 
         if saved_repeat_vars:
@@ -614,7 +614,7 @@ class _ScriptRun:
                     await self._async_run_script(script)
                     return
             except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in 'choose' evaluation: %s", ex)
+                _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
         if choose_data["default"]:
             await self._async_run_script(choose_data["default"])
