@@ -55,7 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 await hub.async_update_relays()
         except aiohttp.client_exceptions.ClientResponseError as err:
             raise UpdateFailed(f"Wrong credentials: {err}") from err
-        except aiohttp.client_exceptions.ClientConnectorError as err:
+        except (
+            asyncio.TimeoutError,
+            aiohttp.client_exceptions.ClientConnectorError,
+        ) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     coordinator = DataUpdateCoordinator(
@@ -65,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_method=async_update_data,
         update_interval=timedelta(seconds=30),
     )
-
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady

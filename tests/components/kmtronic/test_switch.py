@@ -1,7 +1,10 @@
 """The tests for the KMtronic switch platform."""
+import asyncio
 from datetime import timedelta
 
 from homeassistant.components.kmtronic.const import DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -83,3 +86,65 @@ async def test_update(hass, aioclient_mock):
     await hass.async_block_till_done()
     state = hass.states.get("switch.relay1")
     assert state.state == "on"
+
+
+async def test_config_entry_not_ready(hass, aioclient_mock):
+    """Tests configuration entry not ready."""
+
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        exc=asyncio.TimeoutError(),
+    )
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+async def test_failed_update(hass, aioclient_mock):
+    """Tests coordinator update fails."""
+    now = dt_util.utcnow()
+    future = now + timedelta(minutes=10)
+
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        text="<response><relay0>0</relay0><relay1>0</relay1></response>",
+    )
+
+    MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+    ).add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == "off"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        text="401 Unauthorized: Password required",
+        status=401,
+    )
+    async_fire_time_changed(hass, future)
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == STATE_UNAVAILABLE
+
+    future += timedelta(minutes=10)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        exc=asyncio.TimeoutError(),
+    )
+    async_fire_time_changed(hass, future)
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == STATE_UNAVAILABLE
