@@ -20,6 +20,7 @@ from . import BridgeDeviceEntity
 from .const import DOMAIN
 
 ATTR_ARCH = "arch"
+ATTR_AVAILABLE = "available"
 ATTR_BRAND = "brand"
 ATTR_BUILD = "build"
 ATTR_CAPACITY = "capacity"
@@ -29,6 +30,7 @@ ATTR_CODENAME = "codename"
 ATTR_CORES = "cores"
 ATTR_CORES_PHYSICAL = "cores_physical"
 ATTR_DISTRO = "distro"
+ATTR_FILESYSTEM = "filesystem"
 ATTR_FQDN = "fqdn"
 ATTR_GOVERNOR = "governor"
 ATTR_KERNEL = "kernel"
@@ -38,10 +40,12 @@ ATTR_LOAD_SYSTEM = "load_system"
 ATTR_LOAD_USER = "load_user"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
+ATTR_MOUNT = "mount"
 ATTR_PLATFORM = "platform"
 ATTR_RELEASE = "release"
 ATTR_SERIAL = "serial"
 ATTR_SERVICE_PACK = "service_pack"
+ATTR_SIZE = "size"
 ATTR_SPEED = "speed"
 ATTR_SPEED_CURRENT_MAX = "speed_current_max"
 ATTR_SPEED_CURRENT_MIN = "speed_current_min"
@@ -50,6 +54,7 @@ ATTR_SPEED_MIN = "speed_min"
 ATTR_TEMPERATURE_MAX = "temperature_max"
 ATTR_TIME_REMAINING = "time_remaining"
 ATTR_TYPE = "type"
+ATTR_USED = "used"
 ATTR_VENDOR = "vendor"
 
 
@@ -65,6 +70,10 @@ async def async_setup_entry(
             BridgeBatterySensor(coordinator, bridge),
             BridgeCpuSpeedSensor(coordinator, bridge),
             BridgeCpuTemperatureSensor(coordinator, bridge),
+            *[
+                BridgeFilesystemSensor(coordinator, bridge, key)
+                for key, _ in bridge.filesystem.fsSize.items()
+            ],
             BridgeOsSensor(coordinator, bridge),
             BridgeProcessesLoadSensor(coordinator, bridge),
         ],
@@ -215,6 +224,42 @@ class BridgeCpuTemperatureSensor(BridgeSensor):
             ATTR_TEMPERATURE_MAX: bridge.cpu.temperature.max,
             ATTR_VENDOR: bridge.cpu.cpu.vendor,
             ATTR_VOLTAGE: bridge.cpu.cpu.voltage,
+        }
+
+
+class BridgeFilesystemSensor(BridgeSensor):
+    """Defines a CPU sensor."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, bridge: Bridge, key: str):
+        """Initialize System Bridge sensor."""
+        super().__init__(
+            coordinator,
+            bridge,
+            f"filesystem_{key}",
+            f"{key} Space Used",
+            None,
+            None,
+            PERCENTAGE,
+        )
+        self._key = key
+
+    @property
+    def state(self) -> float:
+        """Return the state of the sensor."""
+        bridge: Bridge = self.coordinator.data
+        return round(bridge.filesystem.fsSize[self._key]["use"], 2)
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the entity."""
+        bridge: Bridge = self.coordinator.data
+        return {
+            ATTR_AVAILABLE: bridge.filesystem.fsSize[self._key]["available"],
+            ATTR_FILESYSTEM: bridge.filesystem.fsSize[self._key]["fs"],
+            ATTR_MOUNT: bridge.filesystem.fsSize[self._key]["mount"],
+            ATTR_SIZE: bridge.filesystem.fsSize[self._key]["size"],
+            ATTR_TYPE: bridge.filesystem.fsSize[self._key]["type"],
+            ATTR_USED: bridge.filesystem.fsSize[self._key]["used"],
         }
 
 

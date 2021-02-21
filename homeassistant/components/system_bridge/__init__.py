@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async with async_timeout.timeout(10):
                 await client.async_get_battery()
                 await client.async_get_cpu()
+                await client.async_get_filesystem()
                 await client.async_get_network()
                 await client.async_get_os()
                 await client.async_get_processes()
