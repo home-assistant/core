@@ -193,8 +193,8 @@ class SuplaMqttSoftBridge(Entity):
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
         if result_code == 0:
-            client_.subscribe("supla/#")
             client_.subscribe("homeassistant/#")
+            client_.subscribe("supla/#")
 
     def on_supla_disconnect(self, client_, userdata, result_code):
         """Handle connection result."""
@@ -214,7 +214,7 @@ class SuplaMqttSoftBridge(Entity):
         # 2. echo reduction check if this message was send by AIS
         if msg.topic != self._ignore_supla_topic or msg.payload != msg.payload:
             payload = msg.payload.decode("utf-8")
-            hass_mqtt.async_publish(self.hass, msg.topic, payload)
+            hass_mqtt.async_publish(self.hass, msg.topic, payload, retain=True)
             self._supla_received = self._supla_received + 1
         else:
             _LOGGER.debug("on_supla_message ignore!")
