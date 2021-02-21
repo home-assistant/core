@@ -53,7 +53,7 @@ class SmartTubEntity(CoordinatorEntity):
         return f"{spa_name} {self._entity_type}"
 
     @property
-    def spa_status(self):
-        """Retrieve the result f Spa.get_status()."""
+    def spa_status(self) -> smarttub.SpaState:
+        """Retrieve the result of Spa.get_status()."""
 
         return self.coordinator.data[self.spa.id].get("status")

@@ -1,4 +1,5 @@
 """Platform for sensor integration."""
+from enum import Enum
 import logging
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
@@ -21,11 +22,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for spa in controller.spas:
         entities.extend(
             [
-                SmartTubState(controller.coordinator, spa),
-                SmartTubFlowSwitch(controller.coordinator, spa),
-                SmartTubOzone(controller.coordinator, spa),
-                SmartTubBlowoutCycle(controller.coordinator, spa),
-                SmartTubCleanupCycle(controller.coordinator, spa),
+                SmartTubSensor(controller.coordinator, spa, "State", "state"),
+                SmartTubSensor(
+                    controller.coordinator, spa, "Flow Switch", "flow_switch"
+                ),
+                SmartTubSensor(controller.coordinator, spa, "Ozone", "ozone"),
+                SmartTubSensor(
+                    controller.coordinator, spa, "Blowout Cycle", "blowout_cycle"
+                ),
+                SmartTubSensor(
+                    controller.coordinator, spa, "Cleanup Cycle", "cleanup_cycle"
+                ),
                 SmartTubPrimaryFiltrationCycle(controller.coordinator, spa),
                 SmartTubSecondaryFiltrationCycle(controller.coordinator, spa),
             ]
@@ -35,7 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class SmartTubSensor(SmartTubEntity):
-    """Base class for SmartTub sensors."""
+    """Generic and base class for SmartTub sensors."""
 
     def __init__(self, coordinator, spa, sensor_name, attr_name):
         """Initialize the entity."""
@@ -50,47 +57,9 @@ class SmartTubSensor(SmartTubEntity):
     @property
     def state(self) -> str:
         """Return the current state of the sensor."""
+        if isinstance(self._state, Enum):
+            return self._state.name.lower()
         return self._state.lower()
-
-
-class SmartTubState(SmartTubSensor):
-    """The state of the spa."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "State", "state")
-
-
-class SmartTubFlowSwitch(SmartTubSensor):
-    """The state of the flow switch."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "Flow Switch", "flowSwitch")
-
-
-class SmartTubOzone(SmartTubSensor):
-    """The state of the ozone system."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "Ozone", "ozone")
-
-
-class SmartTubBlowoutCycle(SmartTubSensor):
-    """The state of the blowout cycle."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "Blowout Cycle", "blowoutCycle")
-
-
-class SmartTubCleanupCycle(SmartTubSensor):
-    """The state of the cleanup cycle."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "Cleanup Cycle", "cleanupCycle")
 
 
 class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
@@ -99,7 +68,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "primary filtration cycle", "primaryFiltration"
+            coordinator, spa, "primary filtration cycle", "primary_filtration"
         )
 
     @property
@@ -112,10 +81,10 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         """Return the state attributes."""
         state = self._state
         return {
-            ATTR_DURATION: state["duration"],
-            ATTR_LAST_UPDATED: state["lastUpdated"],
-            ATTR_MODE: state["mode"].lower(),
-            ATTR_START_HOUR: state["startHour"],
+            ATTR_DURATION: state.duration,
+            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_MODE: state.mode.name.lower(),
+            ATTR_START_HOUR: state.start_hour,
         }
 
 
@@ -125,19 +94,19 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "Secondary Filtration Cycle", "secondaryFiltration"
+            coordinator, spa, "Secondary Filtration Cycle", "secondary_filtration"
         )
 
     @property
     def state(self) -> str:
         """Return the current state of the sensor."""
-        return self._state.get("status").lower()
+        return self._state.status.name.lower()
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {
-            ATTR_LAST_UPDATED: state["lastUpdated"],
-            ATTR_MODE: state["mode"].lower(),
+            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_MODE: state.mode.name.lower(),
         }

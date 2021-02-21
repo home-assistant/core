@@ -11,7 +11,7 @@ async def test_sensors(spa, setup_entry, hass, smarttub_api):
     assert state is not None
     assert state.state == "normal"
 
-    spa.get_status.return_value["state"] = "BAD"
+    spa.get_status.return_value.state = "BAD"
     await trigger_update(hass)
     state = hass.states.get(entity_id)
     assert state is not None
