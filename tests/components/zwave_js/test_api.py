@@ -3,8 +3,8 @@ import json
 from unittest.mock import patch
 
 from zwave_js_server.const import LogLevel
-from zwave_js_server.exceptions import InvalidNewValue
 from zwave_js_server.event import Event
+from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 
 from homeassistant.components.zwave_js.api import (
     CONFIG,
@@ -247,8 +247,8 @@ async def test_set_config_parameter(
 
     with patch(
         "homeassistant.components.zwave_js.api.async_set_config_parameter",
-        side_effect=InvalidNewValue,
-    ):
+    ) as set_param_mock:
+        set_param_mock.side_effect = InvalidNewValue
         await ws_client.send_json(
             {
                 ID: 2,
@@ -263,8 +263,45 @@ async def test_set_config_parameter(
 
         msg = await ws_client.receive_json()
 
-    assert len(client.async_send_command.call_args_list) == 0
-    assert not msg["result"]
+        assert len(client.async_send_command.call_args_list) == 0
+        assert not msg["success"] and msg["error"]["code"] == "not_supported"
+
+        set_param_mock.side_effect = NotFoundError
+        await ws_client.send_json(
+            {
+                ID: 3,
+                TYPE: "zwave_js/set_config_parameter",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 52,
+                PROPERTY: 102,
+                PROPERTY_KEY: 1,
+                VALUE: 1,
+            }
+        )
+
+        msg = await ws_client.receive_json()
+
+        assert len(client.async_send_command.call_args_list) == 0
+        assert not msg["success"] and msg["error"]["code"] == "not_found"
+
+        set_param_mock.side_effect = SetValueFailed
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "zwave_js/set_config_parameter",
+                ENTRY_ID: entry.entry_id,
+                NODE_ID: 52,
+                PROPERTY: 102,
+                PROPERTY_KEY: 1,
+                VALUE: 1,
+            }
+        )
+
+        msg = await ws_client.receive_json()
+
+        assert len(client.async_send_command.call_args_list) == 0
+        assert not msg["success"] and msg["error"]["code"] == "unknown_error"
+    assert False
 
 
 async def test_dump_view(integration, hass_client):

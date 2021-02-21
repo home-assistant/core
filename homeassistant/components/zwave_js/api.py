@@ -7,13 +7,18 @@ from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.const import LogLevel
-from zwave_js_server.exceptions import InvalidNewValue, NotFoundError
+from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.const import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+    ERR_UNKNOWN_ERROR,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -313,12 +318,31 @@ async def websocket_set_config_parameter(
         result = await async_set_config_parameter(
             node, value, property_, property_key=property_key
         )
-    except (InvalidNewValue, NotFoundError, NotImplementedError):
-        result = None
+    except NotFoundError as err:
+        connection.send_error(
+            msg[ID],
+            ERR_NOT_FOUND,
+            err.args,
+        )
+        return
+    except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
+        if type(err) == NotFoundError:
+            code = ERR_NOT_FOUND
+        elif type(err) in (InvalidNewValue, NotImplementedError):
+            code = ERR_NOT_SUPPORTED
+        else:
+            code = ERR_UNKNOWN_ERROR
+
+        connection.send_error(
+            msg[ID],
+            code,
+            f"{type(err).__name__}: {','.join(err.args)}",
+        )
+        return
 
     connection.send_result(
         msg[ID],
-        bool(result),
+        str(result),
     )
 
 
