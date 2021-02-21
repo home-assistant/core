@@ -74,7 +74,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         if self.is_on:
             await self.toggle()
 
-    async def toggle(self) -> None:
+    async def async_toggle(self, **kwargs) -> None:
         """Toggle the pump on or off."""
         await self.pump.toggle()
         await self.coordinator.async_request_refresh()
