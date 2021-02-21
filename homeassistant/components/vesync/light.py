@@ -84,4 +84,4 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
     @property
     def brightness(self):
         """Get dimmer brightness."""
-        return math.ceil(int(self.dimmer.brightness) / 100) * 255
+        return math.round((int(self.dimmer.brightness) / 100) * 255)
