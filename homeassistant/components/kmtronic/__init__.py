@@ -1,18 +1,24 @@
 """The kmtronic integration."""
 import asyncio
+from datetime import timedelta
+import logging
 
+import aiohttp
+import async_timeout
 from pykmtronic.auth import Auth
 from pykmtronic.hub import KMTronicHubAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     CONF_HOSTNAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    DATA_COORDINATOR,
     DATA_HOST,
     DATA_HUB,
     DOMAIN,
@@ -22,6 +28,8 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["switch"]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -41,12 +49,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     hub = KMTronicHubAPI(auth)
 
+    async def async_update_data():
+        try:
+            async with async_timeout.timeout(10):
+                await hub.async_update_relays()
+        except aiohttp.client_exceptions.ClientConnectorError as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{MANUFACTURER} {hub.name}",
+        update_method=async_update_data,
+        update_interval=timedelta(seconds=30),
+    )
+
+    try:
+        await coordinator.async_refresh()
+    except UpdateFailed as err:
+        raise ConfigEntryNotReady from err
+
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    data = hass.data[DOMAIN][entry.entry_id] = {}
-    data[DATA_HUB] = hub
-    data[DATA_HOST] = entry.data[DATA_HOST]
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_HUB: hub,
+        DATA_HOST: entry.data[DATA_HOST],
+        DATA_COORDINATOR: coordinator,
+    }
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(

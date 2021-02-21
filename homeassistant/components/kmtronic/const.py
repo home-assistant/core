@@ -8,6 +8,7 @@ CONF_PASSWORD = "password"
 
 DATA_HUB = "hub"
 DATA_HOST = "host"
+DATA_COORDINATOR = "coordinator"
 
 MANUFACTURER = "KMtronic"
 ATTR_MANUFACTURER = "manufacturer"
