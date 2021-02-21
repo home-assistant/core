@@ -181,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with timeout(CONNECT_TIMEOUT):
             await client.connect()
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+        LOGGER.error(err)
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
