@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered[CONF_ACCESS_TOKEN] = token
         _, hub_name = await _validate_input(self._discovered)
         self._discovered[CONF_NAME] = hub_name
-        
+
     async def async_step_zeroconf(
         self, discovery_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
@@ -138,9 +138,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=data,
                 )
 
+        if CONF_ACCESS_TOKEN in self._discovered:
+            data_schema = TOKEN_SCHEMA
+        else:
+            data_schema = DISCOVERY_SCHEMA
+
         return self.async_show_form(
             step_id="confirm",
-            data_schema=TOKEN_SCHEMA if self._token else DISCOVERY_SCHEMA,
+            data_schema=data_schema,
             errors=errors,
             description_placeholders=self._discovered,
         )
