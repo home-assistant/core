@@ -1,5 +1,4 @@
 """Config flow to configure Xiaomi Miio."""
-from functools import partial
 import logging
 
 import voluptuous as vol
