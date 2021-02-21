@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         discovered = {CONF_HOST: host}
-        token = await _async_try_get_token_for_host(host)
+        token = await _async_try_get_token_for_host(self.hass, host)
         if token:
             discovered[CONF_ACCESS_TOKEN] = token
             _, hub_name = await _validate_input(self.hass, discovered)
