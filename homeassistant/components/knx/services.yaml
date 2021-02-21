@@ -15,7 +15,7 @@ send:
       example: "[0, 4]"
     type:
       name: "Value type"
-      description: "If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      description: "Optional. If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
       required: false
       example: "temperature"
       selector:
@@ -40,7 +40,7 @@ event_register:
       example: "1/1/0"
     remove:
       name: "Remove event registration"
-      description: "If `True` the group address will be removed."
+      description: "Optional. If `True` the group address will be removed."
       required: false
       default: false
       selector:
@@ -64,25 +64,27 @@ exposure_register:
         text:
     entity_id:
       name: "Entity"
-      description: "Entity id to be exposed."
+      description: "Entity id whose state or attribute shall be exposed."
       required: true
       example: "light.kitchen"
       selector:
         entity:
     attribute:
       name: "Entity attribute"
-      description: "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
+      description: "Optional. Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
       required: false
       example: "brightness"
     default:
       name: "Default value"
-      description: "Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
+      description: "Optional. Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
       required: false
       example: "0"
     remove:
       name: "Remove exposure"
-      description: "If `True` the exposure will be removed. Only `address` is required for removal."
+      description: "Optional. If `True` the exposure will be removed. Only `address` is required for removal."
       required: false
       default: false
       selector:
         boolean:
+reload:
+  description: "Reload KNX configuration."
