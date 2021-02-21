@@ -10,17 +10,11 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-    """Set up the Hive thermostat.
-
-    No longer in use.
-    """
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN][entry.entry_id]
-    devices = hive.devices.get("switch")
+    hive = hass.data[DOMAIN]["entries"][entry.entry_id]
+    devices = hive.session.devices.get("switch")
     entities = []
     if devices:
         for dev in devices:
