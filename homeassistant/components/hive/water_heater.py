@@ -36,12 +36,6 @@ HASS_TO_HIVE_STATE = {
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 
-    """Set up the Hive thermostat.
-
-    No longer in use.
-    """
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 

@@ -15,12 +15,6 @@ DEVICETYPE = {
 }
 
 
-    """Set up the Hive thermostat.
-
-    No longer in use.
-    """
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 

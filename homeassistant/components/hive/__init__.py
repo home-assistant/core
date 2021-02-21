@@ -73,7 +73,7 @@ async def async_setup_entry(hass, entry):
 
 
     try:
-        hive.devices = await hive.session.startSession(hive_config)
+        devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
