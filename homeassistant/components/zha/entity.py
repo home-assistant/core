@@ -267,7 +267,11 @@ class ZhaGroupEntity(BaseZhaEntity):
     @callback
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
-        self.async_schedule_update_ha_state(True)
+        # Delay to ensure that we get updates from all members before updating the group
+        self.hass.loop.call_later(
+            0.2,
+            lambda: self.async_schedule_update_ha_state(True),
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""
