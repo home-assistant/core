@@ -167,6 +167,24 @@ async def test_cron_and_meter(hass, legacy_patchable_time):
     assert not await async_setup_component(hass, DOMAIN, config)
 
 
+async def test_both_cron_and_meter(hass, legacy_patchable_time):
+    """Test cron pattern and meter type passes in different meter."""
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "cron": "0 0 1 * *",
+            },
+            "water_bill": {
+                "source": "sensor.water",
+                "cycle": "hourly",
+            },
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+
 async def test_cron_and_offset(hass, legacy_patchable_time):
     """Test cron pattern and offset fails."""
 
