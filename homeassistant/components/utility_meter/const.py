@@ -36,6 +36,7 @@ CONF_CRON_PATTERN = "cron"
 
 ATTR_TARIFF = "tariff"
 ATTR_VALUE = "value"
+ATTR_CRON_PATTERN = "cron pattern"
 
 SIGNAL_START_PAUSE_METER = "utility_meter_start_pause"
 SIGNAL_RESET_METER = "utility_meter_reset"
