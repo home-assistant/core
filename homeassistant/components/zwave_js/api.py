@@ -31,11 +31,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
-<<<<<<< HEAD
     websocket_api.async_register_command(hass, websocket_get_config_parameters)
-=======
-    websocket_api.async_register_command(hass, websocket_get_configuration_values)
->>>>>>> 5bb3567170... Add get_configuration_values websocket command to zwave_js
     hass.http.register_view(DumpView)  # type: ignore
 
 
