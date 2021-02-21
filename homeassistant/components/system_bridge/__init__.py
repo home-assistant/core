@@ -7,15 +7,10 @@ from typing import Any, Dict, Optional
 import aiohttp
 import async_timeout
 from systembridge import Bridge
+from systembridge.client import BridgeClient
 
-from homeassistant.components.mqtt.mixins import (
-    CONF_CONNECTIONS,
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_SW_VERSION,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
@@ -43,8 +38,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up System Bridge from a config entry."""
 
-    session = aiohttp_client.async_get_clientsession(hass)
-    client = Bridge(session, entry.data[CONF_HOST], entry.data[CONF_API_KEY])
+    client = Bridge(
+        BridgeClient(aiohttp_client.async_get_clientsession(hass)),
+        f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}",
+        entry.data[CONF_API_KEY],
+    )
 
     async def async_update_data() -> Bridge:
         """Fetch data from Bridge."""
@@ -153,11 +151,11 @@ class BridgeDeviceEntity(BridgeEntity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information about this System Bridge instance."""
         return {
-            CONF_CONNECTIONS: {
+            "connections": {
                 (dr.CONNECTION_NETWORK_MAC, self._default_interface["mac"])
             },
-            CONF_MANUFACTURER: self._manufacturer,
-            CONF_MODEL: self._model,
-            CONF_NAME: self._hostname,
-            CONF_SW_VERSION: self._version,
+            "manufacturer": self._manufacturer,
+            "model": self._model,
+            "name": self._hostname,
+            "sw_version": self._version,
         }

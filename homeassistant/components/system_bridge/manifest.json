@@ -4,5 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/system_bridge",
   "requirements": ["systembridge==0.1.0"],
-  "codeowners": ["@timmo001"]
+  "codeowners": ["@timmo001"],
+  "zeroconf": ["_system-bridge._tcp.local."],
+  "after_dependencies": ["zeroconf"]
 }
