@@ -2,6 +2,8 @@
 
 from smarttub import SpaPump
 
+from . import trigger_update
+
 
 async def test_pumps(spa, setup_entry, hass):
     """Test pump entities."""
@@ -43,4 +45,19 @@ async def test_pumps(spa, setup_entry, hass):
             {"entity_id": entity_id},
             blocking=True,
         )
+        pump.toggle.assert_called()
+
+        pump.state = "ON"
+        await trigger_update(hass)
+        state = hass.states.get(entity_id)
+        assert state.state == "on"
+
+        pump.reset_mock()
+        await hass.services.async_call(
+            "switch",
+            "turn_off",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+        # it was turned off
         pump.toggle.assert_called()
