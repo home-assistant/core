@@ -14,7 +14,7 @@ async def test_iblinds_v2(hass, client, iblinds_v2, integration):
 
 
 async def test_ge_12730(hass, client, ge_12730, integration):
-    """Test that a GE 12730 Fan Controller v2.0 multilevel switch value is discovered as a fan."""
+    """Test GE 12730 Fan Controller v2.0 multilevel switch is discovered as a fan."""
     node = ge_12730
     assert node.device_class.specific == "Multilevel Power Switch"
 

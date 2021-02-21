@@ -382,7 +382,7 @@ def iblinds_cover_fixture(client, iblinds_v2_state):
 
 
 @pytest.fixture(name="ge_12730")
-def ge_12730_fan_fixture(client, ge_12730_state):
+def ge_12730_fixture(client, ge_12730_state):
     """Mock a GE 12730 fan controller node."""
     node = Node(client, ge_12730_state)
     client.driver.controller.nodes[node.node_id] = node
