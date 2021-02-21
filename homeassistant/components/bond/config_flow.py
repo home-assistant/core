@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_NAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .utils import BondHub
@@ -27,10 +29,14 @@ DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 TOKEN_SCHEMA = vol.Schema({})
 
 
-async def _validate_input(data: Dict[str, Any]) -> Tuple[str, Optional[str]]:
+async def _validate_input(
+    hass: HomeAssistant, data: Dict[str, Any]
+) -> Tuple[str, Optional[str]]:
     """Validate the user input allows us to connect."""
 
-    bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
+    bond = Bond(
+        data[CONF_HOST], data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
+    )
     try:
         hub = BondHub(bond)
         await hub.setup(max_devices=1)
@@ -75,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         token = await _async_try_get_token_for_host(host)
         if token:
             discovered[CONF_ACCESS_TOKEN] = token
-            _, hub_name = await _validate_input(host, token)
+            _, hub_name = await _validate_input(self.hass, discovered)
             discovered[CONF_NAME] = hub_name
         else:
             discovered[CONF_NAME] = bond_id
@@ -107,17 +113,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+            data = {
+                CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                CONF_HOST: self._discovered[CONF_HOST],
+            }
             try:
-                _, hub_name = await _validate_input(user_input)
+                _, hub_name = await _validate_input(self.hass, data)
             except InputValidationError as error:
                 errors["base"] = error.base
             else:
                 return self.async_create_entry(
                     title=hub_name,
-                    data={
-                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
-                        CONF_HOST: self._discovered[CONF_HOST],
-                    },
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -134,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                bond_id, hub_name = await _validate_input(user_input)
+                bond_id, hub_name = await _validate_input(self.hass, user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
             else:
@@ -156,14 +163,14 @@ class InputValidationError(exceptions.HomeAssistantError):
         self.base = base
 
 
-async def _async_try_get_token_for_host(host):
+async def _async_try_get_token_for_host(hass, host):
     """Try to get the token from a bond device.
 
     Failure is acceptable here since the device may have been
     online longer then the allowed setup period, and we will
     instead ask them to manually enter the token.
     """
-    bond = Bond(host, "")
+    bond = Bond(host, "", session=async_get_clientsession(hass))
     try:
         response = await bond.__get("/v2/token")
         return response.get("token")
