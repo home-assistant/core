@@ -254,7 +254,7 @@ class MatrixBot:
     async def compute_commands(self):
         """Set up the variables for a different kind of command types."""
 
-        async def _set_word_command(_room_id):
+        async def _set_word_command(_room_id, _command):
             """Set the word commands."""
 
             _room_id = await self.resolve_room_id(_room_id)
@@ -275,7 +275,7 @@ class MatrixBot:
             _LOGGER.debug("Word command: %s", str(_command))
             self._word_commands[_room_id][_command[CONF_WORD]] = _command
 
-        async def _set_expression_command(_room_id):
+        async def _set_expression_command(_room_id, _command):
             """Set the expression commands."""
 
             _room_id = await self.resolve_room_id(_room_id)
@@ -321,11 +321,11 @@ class MatrixBot:
 
             if _command.get(CONF_WORD):
                 for _room_id in _command[CONF_ROOMS]:
-                    await _set_word_command(_room_id)
+                    await _set_word_command(_room_id, _command)
 
             else:
                 for _room_id in _command[CONF_ROOMS]:
-                    await _set_expression_command(_room_id)
+                    await _set_expression_command(_room_id, _command)
 
         _LOGGER.debug("Word commands: %s", str(self._word_commands))
         _LOGGER.debug("Expression commands: %s", str(self._expression_commands))
