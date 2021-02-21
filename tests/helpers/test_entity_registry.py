@@ -858,7 +858,6 @@ async def test_disable_config_entry_disables_entities(hass, registry):
     assert entry2.disabled_by == "user"
     # The device was re-enabled, so entity disabled by the device will be re-enabled too
     entry3 = registry.async_get(entry3.entity_id)
-    assert entry3.disabled
     assert not entry3.disabled_by
 
 
