@@ -114,6 +114,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors, info = await self._async_get_info(user_input)
         if errors is None:
+            # Check if already configured
+            await self.async_set_unique_id(user_input["host"])
+            self._abort_if_unique_id_configured(updates={CONF_HOST: user_input["host"]})
+
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -138,6 +142,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors, info = await self._async_get_info(user_input)
         if errors is None:
+            # Check if already configured
+            await self.async_set_unique_id(user_input["host"])
+            self._abort_if_unique_id_configured(updates={CONF_HOST: user_input["host"]})
+
             return self.async_create_entry(title=info["title"], data=user_input)
         elif errors["base"] == "cannot_connect" or errors["base"] == "invalid_host":
             return await self.async_step_user(user_input)
