@@ -31,7 +31,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
-    websocket_api.async_register_command(hass, websocket_get_configuration_values)
+    websocket_api.async_register_command(hass, websocket_get_config_parameters)
     hass.http.register_view(DumpView)  # type: ignore
 
 
@@ -267,16 +267,16 @@ async def websocket_remove_node(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "zwave_js/get_configuration_values",
+        vol.Required(TYPE): "zwave_js/get_config_parameters",
         vol.Required(ENTRY_ID): str,
         vol.Required(NODE_ID): int,
     }
 )
 @callback
-def websocket_get_configuration_values(
+def websocket_get_config_parameters(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
-    """Get a list of configuration values for a Z-Wave node."""
+    """Get a list of configuration parameterss for a Z-Wave node."""
     entry_id = msg[ENTRY_ID]
     node_id = msg[NODE_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
