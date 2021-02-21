@@ -49,7 +49,7 @@ async def test_shutdown_before_startup_finishes(hass):
     with patch.object(hass.data[DATA_INSTANCE], "engine"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
-        hass.stop()
+        await hass.async_stop()
 
     run_info = await hass.async_add_executor_job(run_information_with_session, session)
 
