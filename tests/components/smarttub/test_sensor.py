@@ -3,7 +3,7 @@
 from . import trigger_update
 
 
-async def test_state_update(spa, setup_entry, hass, smarttub_api):
+async def test_state_update(spa, setup_entry, hass):
     """Test the state entity."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_state"
