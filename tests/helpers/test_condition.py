@@ -34,6 +34,7 @@ async def test_and_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "And Condition",
             "condition": "and",
             "conditions": [
                 {
@@ -71,6 +72,7 @@ async def test_and_condition_with_template(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Template Condition",
                     "condition": "template",
                     "value_template": '{{ states.sensor.temperature.state == "100" }}',
                 },
@@ -98,6 +100,7 @@ async def test_or_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "Or Condition",
             "condition": "or",
             "conditions": [
                 {
@@ -159,6 +162,7 @@ async def test_not_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "Not Condition",
             "condition": "not",
             "conditions": [
                 {
@@ -226,36 +230,45 @@ async def test_not_condition_with_template(hass):
 
 async def test_time_window(hass):
     """Test time condition windows."""
-    sixam = dt.parse_time("06:00:00")
-    sixpm = dt.parse_time("18:00:00")
+    sixam = "06:00:00"
+    sixpm = "18:00:00"
+
+    test1 = await condition.async_from_config(
+        hass,
+        {"alias": "Time Cond", "condition": "time", "after": sixam, "before": sixpm},
+    )
+    test2 = await condition.async_from_config(
+        hass,
+        {"alias": "Time Cond", "condition": "time", "after": sixpm, "before": sixam},
+    )
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=3),
     ):
-        assert not condition.time(hass, after=sixam, before=sixpm)
-        assert condition.time(hass, after=sixpm, before=sixam)
+        assert not test1(hass)
+        assert test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=9),
     ):
-        assert condition.time(hass, after=sixam, before=sixpm)
-        assert not condition.time(hass, after=sixpm, before=sixam)
+        assert test1(hass)
+        assert not test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=15),
     ):
-        assert condition.time(hass, after=sixam, before=sixpm)
-        assert not condition.time(hass, after=sixpm, before=sixam)
+        assert test1(hass)
+        assert not test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=21),
     ):
-        assert not condition.time(hass, after=sixam, before=sixpm)
-        assert condition.time(hass, after=sixpm, before=sixam)
+        assert not test1(hass)
+        assert test2(hass)
 
 
 async def test_time_using_input_datetime(hass):
@@ -439,6 +452,7 @@ async def test_multiple_states(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "State Condition",
                     "condition": "state",
                     "entity_id": "sensor.temperature",
                     "state": ["100", "200"],
@@ -709,6 +723,7 @@ async def test_numeric_state_multiple_entities(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Numeric State Condition",
                     "condition": "numeric_state",
                     "entity_id": ["sensor.temperature_1", "sensor.temperature_2"],
                     "below": 50,
@@ -911,6 +926,7 @@ async def test_zone_multiple_entities(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Zone Condition",
                     "condition": "zone",
                     "entity_id": ["device_tracker.person_1", "device_tracker.person_2"],
                     "zone": "zone.home",

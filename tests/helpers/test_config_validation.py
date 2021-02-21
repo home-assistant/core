@@ -358,6 +358,11 @@ def test_service_schema():
             "service": "homeassistant.turn_on",
             "entity_id": ["light.kitchen", "light.ceiling"],
         },
+        {
+            "service": "light.turn_on",
+            "entity_id": "all",
+            "alias": "turn on kitchen lights",
+        },
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
