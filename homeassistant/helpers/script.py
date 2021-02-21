@@ -18,7 +18,7 @@ from typing import (
     cast,
 )
 
-from async_timeout import timeout
+import async_timeout
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -339,7 +339,7 @@ class _ScriptRun:
         delay = delay.total_seconds()
         self._changed()
         try:
-            async with timeout(delay):
+            async with async_timeout.timeout(delay):
                 await self._stop.wait()
         except asyncio.TimeoutError:
             pass
@@ -383,7 +383,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with timeout(delay) as to_context:
+            async with async_timeout.timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
@@ -661,7 +661,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with timeout(delay) as to_context:
+            async with async_timeout.timeout(delay) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
