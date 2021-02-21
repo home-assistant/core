@@ -149,4 +149,9 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_USERCODES: self.usercodes,
         }
         self.hass.config_entries.async_update_entry(existing_entry, data=new_entry)
+
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(existing_entry.entry_id)
+        )
+
         return self.async_abort(reason="reauth_successful")
