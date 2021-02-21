@@ -77,8 +77,8 @@ class AsusWrtSensorDataHandler:
         ret_dict: Dict[str, Any] = {}
         try:
             datas = await self._api.async_get_bytes_total()
-        except OSError as ex:
-            raise UpdateFailed(ex)
+        except OSError as exc:
+            raise UpdateFailed from exc
 
         ret_dict[SENSOR_RX_BYTES] = datas[0]
         ret_dict[SENSOR_TX_BYTES] = datas[1]
@@ -90,8 +90,8 @@ class AsusWrtSensorDataHandler:
         ret_dict: Dict[str, Any] = {}
         try:
             rates = await self._api.async_get_current_transfer_rates()
-        except OSError as ex:
-            raise UpdateFailed(ex)
+        except OSError as exc:
+            raise UpdateFailed from exc
 
         ret_dict[SENSOR_RX_RATES] = rates[0]
         ret_dict[SENSOR_TX_RATES] = rates[1]
@@ -195,8 +195,8 @@ class AsusWrtRouter:
         self._connected_devices = 0
         self._connect_error = False
 
-        self._sensor_data_handler: AsusWrtSensorDataHandler = None
-        self._sensor_coordinators: Dict[str, Any] = {}
+        self._sensors_data_handler: AsusWrtSensorDataHandler = None
+        self._sensors_coordinator: Dict[str, Any] = {}
 
         self._on_close = []
 
@@ -236,7 +236,7 @@ class AsusWrtRouter:
         await self.update_devices()
 
         # Init Sensors
-        await self.init_sensor_coordinators()
+        await self.init_sensors_coordinator()
 
         self.async_on_close(
             async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
@@ -267,8 +267,8 @@ class AsusWrtRouter:
             _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
         self._connected_devices = len(wrt_devices)
-        if self._sensor_data_handler:
-            self._sensor_data_handler.update_device_count(self._connected_devices)
+        if self._sensors_data_handler:
+            self._sensors_data_handler.update_device_count(self._connected_devices)
 
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
@@ -293,37 +293,37 @@ class AsusWrtRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
-    async def init_sensor_coordinators(self) -> None:
+    async def init_sensors_coordinator(self) -> None:
         """Init AsusWrt sensors coordinators."""
-        if self._sensor_data_handler:
+        if self._sensors_data_handler:
             return
 
-        self._sensor_data_handler = AsusWrtSensorDataHandler(self.hass, self._api)
-        self._sensor_data_handler.update_device_count(self._connected_devices)
+        self._sensors_data_handler = AsusWrtSensorDataHandler(self.hass, self._api)
+        self._sensors_data_handler.update_device_count(self._connected_devices)
 
-        conn_dev_coordinator = await self._sensor_data_handler.get_coordinator(
+        conn_dev_coordinator = await self._sensors_data_handler.get_coordinator(
             SENSORS_TYPE_COUNT
         )
         if conn_dev_coordinator:
-            self._sensor_coordinators[SENSORS_TYPE_COUNT] = {
+            self._sensors_coordinator[SENSORS_TYPE_COUNT] = {
                 KEY_COORDINATOR: conn_dev_coordinator,
                 KEY_SENSORS: [SENSOR_CONNECTED_DEVICE],
             }
 
-        bytes_coordinator = await self._sensor_data_handler.get_coordinator(
+        bytes_coordinator = await self._sensors_data_handler.get_coordinator(
             SENSORS_TYPE_BYTES
         )
         if bytes_coordinator:
-            self._sensor_coordinators[SENSORS_TYPE_BYTES] = {
+            self._sensors_coordinator[SENSORS_TYPE_BYTES] = {
                 KEY_COORDINATOR: bytes_coordinator,
                 KEY_SENSORS: [SENSOR_RX_BYTES, SENSOR_TX_BYTES],
             }
 
-        rates_coordinator = await self._sensor_data_handler.get_coordinator(
+        rates_coordinator = await self._sensors_data_handler.get_coordinator(
             SENSORS_TYPE_RATES
         )
         if rates_coordinator:
-            self._sensor_coordinators[SENSORS_TYPE_RATES] = {
+            self._sensors_coordinator[SENSORS_TYPE_RATES] = {
                 KEY_COORDINATOR: rates_coordinator,
                 KEY_SENSORS: [SENSOR_RX_RATES, SENSOR_TX_RATES],
             }
@@ -388,9 +388,9 @@ class AsusWrtRouter:
         return self._devices
 
     @property
-    def sensors_coordinators(self) -> Dict[str, Any]:
+    def sensors_coordinator(self) -> Dict[str, Any]:
         """Return sensors coordinators."""
-        return self._sensor_coordinators
+        return self._sensors_coordinator
 
     @property
     def api(self) -> AsusWrt:

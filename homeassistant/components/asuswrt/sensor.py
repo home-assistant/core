@@ -86,7 +86,7 @@ async def async_setup_entry(
     router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
     entities = []
 
-    for sensor_data in router.sensors_coordinators.values():
+    for sensor_data in router.sensors_coordinator.values():
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
         for sensor_key in sensors:
