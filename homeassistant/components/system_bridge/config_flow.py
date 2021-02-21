@@ -35,9 +35,6 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    _LOGGER.warning("validate_input")
-    _LOGGER.warning(data)
-
     if data.get(CONF_HOST, None) is None:
         raise InvalidHost
     if data.get(CONF_PORT, None) is None:
@@ -64,9 +61,6 @@ async def validate_input(hass: core.HomeAssistant, data):
     except BRIDGE_CONNECTION_ERRORS:
         raise CannotConnect
 
-    _LOGGER.warning(interface)
-    _LOGGER.warning(interface["mac"])
-
     return {"hostname": hostname, "mac": interface["mac"]}
 
 
@@ -83,9 +77,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_info(self, user_input=None):
         errors = {}
-
-        _LOGGER.warning("_async_get_info")
-        _LOGGER.warning(user_input)
 
         try:
             info = await validate_input(self.hass, user_input)
@@ -110,8 +101,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input = {**self._input, **user_input}
             else:
                 user_input = self._input
-        _LOGGER.warning("async_step_user")
-        _LOGGER.warning(user_input)
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -136,8 +125,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input = {**self._input, **user_input}
             else:
                 user_input = self._input
-        _LOGGER.warning("async_step_authenticate")
-        _LOGGER.warning(user_input)
         if user_input is None or user_input.get(CONF_API_KEY, None) is None:
             return self.async_show_form(
                 step_id="authenticate",
@@ -164,28 +151,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
-        _LOGGER.warning(discovery_info)
         fqdn = discovery_info["properties"].get("fqdn", None)
         host = (
             fqdn
             if fqdn is not None
             else discovery_info["properties"].get("host", discovery_info[CONF_HOST])
         )
+        mac = discovery_info["properties"].get("mac", None)
 
         # Check if already configured
-        await self.async_set_unique_id(host)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-
-        for entry in self._async_current_entries():
-            # Is this address or IP address already configured?
-            if CONF_HOST in entry.data and entry.data[CONF_HOST] == host:
-                if not entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={**entry.data, CONF_HOST: discovery_info[CONF_HOST]},
-                        unique_id=host,
-                    )
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: mac})
 
         self._name = host
         self._input = {
