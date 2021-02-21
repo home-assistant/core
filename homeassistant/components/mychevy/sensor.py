@@ -159,7 +159,10 @@ class EVSensor(Entity):
     def async_update_callback(self):
         """Update state."""
         if self._car is not None:
-            self._state = getattr(self._car, self._attr, None)
+            if self._unit_of_measurement == "miles":
+                self._state = round(getattr(self._car, self._attr, None))
+            else:
+                self._state = getattr(self._car, self._attr, None)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
             self.async_write_ha_state()
