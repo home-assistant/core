@@ -92,7 +92,6 @@ class StreamOutput:
         self._cursor = None
         self._event = asyncio.Event()
         self._segments = deque(maxlen=deque_maxlen)
-        self._deque_maxlen = deque_maxlen
 
     @property
     def name(self) -> str:
@@ -160,7 +159,7 @@ class StreamOutput:
         """Handle cleanup."""
         self._event.set()
         self._idle_timer.clear()
-        self._segments = deque(maxlen=self._deque_maxlen)
+        self._segments = deque(maxlen=self._segments.maxlen)
 
 
 class StreamView(HomeAssistantView):
