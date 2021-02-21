@@ -6,6 +6,7 @@ import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
+from systembridge.objects.network import Interface, Network
 from systembridge.objects.os import Os
 import voluptuous as vol
 
@@ -44,25 +45,29 @@ async def validate_input(hass: core.HomeAssistant, data):
     if data.get(CONF_API_KEY, None) is None:
         raise InvalidAuth
 
-    client = Bridge(
+    bridge = Bridge(
         BridgeClient(aiohttp_client.async_get_clientsession(hass)),
         f"http://{data[CONF_HOST]}:{data[CONF_PORT]}",
         data[CONF_API_KEY],
     )
 
-    title = data[CONF_HOST]
+    hostname = data[CONF_HOST]
     try:
         async with async_timeout.timeout(10):
-            os: Os = await client.async_get_os()
+            os: Os = await bridge.async_get_os()
+            network: Network = await bridge.async_get_network()
             if os.hostname is not None:
-                title = os.hostname
+                hostname = os.hostname
+            interface: Interface = network.interfaces[network.interfaceDefault]
     except BridgeAuthenticationException:
         raise InvalidAuth
     except BRIDGE_CONNECTION_ERRORS:
         raise CannotConnect
 
-    # Return info that you want to store in the config entry.
-    return {"title": title}
+    _LOGGER.warning(interface)
+    _LOGGER.warning(interface["mac"])
+
+    return {"hostname": hostname, "mac": interface["mac"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -115,10 +120,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors, info = await self._async_get_info(user_input)
         if errors is None:
             # Check if already configured
-            await self.async_set_unique_id(user_input["host"])
-            self._abort_if_unique_id_configured(updates={CONF_HOST: user_input["host"]})
+            await self.async_set_unique_id(info["mac"])
+            self._abort_if_unique_id_configured(updates={CONF_HOST: info["mac"]})
 
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=info["hostname"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -143,10 +148,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors, info = await self._async_get_info(user_input)
         if errors is None:
             # Check if already configured
-            await self.async_set_unique_id(user_input["host"])
-            self._abort_if_unique_id_configured(updates={CONF_HOST: user_input["host"]})
+            await self.async_set_unique_id(info["mac"])
+            self._abort_if_unique_id_configured(updates={CONF_HOST: info["mac"]})
 
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=info["hostname"], data=user_input)
         elif errors["base"] == "cannot_connect" or errors["base"] == "invalid_host":
             return await self.async_step_user(user_input)
 
