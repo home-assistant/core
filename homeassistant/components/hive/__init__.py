@@ -9,13 +9,7 @@ from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -24,15 +18,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    ATTR_ONOFF,
-    ATTR_TIME_PERIOD,
-    DOMAIN,
-    PLATFORMS,
-    SERVICE_BOOST_HEATING,
-    SERVICE_BOOST_HOT_WATER,
-    SERVICES,
-)
+from .const import DOMAIN, PLATFORMS, SERVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,26 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
         )
     },
     extra=vol.ALLOW_EXTRA,
-)
-
-BOOST_HEATING_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TIME_PERIOD): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
-        ),
-        vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
-    }
-)
-
-BOOST_HOT_WATER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Optional(ATTR_TIME_PERIOD, default="00:30:00"): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
-        ),
-        vol.Required(ATTR_ONOFF): cv.string,
-    }
 )
 
 
@@ -99,48 +65,6 @@ async def async_setup_entry(hass, entry):
     hive = Hive(websession)
     hive_config = dict(entry.data)
 
-    if DOMAIN not in config:
-        return True
-
-        entity_lookup = hass.data[DOMAIN]["entity_lookup"]
-        device = entity_lookup.get(service.data[ATTR_ENTITY_ID])
-        if not device:
-            # log or raise error
-            _LOGGER.error("Cannot boost entity id entered")
-            return
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                },
-            )
-        )
-    return True
-
-        await hive.heating.turn_boost_on(device, minutes, temperature)
-
-    async def hot_water_boost(service):
-        """Handle the service call."""
-        entity_lookup = hass.data[DOMAIN]["entity_lookup"]
-        device = entity_lookup.get(service.data[ATTR_ENTITY_ID])
-        if not device:
-            # log or raise error
-            _LOGGER.error("Cannot boost entity id entered")
-            return
-
-        minutes = service.data[ATTR_TIME_PERIOD]
-        mode = service.data[ATTR_ONOFF]
-
-        if mode == "on":
-            await hive.hotwater.turn_boost_on(device, minutes)
-        elif mode == "off":
-            await hive.hotwater.turn_boost_off(device)
-
     hive_config["options"] = {}
     hive_config["options"].update(
         {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
@@ -165,20 +89,6 @@ async def async_setup_entry(hass, entry):
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
             )
-            if component == "climate":
-                hass.services.async_register(
-                    DOMAIN,
-                    SERVICE_BOOST_HEATING,
-                    heating_boost,
-                    schema=BOOST_HEATING_SCHEMA,
-                )
-            if component == "water_heater":
-                hass.services.async_register(
-                    DOMAIN,
-                    SERVICE_BOOST_HOT_WATER,
-                    hot_water_boost,
-                    schema=BOOST_HOT_WATER_SCHEMA,
-                )
 
     return True
 
