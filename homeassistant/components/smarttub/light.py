@@ -11,7 +11,6 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.const import ATTR_MODE
 
 from .const import (
     DEFAULT_LIGHT_INTENSITY,
@@ -105,7 +104,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
 
-        mode = SpaLight.LightMode[kwargs.get(ATTR_MODE, DEFAULT_LIGHT_MODE)]
+        mode = SpaLight.LightMode[DEFAULT_LIGHT_MODE]
 
         if ATTR_BRIGHTNESS in kwargs:
             intensity = self._hass_to_smarttub_brightness(kwargs[ATTR_BRIGHTNESS])
