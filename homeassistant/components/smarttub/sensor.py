@@ -1,17 +1,15 @@
 """Platform for sensor integration."""
 import logging
 
-from .const import (
-    ATTR_DURATION,
-    ATTR_LAST_UPDATED,
-    ATTR_MODE,
-    ATTR_START_HOUR,
-    DOMAIN,
-    SMARTTUB_CONTROLLER,
-)
+from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DURATION = "duration"
+ATTR_LAST_UPDATED = "last_updated"
+ATTR_MODE = "mode"
+ATTR_START_HOUR = "start_hour"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
