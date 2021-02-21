@@ -10,14 +10,15 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
-        "description": "Please enter the api-key you set in your configuration for {name}."
+        "description": "Please enter the API Key you set in your configuration for {name}."
       },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
-        }
+        },
+        "description": "Please enter your connection details."
       }
     },
     "error": {

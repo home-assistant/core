@@ -15,14 +15,15 @@
                 "data": {
                     "api_key": "API Key"
                 },
-                "description": "Please enter the api-key you set in your configuration for {name}."
+                "description": "Please enter the API Key you set in your configuration for {name}."
             },
             "user": {
                 "data": {
                     "api_key": "API Key",
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "description": "Please enter your connection details."
             }
         }
     },

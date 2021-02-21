@@ -2,11 +2,10 @@
 import logging
 from typing import Any, Dict, Optional
 
-from aiohttp.client_exceptions import ClientResponseError
 import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
-from systembridge.exceptions import BridgeAuthenticationException, BridgeException
+from systembridge.exceptions import BridgeAuthenticationException
 from systembridge.objects.os import Os
 import voluptuous as vol
 
@@ -15,7 +14,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ async def validate_input(hass: core.HomeAssistant, data):
                 title = os.hostname
     except BridgeAuthenticationException:
         raise InvalidAuth
-    except (BridgeException, ClientResponseError):
+    except BRIDGE_CONNECTION_ERRORS:
         raise CannotConnect
 
     # Return info that you want to store in the config entry.

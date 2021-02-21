@@ -4,10 +4,10 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict, Optional
 
-import aiohttp
 import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
+from systembridge.exceptions import BridgeAuthenticationException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 await client.async_get_os()
                 await client.async_get_system()
             return client
-        except aiohttp.ClientError as exception:
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
             raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
