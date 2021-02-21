@@ -112,9 +112,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
-            if CONF_ACCESS_TOKEN not in self._discovered:
-                await self._async_try_automatic_configure()
-
             if CONF_ACCESS_TOKEN in self._discovered:
                 return self.async_create_entry(
                     title=self._discovered[CONF_NAME],
