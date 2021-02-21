@@ -1,11 +1,12 @@
 """Test the kmtronic config flow."""
+from unittest.mock import Mock, patch
+
 from aiohttp import ClientConnectorError, ClientResponseError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
