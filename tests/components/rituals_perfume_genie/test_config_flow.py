@@ -1,5 +1,5 @@
 """Test the Rituals Perfume Genie config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
 from pyrituals import AuthenticationException
@@ -13,6 +13,13 @@ VALID_PASSWORD = "passw0rd"
 WRONG_PASSWORD = "wrong-passw0rd"
 
 
+def _mock_account(*_):
+    account = MagicMock()
+    account.authenticate = AsyncMock()
+    account.data = {CONF_EMAIL: TEST_EMAIL, ACCOUNT_HASH: "any"}
+    return account
+
+
 async def test_form(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -22,6 +29,9 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
+        "homeassistant.components.rituals_perfume_genie.config_flow.Account",
+        side_effect=_mock_account,
+    ), patch(
         "homeassistant.components.rituals_perfume_genie.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.rituals_perfume_genie.async_setup_entry",
