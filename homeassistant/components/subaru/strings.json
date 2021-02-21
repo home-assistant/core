@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Subaru Starlink Configuration",
+        "description": "Please enter your MySubaru credentials\nNOTE: Initial setup may take up to 30 seconds",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "country": "Select country"
+        }
+      },
+      "pin": {
+        "title": "Subaru Starlink Configuration",
+        "description": "Please enter your MySubaru PIN\nNOTE: All vehicles in account must have the same PIN",
+        "data": {
+          "pin": "PIN"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "incorrect_pin": "Incorrect PIN",
+      "bad_pin_format": "PIN should be 4 digits",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+
+  "options": {
+    "step": {
+      "init": {
+        "title": "Subaru Starlink Options",
+        "description": "When enabled, vehicle polling will send a remote command to your vehicle every 2 hours to obtain new sensor data. Without vehicle polling, new sensor data is only received when the vehicle automatically pushes data (normally after engine shutdown).",
+        "data": {
+          "update_enabled": "Enable vehicle polling"
+        }
+      }
+    }
+  }
+}
