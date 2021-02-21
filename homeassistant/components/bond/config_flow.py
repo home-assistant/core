@@ -61,6 +61,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._discovered: dict = None
 
+    async def _async_try_automatic_configure(self):
+        """Try to auto configure the device.
+
+        Failure is acceptable here since the device may have been
+        online longer then the allowed setup period, and we will
+        instead ask them to manually enter the token.
+        """
+        bond = Bond(self._discovered[CONF_HOST], "")
+        try:
+            response = await bond.token()
+        except ClientConnectionError:
+            return
+
+        token = response.get("token")
+        if token is None:
+            return
+
+        self._discovered[CONF_ACCESS_TOKEN] = token
+        _, self._discovered[CONF_NAME] = await _validate_input(self._discovered)
+
     async def async_step_zeroconf(
         self, discovery_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
@@ -71,25 +91,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
-        discovered = {CONF_HOST: host}
-        token = await _async_try_get_token_for_host(host)
-        if token:
-            discovered[CONF_ACCESS_TOKEN] = token
-            _, hub_name = await _validate_input(discovered)
-            discovered[CONF_NAME] = hub_name
-        else:
-            discovered[CONF_NAME] = bond_id
+        self._discovered = {CONF_HOST: host}
+        await self._async_try_automatic_configure()
 
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_HOST: discovered[CONF_HOST],
-                    CONF_NAME: discovered[CONF_NAME],
+                    CONF_HOST: self._discovered[CONF_HOST],
+                    CONF_NAME: self._discovered[CONF_NAME],
                 }
             }
         )
 
-        self._discovered = discovered
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -98,7 +111,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
-            if self._token:
+            if CONF_ACCESS_TOKEN not in self._discovered:
+                await self._async_try_automatic_configure()
+
+            if CONF_ACCESS_TOKEN in self._discovered:
                 return self.async_create_entry(
                     title=self._discovered[CONF_NAME],
                     data={
@@ -155,18 +171,3 @@ class InputValidationError(exceptions.HomeAssistantError):
         """Initialize with error base."""
         super().__init__()
         self.base = base
-
-
-async def _async_try_get_token_for_host(host):
-    """Try to get the token from a bond device.
-
-    Failure is acceptable here since the device may have been
-    online longer then the allowed setup period, and we will
-    instead ask them to manually enter the token.
-    """
-    bond = Bond(host, "")
-    try:
-        response = await bond.token()
-        return response.get("token")
-    except (ClientConnectionError, ClientResponseError):
-        return None
