@@ -320,14 +320,14 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def app_id(self):
         """ID of the current running app."""
-        if self._application:
-            return self._application["id"]
+        return self._tv.application_id
 
     @property
     def app_name(self):
         """Name of the current running app."""
-        if self._application:
-            return self._application["label"]
+        app = self._tv.applications.get(self._tv.application_id)
+        if app:
+            return app.get("label")
 
     @property
     def device_state_attributes(self):
@@ -369,7 +369,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
         elif media_type == MEDIA_TYPE_APP:
-            app = self._applications.get(media_id)
+            app = self._tv.applications.get(media_id)
             if app:
                 await self._tv.setApplication(app["intent"])
                 await self._async_update_soon()
@@ -424,7 +424,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         MEDIA_TYPE_APP, application_id, media_image_id=None
                     ),
                 )
-                for application_id, application in self._applications.items()
+                for application_id, application in self._tv.applications.items()
             ]
         else:
             children = None
@@ -506,29 +506,17 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             for chid, channel in (self._tv.channels or {}).items()
         }
 
-        if self._tv.applications:
-            self._applications = {
-                app["id"]: app for app in self._tv.applications["applications"]
-            }
-        else:
-            self._applications = {}
-
-        if self._tv.application and "component" in self._tv.application:
-            component = self._tv.application["component"]
-            appid = f"{component['className']}-{component['packageName']}"
-            self._application = self._applications.get(appid)
-        else:
-            self._application = None
-
         if self._tv.channel_active:
             self._media_content_type = MEDIA_TYPE_CHANNEL
             self._media_content_id = self._tv.channel_id
             self._media_title = self._channels.get(self._tv.channel_id)
             self._media_channel = self._channels.get(self._tv.channel_id)
-        elif self._application:
+        elif self._tv.application_id:
             self._media_content_type = MEDIA_TYPE_APP
-            self._media_content_id = self._application["id"]
-            self._media_title = self._application["label"]
+            self._media_content_id = self._tv.application_id
+            self._media_title = self._tv.applications.get(
+                self._tv.application_id, {}
+            ).get("label")
             self._media_channel = None
         else:
             self._media_content_type = None
