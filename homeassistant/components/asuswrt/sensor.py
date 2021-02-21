@@ -9,10 +9,11 @@ from homeassistant.const import (
     DATA_RATE_MEGABITS_PER_SECOND,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     DATA_ASUSWRT,
@@ -23,7 +24,7 @@ from .const import (
     SENSOR_TX_BYTES,
     SENSOR_TX_RATES,
 )
-from .router import AsusWrtRouter
+from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
 DEFAULT_PREFIX = "Asuswrt"
 
@@ -82,25 +83,35 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the sensors."""
-    router = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
     entities = []
 
-    for sensor_key in CONNECTION_SENSORS:
-        entities.append(
-            AsusWrtSensor(router, sensor_key, CONNECTION_SENSORS[sensor_key])
-        )
+    for sensor_data in router.sensors_coordinators.values():
+        coordinator = sensor_data[KEY_COORDINATOR]
+        sensors = sensor_data[KEY_SENSORS]
+        for sensor_key in sensors:
+            if sensor_key in CONNECTION_SENSORS:
+                entities.append(
+                    AsusWrtSensor(
+                        coordinator, router, sensor_key, CONNECTION_SENSORS[sensor_key]
+                    )
+                )
 
     async_add_entities(entities, True)
 
 
-class AsusWrtSensor(Entity):
+class AsusWrtSensor(CoordinatorEntity):
     """Representation of a AsusWrt sensor."""
 
     def __init__(
-        self, router: AsusWrtRouter, sensor_type: str, sensor: Dict[str, any]
+        self,
+        coordinator: DataUpdateCoordinator,
+        router: AsusWrtRouter,
+        sensor_type: str,
+        sensor: Dict[str, any],
     ) -> None:
         """Initialize a AsusWrt sensor."""
-        self._state = None
+        super().__init__(coordinator)
         self._router = router
         self._sensor_type = sensor_type
         self._name = f"{DEFAULT_PREFIX} {sensor[SENSOR_NAME]}"
@@ -111,22 +122,20 @@ class AsusWrtSensor(Entity):
         self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._default_enabled = sensor.get(SENSOR_DEFAULT_ENABLED, False)
 
-    @callback
-    def async_update_state(self) -> None:
-        """Update the AsusWrt sensor."""
-        state = self._router.sensors[self._sensor_type].value
-        if state is None:
-            self._state = STATE_UNKNOWN
-            return
-        if self._factor and isinstance(state, Number):
-            self._state = round(state / self._factor, 2)
-        else:
-            self._state = state
-
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._default_enabled
+
+    @property
+    def state(self) -> str:
+        """Return current state."""
+        state = self.coordinator.data.get(self._sensor_type)
+        if state is None:
+            return STATE_UNKNOWN
+        if self._factor and isinstance(state, Number):
+            return round(state / self._factor, 2)
+        return state
 
     @property
     def unique_id(self) -> str:
@@ -137,11 +146,6 @@ class AsusWrtSensor(Entity):
     def name(self) -> str:
         """Return the name."""
         return self._name
-
-    @property
-    def state(self) -> str:
-        """Return the state."""
-        return self._state
 
     @property
     def unit_of_measurement(self) -> str:
@@ -167,30 +171,3 @@ class AsusWrtSensor(Entity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return self._router.device_info
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @callback
-    def async_on_demand_update(self):
-        """Update state."""
-        self.async_update_state()
-        self.async_write_ha_state()
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        self._router.sensors[self._sensor_type].enable()
-        self.async_update_state()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._router.signal_sensor_update,
-                self.async_on_demand_update,
-            )
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Call when entity is removed from hass."""
-        self._router.sensors[self._sensor_type].disable()
