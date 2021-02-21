@@ -79,8 +79,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
-        _, self._discovered[CONF_NAME] = await _validate_input(self._discovered)
-
+        _, hub_name = await _validate_input(self._discovered)
+        self._discovered[CONF_NAME] = hub_name
+        
     async def async_step_zeroconf(
         self, discovery_info: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
@@ -91,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
-        self._discovered = {CONF_HOST: host}
+        self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
         await self._async_try_automatic_configure()
 
         self.context.update(
