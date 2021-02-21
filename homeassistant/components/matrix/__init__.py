@@ -447,9 +447,9 @@ class MatrixBot:
         if ATTR_URL in service.data:
             try:
                 os.unlink(_file_path)
-            except OSError as e:
+            except OSError as exception:
                 _LOGGER.warning(
-                    "The deletion of %s failed. (%s)", str(_file_path), str(e)
+                    "The deletion of %s failed. (%s)", str(_file_path), str(exception)
                 )
 
     async def resolve_room_id(self, room_id_or_alias):
