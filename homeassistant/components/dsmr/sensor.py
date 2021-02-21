@@ -7,6 +7,7 @@ from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
+import re
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -22,7 +23,7 @@ from homeassistant.const import (
     TIME_HOURS,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.util import Throttle
 
 from .const import (
@@ -192,6 +193,8 @@ async def async_setup_entry(
             ),
         ]
 
+    await _async_update_unique_ids_for_renamed_entities(hass, entry)
+
     async_add_entities(devices)
 
     min_time_between_updates = timedelta(
@@ -283,6 +286,19 @@ async def async_setup_entry(
 
     # Save the task to be able to cancel it when unloading
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
+
+
+async def _async_update_unique_ids_for_renamed_entities(hass, config_entry):
+    """Update unique_ids for existing entities in the entity registry which have been renamed."""
+    registry = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_config_entry(
+        registry, config_entry.entry_id
+    )
+
+    # Rename _Power_Tariff to _Energy_Tariff for unique_ids ending with _Power_Tariff
+    for entry in list(filter(lambda x: x.unique_id.endswith("_Power_Tariff"), entries)):
+        new_unique_id = re.sub("_Power_Tariff$", "_Energy_Tariff", entry.unique_id)
+        registry.async_update_entity(entry.entity_id, new_unique_id=new_unique_id)
 
 
 class DSMREntity(SensorEntity):
