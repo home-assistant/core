@@ -344,7 +344,7 @@ def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
                         cv.string,
                         vol.Lower,
                         vol.In([log_level.name.lower() for log_level in LogLevel]),
-                        convert_log_level_to_enum,
+                        lambda val: LogLevel[val.upper()],
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
                     vol.Optional(FILENAME): cv.string,
