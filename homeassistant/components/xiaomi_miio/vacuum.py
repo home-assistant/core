@@ -48,7 +48,6 @@ from .device import XiaomiMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Vacuum cleaner"
-DATA_KEY = "vacuum.xiaomi_miio"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -139,9 +138,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
-
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         name = config_entry.title
@@ -152,7 +148,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         vacuum = Vacuum(host, token)
 
         mirobo = MiroboVacuum(name, vacuum, config_entry, unique_id)
-        hass.data[DATA_KEY][host] = mirobo
         entities.append(mirobo)
 
         platform = entity_platform.current_platform.get()
