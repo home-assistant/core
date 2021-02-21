@@ -5,14 +5,19 @@ from unittest.mock import patch
 from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 
-from homeassistant.components.zwave_js.api import ENTRY_ID, ID, NODE_ID, TYPE
-from homeassistant.components.zwave_js.const import (
-    CONF_CONFIG,
-    CONF_FILENAME,
-    CONF_LEVEL,
-    CONF_LOG_TO_FILE,
-    DOMAIN,
+from homeassistant.components.zwave_js.api import (
+    CONFIG,
+    ENABLED,
+    ENTRY_ID,
+    FILENAME,
+    FORCE_CONSOLE,
+    ID,
+    LEVEL,
+    LOG_TO_FILE,
+    NODE_ID,
+    TYPE,
 )
+from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.helpers.device_registry import async_get_registry
 
 
@@ -212,7 +217,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
             ID: 1,
             TYPE: "zwave_js/update_log_config",
             ENTRY_ID: entry.entry_id,
-            CONF_CONFIG: {CONF_LEVEL: "Error"},
+            CONFIG: {LEVEL: "Error"},
         }
     )
     msg = await ws_client.receive_json()
@@ -233,7 +238,7 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
             ID: 2,
             TYPE: "zwave_js/update_log_config",
             ENTRY_ID: entry.entry_id,
-            CONF_CONFIG: {CONF_LOG_TO_FILE: True, CONF_FILENAME: "/test"},
+            CONFIG: {LOG_TO_FILE: True, FILENAME: "/test"},
         }
     )
     msg = await ws_client.receive_json()
@@ -247,13 +252,46 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
 
     client.async_send_command.reset_mock()
 
-    # Test error when setting unrecognized log level
+    # Test all parameters
+    client.async_send_command.return_value = {"success": True}
     await ws_client.send_json(
         {
             ID: 3,
             TYPE: "zwave_js/update_log_config",
             ENTRY_ID: entry.entry_id,
-            CONF_CONFIG: {CONF_LEVEL: "bad_log_level"},
+            CONFIG: {
+                LEVEL: "Error",
+                LOG_TO_FILE: True,
+                FILENAME: "/test",
+                FORCE_CONSOLE: True,
+                ENABLED: True,
+            },
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["result"]
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "update_log_config"
+    assert args["config"] == {
+        "level": 0,
+        "logToFile": True,
+        "filename": "/test",
+        "forceConsole": True,
+        "enabled": True,
+    }
+
+    client.async_send_command.reset_mock()
+
+    # Test error when setting unrecognized log level
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/update_log_config",
+            ENTRY_ID: entry.entry_id,
+            CONFIG: {LEVEL: "bad_log_level"},
         }
     )
     msg = await ws_client.receive_json()
@@ -263,10 +301,10 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     # Test error without service data
     await ws_client.send_json(
         {
-            ID: 4,
+            ID: 5,
             TYPE: "zwave_js/update_log_config",
             ENTRY_ID: entry.entry_id,
-            CONF_CONFIG: {},
+            CONFIG: {},
         }
     )
     msg = await ws_client.receive_json()
@@ -276,10 +314,10 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
     # Test error if we set logToFile to True without providing filename
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 6,
             TYPE: "zwave_js/update_log_config",
             ENTRY_ID: entry.entry_id,
-            CONF_CONFIG: {CONF_LOG_TO_FILE: True},
+            CONFIG: {LOG_TO_FILE: True},
         }
     )
     msg = await ws_client.receive_json()

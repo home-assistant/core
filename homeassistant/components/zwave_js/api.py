@@ -19,20 +19,21 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    CONF_CONFIG,
-    CONF_FILENAME,
-    CONF_LEVEL,
-    CONF_LOG_TO_FILE,
-    DATA_CLIENT,
-    DOMAIN,
-    EVENT_DEVICE_ADDED_TO_REGISTRY,
-)
+from .const import DATA_CLIENT, DOMAIN, EVENT_DEVICE_ADDED_TO_REGISTRY
 
+# general API constants
 ID = "id"
 ENTRY_ID = "entry_id"
 NODE_ID = "node_id"
 TYPE = "type"
+
+# constants for update_log_config
+CONFIG = "config"
+LEVEL = "level"
+LOG_TO_FILE = "log_to_file"
+FILENAME = "filename"
+ENABLED = "enabled"
+FORCE_CONSOLE = "force_console"
 
 
 @callback
@@ -324,7 +325,7 @@ def convert_log_level_to_enum(value: str) -> LogLevel:
 
 def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
     """Validate that filename is provided if log_to_file is True."""
-    if obj.get(CONF_LOG_TO_FILE, False) and CONF_FILENAME not in obj:
+    if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
         raise vol.Invalid("`filename` must be provided if logging to file")
     return obj
 
@@ -335,20 +336,24 @@ def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
     {
         vol.Required(TYPE): "zwave_js/update_log_config",
         vol.Required(ENTRY_ID): str,
-        vol.Required(CONF_CONFIG): vol.All(
+        vol.Required(CONFIG): vol.All(
             vol.Schema(
                 {
-                    vol.Optional(CONF_LEVEL): vol.All(
+                    vol.Optional(ENABLED): cv.boolean,
+                    vol.Optional(LEVEL): vol.All(
                         cv.string,
                         vol.Lower,
                         vol.In([log_level.name.lower() for log_level in LogLevel]),
                         convert_log_level_to_enum,
                     ),
-                    vol.Optional(CONF_LOG_TO_FILE): cv.boolean,
-                    vol.Optional(CONF_FILENAME): cv.string,
+                    vol.Optional(LOG_TO_FILE): cv.boolean,
+                    vol.Optional(FILENAME): cv.string,
+                    vol.Optional(FORCE_CONSOLE): cv.boolean,
                 }
             ),
-            cv.has_at_least_one_key(CONF_LEVEL, CONF_LOG_TO_FILE, CONF_FILENAME),
+            cv.has_at_least_one_key(
+                ENABLED, FILENAME, FORCE_CONSOLE, LEVEL, LOG_TO_FILE
+            ),
             filename_is_present_if_logging_to_file,
         ),
     },
@@ -359,7 +364,7 @@ async def websocket_update_log_config(
     """Update the driver log config."""
     entry_id = msg[ENTRY_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-    result = await client.driver.async_update_log_config(LogConfig(**msg[CONF_CONFIG]))
+    result = await client.driver.async_update_log_config(LogConfig(**msg[CONFIG]))
     connection.send_result(
         msg[ID],
         result,
