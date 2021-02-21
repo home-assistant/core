@@ -26,7 +26,9 @@
             },
             "geography_by_name": {
                 "data": {
-                    "api_key": "Kl\u00ed\u010d API"
+                    "api_key": "Kl\u00ed\u010d API",
+                    "city": "M\u011bsto",
+                    "country": "Zem\u011b"
                 }
             },
             "node_pro": {

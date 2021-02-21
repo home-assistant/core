@@ -1,16 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 TV \ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "no_ip_control": "TV \uc5d0\uc11c IP \uc81c\uc5b4\uac00 \ube44\ud65c\uc131\ud654\ub418\uc5c8\uac70\ub098 TV \uac00 \uc9c0\uc6d0\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4. \ud638\uc2a4\ud2b8 \ub610\ub294 PIN \ucf54\ub4dc\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
-            "invalid_host": "\ud638\uc2a4\ud2b8 \uc774\ub984 \ub610\ub294 IP \uc8fc\uc18c\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_host": "\ud638\uc2a4\ud2b8\uba85 \ub610\ub294 IP \uc8fc\uc18c\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "unsupported_model": "\uc774 TV \ubaa8\ub378\uc740 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "authorize": {
+                "data": {
+                    "pin": "PIN \ucf54\ub4dc"
+                },
                 "description": "Sony Bravia TV \uc5d0 \ud45c\uc2dc\ub41c PIN \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.\n\nPIN \ucf54\ub4dc\uac00 \ud45c\uc2dc\ub418\uc9c0 \uc54a\uc73c\uba74 TV \uc5d0\uc11c Home Assistant \ub97c \ub4f1\ub85d \ud574\uc81c\ud558\uc5ec\uc57c \ud569\ub2c8\ub2e4. Settings -> Network -> Remote device settings -> Unregister remote device \ub85c \uc774\ub3d9\ud558\uc5ec \ub4f1\ub85d\uc744 \ud574\uc81c\ud574\uc8fc\uc138\uc694.",
                 "title": "Sony Bravia TV \uc2b9\uc778\ud558\uae30"
             },

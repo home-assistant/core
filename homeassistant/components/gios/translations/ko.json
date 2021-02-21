@@ -1,17 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774 \uce21\uc815 \uc2a4\ud14c\uc774\uc158\uc5d0 \ub300\ud55c GIO\u015a \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
         },
         "error": {
-            "cannot_connect": "GIO\u015a \uc11c\ubc84\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "invalid_sensors_data": "\uc774 \uce21\uc815 \uc2a4\ud14c\uc774\uc158\uc5d0 \ub300\ud55c \uc13c\uc11c \ub370\uc774\ud130\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "wrong_station_id": "\uce21\uc815 \uc2a4\ud14c\uc774\uc158\uc758 ID \uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "user": {
                 "data": {
-                    "name": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc758 \uc774\ub984",
+                    "name": "\uc774\ub984",
                     "station_id": "\uce21\uc815 \uc2a4\ud14c\uc774\uc158\uc758 ID"
                 },
                 "description": "\ud3f4\ub780\ub4dc \ud658\uacbd\uccad (GIO\u015a) \ub300\uae30\uc9c8 \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4. \uad6c\uc131\uc5d0 \ub3c4\uc6c0\uc774 \ud544\uc694\ud55c \uacbd\uc6b0 https://www.home-assistant.io/integrations/gios \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694",

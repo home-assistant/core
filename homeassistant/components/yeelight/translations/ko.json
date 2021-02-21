@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc7a5\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.",
-            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c \uc0c1\uc5d0 \ubc1c\uacac\ub41c \uc7a5\uce58\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "no_devices_found": "\ub124\ud2b8\uc6cc\ud06c\uc5d0\uc11c \uae30\uae30\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "cannot_connect": "\uc5f0\uacb0 \uc2e4\ud328"
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "pick_device": {

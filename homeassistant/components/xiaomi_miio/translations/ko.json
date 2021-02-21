@@ -2,20 +2,27 @@
     "config": {
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "already_in_progress": "Xiaomi Miio \uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4."
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4"
         },
         "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "no_device_selected": "\uc120\ud0dd\ub41c \uae30\uae30\uac00 \uc5c6\uc2b5\ub2c8\ub2e4. \uae30\uae30\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694."
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "IP \uc8fc\uc18c",
+                    "token": "API \ud1a0\ud070"
+                }
+            },
             "gateway": {
                 "data": {
                     "host": "IP \uc8fc\uc18c",
                     "name": "\uac8c\uc774\ud2b8\uc6e8\uc774 \uc774\ub984",
                     "token": "API \ud1a0\ud070"
                 },
-                "description": "32 \ubb38\uc790\uc758 API \ud1a0\ud070\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. [\uc548\ub0b4](https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token) \ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694. \uc774 \ud1a0\ud070\uc740 Xiaomi Aqara \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc5d0\uc11c \uc0ac\uc6a9\ub418\ub294 \ud0a4\uc640 \ub2e4\ub985\ub2c8\ub2e4.",
+                "description": "32 \uac1c\uc758 \ubb38\uc790\uc5f4\ub85c \uad6c\uc131\ub41c API \ud1a0\ud070\uc774 \ud544\uc694\ud569\ub2c8\ub2e4. \uc790\uc138\ud55c \uc815\ubcf4\ub294 https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token \uc744 \ucc38\uc870\ud574\uc8fc\uc138\uc694. \ucc38\uace0\ub85c \uc774 API \ud1a0\ud070\uc740 Xiaomi Aqara \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc5d0\uc11c \uc0ac\uc6a9\ub418\ub294 \ud0a4\uc640 \ub2e4\ub985\ub2c8\ub2e4.",
                 "title": "Xiaomi \uac8c\uc774\ud2b8\uc6e8\uc774\uc5d0 \uc5f0\uacb0\ud558\uae30"
             },
             "user": {
