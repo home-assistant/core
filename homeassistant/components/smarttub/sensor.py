@@ -58,7 +58,7 @@ class SmartTubState(SmartTubSensor):
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, "state", "state")
+        super().__init__(coordinator, spa, "State", "state")
 
 
 class SmartTubFlowSwitch(SmartTubSensor):
@@ -66,7 +66,7 @@ class SmartTubFlowSwitch(SmartTubSensor):
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, "flow switch", "flowSwitch")
+        super().__init__(coordinator, spa, "Flow Switch", "flowSwitch")
 
 
 class SmartTubOzone(SmartTubSensor):
@@ -74,7 +74,7 @@ class SmartTubOzone(SmartTubSensor):
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, "ozone", "ozone")
+        super().__init__(coordinator, spa, "Ozone", "ozone")
 
 
 class SmartTubBlowoutCycle(SmartTubSensor):
@@ -82,7 +82,7 @@ class SmartTubBlowoutCycle(SmartTubSensor):
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, "blowout cycle", "blowoutCycle")
+        super().__init__(coordinator, spa, "Blowout Cycle", "blowoutCycle")
 
 
 class SmartTubCleanupCycle(SmartTubSensor):
@@ -90,7 +90,7 @@ class SmartTubCleanupCycle(SmartTubSensor):
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, "cleanup cycle", "cleanupCycle")
+        super().__init__(coordinator, spa, "Cleanup Cycle", "cleanupCycle")
 
 
 class SmartTubPrimaryFiltration(SmartTubSensor):
@@ -125,7 +125,7 @@ class SmartTubSecondaryFiltration(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "secondary filtration cycle", "secondaryFiltration"
+            coordinator, spa, "Secondary Filtration Cycle", "secondaryFiltration"
         )
 
     @property
