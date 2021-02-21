@@ -49,12 +49,19 @@ def mock_spa():
         "state": "NORMAL",
     }
 
-    mock_pump = create_autospec(smarttub.SpaPump, instance=True)
-    mock_pump.id = "CP"
-    mock_pump.spa = mock_spa
-    mock_pump.state = smarttub.SpaPump.PumpState.OFF
-    mock_pump.type = smarttub.SpaPump.PumpType.CIRCULATION
-    mock_spa.get_pumps.return_value = [mock_pump]
+    mock_circulation_pump = create_autospec(smarttub.SpaPump, instance=True)
+    mock_circulation_pump.id = "CP"
+    mock_circulation_pump.spa = mock_spa
+    mock_circulation_pump.state = smarttub.SpaPump.PumpState.OFF
+    mock_circulation_pump.type = smarttub.SpaPump.PumpType.CIRCULATION
+
+    mock_jet = create_autospec(smarttub.SpaPump, instance=True)
+    mock_jet.id = "P1"
+    mock_jet.spa = mock_spa
+    mock_jet.state = smarttub.SpaPump.PumpState.OFF
+    mock_jet.type = smarttub.SpaPump.PumpType.JET
+
+    mock_spa.get_pumps.return_value = [mock_circulation_pump, mock_jet]
 
     return mock_spa
 

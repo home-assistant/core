@@ -37,7 +37,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this pump entity."""
-        return super().unique_id + "-{pump.id}"
+        return super().unique_id + f"-{self.pump.id}"
 
     @property
     def name(self) -> str:
@@ -63,7 +63,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         if not self.is_on:
             await self.toggle()
 
-    async def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the pump off."""
         if self.is_on:
             await self.toggle()
