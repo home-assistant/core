@@ -36,21 +36,3 @@ async def test_sensors(spa, setup_entry, hass):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "inactive"
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_primary_filtration_cycle"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "inactive"
-    assert state.attributes["duration"] == 4
-    assert state.attributes["last_updated"] is not None
-    assert state.attributes["mode"] == "normal"
-    assert state.attributes["start_hour"] == 2
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_secondary_filtration_cycle"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "inactive"
-    assert state.attributes["last_updated"] is not None
-    assert state.attributes["mode"] == "away"
-
-    # TODO: other sensors

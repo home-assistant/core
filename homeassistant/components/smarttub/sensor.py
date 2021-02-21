@@ -21,13 +21,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for spa in controller.spas:
         entities.extend(
             [
-                SmartTubState(controller.coordinator, spa),
-                SmartTubFlowSwitch(controller.coordinator, spa),
-                SmartTubOzone(controller.coordinator, spa),
-                SmartTubBlowoutCycle(controller.coordinator, spa),
-                SmartTubCleanupCycle(controller.coordinator, spa),
-                SmartTubPrimaryFiltration(controller.coordinator, spa),
-                SmartTubSecondaryFiltration(controller.coordinator, spa),
+                SmartTubSensor(controller.coordinator, spa, "State", "state"),
+                SmartTubSensor(
+                    controller.coordinator, spa, "Flow Switch", "flowSwitch"
+                ),
+                SmartTubSensor(controller.coordinator, spa, "Ozone", "ozone"),
+                SmartTubSensor(
+                    controller.coordinator, spa, "Blowout Cycle", "blowoutCycle"
+                ),
+                SmartTubSensor(
+                    controller.coordinator, spa, "Cleanup Cycle", "cleanupCycle"
+                ),
             ]
         )
 
@@ -35,7 +39,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class SmartTubSensor(SmartTubEntity):
-    """Base class for SmartTub sensors."""
+    """Generic and base class for SmartTub sensors."""
 
     def __init__(self, coordinator, spa, sensor_name, spa_status_key):
         """Initialize the entity."""
@@ -51,93 +55,3 @@ class SmartTubSensor(SmartTubEntity):
     def state(self) -> str:
         """Return the current state of the sensor."""
         return self._state.lower()
-
-
-class SmartTubState(SmartTubSensor):
-    """The state of the spa."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "state", "state")
-
-
-class SmartTubFlowSwitch(SmartTubSensor):
-    """The state of the flow switch."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "flow switch", "flowSwitch")
-
-
-class SmartTubOzone(SmartTubSensor):
-    """The state of the ozone system."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "ozone", "ozone")
-
-
-class SmartTubBlowoutCycle(SmartTubSensor):
-    """The state of the blowout cycle."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "blowout cycle", "blowoutCycle")
-
-
-class SmartTubCleanupCycle(SmartTubSensor):
-    """The state of the cleanup cycle."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, "cleanup cycle", "cleanupCycle")
-
-
-class SmartTubPrimaryFiltration(SmartTubSensor):
-    """The primary filtration cycle."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(
-            coordinator, spa, "primary filtration cycle", "primaryFiltration"
-        )
-
-    @property
-    def state(self) -> str:
-        """Return the current state of the sensor."""
-        return self._state["status"].lower()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        state = self._state
-        return {
-            ATTR_DURATION: state["duration"],
-            ATTR_LAST_UPDATED: state["lastUpdated"],
-            ATTR_MODE: state["mode"].lower(),
-            ATTR_START_HOUR: state["startHour"],
-        }
-
-
-class SmartTubSecondaryFiltration(SmartTubSensor):
-    """The secondary filtration cycle."""
-
-    def __init__(self, coordinator, spa):
-        """Initialize the entity."""
-        super().__init__(
-            coordinator, spa, "secondary filtration cycle", "secondaryFiltration"
-        )
-
-    @property
-    def state(self) -> str:
-        """Return the current state of the sensor."""
-        return self._state.get("status").lower()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        state = self._state
-        return {
-            ATTR_LAST_UPDATED: state["lastUpdated"],
-            ATTR_MODE: state["mode"].lower(),
-        }
