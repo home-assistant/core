@@ -71,7 +71,7 @@ BOOST_HOT_WATER_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Hive Integration."""
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = {"entries": {}, "entity_lookup": {}}
 
     if DOMAIN not in config:
         return True
@@ -86,7 +86,6 @@ async def async_setup(hass, config):
                 data={
                     CONF_USERNAME: conf[CONF_USERNAME],
                     CONF_PASSWORD: conf[CONF_PASSWORD],
-                    CONF_SCAN_INTERVAL: conf.get(CONF_SCAN_INTERVAL, 120),
                 },
             )
         )
@@ -95,13 +94,10 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Hive from a config entry."""
-    # Store an API object for your platforms to access
-    # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
     websession = aiohttp_client.async_get_clientsession(hass)
     hive = Hive(websession)
     hive_config = dict(entry.data)
-    hive_options = dict(entry.options)
 
     async def heating_boost(service):
         """Handle the service call."""
@@ -135,22 +131,19 @@ async def async_setup_entry(hass, entry):
         elif mode == "off":
             await hive.hotwater.turn_boost_off(device)
 
-        # Update config entry options
-
-    hive_options = hive_options if len(hive_options) > 0 else hive_config["options"]
-    hive_config["options"].update(hive_options)
-    hive_config["add_sensors"] = bool("hive" in hass.data["custom_components"])
-    hass.config_entries.async_update_entry(entry, options=hive_options)
-    hass.data[DOMAIN][entry.entry_id] = hive
-    hass.data[DOMAIN]["entity_lookup"] = {}
+    hive_config["options"] = {}
+    hive_config["options"].update(
+        {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
+    )
+    hass.data[DOMAIN]["entries"][entry.entry_id] = hive
 
     try:
-        hive.devices = await hive.session.startSession(hive_config)
+        devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
 
-    if hive.devices == "INVALID_REAUTH":
+    if devices == "INVALID_REAUTH":
         return hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
@@ -158,7 +151,7 @@ async def async_setup_entry(hass, entry):
         )
 
     for component in PLATFORMS:
-        devicelist = hive.devices.get(component)
+        devicelist = devices.get(component)
         if devicelist:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, component)
@@ -193,7 +186,7 @@ async def async_unload_entry(hass, entry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN]["entries"].pop(entry.entry_id)
 
     return unload_ok
 
