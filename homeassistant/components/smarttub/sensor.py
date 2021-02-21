@@ -107,14 +107,18 @@ class SmartTubPrimaryFiltration(SmartTubEntity):
         super().__init__(coordinator, spa, "primary_filtration")
 
     @property
+    def _state(self):
+        return self.get_spa_status("primaryFiltration")
+
+    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
-        return self.get_spa_status("primaryFiltration").get("status").lower()
+        return self._state.get("status").lower()
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state = self.get_spa_status("primaryFiltration")
+        state = self._state
         return {
             ATTR_DURATION: state["duration"],
             ATTR_LAST_UPDATED: state["lastUpdated"],
@@ -131,14 +135,18 @@ class SmartTubSecondaryFiltration(SmartTubEntity):
         super().__init__(coordinator, spa, "secondary_filtration")
 
     @property
+    def _state(self):
+        return self.get_spa_status("secondaryFiltration")
+
+    @property
     def state(self) -> str:
         """Return the current state of the sensor."""
-        return self.get_spa_status("secondaryFiltration").get("status").lower()
+        return self._state.get("status").lower()
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state = self.get_spa_status("secondaryFiltration")
+        state = self._state
         return {
             ATTR_LAST_UPDATED: state["lastUpdated"],
             ATTR_MODE: state["mode"].lower(),
