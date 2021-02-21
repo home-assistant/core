@@ -5,8 +5,8 @@ from aiohttp import web
 
 from homeassistant.core import callback
 
-from .const import FORMAT_CONTENT_TYPE, NUM_PLAYLIST_SEGMENTS
-from .core import PROVIDERS, StreamOutput, StreamView
+from .const import FORMAT_CONTENT_TYPE, MAX_SEGMENTS, NUM_PLAYLIST_SEGMENTS
+from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
 from .fmp4utils import get_codec_string, get_init, get_m4s
 
 
@@ -157,6 +157,10 @@ class HlsSegmentView(StreamView):
 @PROVIDERS.register("hls")
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
+
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+        """Initialize recorder output."""
+        super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
 
     @property
     def name(self) -> str:

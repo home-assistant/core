@@ -1,5 +1,4 @@
 """Provide functionality to record stream."""
-from collections import deque
 import logging
 import os
 import threading
@@ -90,7 +89,6 @@ class RecorderOutput(StreamOutput):
         """Initialize recorder output."""
         super().__init__(hass, idle_timer)
         self.video_path = None
-        self._segments = deque()
 
     @property
     def name(self) -> str:
@@ -112,4 +110,3 @@ class RecorderOutput(StreamOutput):
         thread.start()
 
         super().cleanup()
-        self._segments = deque()

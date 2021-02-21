@@ -74,7 +74,7 @@ class SegmentBuffer:
 
         # Fetch the latest StreamOutputs, which may have changed since the
         # worker started.
-        self._outputs = self._outputs_callback()
+        self._outputs = self._outputs_callback().values()
         self._stream_buffer = create_stream_buffer(
             self._video_stream, self._audio_stream, self._sequence
         )
