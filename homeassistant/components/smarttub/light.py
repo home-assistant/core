@@ -13,8 +13,8 @@ from homeassistant.components.light import (
 )
 
 from .const import (
-    DEFAULT_LIGHT_INTENSITY,
-    DEFAULT_LIGHT_MODE,
+    DEFAULT_LIGHT_BRIGHTNESS,
+    DEFAULT_LIGHT_EFFECT,
     DOMAIN,
     SMARTTUB_CONTROLLER,
 )
@@ -92,27 +92,45 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def effect(self):
         """Return the current effect."""
-        if self.light.mode == SpaLight.LightMode.HIGH_SPEED_WHEEL:
-            return EFFECT_COLORLOOP
+        mode = self.light.mode.name.lower()
+        if mode in self.effect_list:
+            return mode
         return None
 
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return [EFFECT_COLORLOOP]
+        effects = [
+            effect
+            for effect in map(self._light_mode_to_effect, SpaLight.LightMode)
+            if effect is not None
+        ]
+
+        return effects
+
+    @staticmethod
+    def _light_mode_to_effect(light_mode: SpaLight.LightMode):
+        if light_mode == SpaLight.LightMode.OFF:
+            return None
+        if light_mode == SpaLight.LightMode.HIGH_SPEED_WHEEL:
+            return EFFECT_COLORLOOP
+
+        return light_mode.name.lower()
+
+    @staticmethod
+    def _effect_to_light_mode(effect):
+        if effect == EFFECT_COLORLOOP:
+            return SpaLight.LightMode.HIGH_SPEED_WHEEL
+
+        return SpaLight.LightMode[effect.upper()]
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
 
-        mode = SpaLight.LightMode[DEFAULT_LIGHT_MODE]
-
-        if ATTR_BRIGHTNESS in kwargs:
-            intensity = self._hass_to_smarttub_brightness(kwargs[ATTR_BRIGHTNESS])
-        else:
-            intensity = DEFAULT_LIGHT_INTENSITY
-
-        if kwargs.get(ATTR_EFFECT) == EFFECT_COLORLOOP:
-            mode = self.light.LightMode.HIGH_SPEED_WHEEL
+        mode = self._effect_to_light_mode(kwargs.get(ATTR_EFFECT, DEFAULT_LIGHT_EFFECT))
+        intensity = self._hass_to_smarttub_brightness(
+            kwargs.get(ATTR_BRIGHTNESS, DEFAULT_LIGHT_BRIGHTNESS)
+        )
 
         await self.light.set_mode(mode, intensity)
         await self.coordinator.async_request_refresh()
