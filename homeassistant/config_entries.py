@@ -11,6 +11,7 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
+from homeassistant.const import EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry
@@ -68,6 +69,8 @@ ENTRY_STATE_SETUP_RETRY = "setup_retry"
 ENTRY_STATE_NOT_LOADED = "not_loaded"
 # An error occurred when trying to unload the entry
 ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
+# The config entry is disabled
+ENTRY_STATE_DISABLED = "disabled"
 
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
@@ -91,6 +94,8 @@ CONN_CLASS_LOCAL_PUSH = "local_push"
 CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
+
+DISABLED_USER = "user"
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
@@ -126,6 +131,7 @@ class ConfigEntry:
         "source",
         "connection_class",
         "state",
+        "disabled_by",
         "_setup_lock",
         "update_listeners",
         "_async_cancel_retry_setup",
@@ -144,6 +150,7 @@ class ConfigEntry:
         unique_id: Optional[str] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
+        disabled_by: Optional[str] = None,
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
@@ -179,6 +186,9 @@ class ConfigEntry:
         # Unique ID of this entry.
         self.unique_id = unique_id
 
+        # Config entry is disabled
+        self.disabled_by = disabled_by
+
         # Supports unload
         self.supports_unload = False
 
@@ -198,7 +208,7 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
-        if self.source == SOURCE_IGNORE:
+        if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
         if integration is None:
@@ -441,6 +451,7 @@ class ConfigEntry:
             "source": self.source,
             "connection_class": self.connection_class,
             "unique_id": self.unique_id,
+            "disabled_by": self.disabled_by,
         }
 
 
@@ -711,6 +722,8 @@ class ConfigEntries:
                 system_options=entry.get("system_options", {}),
                 # New in 0.104
                 unique_id=entry.get("unique_id"),
+                # New in 2021.3
+                disabled_by=entry.get("disabled_by"),
             )
             for entry in config["entries"]
         ]
@@ -759,12 +772,41 @@ class ConfigEntries:
 
         If an entry was not loaded, will just load.
         """
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
         unload_result = await self.async_unload(entry_id)
 
-        if not unload_result:
+        if not unload_result or entry.disabled_by:
             return unload_result
 
         return await self.async_setup(entry_id)
+
+    async def async_set_disabled_by(
+        self, entry_id: str, disabled_by: Optional[str]
+    ) -> bool:
+        """Disable an entry.
+
+        If disabled_by is changed, the config entry will be reloaded.
+        """
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
+        if entry.disabled_by == disabled_by:
+            return True
+
+        entry.disabled_by = disabled_by
+        self._async_schedule_save()
+
+        self.hass.bus.async_fire(
+            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED, {"config_entry_id": entry_id}
+        )
+
+        return await self.async_reload(entry_id)
 
     @callback
     def async_update_entry(

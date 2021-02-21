@@ -6,7 +6,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, 
 
 import attr
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import Event, callback
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
@@ -37,6 +40,7 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
@@ -65,6 +69,7 @@ class DeviceEntry:
         default=None,
         validator=attr.validators.in_(
             (
+                DISABLED_CONFIG_ENTRY,
                 DISABLED_INTEGRATION,
                 DISABLED_USER,
                 None,
@@ -138,6 +143,10 @@ class DeviceRegistry:
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._clear_index()
+        self.hass.bus.async_listen(
+            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
+            self.async_config_entry_disabled_by_changed,
+        )
 
     @callback
     def async_get(self, device_id: str) -> Optional[DeviceEntry]:
@@ -608,6 +617,38 @@ class DeviceRegistry:
         for dev_id, device in self.devices.items():
             if area_id == device.area_id:
                 self._async_update_device(dev_id, area_id=None)
+
+    @callback
+    def async_config_entry_disabled_by_changed(self, event: Event) -> None:
+        """Handle a config entry being disabled or enabled.
+
+        Disable devices in the registry that are associated to a config entry when
+        the config entry is disabled.
+        """
+        config_entry = self.hass.config_entries.async_get_entry(
+            event.data["config_entry_id"]
+        )
+
+        # The config entry may be deleted already if the event handling is late
+        if not config_entry:
+            return
+
+        if not config_entry.disabled_by:
+            devices = async_entries_for_config_entry(
+                self, event.data["config_entry_id"]
+            )
+            for device in devices:
+                if device.disabled_by != DISABLED_CONFIG_ENTRY:
+                    continue
+                self.async_update_device(device.id, disabled_by=None)
+            return
+
+        devices = async_entries_for_config_entry(self, event.data["config_entry_id"])
+        for device in devices:
+            if device.disabled:
+                # Entity already disabled, do not overwrite
+                continue
+            self.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
 
 
 @callback
