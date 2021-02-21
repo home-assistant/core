@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
         vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
-        vol.Optional(CONF_HUMIDITY_TEMPLATE): cv.template,
+        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
         vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
         vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
