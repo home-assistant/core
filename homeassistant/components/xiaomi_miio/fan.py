@@ -76,6 +76,18 @@ from .const import (
     SERVICE_SET_MOTOR_SPEED,
     SERVICE_SET_TARGET_HUMIDITY,
     SERVICE_SET_VOLUME,
+    MODELS_FAN,
+    MODEL_AIRPURIFIER_PRO,
+    MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3,
+    MODEL_AIRPURIFIER_3H,
+    MODEL_AIRPURIFIER_V3,
+    MODEL_AIRHUMIDIFIER_CA1,
+    MODEL_AIRHUMIDIFIER_CB1,
+    MODEL_AIRHUMIDIFIER_CA4,
+    MODELS_PURIFIER_MIOT,
+    MODELS_HUMIDIFIER_MIOT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,58 +96,14 @@ DEFAULT_NAME = "Xiaomi Miio Device"
 DATA_KEY = "fan.xiaomi_miio"
 
 CONF_MODEL = "model"
-MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
-MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
-MODEL_AIRPURIFIER_V3 = "zhimi.airpurifier.v3"
-MODEL_AIRPURIFIER_V5 = "zhimi.airpurifier.v5"
-MODEL_AIRPURIFIER_PRO = "zhimi.airpurifier.v6"
-MODEL_AIRPURIFIER_PRO_V7 = "zhimi.airpurifier.v7"
-MODEL_AIRPURIFIER_M1 = "zhimi.airpurifier.m1"
-MODEL_AIRPURIFIER_M2 = "zhimi.airpurifier.m2"
-MODEL_AIRPURIFIER_MA1 = "zhimi.airpurifier.ma1"
-MODEL_AIRPURIFIER_MA2 = "zhimi.airpurifier.ma2"
-MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
-MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
-MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
-MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
-MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 
-MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
-MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
-MODEL_AIRHUMIDIFIER_CA4 = "zhimi.humidifier.ca4"
-MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
-
-MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODEL): vol.In(
-            [
-                MODEL_AIRPURIFIER_V1,
-                MODEL_AIRPURIFIER_V2,
-                MODEL_AIRPURIFIER_V3,
-                MODEL_AIRPURIFIER_V5,
-                MODEL_AIRPURIFIER_PRO,
-                MODEL_AIRPURIFIER_PRO_V7,
-                MODEL_AIRPURIFIER_M1,
-                MODEL_AIRPURIFIER_M2,
-                MODEL_AIRPURIFIER_MA1,
-                MODEL_AIRPURIFIER_MA2,
-                MODEL_AIRPURIFIER_SA1,
-                MODEL_AIRPURIFIER_SA2,
-                MODEL_AIRPURIFIER_2S,
-                MODEL_AIRPURIFIER_3,
-                MODEL_AIRPURIFIER_3H,
-                MODEL_AIRHUMIDIFIER_V1,
-                MODEL_AIRHUMIDIFIER_CA1,
-                MODEL_AIRHUMIDIFIER_CA4,
-                MODEL_AIRHUMIDIFIER_CB1,
-                MODEL_AIRFRESH_VA2,
-            ]
-        ),
+        vol.Optional(CONF_MODEL): vol.In(MODELS_FAN),
     }
 )
 
@@ -192,9 +160,6 @@ ATTR_FAULT = "fault"
 
 # Air Fresh
 ATTR_CO2 = "co2"
-
-PURIFIER_MIOT = [MODEL_AIRPURIFIER_3, MODEL_AIRPURIFIER_3H]
-HUMIDIFIER_MIOT = [MODEL_AIRHUMIDIFIER_CA4]
 
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
@@ -553,104 +518,104 @@ SERVICE_TO_METHOD = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the miio fan device from config."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
-
-    host = config[CONF_HOST]
-    token = config[CONF_TOKEN]
-    name = config[CONF_NAME]
-    model = config.get(CONF_MODEL)
-
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    unique_id = None
-
-    if model is None:
-        try:
-            miio_device = Device(host, token)
-            device_info = await hass.async_add_executor_job(miio_device.info)
-            model = device_info.model
-            unique_id = f"{model}-{device_info.mac_address}"
-            _LOGGER.info(
-                "%s %s %s detected",
-                model,
-                device_info.firmware_version,
-                device_info.hardware_version,
-            )
-        except DeviceException as ex:
-            raise PlatformNotReady from ex
-
-    if model in PURIFIER_MIOT:
-        air_purifier = AirPurifierMiot(host, token)
-        device = XiaomiAirPurifierMiot(name, air_purifier, model, unique_id)
-    elif model.startswith("zhimi.airpurifier."):
-        air_purifier = AirPurifier(host, token)
-        device = XiaomiAirPurifier(name, air_purifier, model, unique_id)
-    elif model in HUMIDIFIER_MIOT:
-        air_humidifier = AirHumidifierMiot(host, token)
-        device = XiaomiAirHumidifierMiot(name, air_humidifier, model, unique_id)
-    elif model.startswith("zhimi.humidifier."):
-        air_humidifier = AirHumidifier(host, token, model=model)
-        device = XiaomiAirHumidifier(name, air_humidifier, model, unique_id)
-    elif model.startswith("zhimi.airfresh."):
-        air_fresh = AirFresh(host, token)
-        device = XiaomiAirFresh(name, air_fresh, model, unique_id)
-    else:
-        _LOGGER.error(
-            "Unsupported device found! Please create an issue at "
-            "https://github.com/syssi/xiaomi_airpurifier/issues "
-            "and provide the following data: %s",
-            model,
+    """Import Miio configuration from YAML."""
+    _LOGGER.warning(
+        "Loading Xiaomi Miio Fan via platform setup is deprecated. Please remove it from your configuration."
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
-        return False
+    )
 
-    hass.data[DATA_KEY][host] = device
-    async_add_entities([device], update_before_add=True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fan from a config entry."""
+    entities = []
 
-    async def async_service_handler(service):
-        """Map services to methods on XiaomiAirPurifier."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            devices = [
-                device
-                for device in hass.data[DATA_KEY].values()
-                if device.entity_id in entity_ids
-            ]
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        if DATA_KEY not in hass.data:
+            hass.data[DATA_KEY] = {}
+
+        host = config_entry.data[CONF_HOST]
+        token = config_entry.data[CONF_TOKEN]
+        name = config_entry.title
+        model = config_entry.data[CONF_MODEL]
+        unique_id = config_entry.unique_id
+
+        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+
+        if model in MODELS_PURIFIER_MIOT:
+            air_purifier = AirPurifierMiot(host, token)
+            device = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
+        elif model.startswith("zhimi.airpurifier."):
+            air_purifier = AirPurifier(host, token)
+            device = XiaomiAirPurifier(name, air_purifier, config_entry, unique_id)
+        elif model in MODELS_HUMIDIFIER_MIOT:
+            air_humidifier = AirHumidifierMiot(host, token)
+            device = XiaomiAirHumidifierMiot(name, air_humidifier, config_entry, unique_id)
+        elif model.startswith("zhimi.humidifier."):
+            air_humidifier = AirHumidifier(host, token, model=model)
+            device = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
+        elif model.startswith("zhimi.airfresh."):
+            air_fresh = AirFresh(host, token)
+            device = XiaomiAirFresh(name, air_fresh, config_entry, unique_id)
         else:
-            devices = hass.data[DATA_KEY].values()
+            _LOGGER.error(
+                "Unsupported device found! Please create an issue at "
+                "https://github.com/syssi/xiaomi_airpurifier/issues "
+                "and provide the following data: %s",
+                model,
+            )
+            return False
 
-        update_tasks = []
-        for device in devices:
-            if not hasattr(device, method["method"]):
-                continue
-            await getattr(device, method["method"])(**params)
-            update_tasks.append(device.async_update_ha_state(True))
+        hass.data[DATA_KEY][host] = device
+        entities.append(device)
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
+        async def async_service_handler(service):
+            """Map services to methods on XiaomiAirPurifier."""
+            method = SERVICE_TO_METHOD.get(service.service)
+            params = {
+                key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+            }
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            if entity_ids:
+                devices = [
+                    device
+                    for device in hass.data[DATA_KEY].values()
+                    if device.entity_id in entity_ids
+                ]
+            else:
+                devices = hass.data[DATA_KEY].values()
 
-    for air_purifier_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[air_purifier_service].get(
-            "schema", AIRPURIFIER_SERVICE_SCHEMA
-        )
-        hass.services.async_register(
-            DOMAIN, air_purifier_service, async_service_handler, schema=schema
-        )
+            update_tasks = []
+            for device in devices:
+                if not hasattr(device, method["method"]):
+                    continue
+                await getattr(device, method["method"])(**params)
+                update_tasks.append(device.async_update_ha_state(True))
+
+            if update_tasks:
+                await asyncio.wait(update_tasks)
+
+        for air_purifier_service in SERVICE_TO_METHOD:
+            schema = SERVICE_TO_METHOD[air_purifier_service].get(
+                "schema", AIRPURIFIER_SERVICE_SCHEMA
+            )
+            hass.services.async_register(
+                DOMAIN, air_purifier_service, async_service_handler, schema=schema
+            )
+
+    async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiGenericDevice(FanEntity):
+class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
     """Representation of a generic Xiaomi device."""
 
-    def __init__(self, name, device, model, unique_id):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the generic Xiaomi device."""
-        self._name = name
-        self._device = device
-        self._model = model
-        self._unique_id = unique_id
+        super().__init__(name, device, entry, unique_id)
 
         self._available = False
         self._state = None
@@ -667,16 +632,6 @@ class XiaomiGenericDevice(FanEntity):
     def should_poll(self):
         """Poll the device."""
         return True
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
 
     @property
     def available(self):
@@ -803,9 +758,9 @@ class XiaomiGenericDevice(FanEntity):
 class XiaomiAirPurifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier."""
 
-    def __init__(self, name, device, model, unique_id):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the plug switch."""
-        super().__init__(name, device, model, unique_id)
+        super().__init__(name, device, entry, unique_id)
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
@@ -1056,9 +1011,9 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
 class XiaomiAirHumidifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Humidifier."""
 
-    def __init__(self, name, device, model, unique_id):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the plug switch."""
-        super().__init__(name, device, model, unique_id)
+        super().__init__(name, device, entry, unique_id)
 
         if self._model in [MODEL_AIRHUMIDIFIER_CA1, MODEL_AIRHUMIDIFIER_CB1]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB
@@ -1247,9 +1202,9 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 class XiaomiAirFresh(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Fresh."""
 
-    def __init__(self, name, device, model, unique_id):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the miio device."""
-        super().__init__(name, device, model, unique_id)
+        super().__init__(name, device, entry, unique_id)
 
         self._device_features = FEATURE_FLAGS_AIRFRESH
         self._available_attributes = AVAILABLE_ATTRIBUTES_AIRFRESH

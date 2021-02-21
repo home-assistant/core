@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     MODELS_GATEWAY,
     MODELS_SWITCH,
+    MODELS_FAN,
 )
 from .device import ConnectXiaomiDevice
 
@@ -70,7 +71,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 return await self.async_step_device()
-        for switch_model in MODELS_SWITCH:
+        for switch_model in (MODELS_SWITCH + MODELS_FAN):
             if name.startswith(switch_model.replace(".", "-")):
                 unique_id = format_mac(mac_address)
                 await self.async_set_unique_id(unique_id)
@@ -125,7 +126,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Setup all other Miio Devices
                 name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
 
-                if device_info.model in MODELS_SWITCH:
+                if device_info.model in (MODELS_SWITCH + MODELS_FAN):
                     mac = format_mac(device_info.mac_address)
                     unique_id = mac
                     await self.async_set_unique_id(unique_id)

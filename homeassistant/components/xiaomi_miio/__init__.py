@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     MODELS_SWITCH,
+    MODELS_FAN,
 )
 from .gateway import ConnectXiaomiGateway
 
@@ -24,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
+FAN_PLATFORMS = ["fan"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -119,6 +121,8 @@ async def async_setup_device_entry(
     # Identify platforms to setup
     if model in MODELS_SWITCH:
         platforms = SWITCH_PLATFORMS
+    elif model in MODELS_FAN:
+        platforms = FAN_PLATFORMS
     else:
         return False
 
