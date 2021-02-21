@@ -31,8 +31,8 @@ class TemplateError(HomeAssistantError):
 class ConditionError(HomeAssistantError):
     """Error during condition evaluation."""
 
-    # The name of the failed condition, such as 'and' or 'numeric_state'
-    name: str = attr.ib()
+    # The type of the failed condition, such as 'and' or 'numeric_state'
+    type: str = attr.ib()
 
     @staticmethod
     def _indent(indent: int, message: str) -> str:
@@ -57,7 +57,7 @@ class ConditionErrorMessage(ConditionError):
 
     def output(self, indent: int) -> Generator:
         """Yield an indented representation."""
-        yield self._indent(indent, f"In '{self.name}' condition: {self.message}")
+        yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
 
 @attr.s
@@ -75,10 +75,10 @@ class ConditionErrorIndex(ConditionError):
         """Yield an indented representation."""
         if self.total > 1:
             yield self._indent(
-                indent, f"In '{self.name}' (item {self.index+1} of {self.total}):"
+                indent, f"In '{self.type}' (item {self.index+1} of {self.total}):"
             )
         else:
-            yield self._indent(indent, f"In '{self.name}':")
+            yield self._indent(indent, f"In '{self.type}':")
 
         yield from self.error.output(indent + 1)
 
