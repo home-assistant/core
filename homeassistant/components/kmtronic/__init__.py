@@ -41,10 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     hub = KMTronicHubAPI(auth)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = {}
-    hass.data[DOMAIN][entry.entry_id][DATA_HUB] = hub
-    hass.data[DOMAIN][entry.entry_id][DATA_HOST] = entry.data[DATA_HOST]
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+
+    data = hass.data[DOMAIN][entry.entry_id] = {}
+    data[DATA_HUB] = hub
+    data[DATA_HOST] = entry.data[DATA_HOST]
 
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
