@@ -10,14 +10,14 @@ from homeassistant.components.recorder import (
     CONFIG_SCHEMA,
     DATA_INSTANCE,
     DOMAIN,
-    Recorder,
-    run_information,
-    run_information_from_instance,
-    run_information_with_session,
     SERVICE_DISABLE,
     SERVICE_ENABLE,
     SERVICE_PURGE,
     SQLITE_URL_PREFIX,
+    Recorder,
+    run_information,
+    run_information_from_instance,
+    run_information_with_session,
 )
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
