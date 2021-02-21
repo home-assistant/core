@@ -28,7 +28,7 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, callback
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import async_wait_recording_done, corrupt_db_file, wait_recording_done
@@ -627,6 +627,48 @@ def test_service_disable_states_not_recording(hass, hass_recorder):
         assert len(db_states) == 1
         assert db_states[0].event_id > 0
         assert db_states[0].to_native() == _state_empty_context(hass, "test.two")
+
+
+def test_service_disable_run_information_recorded(tmpdir):
+    """Test that runs are still recorded when recorder is disabled."""
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    hass = get_test_home_assistant()
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_run_info = list(session.query(RecorderRuns))
+        assert len(db_run_info) == 1
+        assert db_run_info[0].start is not None
+        assert db_run_info[0].end is None
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_DISABLE,
+        {},
+        blocking=True,
+    )
+
+    wait_recording_done(hass)
+    hass.stop()
+
+    hass = get_test_home_assistant()
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_run_info = list(session.query(RecorderRuns))
+        assert len(db_run_info) == 2
+        assert db_run_info[0].start is not None
+        assert db_run_info[0].end is not None
+        assert db_run_info[1].start is not None
+        assert db_run_info[1].end is None
+
+    hass.stop()
 
 
 class CannotSerializeMe:
