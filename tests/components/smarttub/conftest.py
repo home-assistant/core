@@ -36,7 +36,7 @@ async def setup_component(hass):
 
 @pytest.fixture(name="spa")
 def mock_spa():
-    """Mock a SmartTub.Spa."""
+    """Mock a smarttub.Spa."""
 
     mock_spa = create_autospec(smarttub.Spa, instance=True)
     mock_spa.id = "mockspa1"
@@ -48,6 +48,14 @@ def mock_spa():
         "heater": "ON",
         "state": "NORMAL",
     }
+
+    mock_pump = create_autospec(smarttub.SpaPump, instance=True)
+    mock_pump.id = "CP"
+    mock_pump.spa = mock_spa
+    mock_pump.state = smarttub.SpaPump.PumpState.OFF
+    mock_pump.type = smarttub.SpaPump.PumpType.CIRCULATION
+    mock_spa.get_pumps.return_value = [mock_pump]
+
     return mock_spa
 
 
