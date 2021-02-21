@@ -23,7 +23,7 @@ ezviz_set_alarm_detection_sensibility:
   description: 'Sets the detection sensibility level.'
   fields:
     entity_id:
-      description: 'Name(s) of entities to move.'
+      description: 'Name(s) of entities to perform action on.'
       example: 'camera.living_room_camera'
     level:
       description: 'Sensibility level (1-6) for device (type 0)
@@ -32,9 +32,24 @@ ezviz_set_alarm_detection_sensibility:
     type_value:
       description: 'Type of detection. Options : 0 - Device or 3 - Camera'
       example: '3'
+ezviz_sound_alarm:
+  description: 'Sounds the alarm on your camera.'
+  fields:
+    enable:
+      description: 'Enter 1 or 2 (1=disable, 2=enable).'
+      example: '1'
+    entity_id:
+      description: 'Name(s) of entities to perform action on.'
+      example: 'camera.living_room_camera'
+ezviz_defence_mode_change:
+  description: 'Change ezviz defence mode to away or home.'
+  fields:
+    mode:
+      description: 'Enter HOME_MODE or AWAY_MODE.'
+      example: 'HOME_MODE'
 ezviz_wake_device:
   description: 'This can also be used to wake device from hibernation.'
   fields:
     entity_id:
-      description: 'Name(s) of entities to move.'
+      description: 'Name(s) of entities to perform action on.'
       example: 'camera.living_room_camera'

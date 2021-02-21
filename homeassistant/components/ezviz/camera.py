@@ -5,6 +5,7 @@ import logging
 from typing import Callable, List
 
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+from pyezviz import DefenseModeType
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -19,10 +20,14 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ACC_PASSWORD,
     ACC_USERNAME,
+    ATTR_AWAY,
     ATTR_CAMERAS,
     ATTR_DIRECTION,
+    ATTR_ENABLE,
+    ATTR_HOME,
     ATTR_LEVEL,
     ATTR_SPEED,
+    ATTR_SWITCH,
     ATTR_TYPE,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
@@ -98,6 +103,27 @@ async def async_setup_entry(
             vol.Required(ATTR_SPEED): cv.positive_int,
         },
         "perform_ezviz_ptz",
+    )
+
+    platform.async_register_entity_service(
+        "ezviz_defence_mode_change",
+        {
+            vol.Required(ATTR_SWITCH): vol.In(
+                [
+                    ATTR_HOME,
+                    ATTR_AWAY,
+                ]
+            ),
+        },
+        "perform_ezviz_defence_mode_change",
+    )
+
+    platform.async_register_entity_service(
+        "ezviz_sound_alarm",
+        {
+            vol.Required(ATTR_ENABLE): cv.positive_int,
+        },
+        "perform_ezviz_sound_alarm",
     )
 
     platform.async_register_entity_service(
@@ -312,6 +338,19 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         self.coordinator.ezviz_client.ptz_control(
             str(direction).upper(), self._serial, "STOP", speed
         )
+
+    def perform_ezviz_sound_alarm(self, enable):
+        """Sound the alarm on a camera."""
+        _LOGGER.debug("EZVIZ Alarm Switch to %s", enable)
+
+        self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
+
+    def perform_ezviz_defence_mode_change(self, defence_type):
+        """Sound the alarm on a camera."""
+        _LOGGER.debug("EZVIZ Defence mode to %s", type)
+        service_switch = getattr(DefenseModeType, defence_type)
+
+        self.coordinator.ezviz_client.api_set_defence_mode(service_switch.value)
 
     def perform_ezviz_wake_device(self):
         """Basically wakes the camera by querying the device."""
