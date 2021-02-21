@@ -373,6 +373,10 @@ async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
 
 async def test_state_raises(hass):
     """Test that state raises ConditionError on errors."""
+    # No entity
+    with pytest.raises(ConditionError, match="no entity"):
+        condition.state(hass, entity=None, req_state="missing")
+
     # Unknown entity_id
     with pytest.raises(ConditionError, match="unknown entity"):
         test = await condition.async_from_config(
@@ -395,6 +399,20 @@ async def test_state_raises(hass):
                 "entity_id": "sensor.door",
                 "attribute": "model",
                 "state": "acme",
+            },
+        )
+
+        hass.states.async_set("sensor.door", "open")
+        test(hass)
+
+    # Unknown state entity
+    with pytest.raises(ConditionError, match="input_text.missing"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "sensor.door",
+                "state": "input_text.missing",
             },
         )
 
@@ -550,7 +568,6 @@ async def test_state_using_input_entities(hass):
                     "state": [
                         "input_text.hello",
                         "input_select.hello",
-                        "input_number.not_exist",
                         "salut",
                     ],
                 },
@@ -686,6 +703,14 @@ async def test_numeric_state_raises(hass):
         hass.states.async_set("sensor.temperature", 50)
         test(hass)
 
+    # Below entity not a number
+    with pytest.raises(
+        ConditionError,
+        match="'below'.*input_number.missing.*cannot be processed as a number",
+    ):
+        hass.states.async_set("input_number.missing", "number")
+        test(hass)
+
     # Above entity missing
     with pytest.raises(ConditionError, match="'above' entity"):
         test = await condition.async_from_config(
@@ -698,6 +723,14 @@ async def test_numeric_state_raises(hass):
         )
 
         hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Above entity not a number
+    with pytest.raises(
+        ConditionError,
+        match="'above'.*input_number.missing.*cannot be processed as a number",
+    ):
+        hass.states.async_set("input_number.missing", "number")
         test(hass)
 
 
@@ -834,6 +867,9 @@ async def test_zone_raises(hass):
         },
     )
 
+    with pytest.raises(ConditionError, match="no zone"):
+        condition.zone(hass, zone_ent=None, entity="sensor.any")
+
     with pytest.raises(ConditionError, match="unknown zone"):
         test(hass)
 
@@ -842,6 +878,9 @@ async def test_zone_raises(hass):
         "zoning",
         {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
     )
+
+    with pytest.raises(ConditionError, match="no entity"):
+        condition.zone(hass, zone_ent="zone.home", entity=None)
 
     with pytest.raises(ConditionError, match="unknown entity"):
         test(hass)

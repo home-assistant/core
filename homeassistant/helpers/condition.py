@@ -124,13 +124,6 @@ async def async_and_from_config(
                 errors.append(
                     ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
                 )
-            except Exception as ex:  # pylint: disable=broad-except
-                error = ConditionErrorMessage("and", f"unhandled exception: {ex}")
-                errors.append(
-                    ConditionErrorIndex(
-                        "and", index=index, total=len(checks), error=error
-                    )
-                )
 
         # Raise the errors if no check was false
         if errors:
@@ -164,13 +157,6 @@ async def async_or_from_config(
                 errors.append(
                     ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
                 )
-            except Exception as ex:  # pylint: disable=broad-except
-                error = ConditionErrorMessage("or", f"unhandled exception: {ex}")
-                errors.append(
-                    ConditionErrorIndex(
-                        "or", index=index, total=len(checks), error=error
-                    )
-                )
 
         # Raise the errors if no check was true
         if errors:
@@ -203,13 +189,6 @@ async def async_not_from_config(
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
-                )
-            except Exception as ex:  # pylint: disable=broad-except
-                error = ConditionErrorMessage("not", f"unhandled exception: {ex}")
-                errors.append(
-                    ConditionErrorIndex(
-                        "not", index=index, total=len(checks), error=error
-                    )
                 )
 
         # Raise the errors if no check was true
@@ -293,7 +272,7 @@ def async_numeric_state(
 
     try:
         fvalue = float(value)
-    except ValueError as ex:
+    except (ValueError, TypeError) as ex:
         raise ConditionErrorMessage(
             "numeric_state",
             f"entity {entity_id} state '{value}' cannot be processed as a number",
@@ -309,8 +288,14 @@ def async_numeric_state(
                 raise ConditionErrorMessage(
                     "numeric_state", f"the 'below' entity {below} is unavailable"
                 )
-            if fvalue >= float(below_entity.state):
-                return False
+            try:
+                if fvalue >= float(below_entity.state):
+                    return False
+            except (ValueError, TypeError) as ex:
+                raise ConditionErrorMessage(
+                    "numeric_state",
+                    f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
+                ) from ex
         elif fvalue >= below:
             return False
 
@@ -324,8 +309,14 @@ def async_numeric_state(
                 raise ConditionErrorMessage(
                     "numeric_state", f"the 'above' entity {above} is unavailable"
                 )
-            if fvalue <= float(above_entity.state):
-                return False
+            try:
+                if fvalue <= float(above_entity.state):
+                    return False
+            except (ValueError, TypeError) as ex:
+                raise ConditionErrorMessage(
+                    "numeric_state",
+                    f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
+                ) from ex
         elif fvalue <= above:
             return False
 
@@ -408,7 +399,9 @@ def state(
         ):
             state_entity = hass.states.get(req_state_value)
             if not state_entity:
-                continue
+                raise ConditionErrorMessage(
+                    "state", f"the 'state' entity {req_state_value} is unavailable"
+                )
             state_value = state_entity.state
         is_state = value == state_value
         if is_state:
