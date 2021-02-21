@@ -236,16 +236,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     async def async_coordinator_update_data_central():
         """Fetch all device and sensor data from api."""
-        registry = await entity_registry.async_get_registry(hass)
-        entries = entity_registry.async_entries_for_config_entry(
-            registry, entry.entry_id
-        )
-        used_keys = {}
-        for ent in entries:
-            api_key = ent.unique_id.split(":")[0].split("_")[-1]
-            used_keys[api_key] = True
-        api.set_fetching_entities(used_keys)
-
         try:
             await api.async_update()
         except Exception as err:
@@ -420,9 +410,27 @@ class SynoApi:
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
 
-    def set_fetching_entities(self, fetching_entities: Dict[str, bool]):
-        """Set entries to be fetch from api."""
-        self._fetching_entities = fetching_entities
+    @callback
+    def subscribe(self, api_key, unique_id):
+        """Subscribe an entity to API fetches."""
+        _LOGGER.debug(
+            "SynoAPI.subscribe() - api_key:%s, unique_id:%s", api_key, unique_id
+        )
+        if api_key not in self._fetching_entities:
+            self._fetching_entities[api_key] = set()
+        self._fetching_entities[api_key].add(unique_id)
+
+        @callback
+        def unsubscribe() -> None:
+            """Unsubscribe an entity from API fetches (when disable)."""
+            _LOGGER.debug(
+                "SynoAPI.unsubscribe() - api_key:%s, unique_id:%s", api_key, unique_id
+            )
+            self._fetching_entities[api_key].remove(unique_id)
+            if len(self._fetching_entities[api_key]) == 0:
+                self._fetching_entities.pop(api_key)
+
+        return unsubscribe
 
     @callback
     def _setup_api_requests(self):
@@ -627,6 +635,11 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._enable_default
+
+    async def async_added_to_hass(self):
+        """Register entity for updates from API."""
+        self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
+        super().async_added_to_hass()
 
 
 class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
