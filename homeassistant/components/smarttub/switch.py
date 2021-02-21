@@ -44,7 +44,7 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this pump entity."""
-        return super().unique_id + f"-{self.pump_id}"
+        return f"{super().unique_id}-{self.pump_id}"
 
     @property
     def name(self) -> str:
