@@ -112,7 +112,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     def _light_mode_to_effect(light_mode: SpaLight.LightMode):
         if light_mode == SpaLight.LightMode.OFF:
             return None
-        if light_mode == SpaLight.LightMode.HIGH_SPEED_WHEEL:
+        if light_mode == SpaLight.LightMode.HIGH_SPEED_COLOR_WHEEL:
             return EFFECT_COLORLOOP
 
         return light_mode.name.lower()
@@ -120,7 +120,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @staticmethod
     def _effect_to_light_mode(effect):
         if effect == EFFECT_COLORLOOP:
-            return SpaLight.LightMode.HIGH_SPEED_WHEEL
+            return SpaLight.LightMode.HIGH_SPEED_COLOR_WHEEL
 
         return SpaLight.LightMode[effect.upper()]
 
