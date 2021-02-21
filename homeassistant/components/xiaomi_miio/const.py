@@ -75,6 +75,7 @@ SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
 SERVICE_CLEAN_SEGMENT = "vacuum_clean_segment"
 SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
 SERVICE_GOTO = "vacuum_goto"
+SERVICE_LOAD_MAP = "vacuum_load_map"
 
 # AirQuality Model
 MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"

@@ -38,6 +38,7 @@ from .const import (
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
+    SERVICE_LOAD_MAP
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,12 +207,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         },
         MiroboVacuum.async_goto.__name__,
     )
+
     platform.async_register_entity_service(
         SERVICE_CLEAN_SEGMENT,
         {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
         MiroboVacuum.async_clean_segment.__name__,
     )
 
+    platform.async_register_entity_service(
+        SERVICE_LOAD_MAP,
+        {vol.Required("map"): vol.Coerce(int)},
+        MiroboVacuum.async_load_map.__name__,
+    )
 
 class MiroboVacuum(StateVacuumEntity):
     """Representation of a Xiaomi Vacuum cleaner robot."""
@@ -470,6 +477,14 @@ class MiroboVacuum(StateVacuumEntity):
             "Unable to start cleaning of the specified segments: %s",
             self._vacuum.segment_clean,
             segments=segments,
+        )
+
+    async def async_load_map(self, map_id):
+        """Load saved map."""
+        await self._try_command(
+            "Unable to load the specified map: %s",
+            self._vacuum.use_backup_map,
+            id=map_id,
         )
 
     def update(self):

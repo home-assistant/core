@@ -363,3 +363,15 @@ vacuum_clean_segment:
     segments:
       description: Segments.
       example: "[1,2]"
+
+vacuum_load_map:
+  description: Load the specified map.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: "vacuum.xiaomi_vacuum_cleaner"
+    map:
+      description: Map.
+      example: "15"
+
+
