@@ -2,7 +2,6 @@
 from functools import partial
 import logging
 
-from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -113,8 +112,8 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 model = device_info.model
 
             if model is not None:
-                if self.mac is None:
-                    self.mac = await self.async_get_mac(device_info, self.host)
+                if self.mac is None and device_info is not None:
+                    self.mac = format_mac(device_info.mac_address)
 
                 # Setup Gateways
                 for gateway_model in MODELS_GATEWAY:
@@ -164,25 +163,3 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             schema = schema.extend(DEVICE_MODEL_CONFIG)
 
         return self.async_show_form(step_id="device", data_schema=schema, errors=errors)
-
-    async def async_get_mac(self, device_info, host):
-        """Get the mac address of a Miio Device when the info call fails."""
-        if device_info is not None:
-            return format_mac(device_info.mac_address)
-
-        # If the info call failed, use getmac as backup
-        try:
-            mac = await self.hass.async_add_executor_job(
-                partial(get_mac_address, **{"ip": host})
-            )
-            if not mac:
-                mac = await self.hass.async_add_executor_job(
-                    partial(get_mac_address, **{"hostname": host})
-                )
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Unable to get mac address: %s", err)
-            mac = None
-
-        if mac is not None:
-            mac = format_mac(mac)
-        return mac
