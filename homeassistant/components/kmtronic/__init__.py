@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -80,14 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         DATA_HOST: entry.data[DATA_HOST],
         DATA_COORDINATOR: coordinator,
     }
-
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        identifiers={(DOMAIN, hub.name)},
-        config_entry_id=entry.entry_id,
-        manufacturer=MANUFACTURER,
-        name=hub.name,
-    )
 
     for component in PLATFORMS:
         hass.async_create_task(
