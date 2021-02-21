@@ -65,14 +65,14 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
 
         # the API only supports toggling
         if not self.is_on:
-            await self.toggle()
+            await self.async_toggle()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the pump off."""
 
         # the API only supports toggling
         if self.is_on:
-            await self.toggle()
+            await self.async_toggle()
 
     async def async_toggle(self, **kwargs) -> None:
         """Toggle the pump on or off."""
