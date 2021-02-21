@@ -108,12 +108,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         "ezviz_defence_mode_change",
         {
-            vol.Required(ATTR_SWITCH): vol.In(
-                [
-                    ATTR_HOME,
-                    ATTR_AWAY,
-                ]
-            ),
+            vol.Required(ATTR_SWITCH): vol.In([ATTR_HOME, ATTR_AWAY]),
         },
         "perform_ezviz_defence_mode_change",
     )
@@ -345,10 +340,10 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
 
         self.coordinator.ezviz_client.sound_alarm(self._serial, enable)
 
-    def perform_ezviz_defence_mode_change(self, defence_type):
+    def perform_ezviz_defence_mode_change(self, switch):
         """Sound the alarm on a camera."""
-        _LOGGER.debug("EZVIZ Defence mode to %s", type)
-        service_switch = getattr(DefenseModeType, defence_type)
+        _LOGGER.debug("EZVIZ Defence mode to %s", switch)
+        service_switch = getattr(DefenseModeType, switch)
 
         self.coordinator.ezviz_client.api_set_defence_mode(service_switch.value)
 

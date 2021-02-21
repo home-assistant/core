@@ -44,9 +44,12 @@ ezviz_sound_alarm:
 ezviz_defence_mode_change:
   description: 'Change ezviz defence mode to away or home.'
   fields:
-    mode:
+    switch:
       description: 'Enter HOME_MODE or AWAY_MODE.'
       example: 'HOME_MODE'
+    entity_id:
+      description: 'Name(s) of entities to perform action on.'
+      example: 'camera.living_room_camera'
 ezviz_wake_device:
   description: 'This can also be used to wake device from hibernation.'
   fields:
