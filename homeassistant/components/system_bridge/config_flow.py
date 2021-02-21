@@ -161,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: mac})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._name = host
         self._input = {
