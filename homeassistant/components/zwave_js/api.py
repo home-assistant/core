@@ -27,7 +27,7 @@ ENTRY_ID = "entry_id"
 NODE_ID = "node_id"
 TYPE = "type"
 
-# constants for update_log_config
+# constants for log config commands
 CONFIG = "config"
 LEVEL = "level"
 LOG_TO_FILE = "log_to_file"
