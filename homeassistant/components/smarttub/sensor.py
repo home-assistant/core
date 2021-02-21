@@ -7,6 +7,11 @@ from .entity import SmartTubEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DURATION = "duration"
+ATTR_LAST_UPDATED = "last_updated"
+ATTR_MODE = "mode"
+ATTR_START_HOUR = "start_hour"
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up sensor entities for the sensors in the tub."""
