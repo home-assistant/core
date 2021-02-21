@@ -127,6 +127,120 @@ async def test_form_options(hass):
         assert config_entry.state == "loaded"
 
 
+async def test_form_options_default_language(hass):
+    """Test that the options form."""
+    mocked_owm = _create_mocked_owm(True)
+
+    with patch(
+        "pyowm.weatherapi25.weather_manager.WeatherManager",
+        return_value=mocked_owm,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, unique_id="openweathermap_unique_id", data=CONFIG
+        )
+        config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state == "loaded"
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_MODE: "daily"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {
+            CONF_MODE: "daily",
+            CONF_LANGUAGE: DEFAULT_LANGUAGE,
+        }
+
+        await hass.async_block_till_done()
+
+        assert config_entry.state == "loaded"
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={CONF_LANGUAGE: "it"}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {
+            CONF_MODE: "daily",
+            CONF_LANGUAGE: "it",
+        }
+
+        await hass.async_block_till_done()
+
+        assert config_entry.state == "loaded"
+
+
+async def test_form_options_defaults_all(hass):
+    """Test that the options form."""
+    mocked_owm = _create_mocked_owm(True)
+
+    with patch(
+        "pyowm.weatherapi25.weather_manager.WeatherManager",
+        return_value=mocked_owm,
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN, unique_id="openweathermap_unique_id", data=CONFIG
+        )
+        config_entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert config_entry.state == "loaded"
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {
+            CONF_MODE: DEFAULT_FORECAST_MODE,
+            CONF_LANGUAGE: DEFAULT_LANGUAGE,
+        }
+
+        await hass.async_block_till_done()
+
+        assert config_entry.state == "loaded"
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert config_entry.options == {
+            CONF_MODE: DEFAULT_FORECAST_MODE,
+            CONF_LANGUAGE: DEFAULT_LANGUAGE,
+        }
+
+        await hass.async_block_till_done()
+
+        assert config_entry.state == "loaded"
+
+
 async def test_form_invalid_api_key(hass):
     """Test that the form is served with no input."""
     mocked_owm = _create_mocked_owm(True)
