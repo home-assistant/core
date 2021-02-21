@@ -7,10 +7,10 @@ from typing import Deque, List
 
 import av
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
-from .const import OUTPUT_CONTAINER_FORMAT
-from .core import Segment, StreamOutput
+from .const import RECORDER_CONTAINER_FORMAT, SEGMENT_CONTAINER_FORMAT
+from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,13 +20,13 @@ def async_setup_recorder(hass):
     """Only here so Provider Registry works."""
 
 
-def recorder_save_worker(file_out: str, segments: Deque[Segment], container_format):
+def recorder_save_worker(file_out: str, segments: Deque[Segment]):
     """Handle saving stream."""
     if not os.path.exists(os.path.dirname(file_out)):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
     pts_adjuster = {"video": None, "audio": None}
-    output = av.open(file_out, "w", format=container_format)
+    output = av.open(file_out, "w", format=RECORDER_CONTAINER_FORMAT)
     output_v = None
     output_a = None
 
@@ -42,7 +42,7 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment], container_form
         last_sequence = segment.sequence
 
         # Open segment
-        source = av.open(segment.segment, "r", format=container_format)
+        source = av.open(segment.segment, "r", format=SEGMENT_CONTAINER_FORMAT)
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 
@@ -82,30 +82,34 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment], container_form
     output.close()
 
 
+@PROVIDERS.register("recorder")
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass) -> None:
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
         """Initialize recorder output."""
-        super().__init__(hass)
+        super().__init__(hass, idle_timer)
         self.video_path = None
         self._segments = deque()
 
-    def _async_put(self, segment: Segment) -> None:
-        """Store output."""
-        self._segments.append(segment)
+    @property
+    def name(self) -> str:
+        """Return provider name."""
+        return "recorder"
 
     def prepend(self, segments: List[Segment]) -> None:
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
-    def save(self):
+    def cleanup(self):
         """Write recording and clean up."""
         _LOGGER.debug("Starting recorder worker thread")
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments, OUTPUT_CONTAINER_FORMAT),
+            args=(self.video_path, self._segments),
         )
         thread.start()
+
+        super().cleanup()
         self._segments = deque()

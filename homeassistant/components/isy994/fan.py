@@ -2,12 +2,13 @@
 import math
 from typing import Callable
 
-from pyisy.constants import ISY_VALUE_UNKNOWN
+from pyisy.constants import ISY_VALUE_UNKNOWN, PROTO_INSTEON
 
 from homeassistant.components.fan import DOMAIN as FAN, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -47,6 +48,13 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        if self._node.protocol == PROTO_INSTEON:
+            return 3
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def is_on(self) -> bool:
@@ -94,6 +102,13 @@ class ISYFanProgramEntity(ISYProgramEntity, FanEntity):
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, self._node.status)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        if self._node.protocol == PROTO_INSTEON:
+            return 3
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def is_on(self) -> bool:
