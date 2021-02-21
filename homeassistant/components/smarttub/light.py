@@ -11,8 +11,14 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
+from homeassistant.const import ATTR_MODE
 
-from .const import DEFAULT_LIGHT_INTENSITY, DOMAIN, SMARTTUB_CONTROLLER
+from .const import (
+    DEFAULT_LIGHT_INTENSITY,
+    DEFAULT_LIGHT_MODE,
+    DOMAIN,
+    SMARTTUB_CONTROLLER,
+)
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
@@ -99,8 +105,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
 
-        # the light doesn't remember any state, so we have to choose a color to turn it on. I like purple.
-        mode = SpaLight.LightMode.PURPLE
+        mode = SpaLight.LightMode[kwargs.get(ATTR_MODE, DEFAULT_LIGHT_MODE)]
 
         if ATTR_BRIGHTNESS in kwargs:
             intensity = self._hass_to_smarttub_brightness(kwargs[ATTR_BRIGHTNESS])

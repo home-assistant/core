@@ -14,5 +14,9 @@ API_TIMEOUT = 5
 DEFAULT_MIN_TEMP = 18.5
 DEFAULT_MAX_TEMP = 40
 
+# the device doesn't remember any state for the light, so we have to choose a
+# mode (smarttub.SpaLight.LightMode) when turning it on. There is no white
+# mode.
+DEFAULT_LIGHT_MODE = "PURPLE"
 # this is what the vendor app does
 DEFAULT_LIGHT_INTENSITY = 50
