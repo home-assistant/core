@@ -347,13 +347,13 @@ class _ScriptRun:
     async def _async_wait_template_step(self):
         """Handle a wait template."""
         if CONF_TIMEOUT in self._action:
-            delay = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+            timeout = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
         else:
-            delay = None
+            timeout = None
 
-        self._step_log("wait template", delay)
+        self._step_log("wait template", timeout)
 
-        self._variables["wait"] = {"remaining": delay, "completed": False}
+        self._variables["wait"] = {"remaining": timeout, "completed": False}
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self._hass
@@ -367,7 +367,7 @@ class _ScriptRun:
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             self._variables["wait"] = {
-                "remaining": to_context.remaining if to_context else delay,
+                "remaining": to_context.remaining if to_context else timeout,
                 "completed": True,
             }
             done.set()
@@ -383,7 +383,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(delay) as to_context:
+            async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
@@ -622,20 +622,20 @@ class _ScriptRun:
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""
         if CONF_TIMEOUT in self._action:
-            delay = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+            timeout = self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
         else:
-            delay = None
+            timeout = None
 
-        self._step_log("wait for trigger", delay)
+        self._step_log("wait for trigger", timeout)
 
         variables = {**self._variables}
-        self._variables["wait"] = {"remaining": delay, "trigger": None}
+        self._variables["wait"] = {"remaining": timeout, "trigger": None}
 
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
             self._variables["wait"] = {
-                "remaining": to_context.remaining if to_context else delay,
+                "remaining": to_context.remaining if to_context else timeout,
                 "trigger": variables["trigger"],
             }
             done.set()
@@ -661,7 +661,7 @@ class _ScriptRun:
             self._hass.async_create_task(flag.wait()) for flag in (self._stop, done)
         ]
         try:
-            async with async_timeout.timeout(delay) as to_context:
+            async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
