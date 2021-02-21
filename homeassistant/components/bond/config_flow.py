@@ -14,16 +14,17 @@ from homeassistant.const import (
     HTTP_UNAUTHORIZED,
 )
 
-from .const import CONF_BOND_ID
 from .const import DOMAIN  # pylint:disable=unused-import
 from .utils import BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA_USER = vol.Schema(
+
+USER_SCHEMA = vol.Schema(
     {vol.Required(CONF_HOST): str, vol.Required(CONF_ACCESS_TOKEN): str}
 )
-DATA_SCHEMA_DISCOVERY = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+TOKEN_SCHEMA = vol.Schema({})
 
 
 async def _validate_input(data: Dict[str, Any]) -> Tuple[str, Optional[str]]:
@@ -56,7 +57,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    _discovered: dict = None
+    def __init__(self):
+        """Initialize config flow."""
+        self._discovered: dict = None
 
     async def async_step_zeroconf(
         self, discovery_info: Optional[Dict[str, Any]] = None
@@ -68,12 +71,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(bond_id)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
-        self._discovered = {
-            CONF_HOST: host,
-            CONF_BOND_ID: bond_id,
-        }
-        self.context.update({"title_placeholders": self._discovered})
+        discovered = {CONF_HOST: host}
+        token = await _async_try_get_token_for_host(host)
+        if token:
+            discovered[CONF_ACCESS_TOKEN] = token
+            _, hub_name = await _validate_input(host, token)
+            discovered[CONF_NAME] = hub_name
+        else:
+            discovered[CONF_NAME] = bond_id
 
+        self.context.update(
+            {
+                "title_placeholders": {
+                    CONF_HOST: discovered[CONF_HOST],
+                    CONF_NAME: discovered[CONF_NAME],
+                }
+            }
+        )
+
+        self._discovered = discovered
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -82,16 +98,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
         if user_input is not None:
-            data = user_input.copy()
-            data[CONF_HOST] = self._discovered[CONF_HOST]
+            if self._token:
+                return self.async_create_entry(
+                    title=self._discovered[CONF_NAME],
+                    data={
+                        CONF_ACCESS_TOKEN: self._discovered[CONF_ACCESS_TOKEN],
+                        CONF_HOST: self._discovered[CONF_HOST],
+                    },
+                )
+
             try:
-                return await self._try_create_entry(data)
+                _, hub_name = await _validate_input(user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
+            else:
+                return self.async_create_entry(
+                    title=hub_name,
+                    data={
+                        CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                        CONF_HOST: self._discovered[CONF_HOST],
+                    },
+                )
 
         return self.async_show_form(
             step_id="confirm",
-            data_schema=DATA_SCHEMA_DISCOVERY,
+            data_schema=TOKEN_SCHEMA if self._token else DISCOVERY_SCHEMA,
             errors=errors,
             description_placeholders=self._discovered,
         )
@@ -103,20 +134,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                return await self._try_create_entry(user_input)
+                bond_id, hub_name = await _validate_input(user_input)
             except InputValidationError as error:
                 errors["base"] = error.base
+            else:
+                await self.async_set_unique_id(bond_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=hub_name, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
+            step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
-
-    async def _try_create_entry(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        bond_id, name = await _validate_input(data)
-        await self.async_set_unique_id(bond_id)
-        self._abort_if_unique_id_configured()
-        hub_name = name or bond_id
-        return self.async_create_entry(title=hub_name, data=data)
 
 
 class InputValidationError(exceptions.HomeAssistantError):
@@ -126,3 +154,16 @@ class InputValidationError(exceptions.HomeAssistantError):
         """Initialize with error base."""
         super().__init__()
         self.base = base
+
+
+async def _async_try_get_token_for_host(host):
+    """Try to get the token from a bond device.
+
+    Failure is acceptable here since the device may have been
+    online longer then the allowed setup period, and we will
+    instead ask them to manually enter the token.
+    """
+    try:
+        return await Bond(host, "").__get("/v2/token").get("token")
+    except (ClientConnectionError, ClientResponseError):
+        return None
