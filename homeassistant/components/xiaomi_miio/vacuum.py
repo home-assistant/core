@@ -148,7 +148,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         unique_id = config_entry.unique_id
 
         # Create handler
-        _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
         vacuum = Vacuum(host, token)
 
         mirobo = MiroboVacuum(name, vacuum, config_entry, unique_id)
