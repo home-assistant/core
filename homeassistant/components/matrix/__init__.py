@@ -254,6 +254,51 @@ class MatrixBot:
     async def compute_commands(self):
         """Set up the variables for a different kind of command types."""
 
+        async def _set_word_command(_room_id):
+            """Set the word commands."""
+
+            _room_id = await self.resolve_room_id(_room_id)
+            if _room_id in self._conversation[CONF_ROOMS]:
+                return
+
+            if _room_id not in self._word_commands:
+                self._word_commands[_room_id] = {}
+
+            if len(_command[CONF_ROOMS]) > 0:
+                _room_id_list = []
+                for _room_id_or_alias in _command[CONF_ROOMS]:
+                    _id = await self.resolve_room_id(_room_id_or_alias)
+                    if _id not in self._conversation[CONF_ROOMS]:
+                        _room_id_list.append(_id)
+                _command[CONF_ROOMS] = list(_room_id_list)
+
+            _LOGGER.debug("Word command: %s", str(_command))
+            self._word_commands[_room_id][_command[CONF_WORD]] = _command
+
+        async def _set_expression_command(_room_id):
+            """Set the expression commands."""
+
+            _room_id = await self.resolve_room_id(_room_id)
+            if (
+                self._conversation[CONF_ROOMS]
+                and _room_id in self._conversation[CONF_ROOMS]
+            ):
+                return
+
+            if _room_id not in self._expression_commands:
+                self._expression_commands[_room_id] = []
+
+            if len(_command[CONF_ROOMS]) > 0:
+                _room_id_list = []
+                for _room_id_or_alias in _command[CONF_ROOMS]:
+                    _id = await self.resolve_room_id(_room_id_or_alias)
+                    if _id not in self._conversation[CONF_ROOMS]:
+                        _room_id_list.append(_id)
+                _command[CONF_ROOMS] = list(_room_id_list)
+
+            _LOGGER.debug("Exp. command: %s", str(_command))
+            self._expression_commands[_room_id].append(_command)
+
         # Compute the rooms the bot listens and sends everything to conversation
         if self._conversation:
             _LOGGER.debug("There is Conversation defined.")
@@ -276,46 +321,11 @@ class MatrixBot:
 
             if _command.get(CONF_WORD):
                 for _room_id in _command[CONF_ROOMS]:
-                    _room_id = await self.resolve_room_id(_room_id)
-                    if _room_id in self._conversation[CONF_ROOMS]:
-                        continue
-
-                    if _room_id not in self._word_commands:
-                        self._word_commands[_room_id] = {}
-
-                    if len(_command[CONF_ROOMS]) > 0:
-                        _room_id_list = []
-                        for _room_id_or_alias in _command[CONF_ROOMS]:
-                            _id = await self.resolve_room_id(_room_id_or_alias)
-                            if _id not in self._conversation[CONF_ROOMS]:
-                                _room_id_list.append(_id)
-                        _command[CONF_ROOMS] = list(_room_id_list)
-
-                    _LOGGER.debug("Word command: %s", str(_command))
-                    self._word_commands[_room_id][_command[CONF_WORD]] = _command
+                    await _set_word_command(_room_id)
 
             else:
                 for _room_id in _command[CONF_ROOMS]:
-                    _room_id = await self.resolve_room_id(_room_id)
-                    if (
-                        self._conversation[CONF_ROOMS]
-                        and _room_id in self._conversation[CONF_ROOMS]
-                    ):
-                        continue
-
-                    if _room_id not in self._expression_commands:
-                        self._expression_commands[_room_id] = []
-
-                    if len(_command[CONF_ROOMS]) > 0:
-                        _room_id_list = []
-                        for _room_id_or_alias in _command[CONF_ROOMS]:
-                            _id = await self.resolve_room_id(_room_id_or_alias)
-                            if _id not in self._conversation[CONF_ROOMS]:
-                                _room_id_list.append(_id)
-                        _command[CONF_ROOMS] = list(_room_id_list)
-
-                    _LOGGER.debug("Exp. command: %s", str(_command))
-                    self._expression_commands[_room_id].append(_command)
+                    await _set_expression_command(_room_id)
 
         _LOGGER.debug("Word commands: %s", str(self._word_commands))
         _LOGGER.debug("Expression commands: %s", str(self._expression_commands))
