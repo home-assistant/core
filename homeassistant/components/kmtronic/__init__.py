@@ -34,6 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the kmtronic component."""
+    hass.data[DOMAIN] = {}
+
     return True
 
 
@@ -71,9 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
-
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_HUB: hub,
