@@ -87,13 +87,13 @@ class SmartTubController:
 
     async def _get_spa_data(self, spa):
         async with async_timeout.timeout(API_TIMEOUT):
-            status, pumps, lights = await asyncio.gather(
-                spa.get_status(), spa.get_pumps(), spa.get_lights()
+            status, pumps = await asyncio.gather(
+                spa.get_status(),
+                spa.get_pumps(),
             )
             return {
                 "status": status,
                 "pumps": {pump.id: pump for pump in pumps},
-                "lights": {light.zone: light for light in lights},
             }
 
     async def async_register_devices(self, entry):
