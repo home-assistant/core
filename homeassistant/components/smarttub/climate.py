@@ -44,7 +44,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current running hvac operation."""
-        heater_status = self.get_spa_status("heater")
+        heater_status = self.spa_status.heater
         if heater_status == "ON":
             return CURRENT_HVAC_HEAT
         if heater_status == "OFF":
@@ -97,12 +97,12 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current water temperature."""
-        return self.get_spa_status("water.temperature")
+        return self.spa_status.water.temperature
 
     @property
     def target_temperature(self):
         """Return the target water temperature."""
-        return self.get_spa_status("setTemperature")
+        return self.spa_status.set_temperature
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
