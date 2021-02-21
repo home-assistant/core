@@ -55,13 +55,19 @@ def mock_spa():
     mock_circulation_pump.state = smarttub.SpaPump.PumpState.OFF
     mock_circulation_pump.type = smarttub.SpaPump.PumpType.CIRCULATION
 
-    mock_jet = create_autospec(smarttub.SpaPump, instance=True)
-    mock_jet.id = "P1"
-    mock_jet.spa = mock_spa
-    mock_jet.state = smarttub.SpaPump.PumpState.OFF
-    mock_jet.type = smarttub.SpaPump.PumpType.JET
+    mock_jet_off = create_autospec(smarttub.SpaPump, instance=True)
+    mock_jet_off.id = "P1"
+    mock_jet_off.spa = mock_spa
+    mock_jet_off.state = smarttub.SpaPump.PumpState.OFF
+    mock_jet_off.type = smarttub.SpaPump.PumpType.JET
 
-    mock_spa.get_pumps.return_value = [mock_circulation_pump, mock_jet]
+    mock_jet_on = create_autospec(smarttub.SpaPump, instance=True)
+    mock_jet_on.id = "P2"
+    mock_jet_on.spa = mock_spa
+    mock_jet_on.state = smarttub.SpaPump.PumpState.HIGH
+    mock_jet_on.type = smarttub.SpaPump.PumpType.JET
+
+    mock_spa.get_pumps.return_value = [mock_circulation_pump, mock_jet_off, mock_jet_on]
 
     mock_light_off = create_autospec(smarttub.SpaLight, instance=True)
     mock_light_off.spa = mock_spa
