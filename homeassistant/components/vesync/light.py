@@ -1,6 +1,5 @@
 """Support for VeSync dimmers."""
 import logging
-import math
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
