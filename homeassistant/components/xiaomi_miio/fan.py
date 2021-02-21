@@ -10,7 +10,6 @@ from miio import (  # pylint: disable=import-error
     AirHumidifierMiot,
     AirPurifier,
     AirPurifierMiot,
-    Device,
     DeviceException,
 )
 from miio.airfresh import (  # pylint: disable=import-error, import-error
@@ -44,6 +43,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -51,11 +51,24 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
     DOMAIN,
+    MODEL_AIRHUMIDIFIER_CA1,
+    MODEL_AIRHUMIDIFIER_CA4,
+    MODEL_AIRHUMIDIFIER_CB1,
+    MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3,
+    MODEL_AIRPURIFIER_3H,
+    MODEL_AIRPURIFIER_PRO,
+    MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_V3,
+    MODELS_FAN,
+    MODELS_HUMIDIFIER_MIOT,
+    MODELS_PURIFIER_MIOT,
     SERVICE_RESET_FILTER,
     SERVICE_SET_AUTO_DETECT_OFF,
     SERVICE_SET_AUTO_DETECT_ON,
@@ -76,19 +89,8 @@ from .const import (
     SERVICE_SET_MOTOR_SPEED,
     SERVICE_SET_TARGET_HUMIDITY,
     SERVICE_SET_VOLUME,
-    MODELS_FAN,
-    MODEL_AIRPURIFIER_PRO,
-    MODEL_AIRPURIFIER_PRO_V7,
-    MODEL_AIRPURIFIER_2S,
-    MODEL_AIRPURIFIER_3,
-    MODEL_AIRPURIFIER_3H,
-    MODEL_AIRPURIFIER_V3,
-    MODEL_AIRHUMIDIFIER_CA1,
-    MODEL_AIRHUMIDIFIER_CB1,
-    MODEL_AIRHUMIDIFIER_CA4,
-    MODELS_PURIFIER_MIOT,
-    MODELS_HUMIDIFIER_MIOT,
 )
+from .device import XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -530,6 +532,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
     )
 
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fan from a config entry."""
     entities = []
@@ -554,7 +557,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             device = XiaomiAirPurifier(name, air_purifier, config_entry, unique_id)
         elif model in MODELS_HUMIDIFIER_MIOT:
             air_humidifier = AirHumidifierMiot(host, token)
-            device = XiaomiAirHumidifierMiot(name, air_humidifier, config_entry, unique_id)
+            device = XiaomiAirHumidifierMiot(
+                name, air_humidifier, config_entry, unique_id
+            )
         elif model.startswith("zhimi.humidifier."):
             air_humidifier = AirHumidifier(host, token, model=model)
             device = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
@@ -577,7 +582,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             """Map services to methods on XiaomiAirPurifier."""
             method = SERVICE_TO_METHOD.get(service.service)
             params = {
-                key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+                key: value
+                for key, value in service.data.items()
+                if key != ATTR_ENTITY_ID
             }
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             if entity_ids:
@@ -1169,7 +1176,6 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,

@@ -16,8 +16,8 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
-    MODELS_SWITCH,
     MODELS_FAN,
+    MODELS_SWITCH,
 )
 from .gateway import ConnectXiaomiGateway
 
