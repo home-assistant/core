@@ -66,10 +66,10 @@ class VeSyncDimmerHA(VeSyncDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             # get brightness from HA data
             brightness = int(kwargs[ATTR_BRIGHTNESS])
-            # clamp to 1-255
-            brightness = max(1, min(brightness, 255))
-            # convert to 1-100 range that vesync api expects
-            brightness = math.ceil((brightness / 255) * 100)
+            # convert to percent that vesync api expects
+            brightness = math.round((brightness / 255) * 100)
+            # clamp to 1-100
+            brightness = max(1, min(brightness, 100))
             self.dimmer.set_brightness(brightness)
         # Avoid turning device back on if this is just a brightness adjustment
         if not self.is_on:
