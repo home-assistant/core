@@ -16,6 +16,14 @@
         "data": {
           "2fa": "Two-factor code"
         }
+      },
+      "reauth": {
+        "title": "Hive Login",
+        "description": "Re-enter your Hive login information.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -26,7 +34,8 @@
     },
     "abort": {
       "already_configured": "Hive account is already configured.",
-      "unknown": "Something has gone wrong please try again later."
+      "unknown": "Something has gone wrong please try again later.",
+      "unknown_entry": "Unable to find exisitng entry."
     }
   },
   "options": {

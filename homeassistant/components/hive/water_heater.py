@@ -33,18 +33,11 @@ HASS_TO_HIVE_STATE = {
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Hive thermostat.
-
-    No longer in use.
-    """
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN][entry.entry_id]
-    devices = hive.devices.get("water_heater")
+    hive = hass.data[DOMAIN]["entries"][entry.entry_id]
+    devices = hive.session.devices.get("water_heater")
     entities = []
     if devices:
         for dev in devices:
