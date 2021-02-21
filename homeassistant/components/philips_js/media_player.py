@@ -68,10 +68,6 @@ CONF_ON_ACTION = "turn_on_action"
 
 DEFAULT_API_VERSION = 1
 
-PREFIX_SEPARATOR = ": "
-PREFIX_SOURCE = "Input"
-PREFIX_CHANNEL = "Channel"
-
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_NAME),
@@ -189,19 +185,9 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Set the input source."""
-        data = source.split(PREFIX_SEPARATOR, 1)
-        if data[0] == PREFIX_SOURCE:  # Legacy way to set source
-            source_id = _inverted(self._sources).get(data[1])
-            if source_id:
-                await self._tv.setSource(source_id)
-        elif data[0] == PREFIX_CHANNEL:  # Legacy way to set channel
-            channel_id = _inverted(self._channels).get(data[1])
-            if channel_id:
-                await self._tv.setChannel(channel_id)
-        else:
-            source_id = _inverted(self._sources).get(source)
-            if source_id:
-                await self._tv.setSource(source_id)
+        source_id = _inverted(self._sources).get(source)
+        if source_id:
+            await self._tv.setSource(source_id)
         await self._async_update_soon()
 
     @property
@@ -330,11 +316,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             return app.get("label")
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {"channel_list": list(self._channels.values())}
-
-    @property
     def device_class(self):
         """Return the device class."""
         return DEVICE_CLASS_TV
@@ -362,9 +343,9 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MEDIA_TYPE_CHANNEL:
-            channel_id = _inverted(self._channels).get(media_id)
+            list_id, _, channel_id = media_id.partition("/")
             if channel_id:
-                await self._tv.setChannel(channel_id)
+                await self._tv.setChannel(channel_id, list_id)
                 await self._async_update_soon()
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
@@ -383,17 +364,17 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         if expanded:
             children = [
                 BrowseMedia(
-                    title=channel,
+                    title=channel.get("name", f"Channel: {channel_id}"),
                     media_class=MEDIA_CLASS_CHANNEL,
-                    media_content_id=channel,
+                    media_content_id=f"alltv/{channel_id}",
                     media_content_type=MEDIA_TYPE_CHANNEL,
                     can_play=True,
                     can_expand=False,
                     thumbnail=self.get_browse_image_url(
-                        MEDIA_TYPE_APP, channel, media_image_id=None
+                        MEDIA_TYPE_APP, channel_id, media_image_id=None
                     ),
                 )
-                for channel in self._channels.values()
+                for channel_id, channel in self._tv.channels.items()
             ]
         else:
             children = None
@@ -402,6 +383,50 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             title="Channels",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="channels",
+            media_content_type=MEDIA_TYPE_CHANNELS,
+            children_media_class=MEDIA_TYPE_CHANNEL,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
+    async def async_browse_media_favorites(self, list_id, expanded):
+        """Return channel media objects."""
+        if expanded:
+            favorites = await self._tv.getFavoriteList(list_id)
+            if favorites:
+
+                def get_name(channel):
+                    channel_data = self._tv.channels.get(str(channel["ccid"]))
+                    if channel_data:
+                        return channel_data["name"]
+                    else:
+                        return f"Channel: {channel['ccid']}"
+
+                children = [
+                    BrowseMedia(
+                        title=get_name(channel),
+                        media_class=MEDIA_CLASS_CHANNEL,
+                        media_content_id=f"{list_id}/{channel['ccid']}",
+                        media_content_type=MEDIA_TYPE_CHANNEL,
+                        can_play=True,
+                        can_expand=False,
+                        thumbnail=self.get_browse_image_url(
+                            MEDIA_TYPE_APP, channel, media_image_id=None
+                        ),
+                    )
+                    for channel in favorites
+                ]
+            else:
+                children = None
+        else:
+            children = None
+
+        favorite = self._tv.favorite_lists[list_id]
+        return BrowseMedia(
+            title=favorite.get("name", f"Favorites {list_id}"),
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id=f"favorites/{list_id}",
             media_content_type=MEDIA_TYPE_CHANNELS,
             children_media_class=MEDIA_TYPE_CHANNEL,
             can_play=False,
@@ -440,8 +465,30 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             children=children,
         )
 
+    async def async_browse_media_favorite_lists(self, expanded):
+        """Return favorite media objects."""
+        if self._tv.favorite_lists and expanded:
+            children = [
+                await self.async_browse_media_favorites(list_id, False)
+                for list_id in self._tv.favorite_lists
+            ]
+        else:
+            children = None
+
+        return BrowseMedia(
+            title="Favorites",
+            media_class=MEDIA_CLASS_DIRECTORY,
+            media_content_id="favorite_lists",
+            media_content_type=MEDIA_TYPE_CHANNELS,
+            children_media_class=MEDIA_TYPE_CHANNEL,
+            can_play=False,
+            can_expand=True,
+            children=children,
+        )
+
     async def async_browse_media_root(self):
         """Return root media objects."""
+
         return BrowseMedia(
             title="Library",
             media_class=MEDIA_CLASS_DIRECTORY,
@@ -452,17 +499,26 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             children=[
                 await self.async_browse_media_channels(False),
                 await self.async_browse_media_applications(False),
+                await self.async_browse_media_favorite_lists(False),
             ],
         )
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
-        if media_content_id == "channels":
-            return await self.async_browse_media_channels(True)
-        if media_content_id == "applications":
-            return await self.async_browse_media_applications(True)
+        if not self._tv.on:
+            raise BrowseError("Can't browse when tv is turned off")
+
         if media_content_id in (None, ""):
             return await self.async_browse_media_root()
+        path = media_content_id.partition("/")
+        if path[0] == "channels":
+            return await self.async_browse_media_channels(True)
+        if path[0] == "applications":
+            return await self.async_browse_media_applications(True)
+        if path[0] == "favorite_lists":
+            return await self.async_browse_media_favorite_lists(True)
+        if path[0] == "favorites":
+            return await self.async_browse_media_favorites(path[2], True)
 
         raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
 
@@ -501,16 +557,13 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             for srcid, source in (self._tv.sources or {}).items()
         }
 
-        self._channels = {
-            chid: channel.get("name") or f"Channel {chid}"
-            for chid, channel in (self._tv.channels or {}).items()
-        }
-
         if self._tv.channel_active:
             self._media_content_type = MEDIA_TYPE_CHANNEL
-            self._media_content_id = self._tv.channel_id
-            self._media_title = self._channels.get(self._tv.channel_id)
-            self._media_channel = self._channels.get(self._tv.channel_id)
+            self._media_content_id = f"all/{self._tv.channel_id}"
+            self._media_title = self._tv.channels.get(self._tv.channel_id, {}).get(
+                "name"
+            )
+            self._media_channel = self._media_title
         elif self._tv.application_id:
             self._media_content_type = MEDIA_TYPE_APP
             self._media_content_id = self._tv.application_id
