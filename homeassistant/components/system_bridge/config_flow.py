@@ -110,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if errors is None:
             # Check if already configured
             await self.async_set_unique_id(info["mac"])
-            self._abort_if_unique_id_configured(updates={CONF_HOST: info["mac"]})
+            self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
 
             return self.async_create_entry(title=info["hostname"], data=user_input)
 
@@ -136,7 +136,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if errors is None:
             # Check if already configured
             await self.async_set_unique_id(info["mac"])
-            self._abort_if_unique_id_configured(updates={CONF_HOST: info["mac"]})
+            self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
 
             return self.async_create_entry(title=info["hostname"], data=user_input)
         elif errors["base"] == "cannot_connect" or errors["base"] == "invalid_host":
