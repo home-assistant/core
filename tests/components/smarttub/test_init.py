@@ -39,15 +39,13 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
     assert config_entry.state == ENTRY_STATE_SETUP_ERROR
 
 
-async def test_config_passed_to_config_entry(
-    hass, config_entry, config_data, smarttub_api
-):
+async def test_config_passed_to_config_entry(hass, config_entry, config_data):
     """Test that configured options are loaded via config entry."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, smarttub.DOMAIN, config_data)
 
 
-async def test_unload_entry(hass, config_entry, smarttub_api):
+async def test_unload_entry(hass, config_entry):
     """Test being able to unload an entry."""
     config_entry.add_to_hass(hass)
 
