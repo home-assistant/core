@@ -19,6 +19,15 @@ async def test_light(spa, setup_entry, hass):
                 blocking=True,
             )
             light.set_mode.assert_called()
+
+            await hass.services.async_call(
+                "light",
+                "turn_on",
+                {"entity_id": entity_id, "brightness": 255},
+                blocking=True,
+            )
+            light.set_mode.assert_called_with(SpaLight.LightMode.PURPLE, 100)
+
         else:
             assert state.state == "on"
             await hass.services.async_call(

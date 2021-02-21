@@ -98,10 +98,10 @@ class SmartTubLight(SmartTubEntity, LightEntity):
         """Turn the light on."""
 
         # the light doesn't remember any state, so we have to choose a color to turn it on. I like purple.
-        mode = self.light.LightMode.PURPLE
+        mode = SpaLight.LightMode.PURPLE
 
         if ATTR_BRIGHTNESS in kwargs:
-            intensity = self.hass_to_smarttub_brightness(kwargs[ATTR_BRIGHTNESS])
+            intensity = self._hass_to_smarttub_brightness(kwargs[ATTR_BRIGHTNESS])
         else:
             intensity = DEFAULT_LIGHT_INTENSITY
 
