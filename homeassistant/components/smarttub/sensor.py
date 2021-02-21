@@ -26,6 +26,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 SmartTubOzone(controller.coordinator, spa),
                 SmartTubBlowoutCycle(controller.coordinator, spa),
                 SmartTubCleanupCycle(controller.coordinator, spa),
+                SmartTubPrimaryFiltrationCycle(controller.coordinator, spa),
+                SmartTubSecondaryFiltrationCycle(controller.coordinator, spa),
             ]
         )
 
@@ -89,3 +91,53 @@ class SmartTubCleanupCycle(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Cleanup Cycle", "cleanupCycle")
+
+
+class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
+    """The primary filtration cycle."""
+
+    def __init__(self, coordinator, spa):
+        """Initialize the entity."""
+        super().__init__(
+            coordinator, spa, "primary filtration cycle", "primaryFiltration"
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the current state of the sensor."""
+        return self._state["status"].lower()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state = self._state
+        return {
+            ATTR_DURATION: state["duration"],
+            ATTR_LAST_UPDATED: state["lastUpdated"],
+            ATTR_MODE: state["mode"].lower(),
+            ATTR_START_HOUR: state["startHour"],
+        }
+
+
+class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
+    """The secondary filtration cycle."""
+
+    def __init__(self, coordinator, spa):
+        """Initialize the entity."""
+        super().__init__(
+            coordinator, spa, "Secondary Filtration Cycle", "secondaryFiltration"
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the current state of the sensor."""
+        return self._state.get("status").lower()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        state = self._state
+        return {
+            ATTR_LAST_UPDATED: state["lastUpdated"],
+            ATTR_MODE: state["mode"].lower(),
+        }
