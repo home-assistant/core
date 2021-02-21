@@ -220,6 +220,7 @@ class Remote:
         """Turn off the TV."""
         if self.state != STATE_OFF:
             await self.async_send_key(Keys.power)
+            self.state = STATE_OFF
             await self.async_update()
 
     async def async_set_mute(self, enable):

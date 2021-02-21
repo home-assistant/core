@@ -2,6 +2,8 @@
 
 from unittest.mock import call
 
+from panasonic_viera import Keys
+
 from homeassistant.components.panasonic_viera.const import ATTR_UDN, DOMAIN
 from homeassistant.components.remote import (
     ATTR_COMMAND,
@@ -29,37 +31,28 @@ async def setup_panasonic_viera(hass):
     await hass.async_block_till_done()
 
 
-async def test_turn_on(hass, mock_remote):
-    """Test turn on service call."""
+async def test_onoff(hass, mock_remote):
+    """Test the on/off service calls."""
 
     await setup_panasonic_viera(hass)
 
     data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
+
+    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_OFF, data)
     await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_ON, data)
     await hass.async_block_till_done()
 
-    assert mock_remote.async_turn_on.call_args == ()
-
-
-async def test_turn_off(hass, mock_remote):
-    """Test turn off service call."""
-
-    await setup_panasonic_viera(hass)
-
-    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv"}
-    await hass.services.async_call(REMOTE_DOMAIN, SERVICE_TURN_OFF, data)
-    await hass.async_block_till_done()
-
-    assert mock_remote.async_turn_off.call_args == ()
+    power = getattr(Keys.power, "value", Keys.power)
+    assert mock_remote.send_key.call_args_list == [call(power), call(power)]
 
 
 async def test_send_command(hass, mock_remote):
-    """Test send command service call."""
+    """Test the send_command service call."""
 
     await setup_panasonic_viera(hass)
 
-    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv", ATTR_COMMAND: "power"}
+    data = {ATTR_ENTITY_ID: "remote.panasonic_viera_tv", ATTR_COMMAND: "command"}
     await hass.services.async_call(REMOTE_DOMAIN, SERVICE_SEND_COMMAND, data)
     await hass.async_block_till_done()
 
-    assert mock_remote.async_send_key.call_args == call("power")
+    assert mock_remote.send_key.call_args == call("command")

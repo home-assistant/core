@@ -15,7 +15,7 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
-    get_mock_remote_entity,
+    get_mock_remote,
 )
 
 from tests.common import MockConfigEntry
@@ -80,10 +80,10 @@ async def test_setup_entry_encrypted_missing_device_info_none(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote_entity(device_info=None)
+    mock_remote = get_mock_remote(device_info=None)
 
     with patch(
-        "homeassistant.components.panasonic_viera.Remote",
+        "homeassistant.components.panasonic_viera.RemoteControl",
         return_value=mock_remote,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)
@@ -161,10 +161,10 @@ async def test_setup_entry_unencrypted_missing_device_info_none(hass):
 
     mock_entry.add_to_hass(hass)
 
-    mock_remote = get_mock_remote_entity(device_info=None)
+    mock_remote = get_mock_remote(device_info=None)
 
     with patch(
-        "homeassistant.components.panasonic_viera.Remote",
+        "homeassistant.components.panasonic_viera.RemoteControl",
         return_value=mock_remote,
     ):
         await hass.config_entries.async_setup(mock_entry.entry_id)

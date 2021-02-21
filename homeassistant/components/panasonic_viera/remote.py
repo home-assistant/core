@@ -78,7 +78,7 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self._remote.async_turn_on()
+        await self._remote.async_turn_on(context=self._context)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""

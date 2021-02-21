@@ -1,8 +1,7 @@
 """Test the Panasonic Viera config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from panasonic_viera import TV_TYPE_ENCRYPTED, TV_TYPE_NONENCRYPTED, SOAPError
-import pytest
+from panasonic_viera import SOAPError
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
@@ -18,59 +17,10 @@ from .conftest import (
     MOCK_CONFIG_DATA,
     MOCK_DEVICE_INFO,
     MOCK_ENCRYPTION_DATA,
+    get_mock_remote,
 )
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="panasonic_viera_setup", autouse=True)
-def panasonic_viera_setup_fixture():
-    """Patch the Panasonic Viera setup."""
-    with patch(
-        "homeassistant.components.panasonic_viera.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.panasonic_viera.async_setup_entry",
-        return_value=True,
-    ):
-        yield
-
-
-def get_mock_remote(
-    request_error=None,
-    authorize_error=None,
-    encrypted=False,
-    app_id=None,
-    encryption_key=None,
-    device_info=MOCK_DEVICE_INFO,
-):
-    """Return a mock remote."""
-    mock_remote = Mock()
-
-    mock_remote.type = TV_TYPE_ENCRYPTED if encrypted else TV_TYPE_NONENCRYPTED
-    mock_remote.app_id = app_id
-    mock_remote.enc_key = encryption_key
-
-    def request_pin_code(name=None):
-        if request_error is not None:
-            raise request_error
-
-    mock_remote.request_pin_code = request_pin_code
-
-    def authorize_pin_code(pincode):
-        if pincode == "1234":
-            return
-
-        if authorize_error is not None:
-            raise authorize_error
-
-    mock_remote.authorize_pin_code = authorize_pin_code
-
-    def get_device_info():
-        return device_info
-
-    mock_remote.get_device_info = get_device_info
-
-    return mock_remote
 
 
 async def test_flow_non_encrypted(hass):

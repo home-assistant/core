@@ -1,7 +1,8 @@
 """Test helpers for Panasonic Viera."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
+from panasonic_viera import TV_TYPE_ENCRYPTED, TV_TYPE_NONENCRYPTED
 import pytest
 
 from homeassistant.components.panasonic_viera.const import (
@@ -43,47 +44,61 @@ MOCK_DEVICE_INFO = {
 }
 
 
-def get_mock_remote_entity(device_info=MOCK_DEVICE_INFO):
-    """Return a mock remote entity."""
+def get_mock_remote(
+    request_error=None,
+    authorize_error=None,
+    encrypted=False,
+    app_id=None,
+    encryption_key=None,
+    device_info=MOCK_DEVICE_INFO,
+):
+    """Return a mock remote."""
     mock_remote = Mock()
 
-    async def async_create_remote_control(during_setup=False):
-        return
+    mock_remote.type = TV_TYPE_ENCRYPTED if encrypted else TV_TYPE_NONENCRYPTED
+    mock_remote.app_id = app_id
+    mock_remote.enc_key = encryption_key
 
-    mock_remote.async_create_remote_control = AsyncMock(
-        side_effect=async_create_remote_control
-    )
+    def request_pin_code(name=None):
+        if request_error is not None:
+            raise request_error
 
-    async def async_get_device_info():
+    mock_remote.request_pin_code = request_pin_code
+
+    def authorize_pin_code(pincode):
+        if pincode == "1234":
+            return
+
+        if authorize_error is not None:
+            raise authorize_error
+
+    mock_remote.authorize_pin_code = authorize_pin_code
+
+    def get_device_info():
         return device_info
 
-    mock_remote.async_get_device_info = AsyncMock(side_effect=async_get_device_info)
+    mock_remote.get_device_info = get_device_info
 
-    async def async_turn_on():
+    def send_key(key):
         return
 
-    mock_remote.async_turn_on = AsyncMock(side_effect=async_turn_on)
+    mock_remote.send_key = Mock(send_key)
 
-    async def async_turn_off():
-        return
+    def get_volume(key):
+        return 100
 
-    mock_remote.async_turn_on = AsyncMock(side_effect=async_turn_off)
-
-    async def async_send_key(key):
-        return
-
-    mock_remote.async_send_key = AsyncMock(side_effect=async_send_key)
+    mock_remote.get_volume = Mock(get_volume)
 
     return mock_remote
 
 
 @pytest.fixture(name="mock_remote")
 def mock_remote_fixture():
-    """Patch the remote."""
-    mock_remote = get_mock_remote_entity()
+    """Patch the library remote."""
+    mock_remote = get_mock_remote()
 
     with patch(
-        "homeassistant.components.panasonic_viera.Remote",
+        "homeassistant.components.panasonic_viera.RemoteControl",
         return_value=mock_remote,
     ):
         yield mock_remote
