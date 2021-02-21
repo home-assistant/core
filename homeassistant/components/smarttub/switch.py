@@ -1,11 +1,12 @@
 """Platform for switch integration."""
 import logging
 
+import async_timeout
 from smarttub import SpaPump
 
 from homeassistant.components.switch import SwitchEntity
 
-from .const import DOMAIN, SMARTTUB_CONTROLLER
+from .const import API_TIMEOUT, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity
 from .helpers import get_spa_name
 
@@ -76,5 +77,6 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
 
     async def async_toggle(self, **kwargs) -> None:
         """Toggle the pump on or off."""
-        await self.pump.toggle()
+        async with async_timeout.timeout(API_TIMEOUT):
+            await self.pump.toggle()
         await self.coordinator.async_request_refresh()

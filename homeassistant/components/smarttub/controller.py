@@ -15,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, POLLING_TIMEOUT, SCAN_INTERVAL
+from .const import API_TIMEOUT, DOMAIN, POLLING_TIMEOUT, SCAN_INTERVAL
 from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,8 +86,15 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        status, pumps = await asyncio.gather(spa.get_status(), spa.get_pumps())
-        return {"status": status, "pumps": {pump.id: pump for pump in pumps}}
+        async with async_timeout.timeout(API_TIMEOUT):
+            status, pumps, lights = await asyncio.gather(
+                spa.get_status(), spa.get_pumps(), spa.get_lights()
+            )
+            return {
+                "status": status,
+                "pumps": {pump.id: pump for pump in pumps},
+                "lights": {light.zone: light for light in lights},
+            }
 
     async def async_register_devices(self, entry):
         """Register devices with the device registry for all spas."""
