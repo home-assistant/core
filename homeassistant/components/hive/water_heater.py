@@ -1,6 +1,9 @@
 """Support for hive water heaters."""
 
 from datetime import timedelta
+import logging
+
+import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -9,10 +12,11 @@ from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
     WaterHeaterEntity,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import ATTR_ENTITY_ID, TEMP_CELSIUS
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
-from .const import DOMAIN
+from .const import ATTR_ONOFF, ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HOT_WATER
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 HOTWATER_NAME = "Hot Water"
@@ -33,8 +37,38 @@ HASS_TO_HIVE_STATE = {
 SUPPORT_WATER_HEATER = [STATE_ECO, STATE_ON, STATE_OFF]
 
 
+BOOST_HOT_WATER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Optional(ATTR_TIME_PERIOD, default="00:30:00"): vol.All(
+            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
+        ),
+        vol.Required(ATTR_ONOFF): cv.string,
+    }
+)
+
+_LOGGER = logging.getLogger(__name__)
+
+
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
+
+    async def async_hot_water_boost(self, service):
+        """Handle the service call."""
+        entity_lookup = hass.data[DOMAIN]["entity_lookup"]
+        device = entity_lookup.get(service.data[ATTR_ENTITY_ID])
+        if not device:
+            # log or raise error
+            _LOGGER.error("Cannot boost entity id entered")
+            return
+
+        minutes = service.data[ATTR_TIME_PERIOD]
+        mode = service.data[ATTR_ONOFF]
+
+        if mode == "on":
+            await hive.hotwater.turn_boost_on(device, minutes)
+        elif mode == "off":
+            await hive.hotwater.turn_boost_off(device)
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
     devices = hive.session.devices.get("water_heater")
@@ -43,6 +77,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         for dev in devices:
             entities.append(HiveWaterHeater(hive, dev))
     async_add_entities(entities, True)
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_BOOST_HOT_WATER,
+        BOOST_HOT_WATER_SCHEMA,
+        async_hot_water_boost,
+    )
 
 
 class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
