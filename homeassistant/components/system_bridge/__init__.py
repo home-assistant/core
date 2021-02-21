@@ -125,6 +125,7 @@ class BridgeEntity(CoordinatorEntity):
         ]
         self._manufacturer = bridge.system.system.manufacturer
         self._model = bridge.system.system.model
+        self._version = bridge.system.system.version
 
     @property
     def unique_id(self) -> str:
@@ -155,4 +156,5 @@ class BridgeDeviceEntity(BridgeEntity):
             "manufacturer": self._manufacturer,
             "model": self._model,
             "name": self._hostname,
+            "sw_version": self._version,
         }
