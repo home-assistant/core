@@ -199,7 +199,8 @@ class BaseNotificationService:
                 )
                 # Register the service description
                 service_desc = {
-                    CONF_DESCRIPTION: f"Send a notification to {target_name}",
+                    CONF_NAME: f"Send a notification via {target_name}",
+                    CONF_DESCRIPTION: f"Sends a notification message using the {target_name} integration.",
                     CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
                 }
                 async_set_service_schema(self.hass, DOMAIN, target_name, service_desc)
@@ -223,7 +224,8 @@ class BaseNotificationService:
 
         # Register the service description
         service_desc = {
-            CONF_DESCRIPTION: f"Send a notification with {self._service_name}",
+            CONF_NAME: f"Send a notification with {self._service_name}",
+            CONF_DESCRIPTION: f"Sends a notification message using the {self._service_name} service.",
             CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)

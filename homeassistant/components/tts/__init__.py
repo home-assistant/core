@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_NAME,
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
@@ -208,7 +209,8 @@ async def async_setup(hass, config):
 
         # Register the service description
         service_desc = {
-            CONF_DESCRIPTION: f"Say some things on a media player with {p_type}",
+            CONF_NAME: "Say an TTS message with {p_type}",
+            CONF_DESCRIPTION: f"Say something using text-to-speech on a media player with {p_type}.",
             CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
         }
         async_set_service_schema(hass, DOMAIN, service_name, service_desc)
