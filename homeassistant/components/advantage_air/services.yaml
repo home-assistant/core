@@ -7,3 +7,9 @@ set_time_to:
     minutes:
       description: Minutes until action
       example: "60"
+set_myzone:
+  description: Change which zone is set as the reference for temperature control
+  fields:
+    entity_id:
+      description: Climate entity
+      example: "climate.living_room"
