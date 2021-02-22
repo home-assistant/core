@@ -41,11 +41,11 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert not result["is_secure"]
     assert result["status"] == 1
 
-    # Test getting configuration values
+    # Test getting configuration parameter values
     await ws_client.send_json(
         {
             ID: 4,
-            TYPE: "zwave_js/get_configuration_values",
+            TYPE: "zwave_js/get_config_parameters",
             ENTRY_ID: entry.entry_id,
             NODE_ID: node.node_id,
         }
