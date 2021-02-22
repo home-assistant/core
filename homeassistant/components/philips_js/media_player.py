@@ -400,8 +400,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     channel_data = self._tv.channels.get(str(channel["ccid"]))
                     if channel_data:
                         return channel_data["name"]
-                    else:
-                        return f"Channel: {channel['ccid']}"
+                    return f"Channel: {channel['ccid']}"
 
                 children = [
                     BrowseMedia(
