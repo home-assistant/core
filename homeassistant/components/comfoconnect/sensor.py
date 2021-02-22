@@ -29,6 +29,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONF_RESOURCES,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -71,7 +72,6 @@ ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ICON = "icon"
 ATTR_ID = "id"
 ATTR_LABEL = "label"
 ATTR_MULTIPLIER = "multiplier"

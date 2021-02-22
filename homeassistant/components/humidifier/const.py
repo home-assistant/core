@@ -10,7 +10,6 @@ MODE_SLEEP = "sleep"
 MODE_AUTO = "auto"
 MODE_BABY = "baby"
 
-ATTR_MODE = "mode"
 ATTR_AVAILABLE_MODES = "available_modes"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
