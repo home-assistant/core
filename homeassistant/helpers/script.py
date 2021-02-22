@@ -66,14 +66,9 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import condition, config_validation as cv, service, template
 from homeassistant.helpers.condition import (
-    TraceElement,
     condition_path,
     condition_trace_clear,
     condition_trace_get,
-    trace_append_element,
-    trace_stack_pop,
-    trace_stack_push,
-    trace_stack_top,
 )
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -84,6 +79,14 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
+
+from .trace import (
+    TraceElement,
+    trace_append_element,
+    trace_stack_pop,
+    trace_stack_push,
+    trace_stack_top,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 

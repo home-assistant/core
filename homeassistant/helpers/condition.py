@@ -64,6 +64,14 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
+from .trace import (
+    TraceElement,
+    trace_append_element,
+    trace_stack_pop,
+    trace_stack_push,
+    trace_stack_top,
+)
+
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
@@ -74,74 +82,6 @@ INPUT_ENTITY_ID = re.compile(
 )
 
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
-
-
-# Common helpers for tracing. TODO: Move to own file
-def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
-    """Push an element to the top of a trace stack."""
-    trace_stack = trace_stack_var.get()
-    if trace_stack is None:
-        trace_stack_var.set([])
-        trace_stack = trace_stack_var.get()
-    trace_stack.append(node)
-
-
-def trace_stack_pop(trace_stack_var: ContextVar) -> None:
-    """Remove the top element from a trace stack."""
-    trace_stack = trace_stack_var.get()
-    trace_stack.pop()
-
-
-def trace_stack_top(trace_stack_var: ContextVar) -> Optional[Any]:
-    """Return the element at the top of a trace stack."""
-    trace_stack = trace_stack_var.get()
-    return trace_stack[-1] if trace_stack else None
-
-
-class TraceElement:
-    """Container for trace data."""
-
-    def __init__(self, variables: TemplateVarsType):
-        """Container for trace data."""
-        self._error = None  # type: Optional[Exception]
-        self._result = None  # type: Optional[dict]
-        self._timestamp = dt_util.utcnow()
-        self._variables = variables
-
-    def __repr__(self) -> str:
-        """Container for trace data."""
-        return f"{self._result}"
-
-    def set_error(self, ex: Exception) -> None:
-        """Set error."""
-        self._error = ex
-
-    def set_result(self, **kwargs: Any) -> None:
-        """Set result."""
-        self._result = {**kwargs}
-
-    def as_dict(self) -> Dict[str, Any]:
-        """Return dictionary version of this TraceElement."""
-        result = {"timestamp": self._timestamp}  # type: Dict[str, Any]
-        # Commented out because we get too many copies of the same data
-        # result["variables"] = self._variables
-        if self._error is not None:
-            result["error"] = self._error
-        if self._result is not None:
-            result["result"] = self._result
-        return result
-
-
-def trace_append_element(
-    trace_var: ContextVar, trace_element: TraceElement, path: str
-) -> None:
-    """Append a TraceElement to trace[path]."""
-    trace = trace_var.get()
-    if trace is None:
-        trace_var.set({})
-        trace = trace_var.get()
-    trace.setdefault(path, [])
-    trace[path].append(trace_element)
 
 
 # Context variables for tracing
