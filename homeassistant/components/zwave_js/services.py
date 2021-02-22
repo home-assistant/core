@@ -54,10 +54,8 @@ class ZWaveServices:
             self.async_set_config_parameter,
             schema=vol.All(
                 {
-                    vol.Optional(ATTR_DEVICE_ID, "id"): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(ATTR_ENTITY_ID, "id"): cv.entity_ids,
+                    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+                    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
                     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Any(
                         vol.Coerce(int), cv.string
                     ),
