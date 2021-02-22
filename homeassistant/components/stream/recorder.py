@@ -30,7 +30,9 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
     output_a = None
 
     last_stream_id = None
-    running_duration = 0  # the running duration of processed segments
+    # The running duration of processed segments. Note that this is in av.time_base
+    # units which seem to be defined inversely to how stream time_bases are defined
+    running_duration = 0
 
     last_sequence = float("-inf")
     for segment in segments:
@@ -57,12 +59,14 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
         # We are assuming time base is the same across all discontinuities
         if last_stream_id != segment.stream_id:
             last_stream_id = segment.stream_id
-            pts_adjuster["video"] = running_duration - source_v.start_time
+            pts_adjuster["video"] = int(
+                (running_duration - source.start_time)
+                / (av.time_base * source_v.time_base)
+            )
             if source_a:
                 pts_adjuster["audio"] = int(
-                    (running_duration - source_v.start_time)
-                    * source_v.time_base
-                    / source_a.time_base
+                    (running_duration - source.start_time)
+                    / (av.time_base * source_a.time_base)
                 )
 
         # Remux video
@@ -74,7 +78,7 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
             packet.stream = output_v if packet.stream.type == "video" else output_a
             output.mux(packet)
 
-        running_duration += source_v.duration
+        running_duration += source.duration
 
         source.close()
 
