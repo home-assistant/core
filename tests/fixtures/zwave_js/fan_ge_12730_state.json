@@ -1,0 +1,434 @@
+{
+    "nodeId": 24,
+    "index": 0,
+    "status": 4,
+    "ready": true,
+    "deviceClass": {
+        "basic": "Routing Slave",
+        "generic": "Multilevel Switch",
+        "specific": "Multilevel Power Switch",
+        "mandatorySupportedCCs": [
+            "Basic",
+            "Multilevel Switch",
+            "All Switch"
+        ],
+        "mandatoryControlCCs": []
+    },
+    "isListening": true,
+    "isFrequentListening": false,
+    "isRouting": true,
+    "maxBaudRate": 40000,
+    "isSecure": false,
+    "version": 4,
+    "isBeaming": true,
+    "manufacturerId": 99,
+    "productId": 12340,
+    "productType": 18756,
+    "firmwareVersion": "3.10",
+    "deviceConfig": {
+        "manufacturerId": 99,
+        "manufacturer": "GE/Jasco",
+        "label": "12730  / ZW4002",
+        "description": "In-Wall Smart Fan Control",
+        "devices": [
+            {
+                "productType": "0x4944",
+                "productId": "0x3034"
+            }
+        ],
+        "firmwareVersion": {
+            "min": "0.0",
+            "max": "255.255"
+        },
+        "paramInformation": {
+            "_map": {}
+        }
+    },
+    "label": "12730  / ZW4002",
+    "neighbors": [
+        1,
+        12
+    ],
+    "interviewAttempts": 1,
+    "interviewStage": 7,
+    "endpoints": [
+        {
+            "nodeId": 24,
+            "index": 0
+        }
+    ],
+    "values": [
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "targetValue",
+            "propertyName": "targetValue",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 99,
+                "label": "Target value"
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "duration",
+            "propertyName": "duration",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "duration",
+                "readable": true,
+                "writeable": true,
+                "label": "Transition duration"
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "currentValue",
+            "propertyName": "currentValue",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 99,
+                "label": "Current value"
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "Up",
+            "propertyName": "Up",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Perform a level change (Up)",
+                "ccSpecific": {
+                    "switchType": 2
+                }
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 38,
+            "commandClassName": "Multilevel Switch",
+            "property": "Down",
+            "propertyName": "Down",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "boolean",
+                "readable": true,
+                "writeable": true,
+                "label": "Perform a level change (Down)",
+                "ccSpecific": {
+                    "switchType": 2
+                }
+            }
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 3,
+            "propertyName": "LED Light",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 2,
+                "default": 0,
+                "format": 0,
+                "allowManualEntry": false,
+                "states": {
+                    "0": "LED on when light off",
+                    "1": "LED on when light on",
+                    "2": "LED always off"
+                },
+                "label": "LED Light",
+                "description": "Sets when the LED on the switch is lit.",
+                "isFromConfig": true
+            },
+            "value": 1
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 4,
+            "propertyName": "Invert Switch",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 1,
+                "default": 0,
+                "format": 0,
+                "allowManualEntry": false,
+                "states": {
+                    "0": "No",
+                    "1": "Yes"
+                },
+                "label": "Invert Switch",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 7,
+            "propertyName": "Dim Rate Steps (Z-Wave Command)",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 0,
+                "max": 99,
+                "default": 1,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Dim Rate Steps (Z-Wave Command)",
+                "description": "Number of steps or levels",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 8,
+            "propertyName": "Dim Rate Timing (Z-Wave)",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 2,
+                "min": 1,
+                "max": 255,
+                "default": 3,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Dim Rate Timing (Z-Wave)",
+                "description": "Timing of steps or levels",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 9,
+            "propertyName": "Dim Rate Steps (Manual)",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 1,
+                "max": 99,
+                "default": 1,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Dim Rate Steps (Manual)",
+                "description": "Number of steps or levels",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 10,
+            "propertyName": "Dim Rate Timing (Manual)",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 2,
+                "min": 1,
+                "max": 255,
+                "default": 3,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Dim Rate Timing (Manual)",
+                "description": "Timing of steps",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 11,
+            "propertyName": "Dim Rate Steps (All-On/All-Off)",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 1,
+                "min": 1,
+                "max": 99,
+                "default": 1,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Dim Rate Steps (All-On/All-Off)",
+                "description": "Number of steps or levels",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 112,
+            "commandClassName": "Configuration",
+            "property": 12,
+            "propertyName": "Dim Rate Timing (All-On/All-Off)",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "valueSize": 2,
+                "min": 1,
+                "max": 255,
+                "default": 3,
+                "format": 1,
+                "allowManualEntry": true,
+                "label": "Dim Rate Timing (All-On/All-Off)",
+                "description": "Timing of steps or levels",
+                "isFromConfig": true
+            },
+            "value": 0
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 114,
+            "commandClassName": "Manufacturer Specific",
+            "property": "manufacturerId",
+            "propertyName": "manufacturerId",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Manufacturer ID"
+            },
+            "value": 99
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 114,
+            "commandClassName": "Manufacturer Specific",
+            "property": "productType",
+            "propertyName": "productType",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Product type"
+            },
+            "value": 18756
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 114,
+            "commandClassName": "Manufacturer Specific",
+            "property": "productId",
+            "propertyName": "productId",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 65535,
+                "label": "Product ID"
+            },
+            "value": 12340
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "libraryType",
+            "propertyName": "libraryType",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Library type"
+            },
+            "value": 6
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "protocolVersion",
+            "propertyName": "protocolVersion",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave protocol version"
+            },
+            "value": "3.67"
+        },
+        {
+            "endpoint": 0,
+            "commandClass": 134,
+            "commandClassName": "Version",
+            "property": "firmwareVersions",
+            "propertyName": "firmwareVersions",
+            "ccVersion": 1,
+            "metadata": {
+                "type": "any",
+                "readable": true,
+                "writeable": false,
+                "label": "Z-Wave chip firmware versions"
+            },
+            "value": [
+                "3.10"
+            ]
+        }
+    ]
+}
