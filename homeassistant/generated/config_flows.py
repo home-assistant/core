@@ -115,6 +115,7 @@ FLOWS = [
     "izone",
     "juicenet",
     "keenetic_ndms2",
+    "kmtronic",
     "kodi",
     "konnected",
     "kulersky",
