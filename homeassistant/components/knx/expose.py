@@ -5,6 +5,7 @@ from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_ENTITY_ID,
     STATE_OFF,
     STATE_ON,
@@ -23,7 +24,7 @@ def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> Union["KNXExposeSensor", "KNXExposeTime"]:
     """Create exposures from config."""
-    address = config[ExposeSchema.CONF_KNX_EXPOSE_ADDRESS]
+    address = config[CONF_ADDRESS]
     attribute = config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
     entity_id = config.get(CONF_ENTITY_ID)
     expose_type = config.get(ExposeSchema.CONF_KNX_EXPOSE_TYPE)

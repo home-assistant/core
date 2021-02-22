@@ -17,6 +17,7 @@ from xknx.telegram import AddressFilter, GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -64,7 +65,6 @@ CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
 
 SERVICE_KNX_SEND = "send"
-SERVICE_KNX_ATTR_ADDRESS = "address"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
 SERVICE_KNX_ATTR_TYPE = "type"
 SERVICE_KNX_ATTR_REMOVE = "remove"
@@ -146,7 +146,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
         }
@@ -154,7 +154,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         # without type given payload is treated as raw bytes
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
@@ -164,7 +164,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
 
 SERVICE_KNX_READ_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): vol.All(
+        vol.Required(CONF_ADDRESS): vol.All(
             cv.ensure_list,
             [cv.string],
         )
@@ -173,7 +173,7 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
 
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+        vol.Required(CONF_ADDRESS): cv.string,
         vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
@@ -187,7 +187,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
     vol.Schema(
         # for removing only `address` is required
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
         },
         extra=vol.ALLOW_EXTRA,
@@ -399,7 +399,7 @@ class KNXModule:
 
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
-        group_address = GroupAddress(call.data[SERVICE_KNX_ATTR_ADDRESS])
+        group_address = GroupAddress(call.data[CONF_ADDRESS])
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             try:
                 self._knx_event_callback.group_addresses.remove(group_address)
@@ -417,7 +417,7 @@ class KNXModule:
 
     async def service_exposure_register_modify(self, call):
         """Service for adding or removing an exposure to KNX bus."""
-        group_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        group_address = call.data.get(CONF_ADDRESS)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             try:
@@ -449,7 +449,7 @@ class KNXModule:
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
-        attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        attr_address = call.data.get(CONF_ADDRESS)
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
 
         def calculate_payload(attr_payload):
@@ -471,7 +471,7 @@ class KNXModule:
 
     async def service_read_to_knx_bus(self, call):
         """Service for sending a GroupValueRead telegram to the KNX bus."""
-        for address in call.data.get(SERVICE_KNX_ATTR_ADDRESS):
+        for address in call.data.get(CONF_ADDRESS):
             telegram = Telegram(
                 destination_address=GroupAddress(address),
                 payload=GroupValueRead(),
