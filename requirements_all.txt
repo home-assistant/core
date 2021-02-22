@@ -81,7 +81,7 @@ RtmAPI==0.7.2
 TravisPy==0.3.5
 
 # homeassistant.components.twitter
-TwitterAPI==2.6.5
+TwitterAPI==2.6.6
 
 # homeassistant.components.tof
 # VL53L1X2==0.1.5
@@ -371,7 +371,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bond
-bond-api==0.1.9
+bond-api==0.1.10
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -1473,6 +1473,9 @@ pyitachip2ir==0.0.7
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.kmtronic
+pykmtronic==0.0.3
+
 # homeassistant.components.kodi
 pykodi==0.2.1
 
@@ -1499,6 +1502,9 @@ pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
+
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1651,6 +1657,9 @@ pyrepetier==3.0.5
 
 # homeassistant.components.risco
 pyrisco==0.3.1
+
+# homeassistant.components.rituals_perfume_genie
+pyrituals==0.0.2
 
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
@@ -1814,7 +1823,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.6
+python-smarttub==0.0.17
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -1902,7 +1911,7 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.6.1
+pywemo==0.6.3
 
 # homeassistant.components.wilight
 pywilight==0.0.68
@@ -1962,7 +1971,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.6.0
+rokuecp==0.8.0
 
 # homeassistant.components.roomba
 roombapy==1.6.2
@@ -1992,7 +2001,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.4.0
+samsungtvws==1.6.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2139,6 +2148,9 @@ streamlabswater==1.0.1
 # homeassistant.components.traccar
 stringcase==1.2.0
 
+# homeassistant.components.subaru
+subarulink==0.3.12
+
 # homeassistant.components.ecovacs
 sucks==0.9.4
 
@@ -2212,7 +2224,7 @@ todoist-python==8.0.0
 toonapi==0.2.0
 
 # homeassistant.components.totalconnect
-total_connect_client==0.55
+total_connect_client==0.57
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -2321,7 +2333,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.16.3
+xknx==0.17.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2376,7 +2388,7 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.3.0
+zigpy-znp==0.4.0
 
 # homeassistant.components.zha
 zigpy==0.32.0
@@ -2385,4 +2397,4 @@ zigpy==0.32.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.17.2
+zwave-js-server-python==0.18.0

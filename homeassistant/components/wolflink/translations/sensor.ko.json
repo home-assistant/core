@@ -14,7 +14,8 @@
             "auto_off_cool": "\ub0c9\ubc29 \uc790\ub3d9 \uaebc\uc9d0",
             "auto_on_cool": "\ub0c9\ubc29 \uc790\ub3d9 \ucf1c\uc9d0",
             "automatik_aus": "\uc790\ub3d9 \uaebc\uc9d0",
-            "automatik_ein": "\uc790\ub3d9 \ucf1c\uc9d0"
+            "automatik_ein": "\uc790\ub3d9 \ucf1c\uc9d0",
+            "permanent": "\uc601\uad6c\uc801"
         }
     }
 }

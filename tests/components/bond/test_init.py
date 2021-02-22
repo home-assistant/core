@@ -1,5 +1,7 @@
 """Tests for the Bond module."""
-from aiohttp import ClientConnectionError
+from unittest.mock import Mock
+
+from aiohttp import ClientConnectionError, ClientResponseError
 from bond_api import DeviceType
 
 from homeassistant.components.bond.const import DOMAIN
@@ -14,6 +16,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    patch_bond_bridge,
     patch_bond_device,
     patch_bond_device_ids,
     patch_bond_device_properties,
@@ -54,25 +57,22 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
         data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
     )
 
-    with patch_bond_version(
+    with patch_bond_bridge(), patch_bond_version(
         return_value={
             "bondid": "test-bond-id",
             "target": "test-model",
             "fw_ver": "test-version",
         }
-    ):
-        with patch_setup_entry(
-            "cover"
-        ) as mock_cover_async_setup_entry, patch_setup_entry(
-            "fan"
-        ) as mock_fan_async_setup_entry, patch_setup_entry(
-            "light"
-        ) as mock_light_async_setup_entry, patch_setup_entry(
-            "switch"
-        ) as mock_switch_async_setup_entry:
-            result = await setup_bond_entity(hass, config_entry, patch_device_ids=True)
-            assert result is True
-            await hass.async_block_till_done()
+    ), patch_setup_entry("cover") as mock_cover_async_setup_entry, patch_setup_entry(
+        "fan"
+    ) as mock_fan_async_setup_entry, patch_setup_entry(
+        "light"
+    ) as mock_light_async_setup_entry, patch_setup_entry(
+        "switch"
+    ) as mock_switch_async_setup_entry:
+        result = await setup_bond_entity(hass, config_entry, patch_device_ids=True)
+        assert result is True
+        await hass.async_block_till_done()
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state == ENTRY_STATE_LOADED
@@ -81,7 +81,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
     # verify hub device is registered correctly
     device_registry = await dr.async_get_registry(hass)
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
-    assert hub.name == "test-bond-id"
+    assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
     assert hub.model == "test-model"
     assert hub.sw_version == "test-version"
@@ -106,6 +106,7 @@ async def test_unload_config_entry(hass: HomeAssistant):
         patch_version=True,
         patch_device_ids=True,
         patch_platforms=True,
+        patch_bridge=True,
     )
     assert result is True
     await hass.async_block_till_done()
@@ -136,7 +137,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
 
     config_entry.add_to_hass(hass)
 
-    with patch_bond_version(
+    with patch_bond_bridge(), patch_bond_version(
         return_value={
             "bondid": "test-bond-id",
             "target": "test-model",
@@ -164,3 +165,92 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
     # verify the device info is cleaned up
     assert device_registry.async_get_device(identifiers={old_identifers}) is None
     assert device_registry.async_get_device(identifiers={new_identifiers}) is not None
+
+
+async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
+    """Test we can setup a smart by bond device and get the suggested area."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch_bond_bridge(
+        side_effect=ClientResponseError(Mock(), Mock(), status=404)
+    ), patch_bond_version(
+        return_value={
+            "bondid": "test-bond-id",
+            "target": "test-model",
+            "fw_ver": "test-version",
+        }
+    ), patch_start_bpup(), patch_bond_device_ids(
+        return_value=["bond-device-id", "device_id"]
+    ), patch_bond_device(
+        return_value={
+            "name": "test1",
+            "type": DeviceType.GENERIC_DEVICE,
+            "location": "Den",
+        }
+    ), patch_bond_device_properties(
+        return_value={}
+    ), patch_bond_device_state(
+        return_value={}
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        await hass.async_block_till_done()
+
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.unique_id == "test-bond-id"
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
+    assert device is not None
+    assert device.suggested_area == "Den"
+
+
+async def test_bridge_device_suggested_area(hass: HomeAssistant):
+    """Test we can setup a bridge bond device and get the suggested area."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+    )
+
+    config_entry.add_to_hass(hass)
+
+    with patch_bond_bridge(
+        return_value={
+            "name": "Office Bridge",
+            "location": "Office",
+        }
+    ), patch_bond_version(
+        return_value={
+            "bondid": "test-bond-id",
+            "target": "test-model",
+            "fw_ver": "test-version",
+        }
+    ), patch_start_bpup(), patch_bond_device_ids(
+        return_value=["bond-device-id", "device_id"]
+    ), patch_bond_device(
+        return_value={
+            "name": "test1",
+            "type": DeviceType.GENERIC_DEVICE,
+            "location": "Bathroom",
+        }
+    ), patch_bond_device_properties(
+        return_value={}
+    ), patch_bond_device_state(
+        return_value={}
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        await hass.async_block_till_done()
+
+    assert config_entry.entry_id in hass.data[DOMAIN]
+    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.unique_id == "test-bond-id"
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
+    assert device is not None
+    assert device.suggested_area == "Office"

@@ -1,8 +1,12 @@
 # Describes the format for available Z-Wave services
 
 clear_lock_usercode:
-  description: Clear a usercode from lock
+  name: Clear a usercode from a lock
+  description: Clear a usercode from a lock
   target:
+    entity:
+      domain: lock
+      integration: zwave_js
   fields:
     code_slot:
       name: Code slot
@@ -13,8 +17,12 @@ clear_lock_usercode:
         text:
 
 set_lock_usercode:
-  description: Set a usercode to lock
+  name: Set a usercode on a lock
+  description: Set a usercode on a lock
   target:
+    entity:
+      domain: lock
+      integration: zwave_js
   fields:
     code_slot:
       name: Code slot

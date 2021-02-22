@@ -120,7 +120,7 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         )
 
     @property
-    def speed_count(self) -> Optional[int]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 

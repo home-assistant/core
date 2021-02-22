@@ -205,7 +205,7 @@ blebox_uniapi==1.3.2
 blinkpy==0.17.0
 
 # homeassistant.components.bond
-bond-api==0.1.9
+bond-api==0.1.10
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.8
@@ -775,6 +775,9 @@ pyisy==2.1.0
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.kmtronic
+pykmtronic==0.0.3
+
 # homeassistant.components.kodi
 pykodi==0.2.1
 
@@ -789,6 +792,9 @@ pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
+
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.9.0
@@ -876,6 +882,9 @@ pyqwikswitch==0.93
 # homeassistant.components.risco
 pyrisco==0.3.1
 
+# homeassistant.components.rituals_perfume_genie
+pyrituals==0.0.2
+
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
@@ -939,7 +948,7 @@ python-nest==4.1.0
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.6
+python-smarttub==0.0.17
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -981,7 +990,7 @@ pyvolumio==0.1.3
 pywebpush==1.9.2
 
 # homeassistant.components.wemo
-pywemo==0.6.1
+pywemo==0.6.3
 
 # homeassistant.components.wilight
 pywilight==0.0.68
@@ -1005,7 +1014,7 @@ rflink==0.0.58
 ring_doorbell==0.6.2
 
 # homeassistant.components.roku
-rokuecp==0.6.0
+rokuecp==0.8.0
 
 # homeassistant.components.roomba
 roombapy==1.6.2
@@ -1023,7 +1032,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.4.0
+samsungtvws==1.6.0
 
 # homeassistant.components.dhcp
 scapy==2.4.4
@@ -1102,6 +1111,9 @@ statsd==3.2.1
 # homeassistant.components.traccar
 stringcase==1.2.0
 
+# homeassistant.components.subaru
+subarulink==0.3.12
+
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
@@ -1124,7 +1136,7 @@ teslajsonpy==0.11.5
 toonapi==0.2.0
 
 # homeassistant.components.totalconnect
-total_connect_client==0.55
+total_connect_client==0.57
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
@@ -1216,10 +1228,10 @@ zigpy-xbee==0.13.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.3.0
+zigpy-znp==0.4.0
 
 # homeassistant.components.zha
 zigpy==0.32.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.17.2
+zwave-js-server-python==0.18.0

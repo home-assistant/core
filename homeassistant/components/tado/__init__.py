@@ -33,8 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 
 TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater"]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-SCAN_INTERVAL = timedelta(seconds=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 

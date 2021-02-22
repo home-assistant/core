@@ -281,9 +281,9 @@ class DumpView(HomeAssistantView):
         msgs = await dump.dump_msgs(entry.data[CONF_URL], async_get_clientsession(hass))
 
         return web.Response(
-            body="\n".join(json.dumps(msg) for msg in msgs) + "\n",
+            body=json.dumps(msgs, indent=2) + "\n",
             headers={
-                hdrs.CONTENT_TYPE: "application/jsonl",
-                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.jsonl"',
+                hdrs.CONTENT_TYPE: "application/json",
+                hdrs.CONTENT_DISPOSITION: 'attachment; filename="zwave_js_dump.json"',
             },
         )
