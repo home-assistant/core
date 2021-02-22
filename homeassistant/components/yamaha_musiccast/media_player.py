@@ -721,7 +721,6 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         if not self.coordinator.data.has_alarm:
             return {}
         inputs = {"resume:" + inp: "Resume " + inp for inp in self.coordinator.data.alarm_resume_input_list}
-        print(self.coordinator.data.netusb_preset_list.items())
         if "netusb" in self.coordinator.data.alarm_preset_list:
             inputs = {**inputs, **{"preset:netusb:" + str(index): entry[0] + " - " + entry[1]
                                    for index, entry in self.coordinator.data.netusb_preset_list.items()}

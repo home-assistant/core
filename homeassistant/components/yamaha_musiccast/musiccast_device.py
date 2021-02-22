@@ -342,8 +342,6 @@ class MusicCastDevice:
             one_day_info.get('preset', {}).get('tuner_info', {})
         self.data.alarm_volume = self._clock_info.get('alarm', {}).get("volume", None)
 
-        print(self._clock_info)
-
     async def fetch(self):
         """Fetch data from musiccast device."""
         if not self._network_status:
