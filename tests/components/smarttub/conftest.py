@@ -47,6 +47,24 @@ def mock_spa():
         "water": {"temperature": 38},
         "heater": "ON",
         "state": "NORMAL",
+        "primaryFiltration": {
+            "cycle": 1,
+            "duration": 4,
+            "lastUpdated": "2021-01-20T11:38:57.014Z",
+            "mode": "NORMAL",
+            "startHour": 2,
+            "status": "INACTIVE",
+        },
+        "secondaryFiltration": {
+            "lastUpdated": "2020-07-09T19:39:52.961Z",
+            "mode": "AWAY",
+            "status": "INACTIVE",
+        },
+        "flowSwitch": "OPEN",
+        "ozone": "OFF",
+        "uv": "OFF",
+        "blowoutCycle": "INACTIVE",
+        "cleanupCycle": "INACTIVE",
     }
     return mock_spa
 
