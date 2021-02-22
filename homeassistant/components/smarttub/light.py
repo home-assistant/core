@@ -54,7 +54,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this light entity."""
-        return super().unique_id + f"-{self.light_zone}"
+        return f"{super().unique_id}-{self.light_zone}"
 
     @property
     def name(self) -> str:
