@@ -57,10 +57,15 @@ class TahomaLight(TahomaEntity, LightEntity):
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
-        r = self.executor.select_state(CORE_RED_COLOR_INTENSITY_STATE)
-        g = self.executor.select_state(CORE_GREEN_COLOR_INTENSITY_STATE)
-        b = self.executor.select_state(CORE_BLUE_COLOR_INTENSITY_STATE)
-        return None if None in [r, g, b] else color_util.color_RGB_to_hs(r, g, b)
+        red = self.executor.select_state(CORE_RED_COLOR_INTENSITY_STATE)
+        green = self.executor.select_state(CORE_GREEN_COLOR_INTENSITY_STATE)
+        blue = self.executor.select_state(CORE_BLUE_COLOR_INTENSITY_STATE)
+
+        return (
+            None
+            if None in [red, green, blue]
+            else color_util.color_RGB_to_hs(red, green, blue)
+        )
 
     @property
     def supported_features(self) -> int:
