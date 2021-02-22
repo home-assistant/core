@@ -37,6 +37,7 @@ FIELD_SCHEMA = vol.Schema(
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("target"): vol.Any(
             selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
         ),

@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.geo_location import PLATFORM_SCHEMA, GeolocationEvent
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_TIME,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
@@ -30,7 +31,6 @@ ATTR_EXTERNAL_ID = "external_id"
 ATTR_MAGNITUDE = "magnitude"
 ATTR_PLACE = "place"
 ATTR_STATUS = "status"
-ATTR_TIME = "time"
 ATTR_TYPE = "type"
 ATTR_UPDATED = "updated"
 
