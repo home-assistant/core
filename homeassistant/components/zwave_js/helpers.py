@@ -30,7 +30,11 @@ def get_home_and_node_id_from_device_id(device_id: Tuple[str, str]) -> List[str]
 
 @callback
 def async_get_node_from_device_id(hass: HomeAssistant, device_id: str) -> ZwaveNode:
-    """Get node from a device ID."""
+    """
+    Get node from a device ID.
+
+    Raises ValueError if device is invalid or node can't be found.
+    """
     device_entry = async_get_dev_reg(hass).async_get(device_id)
 
     if not device_entry:
@@ -77,7 +81,11 @@ def async_get_node_from_device_id(hass: HomeAssistant, device_id: str) -> ZwaveN
 
 @callback
 def async_get_node_from_entity_id(hass: HomeAssistant, entity_id: str) -> ZwaveNode:
-    """Get node from an entity ID."""
+    """
+    Get node from an entity ID.
+
+    Raises ValueError if entity is invalid.
+    """
     entity_entry = async_get_ent_reg(hass).async_get(entity_id)
 
     if not entity_entry:
