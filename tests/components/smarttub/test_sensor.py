@@ -4,7 +4,7 @@ from . import trigger_update
 
 
 async def test_sensors(spa, setup_entry, hass):
-    """Test the state entity."""
+    """Test the sensors."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_state"
     state = hass.states.get(entity_id)
