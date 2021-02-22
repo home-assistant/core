@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name="device events",
         client=client,
         devices=devices,
-        update_interval=timedelta(seconds=update_interval),
+        update_interval=update_interval,
     )
 
     _LOGGER.debug(
