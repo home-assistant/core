@@ -19,7 +19,9 @@ update_setting:
       selector:
         text:
     new_value:
-      description: The new value for the setting
+      name: New value
+      description: The new value for the setting.
+      required: true
       example: "Music"
       selector:
         text:
