@@ -51,7 +51,6 @@ set_config_parameter:
       name: Device ID
       description: The device ID of the device you want to configure.
       example: 336bef715bf7d370934564d4d8ef8457
-      required: false
     parameter:
       name: Parameter
       description: The (name or id of the) configuration parameter you want to configure.
