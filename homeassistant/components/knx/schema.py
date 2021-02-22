@@ -24,6 +24,10 @@ from .const import (
     ColorTempModes,
 )
 
+##############
+# CONNECTION
+##############
+
 
 class ConnectionSchema:
     """Voluptuous schema for KNX connection."""
@@ -41,45 +45,9 @@ class ConnectionSchema:
     ROUTING_SCHEMA = vol.Maybe(vol.Schema({vol.Optional(CONF_KNX_LOCAL_IP): cv.string}))
 
 
-class CoverSchema:
-    """Voluptuous schema for KNX covers."""
-
-    CONF_MOVE_LONG_ADDRESS = "move_long_address"
-    CONF_MOVE_SHORT_ADDRESS = "move_short_address"
-    CONF_STOP_ADDRESS = "stop_address"
-    CONF_POSITION_ADDRESS = "position_address"
-    CONF_POSITION_STATE_ADDRESS = "position_state_address"
-    CONF_ANGLE_ADDRESS = "angle_address"
-    CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
-    CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
-    CONF_TRAVELLING_TIME_UP = "travelling_time_up"
-    CONF_INVERT_POSITION = "invert_position"
-    CONF_INVERT_ANGLE = "invert_angle"
-
-    DEFAULT_TRAVEL_TIME = 25
-    DEFAULT_NAME = "KNX Cover"
-
-    SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
-            vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
-            vol.Optional(CONF_STOP_ADDRESS): cv.string,
-            vol.Optional(CONF_POSITION_ADDRESS): cv.string,
-            vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
-            vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_int,
-            vol.Optional(
-                CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
-            ): cv.positive_int,
-            vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-            vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS): cv.string,
-        }
-    )
+#############
+# PLATFORMS
+#############
 
 
 class BinarySensorSchema:
@@ -114,95 +82,6 @@ class BinarySensorSchema:
                 vol.Optional(CONF_INVERT): cv.boolean,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
-        ),
-    )
-
-
-class LightSchema:
-    """Voluptuous schema for KNX lights."""
-
-    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_BRIGHTNESS_ADDRESS = "brightness_address"
-    CONF_BRIGHTNESS_STATE_ADDRESS = "brightness_state_address"
-    CONF_COLOR_ADDRESS = "color_address"
-    CONF_COLOR_STATE_ADDRESS = "color_state_address"
-    CONF_COLOR_TEMP_ADDRESS = "color_temperature_address"
-    CONF_COLOR_TEMP_STATE_ADDRESS = "color_temperature_state_address"
-    CONF_COLOR_TEMP_MODE = "color_temperature_mode"
-    CONF_RGBW_ADDRESS = "rgbw_address"
-    CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
-    CONF_MIN_KELVIN = "min_kelvin"
-    CONF_MAX_KELVIN = "max_kelvin"
-
-    DEFAULT_NAME = "KNX Light"
-    DEFAULT_COLOR_TEMP_MODE = "absolute"
-    DEFAULT_MIN_KELVIN = 2700  # 370 mireds
-    DEFAULT_MAX_KELVIN = 6000  # 166 mireds
-
-    CONF_INDIVIDUAL_COLORS = "individual_colors"
-    CONF_RED = "red"
-    CONF_GREEN = "green"
-    CONF_BLUE = "blue"
-    CONF_WHITE = "white"
-
-    COLOR_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_ADDRESS): cv.string,
-            vol.Optional(CONF_STATE_ADDRESS): cv.string,
-            vol.Required(CONF_BRIGHTNESS_ADDRESS): cv.string,
-            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
-        }
-    )
-
-    SCHEMA = vol.All(
-        vol.Schema(
-            {
-                vol.Optional(CONF_ADDRESS): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_STATE_ADDRESS): cv.string,
-                vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
-                vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
-                vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
-                    vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
-                    vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
-                    vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
-                    vol.Optional(CONF_WHITE): COLOR_SCHEMA,
-                },
-                vol.Exclusive(CONF_COLOR_ADDRESS, "color"): cv.string,
-                vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
-                vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
-                vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
-                vol.Optional(
-                    CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
-                ): cv.enum(ColorTempModes),
-                vol.Exclusive(CONF_RGBW_ADDRESS, "color"): cv.string,
-                vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
-                vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
-                    vol.Coerce(int), vol.Range(min=1)
-                ),
-                vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
-                    vol.Coerce(int), vol.Range(min=1)
-                ),
-            }
-        ),
-        vol.Any(
-            # either global "address" or all addresses for individual colors are required
-            vol.Schema(
-                {
-                    vol.Required(CONF_INDIVIDUAL_COLORS): {
-                        vol.Required(CONF_RED): {vol.Required(CONF_ADDRESS): object},
-                        vol.Required(CONF_GREEN): {vol.Required(CONF_ADDRESS): object},
-                        vol.Required(CONF_BLUE): {vol.Required(CONF_ADDRESS): object},
-                    },
-                },
-                extra=vol.ALLOW_EXTRA,
-            ),
-            vol.Schema(
-                {
-                    vol.Required(CONF_ADDRESS): object,
-                },
-                extra=vol.ALLOW_EXTRA,
-            ),
         ),
     )
 
@@ -304,19 +183,43 @@ class ClimateSchema:
     )
 
 
-class SwitchSchema:
-    """Voluptuous schema for KNX switches."""
+class CoverSchema:
+    """Voluptuous schema for KNX covers."""
 
-    CONF_INVERT = CONF_INVERT
-    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_MOVE_LONG_ADDRESS = "move_long_address"
+    CONF_MOVE_SHORT_ADDRESS = "move_short_address"
+    CONF_STOP_ADDRESS = "stop_address"
+    CONF_POSITION_ADDRESS = "position_address"
+    CONF_POSITION_STATE_ADDRESS = "position_state_address"
+    CONF_ANGLE_ADDRESS = "angle_address"
+    CONF_ANGLE_STATE_ADDRESS = "angle_state_address"
+    CONF_TRAVELLING_TIME_DOWN = "travelling_time_down"
+    CONF_TRAVELLING_TIME_UP = "travelling_time_up"
+    CONF_INVERT_POSITION = "invert_position"
+    CONF_INVERT_ANGLE = "invert_angle"
 
-    DEFAULT_NAME = "KNX Switch"
+    DEFAULT_TRAVEL_TIME = 25
+    DEFAULT_NAME = "KNX Cover"
+
     SCHEMA = vol.Schema(
         {
-            vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_INVERT): cv.boolean,
+            vol.Optional(CONF_MOVE_LONG_ADDRESS): cv.string,
+            vol.Optional(CONF_MOVE_SHORT_ADDRESS): cv.string,
+            vol.Optional(CONF_STOP_ADDRESS): cv.string,
+            vol.Optional(CONF_POSITION_ADDRESS): cv.string,
+            vol.Optional(CONF_POSITION_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_ANGLE_ADDRESS): cv.string,
+            vol.Optional(CONF_ANGLE_STATE_ADDRESS): cv.string,
+            vol.Optional(
+                CONF_TRAVELLING_TIME_DOWN, default=DEFAULT_TRAVEL_TIME
+            ): cv.positive_int,
+            vol.Optional(
+                CONF_TRAVELLING_TIME_UP, default=DEFAULT_TRAVEL_TIME
+            ): cv.positive_int,
+            vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
+            vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
+            vol.Optional(CONF_DEVICE_CLASS): cv.string,
         }
     )
 
@@ -340,6 +243,117 @@ class ExposeSchema:
     )
 
 
+class FanSchema:
+    """Voluptuous schema for KNX fans."""
+
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_OSCILLATION_ADDRESS = "oscillation_address"
+    CONF_OSCILLATION_STATE_ADDRESS = "oscillation_state_address"
+    CONF_MAX_STEP = "max_step"
+
+    DEFAULT_NAME = "KNX Fan"
+
+    SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_OSCILLATION_ADDRESS): cv.string,
+            vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_MAX_STEP): cv.byte,
+        }
+    )
+
+
+class LightSchema:
+    """Voluptuous schema for KNX lights."""
+
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
+    CONF_BRIGHTNESS_ADDRESS = "brightness_address"
+    CONF_BRIGHTNESS_STATE_ADDRESS = "brightness_state_address"
+    CONF_COLOR_ADDRESS = "color_address"
+    CONF_COLOR_STATE_ADDRESS = "color_state_address"
+    CONF_COLOR_TEMP_ADDRESS = "color_temperature_address"
+    CONF_COLOR_TEMP_STATE_ADDRESS = "color_temperature_state_address"
+    CONF_COLOR_TEMP_MODE = "color_temperature_mode"
+    CONF_RGBW_ADDRESS = "rgbw_address"
+    CONF_RGBW_STATE_ADDRESS = "rgbw_state_address"
+    CONF_MIN_KELVIN = "min_kelvin"
+    CONF_MAX_KELVIN = "max_kelvin"
+
+    DEFAULT_NAME = "KNX Light"
+    DEFAULT_COLOR_TEMP_MODE = "absolute"
+    DEFAULT_MIN_KELVIN = 2700  # 370 mireds
+    DEFAULT_MAX_KELVIN = 6000  # 166 mireds
+
+    CONF_INDIVIDUAL_COLORS = "individual_colors"
+    CONF_RED = "red"
+    CONF_GREEN = "green"
+    CONF_BLUE = "blue"
+    CONF_WHITE = "white"
+
+    COLOR_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_ADDRESS): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Required(CONF_BRIGHTNESS_ADDRESS): cv.string,
+            vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
+        }
+    )
+
+    SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_ADDRESS): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
+                vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
+                vol.Exclusive(CONF_INDIVIDUAL_COLORS, "color"): {
+                    vol.Inclusive(CONF_RED, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(CONF_GREEN, "colors"): COLOR_SCHEMA,
+                    vol.Inclusive(CONF_BLUE, "colors"): COLOR_SCHEMA,
+                    vol.Optional(CONF_WHITE): COLOR_SCHEMA,
+                },
+                vol.Exclusive(CONF_COLOR_ADDRESS, "color"): cv.string,
+                vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_COLOR_TEMP_ADDRESS): cv.string,
+                vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
+                vol.Optional(
+                    CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
+                ): cv.enum(ColorTempModes),
+                vol.Exclusive(CONF_RGBW_ADDRESS, "color"): cv.string,
+                vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
+                vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+                vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            }
+        ),
+        vol.Any(
+            # either global "address" or all addresses for individual colors are required
+            vol.Schema(
+                {
+                    vol.Required(CONF_INDIVIDUAL_COLORS): {
+                        vol.Required(CONF_RED): {vol.Required(CONF_ADDRESS): object},
+                        vol.Required(CONF_GREEN): {vol.Required(CONF_ADDRESS): object},
+                        vol.Required(CONF_BLUE): {vol.Required(CONF_ADDRESS): object},
+                    },
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                {
+                    vol.Required(CONF_ADDRESS): object,
+                },
+                extra=vol.ALLOW_EXTRA,
+            ),
+        ),
+    )
+
+
 class NotifySchema:
     """Voluptuous schema for KNX notifications."""
 
@@ -349,6 +363,21 @@ class NotifySchema:
         {
             vol.Required(CONF_ADDRESS): cv.string,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        }
+    )
+
+
+class SceneSchema:
+    """Voluptuous schema for KNX scenes."""
+
+    CONF_SCENE_NUMBER = "scene_number"
+
+    DEFAULT_NAME = "KNX SCENE"
+    SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
         }
     )
 
@@ -376,17 +405,19 @@ class SensorSchema:
     )
 
 
-class SceneSchema:
-    """Voluptuous schema for KNX scenes."""
+class SwitchSchema:
+    """Voluptuous schema for KNX switches."""
 
-    CONF_SCENE_NUMBER = "scene_number"
+    CONF_INVERT = CONF_INVERT
+    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
 
-    DEFAULT_NAME = "KNX SCENE"
+    DEFAULT_NAME = "KNX Switch"
     SCHEMA = vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(CONF_ADDRESS): cv.string,
-            vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_STATE_ADDRESS): cv.string,
+            vol.Optional(CONF_INVERT): cv.boolean,
         }
     )
 
@@ -434,27 +465,5 @@ class WeatherSchema:
             vol.Optional(CONF_KNX_DAY_NIGHT_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_AIR_PRESSURE_ADDRESS): cv.string,
             vol.Optional(CONF_KNX_HUMIDITY_ADDRESS): cv.string,
-        }
-    )
-
-
-class FanSchema:
-    """Voluptuous schema for KNX fans."""
-
-    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_OSCILLATION_ADDRESS = "oscillation_address"
-    CONF_OSCILLATION_STATE_ADDRESS = "oscillation_state_address"
-    CONF_MAX_STEP = "max_step"
-
-    DEFAULT_NAME = "KNX Fan"
-
-    SCHEMA = vol.Schema(
-        {
-            vol.Required(CONF_ADDRESS): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_OSCILLATION_ADDRESS): cv.string,
-            vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): cv.string,
-            vol.Optional(CONF_MAX_STEP): cv.byte,
         }
     )
