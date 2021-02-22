@@ -390,17 +390,18 @@ async def test_state_raises(hass):
     with pytest.raises(ConditionError, match="no entity"):
         condition.state(hass, entity=None, req_state="missing")
 
-    # Unknown entity_id
-    with pytest.raises(ConditionError, match="unknown entity"):
-        test = await condition.async_from_config(
-            hass,
-            {
-                "condition": "state",
-                "entity_id": "sensor.door_unknown",
-                "state": "open",
-            },
-        )
-
+    # Unknown entities
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "state",
+            "entity_id": ["sensor.door_unknown", "sensor.window_unknown"],
+            "state": "open",
+        },
+    )
+    with pytest.raises(ConditionError, match="unknown entity.*door"):
+        test(hass)
+    with pytest.raises(ConditionError, match="unknown entity.*window"):
         test(hass)
 
     # Unknown attribute
@@ -632,17 +633,18 @@ async def test_state_using_input_entities(hass):
 
 async def test_numeric_state_raises(hass):
     """Test that numeric_state raises ConditionError on errors."""
-    # Unknown entity_id
-    with pytest.raises(ConditionError, match="unknown entity"):
-        test = await condition.async_from_config(
-            hass,
-            {
-                "condition": "numeric_state",
-                "entity_id": "sensor.temperature_unknown",
-                "above": 0,
-            },
-        )
-
+    # Unknown entities
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "numeric_state",
+            "entity_id": ["sensor.temperature_unknown", "sensor.humidity_unknown"],
+            "above": 0,
+        },
+    )
+    with pytest.raises(ConditionError, match="unknown entity.*temperature"):
+        test(hass)
+    with pytest.raises(ConditionError, match="unknown entity.*humidity"):
         test(hass)
 
     # Unknown attribute

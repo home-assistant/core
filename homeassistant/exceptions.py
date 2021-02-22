@@ -85,7 +85,7 @@ class ConditionErrorIndex(ConditionError):
 
 @attr.s
 class ConditionErrorContainer(ConditionError):
-    """Condition error with index."""
+    """Condition error with subconditions."""
 
     # List of ConditionErrors that this error wraps
     errors: Sequence[ConditionError] = attr.ib()
