@@ -61,10 +61,11 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             location = user_input[CONF_LOCATION]
             tls = user_input[CONF_SSL]
             verify_tls = user_input[CONF_VERIFY_SSL]
-            endpoint = f"{host}/{location}"
 
-            if await self._async_endpoint_existed(endpoint):
-                return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(
+                f"{user_input[CONF_HOST]}/{user_input[CONF_LOCATION]}"
+            )
+            self._abort_if_unique_id_configured()
 
             try:
                 await self._async_try_connect(host, location, tls, verify_tls)
@@ -147,13 +148,6 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="api_key",
             data_schema=vol.Schema({vol.Optional(CONF_API_KEY): str}),
         )
-
-    async def _async_endpoint_existed(self, endpoint):
-        existing_endpoints = [
-            f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
-            for entry in self._async_current_entries()
-        ]
-        return endpoint in existing_endpoints
 
     async def _async_try_connect(self, host, location, tls, verify_tls):
         session = async_get_clientsession(self.hass, verify_tls)
