@@ -338,7 +338,7 @@ async def websocket_set_config_parameter(
     )
 
 
-@websocket_api.require_admin  # type:ignore
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required(TYPE): "zwave_js/get_config_parameters",
