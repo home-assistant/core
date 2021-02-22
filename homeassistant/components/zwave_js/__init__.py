@@ -12,7 +12,7 @@ from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry
@@ -24,7 +24,6 @@ from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DEVICE_ID,
-    ATTR_DOMAIN,
     ATTR_ENDPOINT,
     ATTR_HOME_ID,
     ATTR_LABEL,
