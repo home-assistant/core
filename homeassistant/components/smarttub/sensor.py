@@ -44,10 +44,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubSensor(SmartTubSensorBase):
     """Generic class for SmartTub status sensors."""
 
-    def __init__(self, coordinator, spa, sensor_name, attr_name):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, sensor_name, attr_name)
-
     @property
     def state(self) -> str:
         """Return the current state of the sensor."""
