@@ -136,10 +136,9 @@ async def async_setup(hass, config):
     # Load service descriptions from tts/services.yaml
     integration = await async_get_integration(hass, DOMAIN)
     services_yaml = integration.file_path / "services.yaml"
-    if services_yaml.exists():
-        services_dict = cast(dict, load_yaml(str(services_yaml)))
-    else:
-        services_dict = {}
+    services_dict = cast(
+        dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
+    )
 
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
@@ -210,7 +209,7 @@ async def async_setup(hass, config):
         # Register the service description
         service_desc = {
             CONF_DESCRIPTION: f"Say some things on a media player with {p_type}",
-            CONF_FIELDS: services_dict.get(SERVICE_SAY, {}).get(CONF_FIELDS, {}),
+            CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
         }
         async_set_service_schema(hass, DOMAIN, service_name, service_desc)
 
