@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Dict
 
-from pyamaha import AsyncDevice, Dist, NetUSB, System, Tuner, Zone
+from pyamaha import AsyncDevice, Dist, NetUSB, System, Tuner, Zone, Clock
 
 from homeassistant.components.yamaha_musiccast.const import ATTR_MC_LINK_SOURCES, NULL_GROUP, ATTR_MC_LINK, DOMAIN
 from homeassistant.util import dt
@@ -14,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class MusicCastGroupException(Exception):
     pass
+
 
 class MusicCastData:
     """Object that holds data for a MusicCast device."""
@@ -45,6 +46,8 @@ class MusicCastData:
         self.netusb_play_time_updated = None
         self.netusb_total_time = None
 
+        self.netusb_preset_list = {}
+
         # Tuner
         self.band = None
         self._am_freq = 1
@@ -55,6 +58,7 @@ class MusicCastData:
         self.dab_service_label = ""
         self.dab_dls = ""
 
+        # Group
         self.last_group_role = None
         self.last_group_id = None
         self.group_id = None
@@ -63,6 +67,25 @@ class MusicCastData:
         self.group_server_zone = None
         self.group_client_list = []
         self.group_update_lock = asyncio.locks.Lock()
+
+        self.has_clock = False
+
+        # Alarm
+        self.has_alarm = False
+        self.alarm_enabled = None
+        self.alarm_volume = None
+        self.alarm_volume_range = (0, 0)
+        self.alarm_volume_step = 1
+        self.alarm_fade_range = (0, 0)
+        self.alarm_fade_step = 1
+        self.alarm_time = None
+        self.alarm_playback_type = None
+        self.alarm_resume_input_list = []
+        self.alarm_resume_input = None
+        self.alarm_preset_list = []
+        self.alarm_preset = None
+        self.alarm_preset_type = None
+        self.alarm_preset_info = None
 
     @property
     def fm_freq(self):
@@ -89,6 +112,7 @@ class MusicCastZoneData:
         self.input = None
         self.sound_program_list = []
         self.sound_program = None
+        self.func_list = []
 
 
 class MusicCastDevice:
@@ -112,6 +136,7 @@ class MusicCastDevice:
         self._features = None
         self._netusb_play_info = None
         self._tuner_play_info = None
+        self._clock_info = None
         self._distribution_info = {None}
         self._name_text = None
 
@@ -162,6 +187,11 @@ class MusicCastDevice:
                 self.data.netusb_play_time = play_time
                 self.data.netusb_play_time_updated = dt.utcnow()
 
+            if message.get("netusb").get("preset_info_updated"):
+                asyncio.run_coroutine_threadsafe(
+                    self._fetch_netusb_presets(), self.hass.loop
+                ).result()
+
         if "tuner" in message.keys():
             if message.get("tuner").get("play_info_updated"):
                 asyncio.run_coroutine_threadsafe(
@@ -172,6 +202,12 @@ class MusicCastDevice:
             if message.get("dist").get("dist_info_updated"):
                 asyncio.run_coroutine_threadsafe(
                     self._fetch_distribution_data(), self.hass.loop
+                ).result()
+
+        if "clock" in message.keys():
+            if message.get("clock").get("settings_updated"):
+                asyncio.run_coroutine_threadsafe(
+                    self._fetch_clock_data(), self.hass.loop
                 ).result()
 
         for callback in self._callbacks:
@@ -287,6 +323,27 @@ class MusicCastDevice:
             for cb in self._group_update_callbacks:
                 await cb()
 
+    async def _fetch_clock_data(self):
+        _LOGGER.debug(f"Fetching Clock data...")
+        self._clock_info = await (await self.device.get(
+            Clock.get_clock_settings()
+        )).json()
+
+        one_day_info = self._clock_info.get('alarm', {}).get('oneday', {})
+
+        self.data.alarm_enabled = self._clock_info.get('alarm', {}).get('alarm_on', False)
+        self.data.alarm_time = one_day_info.get('time', None)
+        self.data.alarm_playback_type = one_day_info.get('playback_type', None)
+        self.data.alarm_resume_input = one_day_info.get('resume', {}).get('input', None)
+        self.data.alarm_preset = one_day_info.get('preset', {}).get('num', None)
+        self.data.alarm_preset_type = one_day_info.get('preset', {}).get('type', None)
+        self.data.alarm_preset_info = \
+            one_day_info.get('preset', {}).get('netusb_info', {}) if self.data.alarm_preset_type == "netusb" else \
+            one_day_info.get('preset', {}).get('tuner_info', {})
+        self.data.alarm_volume = self._clock_info.get('alarm', {}).get("volume", None)
+
+        print(self._clock_info)
+
     async def fetch(self):
         """Fetch data from musiccast device."""
         if not self._network_status:
@@ -328,8 +385,28 @@ class MusicCastDevice:
 
                 zone_data.sound_program_list = zone.get("sound_program_list", [])
                 zone_data.input_list = zone.get("input_list", [])
+                zone_data.func_list = zone.get('func_list')
 
                 self.data.zones[zone_id] = zone_data
+
+            if "clock" in self._features.keys():
+                if "alarm" in self._features.get('clock', {}).get('func_list', []):
+                    self.data.has_alarm = True
+
+                if "date_and_time" in self._features.get('clock', {}).get('func_list', []):
+                    self.data.has_clock = True
+
+                for value_range in self._features.get('clock', {}).get('range_step', []):
+                    if value_range.get('id') == "alarm_volume":
+                        self.data.alarm_volume_range = (value_range.get('min', 0), value_range.get('max', 0))
+                        self.data.alarm_volume_step = value_range.get('step', 1)
+
+                    if value_range.get('id') == "alarm_fade":
+                        self.data.alarm_fade_range = (value_range.get('min', 0), value_range.get('max', 0))
+                        self.data.alarm_fade_step = value_range.get('step', 1)
+
+                self.data.alarm_preset_list = self._features.get('clock', {}).get('alarm_preset_list', [])
+                self.data.alarm_resume_input_list = self._features.get('clock', {}).get('alarm_input_list', [])
 
         self._name_text = await (
             await self.device.request(System.get_name_text(None))
@@ -341,8 +418,11 @@ class MusicCastDevice:
         }
 
         await self._fetch_netusb()
+        await self._fetch_netusb_presets()
         await self._fetch_tuner()
         await self._fetch_distribution_data()
+        if self.data.has_alarm:
+            await self._fetch_clock_data()
 
         for zone in self._zone_ids:
             await self._fetch_zone(zone)
@@ -497,3 +577,9 @@ class MusicCastDevice:
                 (input.get('play_info_type') != 'netusb' or not netusb_in_use) and
                 input.get('id') not in ATTR_MC_LINK_SOURCES and
                 input.get('id') in self.data.zones.get(zone_id).input_list]
+
+    async def _fetch_netusb_presets(self):
+        result = await (await self.device.request(NetUSB.get_preset_info())).json()
+        self.data.netusb_preset_list = {index + 1: (entry.get('input'), entry.get('text'))
+                                        for index, entry in enumerate(result.get('preset_info', []))
+                                        if entry.get('input') != 'unknown'}
