@@ -1503,6 +1503,9 @@ pylibrespot-java==0.1.0
 # homeassistant.components.litejet
 pylitejet==0.1
 
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
+
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
 

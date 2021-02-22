@@ -1,0 +1,8 @@
+{
+  "domain": "litterrobot",
+  "name": "Litter-Robot",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/litterrobot",
+  "requirements": ["pylitterbot==2021.2.5"],
+  "codeowners": ["@natekspencer"]
+}
