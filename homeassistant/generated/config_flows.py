@@ -122,6 +122,7 @@ FLOWS = [
     "kulersky",
     "life360",
     "lifx",
+    "litterrobot",
     "local_ip",
     "locative",
     "logi_circle",

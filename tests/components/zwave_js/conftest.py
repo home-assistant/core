@@ -170,6 +170,12 @@ def iblinds_v2_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
 
 
+@pytest.fixture(name="ge_12730_state", scope="session")
+def ge_12730_state_fixture():
+    """Load the GE 12730 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_ge_12730_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -371,5 +377,13 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 def iblinds_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, iblinds_v2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="ge_12730")
+def ge_12730_fixture(client, ge_12730_state):
+    """Mock a GE 12730 fan controller node."""
+    node = Node(client, ge_12730_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
