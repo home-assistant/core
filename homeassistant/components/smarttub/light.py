@@ -73,11 +73,11 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     def _smarttub_to_hass_brightness(intensity):
         if intensity in (0, 1):
             return 0
-        return intensity * 255 / 100
+        return round(intensity * 255 / 100)
 
     @staticmethod
     def _hass_to_smarttub_brightness(brightness):
-        return brightness * 100 / 255
+        return round(brightness * 100 / 255)
 
     @property
     def is_on(self):
