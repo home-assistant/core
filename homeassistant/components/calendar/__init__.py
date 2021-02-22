@@ -84,6 +84,7 @@ def normalize_event(event):
     normalized_event["message"] = re.sub("  +", "", summary).strip()
     normalized_event["location"] = event.get("location", "")
     normalized_event["description"] = event.get("description", "")
+    normalized_event["url"] = event.get("url", "")
     normalized_event["all_day"] = "date" in event["start"]
 
     return normalized_event
@@ -149,6 +150,7 @@ class CalendarEventDevice(Entity):
             "end_time": event["end"],
             "location": event["location"],
             "description": event["description"],
+            "event_url": event["url"],
         }
 
     @property
