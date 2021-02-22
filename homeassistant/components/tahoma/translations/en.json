@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Enter your TaHoma credentials for the TaHoma App or the tahomalink.com platform.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "too_many_requests": "Too many requests, try again later.",
+            "invalid_auth": "Invalid authentication",
+            "server_in_maintenance": "Server is down for maintenance.",
+            "unknown": "Unexpected error"
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
+        }
+    },
+    "options": {
+        "step": {
+            "update_interval": {
+                "title": "Update Interval",
+                "description": "The Somfy TaHoma integration periodically retrieves new events. Change the update interval to a lower value if you want more frequent updates, for example when you also control your devices outside Home Assistant.",
+                "data": {
+                    "update_interval": "Update interval (in seconds)"
+                }
+            }
+        }
+    }
+}
