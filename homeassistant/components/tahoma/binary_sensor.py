@@ -55,7 +55,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     entities = [
         TahomaBinarySensor(device.deviceurl, coordinator)
-        for device in data["platforms"].get(BINARY_SENSOR)
+        for device in data["platforms"][BINARY_SENSOR]
     ]
     async_add_entities(entities)
 
