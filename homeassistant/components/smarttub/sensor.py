@@ -27,6 +27,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     controller.coordinator, spa, "Flow Switch", "flow_switch"
                 ),
                 SmartTubSensor(controller.coordinator, spa, "Ozone", "ozone"),
+                SmartTubSensor(controller.coordinator, spa, "UV", "uv"),
                 SmartTubSensor(
                     controller.coordinator, spa, "Blowout Cycle", "blowout_cycle"
                 ),

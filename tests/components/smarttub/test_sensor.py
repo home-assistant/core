@@ -27,6 +27,11 @@ async def test_sensors(spa, setup_entry, hass):
     assert state is not None
     assert state.state == "off"
 
+    entity_id = f"sensor.{spa.brand}_{spa.model}_uv"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
     entity_id = f"sensor.{spa.brand}_{spa.model}_blowout_cycle"
     state = hass.states.get(entity_id)
     assert state is not None
