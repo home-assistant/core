@@ -10,8 +10,8 @@ def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
     """Push an element to the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     if trace_stack is None:
-        trace_stack_var.set([])
-        trace_stack = trace_stack_var.get()
+        trace_stack = []
+        trace_stack_var.set(trace_stack)
     trace_stack.append(node)
 
 

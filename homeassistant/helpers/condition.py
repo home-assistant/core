@@ -85,10 +85,6 @@ ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 
 # Context variables for tracing
-# Config of condition being evaluated - TODO: Remove?
-condition_config: ContextVar[Optional[ConfigType]] = ContextVar(
-    "condition_config", default=None
-)
 # Trace of condition being evaluated
 condition_trace = ContextVar("condition_trace", default=None)
 # Stack of TraceElements
@@ -139,11 +135,6 @@ def condition_path_get() -> str:
     return "/".join(path)
 
 
-def condition_config_get() -> Optional[dict]:
-    """Return the config of the condition that was evaluated."""
-    return condition_config.get()
-
-
 def condition_trace_get() -> Optional[Dict[str, TraceElement]]:
     """Return the trace of the condition that was evaluated."""
     return condition_trace.get()
@@ -151,7 +142,6 @@ def condition_trace_get() -> Optional[Dict[str, TraceElement]]:
 
 def condition_trace_clear() -> None:
     """Clear the condition trace."""
-    condition_config.set(None)
     condition_trace.set(None)
     condition_trace_stack.set(None)
     condition_path_stack.set(None)
@@ -177,11 +167,8 @@ def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_condition(config: dict, variables: TemplateVarsType) -> Generator:
+def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
-    if condition_config.get() is None:
-        condition_config.set(dict(config))
-
     trace_element = condition_trace_append(variables, condition_path_get())
     condition_trace_stack_push(trace_element)
     try:
@@ -257,7 +244,7 @@ async def async_and_from_config(
         """Test and condition."""
         result = True
         errors = []
-        with trace_condition(config, variables):
+        with trace_condition(variables):
             for index, check in enumerate(checks):
                 try:
                     with condition_path(["conditions", str(index)]):
@@ -297,7 +284,7 @@ async def async_or_from_config(
         """Test or condition."""
         result = False
         errors = []
-        with trace_condition(config, variables):
+        with trace_condition(variables):
             for index, check in enumerate(checks):
                 try:
                     with condition_path(["conditions", str(index)]):
@@ -337,7 +324,7 @@ async def async_not_from_config(
         """Test not condition."""
         result = True
         errors = []
-        with trace_condition(config, variables):
+        with trace_condition(variables):
             for index, check in enumerate(checks):
                 with condition_path(["conditions", str(index)]):
                     try:
@@ -520,7 +507,7 @@ def async_numeric_state_from_config(
         for index, entity_id in enumerate(entity_ids):
             try:
                 with condition_path(["entity_id", str(index)]), trace_condition(
-                    config, variables
+                    variables
                 ):
                     if not async_numeric_state(
                         hass,
@@ -633,7 +620,7 @@ def state_from_config(
         for index, entity_id in enumerate(entity_ids):
             try:
                 with condition_path(["entity_id", str(index)]), trace_condition(
-                    config, variables
+                    variables
                 ):
                     if not state(hass, entity_id, req_states, for_period, attribute):
                         return False

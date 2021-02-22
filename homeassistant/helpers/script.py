@@ -390,17 +390,16 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
-        with action_path(str(self._step)):
-            with trace_action(self._action, None):
-                try:
-                    handler = f"_async_{cv.determine_script_action(self._action)}_step"
-                    await getattr(self, handler)()
-                except Exception as ex:
-                    if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
-                        self._log_exceptions or log_exceptions
-                    ):
-                        self._log_exception(ex)
-                    raise
+        with action_path(str(self._step)), trace_action(self._action, None):
+            try:
+                handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                await getattr(self, handler)()
+            except Exception as ex:
+                if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
+                    self._log_exceptions or log_exceptions
+                ):
+                    self._log_exception(ex)
+                raise
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access

@@ -278,11 +278,12 @@ class AutomationTrace:
                 action_trace_list.append(action_trace.as_dict())
             action_traces[key] = action_trace_list
 
-        for key, trace_list in self._condition_trace.items():
-            condition_trace_list = []
-            for condition_trace in trace_list:
-                condition_trace_list.append(condition_trace.as_dict())
-            condition_traces[key] = condition_trace_list
+        if self._condition_trace:
+            for key, trace_list in self._condition_trace.items():
+                condition_trace_list = []
+                for condition_trace in trace_list:
+                    condition_trace_list.append(condition_trace.as_dict())
+                condition_traces[key] = condition_trace_list
 
         return {
             "action_trace": action_traces,
@@ -662,16 +663,14 @@ async def _async_process_config(
         for list_no, config_block in enumerate(conf):
             raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
-                # TODO: handle raw config for blueprints
                 blueprints_used = True
                 blueprint_inputs = config_block
 
                 try:
+                    raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
                         Dict[str, Any],
-                        await async_validate_config_item(
-                            hass, blueprint_inputs.async_substitute()
-                        ),
+                        await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:
                     LOGGER.error(
