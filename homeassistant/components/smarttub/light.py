@@ -60,7 +60,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     def name(self) -> str:
         """Return a name for this light entity."""
         spa_name = get_spa_name(self.spa)
-        return f"{spa_name} light {self.light_zone}"
+        return f"{spa_name} Light {self.light_zone}"
 
     @property
     def brightness(self):
