@@ -1,5 +1,7 @@
 """Support for Somfy TaHoma binary sensors."""
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
@@ -24,11 +26,6 @@ CORE_THREE_WAY_HANDLE_DIRECTION_STATE = "core:ThreeWayHandleDirectionState"
 CORE_VIBRATION_STATE = "core:VibrationState"
 CORE_WATER_DETECTION_STATE = "core:WaterDetectionState"
 
-DEVICE_CLASS_BUTTON = "button"
-DEVICE_CLASS_GAS = "gas"
-DEVICE_CLASS_RAIN = "rain"
-DEVICE_CLASS_WATER = "water"
-
 IO_VIBRATION_DETECTED_STATE = "io:VibrationDetectedState"
 
 STATE_OPEN = "open"
@@ -38,15 +35,15 @@ STATE_PRESSED = "pressed"
 
 TAHOMA_BINARY_SENSOR_DEVICE_CLASSES = {
     "AirFlowSensor": DEVICE_CLASS_GAS,
-    "CarButtonSensor": DEVICE_CLASS_BUTTON,
+    "CarButtonSensor": None,
     "ContactSensor": DEVICE_CLASS_OPENING,
     "MotionSensor": DEVICE_CLASS_MOTION,
     "OccupancySensor": DEVICE_CLASS_OCCUPANCY,
-    "RainSensor": DEVICE_CLASS_RAIN,
+    "RainSensor": DEVICE_CLASS_MOISTURE,
     "SirenStatus": DEVICE_CLASS_OPENING,
     "SmokeSensor": DEVICE_CLASS_SMOKE,
-    "WaterDetectionSensor": DEVICE_CLASS_WATER,
-    "WaterSensor": DEVICE_CLASS_WATER,
+    "WaterDetectionSensor": DEVICE_CLASS_MOISTURE,
+    "WaterSensor": DEVICE_CLASS_MOISTURE,
     "WindowHandle": DEVICE_CLASS_OPENING,
 }
 
