@@ -1473,6 +1473,9 @@ pyitachip2ir==0.0.7
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.kmtronic
+pykmtronic==0.0.3
+
 # homeassistant.components.kodi
 pykodi==0.2.1
 
@@ -1817,7 +1820,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.6
+python-smarttub==0.0.17
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -2218,7 +2221,7 @@ todoist-python==8.0.0
 toonapi==0.2.0
 
 # homeassistant.components.totalconnect
-total_connect_client==0.55
+total_connect_client==0.57
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
