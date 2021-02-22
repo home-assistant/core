@@ -7,7 +7,9 @@ update_setting:
       domain: media_player
   fields:
     setting_type:
-      description: The type of setting to be changed. Available types are listed in the `setting_types` property.
+      name: Setting type
+      description: The type of setting to be changed. Available types are listed in the 'setting_types' property.
+      required: true
       example: "audio"
       selector:
         text:
