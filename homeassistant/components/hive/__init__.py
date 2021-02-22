@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, PLATFORMS, SERVICES
+from .const import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Hive Integration."""
-    hass.data[DOMAIN] = {"entries": {}, "entity_lookup": {}}
+    hass.data[DOMAIN] = {"entries": {}}
 
     if DOMAIN not in config:
         return True
@@ -137,6 +137,3 @@ class HiveEntity(Entity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-        if self.device["hiveType"] in SERVICES:
-            entity_lookup = self.hass.data[DOMAIN]["entity_lookup"]
-            entity_lookup[self.entity_id] = self.device

@@ -191,10 +191,6 @@ async def test_reauth_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    # hass.config_entries.async_update_entry(
-    #    mock_config, data={**CONFIG, CONF_ACCESS_TOKEN: "blah"}
-    # )
-
     with patch(
         "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
         return_value={
@@ -204,10 +200,7 @@ async def test_reauth_flow(hass):
                 "AccessToken": "mock-access-token",
             },
         },
-    ), patch("homeassistant.components.hive.async_setup", return_value=True), patch(
-        "homeassistant.config_entries.ConfigEntries.async_update_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -217,9 +210,10 @@ async def test_reauth_flow(hass):
         )
     await hass.async_block_till_done()
 
+    assert mock_config.data.get("username") == UPDATED_USERNAME
+    assert mock_config.data.get("password") == UPDATED_PASSWORD
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "reauth_sucessfull"
-    assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 

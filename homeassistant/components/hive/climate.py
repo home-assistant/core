@@ -1,6 +1,5 @@
 """Support for the Hive climate devices."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -17,12 +16,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
@@ -54,36 +48,9 @@ SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
-BOOST_HEATING_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TIME_PERIOD): vol.All(
-            cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds() // 60
-        ),
-        vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
-    }
-)
-
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
-
-    async def async_heating_boost(self, service):
-        """Handle the service call."""
-
-        entity_lookup = hass.data[DOMAIN]["entity_lookup"]
-        device = entity_lookup.get(service.data[ATTR_ENTITY_ID])
-        if not device:
-            # log or raise error
-            _LOGGER.error("Cannot boost entity id entered")
-            return
-
-        minutes = service.data[ATTR_TIME_PERIOD]
-        temperature = service.data[ATTR_TEMPERATURE]
-
-        await hive.heating.turn_boost_on(device, minutes, temperature)
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
     devices = hive.session.devices.get("climate")
@@ -97,8 +64,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     platform.async_register_entity_service(
         SERVICE_BOOST_HEATING,
-        BOOST_HEATING_SCHEMA,
-        async_heating_boost,
+        {
+            vol.Required(ATTR_TIME_PERIOD): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+                lambda td: td.total_seconds() // 60,
+            ),
+            vol.Optional(ATTR_TEMPERATURE, default="25.0"): vol.Coerce(float),
+        },
+        "async_heating_boost",
     )
 
 
@@ -228,6 +202,11 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             curtemp = round(self.current_temperature * 2) / 2
             temperature = curtemp + 0.5
             await self.hive.heating.turn_boost_on(self.device, 30, temperature)
+
+    @refresh_system
+    async def async_heating_boost(self, time_period, temperature):
+        """Handle boost heating service call."""
+        await self.hive.heating.turn_boost_on(self.device, time_period, temperature)
 
     async def async_update(self):
         """Update all Node data from Hive."""
