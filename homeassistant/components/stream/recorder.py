@@ -25,7 +25,7 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
         os.makedirs(os.path.dirname(file_out), exist_ok=True)
 
     pts_adjuster = {"video": None, "audio": None}
-    output = av.open(file_out, "w", format=RECORDER_CONTAINER_FORMAT)
+    output = None
     output_v = None
     output_a = None
 
@@ -46,6 +46,17 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
         source = av.open(segment.segment, "r", format=SEGMENT_CONTAINER_FORMAT)
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
+
+        # Create output on first segment
+        if not output:
+            output = av.open(
+                file_out,
+                "w",
+                format=RECORDER_CONTAINER_FORMAT,
+                container_options={
+                    "video_track_timescale": str(int(1 / source_v.time_base))
+                },
+            )
 
         # Add output streams if necessary
         if not output_v:
