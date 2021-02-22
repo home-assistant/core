@@ -27,6 +27,7 @@ set_lock_usercode:
     code_slot:
       name: Code slot
       description: Code slot to set the code.
+      required: true
       example: 1
       selector:
         text:
