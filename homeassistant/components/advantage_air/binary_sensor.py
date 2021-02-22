@@ -73,3 +73,26 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     def is_on(self):
         """Return if motion is detect."""
         return self._zone["motion"]
+
+class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
+    """Advantage Air Zone MyZone."""
+
+    @property
+    def name(self):
+        """Return the name."""
+        return f'{self._zone["name"]} MyZone'
+
+    @property
+    def unique_id(self):
+        """Return a unique id."""
+        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-{self.zone_key}-myzone'
+
+    @property
+    def is_on(self):
+        """Return if this zone is the myZone."""
+        return self._zone["number"] == self._ac["myZone"]
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return false to disable this entity by default."""
+        return False
