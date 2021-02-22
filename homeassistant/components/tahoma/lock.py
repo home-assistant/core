@@ -32,13 +32,13 @@ class TahomaLock(TahomaEntity, LockEntity):
 
     async def async_unlock(self, **_):
         """Unlock method."""
-        await self.async_execute_command(COMMAND_UNLOCK)
+        await self.executor.async_execute_command(COMMAND_UNLOCK)
 
     async def async_lock(self, **_):
         """Lock method."""
-        await self.async_execute_command(COMMAND_LOCK)
+        await self.executor.async_execute_command(COMMAND_LOCK)
 
     @property
     def is_locked(self):
         """Return True if the lock is locked."""
-        return self.select_state(CORE_LOCKED_UNLOCKED_STATE) == STATE_LOCKED
+        return self.executor.select_state(CORE_LOCKED_UNLOCKED_STATE) == STATE_LOCKED
