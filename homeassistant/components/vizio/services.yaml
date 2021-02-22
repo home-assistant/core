@@ -1,5 +1,5 @@
 update_setting:
-  name: Update the value of a setting on a Vizio media player device
+  name: Update a Vizio media player setting
   description: Update the value of a setting on a Vizio media player device.
   target:
     entity:
