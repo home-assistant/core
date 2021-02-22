@@ -53,7 +53,7 @@ dump:
   name: Dump
   description:
     Dump messages on a topic selector to the 'mqtt_dump.txt' file in your
-    config. folder
+    configuration folder.
   fields:
     topic:
       name: Topic
