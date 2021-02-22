@@ -14,11 +14,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
 
-    entities = []
-    for spa in controller.spas:
-        entities.append(
-            SmartTubOnline(controller.coordinator, spa),
-        )
+    entities = [SmartTubOnline(controller.coordinator, spa) for spa in controller.spas]
 
     async_add_entities(entities)
 
