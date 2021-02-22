@@ -6,6 +6,9 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
+    PRESET_ECO,
+    PRESET_NONE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -15,6 +18,8 @@ from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLL
 from .entity import SmartTubEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PRESET_DAY = "day"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -32,6 +37,19 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
 
+    PRESET_MODES = {
+        "AUTO": PRESET_NONE,
+        "ECO": PRESET_ECO,
+        "DAY": PRESET_DAY,
+    }
+
+    HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
+
+    HVAC_ACTIONS = {
+        "OFF": CURRENT_HVAC_IDLE,
+        "ON": CURRENT_HVAC_HEAT,
+    }
+
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(coordinator, spa, "thermostat")
@@ -44,12 +62,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current running hvac operation."""
-        heater_status = self.get_spa_status("heater")
-        if heater_status == "ON":
-            return CURRENT_HVAC_HEAT
-        if heater_status == "OFF":
-            return CURRENT_HVAC_IDLE
-        return None
+        return self.HVAC_ACTIONS.get(self.get_spa_status("heater"))
 
     @property
     def hvac_modes(self):
@@ -92,7 +105,17 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
 
         Only target temperature is supported.
         """
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode."""
+        return self.PRESET_MODES[self.get_spa_status("heatMode")]
+
+    @property
+    def preset_modes(self):
+        """Return the available preset modes."""
+        return list(self.PRESET_MODES.values())
 
     @property
     def current_temperature(self):
@@ -108,4 +131,10 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
+        await self.coordinator.async_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str):
+        """Activate the specified preset mode."""
+        heat_mode = self.HEAT_MODES[preset_mode]
+        await self.spa.set_heat_mode(heat_mode)
         await self.coordinator.async_refresh()
