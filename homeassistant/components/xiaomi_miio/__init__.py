@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     MODELS_SWITCH,
+    MODELS_VACUUM,
 )
 from .gateway import ConnectXiaomiGateway
 
@@ -24,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
+VACUUM_PLATFORMS = ["vacuum"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -117,9 +119,14 @@ async def async_setup_device_entry(
     model = entry.data[CONF_MODEL]
 
     # Identify platforms to setup
+    platforms = []
     if model in MODELS_SWITCH:
         platforms = SWITCH_PLATFORMS
-    else:
+    for vacuum_model in MODELS_VACUUM:
+        if model.startswith(vacuum_model):
+            platforms = VACUUM_PLATFORMS
+
+    if not platforms:
         return False
 
     for component in platforms:
