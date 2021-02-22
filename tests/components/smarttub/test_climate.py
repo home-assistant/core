@@ -42,7 +42,7 @@ async def test_thermostat_update(spa, setup_entry, hass):
 
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
 
-    spa.get_status.return_value["heater"] = "OFF"
+    spa.get_status.return_value.heater = "OFF"
     await trigger_update(hass)
     state = hass.states.get(entity_id)
 
@@ -83,9 +83,9 @@ async def test_thermostat_update(spa, setup_entry, hass):
         {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ECO},
         blocking=True,
     )
-    spa.set_heat_mode.assert_called_with("ECO")
+    spa.set_heat_mode.assert_called_with(smarttub.Spa.HeatMode.ECONOMY)
 
-    spa.get_status.return_value["heatMode"] = "ECO"
+    spa.get_status.return_value.heat_mode = smarttub.Spa.HeatMode.ECONOMY
     await trigger_update(hass)
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_ECO

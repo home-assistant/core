@@ -42,32 +42,34 @@ def mock_spa():
     mock_spa.id = "mockspa1"
     mock_spa.brand = "mockbrand1"
     mock_spa.model = "mockmodel1"
-    mock_spa.get_status.return_value = {
-        "setTemperature": 39,
-        "water": {"temperature": 38},
-        "heater": "ON",
-        "heatMode": "AUTO",
-        "state": "NORMAL",
-        "primaryFiltration": {
-            "cycle": 1,
-            "duration": 4,
-            "lastUpdated": "2021-01-20T11:38:57.014Z",
-            "mode": "NORMAL",
-            "startHour": 2,
-            "status": "INACTIVE",
+    mock_spa.get_status.return_value = smarttub.SpaState(
+        mock_spa,
+        **{
+            "setTemperature": 39,
+            "water": {"temperature": 38},
+            "heater": "ON",
+            "heatMode": "AUTO",
+            "state": "NORMAL",
+            "primaryFiltration": {
+                "cycle": 1,
+                "duration": 4,
+                "lastUpdated": "2021-01-20T11:38:57.014Z",
+                "mode": "NORMAL",
+                "startHour": 2,
+                "status": "INACTIVE",
+            },
+            "secondaryFiltration": {
+                "lastUpdated": "2020-07-09T19:39:52.961Z",
+                "mode": "AWAY",
+                "status": "INACTIVE",
+            },
+            "flowSwitch": "OPEN",
+            "ozone": "OFF",
+            "uv": "OFF",
+            "blowoutCycle": "INACTIVE",
+            "cleanupCycle": "INACTIVE",
         },
-        "secondaryFiltration": {
-            "lastUpdated": "2020-07-09T19:39:52.961Z",
-            "mode": "AWAY",
-            "status": "INACTIVE",
-        },
-        "flowSwitch": "OPEN",
-        "ozone": "OFF",
-        "uv": "OFF",
-        "blowoutCycle": "INACTIVE",
-        "cleanupCycle": "INACTIVE",
-    }
-
+    )
     mock_circulation_pump = create_autospec(smarttub.SpaPump, instance=True)
     mock_circulation_pump.id = "CP"
     mock_circulation_pump.spa = mock_spa
