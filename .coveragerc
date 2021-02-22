@@ -981,7 +981,10 @@ omit =
     homeassistant/components/toon/sensor.py
     homeassistant/components/toon/switch.py
     homeassistant/components/torque/sensor.py
-    homeassistant/components/totalconnect/*
+    homeassistant/components/totalconnect/__init__.py
+    homeassistant/components/totalconnect/alarm_control_panel.py
+    homeassistant/components/totalconnect/binary_sensor.py
+    homeassistant/components/totalconnect/const.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/common.py
     homeassistant/components/tplink/switch.py
