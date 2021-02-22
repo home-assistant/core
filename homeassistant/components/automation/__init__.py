@@ -32,7 +32,12 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import ConditionError, HomeAssistantError
+from homeassistant.exceptions import (
+    ConditionError,
+    ConditionErrorContainer,
+    ConditionErrorIndex,
+    HomeAssistantError,
+)
 from homeassistant.helpers import condition, extract_domain_configs, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -616,16 +621,22 @@ async def _async_process_if(hass, config, p_config):
     def if_action(variables=None):
         """AND all conditions."""
         errors = []
-        for check in checks:
+        for index, check in enumerate(checks):
             try:
                 if not check(hass, variables):
                     return False
             except ConditionError as ex:
-                errors.append(f"Error in 'condition' evaluation: {ex}")
+                errors.append(
+                    ConditionErrorIndex(
+                        "condition", index=index, total=len(checks), error=ex
+                    )
+                )
 
         if errors:
-            for error in errors:
-                LOGGER.warning("%s", error)
+            LOGGER.warning(
+                "Error evaluating condition:\n%s",
+                ConditionErrorContainer("condition", errors=errors),
+            )
             return False
 
         return True
