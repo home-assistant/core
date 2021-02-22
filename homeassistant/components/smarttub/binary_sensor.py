@@ -37,9 +37,4 @@ class SmartTubOnline(SmartTubSensor, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
+        return self._state == STATE_ON
