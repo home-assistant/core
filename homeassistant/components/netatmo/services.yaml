@@ -21,7 +21,7 @@ set_camera_light:
 
 set_schedule:
   name: Set heating schedule
-  description: Set the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo. 
+  description: Set the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.
   target:
     entity:
       integration: netatmo
