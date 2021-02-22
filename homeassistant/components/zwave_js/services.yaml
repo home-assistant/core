@@ -47,7 +47,6 @@ set_config_parameter:
       name: Entity ID
       description: One of the entity_id's of the device you want to configure.
       example: light.zwave_dimmer
-      required: false
     device_id:
       name: Device ID
       description: The device ID of the device you want to configure.
