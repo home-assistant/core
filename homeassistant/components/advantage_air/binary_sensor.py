@@ -74,6 +74,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
         """Return if motion is detect."""
         return self._zone["motion"]
 
+
 class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Zone MyZone."""
 
