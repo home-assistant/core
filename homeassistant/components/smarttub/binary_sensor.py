@@ -1,7 +1,7 @@
 """Platform for binary sensor integration."""
 import logging
 
-from homeassistant.components.binary_sensor import STATE_ON, BinarySensorEntity
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
@@ -29,4 +29,4 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._state == STATE_ON
+        return self._state is True
