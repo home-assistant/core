@@ -35,7 +35,8 @@
     "abort": {
       "already_configured": "Hive account is already configured.",
       "unknown": "Something has gone wrong please try again later.",
-      "unknown_entry": "Unable to find exisitng entry."
+      "unknown_entry": "Unable to find exisitng entry.",
+      "reauth_sucessfull": "Reauthentication has completed cuscessfully."
     }
   },
   "options": {
