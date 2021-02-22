@@ -169,10 +169,10 @@ class BaseNotificationService:
         # Load service descriptions from notify/services.yaml
         integration = await async_get_integration(hass, DOMAIN)
         services_yaml = integration.file_path / "services.yaml"
-        if services_yaml.exists():
-            self.services_dict = cast(dict, load_yaml(str(services_yaml)))
-        else:
-            self.services_dict = {}
+        self.services_dict = cast(
+            dict,
+            await hass.async_add_executor_job(load_yaml, str(services_yaml))
+        )
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
