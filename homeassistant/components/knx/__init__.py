@@ -209,7 +209,7 @@ async def async_setup(hass, config):
 
     if CONF_KNX_EXPOSE in config[DOMAIN]:
         for expose_config in config[DOMAIN][CONF_KNX_EXPOSE]:
-            hass.data[DOMAIN].exposures.append(
+            knx_module.exposures.append(
                 create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
 
