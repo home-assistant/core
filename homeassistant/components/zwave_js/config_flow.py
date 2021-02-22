@@ -333,8 +333,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if not self.unique_id:
             try:
                 version_info = await async_get_version_info(self.hass, self.ws_address)
-            except CannotConnect:
-                raise AbortFlow("cannot_connect")
+            except CannotConnect as err:
+                raise AbortFlow("cannot_connect") from err
             await self.async_set_unique_id(
                 version_info.home_id, raise_on_progress=False
             )

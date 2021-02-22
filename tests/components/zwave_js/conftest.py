@@ -1,7 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 import asyncio
 import json
-from unittest.mock import DEFAULT, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
