@@ -1,11 +1,7 @@
 """Platform for binary sensor integration."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    STATE_OFF,
-    STATE_ON,
-    BinarySensorEntity,
-)
+from homeassistant.components.binary_sensor import STATE_ON, BinarySensorEntity
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .sensor import SmartTubSensor
