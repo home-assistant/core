@@ -473,9 +473,9 @@ def async_set_service_schema(
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
-        "name": schema.get("name") or "",
-        "description": schema.get("description") or "",
-        "fields": schema.get("fields") or {},
+        "name": schema.get("name", ""),
+        "description": schema.get("description", ""),
+        "fields": schema.get("fields", {}),
     }
 
     hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
