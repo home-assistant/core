@@ -53,8 +53,8 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     msg = await ws_client.receive_json()
     result = msg["result"]
 
-    assert len(result) == 44
-    key = "52-112-00-2-00"
+    assert len(result) == 61
+    key = "52-112-0-2-00-00"
     assert result[key]["property"] == 2
     assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
