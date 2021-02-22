@@ -775,6 +775,9 @@ pyisy==2.1.0
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.kmtronic
+pykmtronic==0.0.3
+
 # homeassistant.components.kodi
 pykodi==0.2.1
 
