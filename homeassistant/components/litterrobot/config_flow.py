@@ -4,10 +4,10 @@ import logging
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 from .hub import LitterRobotHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,18 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
-
-
-async def validate_input(hass: core.HomeAssistant, data: dict):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    hub = LitterRobotHub(hass, data)
-
-    await hub.login()
-
-    return {"title": data[CONF_USERNAME]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,10 +32,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if entry.data[CONF_USERNAME] == user_input[CONF_USERNAME]:
                     return self.async_abort(reason="already_configured")
 
+            hub = LitterRobotHub(self.hass, user_input)
             try:
-                info = await validate_input(self.hass, user_input)
-
-                return self.async_create_entry(title=info["title"], data=user_input)
+                await hub.login()
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
             except LitterRobotLoginException:
                 errors["base"] = "invalid_auth"
             except LitterRobotException:

@@ -21,7 +21,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 REFRESH_WAIT_TIME = 12
-UPDATE_INTERVAL = 60
+UPDATE_INTERVAL = 10
 
 
 class LitterRobotHub:
