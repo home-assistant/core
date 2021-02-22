@@ -763,7 +763,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210208.0
+home-assistant-frontend==20210222.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1503,6 +1503,9 @@ pylibrespot-java==0.1.0
 # homeassistant.components.litejet
 pylitejet==0.1
 
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
+
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
 
@@ -1998,7 +2001,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.4.0
+samsungtvws==1.6.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
