@@ -14,7 +14,9 @@ update_setting:
       selector:
         text:
     setting_name:
-      description: The name of the setting to be changed. Available settings for a given setting_type are listed in the `<setting_type>_settings` property.
+      name: Setting name
+      description: The name of the setting to be changed. Available settings for a given setting_type are listed in the '<setting_type>_settings' property.
+      required: true
       example: "eq"
       selector:
         text:
