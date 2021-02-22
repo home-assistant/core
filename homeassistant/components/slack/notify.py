@@ -20,7 +20,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY, CONF_ICON, CONF_USERNAME
+from homeassistant.const import ATTR_ICON, CONF_API_KEY, CONF_ICON, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 import homeassistant.helpers.template as template
@@ -35,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_BLOCKS = "blocks"
 ATTR_BLOCKS_TEMPLATE = "blocks_template"
 ATTR_FILE = "file"
-ATTR_ICON = "icon"
 ATTR_PASSWORD = "password"
 ATTR_PATH = "path"
 ATTR_URL = "url"

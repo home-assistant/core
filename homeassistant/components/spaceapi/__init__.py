@@ -6,6 +6,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_LOCATION,
+    ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
@@ -35,7 +36,6 @@ ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
 ATTR_LOGO = "logo"
-ATTR_NAME = "name"
 ATTR_OPEN = "open"
 ATTR_SENSORS = "sensors"
 ATTR_SPACE = "space"

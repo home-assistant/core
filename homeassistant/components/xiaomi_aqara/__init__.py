@@ -9,6 +9,7 @@ from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 from homeassistant import config_entries, core
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
     ATTR_VOLTAGE,
     CONF_HOST,
     CONF_MAC,
@@ -42,7 +43,6 @@ GATEWAY_PLATFORMS_NO_KEY = ["binary_sensor", "sensor"]
 ATTR_GW_MAC = "gw_mac"
 ATTR_RINGTONE_ID = "ringtone_id"
 ATTR_RINGTONE_VOL = "ringtone_vol"
-ATTR_DEVICE_ID = "device_id"
 
 TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
