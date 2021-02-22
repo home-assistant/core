@@ -1,6 +1,5 @@
 """Support for TaHoma switches."""
 import logging
-from typing import Optional
 
 from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
@@ -22,11 +21,6 @@ COMMAND_STANDARD = "standard"
 
 IO_FORCE_HEATING_STATE = "io:ForceHeatingState"
 
-DEVICE_CLASS_SIREN = "siren"
-
-ICON_BELL_RING = "mdi:bell-ring"
-ICON_BELL_OFF = "mdi:bell-off"
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the TaHoma sensors from a config entry."""
@@ -47,20 +41,15 @@ class TahomaSwitch(TahomaEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of the device."""
-        if self.device.ui_class == "Siren":
-            return DEVICE_CLASS_SIREN
-
         return DEVICE_CLASS_SWITCH
 
     @property
-    def icon(self) -> Optional[str]:
-        """Return the icon to use in the frontend, if any."""
-        if self.device_class == DEVICE_CLASS_SIREN:
-            if self.is_on:
-                return ICON_BELL_RING
-            return ICON_BELL_OFF
-
-        return None
+    def is_on(self):
+        """Get whether the switch is in on state."""
+        return (
+            self.executor.select_state(CORE_ON_OFF_STATE, IO_FORCE_HEATING_STATE)
+            == STATE_ON
+        )
 
     async def async_turn_on(self, **_):
         """Send the on command."""
@@ -104,11 +93,3 @@ class TahomaSwitch(TahomaEntity, SwitchEntity):
         """Click the switch."""
         if self.executor.has_command(COMMAND_CYCLE):
             await self.executor.async_execute_command(COMMAND_CYCLE)
-
-    @property
-    def is_on(self):
-        """Get whether the switch is in on state."""
-        return (
-            self.executor.select_state(CORE_ON_OFF_STATE, IO_FORCE_HEATING_STATE)
-            == STATE_ON
-        )
