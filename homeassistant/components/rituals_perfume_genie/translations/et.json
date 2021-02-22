@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-posti aadress",
+                    "password": "Salas\u00f5na"
+                },
+                "title": "Loo \u00fchendus oma Ritualsi kontoga"
+            }
+        }
+    }
+}

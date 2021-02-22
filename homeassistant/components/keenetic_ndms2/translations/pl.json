@@ -28,7 +28,7 @@
                     "include_associated": "U\u017cyj danych skojarze\u0144 WiFi AP (ignorowane, je\u015bli u\u017cywane s\u0105 dane hotspotu)",
                     "interfaces": "Wybierz interfejsy do skanowania",
                     "scan_interval": "Cz\u0119stotliwo\u015b\u0107 skanowania",
-                    "try_hotspot": "U\u017cyj danych \u201eip hotspot\u201d (najdok\u0142adniejsze)"
+                    "try_hotspot": "U\u017cyj danych \u201eIP hotspot\u201d (najdok\u0142adniejsze)"
                 }
             }
         }
