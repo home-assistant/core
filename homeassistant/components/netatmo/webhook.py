@@ -1,6 +1,7 @@
 """The Netatmo integration."""
 import logging
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -9,7 +10,6 @@ from .const import (
     ATTR_FACE_URL,
     ATTR_ID,
     ATTR_IS_KNOWN,
-    ATTR_NAME,
     ATTR_PERSONS,
     DATA_PERSONS,
     DEFAULT_PERSON,

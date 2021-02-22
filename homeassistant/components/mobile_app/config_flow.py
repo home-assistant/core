@@ -3,9 +3,10 @@ import uuid
 
 from homeassistant import config_entries
 from homeassistant.components import person
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.helpers import entity_registry as er
 
-from .const import ATTR_APP_ID, ATTR_DEVICE_ID, ATTR_DEVICE_NAME, CONF_USER_ID, DOMAIN
+from .const import ATTR_APP_ID, ATTR_DEVICE_NAME, CONF_USER_ID, DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)
