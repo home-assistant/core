@@ -236,6 +236,7 @@ FLOWS = [
     "syncthru",
     "synology_dsm",
     "tado",
+    "tahoma",
     "tasmota",
     "tellduslive",
     "tesla",
