@@ -82,6 +82,8 @@ async def async_validate_config_item(hass, config, full_config=None):
 class AutomationConfig(dict):
     """Dummy class to allow adding attributes."""
 
+    raw_config = None
+
 
 async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
@@ -107,7 +109,7 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
         return config
 
     config = AutomationConfig(config)
-    setattr(config, "raw_config", raw_config)
+    config.raw_config = raw_config
     return config
 
 

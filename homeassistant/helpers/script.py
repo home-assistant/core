@@ -150,9 +150,9 @@ def action_path_push(suffix):
     return len(suffix)
 
 
-def action_path_pop(n):
+def action_path_pop(count):
     """Go n levels up in the config tree."""
-    for _ in range(n):
+    for _ in range(count):
         trace_stack_pop(action_path_stack)
 
 
@@ -203,9 +203,9 @@ def action_trace_add_conditions():
     if condition_trace is None:
         return
 
-    action_path = action_path_get()
+    _action_path = action_path_get()
     for cond_path, conditions in condition_trace.items():
-        path = action_path + "/" + cond_path if cond_path else action_path
+        path = _action_path + "/" + cond_path if cond_path else _action_path
         for cond in conditions:
             trace_append_element(action_trace, cond, path)
 
@@ -230,11 +230,11 @@ def trace_action(config, variables):
 @contextmanager
 def action_path(suffix):
     """Go deeper in the config tree."""
-    n = action_path_push(suffix)
+    count = action_path_push(suffix)
     try:
         yield
     finally:
-        action_path_pop(n)
+        action_path_pop(count)
 
 
 def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):

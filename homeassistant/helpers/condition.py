@@ -8,7 +8,18 @@ import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, Container, List, Optional, Set, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Set,
+    Union,
+    cast,
+)
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -66,7 +77,7 @@ ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 
 # Common helpers for tracing. TODO: Move to own file
-def trace_stack_push(trace_stack_var, node):
+def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
     """Push an element to the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     if trace_stack is None:
@@ -75,13 +86,13 @@ def trace_stack_push(trace_stack_var, node):
     trace_stack.append(node)
 
 
-def trace_stack_pop(trace_stack_var):
+def trace_stack_pop(trace_stack_var: ContextVar) -> None:
     """Remove the top element from a trace stack."""
     trace_stack = trace_stack_var.get()
     trace_stack.pop()
 
 
-def trace_stack_top(trace_stack_var):
+def trace_stack_top(trace_stack_var: ContextVar) -> Optional[Any]:
     """Return the element at the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     return trace_stack[-1] if trace_stack else None
@@ -90,27 +101,40 @@ def trace_stack_top(trace_stack_var):
 class TraceElement:
     """Container for trace data."""
 
-    def __init__(self, variables):
+    def __init__(self, variables: TemplateVarsType):
         """Container for trace data."""
-        self._error = None
-        self._result = None
+        self._error = None  # type: Optional[Exception]
+        self._result = None  # type: Optional[dict]
         self._timestamp = dt_util.utcnow()
         self._variables = variables
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Container for trace data."""
         return f"{self._result}"
 
-    def set_error(self, ex):
+    def set_error(self, ex: Exception) -> None:
         """Set error."""
         self._error = ex
 
-    def set_result(self, **kwargs):
+    def set_result(self, **kwargs: Any) -> None:
         """Set result."""
         self._result = {**kwargs}
 
+    def as_dict(self) -> Dict[str, Any]:
+        """Return dictionary version of this TraceElement."""
+        result = {"timestamp": self._timestamp}  # type: Dict[str, Any]
+        # Commented out because we get too many copies of the same data
+        # result["variables"] = self._variables
+        if self._error is not None:
+            result["error"] = self._error
+        if self._result is not None:
+            result["result"] = self._result
+        return result
 
-def trace_append_element(trace_var, trace_element, path):
+
+def trace_append_element(
+    trace_var: ContextVar, trace_element: TraceElement, path: str
+) -> None:
     """Append a TraceElement to trace[path]."""
     trace = trace_var.get()
     if trace is None:
@@ -122,31 +146,37 @@ def trace_append_element(trace_var, trace_element, path):
 
 # Context variables for tracing
 # Config of condition being evaluated - TODO: Remove?
-condition_config = ContextVar("condition_config", default=None)
+condition_config: ContextVar[Optional[ConfigType]] = ContextVar(
+    "condition_config", default=None
+)
 # Trace of condition being evaluated
 condition_trace = ContextVar("condition_trace", default=None)
 # Stack of TraceElements
-condition_trace_stack = ContextVar("condition_trace_stack", default=None)
+condition_trace_stack: ContextVar[Optional[List[TraceElement]]] = ContextVar(
+    "condition_trace_stack", default=None
+)
 # Current location in config tree
-condition_path_stack = ContextVar("condition_path_stack", default=None)
+condition_path_stack: ContextVar[Optional[List[str]]] = ContextVar(
+    "condition_path_stack", default=None
+)
 
 
-def condition_trace_stack_push(node):
+def condition_trace_stack_push(node: TraceElement) -> None:
     """Push a TraceElement to the top of the trace stack."""
     trace_stack_push(condition_trace_stack, node)
 
 
-def condition_trace_stack_pop():
+def condition_trace_stack_pop() -> None:
     """Remove the top element from the trace stack."""
     trace_stack_pop(condition_trace_stack)
 
 
-def condition_trace_stack_top():
+def condition_trace_stack_top() -> Optional[TraceElement]:
     """Return the element at the top of the trace stack."""
-    return trace_stack_top(condition_trace_stack)
+    return cast(Optional[TraceElement], trace_stack_top(condition_trace_stack))
 
 
-def condition_path_push(suffix):
+def condition_path_push(suffix: Union[str, List[str]]) -> int:
     """Go deeper in the config tree."""
     if isinstance(suffix, str):
         suffix = [suffix]
@@ -155,13 +185,13 @@ def condition_path_push(suffix):
     return len(suffix)
 
 
-def condition_path_pop(n):
+def condition_path_pop(count: int) -> None:
     """Go n levels up in the config tree."""
-    for _ in range(n):
+    for _ in range(count):
         trace_stack_pop(condition_path_stack)
 
 
-def condition_path_get():
+def condition_path_get() -> str:
     """Return a string representing the current location in the config tree."""
     path = condition_path_stack.get()
     if not path:
@@ -169,17 +199,17 @@ def condition_path_get():
     return "/".join(path)
 
 
-def condition_config_get():
+def condition_config_get() -> Optional[dict]:
     """Return the config of the condition that was evaluated."""
     return condition_config.get()
 
 
-def condition_trace_get():
+def condition_trace_get() -> Optional[Dict[str, TraceElement]]:
     """Return the trace of the condition that was evaluated."""
     return condition_trace.get()
 
 
-def condition_trace_clear():
+def condition_trace_clear() -> None:
     """Clear the condition trace."""
     condition_config.set(None)
     condition_trace.set(None)
@@ -187,14 +217,14 @@ def condition_trace_clear():
     condition_path_stack.set(None)
 
 
-def condition_trace_append(variables, path):
+def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables)
     trace_append_element(condition_trace, trace_element, path)
     return trace_element
 
 
-def condition_trace_set_result(result, **kwargs):
+def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
     """Set the result of TraceElement at the top of the stack."""
     node = condition_trace_stack_top()
 
@@ -207,7 +237,7 @@ def condition_trace_set_result(result, **kwargs):
 
 
 @contextmanager
-def trace_condition(config, variables):
+def trace_condition(config: dict, variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
     if condition_config.get() is None:
         condition_config.set(dict(config))
@@ -224,13 +254,13 @@ def trace_condition(config, variables):
 
 
 @contextmanager
-def condition_path(suffix):
+def condition_path(suffix: Union[str, List[str]]) -> Generator:
     """Go deeper in the config tree."""
-    n = condition_path_push(suffix)
+    count = condition_path_push(suffix)
     try:
         yield
     finally:
-        condition_path_pop(n)
+        condition_path_pop(count)
 
 
 async def async_from_config(
@@ -296,7 +326,9 @@ async def async_and_from_config(
                             break
                 except ConditionError as ex:
                     errors.append(
-                        ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                        ConditionErrorIndex(
+                            "and", index=index, total=len(checks), error=ex
+                        )
                     )
 
             # Raise the errors if no check was false
@@ -334,7 +366,9 @@ async def async_or_from_config(
                             break
                 except ConditionError as ex:
                     errors.append(
-                        ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                        ConditionErrorIndex(
+                            "or", index=index, total=len(checks), error=ex
+                        )
                     )
 
             # Raise the errors if no check was true
@@ -372,7 +406,9 @@ async def async_not_from_config(
                             break
                     except ConditionError as ex:
                         errors.append(
-                            ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                            ConditionErrorIndex(
+                                "not", index=index, total=len(checks), error=ex
+                            )
                         )
 
             # Raise the errors if no check was true
@@ -476,7 +512,9 @@ def async_numeric_state(
             try:
                 if fvalue >= float(below_entity.state):
                     condition_trace_set_result(
-                        False, state=fvalue, wanted_state_below=float(below_entity.state)
+                        False,
+                        state=fvalue,
+                        wanted_state_below=float(below_entity.state),
                     )
                     return False
             except (ValueError, TypeError) as ex:
@@ -501,7 +539,9 @@ def async_numeric_state(
             try:
                 if fvalue <= float(above_entity.state):
                     condition_trace_set_result(
-                        False, state=fvalue, wanted_state_above=float(above_entity.state)
+                        False,
+                        state=fvalue,
+                        wanted_state_above=float(above_entity.state),
                     )
                     return False
             except (ValueError, TypeError) as ex:

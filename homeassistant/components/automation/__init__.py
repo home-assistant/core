@@ -69,9 +69,10 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import parse_datetime
 
+from .config import AutomationConfig, async_validate_config_item
+
 # Not used except by packages to check config structure
 from .config import PLATFORM_SCHEMA  # noqa
-from .config import async_validate_config_item
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
@@ -266,6 +267,38 @@ class AutomationTrace:
         """Set finish time."""
         self._timestamp_finish = dt_util.utcnow()
 
+    def as_dict(self):
+        """Return dictionary version of this AutomationTrace."""
+
+        action_traces = {}
+        condition_traces = {}
+        for key, trace_list in self._action_trace.items():
+            action_trace_list = []
+            for action_trace in trace_list:
+                action_trace_list.append(action_trace.as_dict())
+            action_traces[key] = action_trace_list
+
+        for key, trace_list in self._condition_trace.items():
+            condition_trace_list = []
+            for condition_trace in trace_list:
+                condition_trace_list.append(condition_trace.as_dict())
+            condition_traces[key] = condition_trace_list
+
+        return {
+            "action_trace": action_traces,
+            "condition_trace": condition_traces,
+            "config": self._config,
+            "error": self._error,
+            "entity_id": self._entity_id,
+            "timestamp": {
+                "start": self._timestamp_start,
+                "finish": self._timestamp_finish,
+            },
+            "trigger": self._trigger,
+            # Commented out because we get too many copies of the same data
+            # "variables": self._variables,
+        }
+
 
 @contextmanager
 def trace_automation(hass, entity_id, config, trigger):
@@ -286,8 +319,8 @@ def trace_automation(hass, entity_id, config, trigger):
         # To be removed, only for debugging
         _LOGGER.info(
             "Automation finished. Summary:\n\ttrigger: %s\n\tcondition: %s\n\taction: %s",
-            automation_trace._trigger,
-            automation_trace._condition_trace,
+            automation_trace._trigger,  # pylint: disable=protected-access
+            automation_trace._condition_trace,  # pylint: disable=protected-access
             action_trace,
         )
 
@@ -456,7 +489,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         reason = ""
         if "trigger" in run_variables and "description" in run_variables["trigger"]:
             reason = f' by {run_variables["trigger"]["description"]}'
-        self._logger.debug(f"Automation triggered{reason}")
+        self._logger.debug("Automation triggered%s", reason)
 
         trigger = run_variables["trigger"] if "trigger" in run_variables else None
         with trace_automation(
@@ -649,7 +682,7 @@ async def _async_process_config(
                     )
                     continue
             else:
-                raw_config = config_block.raw_config
+                raw_config = cast(AutomationConfig, config_block).raw_config
 
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
@@ -785,44 +818,7 @@ def get_debug_traces(hass):
     """Return a serializable list of debug traces."""
     traces = []
 
-    def trace_element_to_dict(trace_element):
-        return {
-            "error": trace_element._error,
-            "result": trace_element._result,
-            "timestamp": trace_element._timestamp,
-            # Commented out because we get too many copies of the same data
-            # "variables": trace_element._variables,
-        }
-
     for trace in hass.data[DATA_AUTOMATION_TRACE]:
-        action_traces = {}
-        condition_traces = {}
-        for key, trace_list in trace._action_trace.items():
-            action_trace_list = []
-            for t in trace_list:
-                action_trace_list.append(trace_element_to_dict(t))
-            action_traces[key] = action_trace_list
+        traces.append(trace.as_dict())
 
-        for key, trace_list in trace._condition_trace.items():
-            condition_trace_list = []
-            for t in trace_list:
-                condition_trace_list.append(trace_element_to_dict(t))
-            condition_traces[key] = condition_trace_list
-
-        traces.append(
-            {
-                "action_trace": action_traces,
-                "condition_trace": condition_traces,
-                "config": trace._config,
-                "error": trace._error,
-                "entity_id": trace._entity_id,
-                "timestamp": {
-                    "start": trace._timestamp_start,
-                    "finish": trace._timestamp_finish,
-                },
-                "trigger": trace._trigger,
-                # Commented out because we get too many copies of the same data
-                # "variables": trace._variables,
-            }
-        )
     return traces
