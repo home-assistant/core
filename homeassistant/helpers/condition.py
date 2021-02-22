@@ -36,7 +36,14 @@ from homeassistant.const import (
     WEEKDAYS,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.exceptions import ConditionError, HomeAssistantError, TemplateError
+from homeassistant.exceptions import (
+    ConditionError,
+    ConditionErrorContainer,
+    ConditionErrorIndex,
+    ConditionErrorMessage,
+    HomeAssistantError,
+    TemplateError,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.template import Template
@@ -109,18 +116,18 @@ async def async_and_from_config(
     ) -> bool:
         """Test and condition."""
         errors = []
-        for check in checks:
+        for index, check in enumerate(checks):
             try:
                 if not check(hass, variables):
                     return False
             except ConditionError as ex:
-                errors.append(str(ex))
-            except Exception as ex:  # pylint: disable=broad-except
-                errors.append(str(ex))
+                errors.append(
+                    ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                )
 
         # Raise the errors if no check was false
         if errors:
-            raise ConditionError("Error in 'and' condition: " + ", ".join(errors))
+            raise ConditionErrorContainer("and", errors=errors)
 
         return True
 
@@ -142,18 +149,18 @@ async def async_or_from_config(
     ) -> bool:
         """Test or condition."""
         errors = []
-        for check in checks:
+        for index, check in enumerate(checks):
             try:
                 if check(hass, variables):
                     return True
             except ConditionError as ex:
-                errors.append(str(ex))
-            except Exception as ex:  # pylint: disable=broad-except
-                errors.append(str(ex))
+                errors.append(
+                    ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                )
 
         # Raise the errors if no check was true
         if errors:
-            raise ConditionError("Error in 'or' condition: " + ", ".join(errors))
+            raise ConditionErrorContainer("or", errors=errors)
 
         return False
 
@@ -175,18 +182,18 @@ async def async_not_from_config(
     ) -> bool:
         """Test not condition."""
         errors = []
-        for check in checks:
+        for index, check in enumerate(checks):
             try:
                 if check(hass, variables):
                     return False
             except ConditionError as ex:
-                errors.append(str(ex))
-            except Exception as ex:  # pylint: disable=broad-except
-                errors.append(str(ex))
+                errors.append(
+                    ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                )
 
         # Raise the errors if no check was true
         if errors:
-            raise ConditionError("Error in 'not' condition: " + ", ".join(errors))
+            raise ConditionErrorContainer("not", errors=errors)
 
         return True
 
@@ -225,20 +232,21 @@ def async_numeric_state(
 ) -> bool:
     """Test a numeric state condition."""
     if entity is None:
-        raise ConditionError("No entity specified")
+        raise ConditionErrorMessage("numeric_state", "no entity specified")
 
     if isinstance(entity, str):
         entity_id = entity
         entity = hass.states.get(entity)
 
         if entity is None:
-            raise ConditionError(f"Unknown entity {entity_id}")
+            raise ConditionErrorMessage("numeric_state", f"unknown entity {entity_id}")
     else:
         entity_id = entity.entity_id
 
     if attribute is not None and attribute not in entity.attributes:
-        raise ConditionError(
-            f"Attribute '{attribute}' (of entity {entity_id}) does not exist"
+        raise ConditionErrorMessage(
+            "numeric_state",
+            f"attribute '{attribute}' (of entity {entity_id}) does not exist",
         )
 
     value: Any = None
@@ -253,16 +261,21 @@ def async_numeric_state(
         try:
             value = value_template.async_render(variables)
         except TemplateError as ex:
-            raise ConditionError(f"Template error: {ex}") from ex
+            raise ConditionErrorMessage(
+                "numeric_state", f"template error: {ex}"
+            ) from ex
 
     if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        raise ConditionError("State is not available")
+        raise ConditionErrorMessage(
+            "numeric_state", f"state of {entity_id} is unavailable"
+        )
 
     try:
         fvalue = float(value)
-    except ValueError as ex:
-        raise ConditionError(
-            f"Entity {entity_id} state '{value}' cannot be processed as a number"
+    except (ValueError, TypeError) as ex:
+        raise ConditionErrorMessage(
+            "numeric_state",
+            f"entity {entity_id} state '{value}' cannot be processed as a number",
         ) from ex
 
     if below is not None:
@@ -272,9 +285,17 @@ def async_numeric_state(
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                raise ConditionError(f"The below entity {below} is not available")
-            if fvalue >= float(below_entity.state):
-                return False
+                raise ConditionErrorMessage(
+                    "numeric_state", f"the 'below' entity {below} is unavailable"
+                )
+            try:
+                if fvalue >= float(below_entity.state):
+                    return False
+            except (ValueError, TypeError) as ex:
+                raise ConditionErrorMessage(
+                    "numeric_state",
+                    f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
+                ) from ex
         elif fvalue >= below:
             return False
 
@@ -285,9 +306,17 @@ def async_numeric_state(
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                raise ConditionError(f"The above entity {above} is not available")
-            if fvalue <= float(above_entity.state):
-                return False
+                raise ConditionErrorMessage(
+                    "numeric_state", f"the 'above' entity {above} is unavailable"
+                )
+            try:
+                if fvalue <= float(above_entity.state):
+                    return False
+            except (ValueError, TypeError) as ex:
+                raise ConditionErrorMessage(
+                    "numeric_state",
+                    f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
+                ) from ex
         elif fvalue <= above:
             return False
 
@@ -335,20 +364,20 @@ def state(
     Async friendly.
     """
     if entity is None:
-        raise ConditionError("No entity specified")
+        raise ConditionErrorMessage("state", "no entity specified")
 
     if isinstance(entity, str):
         entity_id = entity
         entity = hass.states.get(entity)
 
         if entity is None:
-            raise ConditionError(f"Unknown entity {entity_id}")
+            raise ConditionErrorMessage("state", f"unknown entity {entity_id}")
     else:
         entity_id = entity.entity_id
 
     if attribute is not None and attribute not in entity.attributes:
-        raise ConditionError(
-            f"Attribute '{attribute}' (of entity {entity_id}) does not exist"
+        raise ConditionErrorMessage(
+            "state", f"attribute '{attribute}' (of entity {entity_id}) does not exist"
         )
 
     assert isinstance(entity, State)
@@ -370,7 +399,9 @@ def state(
         ):
             state_entity = hass.states.get(req_state_value)
             if not state_entity:
-                continue
+                raise ConditionErrorMessage(
+                    "state", f"the 'state' entity {req_state_value} is unavailable"
+                )
             state_value = state_entity.state
         is_state = value == state_value
         if is_state:
@@ -495,7 +526,7 @@ def async_template(
     try:
         value: str = value_template.async_render(variables, parse_result=False)
     except TemplateError as ex:
-        raise ConditionError(f"Error in 'template' condition: {ex}") from ex
+        raise ConditionErrorMessage("template", str(ex)) from ex
 
     return value.lower() == "true"
 
@@ -538,9 +569,7 @@ def time(
     elif isinstance(after, str):
         after_entity = hass.states.get(after)
         if not after_entity:
-            raise ConditionError(
-                f"Error in 'time' condition: The 'after' entity {after} is not available"
-            )
+            raise ConditionErrorMessage("time", f"unknown 'after' entity {after}")
         after = dt_util.dt.time(
             after_entity.attributes.get("hour", 23),
             after_entity.attributes.get("minute", 59),
@@ -552,9 +581,7 @@ def time(
     elif isinstance(before, str):
         before_entity = hass.states.get(before)
         if not before_entity:
-            raise ConditionError(
-                f"Error in 'time' condition: The 'before' entity {before} is not available"
-            )
+            raise ConditionErrorMessage("time", f"unknown 'before' entity {before}")
         before = dt_util.dt.time(
             before_entity.attributes.get("hour", 23),
             before_entity.attributes.get("minute", 59),
@@ -609,24 +636,24 @@ def zone(
     Async friendly.
     """
     if zone_ent is None:
-        raise ConditionError("No zone specified")
+        raise ConditionErrorMessage("zone", "no zone specified")
 
     if isinstance(zone_ent, str):
         zone_ent_id = zone_ent
         zone_ent = hass.states.get(zone_ent)
 
         if zone_ent is None:
-            raise ConditionError(f"Unknown zone {zone_ent_id}")
+            raise ConditionErrorMessage("zone", f"unknown zone {zone_ent_id}")
 
     if entity is None:
-        raise ConditionError("No entity specified")
+        raise ConditionErrorMessage("zone", "no entity specified")
 
     if isinstance(entity, str):
         entity_id = entity
         entity = hass.states.get(entity)
 
         if entity is None:
-            raise ConditionError(f"Unknown entity {entity_id}")
+            raise ConditionErrorMessage("zone", f"unknown entity {entity_id}")
     else:
         entity_id = entity.entity_id
 
@@ -634,10 +661,14 @@ def zone(
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
     if latitude is None:
-        raise ConditionError(f"Entity {entity_id} has no 'latitude' attribute")
+        raise ConditionErrorMessage(
+            "zone", f"entity {entity_id} has no 'latitude' attribute"
+        )
 
     if longitude is None:
-        raise ConditionError(f"Entity {entity_id} has no 'longitude' attribute")
+        raise ConditionErrorMessage(
+            "zone", f"entity {entity_id} has no 'longitude' attribute"
+        )
 
     return zone_cmp.in_zone(
         zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
@@ -664,15 +695,20 @@ def zone_from_config(
                 try:
                     if zone(hass, zone_entity_id, entity_id):
                         entity_ok = True
-                except ConditionError as ex:
-                    errors.append(str(ex))
+                except ConditionErrorMessage as ex:
+                    errors.append(
+                        ConditionErrorMessage(
+                            "zone",
+                            f"error matching {entity_id} with {zone_entity_id}: {ex.message}",
+                        )
+                    )
 
             if not entity_ok:
                 all_ok = False
 
         # Raise the errors only if no definitive result was found
         if errors and not all_ok:
-            raise ConditionError("Error in 'zone' condition: " + ", ".join(errors))
+            raise ConditionErrorContainer("zone", errors=errors)
 
         return all_ok
 
