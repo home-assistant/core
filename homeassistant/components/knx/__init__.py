@@ -198,8 +198,9 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 async def async_setup(hass, config):
     """Set up the KNX component."""
     try:
-        hass.data[DOMAIN] = KNXModule(hass, config)
-        await hass.data[DOMAIN].start()
+        knx_module = KNXModule(hass, config)
+        hass.data[DOMAIN] = knx_module
+        await knx_module.start()
     except XKNXException as ex:
         _LOGGER.warning("Could not connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
@@ -209,13 +210,13 @@ async def async_setup(hass, config):
     if CONF_KNX_EXPOSE in config[DOMAIN]:
         for expose_config in config[DOMAIN][CONF_KNX_EXPOSE]:
             hass.data[DOMAIN].exposures.append(
-                create_knx_exposure(hass, hass.data[DOMAIN].xknx, expose_config)
+                create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
 
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, hass.data[DOMAIN].xknx, device_config)
+                create_knx_device(platform, knx_module.xknx, device_config)
 
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:
@@ -223,7 +224,7 @@ async def async_setup(hass, config):
             discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
-    if not hass.data[DOMAIN].xknx.devices:
+    if not knx_module.xknx.devices:
         _LOGGER.warning(
             "No KNX devices are configured. Please read "
             "https://www.home-assistant.io/blog/2020/09/17/release-115/#breaking-changes"
@@ -232,14 +233,14 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_SEND,
-        hass.data[DOMAIN].service_send_to_knx_bus,
+        knx_module.service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_READ,
-        hass.data[DOMAIN].service_read_to_knx_bus,
+        knx_module.service_read_to_knx_bus,
         schema=SERVICE_KNX_READ_SCHEMA,
     )
 
@@ -247,7 +248,7 @@ async def async_setup(hass, config):
         hass,
         DOMAIN,
         SERVICE_KNX_EVENT_REGISTER,
-        hass.data[DOMAIN].service_event_register_modify,
+        knx_module.service_event_register_modify,
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
     )
 
@@ -255,7 +256,7 @@ async def async_setup(hass, config):
         hass,
         DOMAIN,
         SERVICE_KNX_EXPOSURE_REGISTER,
-        hass.data[DOMAIN].service_exposure_register_modify,
+        knx_module.service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
@@ -269,7 +270,7 @@ async def async_setup(hass, config):
         if not config or DOMAIN not in config:
             return
 
-        await hass.data[DOMAIN].xknx.stop()
+        await knx_module.xknx.stop()
 
         await asyncio.gather(
             *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
