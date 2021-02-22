@@ -1,5 +1,4 @@
 """Config Flow for Hive."""
-import logging
 
 from pyhiveapi import HiveAuthAsync, Session
 import voluptuous as vol
@@ -9,8 +8,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
