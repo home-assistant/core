@@ -1,7 +1,10 @@
 # Describes the format for available light services
 
 turn_on:
-  description: Turn a light on
+  name: Turn on lights
+  description: >
+    Turn on one or more lights and adjust properties of the light, even when
+    they are turned on already.
   target:
   fields:
     transition:
@@ -311,7 +314,8 @@ turn_on:
         text:
 
 turn_off:
-  description: Turn a light off
+  name: Turn off lights
+  description: Turns off one or more lights.
   target:
   fields:
     transition:
@@ -340,7 +344,10 @@ turn_off:
             - short
 
 toggle:
-  description: Toggles a light
+  name: Toggle lights
+  description: >
+    Toggles one or more lights, from on to off, or, off to on, based on their
+    current state.
   target:
   fields:
     transition:
