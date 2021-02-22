@@ -1,6 +1,8 @@
 """Platform for climate integration."""
 import logging
 
+from smarttub import Spa
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -38,9 +40,9 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
 
     PRESET_MODES = {
-        "AUTO": PRESET_NONE,
-        "ECO": PRESET_ECO,
-        "DAY": PRESET_DAY,
+        Spa.HeatMode.AUTO: PRESET_NONE,
+        Spa.HeatMode.ECONOMY: PRESET_ECO,
+        Spa.HeatMode.DAY: PRESET_DAY,
     }
 
     HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}

@@ -52,5 +52,3 @@ async def test_sensors(spa, setup_entry, hass):
     assert state.state == "inactive"
     assert state.attributes["last_updated"] is not None
     assert state.attributes["mode"] == "away"
-
-    # TODO: other sensors
