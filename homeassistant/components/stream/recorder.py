@@ -78,7 +78,7 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
             packet.stream = output_v if packet.stream.type == "video" else output_a
             output.mux(packet)
 
-        running_duration += source.duration
+        running_duration += source.duration - source.start_time
 
         source.close()
 
