@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call: ServiceCall):
+    async def async_group_service_handle(service_call: ServiceCall):
         """Handle services."""
         entity_ids = service_call.data.get("entity_id", [])
         if not entity_ids:
@@ -99,14 +99,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.services.async_register(
         DOMAIN,
         SERVICE_JOIN,
-        async_service_handle,
+        async_group_service_handle,
         JOIN_SERVICE_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_UNJOIN,
-        async_service_handle,
+        async_group_service_handle,
         UNJOIN_SERVICE_SCHEMA,
     )
 
