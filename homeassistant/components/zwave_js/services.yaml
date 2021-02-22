@@ -40,7 +40,8 @@ set_lock_usercode:
         text:
 
 set_config_parameter:
-  description: Set a configuration parameter to a Z-Wave device. You can provide either an entity_id or device_id.
+  name: Set a Z-Wave device configuration parameter.
+  description: Allow for changing configuration parameters of your Z-Wave devices.
   target:
   fields:
     entity_id:
