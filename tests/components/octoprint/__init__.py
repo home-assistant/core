@@ -1,11 +1,16 @@
 """Tests for the OctoPrint integration."""
 from unittest.mock import patch
 
-from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo, TrackingSetting
+from pyoctoprintapi import (
+    DiscoverySettings,
+    OctoprintJobInfo,
+    OctoprintPrinterInfo,
+    TrackingSetting,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.octoprint import DOMAIN
-from homeassistant.setup import async_setup_component
+
 from tests.common import MockConfigEntry
 
 DEFAULT_JOB = {
@@ -37,6 +42,9 @@ async def init_integration(
     ), patch(
         "pyoctoprintapi.OctoprintClient.get_tracking_info",
         return_value=TrackingSetting({"unique_id": "uuid"}),
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ):
         config_entry = MockConfigEntry(
             domain=DOMAIN,

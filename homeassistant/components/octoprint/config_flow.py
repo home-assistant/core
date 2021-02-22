@@ -60,8 +60,13 @@ async def validate_input(hass: core.HomeAssistant, data):
         _LOGGER.error("Failed to connect")
         raise CannotConnect
 
+    discovery = await octoprint.get_discovery_info()
+    uuid = None
+    if discovery:
+        uuid = discovery.upnp_uuid
+
     # Return info that you want to store in the config entry.
-    return {"title": data[CONF_NAME]}
+    return {"title": data[CONF_NAME], "uuid": uuid}
 
 
 async def validate_connection(octoprint: OctoprintClient):
@@ -101,6 +106,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            if info["uuid"]:
+                await self.async_set_unique_id(info["uuid"])
+                self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -109,15 +117,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == user_input[CONF_HOST]:
-                return self.async_abort(reason="already_configured")
-
         return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle discovery flow."""
-        uuid = discovery_info["properties"]["uuid"]
+        uuid = discovery_info["uuid"]
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured()
 
