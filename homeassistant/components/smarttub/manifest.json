@@ -6,7 +6,7 @@
   "dependencies": [],
   "codeowners": ["@mdz"],
   "requirements": [
-      "python-smarttub==0.0.6"
+      "python-smarttub==0.0.12"
   ],
   "quality_scale": "platinum"
 }
