@@ -106,7 +106,7 @@ class TahomaAlarmControlPanel(TahomaEntity, AlarmControlPanelEntity):
             )
             if state == STATE_DETECTED:
                 return STATE_ALARM_TRIGGERED
-            elif state == STATE_PENDING:
+            if state == STATE_PENDING:
                 return STATE_ALARM_PENDING
 
         if (
