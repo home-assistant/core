@@ -1,5 +1,6 @@
 """Constants for the Somfy TaHoma integration."""
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 
 DOMAIN = "tahoma"
 
@@ -16,11 +17,15 @@ TAHOMA_TYPES = {
     "AirFlowSensor": BINARY_SENSOR,  # widgetName, uiClass is AirSensor (sensor)
     "CarButtonSensor": BINARY_SENSOR,
     "ContactSensor": BINARY_SENSOR,
+    "DomesticHotWaterTank": SWITCH,  # widgetName, uiClass is WaterHeatingSystem (not supported)
     "MotionSensor": BINARY_SENSOR,
     "OccupancySensor": BINARY_SENSOR,
+    "OnOff": SWITCH,
     "RainSensor": BINARY_SENSOR,
+    "Siren": SWITCH,
     "SirenStatus": BINARY_SENSOR,  # widgetName, uiClass is Siren (switch)
     "SmokeSensor": BINARY_SENSOR,
+    "SwimmingPool": SWITCH,
     "WaterDetectionSensor": BINARY_SENSOR,  # widgetName, uiClass is HumiditySensor (sensor)
     "WindowHandle": BINARY_SENSOR,
 }
