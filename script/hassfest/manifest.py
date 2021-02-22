@@ -16,6 +16,14 @@ DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
 SUPPORTED_QUALITY_SCALES = ["gold", "internal", "platinum", "silver"]
+SUPPORTED_IOT_CLASSES = [
+    "Assumed State",
+    "Calculated",
+    "Cloud Polling",
+    "Cloud Push",
+    "Local Polling",
+    "Local Push",
+]
 
 
 def documentation_url(value: str) -> str:
@@ -104,6 +112,7 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
         vol.Optional("disabled"): str,
+        vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
     }
 )
 
