@@ -1,6 +1,6 @@
 """Test the SmartTub binary sensor platform."""
 
-from homeassistant.components.binary_sensor import STATE_ON
+from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY, STATE_ON
 
 
 async def test_binary_sensors(spa, setup_entry, hass):
@@ -10,3 +10,4 @@ async def test_binary_sensors(spa, setup_entry, hass):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_ON
+    assert state.attributes.get("device_class") == DEVICE_CLASS_CONNECTIVITY
