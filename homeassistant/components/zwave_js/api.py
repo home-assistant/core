@@ -316,6 +316,10 @@ def websocket_get_config_parameters(
             },
             "value": zwave_value.value,
         }
+    connection.send_result(
+        msg[ID],
+        result,
+    )
 
 
 def convert_log_level_to_enum(value: str) -> LogLevel:
