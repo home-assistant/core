@@ -225,9 +225,7 @@ class BaseNotificationService:
         # Register the service description
         service_desc = {
             CONF_DESCRIPTION: f"Send a notification with {self._service_name}",
-            CONF_FIELDS: self.services_dict.get(SERVICE_NOTIFY, {}).get(
-                CONF_FIELDS, {}
-            ),
+            CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
         }
         async_set_service_schema(self.hass, DOMAIN, self._service_name, service_desc)
 
