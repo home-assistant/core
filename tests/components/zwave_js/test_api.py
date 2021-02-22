@@ -41,6 +41,24 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert not result["is_secure"]
     assert result["status"] == 1
 
+    # Test getting configuration parameter values
+    await ws_client.send_json(
+        {
+            ID: 4,
+            TYPE: "zwave_js/get_config_parameters",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: node.node_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    result = msg["result"]
+
+    assert len(result) == 61
+    key = "52-112-0-2-00-00"
+    assert result[key]["property"] == 2
+    assert result[key]["metadata"]["type"] == "number"
+    assert result[key]["configuration_value_type"] == "enumerated"
+
 
 async def test_add_node(
     hass, integration, client, hass_ws_client, nortek_thermostat_added_event
