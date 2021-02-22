@@ -1,6 +1,7 @@
 """Support KNX devices."""
 import asyncio
 import logging
+from typing import Union
 
 import voluptuous as vol
 from xknx import XKNX
@@ -146,7 +147,10 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): vol.All(
+                cv.ensure_list,
+                [cv.string],
+            ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
         }
@@ -154,7 +158,10 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         # without type given payload is treated as raw bytes
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(SERVICE_KNX_ATTR_ADDRESS): vol.All(
+                cv.ensure_list,
+                [cv.string],
+            ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
@@ -173,7 +180,10 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
 
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+        vol.Required(SERVICE_KNX_ATTR_ADDRESS): vol.All(
+            cv.ensure_list,
+            [cv.string],
+        ),
         vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
@@ -398,21 +408,26 @@ class KNXModule:
 
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
-        group_address = GroupAddress(call.data.get(SERVICE_KNX_ATTR_ADDRESS))
+        attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        group_addresses = map(lambda ga: GroupAddress(ga), attr_address)
+
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
-            try:
-                self._knx_event_callback.group_addresses.remove(group_address)
-            except ValueError:
-                _LOGGER.warning(
-                    "Service event_register could not remove event for '%s'",
-                    group_address,
-                )
-        elif group_address not in self._knx_event_callback.group_addresses:
-            self._knx_event_callback.group_addresses.append(group_address)
-            _LOGGER.debug(
-                "Service event_register registered event for '%s'",
-                group_address,
-            )
+            for group_address in group_addresses:
+                try:
+                    self._knx_event_callback.group_addresses.remove(group_address)
+                except ValueError:
+                    _LOGGER.warning(
+                        "Service event_register could not remove event for '%s'",
+                        str(group_address),
+                    )
+        else:
+            for group_address in group_addresses:
+                if group_address not in self._knx_event_callback.group_addresses:
+                    self._knx_event_callback.group_addresses.append(group_address)
+                    _LOGGER.debug(
+                        "Service event_register registered event for '%s'",
+                        str(group_address),
+                    )
 
     async def service_exposure_register_modify(self, call):
         """Service for adding or removing an exposure to KNX bus."""
@@ -447,26 +462,27 @@ class KNXModule:
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-        attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
 
-        def calculate_payload(attr_payload):
-            """Calculate payload depending on type of attribute."""
-            if attr_type is not None:
-                transcoder = DPTBase.parse_transcoder(attr_type)
-                if transcoder is None:
-                    raise ValueError(f"Invalid type for knx.send service: {attr_type}")
-                return DPTArray(transcoder.to_knx(attr_payload))
-            if isinstance(attr_payload, int):
-                return DPTBinary(attr_payload)
-            return DPTArray(attr_payload)
+        payload: Union[DPTBinary, DPTArray]
+        if attr_type is not None:
+            transcoder = DPTBase.parse_transcoder(attr_type)
+            if transcoder is None:
+                raise ValueError(f"Invalid type for knx.send service: {attr_type}")
+            payload = DPTArray(transcoder.to_knx(attr_payload))
+        elif isinstance(attr_payload, int):
+            payload = DPTBinary(attr_payload)
+        else:
+            payload = DPTArray(attr_payload)
 
-        telegram = Telegram(
-            destination_address=GroupAddress(attr_address),
-            payload=GroupValueWrite(calculate_payload(attr_payload)),
-        )
-        await self.xknx.telegrams.put(telegram)
+        for address in attr_address:
+            telegram = Telegram(
+                destination_address=GroupAddress(address),
+                payload=GroupValueWrite(payload),
+            )
+            await self.xknx.telegrams.put(telegram)
 
     async def service_read_to_knx_bus(self, call):
         """Service for sending a GroupValueRead telegram to the KNX bus."""
