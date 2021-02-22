@@ -1,6 +1,8 @@
 """Platform for climate integration."""
 import logging
 
+from smarttub import Spa
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
@@ -38,9 +40,9 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
 
     PRESET_MODES = {
-        "AUTO": PRESET_NONE,
-        "ECO": PRESET_ECO,
-        "DAY": PRESET_DAY,
+        Spa.HeatMode.AUTO: PRESET_NONE,
+        Spa.HeatMode.ECONOMY: PRESET_ECO,
+        Spa.HeatMode.DAY: PRESET_DAY,
     }
 
     HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
@@ -62,7 +64,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current running hvac operation."""
-        return self.HVAC_ACTIONS.get(self.get_spa_status("heater"))
+        return self.HVAC_ACTIONS.get(self.spa_status.heater)
 
     @property
     def hvac_modes(self):
@@ -110,7 +112,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def preset_mode(self):
         """Return the current preset mode."""
-        return self.PRESET_MODES[self.get_spa_status("heatMode")]
+        return self.PRESET_MODES[self.spa_status.heat_mode]
 
     @property
     def preset_modes(self):
@@ -120,12 +122,12 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def current_temperature(self):
         """Return the current water temperature."""
-        return self.get_spa_status("water.temperature")
+        return self.spa_status.water.temperature
 
     @property
     def target_temperature(self):
         """Return the target water temperature."""
-        return self.get_spa_status("setTemperature")
+        return self.spa_status.set_temperature
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""

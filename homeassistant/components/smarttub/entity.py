@@ -52,18 +52,8 @@ class SmartTubEntity(CoordinatorEntity):
         spa_name = get_spa_name(self.spa)
         return f"{spa_name} {self._entity_type}"
 
-    def get_spa_status(self, path):
-        """Retrieve a value from the data returned by Spa.get_status().
+    @property
+    def spa_status(self) -> smarttub.SpaState:
+        """Retrieve the result of Spa.get_status()."""
 
-        Nested keys can be specified by a dotted path, e.g.
-        status['foo']['bar'] is 'foo.bar'.
-        """
-
-        status = self.coordinator.data[self.spa.id].get("status")
-        if status is None:
-            return None
-
-        for key in path.split("."):
-            status = status[key]
-
-        return status
+        return self.coordinator.data[self.spa.id].get("status")
