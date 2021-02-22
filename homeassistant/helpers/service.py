@@ -449,6 +449,7 @@ async def async_get_all_descriptions(
                 # positives for things like scripts, that register as a service
 
                 description = {
+                    "name": yaml_description.get("name", ""),
                     "description": yaml_description.get("description", ""),
                     "fields": yaml_description.get("fields", {}),
                 }
@@ -472,8 +473,9 @@ def async_set_service_schema(
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
-        "description": schema.get("description") or "",
-        "fields": schema.get("fields") or {},
+        "name": schema.get("name", ""),
+        "description": schema.get("description", ""),
+        "fields": schema.get("fields", {}),
     }
 
     hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
