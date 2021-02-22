@@ -919,6 +919,7 @@ omit =
     homeassistant/components/tado/*
     homeassistant/components/tado/device_tracker.py
     homeassistant/components/tahoma/__init__.py
+    homeassistant/components/tahoma/alarm_control_panel.py
     homeassistant/components/tahoma/binary_sensor.py
     homeassistant/components/tahoma/coordinator.py
     homeassistant/components/tahoma/overkiz_executor.py

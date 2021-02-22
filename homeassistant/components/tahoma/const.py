@@ -1,4 +1,5 @@
 """Constants for the Somfy TaHoma integration."""
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_CONTROL_PANEL
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 
 DOMAIN = "tahoma"
@@ -13,6 +14,7 @@ IGNORED_TAHOMA_TYPES = [
 
 # Used to map the Somfy widget and ui_class to the Home Assistant platform
 TAHOMA_TYPES = {
+    "Alarm": ALARM_CONTROL_PANEL,
     "AirFlowSensor": BINARY_SENSOR,  # widgetName, uiClass is AirSensor (sensor)
     "CarButtonSensor": BINARY_SENSOR,
     "ContactSensor": BINARY_SENSOR,
