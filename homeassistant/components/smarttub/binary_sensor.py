@@ -1,0 +1,45 @@
+"""Platform for binary sensor integration."""
+import logging
+
+from homeassistant.components.binary_sensor import (
+    STATE_OFF,
+    STATE_ON,
+    BinarySensorEntity,
+)
+
+from .const import DOMAIN, SMARTTUB_CONTROLLER
+from .sensor import SmartTubSensor
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up binary sensor entities for the binary sensors in the tub."""
+
+    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+
+    entities = []
+    for spa in controller.spas:
+        entities.append(
+            SmartTubOnline(controller.coordinator, spa),
+        )
+
+    async_add_entities(entities)
+
+
+class SmartTubOnline(SmartTubSensor, BinarySensorEntity):
+    """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
+
+    def __init__(self, coordinator, spa):
+        """Initialize the entity."""
+        super().__init__(coordinator, spa, "Online", "online")
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self._state
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        return STATE_ON if self.is_on else STATE_OFF
