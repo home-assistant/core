@@ -519,9 +519,17 @@ def async_numeric_state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                with trace_condition(config, variables), condition_path([str(index)]):
+                with condition_path(["entity_id", str(index)]), trace_condition(
+                    config, variables
+                ):
                     if not async_numeric_state(
-                        hass, entity_id, below, above, value_template, variables, attribute
+                        hass,
+                        entity_id,
+                        below,
+                        above,
+                        value_template,
+                        variables,
+                        attribute,
                     ):
                         return False
             except ConditionError as ex:
@@ -624,7 +632,9 @@ def state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                with trace_condition(config, variables), condition_path([str(index)]):
+                with condition_path(["entity_id", str(index)]), trace_condition(
+                    config, variables
+                ):
                     if not state(hass, entity_id, req_states, for_period, attribute):
                         return False
             except ConditionError as ex:
