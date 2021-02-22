@@ -237,6 +237,17 @@ DISCOVERY_SCHEMAS = [
         },
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # catch any device with color switch CC and multilevel CC as light
+    # e.g. the Aeon Smart Switch 6 which is a switch outlet but it also has a color light built-in
+    ZWaveDiscoverySchema(
+        platform="light",
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.SWITCH_COLOR}, property={"currentColor"}
+            )
+        ],
+    ),
     # binary sensors
     ZWaveDiscoverySchema(
         platform="binary_sensor",
