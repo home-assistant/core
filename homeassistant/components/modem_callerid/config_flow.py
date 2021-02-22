@@ -61,12 +61,6 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_endpoint_existed(self, endpoint):
-        for entry in self._async_current_entries():
-            if endpoint == entry.data.get(CONF_DEVICE):
-                return True
-        return False
-
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():

@@ -29,7 +29,7 @@ def _patch_setup():
 
 
 async def test_flow_user(hass):
-    """Test user initialized flow."""
+    """Test user initialized flow with duplicate device."""
     mocked_modem = await _create_mocked_modem()
     with _patch_config_flow_modem(mocked_modem), _patch_setup():
         result = await hass.config_entries.flow.async_init(
@@ -44,9 +44,6 @@ async def test_flow_user(hass):
         assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
 
-
-async def test_flow_user_already_configured(hass):
-    """Test user initialized flow with duplicate device."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: DEFAULT_NAME, CONF_DEVICE: DEFAULT_DEVICE},
@@ -66,7 +63,7 @@ async def test_flow_user_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_unknown_error(hass):
+async def test_flow_user_error(hass):
     """Test user initialized flow with unreachable device."""
     mocked_modem = await _create_mocked_modem(True)
     with _patch_config_flow_modem(mocked_modem) as modemmock:
