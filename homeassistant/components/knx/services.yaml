@@ -1,4 +1,5 @@
 send:
+  name: "Send to KNX bus"
   description: "Send arbitrary data directly to the KNX bus."
   fields:
     address:
@@ -23,6 +24,7 @@ send:
       selector:
         text:
 read:
+  name: "Read from KNX bus"
   description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."
   fields:
     address:
@@ -33,6 +35,7 @@ read:
       selector:
         text:
 event_register:
+  name: "Register knx_event"
   description: "Add or remove single group address to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
   fields:
     address:
@@ -49,6 +52,7 @@ event_register:
       selector:
         boolean:
 exposure_register:
+  name: "Expose to KNX bus"
   description: "Add or remove exposures to KNX bus. Only exposures added with this service can be removed."
   fields:
     address:
@@ -91,4 +95,5 @@ exposure_register:
       selector:
         boolean:
 reload:
-  description: "Reload KNX configuration."
+  name: "Reload KNX configuration"
+  description: "Reload the KNX configuration from yaml."
