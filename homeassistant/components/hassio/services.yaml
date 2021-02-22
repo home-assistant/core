@@ -1,50 +1,61 @@
 addon_start:
+  name: Start add-on
   description: Start add-on.
   fields:
     addon:
       name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_restart:
+  name: Restart add-on.
   description: Restart add-on.
   fields:
     addon:
       name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_stdin:
-  description: Write data to add-on stdin .
+  name: Write data to add-on stdin.
+  description: Write data to add-on stdin.
   fields:
     addon:
       name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 addon_stop:
+  name: Stop add-on.
   description: Stop add-on.
   fields:
     addon:
       name: Add-on
+      required: true
       description: The add-on slug.
       example: core_ssh
       selector:
         addon:
 
 host_reboot:
+  name: Reboot the host system.
   description: Reboot the host system.
 
 host_shutdown:
+  name: Poweroff the host system.
   description: Poweroff the host system.
 
 snapshot_full:
+  name: Create a full snapshot.
   description: Create a full snapshot.
   fields:
     name:
@@ -61,9 +72,11 @@ snapshot_full:
         text:
 
 snapshot_partial:
+  name: Create a partial snapshot.
   description: Create a partial snapshot.
   fields:
     addons:
+      name: Add-ons
       description: Optional list of addon slugs.
       example: ["core_ssh", "core_samba", "core_mosquitto"]
       selector:
