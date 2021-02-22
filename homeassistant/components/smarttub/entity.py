@@ -13,8 +13,6 @@ from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
-
 
 class SmartTubEntity(CoordinatorEntity):
     """Base class for SmartTub entities."""
