@@ -17,7 +17,6 @@ from .tahoma_entity import TahomaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-COMMAND_MY = "my"
 COMMAND_SET_INTENSITY = "setIntensity"
 COMMAND_SET_RGB = "setRGB"
 COMMAND_WINK = "wink"
@@ -97,7 +96,3 @@ class TahomaLight(TahomaEntity, LightEntity):
     async def async_turn_off(self, **_) -> None:
         """Turn the light off."""
         await self.executor.async_execute_command(COMMAND_OFF)
-
-    async def async_my(self, **_):
-        """Set light to preset position."""
-        await self.executor.async_execute_command(COMMAND_MY)
