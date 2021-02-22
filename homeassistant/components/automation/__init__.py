@@ -568,7 +568,7 @@ async def _async_process_config(
             )
 
             if CONF_CONDITION in config_block:
-                cond_func = await _async_process_if(hass, config, config_block)
+                cond_func = await _async_process_if(hass, name, config, config_block)
 
                 if cond_func is None:
                     continue
@@ -606,7 +606,7 @@ async def _async_process_config(
     return blueprints_used
 
 
-async def _async_process_if(hass, config, p_config):
+async def _async_process_if(hass, name, config, p_config):
     """Process if checks."""
     if_configs = p_config[CONF_CONDITION]
 
@@ -634,7 +634,8 @@ async def _async_process_if(hass, config, p_config):
 
         if errors:
             LOGGER.warning(
-                "Error evaluating condition:\n%s",
+                "Error evaluating condition in '%s':\n%s",
+                name,
                 ConditionErrorContainer("condition", errors=errors),
             )
             return False
