@@ -1,7 +1,9 @@
 """Demo implementation of the media player."""
 from typing import Callable, List
 
-from pyamaha import NetUSB, Tuner, Zone
+import math
+from pyamaha import NetUSB, Tuner, Zone, Clock
+import voluptuous as vol
 
 from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -36,8 +38,10 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import uuid
 
 from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity, _LOGGER
-from .const import ATTR_MUSICCAST_GROUP, DOMAIN, NULL_GROUP, ATTR_MC_LINK, ATTR_MAIN_SYNC
+from .const import ATTR_MUSICCAST_GROUP, DOMAIN, NULL_GROUP, ATTR_MC_LINK, ATTR_MAIN_SYNC, SERVICE_ALARM, \
+    ATTR_SLEEP_TIME, SERVICE_SLEEP, SERVICE_RECALL_NETUSB_PRESET, SERVICE_STORE_NETUSB_PRESET
 from .musiccast_device import MusicCastData
+from ...helpers import entity_platform
 
 PARALLEL_UPDATES = 1
 
@@ -79,6 +83,44 @@ async def async_setup_entry(
         media_players.append(
             MusicCastMediaPlayer(zone, zone_name, entry.entry_id, coordinator)
         )
+
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_SLEEP,
+        {
+            vol.Optional(ATTR_SLEEP_TIME): vol.All(
+                vol.Coerce(int), vol.Range(min=30, max=120)
+            )
+        },
+        "set_sleep_timer",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM,
+        {
+            vol.Optional("enable"): bool,
+            vol.Optional("volume"): int,
+            vol.Optional("alarm_time"): str,
+            vol.Optional("source"): str
+        },
+        "configure_alarm",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_RECALL_NETUSB_PRESET,
+        {
+            vol.Required("preset"): int,
+        },
+        "recall_netusb_preset",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_STORE_NETUSB_PRESET,
+        {
+            vol.Required("preset"): int,
+        },
+        "store_netusb_preset",
+    )
 
     async_add_entities(media_players, True)
 
@@ -486,6 +528,10 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
                     NetUSB.set_list_control("main", "play", index, self._zone_id)
                 )
 
+            elif parts[0] == "presets":
+                index = parts[1]
+                await self.recall_netusb_preset(index)
+
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
 
@@ -545,6 +591,33 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
 
                 menu_layer = list_info.get("menu_layer")
 
+            elif parts[0] == "presets":
+                children = []
+
+                for i, preset in self.coordinator.data.netusb_preset_list.items():
+                    child = BrowseMedia(
+                        title=preset[0] + " - " + preset[1],
+                        media_class=MEDIA_CLASS_TRACK,
+                        media_content_id=f"presets:{i}",
+                        media_content_type=MEDIA_TYPE_TRACK,
+                        can_play=True,
+                        can_expand=False,
+                        thumbnail=None,
+                    )
+                    children.append(child)
+
+                preset_folder = BrowseMedia(
+                    title="Presets",
+                    media_class=MEDIA_CLASS_DIRECTORY,
+                    media_content_id=f"presets",
+                    media_content_type=MEDIA_CLASS_DIRECTORY,
+                    can_play=False,
+                    can_expand=True,
+                    children=children,
+                    children_media_class=MEDIA_CLASS_TRACK,
+                )
+                return preset_folder
+
             # Show first layer of list_info
 
             children = []
@@ -594,15 +667,25 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         menu_layer = 0
 
         children = [
-            BrowseMedia(
-                title=self.coordinator.data.input_names.get(input, input),
-                media_class=MEDIA_CLASS_DIRECTORY,
-                media_content_id=f"input:{input}",
-                media_content_type=MEDIA_CLASS_DIRECTORY,
-                can_play=False,
-                can_expand=True,
-            )
-            for input in inputs
+                        BrowseMedia(
+                            title="Presets",
+                            media_class=MEDIA_CLASS_DIRECTORY,
+                            media_content_id=f"presets",
+                            media_content_type=MEDIA_CLASS_DIRECTORY,
+                            can_play=False,
+                            can_expand=True,
+                            thumbnail="mdi-heart",
+                        )
+                   ] + [
+                            BrowseMedia(
+                                title=self.coordinator.data.input_names.get(input, input),
+                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_content_id=f"input:{input}",
+                                media_content_type=MEDIA_CLASS_DIRECTORY,
+                                can_play=False,
+                                can_expand=True,
+                            )
+                            for input in inputs
         ]
 
         overview = BrowseMedia(
@@ -617,6 +700,66 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         )
 
         return overview
+
+    async def recall_netusb_preset(self, preset):
+        """Play the selected preset."""
+        await self.coordinator.musiccast.device.get(NetUSB.recall_preset(self._zone_id, preset))
+
+    async def store_netusb_preset(self, preset):
+        """Play the selected preset."""
+        await self.coordinator.musiccast.device.get(NetUSB.store_preset(preset))
+
+    async def set_sleep_timer(self, sleep_time=0):
+        """Set sleep time"""
+        if 'sleep' not in self.coordinator.data.zones[self._zone_id].func_list:
+            raise Exception(self.entity_id + " does not have a sleep timer.")
+        sleep_time = math.ceil(sleep_time/30) * 30
+        await self.coordinator.musiccast.device.get(Zone.set_sleep(self._zone_id, sleep_time))
+
+    @property
+    def alarm_input_list(self):
+        if not self.coordinator.data.has_alarm:
+            return {}
+        inputs = {"resume:" + inp: "Resume " + inp for inp in self.coordinator.data.alarm_resume_input_list}
+        print(self.coordinator.data.netusb_preset_list.items())
+        if "netusb" in self.coordinator.data.alarm_preset_list:
+            inputs = {**inputs, **{"preset:netusb:" + str(index): entry[0] + " - " + entry[1]
+                                   for index, entry in self.coordinator.data.netusb_preset_list.items()}
+                      }
+
+        return inputs
+
+    async def configure_alarm(self, enable=None, volume=None, alarm_time=None, source=""):
+        """Setup alarm"""
+        if not self.coordinator.data.has_alarm:
+            raise Exception(self.entity_id + " does not have a alarm.")
+        enable = self.coordinator.data.alarm_enabled if enable is None else enable
+        resume_input = None
+        preset_type = None
+        preset_num = None
+        playback_type = None
+
+        parts = source.split(':')
+        if len(parts) > 0 and parts[0] != "":
+            playback_type = parts[0]
+            if playback_type == "resume":
+                resume_input = parts[1]
+            elif playback_type == "preset":
+                preset_type = parts[1]
+                preset_num = int(parts[2])
+            else:
+                playback_type = None
+
+        if isinstance(alarm_time, str):
+            time_parts = alarm_time.split(':')
+            alarm_time = time_parts[0] + time_parts[1]
+
+        await self.coordinator.musiccast.device.post(
+            *Clock.set_alarm_settings(enable, volume=volume, mode="oneday" if playback_type or alarm_time else None,
+                                      day="oneday" if playback_type or alarm_time else None,
+                                      playback_type=playback_type, alarm_time=alarm_time, preset_num=preset_num,
+                                      preset_type=preset_type, enable=enable if playback_type or alarm_time else None,
+                                      resume_input=resume_input))
 
     # Group and MusicCast System specific functions/properties
 
@@ -635,9 +778,9 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """
         return (
                 self.is_network_server or (
-                self._zone_id == DEFAULT_ZONE
-                and len([entity for entity in self.coordinator.entities if entity.source == ATTR_MAIN_SYNC])
-        )
+                    self._zone_id == DEFAULT_ZONE
+                    and len([entity for entity in self.coordinator.entities if entity.source == ATTR_MAIN_SYNC])
+                )
         )
 
     @property
@@ -774,6 +917,20 @@ class MusicCastMediaPlayer(MediaPlayerEntity, MusicCastDeviceEntity):
         """Return entity specific state attributes."""
         attributes = {
             ATTR_MUSICCAST_GROUP: [e.entity_id for e in self.musiccast_group],
+            "alarm_inputs": self.alarm_input_list,
+            "alarm_time": self.coordinator.data.alarm_time,
+            "alarm_volume": self.coordinator.data.alarm_volume,
+            "alarm_volume_settings": {
+                "min": self.coordinator.data.alarm_volume_range[0],
+                "max": self.coordinator.data.alarm_volume_range[1],
+                "step": self.coordinator.data.alarm_volume_step
+            },
+            "alarm_enabled": self.coordinator.data.alarm_enabled,
+            "alarm_input":
+                "preset:netusb:" + str(self.coordinator.data.alarm_preset)
+                if self.coordinator.data.alarm_playback_type == "preset" else
+                "resume:" + str(self.coordinator.data.alarm_resume_input)
+                if self.coordinator.data.alarm_playback_type == "resume" else None
         }
         return attributes
 
