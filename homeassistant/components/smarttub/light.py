@@ -54,7 +54,7 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this light entity."""
-        return super().unique_id + f"-{self.light_zone}"
+        return f"{super().unique_id}-{self.light_zone}"
 
     @property
     def name(self) -> str:
@@ -73,11 +73,11 @@ class SmartTubLight(SmartTubEntity, LightEntity):
     def _smarttub_to_hass_brightness(intensity):
         if intensity in (0, 1):
             return 0
-        return intensity * 255 / 100
+        return round(intensity * 255 / 100)
 
     @staticmethod
     def _hass_to_smarttub_brightness(brightness):
-        return brightness * 100 / 255
+        return round(brightness * 100 / 255)
 
     @property
     def is_on(self):
