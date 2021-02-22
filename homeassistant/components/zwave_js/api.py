@@ -296,6 +296,7 @@ def websocket_get_config_parameters(
                 "max": metadata.max,
                 "unit": metadata.unit,
                 "writeable": metadata.writeable,
+                "readable": metadata.readable,
             },
             "value": zwave_value.value,
         }
