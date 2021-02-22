@@ -43,6 +43,8 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         "DAY": PRESET_DAY,
     }
 
+    HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
+
     HVAC_ACTIONS = {
         "OFF": CURRENT_HVAC_IDLE,
         "ON": CURRENT_HVAC_HEAT,
@@ -133,6 +135,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str):
         """Activate the specified preset mode."""
-        heat_mode = next(k for k, v in self.PRESET_MODES.items() if v == preset_mode)
+        heat_mode = self.HEAT_MODES[preset_mode]
         await self.spa.set_heat_mode(heat_mode)
         await self.coordinator.async_refresh()
