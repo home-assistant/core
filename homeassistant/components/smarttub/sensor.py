@@ -3,7 +3,7 @@ from enum import Enum
 import logging
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity
+from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,18 +41,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubSensor(SmartTubEntity):
-    """Generic and base class for SmartTub sensors."""
+class SmartTubSensor(SmartTubSensorBase):
+    """Generic class for SmartTub status sensors."""
 
     def __init__(self, coordinator, spa, sensor_name, attr_name):
         """Initialize the entity."""
-        super().__init__(coordinator, spa, sensor_name)
-        self._attr_name = attr_name
-
-    @property
-    def _state(self):
-        """Retrieve the underlying state from the spa."""
-        return getattr(self.spa_status, self._attr_name)
+        super().__init__(coordinator, spa, sensor_name, attr_name)
 
     @property
     def state(self) -> str:
