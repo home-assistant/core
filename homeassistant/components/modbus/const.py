@@ -9,11 +9,13 @@ CONF_STOPBITS = "stopbits"
 CONF_REGISTER = "register"
 CONF_REGISTER_TYPE = "register_type"
 CONF_REGISTERS = "registers"
+CONF_REGISTER_MASK = "register_mask"
 CONF_REVERSE_ORDER = "reverse_order"
 CONF_SCALE = "scale"
 CONF_COUNT = "count"
 CONF_PRECISION = "precision"
 CONF_COILS = "coils"
+CONF_STATE_BIT_MASK = "state_bit_mask"
 
 # integration names
 DEFAULT_HUB = "modbus_hub"
@@ -46,6 +48,12 @@ ATTR_VALUE = "value"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 DEFAULT_SCAN_INTERVAL = 15  # seconds
+CONF_TYPE_SERIAL = "serial"
+CONF_TYPE_RTUOVERTCP = "rtuovertcp"
+CONF_TYPE_TCP = "tcp"
+CONF_TYPE_TCPSERVER = "tcpserver"
+CONF_TYPE_UDP = "udp"
+
 
 # binary_sensor.py
 CONF_INPUTS = "inputs"

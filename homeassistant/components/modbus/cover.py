@@ -34,7 +34,7 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     MODBUS_DOMAIN,
 )
-from .modbus import ModbusHub
+from .modbus_hub import AbstractModbusHub
 
 
 async def async_setup_platform(
@@ -49,7 +49,7 @@ async def async_setup_platform(
 
     covers = []
     for cover in discovery_info[CONF_COVERS]:
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub: AbstractModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         covers.append(ModbusCover(hub, cover))
 
     async_add_entities(covers)
@@ -60,11 +60,11 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
     def __init__(
         self,
-        hub: ModbusHub,
+        hub: AbstractModbusHub,
         config: Dict[str, Any],
     ):
         """Initialize the modbus cover."""
-        self._hub: ModbusHub = hub
+        self._hub: AbstractModbusHub = hub
         self._coil = config.get(CALL_TYPE_COIL)
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._name = config[CONF_NAME]

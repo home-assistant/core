@@ -35,8 +35,9 @@ from .const import (
     CONF_VERIFY_STATE,
     DEFAULT_HUB,
     MODBUS_DOMAIN,
+    CONF_STATE_BIT_MASK,
 )
-from .modbus import ModbusHub
+from .modbus_hub import AbstractModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +57,7 @@ REGISTERS_SCHEMA = vol.Schema(
         vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
         vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
+        vol.Optional(CONF_STATE_BIT_MASK, default=0): cv.positive_int,
     }
 )
 
@@ -86,11 +88,11 @@ async def async_setup_platform(
     switches = []
     if CONF_COILS in config:
         for coil in config[CONF_COILS]:
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][coil[CONF_HUB]]
+            hub: AbstractModbusHub = hass.data[MODBUS_DOMAIN][coil[CONF_HUB]]
             switches.append(ModbusCoilSwitch(hub, coil))
     if CONF_REGISTERS in config:
         for register in config[CONF_REGISTERS]:
-            hub: ModbusHub = hass.data[MODBUS_DOMAIN][register[CONF_HUB]]
+            hub: AbstractModbusHub = hass.data[MODBUS_DOMAIN][register[CONF_HUB]]
             switches.append(ModbusRegisterSwitch(hub, register))
 
     async_add_entities(switches)
@@ -99,17 +101,25 @@ async def async_setup_platform(
 class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+    def __init__(self, hub: AbstractModbusHub, config: Dict[str, Any]):
         """Initialize the switch."""
-        self._hub: ModbusHub = hub
+        self._hub: AbstractModbusHub = hub
         self._name = config[CONF_NAME]
         self._slave = config.get(CONF_SLAVE)
         self._is_on = None
         self._available = True
+        self._state_bit_mask = 0
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
+        self._hub.register_entity(
+            self._name,
+            self._slave,
+            self._register,
+            state.state if state else None,
+            bit_mask=self._state_bit_mask,
+        )
         if not state:
             return
         self._is_on = state.state == STATE_ON
@@ -133,7 +143,7 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
 class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus coil switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+    def __init__(self, hub: AbstractModbusHub, config: Dict[str, Any]):
         """Initialize the coil switch."""
         super().__init__(hub, config)
         self._coil = config[CALL_TYPE_COIL]
@@ -184,35 +194,67 @@ class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
 class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus register switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+    def __init__(self, hub: AbstractModbusHub, config: Dict[str, Any]):
         """Initialize the register switch."""
         super().__init__(hub, config)
         self._register = config[CONF_REGISTER]
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
-        self._state_on = config.get(CONF_STATE_ON, self._command_on)
-        self._state_off = config.get(CONF_STATE_OFF, self._command_off)
         self._verify_state = config[CONF_VERIFY_STATE]
         self._verify_register = config.get(CONF_VERIFY_REGISTER, self._register)
         self._register_type = config[CONF_REGISTER_TYPE]
+        self._state_bit_mask = int(config[CONF_STATE_BIT_MASK])
+        if self._state_bit_mask > 0:
+            # if CONF_STATE_BIT_MASK is set, CONF_STATE_ON and CONF_STATE_OFF
+            # become a bit masks to turn on as an OR operation of the current state and the CONF_STATE_ON
+            # value and turn off as an AND operation with the current state and the CONF_STATE_OFF value
+            if self._command_on == 0:
+                _LOGGER.error(
+                    "you have to specify command_on if you use state_bit_mask"
+                )
+                assert False
+            # define off command as a bit inversion of the on command if not set
+            if self._command_off == 0:
+                self._command_off = ~self._command_on
+
+        self._state_on = config.get(CONF_STATE_ON, self._command_on)
+        self._state_off = config.get(CONF_STATE_OFF, self._command_off)
+
         self._available = True
         self._is_on = None
 
     def turn_on(self, **kwargs):
         """Set switch on."""
         # Only holding register is writable
-        if self._register_type == CALL_TYPE_REGISTER_HOLDING:
+        if self._register_type != CALL_TYPE_REGISTER_HOLDING:
+            return
+        if self._state_bit_mask > 0:
+            result = self._read_register()
+            if result is None:
+                return
+            self._write_register(result | self._command_on)
+        else:
             self._write_register(self._command_on)
-            if not self._verify_state:
-                self._is_on = True
+
+        if not self._verify_state:
+            self._is_on = True
 
     def turn_off(self, **kwargs):
         """Set switch off."""
         # Only holding register is writable
-        if self._register_type == CALL_TYPE_REGISTER_HOLDING:
+        if self._register_type != CALL_TYPE_REGISTER_HOLDING:
+            return
+
+        if self._state_bit_mask > 0:
+            result = self._read_register()
+            if result is None:
+                return
+            self._write_register(result & self._command_off)
+        else:
             self._write_register(self._command_off)
-            if not self._verify_state:
-                self._is_on = False
+
+        if not self._verify_state:
+            self._is_on = False
 
     @property
     def available(self) -> bool:
@@ -225,6 +267,13 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
             return
 
         value = self._read_register()
+
+        if value is None:
+            return
+
+        if self._state_bit_mask > 0:
+            value = value & self._state_bit_mask
+
         if value == self._state_on:
             self._is_on = True
         elif value == self._state_off:

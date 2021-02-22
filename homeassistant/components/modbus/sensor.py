@@ -1,6 +1,8 @@
 """Support for Modbus Register sensors."""
 import logging
 import struct
+import traceback
+
 from typing import Any, Optional, Union
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -197,6 +199,14 @@ class ModbusRegisterSensor(RestoreEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
+        self._hub.register_entity(
+            self._name,
+            self._slave,
+            self._register,
+            state.state if state else None,
+            data_type=self._data_type,
+            data_count=self._count,
+        )
         if not state:
             return
         self._value = state.state
@@ -250,6 +260,7 @@ class ModbusRegisterSensor(RestoreEntity):
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
+
         if self._data_type == DATA_TYPE_STRING:
             self._value = byte_string.decode()
         else:
