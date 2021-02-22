@@ -67,4 +67,7 @@ set_config_parameter:
         object:
     bitmask:
       name: Bitmask
-      description: Target a specific bitmask (see docs for info) Optional/advanced.
+      description: Target a specific bitmask (see the documentation for more information).
+      advanced: true
+      selector:
+        object:
