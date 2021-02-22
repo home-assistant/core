@@ -90,6 +90,20 @@ def mock_spa():
 
     mock_spa.get_pumps.return_value = [mock_circulation_pump, mock_jet_off, mock_jet_on]
 
+    mock_light_off = create_autospec(smarttub.SpaLight, instance=True)
+    mock_light_off.spa = mock_spa
+    mock_light_off.zone = 1
+    mock_light_off.intensity = 0
+    mock_light_off.mode = smarttub.SpaLight.LightMode.OFF
+
+    mock_light_on = create_autospec(smarttub.SpaLight, instance=True)
+    mock_light_on.spa = mock_spa
+    mock_light_on.zone = 2
+    mock_light_on.intensity = 50
+    mock_light_on.mode = smarttub.SpaLight.LightMode.PURPLE
+
+    mock_spa.get_lights.return_value = [mock_light_off, mock_light_on]
+
     return mock_spa
 
 
