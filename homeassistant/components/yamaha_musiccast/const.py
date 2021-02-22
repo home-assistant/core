@@ -32,9 +32,15 @@ ATTR_UDP_PORT = "udp_port"
 ATTR_MC_LINK = "mc_link"
 ATTR_MAIN_SYNC = "main_sync"
 ATTR_MC_LINK_SOURCES = [ATTR_MC_LINK, ATTR_MAIN_SYNC]
+ATTR_MASTER = "master"
+ATTR_SLEEP_TIME = "sleep_time"
+
 SERVICE_JOIN = "join"
 SERVICE_UNJOIN = "unjoin"
-ATTR_MASTER = "master"
+SERVICE_SLEEP = "sleep_timer"
+SERVICE_ALARM = "set_alarm"
+SERVICE_RECALL_NETUSB_PRESET = "recall_netusb_preset"
+SERVICE_STORE_NETUSB_PRESET = "store_netusb_preset"
 
 UNJOIN_SERVICE_SCHEMA = vol.Schema(
     {

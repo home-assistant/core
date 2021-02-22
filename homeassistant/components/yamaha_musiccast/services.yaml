@@ -22,3 +22,68 @@ unjoin:
         entity:
           integration: yamaha_musiccast
           domain: media_player
+
+set_sleep_timer:
+  description: Set a sleep timer for a mediaplayer.
+  fields:
+    entity_id:
+      description: Name of the mediaplayer.
+      example: "media_player.living_room"
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+    sleep_time:
+      description: Sleep Time in minutes in steps of 30 minutes.
+      example: 90
+
+set_alarm:
+  description: Configure the alarm of a media player entity.
+  fields:
+    entity_id:
+      description: Name of the mediaplayer.
+      example: "media_player.living_room"
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+    enable:
+      description: Enable the alarm.
+      example: True
+    volume:
+      description: Alarm volume.
+      example: 40
+    alarm_time:
+      description: Alarm time as string in hh:mm 24h notation.
+      example: "07:30"
+    source:
+      description: Alarm source in the following form PLAYBACKTYPE:SOURCE.
+      example: "preset:netusb:2"
+
+recall_netusb_preset:
+  description: Recall a net-usb preset.
+  fields:
+    entity_id:
+      description: Name of the mediaplayer.
+      example: "media_player.living_room"
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+    preset:
+      description: Preset Number.
+      example: 2
+
+store_netusb_preset:
+  description: Store a net-usb preset.
+  fields:
+    entity_id:
+      description: Name of the mediaplayer.
+      example: "media_player.living_room"
+      selector:
+        entity:
+          integration: yamaha_musiccast
+          domain: media_player
+    preset:
+      description: Preset Number.
+      example: 2
