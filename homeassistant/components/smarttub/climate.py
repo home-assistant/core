@@ -110,7 +110,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def preset_mode(self):
         """Return the current preset mode."""
-        return self.PRESET_MODES[self.get_spa_status("heatMode")]
+        return self.PRESET_MODES[self.spa_status.heat_mode]
 
     @property
     def preset_modes(self):
