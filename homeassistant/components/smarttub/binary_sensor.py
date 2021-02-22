@@ -1,7 +1,10 @@
 """Platform for binary sensor integration."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorEntity,
+)
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
@@ -30,3 +33,8 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state is True
+
+    @property
+    def device_class(self) -> str:
+        """Return the device class for this entity."""
+        return DEVICE_CLASS_CONNECTIVITY
