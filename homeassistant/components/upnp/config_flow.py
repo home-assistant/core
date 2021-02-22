@@ -10,10 +10,12 @@ from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 
 from .const import (
+    CONFIG_ENTRY_HOSTNAME,
     CONFIG_ENTRY_SCAN_INTERVAL,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DEFAULT_SCAN_INTERVAL,
+    DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -179,6 +181,16 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
+        # Handle devices changing their UDN, only allow a single
+        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
+        for config_entry in existing_entries:
+            entry_hostname = config_entry.data.get(CONFIG_ENTRY_HOSTNAME)
+            if entry_hostname == discovery[DISCOVERY_HOSTNAME]:
+                _LOGGER.debug(
+                    "Found existing config_entry with same hostname, discovery ignored"
+                )
+                return self.async_abort(reason="discovery_ignored")
+
         # Store discovery.
         self._discoveries = [discovery]
 
@@ -222,6 +234,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data = {
             CONFIG_ENTRY_UDN: discovery[DISCOVERY_UDN],
             CONFIG_ENTRY_ST: discovery[DISCOVERY_ST],
+            CONFIG_ENTRY_HOSTNAME: discovery[DISCOVERY_HOSTNAME],
         }
         return self.async_create_entry(title=title, data=data)
 
