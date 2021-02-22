@@ -23,6 +23,10 @@ MODELS_SWITCH = [
     "chuangmi.plug.hmi206",
     "lumi.acpartner.v3",
 ]
+MODELS_VACUUM = ["roborock.vacuum"]
+
+MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_VACUUM
+MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
 # Fan Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"

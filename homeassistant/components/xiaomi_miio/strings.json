@@ -8,7 +8,7 @@
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "token": "[%key:common::config_flow::data::api_token%]",
-          "name": "Name of the device"
+          "model": "Device model (Optional)"
         }
       }
     },
