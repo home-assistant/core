@@ -1,5 +1,5 @@
 update_setting:
-  name: Update a Vizio media player setting
+  name: Update setting
   description: Update the value of a setting on a Vizio media player device.
   target:
     entity:
@@ -8,14 +8,18 @@ update_setting:
   fields:
     setting_type:
       name: Setting type
-      description: The type of setting to be changed. Available types are listed in the 'setting_types' property.
+      description:
+        The type of setting to be changed. Available types are listed in the
+        'setting_types' property.
       required: true
       example: "audio"
       selector:
         text:
     setting_name:
       name: Setting name
-      description: The name of the setting to be changed. Available settings for a given setting_type are listed in the '<setting_type>_settings' property.
+      description:
+        The name of the setting to be changed. Available settings for a given
+        setting_type are listed in the '<setting_type>_settings' property.
       required: true
       example: "eq"
       selector:

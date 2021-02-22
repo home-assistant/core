@@ -1,7 +1,8 @@
 # Describes the format for available hue services
 
 hue_activate_scene:
-  description: Activate a hue scene stored in the hue hub
+  name: Activate scene
+  description: Activate a hue scene stored in the hue hub.
   fields:
     group_name:
       name: Group
