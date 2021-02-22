@@ -28,8 +28,8 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_NAME]
             scan_interval = user_input[CONF_SCAN_INTERVAL]
 
-            if await self._async_endpoint_existed(host):
-                return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(host)
+            self._abort_if_unique_id_configured()
 
             try:
                 await self._async_try_connect(host)
@@ -70,12 +70,6 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def _async_endpoint_existed(self, endpoint):
-        for entry in self._async_current_entries():
-            if endpoint == entry.data.get(CONF_HOST):
-                return True
-        return False
 
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)
