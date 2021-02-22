@@ -31,6 +31,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
+    websocket_api.async_register_command(hass, websocket_get_config_parameters)
     hass.http.register_view(DumpView)  # type: ignore
 
 
@@ -257,6 +258,48 @@ async def websocket_remove_node(
     ]
 
     result = await controller.async_begin_exclusion()
+    connection.send_result(
+        msg[ID],
+        result,
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_config_parameters",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+@callback
+def websocket_get_config_parameters(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Get a list of configuration parameterss for a Z-Wave node."""
+    entry_id = msg[ENTRY_ID]
+    node_id = msg[NODE_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node = client.driver.controller.nodes[node_id]
+    values = node.get_configuration_values()
+    result = {}
+    for value_id, zwave_value in values.items():
+        metadata = zwave_value.metadata
+        result[value_id] = {
+            "property": zwave_value.property_,
+            "configuration_value_type": zwave_value.configuration_value_type.value,
+            "metadata": {
+                "description": metadata.description,
+                "label": metadata.label,
+                "type": metadata.type,
+                "min": metadata.min,
+                "max": metadata.max,
+                "unit": metadata.unit,
+                "writeable": metadata.writeable,
+                "readable": metadata.readable,
+            },
+            "value": zwave_value.value,
+        }
     connection.send_result(
         msg[ID],
         result,
