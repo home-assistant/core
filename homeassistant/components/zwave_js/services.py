@@ -99,10 +99,14 @@ class ZWaveServices:
             )
 
             if zwave_value:
-                error_msg = "Set configuration parameter %s on Node %s with value %s"
-            else:
-                error_msg = (
-                    "Unable to set configuration parameter on Node %s with value %s"
+                _LOGGER.info(
+                    "Set configuration parameter %s on Node %s with value %s",
+                    zwave_value,
+                    node,
+                    new_value,
                 )
-
-            _LOGGER.info(error_msg, zwave_value, node, new_value)
+            else:
+                raise ValueError(
+                    f"Unable to set configuration parameter on Node {node} with "
+                    f"value {new_value}"
+                )
