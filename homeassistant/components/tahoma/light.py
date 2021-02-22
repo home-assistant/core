@@ -67,10 +67,10 @@ class TahomaLight(TahomaEntity, LightEntity):
         """Flag supported features."""
         supported_features = 0
 
-        if self.has_command(COMMAND_SET_INTENSITY):
+        if self.executor.has_command(COMMAND_SET_INTENSITY):
             supported_features |= SUPPORT_BRIGHTNESS
 
-        if self.has_command(COMMAND_SET_RGB):
+        if self.executor.has_command(COMMAND_SET_RGB):
             supported_features |= SUPPORT_COLOR
 
         return supported_features
