@@ -485,6 +485,9 @@ mbddns==0.1.2
 # homeassistant.components.minecraft_server
 mcstatus==2.3.0
 
+# homeassistant.components.meppel_afvalkalender
+meppel_afvalkalender==0.3.2
+
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.1
 

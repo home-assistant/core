@@ -929,7 +929,7 @@ mbddns==0.1.2
 mcstatus==2.3.0
 
 # homeassistant.components.meppel_afvalkalender
-meppel_afvalkalender==0.3.1
+meppel_afvalkalender==0.3.2
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
