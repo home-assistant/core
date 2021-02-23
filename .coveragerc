@@ -974,6 +974,7 @@ omit =
     homeassistant/components/tahoma/__init__.py
     homeassistant/components/tahoma/binary_sensor.py
     homeassistant/components/tahoma/coordinator.py
+    homeassistant/components/tahoma/light.py
     homeassistant/components/tahoma/lock.py
     homeassistant/components/tahoma/overkiz_executor.py
     homeassistant/components/tahoma/scene.py
