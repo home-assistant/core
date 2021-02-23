@@ -1,5 +1,7 @@
 """Support for Tasmota fans."""
 
+from typing import Optional
+
 from hatasmota import const as tasmota_const
 
 from homeassistant.components import fan
@@ -57,6 +59,11 @@ class TasmotaFan(
         )
 
     @property
+    def speed_count(self) -> Optional[int]:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
+
+    @property
     def percentage(self):
         """Return the current speed percentage."""
         if self._state is None:
@@ -85,7 +92,12 @@ class TasmotaFan(
     ):
         """Turn the fan on."""
         # Tasmota does not support turning a fan on with implicit speed
-        await self.async_set_percentage(percentage or 66)
+        await self.async_set_percentage(
+            percentage
+            or ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, tasmota_const.FAN_SPEED_MEDIUM
+            )
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn the fan off."""
