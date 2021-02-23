@@ -103,6 +103,7 @@ set_direction:
 
 increase_speed:
   description: Increase the speed of the fan by one speed or a percentage_step.
+  target:
   fields:
     entity_id:
       description: Name(s) of the entities to increase speed
@@ -122,6 +123,7 @@ increase_speed:
 
 decrease_speed:
   description: Decrease the speed of the fan by one speed or a percentage_step.
+  target:
   fields:
     entity_id:
       description: Name(s) of the entities to decrease speed
