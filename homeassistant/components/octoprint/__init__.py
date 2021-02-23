@@ -199,6 +199,7 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=interval),
         )
         self._octoprint = octoprint
+        self.data = {"printer": None, "job": None, "last_read_time": None}
 
     async def _async_update_data(self):
         """Update data via API."""
