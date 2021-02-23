@@ -1,7 +1,8 @@
 # Describes the format for available scene services
 
 turn_on:
-  description: Activate a scene
+  name: Activate
+  description: Activate a scene.
   target:
   fields:
     transition:
@@ -19,10 +20,12 @@ turn_on:
           mode: slider
 
 reload:
-  description: Reload the scene configuration
+  name: Reload
+  description: Reload the scene configuration.
 
 apply:
-  description: Activate a scene with configuration
+  name: Apply
+  description: Activate a scene with configuration.
   fields:
     entities:
       name: Entities state
@@ -50,7 +53,8 @@ apply:
           mode: slider
 
 create:
-  description: Creates a new scene
+  name: Create
+  description: Creates a new scene.
   fields:
     scene_id:
       name: Scene entity ID

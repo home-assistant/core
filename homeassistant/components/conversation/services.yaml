@@ -1,6 +1,7 @@
 # Describes the format for available component services
 process:
-  description: Launch a conversation from a transcribed text
+  name: Process
+  description: Launch a conversation from a transcribed text.
   fields:
     text:
       name: Text

@@ -1,7 +1,8 @@
 # Describes the format for available Number entity services
 
 set_value:
-  description: Set the value of a Number entity
+  name: Set
+  description: Set the value of a Number entity.
   target:
   fields:
     value:

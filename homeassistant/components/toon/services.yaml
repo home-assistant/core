@@ -1,4 +1,5 @@
 update:
+  name: Update
   description: Update all entities with fresh data from Toon
   fields:
     display:

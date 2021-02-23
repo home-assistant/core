@@ -1,7 +1,8 @@
 # Describes the format for available recorder services
 
 purge:
-  description: Start purge task - to clean up old data from your database
+  name: Purge
+  description: Start purge task - to clean up old data from your database.
   fields:
     keep_days:
       name: Days to keep
