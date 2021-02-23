@@ -1,7 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 import asyncio
 import json
-from unittest.mock import DEFAULT, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -20,29 +20,6 @@ from tests.common import MockConfigEntry, load_fixture
 async def device_registry_fixture(hass):
     """Return the device registry."""
     return await async_get_device_registry(hass)
-
-
-@pytest.fixture(name="discovery_info")
-def discovery_info_fixture():
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-@pytest.fixture(name="discovery_info_side_effect")
-def discovery_info_side_effect_fixture():
-    """Return the discovery info from the supervisor."""
-    return None
-
-
-@pytest.fixture(name="get_addon_discovery_info")
-def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
-    """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.async_get_addon_discovery_info",
-        side_effect=discovery_info_side_effect,
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
 
 
 @pytest.fixture(name="controller_state", scope="session")
