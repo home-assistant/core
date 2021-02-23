@@ -1,6 +1,6 @@
 add_item:
   name: Add item
-  description: Adds an item to the shopping list.
+  description: Add an item to the shopping list.
   fields:
     name:
       name: Name
@@ -12,7 +12,7 @@ add_item:
 
 complete_item:
   name: Complete item
-  description: Marks an item as completed in the shopping list.
+  description: Mark an item as completed in the shopping list.
   fields:
     name:
       name: Name

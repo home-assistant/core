@@ -1,6 +1,6 @@
 effect:
   name: Set effect
-  description: Controls the effect settings of WLED.
+  description: Control the effect settings of WLED.
   target:
   fields:
     effect:
@@ -46,7 +46,7 @@ effect:
 
 preset:
   name: Set preset
-  description: Calls a preset on the WLED device.
+  description: Set a preset for the WLED device.
   target:
   fields:
     preset:

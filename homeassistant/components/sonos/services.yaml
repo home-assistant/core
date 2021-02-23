@@ -123,7 +123,7 @@ set_option:
 
 play_queue:
   name: Play queue
-  description: Starts playing the queue from the first item.
+  description: Start playing the queue from the first item.
   fields:
     entity_id:
       description: Name(s) of entities that will start playing.

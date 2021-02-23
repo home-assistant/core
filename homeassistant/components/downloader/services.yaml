@@ -1,6 +1,6 @@
 download_file:
   name: Download file
-  description: Downloads a file to the download location.
+  description: Download a file to the download location.
   fields:
     url:
       name: URL
