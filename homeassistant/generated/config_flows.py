@@ -131,6 +131,7 @@ FLOWS = [
     "mailgun",
     "mazda",
     "melcloud",
+    "meppel_afvalkalender",
     "met",
     "meteo_france",
     "metoffice",

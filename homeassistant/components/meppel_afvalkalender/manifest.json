@@ -1,0 +1,8 @@
+{
+  "domain": "meppel_afvalkalender",
+  "name": "Meppel Afvalkalender",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/meppel_afvalkalender",
+  "requirements": ["meppel_afvalkalender==0.3.1"],
+  "codeowners": ["@westenberg"]
+}

@@ -273,6 +273,7 @@ homeassistant/components/media_source/* @hunterjm
 homeassistant/components/mediaroom/* @dgomes
 homeassistant/components/melcloud/* @vilppuvuorinen
 homeassistant/components/melissa/* @kennedyshead
+homeassistant/components/meppel_afvalkalender/* @westenberg
 homeassistant/components/met/* @danielhiversen @thimic
 homeassistant/components/meteo_france/* @hacf-fr @oncleben31 @Quentame
 homeassistant/components/meteoalarm/* @rolfberkenbosch
