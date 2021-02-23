@@ -38,3 +38,31 @@ set_lock_usercode:
       example: 1234
       selector:
         text:
+
+set_config_parameter:
+  name: Set a Z-Wave device configuration parameter
+  description: Allow for changing configuration parameters of your Z-Wave devices.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    parameter:
+      name: Parameter
+      description: The (name or id of the) configuration parameter you want to configure.
+      example: Minimum brightness level
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value to set for this configuration parameter.
+      example: 5
+      required: true
+      selector:
+        object:
+    bitmask:
+      name: Bitmask
+      description: Target a specific bitmask (see the documentation for more information).
+      advanced: true
+      selector:
+        object:

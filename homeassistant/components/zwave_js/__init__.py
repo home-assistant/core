@@ -43,7 +43,8 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .entity import get_device_id
+from .helpers import get_device_id
+from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
@@ -191,6 +192,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_CLIENT: client,
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
+
+    services = ZWaveServices(hass)
+    services.async_register()
 
     # Set up websocket API
     async_register_api(hass)
