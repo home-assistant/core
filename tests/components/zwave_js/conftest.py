@@ -1,7 +1,7 @@
 """Provide common Z-Wave JS fixtures."""
 import asyncio
 import json
-from unittest.mock import DEFAULT, AsyncMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -20,29 +20,6 @@ from tests.common import MockConfigEntry, load_fixture
 async def device_registry_fixture(hass):
     """Return the device registry."""
     return await async_get_device_registry(hass)
-
-
-@pytest.fixture(name="discovery_info")
-def discovery_info_fixture():
-    """Return the discovery info from the supervisor."""
-    return DEFAULT
-
-
-@pytest.fixture(name="discovery_info_side_effect")
-def discovery_info_side_effect_fixture():
-    """Return the discovery info from the supervisor."""
-    return None
-
-
-@pytest.fixture(name="get_addon_discovery_info")
-def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
-    """Mock get add-on discovery info."""
-    with patch(
-        "homeassistant.components.hassio.async_get_addon_discovery_info",
-        side_effect=discovery_info_side_effect,
-        return_value=discovery_info,
-    ) as get_addon_discovery_info:
-        yield get_addon_discovery_info
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -168,6 +145,12 @@ def motorized_barrier_cover_state_fixture():
 def iblinds_v2_state_fixture():
     """Load the iBlinds v2 node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
+
+
+@pytest.fixture(name="ge_12730_state", scope="session")
+def ge_12730_state_fixture():
+    """Load the GE 12730 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_ge_12730_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -371,5 +354,13 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 def iblinds_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, iblinds_v2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="ge_12730")
+def ge_12730_fixture(client, ge_12730_state):
+    """Mock a GE 12730 fan controller node."""
+    node = Node(client, ge_12730_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

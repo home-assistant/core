@@ -1,7 +1,8 @@
 # Describes the format for available alarm control panel services
 
 alarm_disarm:
-  description: Send the alarm the command for disarm
+  name: Disarm
+  description: Send the alarm the command for disarm.
   target:
   fields:
     code:
@@ -12,7 +13,8 @@ alarm_disarm:
         text:
 
 alarm_arm_custom_bypass:
-  description: Send arm custom bypass command
+  name: Arm with custom bypass
+  description: Send arm custom bypass command.
   target:
   fields:
     code:
@@ -24,7 +26,8 @@ alarm_arm_custom_bypass:
         text:
 
 alarm_arm_home:
-  description: Send the alarm the command for arm home
+  name: Arm home
+  description: Send the alarm the command for arm home.
   target:
   fields:
     code:
@@ -35,7 +38,8 @@ alarm_arm_home:
         text:
 
 alarm_arm_away:
-  description: Send the alarm the command for arm away
+  name: Arm away
+  description: Send the alarm the command for arm away.
   target:
   fields:
     code:
@@ -46,7 +50,8 @@ alarm_arm_away:
         text:
 
 alarm_arm_night:
-  description: Send the alarm the command for arm night
+  name: Arm night
+  description: Send the alarm the command for arm night.
   target:
   fields:
     code:
@@ -57,7 +62,8 @@ alarm_arm_night:
         text:
 
 alarm_trigger:
-  description: Send the alarm the command for trigger
+  name: Trigger
+  description: Send the alarm the command for trigger.
   target:
   fields:
     code:

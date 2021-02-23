@@ -26,6 +26,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
+    ATTR_NAME,
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_UNAUTHORIZED,
@@ -73,7 +74,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 ATTR_SUBSCRIPTION = "subscription"
 ATTR_BROWSER = "browser"
-ATTR_NAME = "name"
 
 ATTR_ENDPOINT = "endpoint"
 ATTR_KEYS = "keys"

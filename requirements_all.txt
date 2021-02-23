@@ -96,7 +96,7 @@ WazeRouteCalculator==0.12
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.0.11
+accuweather==0.1.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
@@ -371,7 +371,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bond
-bond-api==0.1.10
+bond-api==0.1.11
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -763,7 +763,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210208.0
+home-assistant-frontend==20210222.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1465,7 +1465,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==2.1.0
+pyisy==2.1.1
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
@@ -1501,7 +1501,10 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
-pylitejet==0.1
+pylitejet==0.3.0
+
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1549,7 +1552,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==3.0.1
+pymyq==3.0.4
 
 # homeassistant.components.mysensors
 pymysensors==0.20.1
