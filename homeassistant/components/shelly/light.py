@@ -118,7 +118,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return "white"
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int:
         """Brightness of light."""
         if self.mode == "color":
             if self.control_result:
@@ -133,7 +133,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(brightness / 100 * 255)
 
     @property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int:
         """White value of light."""
         if self.control_result:
             white = self.control_result["white"]
@@ -142,7 +142,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(white)
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> Tuple[float, float]:
         """Return the hue and saturation color value of light."""
         if self.mode == "white":
             return color_RGB_to_hs(255, 255, 255)
@@ -158,7 +158,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return color_RGB_to_hs(red, green, blue)
 
     @property
-    def color_temp(self) -> Optional[float]:
+    def color_temp(self) -> Optional[int]:
         """Return the CT color value in mireds."""
         if self.mode == "color":
             return None
@@ -176,14 +176,14 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(color_temperature_kelvin_to_mired(color_temp))
 
     @property
-    def min_mireds(self) -> Optional[float]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE)
+        return int(color_temperature_kelvin_to_mired(KELVIN_MAX_VALUE))
 
     @property
-    def max_mireds(self) -> Optional[float]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
-        return color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model))
+        return int(color_temperature_kelvin_to_mired(min_kelvin(self.wrapper.model)))
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
