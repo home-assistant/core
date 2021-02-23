@@ -6,14 +6,16 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_REFRESH_ALL_VALUES,
     DOMAIN,
+    SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
-from .common import AIR_TEMPERATURE_SENSOR
+from .common import AIR_TEMPERATURE_SENSOR, CLIMATE_RADIO_THERMOSTAT_ENTITY
 
 from tests.common import MockConfigEntry
 
@@ -291,5 +293,72 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
                 ATTR_CONFIG_PARAMETER: "Temperature Threshold (Unit)",
                 ATTR_CONFIG_VALUE: "Fahrenheit",
             },
+            blocking=True,
+        )
+
+
+async def test_poll_value(
+    hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
+):
+    """Test the poll_value service."""
+    # Test polling the primary value
+    client.async_send_command.return_value = {"result": 2}
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.poll_value"
+    assert args["nodeId"] == 26
+    assert args["valueId"] == {
+        "commandClassName": "Thermostat Mode",
+        "commandClass": 64,
+        "endpoint": 0,
+        "property": "mode",
+        "propertyName": "mode",
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "min": 0,
+            "max": 31,
+            "label": "Thermostat mode",
+            "states": {
+                "0": "Off",
+                "1": "Heat",
+                "2": "Cool",
+                "3": "Auto",
+                "11": "Energy heat",
+                "12": "Energy cool",
+            },
+        },
+        "value": 1,
+        "ccVersion": 2,
+    }
+
+    client.async_send_command.reset_mock()
+
+    # Test polling all watched values
+    client.async_send_command.return_value = {"result": 2}
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_REFRESH_VALUE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_REFRESH_ALL_VALUES: True,
+        },
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 8
+
+    # Test polling against an invalid entity raises ValueError
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_VALUE,
+            {ATTR_ENTITY_ID: "sensor.fake_entity_id"},
             blocking=True,
         )
