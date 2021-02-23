@@ -42,7 +42,9 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
     @property
     def name(self) -> str:
         """Get the name of the switch"""
-        return self.coordinator.data["circuits"][self._entity_id]["name"]
+        ent_name = self.coordinator.data["circuits"][self._entity_id]["name"]
+        gateway_name = self.coordinator.gateway.name
+        return gateway_name + " " + ent_name
 
     @property
     def is_on(self) -> bool:
