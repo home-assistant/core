@@ -490,7 +490,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     def noop_listener():
         """Noop listener to force coordinator to refresh."""
-        pass
+        return
 
     # add a noop listener to force coordinator to refresh since entities are disabled by default
     hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER] = coordinator.async_add_listener(
