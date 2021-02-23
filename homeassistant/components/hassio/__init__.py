@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-import re
 from typing import Any, Dict, List, Optional
 
 import voluptuous as vol
@@ -37,6 +36,7 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
     ATTR_PASSWORD,
+    ATTR_REPOSITORY,
     ATTR_SLUG,
     ATTR_SNAPSHOT,
     ATTR_URL,
@@ -535,16 +535,10 @@ def register_addons_in_dev_reg(
 ) -> None:
     """Register addons in the device registry."""
     for addon in addons:
-        try:
-            # Get github username or organization
-            user_or_org = re.sub("^https?://", "", addon[ATTR_URL]).split("/")[1]
-        except IndexError:
-            # fall back on unknown in case of Exception
-            user_or_org = "unknown"
         dev_reg.async_get_or_create(
             config_entry_id=entry_id,
             identifiers={(DOMAIN, addon[ATTR_SLUG])},
-            manufacturer=user_or_org,
+            manufacturer=addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL) or "unknown",
             model="Hass.io Add-On",
             sw_version=addon[ATTR_VERSION],
             name=addon[ATTR_NAME],
