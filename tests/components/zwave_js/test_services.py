@@ -345,3 +345,12 @@ async def test_poll_value(
         blocking=True,
     )
     assert len(client.async_send_command.call_args_list) == 8
+
+    # Test polling against an invalid entity raises ValueError
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REFRESH_VALUE,
+            {ATTR_ENTITY_ID: "sensor.fake_entity_id"},
+            blocking=True,
+        )

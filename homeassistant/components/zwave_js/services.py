@@ -128,8 +128,11 @@ class ZWaveServices:
         """Poll value on a node."""
         for entity_id in service.data[ATTR_ENTITY_ID]:
             entry = self._ent_reg.async_get(entity_id)
-            if not entry:
-                continue
+            if entry is None or entry.platform != const.DOMAIN:
+                raise ValueError(
+                    f"Entity {entity_id} doesn't exist or is not a "
+                    f"{const.DOMAIN} entity."
+                )
             async_dispatcher_send(
                 self._hass,
                 f"{const.DOMAIN}_{entry.unique_id}_poll_value",
