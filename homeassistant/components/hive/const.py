@@ -12,3 +12,11 @@ SERVICE_BOOST_HEATING = "boost_heating"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_ONOFF = "on_off"
 PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch", "water_heater"]
+PLATFORM_LOOKUP = {
+    "binary_sensor": "binary_sensor",
+    "climate": "climate",
+    "light": "light",
+    "sensor": "sensor",
+    "switch": "switch",
+    "water_heater": "water_heater",
+}
