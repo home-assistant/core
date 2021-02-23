@@ -46,7 +46,9 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     @property
     def name(self):
         """Return the sensor name"""
-        return self.coordinator.data["sensors"][self._entity_id]["name"]
+        gateway_name = self.coordinator.gateway.name
+        ent_name = self.coordinator.data["sensors"][self._entity_id]["name"]
+        return gateway_name + " " + ent_name
 
     @property
     def device_class(self):

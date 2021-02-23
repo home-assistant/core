@@ -67,15 +67,17 @@ class ScreenLogicSensor(ScreenlogicEntity):
     @property
     def name(self):
         """Return the sensor name"""
-        return self.coordinator.data["sensors"][self._entity_id]["name"]
+        ent_name = self.coordinator.data["sensors"][self._entity_id]["name"]
+        gateway_name = self.coordinator.gateway.name
+        return gateway_name + " " + ent_name
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement"""
         if "unit" in self.coordinator.data["sensors"][self._entity_id]:
             return self.coordinator.data["sensors"][self._entity_id]["unit"]
-        elif "supply" in self._entity_id:
-            return PERCENTAGE
+        # elif "supply" in self._entity_id:
+        #    return PERCENTAGE
         else:
             return None
 
@@ -91,11 +93,7 @@ class ScreenLogicSensor(ScreenlogicEntity):
     def state(self):
         """ Retruns the state of the sensor """
         value = self.coordinator.data["sensors"][self._entity_id]["value"]
-        return (
-            int(round((value - 1) / 6, 2) * 100)
-            if "supply" in self._entity_id
-            else value
-        )
+        return (value - 1) if "supply" in self._entity_id else value
 
 
 class ScreenLogicPumpSensor(ScreenlogicEntity):
@@ -111,7 +109,9 @@ class ScreenLogicPumpSensor(ScreenlogicEntity):
     @property
     def name(self):
         """Return the pump sensor name"""
-        return self.coordinator.data["pumps"][self._pump_id][self._key]["name"]
+        ent_name = self.coordinator.data["pumps"][self._pump_id][self._key]["name"]
+        gateway_name = self.coordinator.gateway.name
+        return gateway_name + " " + ent_name
 
     @property
     def unit_of_measurement(self):
