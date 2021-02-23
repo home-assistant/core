@@ -478,6 +478,9 @@ def async_set_service_schema(
         "fields": schema.get("fields", {}),
     }
 
+    if "target" in schema:
+        description["target"] = schema["target"]
+
     hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
 
 

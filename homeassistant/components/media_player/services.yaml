@@ -1,27 +1,33 @@
 # Describes the format for available media player services
 
 turn_on:
-  description: Turn a media player power on
+  name: Turn on
+  description: Turn a media player power on.
   target:
 
 turn_off:
-  description: Turn a media player power off
+  name: Turn off
+  description: Turn a media player power off.
   target:
 
 toggle:
-  description: Toggles a media player power state
+  name: Toggle
+  description: Toggles a media player power state.
   target:
 
 volume_up:
-  description: Turn a media player volume up
+  name: Turn up volume
+  description: Turn a media player volume up.
   target:
 
 volume_down:
-  description: Turn a media player volume down
+  name: Turn down volume
+  description: Turn a media player volume down.
   target:
 
 volume_mute:
-  description: Mute a media player's volume
+  name: Mute volume
+  description: Mute a media player's volume.
   target:
   fields:
     is_volume_muted:
@@ -33,7 +39,8 @@ volume_mute:
         boolean:
 
 volume_set:
-  description: Set a media player's volume level
+  name: Set volume
+  description: Set a media player's volume level.
   target:
   fields:
     volume_level:
@@ -49,32 +56,39 @@ volume_set:
           mode: slider
 
 media_play_pause:
-  description: Toggle media player play/pause state
+  name: Play/Pause
+  description: Toggle media player play/pause state.
   target:
 
 media_play:
-  description: Send the media player the command for play
+  name: Play
+  description: Send the media player the command for play.
   target:
 
 media_pause:
-  description: Send the media player the command for pause
+  name: Pause
+  description: Send the media player the command for pause.
   target:
 
 media_stop:
-  description: Send the media player the stop command
+  name: Stop
+  description: Send the media player the stop command.
   target:
 
 media_next_track:
-  description: Send the media player the command for next track
+  name: Next
+  description: Send the media player the command for next track.
   target:
 
 media_previous_track:
-  description: Send the media player the command for previous track
+  name: Previous
+  description: Send the media player the command for previous track.
   target:
 
 media_seek:
+  name: Seek
   description:
-    Send the media player the command to seek in current playing media
+    Send the media player the command to seek in current playing media.
   fields:
     seek_position:
       name: Position
@@ -89,7 +103,8 @@ media_seek:
           mode: box
 
 play_media:
-  description: Send the media player the command for playing media
+  name: Play media
+  description: Send the media player the command for playing media.
   target:
   fields:
     media_content_id:
@@ -103,7 +118,7 @@ play_media:
     media_content_type:
       name: Content type
       description:
-        The type of the content to play. Must be one of image, music, tvshow,
+        The type of the content to play. Like image, music, tvshow,
         video, episode, channel or playlist.
       required: true
       example: "music"
@@ -111,7 +126,8 @@ play_media:
         text:
 
 select_source:
-  description: Send the media player the command to change input source
+  name: Select source
+  description: Send the media player the command to change input source.
   target:
   fields:
     source:
@@ -123,7 +139,8 @@ select_source:
         text:
 
 select_sound_mode:
-  description: Send the media player the command to change sound mode
+  name: Select sound mode
+  description: Send the media player the command to change sound mode.
   target:
   fields:
     sound_mode:
@@ -134,11 +151,13 @@ select_sound_mode:
         text:
 
 clear_playlist:
-  description: Send the media player the command to clear players playlist
+  name: Clear playlist
+  description: Send the media player the command to clear players playlist.
   target:
 
 shuffle_set:
-  description: Set shuffling state
+  name: Shuffle
+  description: Set shuffling state.
   target:
   fields:
     shuffle:
@@ -150,6 +169,7 @@ shuffle_set:
         boolean:
 
 repeat_set:
+  name: Repeat
   description: Set repeat mode
   target:
   fields:

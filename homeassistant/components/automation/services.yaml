@@ -1,10 +1,12 @@
 # Describes the format for available automation services
 turn_on:
-  description: Enable an automation
+  name: Turn on
+  description: Enable an automation.
   target:
 
 turn_off:
-  description: Disable an automation
+  name: Turn off
+  description: Disable an automation.
   target:
   fields:
     stop_actions:
@@ -16,11 +18,13 @@ turn_off:
         boolean:
 
 toggle:
-  description: Toggle (enable / disable) an automation
+  name: Toggle
+  description: Toggle (enable / disable) an automation.
   target:
 
 trigger:
-  description: Trigger the actions of an automation
+  name: Trigger
+  description: Trigger the actions of an automation.
   target:
   fields:
     skip_condition:
@@ -32,4 +36,5 @@ trigger:
         boolean:
 
 reload:
-  description: Reload the automation configuration
+  name: Reload
+  description: Reload the automation configuration.

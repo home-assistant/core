@@ -39,3 +39,5 @@ SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
+
+ADDON_SLUG = "core_zwave_js"
