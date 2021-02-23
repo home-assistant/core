@@ -1,5 +1,6 @@
 """Constants for the Somfy TaHoma integration."""
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.lock import DOMAIN as LOCK
 
 DOMAIN = "tahoma"
 
@@ -16,6 +17,7 @@ TAHOMA_TYPES = {
     "AirFlowSensor": BINARY_SENSOR,  # widgetName, uiClass is AirSensor (sensor)
     "CarButtonSensor": BINARY_SENSOR,
     "ContactSensor": BINARY_SENSOR,
+    "DoorLock": LOCK,
     "MotionSensor": BINARY_SENSOR,
     "OccupancySensor": BINARY_SENSOR,
     "RainSensor": BINARY_SENSOR,
