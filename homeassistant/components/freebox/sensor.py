@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +23,8 @@ from .const import (
 )
 from .router import FreeboxRouter
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -30,6 +33,12 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
+    _LOGGER.debug(
+        "%s - %s - %s temperature sensors",
+        router.name,
+        router.mac,
+        len(router.sensors_temperature),
+    )
     for sensor_name in router.sensors_temperature:
         entities.append(
             FreeboxSensor(
@@ -47,6 +56,7 @@ async def async_setup_entry(
     for sensor_key in CALL_SENSORS:
         entities.append(FreeboxCallSensor(router, sensor_key, CALL_SENSORS[sensor_key]))
 
+    _LOGGER.debug("%s - %s - %s disk(s)", router.name, router.mac, len(router.disks))
     for disk in router.disks.values():
         for partition in disk["partitions"]:
             for sensor_key in DISK_PARTITION_SENSORS:

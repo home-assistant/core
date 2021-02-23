@@ -55,7 +55,7 @@ class FreeboxRouter:
         self._port = entry.data[CONF_PORT]
 
         self._api: Freepybox = None
-        self._name = None
+        self.name = None
         self.mac = None
         self._sw_v = None
         self._attrs = {}
@@ -82,7 +82,7 @@ class FreeboxRouter:
         # System
         fbx_config = await self._api.system.get_config()
         self.mac = fbx_config["mac"]
-        self._name = fbx_config["model_info"]["pretty_name"]
+        self.name = fbx_config["model_info"]["pretty_name"]
         self._sw_v = fbx_config["firmware_version"]
 
         # Devices & sensors
@@ -104,7 +104,7 @@ class FreeboxRouter:
         # Adds the Freebox itself
         fbx_devices.append(
             {
-                "primary_name": self._name,
+                "primary_name": self.name,
                 "l2ident": {"id": self.mac},
                 "vendor_name": "Freebox SAS",
                 "host_type": "router",
@@ -183,7 +183,7 @@ class FreeboxRouter:
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
-            "name": self._name,
+            "name": self.name,
             "manufacturer": "Freebox SAS",
             "sw_version": self._sw_v,
         }
