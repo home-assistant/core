@@ -1,131 +1,19 @@
-from abc import ABC, abstractmethod
+"""Modbus Client Implementation."""
 import logging
-import threading
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
 
-from pymodbus.server.asyncio import StartTcpServer
-from pymodbus.device import ModbusDeviceIdentification
-from pymodbus.datastore import ModbusSparseDataBlock
-from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
-from pymodbus.payload import BinaryPayloadBuilder
-from pymodbus.exceptions import ConnectionException
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_METHOD
 
-from homeassistant.const import (
-    CONF_DELAY,
-    CONF_HOST,
-    CONF_METHOD,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-    EVENT_HOMEASSISTANT_STARTED,
-)
-
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers import entity_registry
-
-from .const import (
-    CONF_BAUDRATE,
-    CONF_BYTESIZE,
-    CONF_PARITY,
-    CONF_STOPBITS,
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_UINT,
-    DATA_TYPE_STRING,
-)
-from .const import (
-    CONF_TYPE_SERIAL,
-    CONF_TYPE_RTUOVERTCP,
-    CONF_TYPE_TCP,
-    CONF_TYPE_TCPSERVER,
-    CONF_TYPE_UDP,
-)
+from .const import CONF_BAUDRATE, CONF_BYTESIZE, CONF_PARITY, CONF_STOPBITS
+from .modbus_base import BaseModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class AbstractModbusHub(ABC):
-    """Thread safe wrapper class for pymodbus."""
-
-    def __init__(self, client_config):
-        """Initialize the Modbus hub."""
-
-        # generic configuration
-        self._lock = threading.Lock()
-        self._config_name = client_config[CONF_NAME]
-        self._config_type = client_config[CONF_TYPE]
-        self._config_port = client_config[CONF_PORT]
-        self._config_timeout = client_config[CONF_TIMEOUT]
-        self._config_delay = 0
-
-    @property
-    def name(self):
-        """Return the name of this hub."""
-        return self._config_name
-
-    @abstractmethod
-    def setup(self):
-        assert False
-
-    @abstractmethod
-    def close(self):
-        """Disconnect client."""
-        assert False
-
-    @abstractmethod
-    def read_coils(self, unit, address, count):
-        """Read coils."""
-        assert False
-
-    @abstractmethod
-    def read_discrete_inputs(self, unit, address, count):
-        """Read discrete inputs."""
-        assert False
-
-    @abstractmethod
-    def read_input_registers(self, unit, address, count):
-        """Read input registers."""
-        assert False
-
-    @abstractmethod
-    def read_holding_registers(self, unit, address, count):
-        """Read holding registers."""
-        assert False
-
-    @abstractmethod
-    def write_coil(self, unit, address, value):
-        """Write coil."""
-        assert False
-
-    @abstractmethod
-    def write_register(self, unit, address, value):
-        """Write register."""
-        assert False
-
-    @abstractmethod
-    def write_registers(self, unit, address, values):
-        """Write registers."""
-        assert False
-
-    def register_entity(
-        self,
-        name,
-        slave,
-        register,
-        last_state,
-        data_type=None,
-        data_count=None,
-        bit_mask=None,
-    ):
-        pass
-
-
-class ModbusClientHub(AbstractModbusHub):
-    """ModbusClientHub implement AbstractModbusHub and represent all client type configurations """
+class ModbusClientHub(BaseModbusHub):
+    """ModbusClientHub implement BaseModbusHub and represent all client type configurations."""
 
     def __init__(self, client_config):
         """Initialize the Modbus client hub."""

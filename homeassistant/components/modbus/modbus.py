@@ -1,22 +1,13 @@
 """Support for Modbus."""
 import logging
-import threading
-import asyncio
-import json
 
 from homeassistant.const import (
     ATTR_STATE,
     CONF_COVERS,
-    CONF_DELAY,
-    CONF_HOST,
-    CONF_METHOD,
     CONF_NAME,
-    CONF_PORT,
-    CONF_TIMEOUT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-
 from homeassistant.helpers.discovery import load_platform
 
 from .const import (
@@ -24,32 +15,22 @@ from .const import (
     ATTR_HUB,
     ATTR_UNIT,
     ATTR_VALUE,
-    CONF_BAUDRATE,
-    CONF_BYTESIZE,
     CONF_CLIMATE,
     CONF_CLIMATES,
     CONF_COVER,
-    CONF_PARITY,
-    CONF_STOPBITS,
+    CONF_TYPE_TCPSERVER,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
-    CONF_TYPE_TCPSERVER,
 )
-
-from .modbus_hub import ModbusClientHub
+from .modbus_client import ModbusClientHub
 from .modbus_server import ModbusServerHub
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def ser_set(obj):
-    if isinstance(obj, set):
-        return list(obj)
-    return obj
-
-
 def modbus_hub_factory(client_config, hass):
+    """Modbus hub factory method."""
     if client_config[CONF_TYPE] == CONF_TYPE_TCPSERVER:
         return ModbusServerHub(client_config, hass)
     else:

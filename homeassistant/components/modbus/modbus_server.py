@@ -1,45 +1,40 @@
-import logging
-import json
+"""Modbus server implementation."""
 import ctypes
+import logging
 
-from pymodbus.server.asyncio import StartTcpServer
-from pymodbus.datastore import ModbusSparseDataBlock
-from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
-from pymodbus.payload import BinaryPayloadBuilder
-from pymodbus.exceptions import ConnectionException
 from pymodbus.constants import Endian
-
-from homeassistant.const import (
-    CONF_DELAY,
-    CONF_HOST,
-    EVENT_HOMEASSISTANT_STARTED,
-    STATE_ON,
+from pymodbus.datastore import (
+    ModbusServerContext,
+    ModbusSlaveContext,
+    ModbusSparseDataBlock,
 )
+from pymodbus.exceptions import ConnectionException
+from pymodbus.payload import BinaryPayloadBuilder
+from pymodbus.server.asyncio import StartTcpServer
 
-from .const import (
-    DATA_TYPE_CUSTOM,
-    DATA_TYPE_FLOAT,
-    DATA_TYPE_INT,
-    DATA_TYPE_UINT,
-    DATA_TYPE_STRING,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_ON
 
-from .modbus_hub import AbstractModbusHub
+from .const import DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING, DATA_TYPE_UINT
+from .modbus_base import BaseModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class RegisterResult:
+    """Modbus register wrapper."""
+
     def __init__(self, registers=[0]):
+        """Initialize with the defaults."""
         self._registers = registers
 
     @property
     def registers(self):
+        """Get registers."""
         return self._registers
 
 
-class ModbusServerHub(AbstractModbusHub):
-    """ModbusServerHub acts as a modbus slave"""
+class ModbusServerHub(BaseModbusHub):
+    """ModbusServerHub acts as a modbus slave."""
 
     def __init__(self, client_config, hass):
         """Initialize the Modbus server hub."""
@@ -53,7 +48,7 @@ class ModbusServerHub(AbstractModbusHub):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.start_server)
 
     def setup(self):
-        """No op for the server"""
+        """No op for the server."""
         pass
 
     def close(self):
@@ -121,7 +116,8 @@ class ModbusServerHub(AbstractModbusHub):
         data_count=None,
         bit_mask=None,
     ):
-        if data_type == None:
+        """Register an entity with the Modbus server."""
+        if data_type is None:
             data = 1 if last_state == STATE_ON else 0
             entity = {"name": name, "unit": unit, "register": register, "data": [data]}
             if bit_mask > 0:
@@ -211,7 +207,7 @@ class ModbusServerHub(AbstractModbusHub):
         }
 
     async def start_server(self, _):
-        """start modbus slave"""
+        """Start modbus slave."""
         with self._lock:
             self._block = self._build_server_blocks(self._entities)
 

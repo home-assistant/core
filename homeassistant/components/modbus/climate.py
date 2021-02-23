@@ -48,7 +48,7 @@ from .const import (
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
-from .modbus_hub import AbstractModbusHub
+from .modbus_base import BaseModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ async def async_setup_platform(
 
     entities = []
     for entity in discovery_info[CONF_CLIMATES]:
-        hub: AbstractModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        hub: BaseModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         count = entity[CONF_DATA_COUNT]
         data_type = entity[CONF_DATA_TYPE]
         name = entity[CONF_NAME]
@@ -107,11 +107,11 @@ class ModbusThermostat(ClimateEntity):
 
     def __init__(
         self,
-        hub: AbstractModbusHub,
+        hub: BaseModbusHub,
         config: Dict[str, Any],
     ):
         """Initialize the modbus thermostat."""
-        self._hub: AbstractModbusHub = hub
+        self._hub: BaseModbusHub = hub
         self._name = config[CONF_NAME]
         self._slave = config[CONF_SLAVE]
         self._target_temperature_register = config[CONF_TARGET_TEMP]
