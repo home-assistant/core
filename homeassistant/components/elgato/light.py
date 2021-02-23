@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, ATTR_TEMPERATURE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -25,7 +25,6 @@ from .const import (
     ATTR_MODEL,
     ATTR_ON,
     ATTR_SOFTWARE_VERSION,
-    ATTR_TEMPERATURE,
     DATA_ELGATO_CLIENT,
     DOMAIN,
 )
