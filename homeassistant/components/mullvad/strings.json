@@ -10,6 +10,7 @@
         },
         "step": {
             "user": {
+               "description": "Set up the Mulvad VPN integration?",
                 "data": {
                     "host": "[%key:common::config_flow::data::host%]",
                     "password": "[%key:common::config_flow::data::password%]",
