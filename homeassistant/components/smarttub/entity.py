@@ -13,8 +13,6 @@ from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
-
 
 class SmartTubEntity(CoordinatorEntity):
     """Base class for SmartTub entities."""
@@ -52,18 +50,22 @@ class SmartTubEntity(CoordinatorEntity):
         spa_name = get_spa_name(self.spa)
         return f"{spa_name} {self._entity_type}"
 
-    def get_spa_status(self, path):
-        """Retrieve a value from the data returned by Spa.get_status().
+    @property
+    def spa_status(self) -> smarttub.SpaState:
+        """Retrieve the result of Spa.get_status()."""
 
-        Nested keys can be specified by a dotted path, e.g.
-        status['foo']['bar'] is 'foo.bar'.
-        """
+        return self.coordinator.data[self.spa.id].get("status")
 
-        status = self.coordinator.data[self.spa.id].get("status")
-        if status is None:
-            return None
 
-        for key in path.split("."):
-            status = status[key]
+class SmartTubSensorBase(SmartTubEntity):
+    """Base class for SmartTub sensors."""
 
-        return status
+    def __init__(self, coordinator, spa, sensor_name, attr_name):
+        """Initialize the entity."""
+        super().__init__(coordinator, spa, sensor_name)
+        self._attr_name = attr_name
+
+    @property
+    def _state(self):
+        """Retrieve the underlying state from the spa."""
+        return getattr(self.spa_status, self._attr_name)

@@ -7,7 +7,7 @@ from .controller import SmartTubController
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "sensor"]
+PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
 
 
 async def async_setup(hass, config):

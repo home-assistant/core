@@ -412,7 +412,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210208.0
+home-assistant-frontend==20210222.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -770,10 +770,13 @@ pyipp==0.11.0
 pyiqvia==0.3.1
 
 # homeassistant.components.isy994
-pyisy==2.1.0
+pyisy==2.1.1
 
 # homeassistant.components.kira
 pykira==0.1.1
+
+# homeassistant.components.kmtronic
+pykmtronic==0.0.3
 
 # homeassistant.components.kodi
 pykodi==0.2.1
@@ -789,6 +792,9 @@ pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
+
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.9.0
@@ -942,7 +948,7 @@ python-nest==4.1.0
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.6
+python-smarttub==0.0.17
 
 # homeassistant.components.songpal
 python-songpal==0.12
@@ -1026,7 +1032,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.4.0
+samsungtvws==1.6.0
 
 # homeassistant.components.dhcp
 scapy==2.4.4
@@ -1130,7 +1136,7 @@ teslajsonpy==0.11.5
 toonapi==0.2.0
 
 # homeassistant.components.totalconnect
-total_connect_client==0.55
+total_connect_client==0.57
 
 # homeassistant.components.transmission
 transmissionrpc==0.11

@@ -56,7 +56,6 @@ DEFAULT_PERSON = "Unknown"
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
-ATTR_ID = "id"
 ATTR_PSEUDO = "pseudo"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
