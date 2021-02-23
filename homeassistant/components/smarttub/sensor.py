@@ -2,15 +2,45 @@
 from enum import Enum
 import logging
 
+import smarttub
+import voluptuous as vol
+
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform, service
+
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
+
 ATTR_DURATION = "duration"
 ATTR_LAST_UPDATED = "last_updated"
 ATTR_MODE = "mode"
 ATTR_START_HOUR = "start_hour"
+
+
+SET_PRIMARY_FILTRATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        # TODO: at least one of these two should be required
+        vol.Optional(ATTR_DURATION): vol.All(int, vol.Range(min=1, max=24)),
+        vol.Optional(ATTR_START_HOUR): vol.All(int, vol.Range(min=0, max=23)),
+    }
+)
+
+SET_SECONDARY_FILTRATION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_MODE): vol.Any(
+            str,
+            [
+                mode.name.lower()
+                for mode in smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode
+            ],
+        ),
+    }
+)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -41,6 +71,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(entities)
 
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        "set_primary_filtration",
+        SET_PRIMARY_FILTRATION_SCHEMA,
+        "async_set_primary_filtration",
+    )
+
 
 class SmartTubSensor(SmartTubSensorBase):
     """Generic class for SmartTub status sensors."""
@@ -51,6 +89,9 @@ class SmartTubSensor(SmartTubSensorBase):
         if isinstance(self._state, Enum):
             return self._state.name.lower()
         return self._state.lower()
+
+    async def async_set_primary_filtration(self, service_call):
+        raise HomeAssistantError("supported only on primary filtration entities")
 
 
 class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
@@ -77,6 +118,12 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
             ATTR_MODE: state.mode.name.lower(),
             ATTR_START_HOUR: state.start_hour,
         }
+
+    async def async_set_primary_filtration(self, service_call):
+        await self._state.set(
+            duration=service_call.data.get(ATTR_DURATION),
+            start_hour=service_call.data.get(ATTR_START_HOUR),
+        )
 
 
 class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
