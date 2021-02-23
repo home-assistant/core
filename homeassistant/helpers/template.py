@@ -33,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers import entity_registry, location as loc_helper
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
@@ -48,6 +48,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
+_ENVIRONMENT_LIMITED = "template.environment_limited"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
@@ -300,11 +301,12 @@ class Template:
 
     @property
     def _env(self) -> TemplateEnvironment:
-        if self.hass is None or self._limited:
+        if self.hass is None:
             return _NO_HASS_ENV
-        ret: Optional[TemplateEnvironment] = self.hass.data.get(_ENVIRONMENT)
+        wanted_env = _ENVIRONMENT_LIMITED if self._limited else _ENVIRONMENT
+        ret: Optional[TemplateEnvironment] = self.hass.data.get(wanted_env)
         if ret is None:
-            ret = self.hass.data[_ENVIRONMENT] = TemplateEnvironment(self.hass)  # type: ignore[no-untyped-call]
+            ret = self.hass.data[wanted_env] = TemplateEnvironment(self.hass, self._limited)  # type: ignore[no-untyped-call]
         return ret
 
     def ensure_valid(self) -> None:
@@ -867,6 +869,13 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
     return sorted(found.values(), key=lambda a: a.entity_id)
 
 
+def device_entities(hass: HomeAssistantType, device_id: str) -> Iterable[str]:
+    """Get entity ids for entities tied to a device."""
+    entity_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_device(entity_reg, device_id)
+    return [entry.entity_id for entry in entries]
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1311,7 +1320,7 @@ def urlencode(value):
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, limited=False):
         """Initialise template environment."""
         super().__init__()
         self.hass = hass
@@ -1368,7 +1377,27 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["strptime"] = strptime
         self.globals["urlencode"] = urlencode
         if hass is None:
+            return
 
+        # We mark these as a context functions to ensure they get
+        # evaluated fresh with every execution, rather than executed
+        # at compile time and the value stored. The context itself
+        # can be discarded, we only need to get at the hass object.
+        def hassfunction(func):
+            """Wrap function that depend on hass."""
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(hass, *args[1:], **kwargs)
+
+            return contextfunction(wrapper)
+
+        self.globals["device_entities"] = hassfunction(device_entities)
+        self.filters["device_entities"] = contextfilter(self.globals["device_entities"])
+
+        if limited:
+            # Only device_entities is available to limited templates, mark other
+            # functions and filters as unsupported.
             def unsupported(name):
                 def warn_unsupported(*args, **kwargs):
                     raise TemplateError(
@@ -1394,19 +1423,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             for filt in hass_filters:
                 self.filters[filt] = unsupported(filt)
             return
-
-        # We mark these as a context functions to ensure they get
-        # evaluated fresh with every execution, rather than executed
-        # at compile time and the value stored. The context itself
-        # can be discarded, we only need to get at the hass object.
-        def hassfunction(func):
-            """Wrap function that depend on hass."""
-
-            @wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(hass, *args[1:], **kwargs)
-
-            return contextfunction(wrapper)
 
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = contextfilter(self.globals["expand"])

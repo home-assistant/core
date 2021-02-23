@@ -174,7 +174,20 @@ async def test_recorder_save(tmpdir):
     filename = f"{tmpdir}/test.mp4"
 
     # Run
-    recorder_save_worker(filename, [Segment(1, source, 4)], "mp4")
+    recorder_save_worker(filename, [Segment(1, source, 4)])
+
+    # Assert
+    assert os.path.exists(filename)
+
+
+async def test_recorder_discontinuity(tmpdir):
+    """Test recorder save across a discontinuity."""
+    # Setup
+    source = generate_h264_video()
+    filename = f"{tmpdir}/test.mp4"
+
+    # Run
+    recorder_save_worker(filename, [Segment(1, source, 4, 0), Segment(2, source, 4, 1)])
 
     # Assert
     assert os.path.exists(filename)

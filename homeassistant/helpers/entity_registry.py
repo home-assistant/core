@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_RESTORED,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
@@ -156,6 +157,10 @@ class EntityRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
+        )
+        self.hass.bus.async_listen(
+            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
+            self.async_config_entry_disabled_by_changed,
         )
 
     @callback
@@ -349,9 +354,48 @@ class EntityRegistry:
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
+        if device.disabled_by == dr.DISABLED_CONFIG_ENTRY:
+            # Handled by async_config_entry_disabled
+            return
+
+        # Fetch entities which are not already disabled
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
             self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
+
+    @callback
+    def async_config_entry_disabled_by_changed(self, event: Event) -> None:
+        """Handle a config entry being disabled or enabled.
+
+        Disable entities in the registry that are associated to a config entry when
+        the config entry is disabled.
+        """
+        config_entry = self.hass.config_entries.async_get_entry(
+            event.data["config_entry_id"]
+        )
+
+        # The config entry may be deleted already if the event handling is late
+        if not config_entry:
+            return
+
+        if not config_entry.disabled_by:
+            entities = async_entries_for_config_entry(
+                self, event.data["config_entry_id"]
+            )
+            for entity in entities:
+                if entity.disabled_by != DISABLED_CONFIG_ENTRY:
+                    continue
+                self.async_update_entity(entity.entity_id, disabled_by=None)
+            return
+
+        entities = async_entries_for_config_entry(self, event.data["config_entry_id"])
+        for entity in entities:
+            if entity.disabled:
+                # Entity already disabled, do not overwrite
+                continue
+            self.async_update_entity(
+                entity.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
+            )
 
     @callback
     def async_update_entity(
@@ -642,11 +686,13 @@ def async_setup_entity_restore(
     """Set up the entity restore mechanism."""
 
     @callback
+    def cleanup_restored_states_filter(event: Event) -> bool:
+        """Clean up restored states filter."""
+        return bool(event.data["action"] == "remove")
+
+    @callback
     def cleanup_restored_states(event: Event) -> None:
         """Clean up restored states."""
-        if event.data["action"] != "remove":
-            return
-
         state = hass.states.get(event.data["entity_id"])
 
         if state is None or not state.attributes.get(ATTR_RESTORED):
@@ -654,7 +700,11 @@ def async_setup_entity_restore(
 
         hass.states.async_remove(event.data["entity_id"], context=event.context)
 
-    hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        cleanup_restored_states,
+        event_filter=cleanup_restored_states_filter,
+    )
 
     if hass.is_running:
         return

@@ -1,7 +1,7 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
 from dataclasses import dataclass
-from typing import Generator, Optional, Set, Union
+from typing import Generator, List, Optional, Set, Union
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -78,10 +78,16 @@ class ZWaveDiscoverySchema:
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: Optional[Set[str]] = None
     # [optional] additional values that ALL need to be present on the node for this scheme to pass
-    required_values: Optional[Set[ZWaveValueDiscoverySchema]] = None
+    required_values: Optional[List[ZWaveValueDiscoverySchema]] = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
 
+
+SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_MULTILEVEL},
+    property={"currentValue"},
+    type={"number"},
+)
 
 # For device class mapping see:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
@@ -93,11 +99,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0039},
         product_id={0x3131},
         product_type={0x4944},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # GE/Jasco fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
@@ -105,11 +107,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0063},
         product_id={0x3034, 0x3131, 0x3138},
         product_type={0x4944},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Leviton ZW4SF fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
@@ -117,50 +115,39 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x001D},
         product_id={0x0002},
         product_type={0x0038},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x010F},
         product_id={0x1000},
         product_type={0x0302},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x0159},
         product_id={0x0052},
         product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # iBlinds v2 window blind motor
+    ZWaveDiscoverySchema(
+        platform="cover",
+        manufacturer_id={0x0287},
+        product_id={0x000D},
+        product_type={0x0003},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -226,6 +213,7 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Thermostat"},
         device_class_specific={
             "Setpoint Thermostat",
+            "Unused",
         },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
@@ -241,16 +229,13 @@ DISCOVERY_SCHEMAS = [
         device_class_specific={
             "Tunable Color Light",
             "Binary Tunable Color Light",
+            "Tunable Color Switch",
             "Multilevel Remote Switch",
             "Multilevel Power Switch",
             "Multilevel Scene Switch",
             "Unused",
         },
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # binary sensors
     ZWaveDiscoverySchema(
@@ -345,10 +330,22 @@ DISCOVERY_SCHEMAS = [
             command_class={CommandClass.SWITCH_BINARY}, property={"currentValue"}
         ),
     ),
+    # binary switch
+    # barrier operator signaling states
+    ZWaveDiscoverySchema(
+        platform="switch",
+        hint="barrier_event_signaling_state",
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.BARRIER_OPERATOR},
+            property={"signalingState"},
+            type={"number"},
+        ),
+    ),
     # cover
+    # window coverings
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="cover",
+        hint="window_cover",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={
             "Motor Control Class A",
@@ -356,11 +353,25 @@ DISCOVERY_SCHEMAS = [
             "Motor Control Class C",
             "Multiposition Motor",
         },
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # cover
+    # motorized barriers
+    ZWaveDiscoverySchema(
+        platform="cover",
+        hint="motorized_barrier",
         primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
+            command_class={CommandClass.BARRIER_OPERATOR},
+            property={"currentState"},
             type={"number"},
         ),
+        required_values=[
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.BARRIER_OPERATOR},
+                property={"targetState"},
+                type={"number"},
+            ),
+        ],
     ),
     # fan
     ZWaveDiscoverySchema(
@@ -368,11 +379,7 @@ DISCOVERY_SCHEMAS = [
         hint="fan",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={"Fan Switch"},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
 ]
 
@@ -430,13 +437,10 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 continue
             # check additional required values
             if schema.required_values is not None:
-                required_values_present = True
-                for val_scheme in schema.required_values:
-                    for val in node.values.values():
-                        if not check_value(val, val_scheme):
-                            required_values_present = False
-                            break
-                if not required_values_present:
+                if not all(
+                    any(check_value(val, val_scheme) for val in node.values.values())
+                    for val_scheme in schema.required_values
+                ):
                     continue
             # all checks passed, this value belongs to an entity
             yield ZwaveDiscoveryInfo(

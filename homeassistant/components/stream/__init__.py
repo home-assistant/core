@@ -124,7 +124,6 @@ class Stream:
             self.access_token = secrets.token_hex()
         return self.hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(self.access_token)
 
-    @property
     def outputs(self):
         """Return a copy of the stream outputs."""
         # A copy is returned so the caller can iterate through the outputs
@@ -137,7 +136,7 @@ class Stream:
 
             @callback
             def idle_callback():
-                if not self.keepalive and fmt in self._outputs:
+                if (not self.keepalive or fmt == "recorder") and fmt in self._outputs:
                     self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
@@ -178,7 +177,7 @@ class Stream:
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
-        _LOGGER.debug("Updating stream source %s", self.source)
+        _LOGGER.debug("Updating stream source %s", new_source)
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -187,12 +186,14 @@ class Stream:
         """Handle consuming streams and restart keepalive streams."""
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
-        from .worker import stream_worker
+        from .worker import SegmentBuffer, stream_worker
 
+        segment_buffer = SegmentBuffer(self.outputs)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            stream_worker(self.hass, self, self._thread_quit)
+            stream_worker(self.source, self.options, segment_buffer, self._thread_quit)
+            segment_buffer.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
                 if self._fast_restart_once:
                     # The stream source is updated, restart without any delay.
@@ -219,7 +220,7 @@ class Stream:
 
         @callback
         def remove_outputs():
-            for provider in self.outputs.values():
+            for provider in self.outputs().values():
                 self.remove_provider(provider)
 
         self.hass.loop.call_soon_threadsafe(remove_outputs)
@@ -248,7 +249,7 @@ class Stream:
             raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
         # Add recorder
-        recorder = self.outputs.get("recorder")
+        recorder = self.outputs().get("recorder")
         if recorder:
             raise HomeAssistantError(
                 f"Stream already recording to {recorder.video_path}!"
@@ -259,7 +260,7 @@ class Stream:
         self.start()
 
         # Take advantage of lookback
-        hls = self.outputs.get("hls")
+        hls = self.outputs().get("hls")
         if lookback > 0 and hls:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback

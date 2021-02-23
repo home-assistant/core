@@ -1,13 +1,10 @@
 """API for Neato Botvac bound to Home Assistant OAuth."""
 from asyncio import run_coroutine_threadsafe
-import logging
 
 import pybotvac
 
 from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigEntryAuth(pybotvac.OAuthSession):

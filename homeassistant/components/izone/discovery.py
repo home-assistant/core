@@ -1,7 +1,4 @@
 """Internal discovery service for  iZone AC."""
-
-import logging
-
 import pizone
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -17,8 +14,6 @@ from .const import (
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class DiscoveryService(pizone.Listener):

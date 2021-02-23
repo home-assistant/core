@@ -806,7 +806,7 @@ def custom_integration_warning(integration: Integration) -> None:
         if not validate_custom_integration_version(integration.manifest["version"]):
             _LOGGER.warning(
                 CUSTOM_WARNING_VERSION_TYPE,
-                integration.domain,
                 integration.manifest["version"],
+                integration.domain,
                 integration.domain,
             )

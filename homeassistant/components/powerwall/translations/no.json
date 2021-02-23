@@ -17,7 +17,7 @@
                     "ip_address": "IP adresse",
                     "password": "Passord"
                 },
-                "description": "Passordet er vanligvis de siste 5 tegnene i serienummeret for Backup Gateway, og finnes i Telsa-appen. eller de siste 5 tegnene i passordet som er funnet inne i d\u00f8ren til Backup Gateway 2.",
+                "description": "Passordet er vanligvis de siste 5 tegnene i serienummeret for Backup Gateway, og kan bli funnet i Tesla-appen eller de siste 5 tegnene i passordet som er funnet inne i d\u00f8ren til Backup Gateway 2.",
                 "title": "Koble til powerwall"
             }
         }

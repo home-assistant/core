@@ -1,11 +1,25 @@
 # Describes the format for available recorder services
 
 purge:
-  description: Start purge task - delete events and states older than x days, according to keep_days service data.
+  description: Start purge task - to clean up old data from your database
   fields:
     keep_days:
-      description: Number of history days to keep in database after purge. Value >= 0.
+      name: Days to keep
+      description: Number of history days to keep in database after purge.
       example: 2
+      selector:
+        number:
+          min: 0
+          max: 365
+          step: 1
+          unit_of_measurement: days
+          mode: slider
+
     repack:
-      description: Attempt to save disk space by rewriting the entire database file.
+      name: Repack
+      description:
+        Attempt to save disk space by rewriting the entire database file.
       example: true
+      default: false
+      selector:
+        boolean:

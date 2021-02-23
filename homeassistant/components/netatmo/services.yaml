@@ -1,46 +1,72 @@
 # Describes the format for available Netatmo services
 set_camera_light:
-  description: Set the camera light mode.
+  name: Set camera light mode
+  description: Sets the light mode for a Netatmo Outdoor camera light.
+  target:
+    entity:
+      integration: netatmo
+      domain: light
   fields:
     camera_light_mode:
+      name: Camera light mode
       description: Outdoor camera light mode (on/off/auto)
       example: auto
-    entity_id:
-      description: Entity id of the camera.
-      example: camera.netatmo_entrance
+      required: true
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+            - "auto"
 
 set_schedule:
-  description: Set the heating schedule.
+  name: Set heating schedule
+  description: Set the heating schedule for Netatmo climate device. The schedule name must match a schedule configured at Netatmo.
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
   fields:
     schedule_name:
       description: Schedule name
       example: Standard
-    entity_id:
-      description: Entity id of the climate device.
-      example: climate.netatmo_livingroom
+      required: true
+      selector:
+        text:
 
 set_persons_home:
-  description: Set a list of persons as at home. Person's name must match a name known by the Welcome Camera.
+  name: Set persons at home
+  description: Set a list of persons as at home. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.
+  target:
+    entity:
+      integration: netatmo
+      domain: camera
   fields:
     persons:
       description: List of names
       example: Bob
-    entity_id:
-      description: Entity id of the camera.
-      example: camera.netatmo_entrance
+      required: true
+      selector:
+        text:
 
 set_person_away:
-  description: Set a person away. If no person is set the home will be marked as empty. Person's name must match a name known by the Welcome Camera.
+  name: Set person away
+  description: Set a person as away. If no person is set the home will be marked as empty. Person's name must match a name known by the Netatmo Indoor (Welcome) Camera.
+  target:
+    entity:
+      integration: netatmo
+      domain: camera
   fields:
     person:
       description: Person's name (optional)
       example: Bob
-    entity_id:
-      description: Entity id of the camera.
-      example: camera.netatmo_entrance
+      selector:
+        text:
 
 register_webhook:
-  description: Register webhook
+  name: Register webhook
+  description: Register the webhook to the Netatmo backend.
 
 unregister_webhook:
-  description: Unregister webhook
+  name: Unregister webhook
+  description: Unregister the webhook from the Netatmo backend.
