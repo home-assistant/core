@@ -103,7 +103,7 @@ async def websocket_automation_trace(hass, connection, msg):
         automation_traces = get_debug_traces(hass)
     else:
         automation_traces = {
-            "automation_id": get_debug_traces_for_automation(hass, automation_id)
+            automation_id: get_debug_traces_for_automation(hass, automation_id)
         }
 
     connection.send_result(msg["id"], automation_traces)

@@ -39,7 +39,7 @@ class TraceElement:
 
     def __repr__(self) -> str:
         """Container for trace data."""
-        return f"{self._result}"
+        return str(self.as_dict())
 
     def set_error(self, ex: Exception) -> None:
         """Set error."""
@@ -55,7 +55,7 @@ class TraceElement:
         # Commented out because we get too many copies of the same data
         # result["variables"] = self._variables
         if self._error is not None:
-            result["error"] = self._error
+            result["error"] = str(self._error)
         if self._result is not None:
             result["result"] = self._result
         return result

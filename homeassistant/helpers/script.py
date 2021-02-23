@@ -218,7 +218,7 @@ def action_trace_add_conditions():
 def trace_action(config, variables):
     """Trace action execution."""
     if action_config.get() is None:
-        action_config.set(dict(config))
+        action_config.set(config)
 
     trace_element = action_trace_append(variables, action_path_get())
     action_trace_stack_push(trace_element)

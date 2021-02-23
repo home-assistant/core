@@ -284,12 +284,11 @@ class AutomationTrace:
                     condition_trace_list.append(condition_trace.as_dict())
                 condition_traces[key] = condition_trace_list
 
-        return {
+        result = {
             "action_trace": action_traces,
             "condition_trace": condition_traces,
             "config": self._config,
             "context": self._context,
-            "error": self._error,
             "state": self._state,
             "timestamp": {
                 "start": self._timestamp_start,
@@ -299,6 +298,9 @@ class AutomationTrace:
             "unique_id": self._unique_id,
             "variables": self._variables,
         }
+        if self._error is not None:
+            result["error"] = str(self._error)
+        return result
 
 
 @contextmanager
@@ -325,8 +327,7 @@ def trace_automation(hass, unique_id, config, trigger, context):
     finally:
         if unique_id:
             automation_trace.finished()
-        # To be removed, only for debugging
-        _LOGGER.info(
+        _LOGGER.debug(
             "Automation finished. Summary:\n\ttrigger: %s\n\tcondition: %s\n\taction: %s",
             automation_trace._trigger,  # pylint: disable=protected-access
             automation_trace._condition_trace,  # pylint: disable=protected-access
