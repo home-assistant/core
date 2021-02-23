@@ -104,7 +104,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.entry, title=self.data["username"], data=self.data
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_sucessfull")
+                return self.async_abort(reason="reauth_successful")
             return self.async_create_entry(title=self.data["username"], data=self.data)
         return self.async_abort(reason="unknown")
 
