@@ -1,7 +1,8 @@
 # Describes the format for available MQTT services
 
 publish:
-  description: Publish a message to an MQTT topic
+  name: Publish
+  description: Publish a message to an MQTT topic.
   fields:
     topic:
       name: Topic
@@ -49,9 +50,10 @@ publish:
         boolean:
 
 dump:
+  name: Dump
   description:
-    Dump messages on a topic selector to the 'mqtt_dump.txt' file in your config
-    folder
+    Dump messages on a topic selector to the 'mqtt_dump.txt' file in your
+    configuration folder.
   fields:
     topic:
       name: Topic
@@ -73,4 +75,5 @@ dump:
           mode: slider
 
 reload:
-  description: Reload all MQTT entities from YAML
+  name: Reload
+  description: Reload all MQTT entities from YAML.
