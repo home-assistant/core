@@ -50,7 +50,6 @@ async def test_switch(hass, mock_hub):
     [
         (NIGHT_LIGHT_ENTITY_ID, "set_night_light"),
         (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout"),
-        (SLEEP_MODE_ENTITY_ID, "set_sleep_mode"),
     ],
 )
 async def test_on_off_commands(hass, mock_hub, entity_id, robot_command):

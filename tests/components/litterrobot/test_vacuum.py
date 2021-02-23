@@ -43,7 +43,7 @@ async def test_vacuum(hass, mock_hub):
     await setup_hub(hass, mock_hub)
 
     vacuum = hass.states.get(ENTITY_ID)
-    assert vacuum is not None
+    assert vacuum
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
 
