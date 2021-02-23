@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     CAST_APP_ID_HOMEASSISTANT,
@@ -1424,8 +1425,8 @@ class ModesTrait(_Trait):
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
-            if humidifier.ATTR_MODE in attrs:
-                mode_settings["mode"] = attrs.get(humidifier.ATTR_MODE)
+            if ATTR_MODE in attrs:
+                mode_settings["mode"] = attrs.get(ATTR_MODE)
         elif self.state.domain == light.DOMAIN:
             if light.ATTR_EFFECT in attrs:
                 mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
@@ -1460,7 +1461,7 @@ class ModesTrait(_Trait):
                 humidifier.DOMAIN,
                 humidifier.SERVICE_SET_MODE,
                 {
-                    humidifier.ATTR_MODE: requested_mode,
+                    ATTR_MODE: requested_mode,
                     ATTR_ENTITY_ID: self.state.entity_id,
                 },
                 blocking=True,
