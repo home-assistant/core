@@ -1,7 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
 
 import logging
-from typing import Dict, List, Union
+from typing import Dict, Set, Union
 
 import voluptuous as vol
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -73,17 +73,17 @@ class ZWaveServices:
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        nodes: List[ZwaveNode] = []
+        nodes: Set[ZwaveNode] = set()
         if ATTR_ENTITY_ID in service.data:
             for entity_id in service.data[ATTR_ENTITY_ID]:
                 node = async_get_node_from_entity_id(self._hass, entity_id)
                 if node not in nodes:
-                    nodes.append(node)
+                    nodes.add(node)
         if ATTR_DEVICE_ID in service.data:
             for device_id in service.data[ATTR_DEVICE_ID]:
                 node = async_get_node_from_device_id(self._hass, device_id)
                 if node not in nodes:
-                    nodes.append(node)
+                    nodes.add(node)
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
