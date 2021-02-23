@@ -248,7 +248,7 @@ async def test_set_config_parameter(
     with patch(
         "homeassistant.components.zwave_js.api.async_set_config_parameter",
     ) as set_param_mock:
-        set_param_mock.side_effect = InvalidNewValue
+        set_param_mock.side_effect = InvalidNewValue("test")
         await ws_client.send_json(
             {
                 ID: 2,
@@ -264,9 +264,11 @@ async def test_set_config_parameter(
         msg = await ws_client.receive_json()
 
         assert len(client.async_send_command.call_args_list) == 0
-        assert not msg["success"] and msg["error"]["code"] == "not_supported"
+        assert not msg["success"]
+        assert msg["error"]["code"] == "not_supported"
+        assert msg["error"]["message"] == "test"
 
-        set_param_mock.side_effect = NotFoundError
+        set_param_mock.side_effect = NotFoundError("test")
         await ws_client.send_json(
             {
                 ID: 3,
@@ -282,9 +284,11 @@ async def test_set_config_parameter(
         msg = await ws_client.receive_json()
 
         assert len(client.async_send_command.call_args_list) == 0
-        assert not msg["success"] and msg["error"]["code"] == "not_found"
+        assert not msg["success"]
+        assert msg["error"]["code"] == "not_found"
+        assert msg["error"]["message"] == "test"
 
-        set_param_mock.side_effect = SetValueFailed
+        set_param_mock.side_effect = SetValueFailed("test")
         await ws_client.send_json(
             {
                 ID: 4,
@@ -300,7 +304,9 @@ async def test_set_config_parameter(
         msg = await ws_client.receive_json()
 
         assert len(client.async_send_command.call_args_list) == 0
-        assert not msg["success"] and msg["error"]["code"] == "unknown_error"
+        assert not msg["success"]
+        assert msg["error"]["code"] == "unknown_error"
+        assert msg["error"]["message"] == "test"
 
 
 async def test_dump_view(integration, hass_client):

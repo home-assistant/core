@@ -328,7 +328,7 @@ async def websocket_set_config_parameter(
         connection.send_error(
             msg[ID],
             code,
-            f"{type(err).__name__}: {','.join(err.args)}",
+            str(err),
         )
         return
 
