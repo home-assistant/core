@@ -31,6 +31,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_DEVICE_TOKEN,
     CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
@@ -180,7 +181,7 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MAC: api.network.macs,
         }
         if otp_code:
-            config_data["device_token"] = api.device_token
+            config_data[CONF_DEVICE_TOKEN] = api.device_token
         if user_input.get(CONF_DISKS):
             config_data[CONF_DISKS] = user_input[CONF_DISKS]
         if user_input.get(CONF_VOLUMES):
