@@ -30,11 +30,11 @@
       "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
       "invalid_password": "Failed to sign into Hive. Incorrect password please try again.",
       "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
-      "no_internet_available": "An internet connection is required to connect to Hive."
+      "no_internet_available": "An internet connection is required to connect to Hive.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "unknown": "Something has gone wrong please try again later.",
       "unknown_entry": "Unable to find exisitng entry.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
