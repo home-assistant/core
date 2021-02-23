@@ -221,33 +221,6 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # lights
-    # primary value is the currentValue (brightness)
-    ZWaveDiscoverySchema(
-        platform="light",
-        device_class_generic={"Multilevel Switch", "Remote Switch"},
-        device_class_specific={
-            "Tunable Color Light",
-            "Binary Tunable Color Light",
-            "Tunable Color Switch",
-            "Multilevel Remote Switch",
-            "Multilevel Power Switch",
-            "Multilevel Scene Switch",
-            "Unused",
-        },
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-    ),
-    # catch any device with color switch CC and multilevel CC as light
-    # e.g. the Aeon Smart Switch 6 which is a switch outlet but it also has a color light built-in
-    ZWaveDiscoverySchema(
-        platform="light",
-        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
-        required_values=[
-            ZWaveValueDiscoverySchema(
-                command_class={CommandClass.SWITCH_COLOR}, property={"currentColor"}
-            )
-        ],
-    ),
     # binary sensors
     ZWaveDiscoverySchema(
         platform="binary_sensor",
@@ -390,6 +363,15 @@ DISCOVERY_SCHEMAS = [
         hint="fan",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={"Fan Switch"},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # lights
+    # primary value is the currentValue (brightness)
+    # catch any device with multilevel CC as light
+    # NOTE: keep this at the bottom of the discovery scheme,
+    # to handle all others that need the multilevel CC first
+    ZWaveDiscoverySchema(
+        platform="light",
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
 ]
