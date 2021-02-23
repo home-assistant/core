@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PIN,
-    CONF_SENSOR,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
@@ -21,6 +20,7 @@ from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_SENSOR = "sensor"
 CONF_HUMIDITY_OFFSET = "humidity_offset"
 CONF_TEMPERATURE_OFFSET = "temperature_offset"
 
