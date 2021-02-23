@@ -599,9 +599,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             update_tasks = []
             for device in devices:
-                if not hasattr(device, method["method"]):
+                device_method = getattr(device, method["method"], None)
+                if not device_method:
                     continue
-                await getattr(device, method["method"])(**params)
+                await device_method(**params)
                 update_tasks.append(device.async_update_ha_state(True))
 
             if update_tasks:
