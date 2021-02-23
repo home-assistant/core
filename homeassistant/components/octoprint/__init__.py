@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import aiohttp
 from pyoctoprintapi import OctoprintClient
 import voluptuous as vol
 
@@ -208,14 +209,14 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         printer = None
         try:
             job = await self._octoprint.get_job_info()
-        except Exception as error:  # pylint: disable=broad-except
+        except aiohttp.ClientResponseError as error:
             _LOGGER.error("Failed to update job data %s", error)
             if self.data and "job" in self.data:
                 job = self.data["job"]
 
         try:
             printer = await self._octoprint.get_printer_info()
-        except Exception as error:  # pylint: disable=broad-except
+        except aiohttp.ClientResponseError as error:
             _LOGGER.error("Failed to update printer data %s", error)
             if self.data and "printer" in self.data:
                 printer = self.data["printer"]
