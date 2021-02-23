@@ -16,6 +16,7 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
+    MODELS_AIR_MONITOR,
     MODELS_SWITCH,
     MODELS_VACUUM,
 )

@@ -14,6 +14,7 @@ from miio.gateway import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -27,7 +28,6 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -139,9 +139,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
         device = AirQualityMonitor(host, token)
-        entities.append(
-            XiaomiAirQualityMonitor(name, device, config_entry, unique_id)
-        )
+        entities.append(XiaomiAirQualityMonitor(name, device, config_entry, unique_id))
 
     async_add_entities(entities, update_before_add=True)
 
