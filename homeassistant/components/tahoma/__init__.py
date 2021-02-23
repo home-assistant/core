@@ -12,6 +12,7 @@ from pyhoma.exceptions import (
     TooManyRequestsException,
 )
 
+from homeassistant.components.scene import DOMAIN as SCENE
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -48,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await client.login()
         devices = await client.get_devices()
+        scenarios = await client.get_scenarios()
         places = await client.get_places()
     except BadCredentialsException:
         _LOGGER.error("Invalid authentication.")
@@ -86,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     await tahoma_coordinator.async_refresh()
 
     platforms = defaultdict(list)
+    platforms[SCENE] = scenarios
 
     hass.data[DOMAIN][entry.entry_id] = {
         "platforms": platforms,
