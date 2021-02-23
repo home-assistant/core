@@ -5,7 +5,10 @@ import uuid
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.automation import get_debug_traces
+from homeassistant.components.automation import (
+    get_debug_traces,
+    get_debug_traces_for_automation,
+)
 from homeassistant.components.automation.config import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -88,10 +91,19 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         data[index] = updated_value
 
 
-@websocket_api.websocket_command({vol.Required("type"): "automation/trace"})
+@websocket_api.websocket_command(
+    {vol.Required("type"): "automation/trace", vol.Optional("automation_id"): str}
+)
 @websocket_api.async_response
 async def websocket_automation_trace(hass, connection, msg):
     """Get automation traces."""
-    automation_traces = get_debug_traces(hass)
+    automation_id = msg.get("automation_id")
+
+    if not automation_id:
+        automation_traces = get_debug_traces(hass)
+    else:
+        automation_traces = {
+            "automation_id": get_debug_traces_for_automation(hass, automation_id)
+        }
 
     connection.send_result(msg["id"], automation_traces)
