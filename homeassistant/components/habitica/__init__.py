@@ -7,14 +7,19 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_SENSORS, CONF_URL
+from homeassistant.const import (
+    ATTR_NAME,
+    CONF_API_KEY,
+    CONF_NAME,
+    CONF_SENSORS,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     ATTR_ARGS,
-    ATTR_NAME,
     ATTR_PATH,
     CONF_API_USER,
     DEFAULT_URL,

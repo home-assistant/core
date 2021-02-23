@@ -10,6 +10,7 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
 from homeassistant.const import (
+    ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
@@ -30,7 +31,6 @@ from .const import (
     ATTR_FOLDERS,
     ATTR_HOMEASSISTANT,
     ATTR_INPUT,
-    ATTR_NAME,
     ATTR_PASSWORD,
     ATTR_SNAPSHOT,
     DOMAIN,

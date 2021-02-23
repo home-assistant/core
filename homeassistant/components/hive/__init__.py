@@ -23,7 +23,6 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AVAILABLE = "available"
-ATTR_MODE = "mode"
 DOMAIN = "hive"
 DATA_HIVE = "data_hive"
 SERVICES = ["Heating", "HotWater", "TRV"]

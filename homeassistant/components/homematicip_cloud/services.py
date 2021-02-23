@@ -9,7 +9,7 @@ from homematicip.aio.home import AsyncHome
 from homematicip.base.helpers import handle_config
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
@@ -29,7 +29,6 @@ ATTR_CONFIG_OUTPUT_FILE_PREFIX = "config_output_file_prefix"
 ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
-ATTR_TEMPERATURE = "temperature"
 
 DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 
