@@ -72,6 +72,7 @@ from .const import (
     SYNO_API,
     SYSTEM_LOADED,
     TEMP_SENSORS_KEYS,
+    UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
 )
 
@@ -195,6 +196,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
         SYNO_API: api,
         SYSTEM_LOADED: True,
     }
@@ -309,10 +311,16 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     if unload_ok:
         entry_data = hass.data[DOMAIN][entry.unique_id]
+        entry_data[UNDO_UPDATE_LISTENER]()
         await entry_data[SYNO_API].async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
 
     return unload_ok
+
+
+async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_setup_services(hass: HomeAssistantType):
@@ -639,7 +647,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
     async def async_added_to_hass(self):
         """Register entity for updates from API."""
         self.async_on_remove(self._api.subscribe(self._api_key, self.unique_id))
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
 
 
 class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
