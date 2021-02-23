@@ -760,7 +760,7 @@ pyheos==0.7.2
 pyhiveapi==0.3.9
 
 # homeassistant.components.tahoma
-pyhoma==0.5.8
+pyhoma==0.5.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.72
