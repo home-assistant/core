@@ -68,7 +68,6 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
         )
-
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_2fa(self, user_input=None):
@@ -90,11 +89,11 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_finish()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
-
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
     async def async_step_finish(self):
         """Finish setup and create the config entry."""
+        errors = {}
         self.data["tokens"] = self.tokens.get("AuthenticationResult")
 
         if "AccessToken" in self.data["tokens"]:
@@ -106,7 +105,12 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
             return self.async_create_entry(title=self.data["username"], data=self.data)
-        return self.async_abort(reason="unknown")
+
+        errors["base"] = "unknown"
+        schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reauth(self, user_input=None):
         """Re Authenticate a user."""
