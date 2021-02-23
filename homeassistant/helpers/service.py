@@ -448,11 +448,16 @@ async def async_get_all_descriptions(
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
 
-                description = descriptions_cache[cache_key] = {
+                description = {
+                    "name": yaml_description.get("name", ""),
                     "description": yaml_description.get("description", ""),
-                    "target": yaml_description.get("target"),
                     "fields": yaml_description.get("fields", {}),
                 }
+
+                if "target" in yaml_description:
+                    description["target"] = yaml_description["target"]
+
+                descriptions_cache[cache_key] = description
 
             descriptions[domain][service] = description
 
@@ -468,8 +473,9 @@ def async_set_service_schema(
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
-        "description": schema.get("description") or "",
-        "fields": schema.get("fields") or {},
+        "name": schema.get("name", ""),
+        "description": schema.get("description", ""),
+        "fields": schema.get("fields", {}),
     }
 
     hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
@@ -625,7 +631,7 @@ async def entity_service_call(
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
-        tasks.append(entity.async_update_ha_state(True))
+        tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)

@@ -300,17 +300,7 @@ class HomeAccessory(Accessory):
         return state is not None and state.state != STATE_UNAVAILABLE
 
     async def run(self):
-        """Handle accessory driver started event.
-
-        Run inside the HAP-python event loop.
-        """
-        self.hass.add_job(self.run_handler)
-
-    async def run_handler(self):
-        """Handle accessory driver started event.
-
-        Run inside the Home Assistant event loop.
-        """
+        """Handle accessory driver started event."""
         state = self.hass.states.get(self.entity_id)
         self.async_update_state_callback(state)
         self._subscriptions.append(
@@ -441,15 +431,9 @@ class HomeAccessory(Accessory):
         """
         raise NotImplementedError()
 
-    def call_service(self, domain, service, service_data, value=None):
+    @ha_callback
+    def async_call_service(self, domain, service, service_data, value=None):
         """Fire event and call service for changes from HomeKit."""
-        self.hass.add_job(self.async_call_service, domain, service, service_data, value)
-
-    async def async_call_service(self, domain, service, service_data, value=None):
-        """Fire event and call service for changes from HomeKit.
-
-        This method must be run in the event loop.
-        """
         event_data = {
             ATTR_ENTITY_ID: self.entity_id,
             ATTR_DISPLAY_NAME: self.display_name,
@@ -459,8 +443,10 @@ class HomeAccessory(Accessory):
         context = Context()
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-        await self.hass.services.async_call(
-            domain, service, service_data, context=context
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                domain, service, service_data, context=context
+            )
         )
 
     @ha_callback

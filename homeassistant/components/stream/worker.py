@@ -6,10 +6,12 @@ import logging
 import av
 
 from .const import (
+    AUDIO_CODECS,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    SEGMENT_CONTAINER_FORMAT,
     STREAM_TIMEOUT,
 )
 from .core import Segment, StreamBuffer
@@ -17,19 +19,20 @@ from .core import Segment, StreamBuffer
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
+def create_stream_buffer(video_stream, audio_stream, sequence):
     """Create a new StreamBuffer."""
 
     segment = io.BytesIO()
-    container_options = (
-        stream_output.container_options(sequence)
-        if stream_output.container_options
-        else {}
-    )
+    container_options = {
+        # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
+        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
+        "avoid_negative_ts": "disabled",
+        "fragment_index": str(sequence),
+    }
     output = av.open(
         segment,
         mode="w",
-        format=stream_output.format,
+        format=SEGMENT_CONTAINER_FORMAT,
         container_options={
             "video_track_timescale": str(int(1 / video_stream.time_base)),
             **container_options,
@@ -38,20 +41,93 @@ def create_stream_buffer(stream_output, video_stream, audio_stream, sequence):
     vstream = output.add_stream(template=video_stream)
     # Check if audio is requested
     astream = None
-    if audio_stream and audio_stream.name in stream_output.audio_codecs:
+    if audio_stream and audio_stream.name in AUDIO_CODECS:
         astream = output.add_stream(template=audio_stream)
     return StreamBuffer(segment, output, vstream, astream)
 
 
-def stream_worker(hass, stream, quit_event):
+class SegmentBuffer:
+    """Buffer for writing a sequence of packets to the output as a segment."""
+
+    def __init__(self, outputs_callback) -> None:
+        """Initialize SegmentBuffer."""
+        self._stream_id = 0
+        self._video_stream = None
+        self._audio_stream = None
+        self._outputs_callback = outputs_callback
+        # Each element is a StreamOutput
+        self._outputs = []
+        self._sequence = 0
+        self._segment_start_pts = None
+        self._stream_buffer = None
+
+    def set_streams(self, video_stream, audio_stream):
+        """Initialize output buffer with streams from container."""
+        self._video_stream = video_stream
+        self._audio_stream = audio_stream
+
+    def reset(self, video_pts):
+        """Initialize a new stream segment."""
+        # Keep track of the number of segments we've processed
+        self._sequence += 1
+        self._segment_start_pts = video_pts
+
+        # Fetch the latest StreamOutputs, which may have changed since the
+        # worker started.
+        self._outputs = self._outputs_callback().values()
+        self._stream_buffer = create_stream_buffer(
+            self._video_stream, self._audio_stream, self._sequence
+        )
+
+    def mux_packet(self, packet):
+        """Mux a packet to the appropriate StreamBuffers."""
+
+        # Check for end of segment
+        if packet.stream == self._video_stream and packet.is_keyframe:
+            duration = (packet.pts - self._segment_start_pts) * packet.time_base
+            if duration >= MIN_SEGMENT_DURATION:
+                # Save segment to outputs
+                self.flush(duration)
+
+                # Reinitialize
+                self.reset(packet.pts)
+
+        # Mux the packet
+        if packet.stream == self._video_stream:
+            packet.stream = self._stream_buffer.vstream
+            self._stream_buffer.output.mux(packet)
+        elif packet.stream == self._audio_stream:
+            packet.stream = self._stream_buffer.astream
+            self._stream_buffer.output.mux(packet)
+
+    def flush(self, duration):
+        """Create a segment from the buffered packets and write to output."""
+        self._stream_buffer.output.close()
+        segment = Segment(
+            self._sequence, self._stream_buffer.segment, duration, self._stream_id
+        )
+        for stream_output in self._outputs:
+            stream_output.put(segment)
+
+    def discontinuity(self):
+        """Mark the stream as having been restarted."""
+        # Preserving sequence and stream_id here keep the HLS playlist logic
+        # simple to check for discontinuity at output time, and to determine
+        # the discontinuity sequence number.
+        self._stream_id += 1
+
+    def close(self):
+        """Close stream buffer."""
+        self._stream_buffer.output.close()
+
+
+def stream_worker(source, options, segment_buffer, quit_event):
     """Handle consuming streams."""
 
     try:
-        container = av.open(
-            stream.source, options=stream.options, timeout=STREAM_TIMEOUT
-        )
+        container = av.open(source, options=options, timeout=STREAM_TIMEOUT)
     except av.AVError:
-        _LOGGER.error("Error opening stream %s", stream.source)
+        _LOGGER.error("Error opening stream %s", source)
         return
     try:
         video_stream = container.streams.video[0]
@@ -77,10 +153,6 @@ def stream_worker(hass, stream, quit_event):
     last_dts = {video_stream: float("-inf"), audio_stream: float("-inf")}
     # Keep track of consecutive packets without a dts to detect end of stream.
     missing_dts = 0
-    # Holds the buffers for each stream provider
-    outputs = None
-    # Keep track of the number of segments we've processed
-    sequence = 0
     # The video pts at the beginning of the segment
     segment_start_pts = None
     # Because of problems 1 and 2 below, we need to store the first few packets and replay them
@@ -157,44 +229,12 @@ def stream_worker(hass, stream, quit_event):
             return False
         return True
 
-    def initialize_segment(video_pts):
-        """Reset some variables and initialize outputs for each segment."""
-        nonlocal outputs, sequence, segment_start_pts
-        # Clear outputs and increment sequence
-        outputs = {}
-        sequence += 1
-        segment_start_pts = video_pts
-        for stream_output in stream.outputs.values():
-            if video_stream.name not in stream_output.video_codecs:
-                continue
-            buffer = create_stream_buffer(
-                stream_output, video_stream, audio_stream, sequence
-            )
-            outputs[stream_output.name] = (
-                buffer,
-                {video_stream: buffer.vstream, audio_stream: buffer.astream},
-            )
-
-    def mux_video_packet(packet):
-        # mux packets to each buffer
-        for buffer, output_streams in outputs.values():
-            # Assign the packet to the new stream & mux
-            packet.stream = output_streams[video_stream]
-            buffer.output.mux(packet)
-
-    def mux_audio_packet(packet):
-        # almost the same as muxing video but add extra check
-        for buffer, output_streams in outputs.values():
-            # Assign the packet to the new stream & mux
-            if output_streams.get(audio_stream):
-                packet.stream = output_streams[audio_stream]
-                buffer.output.mux(packet)
-
     if not peek_first_pts():
         container.close()
         return
 
-    initialize_segment(segment_start_pts)
+    segment_buffer.set_streams(video_stream, audio_stream)
+    segment_buffer.reset(segment_start_pts)
 
     while not quit_event.is_set():
         try:
@@ -229,34 +269,13 @@ def stream_worker(hass, stream, quit_event):
                 break
             continue
 
-        # Check for end of segment
-        if packet.stream == video_stream and packet.is_keyframe:
-            segment_duration = (packet.pts - segment_start_pts) * packet.time_base
-            if segment_duration >= MIN_SEGMENT_DURATION:
-                # Save segment to outputs
-                for fmt, (buffer, _) in outputs.items():
-                    buffer.output.close()
-                    if stream.outputs.get(fmt):
-                        stream.outputs[fmt].put(
-                            Segment(
-                                sequence,
-                                buffer.segment,
-                                segment_duration,
-                            ),
-                        )
-
-                # Reinitialize
-                initialize_segment(packet.pts)
-
         # Update last_dts processed
         last_dts[packet.stream] = packet.dts
-        # mux packets
-        if packet.stream == video_stream:
-            mux_video_packet(packet)  # mutates packet timestamps
-        else:
-            mux_audio_packet(packet)  # mutates packet timestamps
+
+        # Mux packets, and possibly write a segment to the output stream.
+        # This mutates packet timestamps and stream
+        segment_buffer.mux_packet(packet)
 
     # Close stream
-    for buffer, _ in outputs.values():
-        buffer.output.close()
+    segment_buffer.close()
     container.close()

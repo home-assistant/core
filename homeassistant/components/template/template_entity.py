@@ -223,7 +223,6 @@ class TemplateEntity(Entity):
         updates: List[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
-
         if event:
             self.async_set_context(event.context)
 

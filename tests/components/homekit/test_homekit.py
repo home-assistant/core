@@ -27,20 +27,15 @@ from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_AUTO_START,
-    CONF_ENTRY_INDEX,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT,
-    HOMEKIT_FILE,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
 )
-from homeassistant.components.homekit.util import (
-    get_aid_storage_fullpath_for_entry_id,
-    get_persist_fullpath_for_entry_id,
-)
+from homeassistant.components.homekit.util import get_persist_fullpath_for_entry_id
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -60,7 +55,6 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entityfilter import generate_filter
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
 from homeassistant.util import json as json_util
 
@@ -907,69 +901,6 @@ async def test_homekit_async_get_integration_fails(
             "linked_battery_sensor": "sensor.invalid_integration_does_not_exist_battery",
         },
     )
-
-
-async def test_setup_imported(hass, mock_zeroconf):
-    """Test async_setup with imported config options."""
-    legacy_persist_file_path = hass.config.path(HOMEKIT_FILE)
-    legacy_aid_storage_path = hass.config.path(STORAGE_DIR, "homekit.aids")
-    legacy_homekit_state_contents = {"homekit.state": 1}
-    legacy_homekit_aids_contents = {"homekit.aids": 1}
-    await hass.async_add_executor_job(
-        _write_data, legacy_persist_file_path, legacy_homekit_state_contents
-    )
-    await hass.async_add_executor_job(
-        _write_data, legacy_aid_storage_path, legacy_homekit_aids_contents
-    )
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_IMPORT,
-        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT, CONF_ENTRY_INDEX: 0},
-        options={},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(f"{PATH_HOMEKIT}.HomeKit") as mock_homekit:
-        mock_homekit.return_value = homekit = Mock()
-        type(homekit).async_start = AsyncMock()
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    mock_homekit.assert_any_call(
-        hass,
-        BRIDGE_NAME,
-        DEFAULT_PORT,
-        None,
-        ANY,
-        {},
-        HOMEKIT_MODE_BRIDGE,
-        None,
-        entry.entry_id,
-    )
-    assert mock_homekit().setup.called is True
-
-    # Test auto start enabled
-    mock_homekit.reset_mock()
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-    await hass.async_block_till_done()
-
-    mock_homekit().async_start.assert_called()
-
-    migrated_persist_file_path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
-    assert (
-        await hass.async_add_executor_job(
-            json_util.load_json, migrated_persist_file_path
-        )
-        == legacy_homekit_state_contents
-    )
-    os.unlink(migrated_persist_file_path)
-    migrated_aid_file_path = get_aid_storage_fullpath_for_entry_id(hass, entry.entry_id)
-    assert (
-        await hass.async_add_executor_job(json_util.load_json, migrated_aid_file_path)
-        == legacy_homekit_aids_contents
-    )
-    os.unlink(migrated_aid_file_path)
 
 
 async def test_yaml_updates_update_config_entry_for_name(hass, mock_zeroconf):

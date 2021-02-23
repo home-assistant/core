@@ -1,5 +1,4 @@
 """Support for Z-Wave fans."""
-import logging
 import math
 from typing import Any, Callable, List, Optional
 
@@ -14,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -21,8 +21,6 @@ from homeassistant.util.percentage import (
 from .const import DATA_CLIENT, DATA_UNSUBSCRIBE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
@@ -98,6 +96,11 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
             # guard missing value
             return None
         return ranged_value_to_percentage(SPEED_RANGE, self.info.primary_value.value)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self) -> int:

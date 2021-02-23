@@ -1,93 +1,144 @@
 # Describes the format for available climate services
 
 set_aux_heat:
-  description: Turn auxiliary heater on/off for climate device.
+  description: Turn auxiliary heater on/off for climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     aux_heat:
-      description: New value of axillary heater.
+      name: Auxiliary heating
+      description: New value of auxiliary heater.
+      required: true
       example: true
+      selector:
+        boolean:
 
 set_preset_mode:
-  description: Set preset mode for climate device.
+  description: Set preset mode for climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     preset_mode:
-      description: New value of preset mode
+      name: Preset mode
+      description: New value of preset mode.
+      required: true
       example: "away"
+      selector:
+        text:
 
 set_temperature:
-  description: Set target temperature of climate device.
+  description: Set target temperature of climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     temperature:
+      name: Temperature
       description: New target temperature for HVAC.
       example: 25
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_high:
+      name: Target temperature high
       description: New target high temperature for HVAC.
+      advanced: true
       example: 26
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     target_temp_low:
+      name: Target temperature low
       description: New target low temperature for HVAC.
+      advanced: true
       example: 20
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
     hvac_mode:
+      name: HVAC mode
       description: HVAC operation mode to set temperature to.
       example: "heat"
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
 
 set_humidity:
-  description: Set target humidity of climate device.
+  description: Set target humidity of climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
     humidity:
+      name: Humidity
       description: New target humidity for climate device.
+      required: true
       example: 60
+      selector:
+        number:
+          min: 30
+          max: 99
+          step: 1
+          unit_of_measurement: "%"
+          mode: slider
 
 set_fan_mode:
-  description: Set fan operation for climate device.
+  description: Set fan operation for climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.nest"
     fan_mode:
+      name: Fan mode
       description: New value of fan mode.
-      example: On Low
+      required: true
+      example: "low"
+      selector:
+        text:
 
 set_hvac_mode:
-  description: Set HVAC operation mode for climate device.
+  description: Set HVAC operation mode for climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.nest"
     hvac_mode:
+      name: HVAC mode
       description: New value of operation mode.
-      example: heat
+      example: "heat"
+      selector:
+        select:
+          options:
+            - "off"
+            - "auto"
+            - "cool"
+            - "dry"
+            - "fan_only"
+            - "heat_cool"
+            - "heat"
 
 set_swing_mode:
-  description: Set swing operation for climate device.
+  description: Set swing operation for climate device
+  target:
   fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.nest"
     swing_mode:
+      name: Swing mode
       description: New value of swing mode.
+      required: true
+      example: "horizontal"
+      selector:
+        text:
 
 turn_on:
-  description: Turn climate device on.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
+  description: Turn climate device on
+  target:
 
 turn_off:
-  description: Turn climate device off.
-  fields:
-    entity_id:
-      description: Name(s) of entities to change.
-      example: "climate.kitchen"
+  description: Turn climate device off
+  target:

@@ -37,12 +37,32 @@ async def async_attach_trigger(
     template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
+    armed = False
+
+    # Arm at setup if the template is already false.
+    try:
+        if not result_as_boolean(value_template.async_render()):
+            armed = True
+    except exceptions.TemplateError as ex:
+        _LOGGER.warning(
+            "Error initializing 'template' trigger for '%s': %s",
+            automation_info["name"],
+            ex,
+        )
 
     @callback
     def template_listener(event, updates):
         """Listen for state changes and calls action."""
-        nonlocal delay_cancel
+        nonlocal delay_cancel, armed
         result = updates.pop().result
+
+        if isinstance(result, exceptions.TemplateError):
+            _LOGGER.warning(
+                "Error evaluating 'template' trigger for '%s': %s",
+                automation_info["name"],
+                result,
+            )
+            return
 
         if delay_cancel:
             # pylint: disable=not-callable
@@ -50,7 +70,15 @@ async def async_attach_trigger(
             delay_cancel = None
 
         if not result_as_boolean(result):
+            armed = True
             return
+
+        # Only fire when previously armed.
+        if not armed:
+            return
+
+        # Fire!
+        armed = False
 
         entity_id = event and event.data.get("entity_id")
         from_s = event and event.data.get("old_state")

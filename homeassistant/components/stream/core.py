@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN, MAX_SEGMENTS
+from .const import ATTR_STREAMS, DOMAIN
 
 PROVIDERS = Registry()
 
@@ -34,6 +34,8 @@ class Segment:
     sequence: int = attr.ib()
     segment: io.BytesIO = attr.ib()
     duration: float = attr.ib()
+    # For detecting discontinuities across stream restarts
+    stream_id: int = attr.ib(default=0)
 
 
 class IdleTimer:
@@ -67,7 +69,7 @@ class IdleTimer:
         self._unsub = async_call_later(self._hass, self._timeout, self.fire)
 
     def clear(self):
-        """Clear and disable the timer."""
+        """Clear and disable the timer if it has not already fired."""
         if self._unsub is not None:
             self._unsub()
 
@@ -81,13 +83,15 @@ class IdleTimer:
 class StreamOutput:
     """Represents a stream output."""
 
-    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+    def __init__(
+        self, hass: HomeAssistant, idle_timer: IdleTimer, deque_maxlen: int = None
+    ) -> None:
         """Initialize a stream output."""
         self._hass = hass
         self._idle_timer = idle_timer
         self._cursor = None
         self._event = asyncio.Event()
-        self._segments = deque(maxlen=MAX_SEGMENTS)
+        self._segments = deque(maxlen=deque_maxlen)
 
     @property
     def name(self) -> str:
@@ -98,26 +102,6 @@ class StreamOutput:
     def idle(self) -> bool:
         """Return True if the output is idle."""
         return self._idle_timer.idle
-
-    @property
-    def format(self) -> str:
-        """Return container format."""
-        return None
-
-    @property
-    def audio_codecs(self) -> str:
-        """Return desired audio codecs."""
-        return None
-
-    @property
-    def video_codecs(self) -> tuple:
-        """Return desired video codecs."""
-        return None
-
-    @property
-    def container_options(self) -> Callable[[int], dict]:
-        """Return Callable which takes a sequence number and returns container options."""
-        return None
 
     @property
     def segments(self) -> List[int]:
@@ -175,7 +159,7 @@ class StreamOutput:
         """Handle cleanup."""
         self._event.set()
         self._idle_timer.clear()
-        self._segments = deque(maxlen=MAX_SEGMENTS)
+        self._segments = deque(maxlen=self._segments.maxlen)
 
 
 class StreamView(HomeAssistantView):

@@ -1,37 +1,35 @@
 # Describes the format for available automation services
 turn_on:
-  description: Enable an automation.
-  fields:
-    entity_id:
-      description: Name of the automation to turn on.
-      example: "automation.notify_home"
+  description: Enable an automation
+  target:
 
 turn_off:
-  description: Disable an automation.
+  description: Disable an automation
+  target:
   fields:
-    entity_id:
-      description: Name of the automation to turn off.
-      example: "automation.notify_home"
     stop_actions:
-      description: Stop currently running actions (defaults to true).
-      example: false
+      name: Stop actions
+      description: Stop currently running actions.
+      default: true
+      example: true
+      selector:
+        boolean:
 
 toggle:
-  description: Toggle an automation.
-  fields:
-    entity_id:
-      description: Name of the automation to toggle on/off.
-      example: "automation.notify_home"
+  description: Toggle (enable / disable) an automation
+  target:
 
 trigger:
-  description: Trigger the action of an automation.
+  description: Trigger the actions of an automation
+  target:
   fields:
-    entity_id:
-      description: Name of the automation to trigger.
-      example: "automation.notify_home"
     skip_condition:
-      description: Whether or not the condition will be skipped (defaults to true).
+      name: Skip conditions
+      description: Whether or not the conditions will be skipped.
+      default: true
       example: true
+      selector:
+        boolean:
 
 reload:
-  description: Reload the automation configuration.
+  description: Reload the automation configuration
