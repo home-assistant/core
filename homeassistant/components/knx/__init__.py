@@ -17,6 +17,7 @@ from xknx.telegram import AddressFilter, GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -64,7 +65,6 @@ CONF_KNX_RATE_LIMIT = "rate_limit"
 CONF_KNX_EXPOSE = "expose"
 
 SERVICE_KNX_SEND = "send"
-SERVICE_KNX_ATTR_ADDRESS = "address"
 SERVICE_KNX_ATTR_PAYLOAD = "payload"
 SERVICE_KNX_ATTR_TYPE = "type"
 SERVICE_KNX_ATTR_REMOVE = "remove"
@@ -146,7 +146,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
         }
@@ -154,7 +154,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         # without type given payload is treated as raw bytes
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
@@ -164,7 +164,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
 
 SERVICE_KNX_READ_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): vol.All(
+        vol.Required(CONF_ADDRESS): vol.All(
             cv.ensure_list,
             [cv.string],
         )
@@ -173,7 +173,7 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
 
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+        vol.Required(CONF_ADDRESS): cv.string,
         vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
 )
@@ -187,7 +187,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
     vol.Schema(
         # for removing only `address` is required
         {
-            vol.Required(SERVICE_KNX_ATTR_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
             vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
         },
         extra=vol.ALLOW_EXTRA,
@@ -198,8 +198,9 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 async def async_setup(hass, config):
     """Set up the KNX component."""
     try:
-        hass.data[DOMAIN] = KNXModule(hass, config)
-        await hass.data[DOMAIN].start()
+        knx_module = KNXModule(hass, config)
+        hass.data[DOMAIN] = knx_module
+        await knx_module.start()
     except XKNXException as ex:
         _LOGGER.warning("Could not connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
@@ -208,14 +209,14 @@ async def async_setup(hass, config):
 
     if CONF_KNX_EXPOSE in config[DOMAIN]:
         for expose_config in config[DOMAIN][CONF_KNX_EXPOSE]:
-            hass.data[DOMAIN].exposures.append(
-                create_knx_exposure(hass, hass.data[DOMAIN].xknx, expose_config)
+            knx_module.exposures.append(
+                create_knx_exposure(hass, knx_module.xknx, expose_config)
             )
 
     for platform in SupportedPlatforms:
         if platform.value in config[DOMAIN]:
             for device_config in config[DOMAIN][platform.value]:
-                create_knx_device(platform, hass.data[DOMAIN].xknx, device_config)
+                create_knx_device(platform, knx_module.xknx, device_config)
 
     # We need to wait until all entities are loaded into the device list since they could also be created from other platforms
     for platform in SupportedPlatforms:
@@ -223,7 +224,7 @@ async def async_setup(hass, config):
             discovery.async_load_platform(hass, platform.value, DOMAIN, {}, config)
         )
 
-    if not hass.data[DOMAIN].xknx.devices:
+    if not knx_module.xknx.devices:
         _LOGGER.warning(
             "No KNX devices are configured. Please read "
             "https://www.home-assistant.io/blog/2020/09/17/release-115/#breaking-changes"
@@ -232,14 +233,14 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_SEND,
-        hass.data[DOMAIN].service_send_to_knx_bus,
+        knx_module.service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
     )
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_READ,
-        hass.data[DOMAIN].service_read_to_knx_bus,
+        knx_module.service_read_to_knx_bus,
         schema=SERVICE_KNX_READ_SCHEMA,
     )
 
@@ -247,7 +248,7 @@ async def async_setup(hass, config):
         hass,
         DOMAIN,
         SERVICE_KNX_EVENT_REGISTER,
-        hass.data[DOMAIN].service_event_register_modify,
+        knx_module.service_event_register_modify,
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
     )
 
@@ -255,7 +256,7 @@ async def async_setup(hass, config):
         hass,
         DOMAIN,
         SERVICE_KNX_EXPOSURE_REGISTER,
-        hass.data[DOMAIN].service_exposure_register_modify,
+        knx_module.service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
@@ -269,7 +270,7 @@ async def async_setup(hass, config):
         if not config or DOMAIN not in config:
             return
 
-        await hass.data[DOMAIN].xknx.stop()
+        await knx_module.xknx.stop()
 
         await asyncio.gather(
             *[platform.async_reset() for platform in async_get_platforms(hass, DOMAIN)]
@@ -398,7 +399,7 @@ class KNXModule:
 
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
-        group_address = GroupAddress(call.data.get(SERVICE_KNX_ATTR_ADDRESS))
+        group_address = GroupAddress(call.data[CONF_ADDRESS])
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             try:
                 self._knx_event_callback.group_addresses.remove(group_address)
@@ -416,7 +417,7 @@ class KNXModule:
 
     async def service_exposure_register_modify(self, call):
         """Service for adding or removing an exposure to KNX bus."""
-        group_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        group_address = call.data.get(CONF_ADDRESS)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             try:
@@ -448,7 +449,7 @@ class KNXModule:
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
-        attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
+        attr_address = call.data.get(CONF_ADDRESS)
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
 
         def calculate_payload(attr_payload):
@@ -470,7 +471,7 @@ class KNXModule:
 
     async def service_read_to_knx_bus(self, call):
         """Service for sending a GroupValueRead telegram to the KNX bus."""
-        for address in call.data.get(SERVICE_KNX_ATTR_ADDRESS):
+        for address in call.data.get(CONF_ADDRESS):
             telegram = Telegram(
                 destination_address=GroupAddress(address),
                 payload=GroupValueRead(),
