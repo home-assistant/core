@@ -75,15 +75,15 @@ class ZWaveServices:
         """Set a config value on a node."""
         nodes: Set[ZwaveNode] = set()
         if ATTR_ENTITY_ID in service.data:
-            for entity_id in service.data[ATTR_ENTITY_ID]:
-                node = async_get_node_from_entity_id(self._hass, entity_id)
-                if node not in nodes:
-                    nodes.add(node)
+            nodes |= {
+                async_get_node_from_entity_id(self._hass, entity_id)
+                for entity_id in service.data[ATTR_ENTITY_ID]
+            }
         if ATTR_DEVICE_ID in service.data:
-            for device_id in service.data[ATTR_DEVICE_ID]:
-                node = async_get_node_from_device_id(self._hass, device_id)
-                if node not in nodes:
-                    nodes.add(node)
+            nodes |= {
+                async_get_node_from_device_id(self._hass, device_id)
+                for device_id in service.data[ATTR_DEVICE_ID]
+            }
         property_or_property_name = service.data[const.ATTR_CONFIG_PARAMETER]
         property_key = service.data.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
         new_value = service.data[const.ATTR_CONFIG_VALUE]
