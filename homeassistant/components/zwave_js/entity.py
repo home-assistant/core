@@ -45,9 +45,7 @@ class ZWaveBaseEntity(Entity):
         """Poll a value."""
         await self.info.node.async_poll_value(self.info.primary_value)
         LOGGER.info(
-            "Polled primary value %s on node %s",
-            self.info.primary_value,
-            self.info.node,
+            "Polled primary value %s for %s", self.info.primary_value, self.entity_id
         )
 
     async def async_added_to_hass(self) -> None:
