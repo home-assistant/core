@@ -190,6 +190,20 @@ def condition_path(suffix: Union[str, List[str]]) -> Generator:
         condition_path_pop(count)
 
 
+def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
+    """Wrap a condition function to enable basic tracing."""
+
+    @ft.wraps(condition)
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Trace condition."""
+        with trace_condition(variables):
+            result = condition(hass, variables)
+            condition_trace_set_result(result)
+            return result
+
+    return wrapper
+
+
 async def async_from_config(
     hass: HomeAssistant,
     config: Union[ConfigType, Template],
@@ -238,32 +252,27 @@ async def async_and_from_config(
         await async_from_config(hass, entry, False) for entry in config["conditions"]
     ]
 
+    @trace_condition_function
     def if_and_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test and condition."""
-        result = True
         errors = []
-        with trace_condition(variables):
-            for index, check in enumerate(checks):
-                try:
-                    with condition_path(["conditions", str(index)]):
-                        if not check(hass, variables):
-                            result = False
-                            break
-                except ConditionError as ex:
-                    errors.append(
-                        ConditionErrorIndex(
-                            "and", index=index, total=len(checks), error=ex
-                        )
-                    )
+        for index, check in enumerate(checks):
+            try:
+                with condition_path(["conditions", str(index)]):
+                    if not check(hass, variables):
+                        return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
+                )
 
-            # Raise the errors if no check was false
-            if errors:
-                raise ConditionErrorContainer("and", errors=errors)
+        # Raise the errors if no check was false
+        if errors:
+            raise ConditionErrorContainer("and", errors=errors)
 
-            condition_trace_set_result(result)
-        return result
+        return True
 
     return if_and_condition
 
@@ -278,32 +287,27 @@ async def async_or_from_config(
         await async_from_config(hass, entry, False) for entry in config["conditions"]
     ]
 
+    @trace_condition_function
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test or condition."""
-        result = False
         errors = []
-        with trace_condition(variables):
-            for index, check in enumerate(checks):
-                try:
-                    with condition_path(["conditions", str(index)]):
-                        if check(hass, variables):
-                            result = True
-                            break
-                except ConditionError as ex:
-                    errors.append(
-                        ConditionErrorIndex(
-                            "or", index=index, total=len(checks), error=ex
-                        )
-                    )
+        for index, check in enumerate(checks):
+            try:
+                with condition_path(["conditions", str(index)]):
+                    if check(hass, variables):
+                        return True
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
+                )
 
-            # Raise the errors if no check was true
-            if errors:
-                raise ConditionErrorContainer("or", errors=errors)
+        # Raise the errors if no check was true
+        if errors:
+            raise ConditionErrorContainer("or", errors=errors)
 
-            condition_trace_set_result(result)
-        return result
+        return False
 
     return if_or_condition
 
@@ -318,32 +322,27 @@ async def async_not_from_config(
         await async_from_config(hass, entry, False) for entry in config["conditions"]
     ]
 
+    @trace_condition_function
     def if_not_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
         """Test not condition."""
-        result = True
         errors = []
-        with trace_condition(variables):
-            for index, check in enumerate(checks):
+        for index, check in enumerate(checks):
+            try:
                 with condition_path(["conditions", str(index)]):
-                    try:
-                        if check(hass, variables):
-                            result = False
-                            break
-                    except ConditionError as ex:
-                        errors.append(
-                            ConditionErrorIndex(
-                                "not", index=index, total=len(checks), error=ex
-                            )
-                        )
+                    if check(hass, variables):
+                        return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
+                )
 
-            # Raise the errors if no check was true
-            if errors:
-                raise ConditionErrorContainer("not", errors=errors)
+        # Raise the errors if no check was true
+        if errors:
+            raise ConditionErrorContainer("not", errors=errors)
 
-            condition_trace_set_result(result)
-        return result
+        return True
 
     return if_not_condition
 
@@ -496,6 +495,7 @@ def async_numeric_state_from_config(
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    @trace_condition_function
     def if_numeric_state(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -614,6 +614,7 @@ def state_from_config(
     if not isinstance(req_states, list):
         req_states = [req_states]
 
+    @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
@@ -706,11 +707,12 @@ def sun_from_config(
     before_offset = config.get("before_offset")
     after_offset = config.get("after_offset")
 
-    def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    @trace_condition_function
+    def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
         return sun(hass, before, after, before_offset, after_offset)
 
-    return time_if
+    return sun_if
 
 
 def template(
@@ -742,6 +744,7 @@ def async_template_from_config(
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
     value_template = cast(Template, config.get(CONF_VALUE_TEMPLATE))
 
+    @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
         value_template.hass = hass
@@ -822,6 +825,7 @@ def time_from_config(
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
 
+    @trace_condition_function
     def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
         return time(hass, before, after, weekday)
@@ -887,6 +891,7 @@ def zone_from_config(
     entity_ids = config.get(CONF_ENTITY_ID, [])
     zone_entity_ids = config.get(CONF_ZONE, [])
 
+    @trace_condition_function
     def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
@@ -927,9 +932,11 @@ async def async_device_from_config(
     platform = await async_get_device_automation_platform(
         hass, config[CONF_DOMAIN], "condition"
     )
-    return cast(
-        ConditionCheckerType,
-        platform.async_condition_from_config(config, config_validation),  # type: ignore
+    return trace_condition_function(
+        cast(
+            ConditionCheckerType,
+            platform.async_condition_from_config(config, config_validation),  # type: ignore
+        )
     )
 
 

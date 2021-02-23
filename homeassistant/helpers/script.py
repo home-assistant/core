@@ -69,6 +69,7 @@ from homeassistant.helpers.condition import (
     condition_path,
     condition_trace_clear,
     condition_trace_get,
+    trace_condition_function,
 )
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -659,18 +660,21 @@ class _ScriptRun:
             raise _StopScript
 
     def _test_conditions(self, conditions, name):
-        result = True
-        try:
-            with condition_path("conditions"):
-                for idx, cond in enumerate(conditions):
-                    with condition_path(str(idx)):
-                        if not cond(self._hass, self._variables):
-                            result = False
-                            break
-        except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in '%s' evaluation: %s", name, ex)
-            result = None
+        @trace_condition_function
+        def traced_test_conditions(hass, variables):
+            try:
+                with condition_path("conditions"):
+                    for idx, cond in enumerate(conditions):
+                        with condition_path(str(idx)):
+                            if not cond(hass, variables):
+                                return False
+            except exceptions.ConditionError as ex:
+                _LOGGER.warning("Error in '%s' evaluation: %s", name, ex)
+                return None
 
+            return True
+
+        result = traced_test_conditions(self._hass, self._variables)
         action_trace_add_conditions()
         return result
 
