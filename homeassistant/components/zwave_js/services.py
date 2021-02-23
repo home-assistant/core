@@ -78,7 +78,7 @@ class ZWaveServices:
             const.DOMAIN,
             const.SERVICE_POLL_VALUE,
             self.async_poll_value,
-            schema=vol.All({vol.Required(ATTR_ENTITY_ID): cv.entity_ids}),
+            schema=vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids}),
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
