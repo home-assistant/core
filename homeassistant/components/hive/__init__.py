@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,11 +84,11 @@ async def async_setup_entry(hass, entry):
             )
         )
 
-    for component in PLATFORMS:
-        devicelist = devices.get(component)
+    for ha_type, hive_type in PLATFORM_LOOKUP.items():
+        devicelist = devices.get(hive_type)
         if devicelist:
             hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
+                hass.config_entries.async_forward_entry_setup(entry, ha_type)
             )
 
     return True
