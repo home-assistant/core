@@ -96,4 +96,4 @@ exposure_register:
         boolean:
 reload:
   name: "Reload KNX configuration"
-  description: "Reload the KNX configuration from yaml."
+  description: "Reload the KNX configuration from YAML."
