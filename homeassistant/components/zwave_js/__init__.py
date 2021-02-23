@@ -219,7 +219,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
 
-        await driver_ready.wait()
+        try:
+            await driver_ready.wait()
+        except asyncio.CancelledError:
+            LOGGER.debug("Cancelling start platforms")
+            return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
 
