@@ -1,5 +1,5 @@
 """Support for Z-Wave controls using the number platform."""
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -65,6 +65,13 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         if self.info.primary_value.value is None:
             return 0
         return float(self.info.primary_value.value)
+
+    @property
+    def unit_of_measurement(self) -> Optional[str]:
+        """Return the unit of measurement of this entity, if any."""
+        if self.info.primary_value.metadata.unit is None:
+            return None
+        return str(self.info.primary_value.metadata.unit)
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
