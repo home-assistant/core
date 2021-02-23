@@ -26,6 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -238,7 +239,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 )
             )
 
-        registry = await self.hass.helpers.device_registry.async_get_registry()
+        registry = await async_get_registry(self.hass)
         device = registry.async_get_device({(DOMAIN, self._id)}, set())
         self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._home_id] = device.id
 
