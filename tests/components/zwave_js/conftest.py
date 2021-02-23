@@ -394,7 +394,7 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
     client.driver.controller.nodes[node.node_id] = node
     return node
 
-    
+
 @pytest.fixture(name="ge_12730")
 def ge_12730_fixture(client, ge_12730_state):
     """Mock a GE 12730 fan controller node."""
