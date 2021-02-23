@@ -1,5 +1,6 @@
 """Test shopping list component."""
 
+from homeassistant.components.shopping_list.const import DOMAIN
 from homeassistant.components.websocket_api.const import (
     ERR_INVALID_FORMAT,
     ERR_NOT_FOUND,
@@ -17,6 +18,39 @@ async def test_add_item(hass, sl_setup):
     )
 
     assert response.speech["plain"]["speech"] == "I've added beer to your shopping list"
+
+
+async def test_update_list(hass, sl_setup):
+    """Test updating all list items."""
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "cheese"}}
+    )
+
+    # Update a single attribute, other attributes shouldn't change
+    await hass.data[DOMAIN].async_update_list({"complete": True})
+
+    beer = hass.data[DOMAIN].items[0]
+    assert beer["name"] == "beer"
+    assert beer["complete"] is True
+
+    cheese = hass.data[DOMAIN].items[1]
+    assert cheese["name"] == "cheese"
+    assert cheese["complete"] is True
+
+    # Update multiple attributes
+    await hass.data[DOMAIN].async_update_list({"name": "dupe", "complete": False})
+
+    beer = hass.data[DOMAIN].items[0]
+    assert beer["name"] == "dupe"
+    assert beer["complete"] is False
+
+    cheese = hass.data[DOMAIN].items[1]
+    assert cheese["name"] == "dupe"
+    assert cheese["complete"] is False
 
 
 async def test_recent_items_intent(hass, sl_setup):
