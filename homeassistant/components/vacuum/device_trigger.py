@@ -17,7 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, STATE_CLEANING, STATE_DOCKED, STATES
+from . import DOMAIN, STATE_CLEANING, STATE_DOCKED
 
 TRIGGER_TYPES = {"cleaning", "docked"}
 
@@ -71,16 +71,13 @@ async def async_attach_trigger(
     config = TRIGGER_SCHEMA(config)
 
     if config[CONF_TYPE] == "cleaning":
-        from_state = [state for state in STATES if state != STATE_CLEANING]
         to_state = STATE_CLEANING
     else:
-        from_state = [state for state in STATES if state != STATE_DOCKED]
         to_state = STATE_DOCKED
 
     state_config = {
         CONF_PLATFORM: "state",
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
-        state_trigger.CONF_FROM: from_state,
         state_trigger.CONF_TO: to_state,
     }
     state_config = state_trigger.TRIGGER_SCHEMA(state_config)

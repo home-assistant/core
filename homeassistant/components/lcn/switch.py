@@ -50,7 +50,8 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.device_connection.activate_status_request_handler(self.output)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.output)
 
     @property
     def is_on(self):
@@ -97,7 +98,8 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.device_connection.activate_status_request_handler(self.output)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.output)
 
     @property
     def is_on(self):
@@ -115,7 +117,6 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
         if not await self.device_connection.control_relays(states):

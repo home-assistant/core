@@ -1,6 +1,7 @@
 """The tests for the MQTT discovery."""
 import copy
 import json
+from unittest.mock import patch
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
@@ -8,7 +9,6 @@ from homeassistant.components.tasmota.discovery import ALREADY_DISCOVERED
 from .conftest import setup_tasmota_helper
 from .test_common import DEFAULT_CONFIG, DEFAULT_CONFIG_9_0_0_3
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 

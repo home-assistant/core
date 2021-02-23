@@ -1,4 +1,6 @@
 """Test the DenonAVR config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -15,7 +17,6 @@ from homeassistant.components.denonavr.config_flow import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"

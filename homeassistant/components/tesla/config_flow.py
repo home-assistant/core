@@ -20,21 +20,11 @@ from .const import (
     CONF_WAKE_ON_START,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_WAKE_ON_START,
-    DOMAIN,
     MIN_SCAN_INTERVAL,
 )
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
-
-DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-)
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured Tesla instances."""
-    return {entry.title for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
 class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -43,52 +33,80 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        """Initialize the tesla flow."""
+        self.username = None
+
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
+        errors = {}
 
-        if not user_input:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={},
-                description_placeholders={},
-            )
+        if user_input is not None:
+            existing_entry = self._async_entry_for_username(user_input[CONF_USERNAME])
+            if (
+                existing_entry
+                and existing_entry.data[CONF_PASSWORD] == user_input[CONF_PASSWORD]
+            ):
+                return self.async_abort(reason="already_configured")
 
-        if user_input[CONF_USERNAME] in configured_instances(self.hass):
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={CONF_USERNAME: "already_configured"},
-                description_placeholders={},
-            )
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "cannot_connect"},
-                description_placeholders={},
-            )
-        except InvalidAuth:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=DATA_SCHEMA,
-                errors={"base": "invalid_auth"},
-                description_placeholders={},
-            )
-        return self.async_create_entry(title=user_input[CONF_USERNAME], data=info)
+            if not errors:
+                if existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=info
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
+
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=info
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self._async_schema(),
+            errors=errors,
+            description_placeholders={},
+        )
+
+    async def async_step_reauth(self, data):
+        """Handle configuration by re-auth."""
+        self.username = data[CONF_USERNAME]
+        return await self.async_step_user()
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
+
+    @callback
+    def _async_schema(self):
+        """Fetch schema with defaults."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=self.username): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
+
+    @callback
+    def _async_entry_for_username(self, username):
+        """Find an existing entry for a username."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_USERNAME) == username:
+                return entry
+        return None
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
@@ -140,6 +158,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
             test_login=True
         )
+        config[CONF_USERNAME] = data[CONF_USERNAME]
+        config[CONF_PASSWORD] = data[CONF_PASSWORD]
     except TeslaException as ex:
         if ex.code == HTTP_UNAUTHORIZED:
             _LOGGER.error("Invalid credentials: %s", ex)

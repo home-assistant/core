@@ -9,6 +9,7 @@ from . import (
     config_flow,
     coverage,
     dependencies,
+    dhcp,
     json,
     manifest,
     mqtt,
@@ -31,6 +32,7 @@ INTEGRATION_PLUGINS = [
     ssdp,
     translations,
     zeroconf,
+    dhcp,
 ]
 HASS_PLUGINS = [
     coverage,
@@ -181,7 +183,7 @@ def print_integrations_status(config, integrations, *, show_fixable_errors=True)
         print(f"Integration {integration.domain}{extra}:")
         for error in integration.errors:
             if show_fixable_errors or not error.fixable:
-                print("*", error)
+                print("*", "[ERROR]", error)
         for warning in integration.warnings:
             print("*", "[WARNING]", warning)
         print()

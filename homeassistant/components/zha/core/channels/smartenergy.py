@@ -89,12 +89,12 @@ class Metering(ZigbeeChannel):
     @property
     def divisor(self) -> int:
         """Return divisor for the value."""
-        return self.cluster.get("divisor")
+        return self.cluster.get("divisor") or 1
 
     @property
     def multiplier(self) -> int:
         """Return multiplier for the value."""
-        return self.cluster.get("multiplier")
+        return self.cluster.get("multiplier") or 1
 
     def async_configure_channel_specific(self) -> Coroutine:
         """Configure channel."""

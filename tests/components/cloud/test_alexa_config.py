@@ -1,11 +1,11 @@
 """Test Alexa config."""
 import contextlib
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.cloud import ALEXA_SCHEMA, alexa_config
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
 
@@ -16,7 +16,9 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
         alexa_entity_configs={"light.kitchen": entity_conf},
         alexa_default_expose=["light"],
     )
-    conf = alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    conf = alexa_config.AlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, None
+    )
 
     assert not conf.should_expose("light.kitchen")
     entity_conf["should_expose"] = True
@@ -33,7 +35,9 @@ async def test_alexa_config_expose_entity_prefs(hass, cloud_prefs):
 
 async def test_alexa_config_report_state(hass, cloud_prefs):
     """Test Alexa config should expose using prefs."""
-    conf = alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    conf = alexa_config.AlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, None
+    )
 
     assert cloud_prefs.alexa_report_state is False
     assert conf.should_report_state is False
@@ -68,6 +72,7 @@ async def test_alexa_config_invalidate_token(hass, cloud_prefs, aioclient_mock):
     conf = alexa_config.AlexaConfig(
         hass,
         ALEXA_SCHEMA({}),
+        "mock-user-id",
         cloud_prefs,
         Mock(
             alexa_access_token_url="http://example/alexa_token",
@@ -114,7 +119,7 @@ def patch_sync_helper():
 
 async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
     """Test Alexa config responds to updating exposed entities."""
-    alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, None)
 
     with patch_sync_helper() as (to_update, to_remove):
         await cloud_prefs.async_update_alexa_entity_config(
@@ -147,7 +152,9 @@ async def test_alexa_update_expose_trigger_sync(hass, cloud_prefs):
 
 async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
     """Test Alexa config responds to entity registry."""
-    alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, hass.data["cloud"])
+    alexa_config.AlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+    )
 
     with patch_sync_helper() as (to_update, to_remove):
         hass.bus.async_fire(
@@ -197,7 +204,7 @@ async def test_alexa_entity_registry_sync(hass, mock_cloud_login, cloud_prefs):
 
 async def test_alexa_update_report_state(hass, cloud_prefs):
     """Test Alexa config responds to reporting state."""
-    alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), cloud_prefs, None)
+    alexa_config.AlexaConfig(hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, None)
 
     with patch(
         "homeassistant.components.cloud.alexa_config.AlexaConfig.async_sync_entities",
@@ -208,3 +215,16 @@ async def test_alexa_update_report_state(hass, cloud_prefs):
         await hass.async_block_till_done()
 
     assert len(mock_sync.mock_calls) == 1
+
+
+def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs):
+    """Test that alexa config enabled requires a valid Cloud sub."""
+    assert cloud_prefs.alexa_enabled
+    assert hass.data["cloud"].is_logged_in
+    assert hass.data["cloud"].subscription_expired
+
+    config = alexa_config.AlexaConfig(
+        hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+    )
+
+    assert not config.enabled

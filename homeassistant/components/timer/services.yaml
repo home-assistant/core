@@ -1,36 +1,28 @@
 # Describes the format for available timer services
 
 start:
-  description: Start a timer.
-
+  name: Start
+  description: Start a timer
+  target:
   fields:
-    entity_id:
-      description: Entity id of the timer to start. [optional]
-      example: "timer.timer0"
     duration:
       description: Duration the timer requires to finish. [optional]
+      default: 0
       example: "00:01:00 or 60"
+      selector:
+        text:
 
 pause:
+  name: Pause
   description: Pause a timer.
-
-  fields:
-    entity_id:
-      description: Entity id of the timer to pause. [optional]
-      example: "timer.timer0"
+  target:
 
 cancel:
+  name: Cancel
   description: Cancel a timer.
-
-  fields:
-    entity_id:
-      description: Entity id of the timer to cancel. [optional]
-      example: "timer.timer0"
+  target:
 
 finish:
+  name: Finish
   description: Finish a timer.
-
-  fields:
-    entity_id:
-      description: Entity id of the timer to finish. [optional]
-      example: "timer.timer0"
+  target:

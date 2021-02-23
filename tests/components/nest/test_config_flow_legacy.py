@@ -1,12 +1,11 @@
 """Tests for the Nest config flow."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.nest import DOMAIN, config_flow
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock
 from tests.common import mock_coro
 
 

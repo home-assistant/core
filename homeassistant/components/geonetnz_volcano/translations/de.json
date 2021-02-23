@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Standort ist bereits konfiguriert"
+        },
         "step": {
             "user": {
                 "data": {

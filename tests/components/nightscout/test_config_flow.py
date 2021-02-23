@@ -1,4 +1,6 @@
 """Test the Nightscout config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientConnectionError, ClientResponseError
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -6,7 +8,6 @@ from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.components.nightscout.utils import hash_from_url
 from homeassistant.const import CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.nightscout import (
     GLUCOSE_READINGS,

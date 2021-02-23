@@ -1,4 +1,6 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+from __future__ import annotations
+
 from ast import literal_eval
 import asyncio
 import base64
@@ -11,7 +13,7 @@ import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Dict, Generator, Iterable, Optional, Type, Union
+from typing import Any, Dict, Generator, Iterable, Optional, Type, Union, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -31,15 +33,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import location as loc_helper
+from homeassistant.helpers import entity_registry, location as loc_helper
 from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -47,6 +48,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RENDER_INFO = "template.render_info"
 _ENVIRONMENT = "template.environment"
+_ENVIRONMENT_LIMITED = "template.environment_limited"
 
 _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
@@ -85,7 +87,9 @@ def attach(hass: HomeAssistantType, obj: Any) -> None:
         obj.hass = hass
 
 
-def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
+def render_complex(
+    value: Any, variables: TemplateVarsType = None, limited: bool = False
+) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
         return [render_complex(item, variables) for item in value]
@@ -95,7 +99,7 @@ def render_complex(value: Any, variables: TemplateVarsType = None) -> Any:
             for key, item in value.items()
         }
     if isinstance(value, Template):
-        return value.async_render(variables)
+        return value.async_render(variables, limited=limited)
 
     return value
 
@@ -140,7 +144,7 @@ def gen_result_wrapper(kls):
                 if kls is set:
                     return str(set(self))
 
-                return kls.__str__(self)
+                return cast(str, kls.__str__(self))
 
             return self.render_result
 
@@ -154,7 +158,7 @@ class TupleWrapper(tuple, ResultWrapper):
 
     def __new__(
         cls, value: tuple, *, render_result: Optional[str] = None
-    ) -> "TupleWrapper":
+    ) -> TupleWrapper:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
@@ -173,7 +177,8 @@ class TupleWrapper(tuple, ResultWrapper):
 
 
 RESULT_WRAPPERS: Dict[Type, Type] = {
-    kls: gen_result_wrapper(kls) for kls in (list, dict, set)
+    kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
+    for kls in (list, dict, set)
 }
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
@@ -195,15 +200,15 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self.filter = _true
-        self._result = None
+        self._result: Optional[str] = None
         self.is_static = False
-        self.exception = None
+        self.exception: Optional[TemplateError] = None
         self.all_states = False
         self.all_states_lifecycle = False
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
-        self.rate_limit = None
+        self.rate_limit: Optional[timedelta] = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -228,7 +233,7 @@ class RenderInfo:
         """Results of the template computation."""
         if self.exception is not None:
             raise self.exception
-        return self._result
+        return cast(str, self._result)
 
     def _freeze_static(self) -> None:
         self.is_static = True
@@ -279,6 +284,7 @@ class Template:
         "is_static",
         "_compiled_code",
         "_compiled",
+        "_limited",
     )
 
     def __init__(self, template, hass=None):
@@ -288,26 +294,28 @@ class Template:
 
         self.template: str = template.strip()
         self._compiled_code = None
-        self._compiled = None
+        self._compiled: Optional[Template] = None
         self.hass = hass
         self.is_static = not is_template_string(template)
+        self._limited = None
 
     @property
-    def _env(self):
+    def _env(self) -> TemplateEnvironment:
         if self.hass is None:
             return _NO_HASS_ENV
-        ret = self.hass.data.get(_ENVIRONMENT)
+        wanted_env = _ENVIRONMENT_LIMITED if self._limited else _ENVIRONMENT
+        ret: Optional[TemplateEnvironment] = self.hass.data.get(wanted_env)
         if ret is None:
-            ret = self.hass.data[_ENVIRONMENT] = TemplateEnvironment(self.hass)
+            ret = self.hass.data[wanted_env] = TemplateEnvironment(self.hass, self._limited)  # type: ignore[no-untyped-call]
         return ret
 
-    def ensure_valid(self):
+    def ensure_valid(self) -> None:
         """Return if template is valid."""
         if self._compiled_code is not None:
             return
 
         try:
-            self._compiled_code = self._env.compile(self.template)
+            self._compiled_code = self._env.compile(self.template)  # type: ignore[no-untyped-call]
         except jinja2.TemplateError as err:
             raise TemplateError(err) from err
 
@@ -315,9 +323,13 @@ class Template:
         self,
         variables: TemplateVarsType = None,
         parse_result: bool = True,
+        limited: bool = False,
         **kwargs: Any,
     ) -> Any:
-        """Render given template."""
+        """Render given template.
+
+        If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
+        """
         if self.is_static:
             if self.hass.config.legacy_templates or not parse_result:
                 return self.template
@@ -325,7 +337,7 @@ class Template:
 
         return run_callback_threadsafe(
             self.hass.loop,
-            partial(self.async_render, variables, parse_result, **kwargs),
+            partial(self.async_render, variables, parse_result, limited, **kwargs),
         ).result()
 
     @callback
@@ -333,18 +345,21 @@ class Template:
         self,
         variables: TemplateVarsType = None,
         parse_result: bool = True,
+        limited: bool = False,
         **kwargs: Any,
     ) -> Any:
         """Render given template.
 
         This method must be run in the event loop.
+
+        If limited is True, the template is not allowed to access any function or filter depending on hass or the state machine.
         """
         if self.is_static:
             if self.hass.config.legacy_templates or not parse_result:
                 return self.template
             return self._parse_result(self.template)
 
-        compiled = self._compiled or self._ensure_compiled()
+        compiled = self._compiled or self._ensure_compiled(limited)
 
         if variables is not None:
             kwargs.update(variables)
@@ -422,7 +437,7 @@ class Template:
 
         finish_event = asyncio.Event()
 
-        def _render_template():
+        def _render_template() -> None:
             try:
                 compiled.render(kwargs)
             except TimeoutError:
@@ -449,7 +464,7 @@ class Template:
         """Render the template and collect an entity filter."""
         assert self.hass and _RENDER_INFO not in self.hass.data
 
-        render_info = RenderInfo(self)
+        render_info = RenderInfo(self)  # type: ignore[no-untyped-call]
 
         # pylint: disable=protected-access
         if self.is_static:
@@ -519,16 +534,21 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-    def _ensure_compiled(self):
+    def _ensure_compiled(self, limited: bool = False) -> Template:
         """Bind a template to a specific hass instance."""
         self.ensure_valid()
 
         assert self.hass is not None, "hass variable not set on template"
+        assert (
+            self._limited is None or self._limited == limited
+        ), "can't change between limited and non limited template"
 
+        self._limited = limited
         env = self._env
 
-        self._compiled = jinja2.Template.from_code(
-            env, self._compiled_code, env.globals, None
+        self._compiled = cast(
+            Template,
+            jinja2.Template.from_code(env, self._compiled_code, env.globals, None),
         )
 
         return self._compiled
@@ -553,7 +573,7 @@ class Template:
 class AllStates:
     """Class to expose all HA states as attributes."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize all states."""
         self._hass = hass
 
@@ -607,7 +627,7 @@ class AllStates:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    def __init__(self, hass, domain):
+    def __init__(self, hass: HomeAssistantType, domain: str) -> None:
         """Initialize the domain states."""
         self._hass = hass
         self._domain = domain
@@ -652,13 +672,15 @@ class TemplateState(State):
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
-    def __init__(self, hass, state, collect=True):
+    def __init__(
+        self, hass: HomeAssistantType, state: State, collect: bool = True
+    ) -> None:
         """Initialize template state."""
         self._hass = hass
         self._state = state
         self._collect = collect
 
-    def _collect_state(self):
+    def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
             self._hass.data[_RENDER_INFO].entities.add(self._state.entity_id)
 
@@ -845,6 +867,13 @@ def expand(hass: HomeAssistantType, *args: Any) -> Iterable[State]:
             found[entity_id] = entity
 
     return sorted(found.values(), key=lambda a: a.entity_id)
+
+
+def device_entities(hass: HomeAssistantType, device_id: str) -> Iterable[str]:
+    """Get entity ids for entities tied to a device."""
+    entity_reg = entity_registry.async_get(hass)
+    entries = entity_registry.async_entries_for_device(entity_reg, device_id)
+    return [entry.entity_id for entry in entries]
 
 
 def closest(hass, *args):
@@ -1274,7 +1303,6 @@ def relative_time(value):
 
     If the input are not a datetime object the input will be returned unmodified.
     """
-
     if not isinstance(value, datetime):
         return value
     if not value.tzinfo:
@@ -1292,7 +1320,7 @@ def urlencode(value):
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, limited=False):
         """Initialise template environment."""
         super().__init__()
         self.hass = hass
@@ -1364,6 +1392,38 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
             return contextfunction(wrapper)
 
+        self.globals["device_entities"] = hassfunction(device_entities)
+        self.filters["device_entities"] = contextfilter(self.globals["device_entities"])
+
+        if limited:
+            # Only device_entities is available to limited templates, mark other
+            # functions and filters as unsupported.
+            def unsupported(name):
+                def warn_unsupported(*args, **kwargs):
+                    raise TemplateError(
+                        f"Use of '{name}' is not supported in limited templates"
+                    )
+
+                return warn_unsupported
+
+            hass_globals = [
+                "closest",
+                "distance",
+                "expand",
+                "is_state",
+                "is_state_attr",
+                "state_attr",
+                "states",
+                "utcnow",
+                "now",
+            ]
+            hass_filters = ["closest", "expand"]
+            for glob in hass_globals:
+                self.globals[glob] = unsupported(glob)
+            for filt in hass_filters:
+                self.filters[filt] = unsupported(filt)
+            return
+
         self.globals["expand"] = hassfunction(expand)
         self.filters["expand"] = contextfilter(self.globals["expand"])
         self.globals["closest"] = hassfunction(closest)
@@ -1411,4 +1471,4 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return cached
 
 
-_NO_HASS_ENV = TemplateEnvironment(None)
+_NO_HASS_ENV = TemplateEnvironment(None)  # type: ignore[no-untyped-call]

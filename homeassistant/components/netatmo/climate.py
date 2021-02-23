@@ -31,6 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
+    ATTR_SELECTED_SCHEDULE,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_SCHEDULES,
@@ -212,6 +213,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._hg_temperature = None
         self._boilerstatus = None
         self._setpoint_duration = None
+        self._selected_schedule = None
 
         if self._model == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
@@ -243,7 +245,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return
 
         home = data["home"]
-        if self._home_id == home["id"] and data["event_type"] == EVENT_TYPE_THERM_MODE:
+
+        if self._home_id != home["id"]:
+            return
+
+        if data["event_type"] == EVENT_TYPE_THERM_MODE:
             self._preset = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._hvac_mode = HVAC_MAP_NETATMO[self._preset]
             if self._preset == PRESET_FROST_GUARD:
@@ -266,8 +272,13 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
                         self._hvac_mode = HVAC_MODE_HEAT
                         self._target_temperature = DEFAULT_MAX_TEMP
+                    elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
+                        self._hvac_mode = HVAC_MODE_HEAT
+                        self._target_temperature = room["therm_setpoint_temperature"]
                     else:
                         self._target_temperature = room["therm_setpoint_temperature"]
+                        if self._target_temperature == DEFAULT_MAX_TEMP:
+                            self._hvac_mode = HVAC_MODE_HEAT
                     self.async_write_ha_state()
                     break
 
@@ -341,12 +352,28 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 STATE_NETATMO_HOME,
             )
 
-        if preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE:
+        if (
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            and self._model == NA_VALVE
+            and self.hvac_mode == HVAC_MODE_HEAT
+        ):
+            self._home_status.set_room_thermpoint(
+                self._id,
+                STATE_NETATMO_HOME,
+            )
+        elif (
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX] and self._model == NA_VALVE
+        ):
             self._home_status.set_room_thermpoint(
                 self._id,
                 STATE_NETATMO_MANUAL,
                 DEFAULT_MAX_TEMP,
             )
+        elif (
+            preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]
+            and self.hvac_mode == HVAC_MODE_HEAT
+        ):
+            self._home_status.set_room_thermpoint(self._id, STATE_NETATMO_HOME)
         elif preset_mode in [PRESET_BOOST, STATE_NETATMO_MAX]:
             self._home_status.set_room_thermpoint(
                 self._id, PRESET_MAP_NETATMO[preset_mode]
@@ -389,6 +416,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             attr[ATTR_HEATING_POWER_REQUEST] = self._room_status.get(
                 "heating_power_request", 0
             )
+
+        if self._selected_schedule is not None:
+            attr[ATTR_SELECTED_SCHEDULE] = self._selected_schedule
 
         return attr
 
@@ -438,6 +468,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._away_temperature = self._data.get_away_temp(self._home_id)
         self._hg_temperature = self._data.get_hg_temp(self._home_id)
         self._setpoint_duration = self._data.setpoint_duration[self._home_id]
+        self._selected_schedule = roomstatus.get("selected_schedule")
 
         if "current_temperature" not in roomstatus:
             return
@@ -467,6 +498,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 "module_id": None,
                 "heating_status": None,
                 "heating_power_request": None,
+                "selected_schedule": self._data._get_selected_schedule(  # pylint: disable=protected-access
+                    home_id=self._home_id
+                ).get(
+                    "name"
+                ),
             }
 
             batterylevel = None
@@ -530,6 +566,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             kwargs.get(ATTR_SCHEDULE_NAME),
             schedule_id,
         )
+
+    @property
+    def device_info(self):
+        """Return the device info for the thermostat."""
+        return {**super().device_info, "suggested_area": self._room_data["name"]}
 
 
 def interpolate(batterylevel, module_type):

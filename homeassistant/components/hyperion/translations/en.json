@@ -7,7 +7,8 @@
             "auth_new_token_not_work_error": "Failed to authenticate using newly created token",
             "auth_required_error": "Failed to determine if authorization is required",
             "cannot_connect": "Failed to connect",
-            "no_id": "The Hyperion Ambilight instance did not report its id"
+            "no_id": "The Hyperion Ambilight instance did not report its id",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",

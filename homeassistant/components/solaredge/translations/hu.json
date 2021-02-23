@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "site_not_active": "Az oldal nem akt\u00edv"
+        },
         "step": {
             "user": {
                 "data": {

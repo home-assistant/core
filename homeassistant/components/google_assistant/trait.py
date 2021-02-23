@@ -648,7 +648,14 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if self.state.state in (cover.STATE_CLOSING, cover.STATE_OPENING):
+                if (
+                    self.state.state
+                    in (
+                        cover.STATE_CLOSING,
+                        cover.STATE_OPENING,
+                    )
+                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
+                ):
                     await self.hass.services.async_call(
                         self.state.domain,
                         cover.SERVICE_STOP_COVER,
@@ -1269,6 +1276,7 @@ class FanSpeedTrait(_Trait):
         return {
             "availableFanSpeeds": {"speeds": speeds, "ordered": True},
             "reversible": reversible,
+            "supportsFanSpeedPercent": True,
         }
 
     def query_attributes(self):
@@ -1282,9 +1290,11 @@ class FanSpeedTrait(_Trait):
                 response["currentFanSpeedSetting"] = speed
         if domain == fan.DOMAIN:
             speed = attrs.get(fan.ATTR_SPEED)
+            percent = attrs.get(fan.ATTR_PERCENTAGE) or 0
             if speed is not None:
                 response["on"] = speed != fan.SPEED_OFF
                 response["currentFanSpeedSetting"] = speed
+                response["currentFanSpeedPercent"] = percent
         return response
 
     async def execute(self, command, data, params, challenge):
@@ -1302,13 +1312,20 @@ class FanSpeedTrait(_Trait):
                 context=data.context,
             )
         if domain == fan.DOMAIN:
+            service_params = {
+                ATTR_ENTITY_ID: self.state.entity_id,
+            }
+            if "fanSpeedPercent" in params:
+                service = fan.SERVICE_SET_PERCENTAGE
+                service_params[fan.ATTR_PERCENTAGE] = params["fanSpeedPercent"]
+            else:
+                service = fan.SERVICE_SET_SPEED
+                service_params[fan.ATTR_SPEED] = params["fanSpeed"]
+
             await self.hass.services.async_call(
                 fan.DOMAIN,
-                fan.SERVICE_SET_SPEED,
-                {
-                    ATTR_ENTITY_ID: self.state.entity_id,
-                    fan.ATTR_SPEED: params["fanSpeed"],
-                },
+                service,
+                service_params,
                 blocking=True,
                 context=data.context,
             )
@@ -1668,17 +1685,17 @@ class OpenCloseTrait(_Trait):
             else:
                 position = params["openPercent"]
 
-            if features & cover.SUPPORT_SET_POSITION:
-                service = cover.SERVICE_SET_COVER_POSITION
-                if position > 0:
-                    should_verify = True
-                svc_params[cover.ATTR_POSITION] = position
-            elif position == 0:
+            if position == 0:
                 service = cover.SERVICE_CLOSE_COVER
                 should_verify = False
             elif position == 100:
                 service = cover.SERVICE_OPEN_COVER
                 should_verify = True
+            elif features & cover.SUPPORT_SET_POSITION:
+                service = cover.SERVICE_SET_COVER_POSITION
+                if position > 0:
+                    should_verify = True
+                svc_params[cover.ATTR_POSITION] = position
             else:
                 raise SmartHomeError(
                     ERR_NOT_SUPPORTED, "No support for partial open close"
@@ -1921,12 +1938,10 @@ class TransportControlTrait(_Trait):
 
     def query_attributes(self):
         """Return the attributes of this trait for this entity."""
-
         return {}
 
     async def execute(self, command, data, params, challenge):
         """Execute a media command."""
-
         service_attrs = {ATTR_ENTITY_ID: self.state.entity_id}
 
         if command == COMMAND_MEDIA_SEEK_RELATIVE:

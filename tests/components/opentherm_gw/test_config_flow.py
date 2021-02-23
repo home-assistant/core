@@ -1,7 +1,8 @@
 """Test the Opentherm Gateway config flow."""
 import asyncio
+from unittest.mock import patch
 
-from pyotgw.vars import OTGW_ABOUT
+from pyotgw.vars import OTGW, OTGW_ABOUT
 from serial import SerialException
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -12,8 +13,9 @@ from homeassistant.components.opentherm_gw.const import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
+
+MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}}
 
 
 async def test_form_user(hass):
@@ -32,8 +34,7 @@ async def test_form_user(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect",
-        return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
+        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
         "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
@@ -65,8 +66,7 @@ async def test_form_import(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect",
-        return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
+        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
         "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:
@@ -108,8 +108,7 @@ async def test_form_duplicate_entries(hass):
         "homeassistant.components.opentherm_gw.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "pyotgw.pyotgw.connect",
-        return_value={OTGW_ABOUT: "OpenTherm Gateway 4.2.5"},
+        "pyotgw.pyotgw.connect", return_value=MINIMAL_STATUS
     ) as mock_pyotgw_connect, patch(
         "pyotgw.pyotgw.disconnect", return_value=None
     ) as mock_pyotgw_disconnect:

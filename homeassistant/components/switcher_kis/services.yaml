@@ -15,5 +15,5 @@ turn_on_with_timer:
       description: "Name of the entity id associated with the integration, used for permission validation."
       example: "switch.switcher_kis_boiler"
     timer_minutes:
-      description: 'Minutes to turn on (valid range from 1 to 90)'
+      description: 'Minutes to turn on (valid range from 1 to 150)'
       example: '30'

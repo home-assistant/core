@@ -1,5 +1,6 @@
 """The tests for the person component."""
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -24,7 +25,6 @@ from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import collection, entity_registry
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import mock_component, mock_restore_cache
 
 DEVICE_TRACKER = "device_tracker.test_tracker"

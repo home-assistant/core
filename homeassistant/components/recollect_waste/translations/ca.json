@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Utilitza els sobrenoms per als tipus de recollida (quan sigui possible)"
+                },
+                "title": "Configuraci\u00f3 de Recollect Waste"
+            }
+        }
     }
 }

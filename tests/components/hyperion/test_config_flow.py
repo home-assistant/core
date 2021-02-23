@@ -1,7 +1,6 @@
 """Tests for the Hyperion config flow."""
-
-import logging
 from typing import Any, Dict, Optional
+from unittest.mock import AsyncMock, patch
 
 from hyperion import const
 
@@ -11,10 +10,9 @@ from homeassistant.components.hyperion.const import (
     CONF_CREATE_TOKEN,
     CONF_PRIORITY,
     DOMAIN,
-    SOURCE_IMPORT,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -25,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
+    TEST_AUTH_REQUIRED_RESP,
     TEST_CONFIG_ENTRY_ID,
     TEST_ENTITY_ID_1,
     TEST_HOST,
@@ -38,24 +37,12 @@ from . import (
     create_mock_client,
 )
 
-from tests.async_mock import AsyncMock, patch  # type: ignore[attr-defined]
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT: Dict[str, Any] = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
-}
-
-TEST_AUTH_REQUIRED_RESP = {
-    "command": "authorize-tokenRequired",
-    "info": {
-        "required": True,
-    },
-    "success": True,
-    "tan": 1,
 }
 
 TEST_AUTH_ID = "ABCDE"
@@ -610,56 +597,6 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
     assert result_2["reason"] == "already_in_progress"
 
 
-async def test_import_success(hass: HomeAssistantType) -> None:
-    """Check an import flow from the old-style YAML."""
-
-    client = create_mock_client()
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    # No human interaction should be required.
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_TITLE
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-    }
-
-
-async def test_import_cannot_connect(hass: HomeAssistantType) -> None:
-    """Check an import flow that cannot connect."""
-
-    client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 async def test_options(hass: HomeAssistantType) -> None:
     """Check an options flow."""
 
@@ -693,4 +630,64 @@ async def test_options(hass: HomeAssistantType) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
+        # pylint: disable=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
+
+
+async def test_reauth_success(hass: HomeAssistantType) -> None:
+    """Check a reauth flow that succeeds."""
+
+    config_data = {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+    }
+
+    config_entry = add_test_config_entry(hass, data=config_data)
+    client = create_mock_client()
+    client.async_is_auth_required = AsyncMock(return_value=TEST_AUTH_REQUIRED_RESP)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ), patch("homeassistant.components.hyperion.async_setup", return_value=True), patch(
+        "homeassistant.components.hyperion.async_setup_entry", return_value=True
+    ):
+        result = await _init_flow(
+            hass,
+            source=SOURCE_REAUTH,
+            data=config_data,
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await _configure_flow(
+            hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
+        assert CONF_TOKEN in config_entry.data
+
+
+async def test_reauth_cannot_connect(hass: HomeAssistantType) -> None:
+    """Check a reauth flow that fails to connect."""
+
+    config_data = {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+    }
+
+    add_test_config_entry(hass, data=config_data)
+    client = create_mock_client()
+    client.async_client_connect = AsyncMock(return_value=False)
+
+    with patch(
+        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
+    ):
+        result = await _init_flow(
+            hass,
+            source=SOURCE_REAUTH,
+            data=config_data,
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"

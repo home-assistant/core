@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "connection_exception": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unauthenticated_exception": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    }
+}

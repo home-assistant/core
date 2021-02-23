@@ -105,16 +105,18 @@ async def process_wrong_login(request):
     except herror:
         pass
 
-    msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})"
+    base_msg = f"Login attempt or request with invalid authentication from {remote_host} ({remote_addr})."
 
+    # The user-agent is unsanitized input so we only include it in the log
     user_agent = request.headers.get("user-agent")
-    if user_agent:
-        msg = f"{msg} ({user_agent})"
+    log_msg = f"{base_msg} ({user_agent})"
 
-    _LOGGER.warning(msg)
+    notification_msg = f"{base_msg} See the log for details."
+
+    _LOGGER.warning(log_msg)
 
     hass.components.persistent_notification.async_create(
-        msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
+        notification_msg, "Login attempt failed", NOTIFICATION_ID_LOGIN
     )
 
     # Check if ban middleware is loaded

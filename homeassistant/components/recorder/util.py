@@ -112,17 +112,22 @@ def execute(qry, to_native=False, validate_entity_ids=True):
 
 def validate_or_move_away_sqlite_database(dburl: str, db_integrity_check: bool) -> bool:
     """Ensure that the database is valid or move it away."""
-    dbpath = dburl[len(SQLITE_URL_PREFIX) :]
+    dbpath = dburl_to_path(dburl)
 
     if not os.path.exists(dbpath):
         # Database does not exist yet, this is OK
         return True
 
     if not validate_sqlite_database(dbpath, db_integrity_check):
-        _move_away_broken_database(dbpath)
+        move_away_broken_database(dbpath)
         return False
 
     return True
+
+
+def dburl_to_path(dburl):
+    """Convert the db url into a filesystem path."""
+    return dburl[len(SQLITE_URL_PREFIX) :]
 
 
 def last_run_was_recently_clean(cursor):
@@ -149,7 +154,7 @@ def basic_sanity_check(cursor):
     """Check tables to make sure select does not fail."""
 
     for table in ALL_TABLES:
-        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # sec: not injection
+        cursor.execute(f"SELECT * FROM {table} LIMIT 1;")  # nosec # not injection
 
     return True
 
@@ -171,7 +176,10 @@ def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
 
 def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
     """Run checks that will generate a sqlite3 exception if there is corruption."""
-    if basic_sanity_check(cursor) and last_run_was_recently_clean(cursor):
+    sanity_check_passed = basic_sanity_check(cursor)
+    last_run_was_clean = last_run_was_recently_clean(cursor)
+
+    if sanity_check_passed and last_run_was_clean:
         _LOGGER.debug(
             "The quick_check will be skipped as the system was restarted cleanly and passed the basic sanity check"
         )
@@ -187,13 +195,25 @@ def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
         )
         return
 
-    _LOGGER.debug(
+    if not sanity_check_passed:
+        _LOGGER.warning(
+            "The database sanity check failed to validate the sqlite3 database at %s",
+            dbpath,
+        )
+
+    if not last_run_was_clean:
+        _LOGGER.warning(
+            "The system could not validate that the sqlite3 database at %s was shutdown cleanly.",
+            dbpath,
+        )
+
+    _LOGGER.info(
         "A quick_check is being performed on the sqlite3 database at %s", dbpath
     )
     cursor.execute("PRAGMA QUICK_CHECK")
 
 
-def _move_away_broken_database(dbfile: str) -> None:
+def move_away_broken_database(dbfile: str) -> None:
     """Move away a broken sqlite3 database."""
 
     isotime = dt_util.utcnow().isoformat()

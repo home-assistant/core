@@ -56,7 +56,7 @@ class TriggerInstance:
             event_trigger.CONF_EVENT_TYPE: TASMOTA_EVENT,
             event_trigger.CONF_EVENT_DATA: {
                 "mac": self.trigger.tasmota_trigger.cfg.mac,
-                "source": self.trigger.tasmota_trigger.cfg.source,
+                "source": self.trigger.tasmota_trigger.cfg.subtype,
                 "event": self.trigger.tasmota_trigger.cfg.event,
             },
         }
@@ -126,7 +126,7 @@ class Trigger:
         def _on_trigger():
             data = {
                 "mac": self.tasmota_trigger.cfg.mac,
-                "source": self.tasmota_trigger.cfg.source,
+                "source": self.tasmota_trigger.cfg.subtype,
                 "event": self.tasmota_trigger.cfg.event,
             }
             self.hass.bus.async_fire(
@@ -157,7 +157,7 @@ async def async_setup_trigger(hass, tasmota_trigger, config_entry, discovery_has
     discovery_id = tasmota_trigger.cfg.trigger_id
     remove_update_signal = None
     _LOGGER.debug(
-        "Discovered trigger with id: %s '%s'", discovery_id, tasmota_trigger.cfg
+        "Discovered trigger with ID: %s '%s'", discovery_id, tasmota_trigger.cfg
     )
 
     async def discovery_update(trigger_config):

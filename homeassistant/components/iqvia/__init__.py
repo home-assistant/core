@@ -52,7 +52,7 @@ async def async_setup_entry(hass, entry):
         )
 
     websession = aiohttp_client.async_get_clientsession(hass)
-    client = Client(entry.data[CONF_ZIP_CODE], websession)
+    client = Client(entry.data[CONF_ZIP_CODE], session=websession)
 
     async def async_get_data_from_api(api_coro):
         """Get data from a particular API coroutine."""

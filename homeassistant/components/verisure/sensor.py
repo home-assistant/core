@@ -2,7 +2,8 @@
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-from . import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, HUB as hub
+from . import HUB as hub
+from .const import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

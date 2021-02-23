@@ -1,5 +1,7 @@
 """Test the config flow for the Insteon integration."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.insteon.config_flow import (
     HUB1,
@@ -50,7 +52,6 @@ from .const import (
     PATCH_CONNECTION,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -368,12 +369,15 @@ async def test_options_add_device_override(hass: HomeAssistantType):
         CONF_CAT: "05",
         CONF_SUBCAT: "bb",
     }
-    await _options_form(hass, result2["flow_id"], user_input)
+    result3, _ = await _options_form(hass, result2["flow_id"], user_input)
 
     assert len(config_entry.options[CONF_OVERRIDE]) == 2
     assert config_entry.options[CONF_OVERRIDE][1][CONF_ADDRESS] == "4D.5E.6F"
     assert config_entry.options[CONF_OVERRIDE][1][CONF_CAT] == 5
     assert config_entry.options[CONF_OVERRIDE][1][CONF_SUBCAT] == 187
+
+    # If result1 eq result2 the changes will not save
+    assert result["data"] != result3["data"]
 
 
 async def test_options_remove_device_override(hass: HomeAssistantType):
@@ -475,6 +479,9 @@ async def test_options_add_x10_device(hass: HomeAssistantType):
     assert config_entry.options[CONF_X10][1][CONF_UNITCODE] == 10
     assert config_entry.options[CONF_X10][1][CONF_PLATFORM] == "binary_sensor"
     assert config_entry.options[CONF_X10][1][CONF_DIM_STEPS] == 15
+
+    # If result2 eq result3 the changes will not save
+    assert result2["data"] != result3["data"]
 
 
 async def test_options_remove_x10_device(hass: HomeAssistantType):

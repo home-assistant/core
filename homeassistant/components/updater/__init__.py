@@ -1,10 +1,10 @@
 """Support to check for available updates."""
 import asyncio
 from datetime import timedelta
-from distutils.version import StrictVersion
 import logging
 
 import async_timeout
+from awesomeversion import AwesomeVersion
 from distro import linux_distribution  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -83,17 +83,21 @@ async def async_setup(hass, config):
 
         # Validate version
         update_available = False
-        if StrictVersion(newest) > StrictVersion(current_version):
+        if AwesomeVersion(newest) > AwesomeVersion(current_version):
             _LOGGER.debug(
                 "The latest available version of Home Assistant is %s", newest
             )
             update_available = True
-        elif StrictVersion(newest) == StrictVersion(current_version):
+        elif AwesomeVersion(newest) == AwesomeVersion(current_version):
             _LOGGER.debug(
                 "You are on the latest version (%s) of Home Assistant", newest
             )
-        elif StrictVersion(newest) < StrictVersion(current_version):
-            _LOGGER.debug("Local version is newer than the latest version (%s)", newest)
+        elif AwesomeVersion(newest) < AwesomeVersion(current_version):
+            _LOGGER.debug(
+                "Local version (%s) is newer than the latest available version (%s)",
+                current_version,
+                newest,
+            )
 
         _LOGGER.debug("Update available: %s", update_available)
 

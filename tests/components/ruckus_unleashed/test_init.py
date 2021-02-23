@@ -1,4 +1,6 @@
 """Test the Ruckus Unleashed config flow."""
+from unittest.mock import patch
+
 from pyruckus.exceptions import AuthenticationError
 
 from homeassistant.components.ruckus_unleashed import (
@@ -19,7 +21,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
-from tests.async_mock import patch
 from tests.components.ruckus_unleashed import (
     DEFAULT_AP_INFO,
     DEFAULT_SYSTEM_INFO,

@@ -1,12 +1,12 @@
 """Vera tests."""
+from unittest.mock import MagicMock
+
 import pyvera as pv
 
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
-
-from tests.async_mock import MagicMock
 
 
 async def test_lock(
@@ -16,6 +16,7 @@ async def test_lock(
     vera_device = MagicMock(spec=pv.VeraLock)  # type: pv.VeraLock
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
+    vera_device.comm_failure = False
     vera_device.name = "dev1"
     vera_device.category = pv.CATEGORY_LOCK
     vera_device.is_locked = MagicMock(return_value=False)

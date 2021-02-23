@@ -6,13 +6,13 @@
         },
         "error": {
             "invalid_2fa": "Ugyldig totrinnsbekreftelse, vennligst pr\u00f8v igjen.",
-            "invalid_2fa_method": "Ugyldig 2FA-metode (Bekreft p\u00e5 telefon).",
+            "invalid_2fa_method": "Ugyldig totrinnsbekreftelse-metode (Bekreft p\u00e5 telefon)",
             "invalid_login": "Ugyldig innlogging, vennligst pr\u00f8v igjen."
         },
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA Pin"
+                    "2fa": "Totrinnsbekreftelse Pin"
                 },
                 "description": "",
                 "title": "Totrinnsbekreftelse"

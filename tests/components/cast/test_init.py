@@ -1,10 +1,10 @@
 """Tests for the Cast config flow."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import cast
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_creating_entry_sets_up_media_player(hass):

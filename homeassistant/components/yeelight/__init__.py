@@ -42,17 +42,18 @@ CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
 CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
-CONF_DEVICE = "device"
 
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
 DATA_SCAN_INTERVAL = "scan_interval"
 DATA_DEVICE = "device"
 DATA_UNSUB_UPDATE_LISTENER = "unsub_update_listener"
+DATA_REMOVE_INIT_DISPATCHER = "remove_init_dispatcher"
 
 ATTR_COUNT = "count"
 ATTR_ACTION = "action"
 ATTR_TRANSITIONS = "transitions"
+ATTR_MODE_MUSIC = "music_mode"
 
 ACTION_RECOVER = "recover"
 ACTION_STAY = "stay"
@@ -181,11 +182,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
     async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
-        async_dispatcher_connect(
+        remove_dispatcher = async_dispatcher_connect(
             hass,
             DEVICE_INITIALIZED.format(host),
             _load_platforms,
         )
+        hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][
+            DATA_REMOVE_INIT_DISPATCHER
+        ] = remove_dispatcher
 
         device = await _async_get_device(hass, host, entry, capabilities)
         hass.data[DOMAIN][DATA_CONFIG_ENTRIES][entry.entry_id][DATA_DEVICE] = device
@@ -250,6 +254,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if unload_ok:
         data = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].pop(entry.entry_id)
+        remove_init_dispatcher = data.get(DATA_REMOVE_INIT_DISPATCHER)
+        if remove_init_dispatcher is not None:
+            remove_init_dispatcher()
         data[DATA_UNSUB_UPDATE_LISTENER]()
         data[DATA_DEVICE].async_unload()
         if entry.data[CONF_ID]:
@@ -415,7 +422,6 @@ class YeelightDevice:
 
         Uses brightness as it appears to be supported in both ceiling and other lights.
         """
-
         return self._nightlight_brightness is not None
 
     @property

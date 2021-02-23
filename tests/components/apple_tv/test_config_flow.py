@@ -1,5 +1,7 @@
 """Test config flow."""
 
+from unittest.mock import patch
+
 from pyatv import exceptions
 from pyatv.const import Protocol
 import pytest
@@ -7,7 +9,6 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DMAP_SERVICE = {

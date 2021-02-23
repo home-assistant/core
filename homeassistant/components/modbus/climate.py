@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
@@ -28,7 +29,6 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from . import ModbusHub
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -39,7 +39,6 @@ from .const import (
     CONF_DATA_TYPE,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
-    CONF_OFFSET,
     CONF_PRECISION,
     CONF_SCALE,
     CONF_STEP,
@@ -49,6 +48,7 @@ from .const import (
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
+from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,7 +146,6 @@ class ModbusThermostat(ClimateEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 

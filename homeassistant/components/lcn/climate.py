@@ -3,7 +3,12 @@
 import pypck
 
 from homeassistant.components.climate import ClimateEntity, const
-from homeassistant.const import ATTR_TEMPERATURE, CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ADDRESS,
+    CONF_SOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 
 from . import LcnEntity
 from .const import (
@@ -12,7 +17,6 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_SETPOINT,
-    CONF_SOURCE,
     DATA_LCN,
 )
 from .helpers import get_connection
@@ -63,8 +67,9 @@ class LcnClimate(LcnEntity, ClimateEntity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self.device_connection.activate_status_request_handler(self.variable)
-        await self.device_connection.activate_status_request_handler(self.setpoint)
+        if not self.device_connection.is_group:
+            await self.device_connection.activate_status_request_handler(self.variable)
+            await self.device_connection.activate_status_request_handler(self.setpoint)
 
     @property
     def supported_features(self):

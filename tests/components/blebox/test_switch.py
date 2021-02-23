@@ -1,6 +1,7 @@
 """Blebox switch tests."""
 
 import logging
+from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -21,8 +22,6 @@ from .conftest import (
     mock_only_feature,
     setup_product_mock,
 )
-
-from tests.async_mock import AsyncMock, PropertyMock
 
 
 @pytest.fixture(name="switchbox")

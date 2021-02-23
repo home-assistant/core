@@ -3,7 +3,12 @@ import logging
 
 from sqlalchemy import ForeignKeyConstraint, MetaData, Table, text
 from sqlalchemy.engine import reflection
-from sqlalchemy.exc import InternalError, OperationalError, SQLAlchemyError
+from sqlalchemy.exc import (
+    InternalError,
+    OperationalError,
+    ProgrammingError,
+    SQLAlchemyError,
+)
 from sqlalchemy.schema import AddConstraint, DropConstraint
 
 from .const import DOMAIN
@@ -69,17 +74,10 @@ def _create_index(engine, table_name, index_name):
     )
     try:
         index.create(engine)
-    except OperationalError as err:
+    except (InternalError, ProgrammingError, OperationalError) as err:
         lower_err_str = str(err).lower()
 
         if "already exists" not in lower_err_str and "duplicate" not in lower_err_str:
-            raise
-
-        _LOGGER.warning(
-            "Index %s already exists on %s, continuing", index_name, table_name
-        )
-    except InternalError as err:
-        if "duplicate" not in str(err).lower():
             raise
 
         _LOGGER.warning(
@@ -211,7 +209,13 @@ def _update_states_table_with_foreign_key_options(engine):
     inspector = reflection.Inspector.from_engine(engine)
     alters = []
     for foreign_key in inspector.get_foreign_keys(TABLE_STATES):
-        if foreign_key["name"] and not foreign_key["options"]:
+        if foreign_key["name"] and (
+            # MySQL/MariaDB will have empty options
+            not foreign_key["options"]
+            or
+            # Postgres will have ondelete set to None
+            foreign_key["options"].get("ondelete") is None
+        ):
             alters.append(
                 {
                     "old_fk": ForeignKeyConstraint((), (), name=foreign_key["name"]),
@@ -312,6 +316,10 @@ def _apply_update(engine, new_version, old_version):
         _create_index(engine, "events", "ix_events_event_type_time_fired")
         _drop_index(engine, "events", "ix_events_event_type")
     elif new_version == 10:
+        # Now done in step 11
+        pass
+    elif new_version == 11:
+        _create_index(engine, "states", "ix_states_old_state_id")
         _update_states_table_with_foreign_key_options(engine)
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")

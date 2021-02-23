@@ -1,4 +1,6 @@
 """Tests for 1-Wire devices connected on OWServer."""
+from unittest.mock import patch
+
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
@@ -30,7 +32,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_onewire_patched_owserver_integration
 
-from tests.async_mock import patch
 from tests.common import mock_device_registry, mock_registry
 
 MOCK_DEVICE_SENSORS = {
@@ -703,6 +704,52 @@ MOCK_DEVICE_SENSORS = {
             },
         ],
     },
+    "7E.111111111111": {
+        "inject_reads": [
+            b"EDS",  # read type
+            b"EDS0068",  # read device_type - note EDS specific
+        ],
+        "device_info": {
+            "identifiers": {(DOMAIN, "7E.111111111111")},
+            "manufacturer": "Maxim Integrated",
+            "model": "EDS",
+            "name": "7E.111111111111",
+        },
+        SENSOR_DOMAIN: [
+            {
+                "entity_id": "sensor.7e_111111111111_temperature",
+                "unique_id": "/7E.111111111111/EDS0068/temperature",
+                "injected_value": b"    13.9375",
+                "result": "13.9",
+                "unit": TEMP_CELSIUS,
+                "class": DEVICE_CLASS_TEMPERATURE,
+            },
+            {
+                "entity_id": "sensor.7e_111111111111_pressure",
+                "unique_id": "/7E.111111111111/EDS0068/pressure",
+                "injected_value": b"  1012.21",
+                "result": "1012.2",
+                "unit": PRESSURE_MBAR,
+                "class": DEVICE_CLASS_PRESSURE,
+            },
+            {
+                "entity_id": "sensor.7e_111111111111_illuminance",
+                "unique_id": "/7E.111111111111/EDS0068/light",
+                "injected_value": b"  65.8839",
+                "result": "65.9",
+                "unit": LIGHT_LUX,
+                "class": DEVICE_CLASS_ILLUMINANCE,
+            },
+            {
+                "entity_id": "sensor.7e_111111111111_humidity",
+                "unique_id": "/7E.111111111111/EDS0068/humidity",
+                "injected_value": b"    41.375",
+                "result": "41.4",
+                "unit": PERCENTAGE,
+                "class": DEVICE_CLASS_HUMIDITY,
+            },
+        ],
+    },
 }
 
 
@@ -744,7 +791,7 @@ async def test_owserver_setup_valid_device(owproxy, hass, device_id, platform):
     if len(expected_sensors) > 0:
         device_info = mock_device_sensor["device_info"]
         assert len(device_registry.devices) == 1
-        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)}, set())
+        registry_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         assert registry_entry is not None
         assert registry_entry.identifiers == {(DOMAIN, device_id)}
         assert registry_entry.manufacturer == device_info["manufacturer"]

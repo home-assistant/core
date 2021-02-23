@@ -1,7 +1,7 @@
 """The tests for the apprise notification platform."""
-from homeassistant.setup import async_setup_component
+from unittest.mock import MagicMock, patch
 
-from tests.async_mock import MagicMock, patch
+from homeassistant.setup import async_setup_component
 
 BASE_COMPONENT = "notify"
 

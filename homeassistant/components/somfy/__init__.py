@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
 from homeassistant.core import callback
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -21,10 +21,11 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from . import api
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover", "switch"]
+SOMFY_COMPONENTS = ["climate", "cover", "sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -92,6 +93,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     async def _update_all_devices():
         """Update all the devices."""
         devices = await hass.async_add_executor_job(data[API].get_devices)
+        previous_devices = data[COORDINATOR].data
+        # Sometimes Somfy returns an empty list.
+        if not devices and previous_devices:
+            raise UpdateFailed("No devices returned")
         return {dev.id: dev for dev in devices}
 
     coordinator = DataUpdateCoordinator(
@@ -183,7 +188,7 @@ class SomfyEntity(CoordinatorEntity, Entity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "model": self.device.type,
-            "via_hub": (DOMAIN, self.device.parent_id),
+            "via_device": (DOMAIN, self.device.parent_id),
             # For the moment, Somfy only returns their own device.
             "manufacturer": "Somfy",
         }

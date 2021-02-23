@@ -1,5 +1,5 @@
 """Tests for the GDACS component."""
-from tests.async_mock import MagicMock
+from unittest.mock import MagicMock
 
 
 def _generate_mock_feed_entry(

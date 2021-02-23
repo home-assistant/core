@@ -5,6 +5,7 @@ from typing import Any, Dict, Optional
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
+from homeassistant.const import ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
@@ -19,7 +20,6 @@ ATTR_LOW_BATTERY = "low_battery"
 ATTR_CONFIG_PENDING = "config_pending"
 ATTR_CONNECTION_TYPE = "connection_type"
 ATTR_DUTY_CYCLE_REACHED = "duty_cycle_reached"
-ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
 ATTR_RSSI_DEVICE = "rssi_device"
@@ -172,7 +172,7 @@ class HomematicipGenericEntity(Entity):
         """Handle hmip device removal."""
         # Set marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = True
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @property
     def name(self) -> str:

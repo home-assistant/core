@@ -1,0 +1,739 @@
+{
+  "nodeId": 13,
+  "index": 0,
+  "installerIcon": 4608,
+  "userIcon": 4608,
+  "status": 4,
+  "ready": true,
+  "deviceClass": {
+    "basic": "Static Controller",
+    "generic": "Thermostat",
+    "specific": "Thermostat General V2",
+    "mandatorySupportedCCs": [
+      "Basic",
+      "Manufacturer Specific",
+      "Thermostat Mode",
+      "Thermostat Setpoint",
+      "Version"
+    ],
+    "mandatoryControlCCs": []
+  },
+  "isListening": true,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": false,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 152,
+  "productId": 256,
+  "productType": 25602,
+  "firmwareVersion": "10.7",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 5,
+  "deviceConfig": {
+    "manufacturerId": 152,
+    "manufacturer": "Radio Thermostat Company of America (RTC)",
+    "label": "CT100 Plus",
+    "description": "Z-Wave Thermostat",
+    "devices": [{ "productType": "0x6402", "productId": "0x0100" }],
+    "firmwareVersion": { "min": "0.0", "max": "255.255" },
+    "paramInformation": { "_map": {} }
+  },
+  "label": "CT100 Plus",
+  "neighbors": [1, 2, 3, 4, 20],
+  "endpointCountIsDynamic": false,
+  "endpointsHaveIdenticalCapabilities": false,
+  "individualEndpointCount": 2,
+  "aggregatedEndpointCount": 0,
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 13,
+      "index": 0,
+      "installerIcon": 4608,
+      "userIcon": 4608
+    },
+    {
+      "nodeId": 13,
+      "index": 1,
+      "installerIcon": 4608,
+      "userIcon": 4608
+    },
+    { "nodeId": 13, "index": 2 }
+  ],
+  "values": [
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Manufacturer ID"
+      },
+      "value": 152
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "productType",
+      "propertyName": "productType",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product type"
+      },
+      "value": 25602
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "productId",
+      "propertyName": "productId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product ID"
+      },
+      "value": 256
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type"
+      },
+      "value": 3
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.24"
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["10.7"]
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    },
+    {
+      "commandClassName": "Indicator",
+      "commandClass": 135,
+      "endpoint": 0,
+      "property": "value",
+      "propertyName": "value",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Indicator value",
+        "ccSpecific": { "indicatorId": 0 }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 1,
+      "propertyName": "Temperature Reporting Threshold",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 4,
+        "default": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disabled",
+          "1": "0.5° F",
+          "2": "1.0° F",
+          "3": "1.5° F",
+          "4": "2.0° F"
+        },
+        "label": "Temperature Reporting Threshold",
+        "description": "Reporting threshold for changes in the ambient temperature",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 2,
+      "propertyName": "HVAC Settings",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "valueSize": 4,
+        "min": 0,
+        "max": 0,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "HVAC Settings",
+        "description": "Configured HVAC settings",
+        "isFromConfig": true
+      },
+      "value": 17891329
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 4,
+      "propertyName": "Power Status",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "valueSize": 1,
+        "min": 0,
+        "max": 0,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Power Status",
+        "description": "C-Wire / Battery Status",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 7,
+      "propertyName": "Thermostat Swing Temperature",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 1,
+        "max": 8,
+        "default": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "1": "0.5° F",
+          "2": "1.0° F",
+          "3": "1.5° F",
+          "4": "2.0° F",
+          "5": "2.5° F",
+          "6": "3.0° F",
+          "7": "3.5° F",
+          "8": "4.0° F"
+        },
+        "label": "Thermostat Swing Temperature",
+        "description": "Variance allowed from setpoint to engage HVAC",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 8,
+      "propertyName": "Thermostat Diff Temperature",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 4,
+        "max": 12,
+        "default": 4,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": { "4": "2.0° F", "8": "4.0° F", "12": "6.0° F" },
+        "label": "Thermostat Diff Temperature",
+        "description": "Configures additional stages",
+        "isFromConfig": true
+      },
+      "value": 1028
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 9,
+      "propertyName": "Thermostat Recovery Mode",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 1,
+        "max": 2,
+        "default": 2,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "1": "Fast recovery mode",
+          "2": "Economy recovery mode"
+        },
+        "label": "Thermostat Recovery Mode",
+        "description": "Fast or Economy recovery mode",
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 10,
+      "propertyName": "Temperature Reporting Filter",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 124,
+        "default": 124,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Temperature Reporting Filter",
+        "description": "Upper/Lower bounds for thermostat temperature reporting",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 11,
+      "propertyName": "Simple UI Mode",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Normal mode enabled",
+          "1": "Simple mode enabled"
+        },
+        "label": "Simple UI Mode",
+        "description": "Simple mode enable/disable",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 12,
+      "propertyName": "Multicast",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Multicast disabled",
+          "1": "Multicast enabled"
+        },
+        "label": "Multicast",
+        "description": "Enable or disables Multicast",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 3,
+      "propertyName": "Utility Lock Enable/Disable",
+      "metadata": {
+        "type": "number",
+        "readable": false,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 255,
+        "default": 0,
+        "format": 1,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Utility lock disabled",
+          "1": "Utility lock enabled"
+        },
+        "label": "Utility Lock Enable/Disable",
+        "description": "Prevents setpoint changes at thermostat",
+        "isFromConfig": true
+      }
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 5,
+      "propertyName": "Humidity Reporting Threshold",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 255,
+        "default": 0,
+        "format": 1,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Disabled",
+          "1": "3% RH",
+          "2": "5% RH",
+          "3": "10% RH"
+        },
+        "label": "Humidity Reporting Threshold",
+        "description": "Reporting threshold for changes in the relative humidity",
+        "isFromConfig": true
+      }
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 6,
+      "propertyName": "Auxiliary/Emergency",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 255,
+        "default": 0,
+        "format": 1,
+        "allowManualEntry": false,
+        "states": {
+          "0": "Auxiliary/Emergency heat disabled",
+          "1": "Auxiliary/Emergency heat enabled"
+        },
+        "label": "Auxiliary/Emergency",
+        "description": "Enables or disables auxiliary / emergency heating",
+        "isFromConfig": true
+      }
+    },
+    {
+      "commandClassName": "Battery",
+      "commandClass": 128,
+      "endpoint": 0,
+      "property": "level",
+      "propertyName": "level",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "label": "Battery level"
+      },
+      "value": 100
+    },
+    {
+      "commandClassName": "Battery",
+      "commandClass": 128,
+      "endpoint": 0,
+      "property": "isLow",
+      "propertyName": "isLow",
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level"
+      },
+      "value": false
+    },
+    {
+      "commandClassName": "Indicator",
+      "commandClass": 135,
+      "endpoint": 1,
+      "property": "value",
+      "propertyName": "value",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "label": "Indicator value",
+        "ccSpecific": { "indicatorId": 0 }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Multilevel Sensor",
+      "commandClass": 49,
+      "endpoint": 1,
+      "property": "Air temperature",
+      "propertyName": "Air temperature",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "unit": "°F",
+        "label": "Air temperature",
+        "ccSpecific": { "sensorType": 1, "scale": 1 }
+      },
+      "value": 72
+    },
+    {
+      "commandClassName": "Multilevel Sensor",
+      "commandClass": 49,
+      "endpoint": 1,
+      "property": "Humidity",
+      "propertyName": "Humidity",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "unit": "%",
+        "label": "Humidity",
+        "ccSpecific": { "sensorType": 5, "scale": 0 }
+      },
+      "value": 30
+    },
+    {
+      "commandClassName": "Thermostat Mode",
+      "commandClass": 64,
+      "endpoint": 1,
+      "property": "mode",
+      "propertyName": "mode",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 31,
+        "label": "Thermostat mode",
+        "states": { "0": "Off", "1": "Heat", "2": "Cool", "3": "Auto" }
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Thermostat Mode",
+      "commandClass": 64,
+      "endpoint": 1,
+      "property": "manufacturerData",
+      "propertyName": "manufacturerData",
+      "metadata": { "type": "any", "readable": true, "writeable": true }
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 68,
+      "commandClassName": "Thermostat Fan Mode",
+      "property": "mode",
+      "propertyName": "mode",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "states": { "0": "Auto low", "1": "Low" },
+        "label": "Thermostat fan mode"
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 1,
+      "commandClass": 69,
+      "commandClassName": "Thermostat Fan State",
+      "property": "state",
+      "propertyName": "state",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Idle / off",
+          "1": "Running / running low",
+          "2": "Running high",
+          "3": "Running medium",
+          "4": "Circulation mode",
+          "5": "Humidity circulation mode",
+          "6": "Right - left circulation mode",
+          "7": "Up - down circulation mode",
+          "8": "Quiet circulation mode"
+        },
+        "label": "Thermostat fan state"
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Thermostat Operating State",
+      "commandClass": 66,
+      "endpoint": 1,
+      "property": "state",
+      "propertyName": "state",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 255,
+        "label": "Operating state",
+        "states": {
+          "0": "Idle",
+          "1": "Heating",
+          "2": "Cooling",
+          "3": "Fan Only",
+          "4": "Pending Heat",
+          "5": "Pending Cool",
+          "6": "Vent/Economizer",
+          "7": "Aux Heating",
+          "8": "2nd Stage Heating",
+          "9": "2nd Stage Cooling",
+          "10": "2nd Stage Aux Heat",
+          "11": "3rd Stage Aux Heat"
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Thermostat Setpoint",
+      "commandClass": 67,
+      "endpoint": 1,
+      "property": "setpoint",
+      "propertyKey": 1,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Heating",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "unit": "°F",
+        "ccSpecific": { "setpointType": 1 }
+      },
+      "value": 72
+    },
+    {
+      "commandClassName": "Thermostat Setpoint",
+      "commandClass": 67,
+      "endpoint": 1,
+      "property": "setpoint",
+      "propertyKey": 2,
+      "propertyName": "setpoint",
+      "propertyKeyName": "Cooling",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "unit": "°F",
+        "ccSpecific": { "setpointType": 2 }
+      },
+      "value": 73
+    },
+    {
+      "commandClassName": "Battery",
+      "commandClass": 128,
+      "endpoint": 1,
+      "property": "level",
+      "propertyName": "level",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "label": "Battery level"
+      },
+      "value": 100
+    },
+    {
+      "commandClassName": "Battery",
+      "commandClass": 128,
+      "endpoint": 1,
+      "property": "isLow",
+      "propertyName": "isLow",
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level"
+      },
+      "value": false
+    }
+  ]
+}

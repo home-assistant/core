@@ -4,6 +4,7 @@ from collections import OrderedDict
 import copy
 import os
 from unittest import mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -34,7 +35,6 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 CONFIG_DIR = get_test_config_dir()
@@ -1087,6 +1087,26 @@ async def test_component_config_exceptions(hass, caplog):
         "Error importing config platform test_domain: ModuleNotFoundError: No module named 'not_installed_something'"
         in caplog.text
     )
+
+    # get_component raising
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {}},
+            integration=Mock(
+                pkg_path="homeassistant.components.test_domain",
+                domain="test_domain",
+                get_component=Mock(
+                    side_effect=FileNotFoundError(
+                        "No such file or directory: b'liblibc.a'"
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert "Unable to import test_domain: No such file or directory" in caplog.text
 
 
 @pytest.mark.parametrize(

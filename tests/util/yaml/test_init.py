@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import unittest
+from unittest.mock import patch
 
 import pytest
 
@@ -11,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.async_mock import patch
 from tests.common import get_test_config_dir, patch_yaml_files
 
 
@@ -461,6 +461,17 @@ def test_duplicate_key(caplog):
     with patch_yaml_files(files):
         load_yaml_config_file(YAML_CONFIG_FILE)
     assert "contains duplicate key" in caplog.text
+
+
+def test_no_recursive_secrets(caplog):
+    """Test that loading of secrets from the secrets file fails correctly."""
+    files = {YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}
+    with patch_yaml_files(files), pytest.raises(HomeAssistantError) as e:
+        load_yaml_config_file(YAML_CONFIG_FILE)
+        assert e.value.args == (
+            "secrets.yaml: attempt to load secret from within secrets file",
+        )
+    assert "attempt to load secret from within secrets file" in caplog.text
 
 
 def test_input_class():

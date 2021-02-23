@@ -6,9 +6,8 @@ import logging
 
 from nexia.home import NexiaHome
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -20,19 +19,7 @@ from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            },
-            extra=vol.ALLOW_EXTRA,
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 DEFAULT_UPDATE_RATE = 120
 
@@ -40,17 +27,8 @@ DEFAULT_UPDATE_RATE = 120
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the nexia component from YAML."""
 
-    conf = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
 
-    if not conf:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
     return True
 
 

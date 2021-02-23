@@ -117,14 +117,20 @@ class OpenSkySensor(Entity):
         for flight in flights:
             if flight in metadata:
                 altitude = metadata[flight].get(ATTR_ALTITUDE)
+                longitude = metadata[flight].get(ATTR_LONGITUDE)
+                latitude = metadata[flight].get(ATTR_LATITUDE)
             else:
                 # Assume Flight has landed if missing.
                 altitude = 0
+                longitude = None
+                latitude = None
 
             data = {
                 ATTR_CALLSIGN: flight,
                 ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
+                ATTR_LONGITUDE: longitude,
+                ATTR_LATITUDE: latitude,
             }
             self._hass.bus.fire(event, data)
 

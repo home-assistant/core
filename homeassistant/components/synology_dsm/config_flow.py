@@ -208,7 +208,6 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
         }
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = self.discovered_conf
         return await self.async_step_user()
 

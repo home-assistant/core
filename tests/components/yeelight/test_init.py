@@ -1,5 +1,5 @@
 """Test Yeelight."""
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from yeelight import BulbType
 
@@ -11,7 +11,7 @@ from homeassistant.components.yeelight import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
 )
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
@@ -32,7 +32,6 @@ from . import (
     _patch_discovery,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -51,6 +50,12 @@ async def test_setup_discovery(hass: HomeAssistant):
 
     # Unload
     assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get(ENTITY_BINARY_SENSOR).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_LIGHT).state == STATE_UNAVAILABLE
+
+    # Remove
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_BINARY_SENSOR) is None
     assert hass.states.get(ENTITY_LIGHT) is None
 
