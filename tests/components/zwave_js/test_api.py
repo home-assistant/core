@@ -74,6 +74,7 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert result[key]["property"] == 2
     assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
+    assert result[key]["metadata"]["states"]
 
 
 async def test_add_node(
