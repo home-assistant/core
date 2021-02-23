@@ -14,6 +14,7 @@
             "device": {
                 "data": {
                     "host": "IP Address",
+                    "model": "Device model (Optional)",
                     "name": "Name of the device",
                     "token": "API Token"
                 },

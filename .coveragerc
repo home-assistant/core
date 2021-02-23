@@ -361,7 +361,9 @@ omit =
     homeassistant/components/guardian/sensor.py
     homeassistant/components/guardian/switch.py
     homeassistant/components/guardian/util.py
-    homeassistant/components/habitica/*
+    homeassistant/components/habitica/__init__.py
+    homeassistant/components/habitica/const.py
+    homeassistant/components/habitica/sensor.py
     homeassistant/components/hangouts/*
     homeassistant/components/hangouts/__init__.py
     homeassistant/components/hangouts/const.py
@@ -785,6 +787,8 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
+    homeassistant/components/rituals_perfume_genie/switch.py
+    homeassistant/components/rituals_perfume_genie/__init__.py
     homeassistant/components/rocketchat/notify.py
     homeassistant/components/roomba/binary_sensor.py
     homeassistant/components/roomba/braava.py
@@ -974,7 +978,10 @@ omit =
     homeassistant/components/toon/sensor.py
     homeassistant/components/toon/switch.py
     homeassistant/components/torque/sensor.py
-    homeassistant/components/totalconnect/*
+    homeassistant/components/totalconnect/__init__.py
+    homeassistant/components/totalconnect/alarm_control_panel.py
+    homeassistant/components/totalconnect/binary_sensor.py
+    homeassistant/components/totalconnect/const.py
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/common.py
     homeassistant/components/tplink/switch.py
@@ -1038,6 +1045,7 @@ omit =
     homeassistant/components/vesync/common.py
     homeassistant/components/vesync/const.py
     homeassistant/components/vesync/fan.py
+    homeassistant/components/vesync/light.py
     homeassistant/components/vesync/switch.py
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*

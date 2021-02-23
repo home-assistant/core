@@ -17,7 +17,7 @@
                     "ip_address": "Indirizzo IP",
                     "password": "Password"
                 },
-                "description": "La password di solito \u00e8 costituita dagli ultimi 5 caratteri del numero di serie per il Backup Gateway e pu\u00f2 essere trovata nell'app Telsa; oppure dagli ultimi 5 caratteri della password trovata all'interno della porta per il Backup Gateway 2.",
+                "description": "La password di solito \u00e8 costituita dagli ultimi 5 caratteri del numero di serie per il Backup Gateway e pu\u00f2 essere trovata nell'app Tesla; oppure dagli ultimi 5 caratteri della password trovata all'interno della porta per il Backup Gateway 2.",
                 "title": "Connessione al Powerwall"
             }
         }

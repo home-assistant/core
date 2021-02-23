@@ -27,10 +27,11 @@ from homeassistant.components.stream.const import (
     MIN_SEGMENT_DURATION,
     PACKETS_TO_WAIT_FOR_AUDIO,
 )
-from homeassistant.components.stream.worker import stream_worker
+from homeassistant.components.stream.worker import SegmentBuffer, stream_worker
 
 STREAM_SOURCE = "some-stream-source"
 # Formats here are arbitrary, not exercised by tests
+STREAM_OUTPUT_FORMAT = "hls"
 AUDIO_STREAM_FORMAT = "mp3"
 VIDEO_STREAM_FORMAT = "h264"
 VIDEO_FRAME_RATE = 12
@@ -187,7 +188,7 @@ class MockPyAv:
 async def async_decode_stream(hass, packets, py_av=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
     stream = Stream(hass, STREAM_SOURCE)
-    stream.hls_output()
+    stream.add_provider(STREAM_OUTPUT_FORMAT)
 
     if not py_av:
         py_av = MockPyAv()
@@ -197,7 +198,8 @@ async def async_decode_stream(hass, packets, py_av=None):
         "homeassistant.components.stream.core.StreamOutput.put",
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
-        stream_worker(STREAM_SOURCE, {}, stream.outputs, threading.Event())
+        segment_buffer = SegmentBuffer(stream.outputs)
+        stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
         await hass.async_block_till_done()
 
     return py_av.capture_buffer
@@ -206,10 +208,11 @@ async def async_decode_stream(hass, packets, py_av=None):
 async def test_stream_open_fails(hass):
     """Test failure on stream open."""
     stream = Stream(hass, STREAM_SOURCE)
-    stream.hls_output()
+    stream.add_provider(STREAM_OUTPUT_FORMAT)
     with patch("av.open") as av_open:
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
-        stream_worker(STREAM_SOURCE, {}, stream.outputs, threading.Event())
+        segment_buffer = SegmentBuffer(stream.outputs)
+        stream_worker(STREAM_SOURCE, {}, segment_buffer, threading.Event())
         await hass.async_block_till_done()
         av_open.assert_called_once()
 
@@ -482,7 +485,7 @@ async def test_stream_stopped_while_decoding(hass):
     worker_wake = threading.Event()
 
     stream = Stream(hass, STREAM_SOURCE)
-    stream.hls_output()
+    stream.add_provider(STREAM_OUTPUT_FORMAT)
 
     py_av = MockPyAv()
     py_av.container.packets = PacketSequence(TEST_SEQUENCE_LENGTH)
@@ -509,7 +512,7 @@ async def test_update_stream_source(hass):
     worker_wake = threading.Event()
 
     stream = Stream(hass, STREAM_SOURCE)
-    stream.hls_output()
+    stream.add_provider(STREAM_OUTPUT_FORMAT)
     # Note that keepalive is not set here.  The stream is "restarted" even though
     # it is not stopping due to failure.
 

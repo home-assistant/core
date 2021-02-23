@@ -4,7 +4,10 @@ from datetime import timedelta
 import logging
 
 from RMVtransport import RMVtransport
-from RMVtransport.rmvtransport import RMVtransportApiConnectionError
+from RMVtransport.rmvtransport import (
+    RMVtransportApiConnectionError,
+    RMVtransportDataError,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -229,7 +232,7 @@ class RMVDepartureData:
                 max_journeys=50,
             )
 
-        except RMVtransportApiConnectionError:
+        except (RMVtransportApiConnectionError, RMVtransportDataError):
             self.departures = []
             _LOGGER.warning("Could not retrieve data from rmv.de")
             return

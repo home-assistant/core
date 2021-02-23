@@ -58,7 +58,7 @@ async def async_attach_trigger(
 
         zone_state = hass.states.get(zone_entity_id)
         from_match = condition.zone(hass, zone_state, from_s) if from_s else False
-        to_match = condition.zone(hass, zone_state, to_s)
+        to_match = condition.zone(hass, zone_state, to_s) if to_s else False
 
         if (
             event == EVENT_ENTER
