@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
 VACUUM_PLATFORMS = ["vacuum"]
+AIR_MONITOR_PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -125,6 +126,9 @@ async def async_setup_device_entry(
     for vacuum_model in MODELS_VACUUM:
         if model.startswith(vacuum_model):
             platforms = VACUUM_PLATFORMS
+    for air_monitor_model in MODELS_AIR_MONITOR:
+        if model.startswith(air_monitor_model):
+            platforms = AIR_MONITOR_PLATFORMS
 
     if not platforms:
         return False
