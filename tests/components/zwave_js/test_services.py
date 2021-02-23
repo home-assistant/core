@@ -298,7 +298,7 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
 
 
 async def test_poll_value(
-    hass, client, climate_radio_thermostat_ct100_plus, integration
+    hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
 ):
     """Test the poll_value service."""
     # Test polling the primary value
@@ -312,11 +312,11 @@ async def test_poll_value(
     assert len(client.async_send_command.call_args_list) == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.poll_value"
-    assert args["nodeId"] == 13
+    assert args["nodeId"] == 26
     assert args["valueId"] == {
         "commandClassName": "Thermostat Mode",
         "commandClass": 64,
-        "endpoint": 1,
+        "endpoint": 0,
         "property": "mode",
         "propertyName": "mode",
         "metadata": {
@@ -326,9 +326,17 @@ async def test_poll_value(
             "min": 0,
             "max": 31,
             "label": "Thermostat mode",
-            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
+            "states": {
+                "0": "Off",
+                "1": "Heat",
+                "2": "Cool",
+                "3": "Auto",
+                "11": "Energy heat",
+                "12": "Energy cool",
+            },
         },
         "value": 1,
+        "ccVersion": 2,
     }
 
     client.async_send_command.reset_mock()
