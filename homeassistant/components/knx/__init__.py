@@ -409,7 +409,7 @@ class KNXModule:
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
-        group_addresses = map(lambda ga: GroupAddress(ga), attr_address)
+        group_addresses = map(GroupAddress, attr_address)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             for group_address in group_addresses:
