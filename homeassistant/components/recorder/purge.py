@@ -19,7 +19,8 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
     Cleans up an timeframe of an hour, based on the oldest record.
     """
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
-    _LOGGER.debug("Purging states and events before target %s", purge_before)
+    _LOGGER.warning("Purge days %s", purge_days)
+    _LOGGER.warning("Purging states and events before target %s", purge_before)
 
     try:
         with session_scope(session=instance.get_session()) as session:
@@ -42,21 +43,21 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
                     events[0].time_fired + timedelta(hours=1),
                 )
 
-            _LOGGER.debug("Purging states and events before %s", batch_purge_before)
+            _LOGGER.warning("Purging states and events before %s", batch_purge_before)
 
             deleted_rows = (
                 session.query(States)
                 .filter(States.last_updated < batch_purge_before)
                 .delete(synchronize_session=False)
             )
-            _LOGGER.debug("Deleted %s states", deleted_rows)
+            _LOGGER.warning("Deleted %s states", deleted_rows)
 
             deleted_rows = (
                 session.query(Events)
                 .filter(Events.time_fired < batch_purge_before)
                 .delete(synchronize_session=False)
             )
-            _LOGGER.debug("Deleted %s events", deleted_rows)
+            _LOGGER.warning("Deleted %s events", deleted_rows)
 
             # If states or events purging isn't processing the purge_before yet,
             # return false, as we are not done yet.
@@ -71,16 +72,16 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
                 .filter(RecorderRuns.run_id != instance.run_info.run_id)
                 .delete(synchronize_session=False)
             )
-            _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
+            _LOGGER.warning("Deleted %s recorder_runs", deleted_rows)
 
         if repack:
             # Execute sqlite or postgresql vacuum command to free up space on disk
             if instance.engine.driver in ("pysqlite", "postgresql"):
-                _LOGGER.debug("Vacuuming SQL DB to free space")
+                _LOGGER.warning("Vacuuming SQL DB to free space")
                 instance.engine.execute("VACUUM")
             # Optimize mysql / mariadb tables to free up space on disk
             elif instance.engine.driver in ("mysqldb", "pymysql"):
-                _LOGGER.debug("Optimizing SQL DB to free space")
+                _LOGGER.warning("Optimizing SQL DB to free space")
                 instance.engine.execute("OPTIMIZE TABLE states, events, recorder_runs")
 
     except OperationalError as err:
