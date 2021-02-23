@@ -791,7 +791,7 @@ pylast==4.1.0
 pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
-pylitejet==0.1
+pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
 pylitterbot==2021.2.5
