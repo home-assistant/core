@@ -9,6 +9,14 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
+            "discovery_confirm": {
+                "data": {
+                    "one": "Een",
+                    "other": "Ander"
+                },
+                "description": "Wilt u {naam} instellen?",
+                "title": "Roku"
+            },
             "ssdp_confirm": {
                 "data": {
                     "one": "Leeg",

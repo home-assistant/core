@@ -1,4 +1,6 @@
 """Reads vehicle status from BMW connected drive portal."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -12,6 +14,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_REGION,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +31,6 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
-    CONF_REGION,
     CONF_USE_LOCATION,
     DATA_ENTRIES,
     DATA_HASS_CONFIG,
@@ -195,7 +197,7 @@ async def update_listener(hass, config_entry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-def setup_account(entry: ConfigEntry, hass, name: str) -> "BMWConnectedDriveAccount":
+def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccount:
     """Set up a new BMWConnectedDriveAccount based on the config."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]

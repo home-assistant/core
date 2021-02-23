@@ -1,18 +1,20 @@
 """Test init of AccuWeather integration."""
 from datetime import timedelta
+import json
 from unittest.mock import patch
 
 from accuweather import ApiError
 
-from homeassistant.components.accuweather.const import COORDINATOR, DOMAIN
+from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.components.accuweather import init_integration
 
 
@@ -68,9 +70,21 @@ async def test_update_interval(hass):
     entry = await init_integration(hass)
 
     assert entry.state == ENTRY_STATE_LOADED
-    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
-        minutes=40
-    )
+
+    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
+    future = utcnow() + timedelta(minutes=40)
+
+    with patch(
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+        return_value=current,
+    ) as mock_current:
+
+        assert mock_current.call_count == 0
+
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        assert mock_current.call_count == 1
 
 
 async def test_update_interval_forecast(hass):
@@ -78,6 +92,24 @@ async def test_update_interval_forecast(hass):
     entry = await init_integration(hass, forecast=True)
 
     assert entry.state == ENTRY_STATE_LOADED
-    assert hass.data[DOMAIN][entry.entry_id][COORDINATOR].update_interval == timedelta(
-        minutes=80
-    )
+
+    current = json.loads(load_fixture("accuweather/current_conditions_data.json"))
+    forecast = json.loads(load_fixture("accuweather/forecast_data.json"))
+    future = utcnow() + timedelta(minutes=80)
+
+    with patch(
+        "homeassistant.components.accuweather.AccuWeather.async_get_current_conditions",
+        return_value=current,
+    ) as mock_current, patch(
+        "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
+        return_value=forecast,
+    ) as mock_forecast:
+
+        assert mock_current.call_count == 0
+        assert mock_forecast.call_count == 0
+
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
+
+        assert mock_current.call_count == 1
+        assert mock_forecast.call_count == 1

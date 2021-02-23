@@ -12,8 +12,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
-BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color_current_value"
-EATON_RF9640_ENTITY = "light.allloaddimmer_current_value"
+BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color"
+EATON_RF9640_ENTITY = "light.allloaddimmer"
 
 
 async def test_light(hass, client, bulb_6_multi_color, integration):
@@ -92,7 +92,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 1
 
     client.async_send_command.reset_mock()
 
@@ -136,7 +136,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 4
+    assert len(client.async_send_command.call_args_list) == 5
     warm_args = client.async_send_command.call_args_list[0][0][0]  # warm white 0
     assert warm_args["command"] == "node.set_value"
     assert warm_args["nodeId"] == 39
@@ -147,7 +147,18 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert warm_args["valueId"]["property"] == "targetColor"
     assert warm_args["valueId"]["propertyName"] == "targetColor"
     assert warm_args["value"] == 0
-    red_args = client.async_send_command.call_args_list[1][0][0]  # red 255
+
+    cold_args = client.async_send_command.call_args_list[1][0][0]  # cold white 0
+    assert cold_args["command"] == "node.set_value"
+    assert cold_args["nodeId"] == 39
+    assert cold_args["valueId"]["commandClassName"] == "Color Switch"
+    assert cold_args["valueId"]["commandClass"] == 51
+    assert cold_args["valueId"]["endpoint"] == 0
+    assert cold_args["valueId"]["metadata"]["label"] == "Target value (Cold White)"
+    assert cold_args["valueId"]["property"] == "targetColor"
+    assert cold_args["valueId"]["propertyName"] == "targetColor"
+    assert cold_args["value"] == 0
+    red_args = client.async_send_command.call_args_list[2][0][0]  # red 255
     assert red_args["command"] == "node.set_value"
     assert red_args["nodeId"] == 39
     assert red_args["valueId"]["commandClassName"] == "Color Switch"
@@ -157,7 +168,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert red_args["valueId"]["property"] == "targetColor"
     assert red_args["valueId"]["propertyName"] == "targetColor"
     assert red_args["value"] == 255
-    green_args = client.async_send_command.call_args_list[2][0][0]  # green 76
+    green_args = client.async_send_command.call_args_list[3][0][0]  # green 76
     assert green_args["command"] == "node.set_value"
     assert green_args["nodeId"] == 39
     assert green_args["valueId"]["commandClassName"] == "Color Switch"
@@ -167,7 +178,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert green_args["valueId"]["property"] == "targetColor"
     assert green_args["valueId"]["propertyName"] == "targetColor"
     assert green_args["value"] == 76
-    blue_args = client.async_send_command.call_args_list[3][0][0]  # blue 255
+    blue_args = client.async_send_command.call_args_list[4][0][0]  # blue 255
     assert blue_args["command"] == "node.set_value"
     assert blue_args["nodeId"] == 39
     assert blue_args["valueId"]["commandClassName"] == "Color Switch"
@@ -192,17 +203,21 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
                 "property": "currentColor",
                 "newValue": 255,
                 "prevValue": 0,
+                "propertyKey": 2,
                 "propertyKeyName": "Red",
             },
         },
     )
     green_event = deepcopy(red_event)
-    green_event.data["args"].update({"newValue": 76, "propertyKeyName": "Green"})
+    green_event.data["args"].update(
+        {"newValue": 76, "propertyKey": 3, "propertyKeyName": "Green"}
+    )
     blue_event = deepcopy(red_event)
+    blue_event.data["args"]["propertyKey"] = 4
     blue_event.data["args"]["propertyKeyName"] = "Blue"
     warm_white_event = deepcopy(red_event)
     warm_white_event.data["args"].update(
-        {"newValue": 0, "propertyKeyName": "Warm White"}
+        {"newValue": 0, "propertyKey": 0, "propertyKeyName": "Warm White"}
     )
     node.receive_event(warm_white_event)
     node.receive_event(red_event)
@@ -225,7 +240,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 5
 
     client.async_send_command.reset_mock()
 
@@ -305,23 +320,25 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
                 "property": "currentColor",
                 "newValue": 0,
                 "prevValue": 255,
+                "propertyKey": 2,
                 "propertyKeyName": "Red",
             },
         },
     )
     green_event = deepcopy(red_event)
     green_event.data["args"].update(
-        {"newValue": 0, "prevValue": 76, "propertyKeyName": "Green"}
+        {"newValue": 0, "prevValue": 76, "propertyKey": 3, "propertyKeyName": "Green"}
     )
     blue_event = deepcopy(red_event)
+    blue_event.data["args"]["propertyKey"] = 4
     blue_event.data["args"]["propertyKeyName"] = "Blue"
     warm_white_event = deepcopy(red_event)
     warm_white_event.data["args"].update(
-        {"newValue": 20, "propertyKeyName": "Warm White"}
+        {"newValue": 20, "propertyKey": 0, "propertyKeyName": "Warm White"}
     )
     cold_white_event = deepcopy(red_event)
     cold_white_event.data["args"].update(
-        {"newValue": 235, "propertyKeyName": "Cold White"}
+        {"newValue": 235, "propertyKey": 1, "propertyKeyName": "Cold White"}
     )
     node.receive_event(red_event)
     node.receive_event(green_event)
@@ -343,7 +360,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command.call_args_list) == 5
 
     client.async_send_command.reset_mock()
 
@@ -384,5 +401,5 @@ async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
 
     assert state
     assert state.state == STATE_ON
-    # the light should pick targetvalue which has zwave value 20
-    assert state.attributes[ATTR_BRIGHTNESS] == 52
+    # the light should pick currentvalue which has zwave value 22
+    assert state.attributes[ATTR_BRIGHTNESS] == 57

@@ -56,7 +56,6 @@ DEFAULT_PERSON = "Unknown"
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
-ATTR_ID = "id"
 ATTR_PSEUDO = "pseudo"
 ATTR_NAME = "name"
 ATTR_EVENT_TYPE = "event_type"

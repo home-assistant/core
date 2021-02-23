@@ -1,15 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "link": {
                 "data": {
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
                 }
             },
             "user": {
                 "data": {
+                    "host": "Ana Bilgisayar",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikalar\u0131n\u0131 do\u011frula"
-                }
+                },
+                "title": "Synology DSM"
             }
         }
     }

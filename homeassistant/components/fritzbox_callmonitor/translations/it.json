@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "insufficient_permissions": "L'utente non dispone di autorizzazioni sufficienti per accedere alle impostazioni di AVM FRITZ! Box e alle sue rubriche.",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "flow_title": "Monitoraggio chiamate FRITZ! Box AVM: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Rubrica telefonica"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "I prefissi non sono corretti, controlla il loro formato."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefissi (elenco separato da virgole)"
+                },
+                "title": "Configura prefissi"
+            }
+        }
+    }
+}

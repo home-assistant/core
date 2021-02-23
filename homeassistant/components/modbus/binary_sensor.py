@@ -10,13 +10,12 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_ADDRESS,
     CONF_COILS,
     CONF_HUB,
     CONF_INPUT_TYPE,

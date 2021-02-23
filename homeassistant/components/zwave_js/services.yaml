@@ -1,24 +1,68 @@
 # Describes the format for available Z-Wave services
 
 clear_lock_usercode:
-  description: Clear a usercode from lock.
+  name: Clear a usercode from a lock
+  description: Clear a usercode from a lock
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
   fields:
-    entity_id:
-      description: Lock entity_id.
-      example: lock.front_door_locked
     code_slot:
-      description: Code slot to clear code from.
+      name: Code slot
+      description: Code slot to clear code from
+      required: true
       example: 1
+      selector:
+        text:
 
 set_lock_usercode:
-  description: Set a usercode to lock.
+  name: Set a usercode on a lock
+  description: Set a usercode on a lock
+  target:
+    entity:
+      domain: lock
+      integration: zwave_js
   fields:
-    entity_id:
-      description: Lock entity_id.
-      example: lock.front_door_locked
     code_slot:
+      name: Code slot
       description: Code slot to set the code.
+      required: true
       example: 1
+      selector:
+        text:
     usercode:
+      name: Code
       description: Code to set.
+      required: true
       example: 1234
+      selector:
+        text:
+
+set_config_parameter:
+  name: Set a Z-Wave device configuration parameter
+  description: Allow for changing configuration parameters of your Z-Wave devices.
+  target:
+    entity:
+      integration: zwave_js
+  fields:
+    parameter:
+      name: Parameter
+      description: The (name or id of the) configuration parameter you want to configure.
+      example: Minimum brightness level
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: The new value to set for this configuration parameter.
+      example: 5
+      required: true
+      selector:
+        object:
+    bitmask:
+      name: Bitmask
+      description: Target a specific bitmask (see the documentation for more information).
+      advanced: true
+      selector:
+        object:

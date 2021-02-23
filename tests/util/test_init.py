@@ -68,6 +68,12 @@ def test_slugify():
     assert util.slugify("Tèst_äöüß_ÄÖÜ") == "test_aouss_aou"
     assert util.slugify("影師嗎") == "ying_shi_ma"
     assert util.slugify("けいふぉんと") == "keihuonto"
+    assert util.slugify("$") == "unknown"
+    assert util.slugify("Ⓐ") == "unknown"
+    assert util.slugify("ⓑ") == "unknown"
+    assert util.slugify("$$$") == "unknown"
+    assert util.slugify("$something") == "something"
+    assert util.slugify("") == ""
 
 
 def test_repr_helper():

@@ -11,7 +11,6 @@ CONF_APP_SECRET = "app_secret"
 CONF_MFA_CODE = "mfa_code"
 CONF_CAPTCHA_CODE = "captcha_code"
 
-CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_SCAN_INTERVAL = 180  # in seconds
 CONF_SCAN_OBD_INTERVAL = "scan_obd_interval"
 DEFAULT_SCAN_OBD_INTERVAL = 10800  # 3 hours in seconds

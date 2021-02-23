@@ -9,13 +9,13 @@
             "old_firmware": "Unsupported old firmware on the Bond device - please upgrade before continuing",
             "unknown": "Unexpected error"
         },
-        "flow_title": "Bond: {bond_id} ({host})",
+        "flow_title": "Bond: {name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Access Token"
                 },
-                "description": "Do you want to set up {bond_id}?"
+                "description": "Do you want to set up {name}?"
             },
             "user": {
                 "data": {

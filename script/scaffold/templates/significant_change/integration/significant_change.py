@@ -2,10 +2,11 @@
 from typing import Any, Optional
 
 from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 
-async def async_check_significant_change(
+@callback
+def async_check_significant_change(
     hass: HomeAssistant,
     old_state: str,
     old_attrs: dict,

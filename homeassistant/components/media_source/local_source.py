@@ -10,7 +10,7 @@ from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.util import raise_if_invalid_filename
+from homeassistant.util import raise_if_invalid_path
 
 from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
@@ -51,7 +51,7 @@ class LocalSource(MediaSource):
             raise Unresolvable("Unknown source directory.")
 
         try:
-            raise_if_invalid_filename(location)
+            raise_if_invalid_path(location)
         except ValueError as err:
             raise Unresolvable("Invalid path.") from err
 
@@ -192,7 +192,7 @@ class LocalMediaView(HomeAssistantView):
     ) -> web.FileResponse:
         """Start a GET request."""
         try:
-            raise_if_invalid_filename(location)
+            raise_if_invalid_path(location)
         except ValueError as err:
             raise web.HTTPBadRequest() from err
 

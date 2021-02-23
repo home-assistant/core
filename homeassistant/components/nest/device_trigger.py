@@ -1,5 +1,4 @@
 """Provides device automations for Nest."""
-import logging
 from typing import List
 
 import voluptuous as vol
@@ -16,8 +15,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .events import DEVICE_TRAIT_TRIGGER_MAP, NEST_EVENT
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE = "device"
 

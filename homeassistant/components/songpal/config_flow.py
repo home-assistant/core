@@ -114,7 +114,6 @@ class SongpalConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if "videoScreen" in service_types:
             return self.async_abort(reason="not_songpal_device")
 
-        # pylint: disable=no-member
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_name,
             CONF_HOST: parsed_url.hostname,
