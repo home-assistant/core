@@ -130,8 +130,7 @@ class ZWaveServices:
             entry = self._ent_reg.async_get(entity_id)
             if entry is None or entry.platform != const.DOMAIN:
                 raise ValueError(
-                    f"Entity {entity_id} doesn't exist or is not a "
-                    f"{const.DOMAIN} entity."
+                    f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
                 )
             async_dispatcher_send(
                 self._hass,
