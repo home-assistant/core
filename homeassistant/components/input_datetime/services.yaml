@@ -1,5 +1,6 @@
 set_datetime:
-  description: This can be used to dynamically set the date and/or time
+  name: Set
+  description: This can be used to dynamically set the date and/or time.
   target:
   fields:
     date:
@@ -33,4 +34,5 @@ set_datetime:
           mode: box
 
 reload:
-  description: Reload the input_datetime configuration
+  name: Reload
+  description: Reload the input_datetime configuration.
