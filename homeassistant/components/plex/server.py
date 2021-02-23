@@ -213,21 +213,27 @@ class PlexServer:
 
         try:
             system_accounts = self._plex_server.systemAccounts()
+            shared_users = self.account.users() if self.account else []
         except Unauthorized:
             _LOGGER.warning(
                 "Plex account has limited permissions, shared account filtering will not be available"
             )
         else:
-            self._accounts = [
-                account.name for account in system_accounts if account.name
-            ]
+            self._accounts = []
+            for user in shared_users:
+                for shared_server in user.servers:
+                    if shared_server.machineIdentifier == self.machine_identifier:
+                        self._accounts.append(user.title)
+
             _LOGGER.debug("Linked accounts: %s", self.accounts)
 
-            owner_account = [
-                account.name for account in system_accounts if account.accountID == 1
-            ]
+            owner_account = next(
+                (account.name for account in system_accounts if account.accountID == 1),
+                None,
+            )
             if owner_account:
-                self._owner_username = owner_account[0]
+                self._owner_username = owner_account
+                self._accounts.append(owner_account)
                 _LOGGER.debug("Server owner found: '%s'", self._owner_username)
 
         self._version = self._plex_server.version
