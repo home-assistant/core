@@ -32,22 +32,29 @@ set_location:
         text:
 
 stop:
+  name: Stop
   description: Stop the Home Assistant service.
 
 toggle:
+  name: Generic toggle
   description: Generic service to toggle devices on/off under any domain
   target:
     entity: {}
 
 turn_on:
+  name: Generic turn on
   description: Generic service to turn devices on under any domain.
   target:
     entity: {}
 
 turn_off:
+  name: Generic turn off
   description: Generic service to turn devices off under any domain.
+  target:
+    entity: {}
 
 update_entity:
+  name: Update entity
   description: Force one or more entities to update its data
   target:
     entity: {}
