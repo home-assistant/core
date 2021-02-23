@@ -7,11 +7,18 @@ from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
 from zwave_js_server import dump
 from zwave_js_server.const import LogLevel
+from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 from zwave_js_server.model.log_config import LogConfig
+from zwave_js_server.util.node import async_set_config_parameter
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.const import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+    ERR_UNKNOWN_ERROR,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -26,6 +33,9 @@ ID = "id"
 ENTRY_ID = "entry_id"
 NODE_ID = "node_id"
 TYPE = "type"
+PROPERTY = "property"
+PROPERTY_KEY = "property_key"
+VALUE = "value"
 
 # constants for log config commands
 CONFIG = "config"
@@ -45,9 +55,10 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
     websocket_api.async_register_command(hass, websocket_stop_exclusion)
-    websocket_api.async_register_command(hass, websocket_get_config_parameters)
     websocket_api.async_register_command(hass, websocket_update_log_config)
     websocket_api.async_register_command(hass, websocket_get_log_config)
+    websocket_api.async_register_command(hass, websocket_get_config_parameters)
+    websocket_api.async_register_command(hass, websocket_set_config_parameter)
     hass.http.register_view(DumpView)  # type: ignore
 
 
@@ -277,6 +288,53 @@ async def websocket_remove_node(
     connection.send_result(
         msg[ID],
         result,
+    )
+
+
+@websocket_api.require_admin  # type:ignore
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/set_config_parameter",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+        vol.Required(PROPERTY): int,
+        vol.Optional(PROPERTY_KEY): int,
+        vol.Required(VALUE): int,
+    }
+)
+async def websocket_set_config_parameter(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Set a config parameter value for a Z-Wave node."""
+    entry_id = msg[ENTRY_ID]
+    node_id = msg[NODE_ID]
+    property_ = msg[PROPERTY]
+    property_key = msg.get(PROPERTY_KEY)
+    value = msg[VALUE]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node = client.driver.controller.nodes[node_id]
+    try:
+        result = await async_set_config_parameter(
+            node, value, property_, property_key=property_key
+        )
+    except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
+        code = ERR_UNKNOWN_ERROR
+        if isinstance(err, NotFoundError):
+            code = ERR_NOT_FOUND
+        elif isinstance(err, (InvalidNewValue, NotImplementedError)):
+            code = ERR_NOT_SUPPORTED
+
+        connection.send_error(
+            msg[ID],
+            code,
+            str(err),
+        )
+        return
+
+    connection.send_result(
+        msg[ID],
+        str(result),
     )
 
 
