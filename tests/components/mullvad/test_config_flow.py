@@ -3,7 +3,7 @@ from homeassistant import config_entries, setup
 from homeassistant.components.mullvad.const import DOMAIN
 
 from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from unittest.mock import patch
 
 
 async def test_form_user(hass):
