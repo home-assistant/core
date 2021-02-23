@@ -8,7 +8,7 @@ from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.entity import get_device_id
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
     ENTRY_STATE_LOADED,
