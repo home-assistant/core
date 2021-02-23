@@ -213,7 +213,7 @@ async def test_reauth_flow(hass):
     assert mock_config.data.get("username") == UPDATED_USERNAME
     assert mock_config.data.get("password") == UPDATED_PASSWORD
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result2["reason"] == "reauth_sucessfull"
+    assert result2["reason"] == "reauth_successful"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
