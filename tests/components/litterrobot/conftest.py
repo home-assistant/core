@@ -17,6 +17,8 @@ def create_mock_robot(hass):
     robot.set_power_status = AsyncMock()
     robot.reset_waste_drawer = AsyncMock()
     robot.set_sleep_mode = AsyncMock()
+    robot.set_night_light = AsyncMock()
+    robot.set_panel_lockout = AsyncMock()
     return robot
 
 
