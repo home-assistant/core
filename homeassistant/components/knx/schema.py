@@ -40,6 +40,7 @@ ia_validator = vol.Any(
     vol.All(int, vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
+
 sync_state_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
     cv.boolean,
@@ -251,15 +252,14 @@ class ExposeSchema:
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    CONF_KNX_EXPOSE_ADDRESS = CONF_ADDRESS
 
     SCHEMA = vol.Schema(
         {
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(int, float, str),
+            vol.Required(CONF_ADDRESS): ga_validator,
             vol.Optional(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
-            vol.Required(CONF_KNX_EXPOSE_ADDRESS): ga_validator,
         }
     )
 

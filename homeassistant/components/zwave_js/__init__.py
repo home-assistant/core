@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ADDON_SLUG,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DEVICE_ID,
@@ -42,7 +43,8 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .entity import get_device_id
+from .helpers import get_device_id
+from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
@@ -191,6 +193,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
 
+    services = ZWaveServices(hass)
+    services.async_register()
+
     # Set up websocket API
     async_register_api(hass)
 
@@ -218,7 +223,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
 
-        await driver_ready.wait()
+        try:
+            await driver_ready.wait()
+        except asyncio.CancelledError:
+            LOGGER.debug("Cancelling start platforms")
+            return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
 
@@ -270,6 +279,9 @@ async def client_listen(
         should_reload = False
     except BaseZwaveJSServerError as err:
         LOGGER.error("Failed to listen: %s", err)
+    except Exception as err:  # pylint: disable=broad-except
+        # We need to guard against unknown exceptions to not crash this task.
+        LOGGER.exception("Unexpected exception: %s", err)
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
@@ -333,11 +345,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     try:
-        await hass.components.hassio.async_stop_addon("core_zwave_js")
+        await hass.components.hassio.async_stop_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
         return
     try:
-        await hass.components.hassio.async_uninstall_addon("core_zwave_js")
+        await hass.components.hassio.async_uninstall_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)

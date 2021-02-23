@@ -3,11 +3,12 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import pytest
+from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.components.zwave_js.entity import get_device_id
+from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
     ENTRY_STATE_LOADED,
@@ -67,6 +68,26 @@ async def test_home_assistant_stop(hass, client, integration):
 
 async def test_initialized_timeout(hass, client, connect_timeout):
     """Test we handle a timeout during client initialization."""
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+
+
+@pytest.mark.parametrize("error", [BaseZwaveJSServerError("Boom"), Exception("Boom")])
+async def test_listen_failure(hass, client, error):
+    """Test we handle errors during client listen."""
+
+    async def listen(driver_ready):
+        """Mock the client listen method."""
+        # Set the connect side effect to stop an endless loop on reload.
+        client.connect.side_effect = BaseZwaveJSServerError("Boom")
+        raise error
+
+    client.listen.side_effect = listen
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
 

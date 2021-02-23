@@ -2,6 +2,7 @@
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
@@ -20,7 +21,6 @@ from .const import (
 
 ATTRIBUTION = "Data provided by AirNow"
 
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
