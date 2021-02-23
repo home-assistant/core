@@ -36,7 +36,7 @@ async def test_load_and_unload(
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
 
-    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 0
 
