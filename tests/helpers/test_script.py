@@ -50,7 +50,10 @@ async def test_firing_event_basic(hass, caplog):
     context = Context()
     events = async_capture_events(hass, event)
 
-    sequence = cv.SCRIPT_SCHEMA({"event": event, "event_data": {"hello": "world"}})
+    alias = "event step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {"alias": alias, "event": event, "event_data": {"hello": "world"}}
+    )
     script_obj = script.Script(
         hass, sequence, "Test Name", "test_domain", running_description="test script"
     )
@@ -63,6 +66,7 @@ async def test_firing_event_basic(hass, caplog):
     assert events[0].data.get("hello") == "world"
     assert ".test_name:" in caplog.text
     assert "Test Name: Running test script" in caplog.text
+    assert f"Executing step {alias}" in caplog.text
 
 
 async def test_firing_event_template(hass):
@@ -107,12 +111,15 @@ async def test_firing_event_template(hass):
     }
 
 
-async def test_calling_service_basic(hass):
+async def test_calling_service_basic(hass, caplog):
     """Test the calling of a service."""
     context = Context()
     calls = async_mock_service(hass, "test", "script")
 
-    sequence = cv.SCRIPT_SCHEMA({"service": "test.script", "data": {"hello": "world"}})
+    alias = "service step"
+    sequence = cv.SCRIPT_SCHEMA(
+        {"alias": alias, "service": "test.script", "data": {"hello": "world"}}
+    )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=context)
@@ -121,6 +128,7 @@ async def test_calling_service_basic(hass):
     assert len(calls) == 1
     assert calls[0].context is context
     assert calls[0].data.get("hello") == "world"
+    assert f"Executing step {alias}" in caplog.text
 
 
 async def test_calling_service_template(hass):
@@ -250,12 +258,13 @@ async def test_multiple_runs_no_wait(hass):
     assert len(calls) == 4
 
 
-async def test_activating_scene(hass):
+async def test_activating_scene(hass, caplog):
     """Test the activation of a scene."""
     context = Context()
     calls = async_mock_service(hass, scene.DOMAIN, SERVICE_TURN_ON)
 
-    sequence = cv.SCRIPT_SCHEMA({"scene": "scene.hello"})
+    alias = "scene step"
+    sequence = cv.SCRIPT_SCHEMA({"alias": alias, "scene": "scene.hello"})
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=context)
@@ -264,6 +273,7 @@ async def test_activating_scene(hass):
     assert len(calls) == 1
     assert calls[0].context is context
     assert calls[0].data.get(ATTR_ENTITY_ID) == "scene.hello"
+    assert f"Executing step {alias}" in caplog.text
 
 
 @pytest.mark.parametrize("count", [1, 3])
@@ -1063,14 +1073,16 @@ async def test_condition_warning(hass, caplog):
     assert len(events) == 1
 
 
-async def test_condition_basic(hass):
+async def test_condition_basic(hass, caplog):
     """Test if we can use conditions in a script."""
     event = "test_event"
     events = async_capture_events(hass, event)
+    alias = "condition step"
     sequence = cv.SCRIPT_SCHEMA(
         [
             {"event": event},
             {
+                "alias": alias,
                 "condition": "template",
                 "value_template": "{{ states.test.entity.state == 'hello' }}",
             },
@@ -1083,6 +1095,8 @@ async def test_condition_basic(hass):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
     assert len(events) == 2
 
     hass.states.async_set("test.entity", "goodbye")
@@ -1090,6 +1104,7 @@ async def test_condition_basic(hass):
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
 
+    assert f"Test condition {alias}: False" in caplog.text
     assert len(events) == 3
 
 
@@ -1140,14 +1155,16 @@ async def test_condition_all_cached(hass):
     assert len(script_obj._config_cache) == 2
 
 
-async def test_repeat_count(hass):
+async def test_repeat_count(hass, caplog):
     """Test repeat action w/ count option."""
     event = "test_event"
     events = async_capture_events(hass, event)
     count = 3
 
+    alias = "condition step"
     sequence = cv.SCRIPT_SCHEMA(
         {
+            "alias": alias,
             "repeat": {
                 "count": count,
                 "sequence": {
@@ -1158,7 +1175,7 @@ async def test_repeat_count(hass):
                         "last": "{{ repeat.last }}",
                     },
                 },
-            }
+            },
         }
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -1171,6 +1188,7 @@ async def test_repeat_count(hass):
         assert event.data.get("first") == (index == 0)
         assert event.data.get("index") == index + 1
         assert event.data.get("last") == (index == count - 1)
+    assert caplog.text.count(f"Repeating {alias}") == count
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
@@ -1470,26 +1488,44 @@ async def test_choose_warning(hass, caplog):
 
 
 @pytest.mark.parametrize("var,result", [(1, "first"), (2, "second"), (3, "default")])
-async def test_choose(hass, var, result):
+async def test_choose(hass, caplog, var, result):
     """Test choose action."""
     event = "test_event"
     events = async_capture_events(hass, event)
+    alias = "choose step"
+    choice = {1: "choice one", 2: "choice two", 3: None}
+    aliases = {1: "sequence one", 2: "sequence two", 3: "default sequence"}
     sequence = cv.SCRIPT_SCHEMA(
         {
+            "alias": alias,
             "choose": [
                 {
+                    "alias": choice[1],
                     "conditions": {
                         "condition": "template",
                         "value_template": "{{ var == 1 }}",
                     },
-                    "sequence": {"event": event, "event_data": {"choice": "first"}},
+                    "sequence": {
+                        "alias": aliases[1],
+                        "event": event,
+                        "event_data": {"choice": "first"},
+                    },
                 },
                 {
+                    "alias": choice[2],
                     "conditions": "{{ var == 2 }}",
-                    "sequence": {"event": event, "event_data": {"choice": "second"}},
+                    "sequence": {
+                        "alias": aliases[2],
+                        "event": event,
+                        "event_data": {"choice": "second"},
+                    },
                 },
             ],
-            "default": {"event": event, "event_data": {"choice": "default"}},
+            "default": {
+                "alias": aliases[3],
+                "event": event,
+                "event_data": {"choice": "default"},
+            },
         }
     )
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
@@ -1499,6 +1535,10 @@ async def test_choose(hass, var, result):
 
     assert len(events) == 1
     assert events[0].data["choice"] == result
+    expected_choice = choice[var]
+    if var == 3:
+        expected_choice = "default"
+    assert f"{alias}: {expected_choice}: Executing step {aliases[var]}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -2115,9 +2155,10 @@ async def test_started_action(hass, caplog):
 
 async def test_set_variable(hass, caplog):
     """Test setting variables in scripts."""
+    alias = "variables step"
     sequence = cv.SCRIPT_SCHEMA(
         [
-            {"variables": {"variable": "value"}},
+            {"alias": alias, "variables": {"variable": "value"}},
             {"service": "test.script", "data": {"value": "{{ variable }}"}},
         ]
     )
@@ -2129,6 +2170,7 @@ async def test_set_variable(hass, caplog):
     await hass.async_block_till_done()
 
     assert mock_calls[0].data["value"] == "value"
+    assert f"Executing step {alias}" in caplog.text
 
 
 async def test_set_redefines_variable(hass, caplog):

@@ -522,7 +522,8 @@ SERVICE_TO_METHOD = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Miio configuration from YAML."""
     _LOGGER.warning(
-        "Loading Xiaomi Miio Fan via platform setup is deprecated. Please remove it from your configuration."
+        "Loading Xiaomi Miio Fan via platform setup is deprecated. "
+        "Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -573,14 +574,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 "and provide the following data: %s",
                 model,
             )
-            return False
+            return
 
         hass.data[DATA_KEY][host] = entity
         entities.append(entity)
 
         async def async_service_handler(service):
             """Map services to methods on XiaomiAirPurifier."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            method = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -597,11 +598,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entities = hass.data[DATA_KEY].values()
 
             update_tasks = []
+
             for entity in entities:
-                if not hasattr(entity, method["method"]):
+               entity_method = getattr(entity, method["method"], None)
+                if not entity_method:
                     continue
-                await getattr(entity, method["method"])(**params)
-                update_tasks.append(entity.async_update_ha_state(True))
+                await entity_method(**params)
+                update_tasks.append(
+                    hass.async_create_task(entity.async_update_ha_state(True))
+                )
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
