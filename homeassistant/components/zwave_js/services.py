@@ -10,6 +10,8 @@ from zwave_js_server.util.node import async_set_config_parameter
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import const
 from .helpers import async_get_node_from_device_id, async_get_node_from_entity_id
@@ -41,9 +43,10 @@ BITMASK_SCHEMA = vol.All(
 class ZWaveServices:
     """Class that holds our services (Zwave Commands) that should be published to hass."""
 
-    def __init__(self, hass: HomeAssistant):
+    def __init__(self, hass: HomeAssistant, ent_reg: EntityRegistry):
         """Initialize with hass object."""
         self._hass = hass
+        self._ent_reg = ent_reg
 
     @callback
     def async_register(self) -> None:
@@ -68,6 +71,18 @@ class ZWaveServices:
                 },
                 cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
                 parameter_name_does_not_need_bitmask,
+            ),
+        )
+
+        self._hass.services.async_register(
+            const.DOMAIN,
+            const.SERVICE_REFRESH_VALUE,
+            self.async_poll_value,
+            schema=vol.Schema(
+                {
+                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(const.ATTR_REFRESH_ALL_VALUES, default=False): bool,
+                }
             ),
         )
 
@@ -108,3 +123,17 @@ class ZWaveServices:
                     f"Unable to set configuration parameter on Node {node} with "
                     f"value {new_value}"
                 )
+
+    async def async_poll_value(self, service: ServiceCall) -> None:
+        """Poll value on a node."""
+        for entity_id in service.data[ATTR_ENTITY_ID]:
+            entry = self._ent_reg.async_get(entity_id)
+            if entry is None or entry.platform != const.DOMAIN:
+                raise ValueError(
+                    f"Entity {entity_id} is not a valid {const.DOMAIN} entity."
+                )
+            async_dispatcher_send(
+                self._hass,
+                f"{const.DOMAIN}_{entry.unique_id}_poll_value",
+                service.data[const.ATTR_REFRESH_ALL_VALUES],
+            )
