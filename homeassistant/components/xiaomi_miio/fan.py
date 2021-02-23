@@ -581,7 +581,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         async def async_service_handler(service):
             """Map services to methods on XiaomiAirPurifier."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            method = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
