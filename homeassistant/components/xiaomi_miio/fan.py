@@ -551,21 +551,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if model in MODELS_PURIFIER_MIOT:
             air_purifier = AirPurifierMiot(host, token)
-            device = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
+            entity = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
         elif model.startswith("zhimi.airpurifier."):
             air_purifier = AirPurifier(host, token)
-            device = XiaomiAirPurifier(name, air_purifier, config_entry, unique_id)
+            entity = XiaomiAirPurifier(name, air_purifier, config_entry, unique_id)
         elif model in MODELS_HUMIDIFIER_MIOT:
             air_humidifier = AirHumidifierMiot(host, token)
-            device = XiaomiAirHumidifierMiot(
+            entity = XiaomiAirHumidifierMiot(
                 name, air_humidifier, config_entry, unique_id
             )
         elif model.startswith("zhimi.humidifier."):
             air_humidifier = AirHumidifier(host, token, model=model)
-            device = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
+            entity = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
         elif model.startswith("zhimi.airfresh."):
             air_fresh = AirFresh(host, token)
-            device = XiaomiAirFresh(name, air_fresh, config_entry, unique_id)
+            entity = XiaomiAirFresh(name, air_fresh, config_entry, unique_id)
         else:
             _LOGGER.error(
                 "Unsupported device found! Please create an issue at "
@@ -575,8 +575,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
             return False
 
-        hass.data[DATA_KEY][host] = device
-        entities.append(device)
+        hass.data[DATA_KEY][host] = entity
+        entities.append(entity)
 
         async def async_service_handler(service):
             """Map services to methods on XiaomiAirPurifier."""
@@ -588,20 +588,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             }
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             if entity_ids:
-                devices = [
-                    device
-                    for device in hass.data[DATA_KEY].values()
-                    if device.entity_id in entity_ids
+                entities = [
+                    entity
+                    for entity in hass.data[DATA_KEY].values()
+                    if entity.entity_id in entity_ids
                 ]
             else:
-                devices = hass.data[DATA_KEY].values()
+                entities = hass.data[DATA_KEY].values()
 
             update_tasks = []
-            for device in devices:
-                if not hasattr(device, method["method"]):
+            for entity in entities:
+                if not hasattr(entity, method["method"]):
                     continue
-                await getattr(device, method["method"])(**params)
-                update_tasks.append(device.async_update_ha_state(True))
+                await getattr(entity, method["method"])(**params)
+                update_tasks.append(entity.async_update_ha_state(True))
 
             if update_tasks:
                 await asyncio.wait(update_tasks)
