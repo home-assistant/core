@@ -14,7 +14,8 @@
                     "host": "Host",
                     "password": "Password",
                     "username": "Username"
-                }
+                },
+                "description": "Set up the Mullvad VPN integration?"
             }
         }
     }
