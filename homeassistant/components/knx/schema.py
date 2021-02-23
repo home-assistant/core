@@ -327,7 +327,6 @@ class ExposeSchema:
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    CONF_KNX_EXPOSE_ADDRESS = CONF_ADDRESS
 
     SCHEMA = vol.Schema(
         {
@@ -335,7 +334,7 @@ class ExposeSchema:
             vol.Optional(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
-            vol.Required(CONF_KNX_EXPOSE_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
         }
     )
 
