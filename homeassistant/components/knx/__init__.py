@@ -75,6 +75,8 @@ SERVICE_KNX_READ = "read"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
+            # deprecated since 2021.3
+            cv.deprecated(CONF_KNX_CONFIG),
             # deprecated since 2021.2
             cv.deprecated(CONF_KNX_FIRE_EVENT),
             cv.deprecated("fire_event_filter", replacement_key=CONF_KNX_EVENT_FILTER),
@@ -232,15 +234,11 @@ async def async_setup(hass, config):
 
     # deprecation warning since 2021.3
     if CONF_KNX_CONFIG in config[DOMAIN]:
-        config_file_deprecation_warning = (
-            f"The 'config_file' option will soon be deprecated. Please replace it with Home Assistant config schema "
-            f"directly in `configuration.yaml` (see https://www.home-assistant.io/integrations/knx/). \n"
-            f"An online configuration converter tool for your `{config[DOMAIN][CONF_KNX_CONFIG]}` is available at https://xknx.io/config-converter/"
-        )
-        _LOGGER.warning(config_file_deprecation_warning)
-        hass.components.persistent_notification.async_create(
-            config_file_deprecation_warning,
-            title="KNX",
+        _LOGGER.warning(
+            "The 'config_file' option will soon be deprecated. Please replace it with Home Assistant config schema "
+            "directly in `configuration.yaml` (see https://www.home-assistant.io/integrations/knx/). \n"
+            "An online configuration converter tool for your `%s` is available at https://xknx.io/config-converter/",
+            config[DOMAIN][CONF_KNX_CONFIG],
         )
 
     hass.services.async_register(
