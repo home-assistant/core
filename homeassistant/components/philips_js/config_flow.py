@@ -148,7 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._current[CONF_API_VERSION] = hub.api_version
                 self._hub = hub
 
-                if hub.pairing_type:
+                if hub.pairing_type == "digest_auth_pairing":
                     return await self.async_step_pair()
                 return await self._async_create_current()
 
