@@ -2,7 +2,6 @@
 
 import logging
 import math
-from typing import Optional
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.core import callback
@@ -65,12 +64,12 @@ class SmartyFan(FanEntity):
         return bool(self._smarty_fan_speed)
 
     @property
-    def speed_count(self) -> Optional[int]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int:
         """Return speed percentage of the fan."""
         if self._smarty_fan_speed == 0:
             return 0
