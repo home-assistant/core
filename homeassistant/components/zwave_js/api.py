@@ -374,6 +374,9 @@ def websocket_get_config_parameters(
             },
             "value": zwave_value.value,
         }
+        if zwave_value.metadata.states:
+            result[value_id]["metadata"]["states"] = zwave_value.metadata.states
+
     connection.send_result(
         msg[ID],
         result,
