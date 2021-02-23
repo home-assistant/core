@@ -5,7 +5,11 @@ from goalzero import exceptions
 
 from homeassistant.components.goalzero.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from . import CONF_DATA, _create_mocked_yeti, _patch_config_flow_yeti
 
@@ -40,6 +44,18 @@ async def test_flow_user(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == DEFAULT_NAME
         assert result["data"] == CONF_DATA
+
+    with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_flow_user_cannot_connect(hass):
