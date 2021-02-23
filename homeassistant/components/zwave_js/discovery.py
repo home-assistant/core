@@ -381,6 +381,14 @@ DISCOVERY_SCHEMAS = [
         device_class_specific={"Fan Switch"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # number platform
+    # valve control for thermostats
+    ZWaveDiscoverySchema(
+        platform="number",
+        hint="valve_control",
+        device_class_generic={"Thermostat"},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
 ]
 
 
