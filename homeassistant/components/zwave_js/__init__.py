@@ -21,6 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ADDON_SLUG,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DEVICE_ID,
@@ -333,11 +334,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     try:
-        await hass.components.hassio.async_stop_addon("core_zwave_js")
+        await hass.components.hassio.async_stop_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
         return
     try:
-        await hass.components.hassio.async_uninstall_addon("core_zwave_js")
+        await hass.components.hassio.async_uninstall_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)
