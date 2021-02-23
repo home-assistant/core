@@ -46,8 +46,10 @@ async def setup_hub(hass, mock_hub, platform_domain):
         data=CONFIG[litterrobot.DOMAIN],
     )
     entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
 
-    with patch.dict(hass.data, {litterrobot.DOMAIN: {entry.entry_id: mock_hub}}):
+    with patch(
+        "homeassistant.components.litterrobot.LitterRobotHub",
+        return_value=mock_hub,
+    ):
         await hass.config_entries.async_forward_entry_setup(entry, platform_domain)
         await hass.async_block_till_done()
