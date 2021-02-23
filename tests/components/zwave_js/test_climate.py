@@ -9,6 +9,7 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_IDLE,
@@ -34,6 +35,7 @@ from homeassistant.const import (
 
 from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY,
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
     CLIMATE_MAIN_HEAT_ACTIONNER,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
@@ -457,3 +459,38 @@ async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integrati
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+
+async def test_preset_and_no_setpoint(hass, climate_eurotronic_spirit_z, integration):
+    """Test preset without setpoint value."""
+    node = climate_eurotronic_spirit_z
+
+    state = hass.states.get(CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY)
+    assert state
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_TEMPERATURE] == 22
+
+    # Test Full power preset update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 8,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 0,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 15,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY)
+    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_TEMPERATURE] is None
+    assert state.attributes[ATTR_PRESET_MODE] == "Full power"
