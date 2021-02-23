@@ -1,10 +1,8 @@
 """Test the Litter-Robot switch entity."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import litterrobot
 from homeassistant.components.litterrobot.hub import REFRESH_WAIT_TIME
 from homeassistant.components.switch import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -14,30 +12,17 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.util.dt import utcnow
 
-from .common import CONFIG
+from .conftest import setup_hub
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
 
 
-async def setup_hub(hass, mock_hub):
-    """Load the Litter-Robot switch platform with the provided hub."""
-    hass.config.components.add(litterrobot.DOMAIN)
-    entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
-    )
-
-    with patch.dict(hass.data, {litterrobot.DOMAIN: {entry.entry_id: mock_hub}}):
-        await hass.config_entries.async_forward_entry_setup(entry, PLATFORM_DOMAIN)
-        await hass.async_block_till_done()
-
-
 async def test_switch(hass, mock_hub):
     """Tests the switch entity was set up."""
-    await setup_hub(hass, mock_hub)
+    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
 
     switch = hass.states.get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert switch
@@ -53,7 +38,7 @@ async def test_switch(hass, mock_hub):
 )
 async def test_on_off_commands(hass, mock_hub, entity_id, robot_command):
     """Test sending commands to the switch."""
-    await setup_hub(hass, mock_hub)
+    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
 
     switch = hass.states.get(entity_id)
     assert switch

@@ -1,5 +1,5 @@
 """Configure pytest for Litter-Robot tests."""
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from pylitterbot import Robot
 import pytest
@@ -7,7 +7,9 @@ import pytest
 from homeassistant.components import litterrobot
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .common import ROBOT_DATA
+from .common import CONFIG, ROBOT_DATA
+
+from tests.common import MockConfigEntry
 
 
 def create_mock_robot(hass):
@@ -35,3 +37,17 @@ def mock_hub(hass):
     hub.coordinator.last_update_success = True
     hub.account.robots = [create_mock_robot(hass)]
     return hub
+
+
+async def setup_hub(hass, mock_hub, platform_domain):
+    """Load a Litter-Robot platform with the provided hub."""
+    entry = MockConfigEntry(
+        domain=litterrobot.DOMAIN,
+        data=CONFIG[litterrobot.DOMAIN],
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    with patch.dict(hass.data, {litterrobot.DOMAIN: {entry.entry_id: mock_hub}}):
+        await hass.config_entries.async_forward_entry_setup(entry, platform_domain)
+        await hass.async_block_till_done()
