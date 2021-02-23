@@ -40,6 +40,7 @@ ia_validator = vol.Any(
     vol.All(int, vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
+
 sync_state_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
     cv.boolean,
