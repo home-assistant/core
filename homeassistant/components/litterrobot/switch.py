@@ -5,8 +5,8 @@ from .const import DOMAIN
 from .hub import LitterRobotEntity
 
 
-class LitterRobotNightLightSwitch(LitterRobotEntity, ToggleEntity):
-    """Litter-Robot Night Light Switch."""
+class LitterRobotNightLightModeSwitch(LitterRobotEntity, ToggleEntity):
+    """Litter-Robot Night Light Mode Switch."""
 
     @property
     def is_on(self):
@@ -50,7 +50,7 @@ class LitterRobotPanelLockoutSwitch(LitterRobotEntity, ToggleEntity):
 
 
 ROBOT_SWITCHES = {
-    "Night Light": LitterRobotNightLightSwitch,
+    "Night Light Mode": LitterRobotNightLightModeSwitch,
     "Panel Lockout": LitterRobotPanelLockoutSwitch,
 }
 

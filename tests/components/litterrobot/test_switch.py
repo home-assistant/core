@@ -18,9 +18,8 @@ from .common import CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-NIGHT_LIGHT_ENTITY_ID = "switch.test_night_light"
+NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
-SLEEP_MODE_ENTITY_ID = "switch.test_sleep_mode"
 
 
 async def setup_hub(hass, mock_hub):
@@ -40,7 +39,7 @@ async def test_switch(hass, mock_hub):
     """Tests the switch entity was set up."""
     await setup_hub(hass, mock_hub)
 
-    switch = hass.states.get(NIGHT_LIGHT_ENTITY_ID)
+    switch = hass.states.get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert switch
     assert switch.state == STATE_ON
 
@@ -48,7 +47,7 @@ async def test_switch(hass, mock_hub):
 @pytest.mark.parametrize(
     "entity_id,robot_command",
     [
-        (NIGHT_LIGHT_ENTITY_ID, "set_night_light"),
+        (NIGHT_LIGHT_MODE_ENTITY_ID, "set_night_light"),
         (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout"),
     ],
 )
