@@ -216,7 +216,11 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
         """Determine cycle - Helper function for larger than daily cycles."""
         now = dt_util.now().date()
         if self._cron_pattern is not None:
-            pass
+            async_track_point_in_time(
+                self.hass,
+                self._async_reset_meter,
+                croniter(self._cron_pattern, dt_util.now()).get_next(datetime),
+            )
         elif (
             self._period == WEEKLY
             and now != now - timedelta(days=now.weekday()) + self._period_offset

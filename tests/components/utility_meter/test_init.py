@@ -152,6 +152,21 @@ async def test_services(hass):
     assert state.state == "0"
 
 
+async def test_cron(hass, legacy_patchable_time):
+    """Test cron pattern and offset fails."""
+
+    config = {
+        "utility_meter": {
+            "energy_bill": {
+                "source": "sensor.energy",
+                "cron": "*/5 * * * *",
+            }
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+
+
 async def test_cron_and_meter(hass, legacy_patchable_time):
     """Test cron pattern and meter type fails."""
     config = {
