@@ -41,7 +41,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
     ) -> None:
-        """Initialize a ZWaveNotificationBinarySensor entity."""
+        """Initialize a ZwaveNumberEntity entity."""
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(include_value_name=True)
 
