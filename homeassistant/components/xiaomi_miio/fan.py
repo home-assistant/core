@@ -574,7 +574,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 "and provide the following data: %s",
                 model,
             )
-            return False
+            return
 
         hass.data[DATA_KEY][host] = device
         entities.append(device)
