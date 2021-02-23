@@ -61,11 +61,10 @@ class TahomaLight(TahomaEntity, LightEntity):
         green = self.executor.select_state(CORE_GREEN_COLOR_INTENSITY_STATE)
         blue = self.executor.select_state(CORE_BLUE_COLOR_INTENSITY_STATE)
 
-        return (
-            None
-            if None in [red, green, blue]
-            else color_util.color_RGB_to_hs(red, green, blue)
-        )
+        if None in [red, green, blue]:
+            return None
+
+        return color_util.color_RGB_to_hs(red, green, blue)
 
     @property
     def supported_features(self) -> int:
