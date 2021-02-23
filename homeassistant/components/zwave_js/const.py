@@ -40,6 +40,8 @@ ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
 
-SERVICE_POLL_VALUE = "poll_value"
+SERVICE_REFRESH_VALUE = "refresh_value"
+
+ATTR_ALL_WATCHED_VALUES = "all_watched_values"
 
 ADDON_SLUG = "core_zwave_js"

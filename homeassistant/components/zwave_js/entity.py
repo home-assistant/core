@@ -41,11 +41,22 @@ class ZWaveBaseEntity(Entity):
         To be overridden by platforms needing this event.
         """
 
-    async def async_poll_value(self) -> None:
+    async def async_poll_value(self, all_watched_values: bool) -> None:
         """Poll a value."""
-        await self.info.node.async_poll_value(self.info.primary_value)
+        if not all_watched_values:
+            await self.info.node.async_poll_value(self.info.primary_value)
+            LOGGER.info(
+                "Polled primary value %s for %s",
+                self.info.primary_value,
+                self.entity_id,
+            )
+            return
+
+        for value_id in self.watched_value_ids:
+            await self.info.node.async_poll_value(value_id)
+
         LOGGER.info(
-            "Polled primary value %s for %s", self.info.primary_value, self.entity_id
+            "Polled values %s for %s", ", ".join(self.watched_value_ids), self.entity_id
         )
 
     async def async_added_to_hass(self) -> None:

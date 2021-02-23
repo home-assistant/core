@@ -76,9 +76,14 @@ class ZWaveServices:
 
         self._hass.services.async_register(
             const.DOMAIN,
-            const.SERVICE_POLL_VALUE,
+            const.SERVICE_REFRESH_VALUE,
             self.async_poll_value,
-            schema=vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids}),
+            schema=vol.Schema(
+                {
+                    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+                    vol.Optional(const.ATTR_ALL_WATCHED_VALUES, default=False): bool,
+                }
+            ),
         )
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
@@ -126,5 +131,7 @@ class ZWaveServices:
             if not entry:
                 continue
             async_dispatcher_send(
-                self._hass, f"{const.DOMAIN}_{entry.unique_id}_poll_value"
+                self._hass,
+                f"{const.DOMAIN}_{entry.unique_id}_poll_value",
+                service.data[const.ATTR_ALL_WATCHED_VALUES],
             )
