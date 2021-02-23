@@ -40,4 +40,6 @@ ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
 
+SERVICE_POLL_VALUE = "poll_value"
+
 ADDON_SLUG = "core_zwave_js"

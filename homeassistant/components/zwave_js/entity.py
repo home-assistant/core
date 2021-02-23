@@ -8,8 +8,10 @@ from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id
 
@@ -39,12 +41,28 @@ class ZWaveBaseEntity(Entity):
         To be overridden by platforms needing this event.
         """
 
+    async def async_poll_value(self) -> None:
+        """Poll a value."""
+        await self.info.node.async_poll_value(self.info.primary_value)
+        LOGGER.info(
+            "Polled primary value %s on node %s",
+            self.info.primary_value,
+            self.info.node,
+        )
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         assert self.hass  # typing
         # Add value_changed callbacks.
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
         )
 
     @property

@@ -7,6 +7,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
     DOMAIN,
+    SERVICE_POLL_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
 )
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
@@ -293,3 +294,35 @@ async def test_set_config_parameter(hass, client, multisensor_6, integration):
             },
             blocking=True,
         )
+
+
+async def test_poll_value(hass, client, multisensor_6, integration):
+    """Test the poll_value service."""
+    # Test polling the primary value
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_POLL_VALUE,
+        {ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.poll_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClassName": "Multilevel Sensor",
+        "commandClass": 49,
+        "endpoint": 0,
+        "property": "Air temperature",
+        "propertyName": "Air temperature",
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": False,
+            "unit": "°C",
+            "label": "Air temperature",
+            "ccSpecific": {"sensorType": 1, "scale": 0},
+        },
+        "value": 9,
+    }
