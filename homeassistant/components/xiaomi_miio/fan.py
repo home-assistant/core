@@ -600,7 +600,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             update_tasks = []
 
             for entity in entities:
-               entity_method = getattr(entity, method["method"], None)
+                entity_method = getattr(entity, method["method"], None)
                 if not entity_method:
                     continue
                 await entity_method(**params)
