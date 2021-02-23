@@ -12,7 +12,7 @@ close_cover:
 
 toggle:
   name: Toggle
-  description: Toggles a cover open/closed.
+  description: Toggle a cover open/closed.
   target:
 
 set_cover_position:
