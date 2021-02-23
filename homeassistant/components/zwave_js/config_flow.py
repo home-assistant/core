@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (  # pylint:disable=unused-import
+    ADDON_SLUG,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_USE_ADDON,
     DOMAIN,
@@ -248,7 +249,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self._async_set_addon_config(new_addon_config)
 
             try:
-                await self.hass.components.hassio.async_start_addon("core_zwave_js")
+                await self.hass.components.hassio.async_start_addon(ADDON_SLUG)
             except self.hass.components.hassio.HassioAPIError as err:
                 _LOGGER.error("Failed to start Z-Wave JS add-on: %s", err)
                 errors["base"] = "addon_start_failed"
@@ -294,7 +295,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return and cache Z-Wave JS add-on info."""
         try:
             addon_info: dict = await self.hass.components.hassio.async_get_addon_info(
-                "core_zwave_js"
+                ADDON_SLUG
             )
         except self.hass.components.hassio.HassioAPIError as err:
             _LOGGER.error("Failed to get Z-Wave JS add-on info: %s", err)
@@ -322,7 +323,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         options = {"options": config}
         try:
             await self.hass.components.hassio.async_set_addon_options(
-                "core_zwave_js", options
+                ADDON_SLUG, options
             )
         except self.hass.components.hassio.HassioAPIError as err:
             _LOGGER.error("Failed to set Z-Wave JS add-on config: %s", err)
@@ -331,7 +332,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_install_addon(self) -> None:
         """Install the Z-Wave JS add-on."""
         try:
-            await self.hass.components.hassio.async_install_addon("core_zwave_js")
+            await self.hass.components.hassio.async_install_addon(ADDON_SLUG)
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
@@ -343,7 +344,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             discovery_info: dict = (
                 await self.hass.components.hassio.async_get_addon_discovery_info(
-                    "core_zwave_js"
+                    ADDON_SLUG
                 )
             )
         except self.hass.components.hassio.HassioAPIError as err:
