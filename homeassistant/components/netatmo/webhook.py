@@ -1,7 +1,7 @@
 """The Netatmo integration."""
 import logging
 
-from homeassistant.const import ATTR_ID, ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
