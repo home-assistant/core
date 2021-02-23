@@ -20,7 +20,7 @@ async def async_setup_entry(
     client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
 
     @callback
-    def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
+    def async_add_number(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave number entity."""
         entities: List[ZWaveBaseEntity] = []
         entities.append(ZwaveNumberEntity(config_entry, client, info))
@@ -30,7 +30,7 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{config_entry.entry_id}_add_{NUMBER_DOMAIN}",
-            async_add_fan,
+            async_add_number,
         )
     )
 
