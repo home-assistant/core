@@ -62,7 +62,7 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     @property
     def value(self) -> float:
         """Return the entity value."""
-        if self.info.primary_value.metadata.value is None:
+        if self.info.primary_value.value is None:
             return 0
         return float(self.info.primary_value.value)
 
