@@ -81,7 +81,7 @@ class ZWaveServices:
             schema=vol.Schema(
                 {
                     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                    vol.Optional(const.ATTR_ALL_WATCHED_VALUES, default=False): bool,
+                    vol.Optional(const.ATTR_REFRESH_ALL_VALUES, default=False): bool,
                 }
             ),
         )
@@ -133,5 +133,5 @@ class ZWaveServices:
             async_dispatcher_send(
                 self._hass,
                 f"{const.DOMAIN}_{entry.unique_id}_poll_value",
-                service.data[const.ATTR_ALL_WATCHED_VALUES],
+                service.data[const.ATTR_REFRESH_ALL_VALUES],
             )

@@ -3,10 +3,10 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.zwave_js.const import (
-    ATTR_ALL_WATCHED_VALUES,
     ATTR_CONFIG_PARAMETER,
     ATTR_CONFIG_PARAMETER_BITMASK,
     ATTR_CONFIG_VALUE,
+    ATTR_REFRESH_ALL_VALUES,
     DOMAIN,
     SERVICE_REFRESH_VALUE,
     SERVICE_SET_CONFIG_PARAMETER,
@@ -340,7 +340,7 @@ async def test_poll_value(
         SERVICE_REFRESH_VALUE,
         {
             ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_ALL_WATCHED_VALUES: True,
+            ATTR_REFRESH_ALL_VALUES: True,
         },
         blocking=True,
     )
