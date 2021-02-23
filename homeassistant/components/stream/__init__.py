@@ -136,7 +136,7 @@ class Stream:
 
             @callback
             def idle_callback():
-                if not self.keepalive and fmt in self._outputs:
+                if (not self.keepalive or fmt == "recorder") and fmt in self._outputs:
                     self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
