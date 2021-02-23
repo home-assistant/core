@@ -271,6 +271,9 @@ async def client_listen(
         should_reload = False
     except BaseZwaveJSServerError as err:
         LOGGER.error("Failed to listen: %s", err)
+    except Exception as err:  # pylint: disable=broad-except
+        # We need to guard against unknown exceptions to not crash this task.
+        LOGGER.exception("Unexpected exception: %s", err)
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
