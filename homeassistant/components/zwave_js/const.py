@@ -33,4 +33,11 @@ ATTR_PROPERTY_NAME = "property_name"
 ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PARAMETERS = "parameters"
 
+# service constants
+SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
+
+ATTR_CONFIG_PARAMETER = "parameter"
+ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
+ATTR_CONFIG_VALUE = "value"
+
 ADDON_SLUG = "core_zwave_js"
