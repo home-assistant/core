@@ -7,7 +7,7 @@ import logging
 import mimetypes
 import os
 import re
-from typing import Dict, Optional
+from typing import Dict, Optional, cast
 
 from aiohttp import web
 import mutagen
@@ -24,6 +24,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_NAME,
     CONF_PLATFORM,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
@@ -33,8 +34,11 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.yaml import load_yaml
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -54,6 +58,9 @@ CONF_CACHE_DIR = "cache_dir"
 CONF_LANG = "language"
 CONF_SERVICE_NAME = "service_name"
 CONF_TIME_MEMORY = "time_memory"
+
+CONF_DESCRIPTION = "description"
+CONF_FIELDS = "fields"
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
@@ -127,6 +134,13 @@ async def async_setup(hass, config):
     hass.http.register_view(TextToSpeechView(tts))
     hass.http.register_view(TextToSpeechUrlView(tts))
 
+    # Load service descriptions from tts/services.yaml
+    integration = await async_get_integration(hass, DOMAIN)
+    services_yaml = integration.file_path / "services.yaml"
+    services_dict = cast(
+        dict, await hass.async_add_executor_job(load_yaml, str(services_yaml))
+    )
+
     async def async_setup_platform(p_type, p_config=None, discovery_info=None):
         """Set up a TTS platform."""
         if p_config is None:
@@ -192,6 +206,14 @@ async def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service_name, async_say_handle, schema=SCHEMA_SERVICE_SAY
         )
+
+        # Register the service description
+        service_desc = {
+            CONF_NAME: "Say an TTS message with {p_type}",
+            CONF_DESCRIPTION: f"Say something using text-to-speech on a media player with {p_type}.",
+            CONF_FIELDS: services_dict[SERVICE_SAY][CONF_FIELDS],
+        }
+        async_set_service_schema(hass, DOMAIN, service_name, service_desc)
 
     setup_tasks = [
         asyncio.create_task(async_setup_platform(p_type, p_config))
