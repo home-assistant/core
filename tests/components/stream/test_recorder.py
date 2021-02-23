@@ -1,10 +1,13 @@
 """The tests for hls streams."""
+import asyncio
 from datetime import timedelta
 import logging
 import os
 import threading
+from typing import Deque
 from unittest.mock import patch
 
+import async_timeout
 import av
 import pytest
 
@@ -19,6 +22,7 @@ from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
 TEST_TIMEOUT = 10
+RECORD_DURATION = 30
 
 
 class SaveRecordWorkerSync:
@@ -32,23 +36,30 @@ class SaveRecordWorkerSync:
     def __init__(self):
         """Initialize SaveRecordWorkerSync."""
         self.reset()
+        self._segments = None
 
-    def recorder_save_worker(self, *args, **kwargs):
+    def recorder_save_worker(self, file_out: str, segments: Deque[Segment]):
         """Mock method for patch."""
         logging.debug("recorder_save_worker thread started")
+        self._segments = segments
         assert self._save_thread is None
         self._save_thread = threading.current_thread()
         self._save_event.set()
 
+    async def get_segments(self):
+        """Return the recorded video segments."""
+        with async_timeout.timeout(TEST_TIMEOUT):
+            await self._save_event.wait()
+        return self._segments
+
     def join(self):
         """Verify save worker was invoked and block on shutdown."""
-        assert self._save_event.wait(timeout=TEST_TIMEOUT)
         self._save_thread.join()
 
     def reset(self):
         """Reset callback state for reuse in tests."""
         self._save_thread = None
-        self._save_event = threading.Event()
+        self._save_event = asyncio.Event()
 
 
 @pytest.fixture()
@@ -119,15 +130,16 @@ async def test_record_lookback(
     stream.stop()
 
 
-async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
+async def test_recorder_duration(hass, hass_client, stream_worker_sync):
     """
-    Test recorder timeout.
+    Test recorder invokes the save function after the duration expires.
 
     Mocks out the cleanup to assert that it is invoked after a timeout.
     This test does not start the recorder save thread.
     """
     await async_setup_component(hass, "stream", {"stream": {}})
 
+    # Prevent the worker thread from exiting before the alarm fires
     stream_worker_sync.pause()
 
     with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
@@ -136,13 +148,15 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
 
         stream = create_stream(hass, source)
         with patch.object(hass.config, "is_allowed_path", return_value=True):
-            await stream.async_record("/example/path")
+            await stream.async_record("/example/path", duration=RECORD_DURATION)
         recorder = stream.add_provider("recorder")
 
+        # The recorder timer starts when the first packet is received
         await recorder.recv()
 
-        # Wait a minute
-        future = dt_util.utcnow() + timedelta(minutes=1)
+        assert not mock_timeout.called
+
+        future = dt_util.utcnow() + timedelta(seconds=RECORD_DURATION + 1)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
@@ -152,6 +166,37 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         stream.stop()
         await hass.async_block_till_done()
         await hass.async_block_till_done()
+
+
+async def test_recorder_duration_keepalive(
+    hass, hass_client, stream_worker_sync, record_worker_sync
+):
+    """Test recorder duration firing on a keepalive stream."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    # Setup demo track
+    source = generate_h264_video()
+
+    stream = create_stream(hass, source)
+    stream.keepalive = True
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await stream.async_record("/example/path", duration=RECORD_DURATION)
+
+    # The recorder timer starts when the first packet is received
+    recorder = stream.add_provider("recorder")
+    await recorder.recv()
+
+    future = dt_util.utcnow() + timedelta(seconds=RECORD_DURATION + 1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    segments = await record_worker_sync.get_segments()
+    assert len(segments) >= 1
+
+    record_worker_sync.join()
+    stream.stop()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
 
 async def test_record_path_not_allowed(hass, hass_client):
