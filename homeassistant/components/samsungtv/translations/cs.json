@@ -5,7 +5,6 @@
             "already_in_progress": "Konfigurace ji\u017e prob\u00edh\u00e1",
             "auth_missing": "Home Assistant nem\u00e1 opr\u00e1vn\u011bn\u00ed k p\u0159ipojen\u00ed k t\u00e9to televizi Samsung. Zkontrolujte nastaven\u00ed sv\u00e9 televize a povolte Home Assistant.",
             "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "not_successful": "Nelze se p\u0159ipojit k t\u00e9to televizi Samsung.",
             "not_supported": "Tato televize Samsung nen\u00ed aktu\u00e1ln\u011b podporov\u00e1na."
         },
         "flow_title": "Samsung TV: {model}",

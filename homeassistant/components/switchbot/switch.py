@@ -1,5 +1,4 @@
 """Support for Switchbot."""
-import logging
 from typing import Any, Dict
 
 # pylint: disable=import-error, no-member
@@ -10,8 +9,6 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Switchbot"
 

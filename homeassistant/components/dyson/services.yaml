@@ -33,7 +33,7 @@ set_angle:
       description: The angle at which the oscillation should end
       example: 255
 
-flow_direction_front:
+set_flow_direction_front:
   description: Set the fan flow direction.
   fields:
     entity_id:

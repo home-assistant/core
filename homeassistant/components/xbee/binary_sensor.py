@@ -3,12 +3,8 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from . import DOMAIN, PLATFORM_SCHEMA, XBeeDigitalIn, XBeeDigitalInConfig
-
-CONF_ON_STATE = "on_state"
-
-DEFAULT_ON_STATE = "high"
-STATES = ["high", "low"]
+from . import PLATFORM_SCHEMA, XBeeDigitalIn, XBeeDigitalInConfig
+from .const import CONF_ON_STATE, DOMAIN, STATES
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Optional(CONF_ON_STATE): vol.In(STATES)})
 

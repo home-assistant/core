@@ -1,94 +1,168 @@
 join:
+  name: Join group
   description: Group player together.
   fields:
     master:
-      description: Entity ID of the player that should become the coordinator of the group.
+      description:
+        Entity ID of the player that should become the coordinator of the group.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     entity_id:
       description: Name(s) of entities that will join the master.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
 
 unjoin:
+  name: Unjoin group
   description: Unjoin the player from a group.
   fields:
     entity_id:
       description: Name(s) of entities that will be unjoined from their group.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
 
 snapshot:
+  name: Snapshot
   description: Take a snapshot of the media player.
   fields:
     entity_id:
       description: Name(s) of entities that will be snapshot.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     with_group:
       description: True (default) or False. Also snapshot the group layout.
       example: "true"
 
 restore:
+  name: Restore
   description: Restore a snapshot of the media player.
   fields:
     entity_id:
       description: Name(s) of entities that will be restored.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     with_group:
       description: True (default) or False. Also restore the group layout.
       example: "true"
 
 set_sleep_timer:
+  name: Set timer
   description: Set a Sonos timer.
   fields:
     entity_id:
       description: Name(s) of entities that will have a timer set.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     sleep_time:
       description: Number of seconds to set the timer.
       example: "900"
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 1
+          unit_of_measurement: seconds
+          mode: slider
 
 clear_sleep_timer:
+  name: Clear timer
   description: Clear a Sonos timer.
   fields:
     entity_id:
       description: Name(s) of entities that will have the timer cleared.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
 
 set_option:
+  name: Set option
   description: Set Sonos sound options.
   fields:
     entity_id:
       description: Name(s) of entities that will have options set.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     night_sound:
       description: Enable Night Sound mode
       example: "true"
+      selector:
+        boolean:
     speech_enhance:
       description: Enable Speech Enhancement mode
       example: "true"
+      selector:
+        boolean:
     status_light:
       description: Enable Status (LED) Light
       example: "true"
+      selector:
+        boolean:
 
 play_queue:
-  description: Starts playing the queue from the first item.
+  name: Play queue
+  description: Start playing the queue from the first item.
   fields:
     entity_id:
       description: Name(s) of entities that will start playing.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     queue_position:
       description: Position of the song in the queue to start playing from.
       example: "0"
+      selector:
+        number:
+          min: 0
+          max: 100000000
+          mode: box
 
 remove_from_queue:
+  name: Remove from queue
   description: Removes an item from the queue.
   fields:
     entity_id:
       description: Name(s) of entities that will remove an item.
       example: "media_player.living_room_sonos"
+      selector:
+        entity:
+          integration: sonos
+          domain: media_player
     queue_position:
       description: Position in the queue to remove.
       example: "0"
+      selector:
+        number:
+          min: 0
+          max: 100000000
+          mode: box
 
 update_alarm:
+  name: Update alarm
   description: Updates an alarm with new time and volume settings.
   fields:
     alarm_id:

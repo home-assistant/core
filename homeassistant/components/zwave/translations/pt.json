@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "O Z-Wave j\u00e1 est\u00e1 configurado",
-            "one_instance_only": "Componente suporta apenas uma inst\u00e2ncia Z-Wave"
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma \u00fanica configura\u00e7\u00e3o \u00e9 poss\u00edvel."
         },
         "error": {
             "option_error": "A valida\u00e7\u00e3o Z-Wave falhou. O caminho para o dispositivo USB est\u00e1 correto?"

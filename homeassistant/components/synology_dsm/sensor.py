@@ -15,10 +15,11 @@ from homeassistant.helpers.temperature import display_temp
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import utcnow
 
-from . import SynoApi, SynologyDSMDeviceEntity, SynologyDSMEntity
+from . import SynoApi, SynologyDSMDeviceEntity, SynologyDSMDispatcherEntity
 from .const import (
     CONF_VOLUMES,
     DOMAIN,
+    ENTITY_UNIT_LOAD,
     INFORMATION_SENSORS,
     STORAGE_DISK_SENSORS,
     STORAGE_VOL_SENSORS,
@@ -68,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMUtilSensor(SynologyDSMEntity):
+class SynoDSMUtilSensor(SynologyDSMDispatcherEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -87,6 +88,10 @@ class SynoDSMUtilSensor(SynologyDSMEntity):
         # Network
         if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             return round(attr / 1024.0, 1)
+
+        # CPU load average
+        if self._unit == ENTITY_UNIT_LOAD:
+            return round(attr / 100, 2)
 
         return attr
 
@@ -117,7 +122,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
         return attr
 
 
-class SynoDSMInfoSensor(SynologyDSMEntity):
+class SynoDSMInfoSensor(SynologyDSMDispatcherEntity):
     """Representation a Synology information sensor."""
 
     def __init__(self, api: SynoApi, entity_type: str, entity_info: Dict[str, str]):

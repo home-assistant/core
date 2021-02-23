@@ -1,4 +1,6 @@
 """Tests for the TotalConnect alarm control panel device."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -12,6 +14,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     RESPONSE_ARM_FAILURE,
@@ -21,10 +24,9 @@ from .common import (
     RESPONSE_DISARM_FAILURE,
     RESPONSE_DISARM_SUCCESS,
     RESPONSE_DISARMED,
+    RESPONSE_USER_CODE_INVALID,
     setup_platform,
 )
-
-from tests.async_mock import patch
 
 ENTITY_ID = "alarm_control_panel.test"
 CODE = "-1"
@@ -72,12 +74,31 @@ async def test_arm_home_failure(hass):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{e.value}" == "TotalConnect failed to arm home test."
+        assert f"{err.value}" == "TotalConnect failed to arm home test."
+        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+
+
+async def test_arm_home_invalid_usercode(hass):
+    """Test arm home method with invalid usercode."""
+    responses = [RESPONSE_DISARMED, RESPONSE_USER_CODE_INVALID, RESPONSE_DISARMED]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
+            )
+            await hass.async_block_till_done()
+        assert f"{err.value}" == "TotalConnect failed to arm home test."
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
 
@@ -108,12 +129,12 @@ async def test_arm_away_failure(hass):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_ARM_AWAY, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{e.value}" == "TotalConnect failed to arm away test."
+        assert f"{err.value}" == "TotalConnect failed to arm away test."
         assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
 
 
@@ -144,10 +165,29 @@ async def test_disarm_failure(hass):
         await setup_platform(hass, ALARM_DOMAIN)
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
 
-        with pytest.raises(Exception) as e:
+        with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
                 ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
             )
             await hass.async_block_till_done()
-        assert f"{e.value}" == "TotalConnect failed to disarm test."
+        assert f"{err.value}" == "TotalConnect failed to disarm test."
+        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+
+
+async def test_disarm_invalid_usercode(hass):
+    """Test disarm method failure."""
+    responses = [RESPONSE_ARMED_AWAY, RESPONSE_USER_CODE_INVALID, RESPONSE_ARMED_AWAY]
+    with patch(
+        "homeassistant.components.totalconnect.TotalConnectClient.TotalConnectClient.request",
+        side_effect=responses,
+    ):
+        await setup_platform(hass, ALARM_DOMAIN)
+        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
+            )
+            await hass.async_block_till_done()
+        assert f"{err.value}" == "TotalConnect failed to disarm test."
         assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state

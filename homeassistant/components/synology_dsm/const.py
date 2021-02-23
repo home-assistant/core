@@ -1,6 +1,7 @@
 """Constants for Synology DSM."""
 
 from synology_dsm.api.core.security import SynoCoreSecurity
+from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
@@ -18,21 +19,25 @@ from homeassistant.const import (
 
 DOMAIN = "synology_dsm"
 PLATFORMS = ["binary_sensor", "camera", "sensor", "switch"]
+COORDINATOR_SURVEILLANCE = "coordinator_surveillance_station"
 
 # Entry keys
 SYNO_API = "syno_api"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Configuration
+CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 
-DEFAULT_SSL = True
+DEFAULT_USE_SSL = True
+DEFAULT_VERIFY_SSL = False
 DEFAULT_PORT = 5000
 DEFAULT_PORT_SSL = 5001
 # Options
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = 10  # sec
 
+ENTITY_UNIT_LOAD = "load"
 
 ENTITY_NAME = "name"
 ENTITY_UNIT = "unit"
@@ -40,9 +45,27 @@ ENTITY_ICON = "icon"
 ENTITY_CLASS = "device_class"
 ENTITY_ENABLE = "enable"
 
+# Services
+SERVICE_REBOOT = "reboot"
+SERVICE_SHUTDOWN = "shutdown"
+SERVICES = [
+    SERVICE_REBOOT,
+    SERVICE_SHUTDOWN,
+]
+
 # Entity keys should start with the API_KEY to fetch
 
 # Binary sensors
+UPGRADE_BINARY_SENSORS = {
+    f"{SynoCoreUpgrade.API_KEY}:update_available": {
+        ENTITY_NAME: "Update available",
+        ENTITY_UNIT: None,
+        ENTITY_ICON: "mdi:update",
+        ENTITY_CLASS: None,
+        ENTITY_ENABLE: True,
+    },
+}
+
 SECURITY_BINARY_SENSORS = {
     f"{SynoCoreSecurity.API_KEY}:status": {
         ENTITY_NAME: "Security status",
@@ -73,50 +96,50 @@ STORAGE_DISK_BINARY_SENSORS = {
 # Sensors
 UTILISATION_SENSORS = {
     f"{SynoCoreUtilization.API_KEY}:cpu_other_load": {
-        ENTITY_NAME: "CPU Load (Other)",
+        ENTITY_NAME: "CPU Utilization (Other)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_user_load": {
-        ENTITY_NAME: "CPU Load (User)",
+        ENTITY_NAME: "CPU Utilization (User)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_system_load": {
-        ENTITY_NAME: "CPU Load (System)",
+        ENTITY_NAME: "CPU Utilization (System)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_total_load": {
-        ENTITY_NAME: "CPU Load (Total)",
+        ENTITY_NAME: "CPU Utilization (Total)",
         ENTITY_UNIT: PERCENTAGE,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_1min_load": {
-        ENTITY_NAME: "CPU Load (1 min)",
-        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_NAME: "CPU Load Averarge (1 min)",
+        ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: False,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_5min_load": {
-        ENTITY_NAME: "CPU Load (5 min)",
-        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_NAME: "CPU Load Averarge (5 min)",
+        ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,
     },
     f"{SynoCoreUtilization.API_KEY}:cpu_15min_load": {
-        ENTITY_NAME: "CPU Load (15 min)",
-        ENTITY_UNIT: PERCENTAGE,
+        ENTITY_NAME: "CPU Load Averarge (15 min)",
+        ENTITY_UNIT: ENTITY_UNIT_LOAD,
         ENTITY_ICON: "mdi:chip",
         ENTITY_CLASS: None,
         ENTITY_ENABLE: True,

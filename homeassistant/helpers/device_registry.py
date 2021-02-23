@@ -1,25 +1,28 @@
 """Provide a way to connect entities belonging to one device."""
 from collections import OrderedDict
 import logging
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
+import time
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import attr
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import (
+    EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
+    EVENT_HOMEASSISTANT_STARTED,
+)
 from homeassistant.core import Event, callback
+from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
-from .singleton import singleton
-from .typing import HomeAssistantType
+from .typing import UNDEFINED, HomeAssistantType, UndefinedType
+
+# mypy: disallow_any_generics
 
 if TYPE_CHECKING:
     from . import entity_registry
 
-# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
-
 _LOGGER = logging.getLogger(__name__)
-_UNDEF = object()
 
 DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
@@ -37,25 +40,11 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_CONFIG_ENTRY = "config_entry"
+DISABLED_INTEGRATION = "integration"
+DISABLED_USER = "user"
 
-@attr.s(slots=True, frozen=True)
-class DeletedDeviceEntry:
-    """Deleted Device Registry Entry."""
-
-    config_entries: Set[str] = attr.ib()
-    connections: Set[Tuple[str, str]] = attr.ib()
-    identifiers: Set[Tuple[str, str]] = attr.ib()
-    id: str = attr.ib()
-
-    def to_device_entry(self):
-        """Create DeviceEntry from DeletedDeviceEntry."""
-        return DeviceEntry(
-            config_entries=self.config_entries,
-            connections=self.connections,
-            identifiers=self.identifiers,
-            id=self.id,
-            is_new=True,
-        )
+ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 
 @attr.s(slots=True, frozen=True)
@@ -65,17 +54,61 @@ class DeviceEntry:
     config_entries: Set[str] = attr.ib(converter=set, factory=set)
     connections: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
     identifiers: Set[Tuple[str, str]] = attr.ib(converter=set, factory=set)
-    manufacturer: str = attr.ib(default=None)
-    model: str = attr.ib(default=None)
-    name: str = attr.ib(default=None)
-    sw_version: str = attr.ib(default=None)
-    via_device_id: str = attr.ib(default=None)
-    area_id: str = attr.ib(default=None)
-    name_by_user: str = attr.ib(default=None)
-    entry_type: str = attr.ib(default=None)
+    manufacturer: Optional[str] = attr.ib(default=None)
+    model: Optional[str] = attr.ib(default=None)
+    name: Optional[str] = attr.ib(default=None)
+    sw_version: Optional[str] = attr.ib(default=None)
+    via_device_id: Optional[str] = attr.ib(default=None)
+    area_id: Optional[str] = attr.ib(default=None)
+    name_by_user: Optional[str] = attr.ib(default=None)
+    entry_type: Optional[str] = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    disabled_by: Optional[str] = attr.ib(
+        default=None,
+        validator=attr.validators.in_(
+            (
+                DISABLED_CONFIG_ENTRY,
+                DISABLED_INTEGRATION,
+                DISABLED_USER,
+                None,
+            )
+        ),
+    )
+    suggested_area: Optional[str] = attr.ib(default=None)
+
+    @property
+    def disabled(self) -> bool:
+        """Return if entry is disabled."""
+        return self.disabled_by is not None
+
+
+@attr.s(slots=True, frozen=True)
+class DeletedDeviceEntry:
+    """Deleted Device Registry Entry."""
+
+    config_entries: Set[str] = attr.ib()
+    connections: Set[Tuple[str, str]] = attr.ib()
+    identifiers: Set[Tuple[str, str]] = attr.ib()
+    id: str = attr.ib()
+    orphaned_timestamp: Optional[float] = attr.ib()
+
+    def to_device_entry(
+        self,
+        config_entry_id: str,
+        connections: Set[Tuple[str, str]],
+        identifiers: Set[Tuple[str, str]],
+    ) -> DeviceEntry:
+        """Create DeviceEntry from DeletedDeviceEntry."""
+        return DeviceEntry(
+            # type ignores: likely https://github.com/python/mypy/issues/8625
+            config_entries={config_entry_id},  # type: ignore[arg-type]
+            connections=self.connections & connections,  # type: ignore[arg-type]
+            identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
+            id=self.id,
+            is_new=True,
+        )
 
 
 def format_mac(mac: str) -> str:
@@ -103,13 +136,17 @@ class DeviceRegistry:
 
     devices: Dict[str, DeviceEntry]
     deleted_devices: Dict[str, DeletedDeviceEntry]
-    _devices_index: Dict[str, Dict[str, Dict[str, str]]]
+    _devices_index: Dict[str, Dict[str, Dict[Tuple[str, str], str]]]
 
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the device registry."""
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._clear_index()
+        self.hass.bus.async_listen(
+            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
+            self.async_config_entry_disabled_by_changed,
+        )
 
     @callback
     def async_get(self, device_id: str) -> Optional[DeviceEntry]:
@@ -118,7 +155,9 @@ class DeviceRegistry:
 
     @callback
     def async_get_device(
-        self, identifiers: set, connections: set
+        self,
+        identifiers: Set[Tuple[str, str]],
+        connections: Optional[Set[Tuple[str, str]]] = None,
     ) -> Optional[DeviceEntry]:
         """Check if device is registered."""
         device_id = self._async_get_device_id_from_index(
@@ -129,7 +168,9 @@ class DeviceRegistry:
         return self.devices[device_id]
 
     def _async_get_deleted_device(
-        self, identifiers: set, connections: set
+        self,
+        identifiers: Set[Tuple[str, str]],
+        connections: Optional[Set[Tuple[str, str]]],
     ) -> Optional[DeletedDeviceEntry]:
         """Check if device is deleted."""
         device_id = self._async_get_device_id_from_index(
@@ -140,7 +181,10 @@ class DeviceRegistry:
         return self.deleted_devices[device_id]
 
     def _async_get_device_id_from_index(
-        self, index: str, identifiers: set, connections: set
+        self,
+        index: str,
+        identifiers: Set[Tuple[str, str]],
+        connections: Optional[Set[Tuple[str, str]]],
     ) -> Optional[str]:
         """Check if device has previously been registered."""
         devices_index = self._devices_index[index]
@@ -184,38 +228,41 @@ class DeviceRegistry:
         _remove_device_from_index(devices_index, old_device)
         _add_device_to_index(devices_index, new_device)
 
-    def _clear_index(self):
+    def _clear_index(self) -> None:
         """Clear the index."""
         self._devices_index = {
             REGISTERED_DEVICE: {IDX_IDENTIFIERS: {}, IDX_CONNECTIONS: {}},
             DELETED_DEVICE: {IDX_IDENTIFIERS: {}, IDX_CONNECTIONS: {}},
         }
 
-    def _rebuild_index(self):
+    def _rebuild_index(self) -> None:
         """Create the index after loading devices."""
         self._clear_index()
         for device in self.devices.values():
             _add_device_to_index(self._devices_index[REGISTERED_DEVICE], device)
-        for device in self.deleted_devices.values():
-            _add_device_to_index(self._devices_index[DELETED_DEVICE], device)
+        for deleted_device in self.deleted_devices.values():
+            _add_device_to_index(self._devices_index[DELETED_DEVICE], deleted_device)
 
     @callback
     def async_get_or_create(
         self,
         *,
-        config_entry_id,
-        connections=None,
-        identifiers=None,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        default_manufacturer=_UNDEF,
-        default_model=_UNDEF,
-        default_name=_UNDEF,
-        sw_version=_UNDEF,
-        entry_type=_UNDEF,
-        via_device=None,
-    ):
+        config_entry_id: str,
+        connections: Optional[Set[Tuple[str, str]]] = None,
+        identifiers: Optional[Set[Tuple[str, str]]] = None,
+        manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        model: Union[str, None, UndefinedType] = UNDEFINED,
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        default_manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        default_model: Union[str, None, UndefinedType] = UNDEFINED,
+        default_name: Union[str, None, UndefinedType] = UNDEFINED,
+        sw_version: Union[str, None, UndefinedType] = UNDEFINED,
+        entry_type: Union[str, None, UndefinedType] = UNDEFINED,
+        via_device: Optional[Tuple[str, str]] = None,
+        # To disable a device if it gets created
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        suggested_area: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> Optional[DeviceEntry]:
         """Get device. Create if it doesn't exist."""
         if not identifiers and not connections:
             return None
@@ -236,52 +283,58 @@ class DeviceRegistry:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
-                device = deleted_device.to_device_entry()
+                device = deleted_device.to_device_entry(
+                    config_entry_id, connections, identifiers
+                )
             self._add_device(device)
 
-        if default_manufacturer is not _UNDEF and device.manufacturer is None:
+        if default_manufacturer is not UNDEFINED and device.manufacturer is None:
             manufacturer = default_manufacturer
 
-        if default_model is not _UNDEF and device.model is None:
+        if default_model is not UNDEFINED and device.model is None:
             model = default_model
 
-        if default_name is not _UNDEF and device.name is None:
+        if default_name is not UNDEFINED and device.name is None:
             name = default_name
 
         if via_device is not None:
-            via = self.async_get_device({via_device}, set())
-            via_device_id = via.id if via else _UNDEF
+            via = self.async_get_device({via_device})
+            via_device_id: Union[str, UndefinedType] = via.id if via else UNDEFINED
         else:
-            via_device_id = _UNDEF
+            via_device_id = UNDEFINED
 
         return self._async_update_device(
             device.id,
             add_config_entry_id=config_entry_id,
             via_device_id=via_device_id,
-            merge_connections=connections or _UNDEF,
-            merge_identifiers=identifiers or _UNDEF,
+            merge_connections=connections or UNDEFINED,
+            merge_identifiers=identifiers or UNDEFINED,
             manufacturer=manufacturer,
             model=model,
             name=name,
             sw_version=sw_version,
             entry_type=entry_type,
+            disabled_by=disabled_by,
+            suggested_area=suggested_area,
         )
 
     @callback
     def async_update_device(
         self,
-        device_id,
+        device_id: str,
         *,
-        area_id=_UNDEF,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        name_by_user=_UNDEF,
-        new_identifiers=_UNDEF,
-        sw_version=_UNDEF,
-        via_device_id=_UNDEF,
-        remove_config_entry_id=_UNDEF,
-    ):
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        model: Union[str, None, UndefinedType] = UNDEFINED,
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        name_by_user: Union[str, None, UndefinedType] = UNDEFINED,
+        new_identifiers: Union[Set[Tuple[str, str]], UndefinedType] = UNDEFINED,
+        sw_version: Union[str, None, UndefinedType] = UNDEFINED,
+        via_device_id: Union[str, None, UndefinedType] = UNDEFINED,
+        remove_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        suggested_area: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> Optional[DeviceEntry]:
         """Update properties of a device."""
         return self._async_update_device(
             device_id,
@@ -294,63 +347,77 @@ class DeviceRegistry:
             sw_version=sw_version,
             via_device_id=via_device_id,
             remove_config_entry_id=remove_config_entry_id,
+            disabled_by=disabled_by,
+            suggested_area=suggested_area,
         )
 
     @callback
     def _async_update_device(
         self,
-        device_id,
+        device_id: str,
         *,
-        add_config_entry_id=_UNDEF,
-        remove_config_entry_id=_UNDEF,
-        merge_connections=_UNDEF,
-        merge_identifiers=_UNDEF,
-        new_identifiers=_UNDEF,
-        manufacturer=_UNDEF,
-        model=_UNDEF,
-        name=_UNDEF,
-        sw_version=_UNDEF,
-        entry_type=_UNDEF,
-        via_device_id=_UNDEF,
-        area_id=_UNDEF,
-        name_by_user=_UNDEF,
-    ):
+        add_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
+        remove_config_entry_id: Union[str, UndefinedType] = UNDEFINED,
+        merge_connections: Union[Set[Tuple[str, str]], UndefinedType] = UNDEFINED,
+        merge_identifiers: Union[Set[Tuple[str, str]], UndefinedType] = UNDEFINED,
+        new_identifiers: Union[Set[Tuple[str, str]], UndefinedType] = UNDEFINED,
+        manufacturer: Union[str, None, UndefinedType] = UNDEFINED,
+        model: Union[str, None, UndefinedType] = UNDEFINED,
+        name: Union[str, None, UndefinedType] = UNDEFINED,
+        sw_version: Union[str, None, UndefinedType] = UNDEFINED,
+        entry_type: Union[str, None, UndefinedType] = UNDEFINED,
+        via_device_id: Union[str, None, UndefinedType] = UNDEFINED,
+        area_id: Union[str, None, UndefinedType] = UNDEFINED,
+        name_by_user: Union[str, None, UndefinedType] = UNDEFINED,
+        disabled_by: Union[str, None, UndefinedType] = UNDEFINED,
+        suggested_area: Union[str, None, UndefinedType] = UNDEFINED,
+    ) -> Optional[DeviceEntry]:
         """Update device attributes."""
         old = self.devices[device_id]
 
-        changes = {}
+        changes: Dict[str, Any] = {}
 
         config_entries = old.config_entries
 
         if (
-            add_config_entry_id is not _UNDEF
+            suggested_area not in (UNDEFINED, None, "")
+            and area_id is UNDEFINED
+            and old.area_id is None
+        ):
+            area = self.hass.helpers.area_registry.async_get(
+                self.hass
+            ).async_get_or_create(suggested_area)
+            area_id = area.id
+
+        if (
+            add_config_entry_id is not UNDEFINED
             and add_config_entry_id not in old.config_entries
         ):
             config_entries = old.config_entries | {add_config_entry_id}
 
         if (
-            remove_config_entry_id is not _UNDEF
+            remove_config_entry_id is not UNDEFINED
             and remove_config_entry_id in config_entries
         ):
             if config_entries == {remove_config_entry_id}:
                 self.async_remove_device(device_id)
-                return
+                return None
 
             config_entries = config_entries - {remove_config_entry_id}
 
-        if config_entries is not old.config_entries:
+        if config_entries != old.config_entries:
             changes["config_entries"] = config_entries
 
-        for attr_name, value in (
+        for attr_name, setvalue in (
             ("connections", merge_connections),
             ("identifiers", merge_identifiers),
         ):
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
-            if value is not _UNDEF and not value.issubset(old_value):
-                changes[attr_name] = old_value | value
+            if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
+                changes[attr_name] = old_value | setvalue
 
-        if new_identifiers is not _UNDEF:
+        if new_identifiers is not UNDEFINED:
             changes["identifiers"] = new_identifiers
 
         for attr_name, value in (
@@ -360,14 +427,16 @@ class DeviceRegistry:
             ("sw_version", sw_version),
             ("entry_type", entry_type),
             ("via_device_id", via_device_id),
+            ("disabled_by", disabled_by),
+            ("suggested_area", suggested_area),
         ):
-            if value is not _UNDEF and value != getattr(old, attr_name):
+            if value is not UNDEFINED and value != getattr(old, attr_name):
                 changes[attr_name] = value
 
-        if area_id is not _UNDEF and area_id != old.area_id:
+        if area_id is not UNDEFINED and area_id != old.area_id:
             changes["area_id"] = area_id
 
-        if name_by_user is not _UNDEF and name_by_user != old.name_by_user:
+        if name_by_user is not UNDEFINED and name_by_user != old.name_by_user:
             changes["name_by_user"] = name_by_user
 
         if old.is_new:
@@ -401,6 +470,7 @@ class DeviceRegistry:
                 connections=device.connections,
                 identifiers=device.identifiers,
                 id=device.id,
+                orphaned_timestamp=None,
             )
         )
         self.hass.bus.async_fire(
@@ -408,7 +478,7 @@ class DeviceRegistry:
         )
         self.async_schedule_save()
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load the device registry."""
         async_setup_cleanup(self.hass, self)
 
@@ -421,8 +491,9 @@ class DeviceRegistry:
             for device in data["devices"]:
                 devices[device["id"]] = DeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    connections={tuple(conn) for conn in device["connections"]},
-                    identifiers={tuple(iden) for iden in device["identifiers"]},
+                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
+                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name=device["name"],
@@ -438,14 +509,19 @@ class DeviceRegistry:
                     # Introduced in 0.87
                     area_id=device.get("area_id"),
                     name_by_user=device.get("name_by_user"),
+                    # Introduced in 0.119
+                    disabled_by=device.get("disabled_by"),
                 )
             # Introduced in 0.111
             for device in data.get("deleted_devices", []):
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    connections={tuple(conn) for conn in device["connections"]},
-                    identifiers={tuple(iden) for iden in device["identifiers"]},
+                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
+                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     id=device["id"],
+                    # Introduced in 2021.2
+                    orphaned_timestamp=device.get("orphaned_timestamp"),
                 )
 
         self.devices = devices
@@ -476,6 +552,7 @@ class DeviceRegistry:
                 "via_device_id": entry.via_device_id,
                 "area_id": entry.area_id,
                 "name_by_user": entry.name_by_user,
+                "disabled_by": entry.disabled_by,
             }
             for entry in self.devices.values()
         ]
@@ -485,6 +562,7 @@ class DeviceRegistry:
                 "connections": list(entry.connections),
                 "identifiers": list(entry.identifiers),
                 "id": entry.id,
+                "orphaned_timestamp": entry.orphaned_timestamp,
             }
             for entry in self.deleted_devices.values()
         ]
@@ -494,6 +572,7 @@ class DeviceRegistry:
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
+        now_time = time.time()
         for device in list(self.devices.values()):
             self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
@@ -501,8 +580,10 @@ class DeviceRegistry:
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
-                # Permanently remove the device from the device registry.
-                self._remove_device(deleted_device)
+                # Add a time stamp when the deleted device became orphaned
+                self.deleted_devices[deleted_device.id] = attr.evolve(
+                    deleted_device, orphaned_timestamp=now_time, config_entries=set()
+                )
             else:
                 config_entries = config_entries - {config_entry_id}
                 # No need to reindex here since we currently
@@ -513,19 +594,83 @@ class DeviceRegistry:
             self.async_schedule_save()
 
     @callback
+    def async_purge_expired_orphaned_devices(self) -> None:
+        """Purge expired orphaned devices from the registry.
+
+        We need to purge these periodically to avoid the database
+        growing without bound.
+        """
+        now_time = time.time()
+        for deleted_device in list(self.deleted_devices.values()):
+            if deleted_device.orphaned_timestamp is None:
+                continue
+
+            if (
+                deleted_device.orphaned_timestamp + ORPHANED_DEVICE_KEEP_SECONDS
+                < now_time
+            ):
+                self._remove_device(deleted_device)
+
+    @callback
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
         for dev_id, device in self.devices.items():
             if area_id == device.area_id:
                 self._async_update_device(dev_id, area_id=None)
 
+    @callback
+    def async_config_entry_disabled_by_changed(self, event: Event) -> None:
+        """Handle a config entry being disabled or enabled.
 
-@singleton(DATA_REGISTRY)
+        Disable devices in the registry that are associated to a config entry when
+        the config entry is disabled.
+        """
+        config_entry = self.hass.config_entries.async_get_entry(
+            event.data["config_entry_id"]
+        )
+
+        # The config entry may be deleted already if the event handling is late
+        if not config_entry:
+            return
+
+        if not config_entry.disabled_by:
+            devices = async_entries_for_config_entry(
+                self, event.data["config_entry_id"]
+            )
+            for device in devices:
+                if device.disabled_by != DISABLED_CONFIG_ENTRY:
+                    continue
+                self.async_update_device(device.id, disabled_by=None)
+            return
+
+        devices = async_entries_for_config_entry(self, event.data["config_entry_id"])
+        for device in devices:
+            if device.disabled:
+                # Entity already disabled, do not overwrite
+                continue
+            self.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
+
+
+@callback
+def async_get(hass: HomeAssistantType) -> DeviceRegistry:
+    """Get device registry."""
+    return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
+
+
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load device registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
+@bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
-    """Create entity registry."""
-    reg = DeviceRegistry(hass)
-    await reg.async_load()
-    return reg
+    """Get device registry.
+
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    return async_get(hass)
 
 
 @callback
@@ -579,13 +724,17 @@ def async_cleanup(
                     device.id, remove_config_entry_id=config_entry_id
                 )
 
+    # Periodic purge of orphaned devices to avoid the registry
+    # growing without bounds when there are lots of deleted devices
+    dev_reg.async_purge_expired_orphaned_devices()
+
 
 @callback
 def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
     from . import entity_registry  # pylint: disable=import-outside-toplevel
 
-    async def cleanup():
+    async def cleanup() -> None:
         """Cleanup."""
         ent_reg = await entity_registry.async_get_registry(hass)
         async_cleanup(hass, dev_reg, ent_reg)
@@ -595,32 +744,41 @@ def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> Non
     )
 
     async def entity_registry_changed(event: Event) -> None:
-        """Handle entity updated or removed."""
+        """Handle entity updated or removed dispatch."""
+        await debounced_cleanup.async_call()
+
+    @callback
+    def entity_registry_changed_filter(event: Event) -> bool:
+        """Handle entity updated or removed filter."""
         if (
             event.data["action"] == "update"
             and "device_id" not in event.data["changes"]
         ) or event.data["action"] == "create":
-            return
+            return False
 
-        await debounced_cleanup.async_call()
+        return True
 
     if hass.is_running:
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_registry_changed,
+            event_filter=entity_registry_changed_filter,
         )
         return
 
     async def startup_clean(event: Event) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
-            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, entity_registry_changed
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
+            entity_registry_changed,
+            event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
 
 
-def _normalize_connections(connections: set) -> set:
+def _normalize_connections(connections: Set[Tuple[str, str]]) -> Set[Tuple[str, str]]:
     """Normalize connections to ensure we can match mac addresses."""
     return {
         (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
@@ -629,7 +787,8 @@ def _normalize_connections(connections: set) -> set:
 
 
 def _add_device_to_index(
-    devices_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
+    devices_index: Dict[str, Dict[Tuple[str, str], str]],
+    device: Union[DeviceEntry, DeletedDeviceEntry],
 ) -> None:
     """Add a device to the index."""
     for identifier in device.identifiers:
@@ -639,7 +798,8 @@ def _add_device_to_index(
 
 
 def _remove_device_from_index(
-    devices_index: dict, device: Union[DeviceEntry, DeletedDeviceEntry]
+    devices_index: Dict[str, Dict[Tuple[str, str], str]],
+    device: Union[DeviceEntry, DeletedDeviceEntry],
 ) -> None:
     """Remove a device from the index."""
     for identifier in device.identifiers:

@@ -10,8 +10,7 @@
             "invalid_host": "Adresse IP non valide, voir https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
             "invalid_interface": "Interface r\u00e9seau non valide",
             "invalid_key": "Cl\u00e9 de passerelle non valide",
-            "invalid_mac": "Adresse MAC non valide",
-            "not_found_error": "La passerelle d\u00e9couverte par Zeroconf  ne permet pas d'obtenir les informations n\u00e9cessaires, essayez d'utiliser l'IP du p\u00e9riph\u00e9rique ex\u00e9cutant HomeAssistant comme interface"
+            "invalid_mac": "Adresse MAC non valide"
         },
         "flow_title": "Passerelle Xiaomi Aqara: {nom}",
         "step": {

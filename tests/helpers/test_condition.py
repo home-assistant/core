@@ -1,15 +1,14 @@
 """Test the condition helper."""
-from logging import ERROR
+from logging import WARNING
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConditionError, HomeAssistantError
 from homeassistant.helpers import condition
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
-
-from tests.async_mock import patch
 
 
 async def test_invalid_condition(hass):
@@ -35,6 +34,7 @@ async def test_and_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "And Condition",
             "condition": "and",
             "conditions": [
                 {
@@ -50,6 +50,9 @@ async def test_and_condition(hass):
             ],
         },
     )
+
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -69,6 +72,7 @@ async def test_and_condition_with_template(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Template Condition",
                     "condition": "template",
                     "value_template": '{{ states.sensor.temperature.state == "100" }}',
                 },
@@ -96,6 +100,7 @@ async def test_or_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "Or Condition",
             "condition": "or",
             "conditions": [
                 {
@@ -111,6 +116,9 @@ async def test_or_condition(hass):
             ],
         },
     )
+
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 120)
     assert not test(hass)
@@ -154,6 +162,7 @@ async def test_not_condition(hass):
     test = await condition.async_from_config(
         hass,
         {
+            "alias": "Not Condition",
             "condition": "not",
             "conditions": [
                 {
@@ -169,6 +178,9 @@ async def test_not_condition(hass):
             ],
         },
     )
+
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 101)
     assert test(hass)
@@ -218,36 +230,45 @@ async def test_not_condition_with_template(hass):
 
 async def test_time_window(hass):
     """Test time condition windows."""
-    sixam = dt.parse_time("06:00:00")
-    sixpm = dt.parse_time("18:00:00")
+    sixam = "06:00:00"
+    sixpm = "18:00:00"
+
+    test1 = await condition.async_from_config(
+        hass,
+        {"alias": "Time Cond", "condition": "time", "after": sixam, "before": sixpm},
+    )
+    test2 = await condition.async_from_config(
+        hass,
+        {"alias": "Time Cond", "condition": "time", "after": sixpm, "before": sixam},
+    )
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=3),
     ):
-        assert not condition.time(hass, after=sixam, before=sixpm)
-        assert condition.time(hass, after=sixpm, before=sixam)
+        assert not test1(hass)
+        assert test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=9),
     ):
-        assert condition.time(hass, after=sixam, before=sixpm)
-        assert not condition.time(hass, after=sixpm, before=sixam)
+        assert test1(hass)
+        assert not test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=15),
     ):
-        assert condition.time(hass, after=sixam, before=sixpm)
-        assert not condition.time(hass, after=sixpm, before=sixam)
+        assert test1(hass)
+        assert not test2(hass)
 
     with patch(
         "homeassistant.helpers.condition.dt_util.now",
         return_value=dt.now().replace(hour=21),
     ):
-        assert not condition.time(hass, after=sixam, before=sixpm)
-        assert condition.time(hass, after=sixpm, before=sixam)
+        assert not test1(hass)
+        assert test2(hass)
 
 
 async def test_time_using_input_datetime(hass):
@@ -335,25 +356,82 @@ async def test_time_using_input_datetime(hass):
             hass, after="input_datetime.pm", before="input_datetime.am"
         )
 
-    assert not condition.time(hass, after="input_datetime.not_existing")
-    assert not condition.time(hass, before="input_datetime.not_existing")
+    with pytest.raises(ConditionError):
+        condition.time(hass, after="input_datetime.not_existing")
+
+    with pytest.raises(ConditionError):
+        condition.time(hass, before="input_datetime.not_existing")
 
 
-async def test_if_numeric_state_not_raise_on_unavailable(hass):
-    """Test numeric_state doesn't raise on unavailable/unknown state."""
+async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
+    """Test numeric_state raises on unavailable/unknown state."""
     test = await condition.async_from_config(
         hass,
         {"condition": "numeric_state", "entity_id": "sensor.temperature", "below": 42},
     )
 
-    with patch("homeassistant.helpers.condition._LOGGER.warning") as logwarn:
-        hass.states.async_set("sensor.temperature", "unavailable")
-        assert not test(hass)
-        assert len(logwarn.mock_calls) == 0
+    caplog.clear()
+    caplog.set_level(WARNING)
 
-        hass.states.async_set("sensor.temperature", "unknown")
-        assert not test(hass)
-        assert len(logwarn.mock_calls) == 0
+    hass.states.async_set("sensor.temperature", "unavailable")
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert len(caplog.record_tuples) == 0
+
+    hass.states.async_set("sensor.temperature", "unknown")
+    with pytest.raises(ConditionError):
+        test(hass)
+    assert len(caplog.record_tuples) == 0
+
+
+async def test_state_raises(hass):
+    """Test that state raises ConditionError on errors."""
+    # No entity
+    with pytest.raises(ConditionError, match="no entity"):
+        condition.state(hass, entity=None, req_state="missing")
+
+    # Unknown entities
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "state",
+            "entity_id": ["sensor.door_unknown", "sensor.window_unknown"],
+            "state": "open",
+        },
+    )
+    with pytest.raises(ConditionError, match="unknown entity.*door"):
+        test(hass)
+    with pytest.raises(ConditionError, match="unknown entity.*window"):
+        test(hass)
+
+    # Unknown attribute
+    with pytest.raises(ConditionError, match=r"attribute .* does not exist"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "sensor.door",
+                "attribute": "model",
+                "state": "acme",
+            },
+        )
+
+        hass.states.async_set("sensor.door", "open")
+        test(hass)
+
+    # Unknown state entity
+    with pytest.raises(ConditionError, match="input_text.missing"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "state",
+                "entity_id": "sensor.door",
+                "state": "input_text.missing",
+            },
+        )
+
+        hass.states.async_set("sensor.door", "open")
+        test(hass)
 
 
 async def test_state_multiple_entities(hass):
@@ -393,6 +471,7 @@ async def test_multiple_states(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "State Condition",
                     "condition": "state",
                     "entity_id": "sensor.temperature",
                     "state": ["100", "200"],
@@ -429,7 +508,8 @@ async def test_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 200})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 200})
     assert test(hass)
@@ -463,7 +543,8 @@ async def test_state_attribute_boolean(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"no_happening": 201})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"happening": False})
     assert test(hass)
@@ -502,7 +583,6 @@ async def test_state_using_input_entities(hass):
                     "state": [
                         "input_text.hello",
                         "input_select.hello",
-                        "input_number.not_exist",
                         "salut",
                     ],
                 },
@@ -551,6 +631,125 @@ async def test_state_using_input_entities(hass):
     assert test(hass)
 
 
+async def test_numeric_state_raises(hass):
+    """Test that numeric_state raises ConditionError on errors."""
+    # Unknown entities
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "numeric_state",
+            "entity_id": ["sensor.temperature_unknown", "sensor.humidity_unknown"],
+            "above": 0,
+        },
+    )
+    with pytest.raises(ConditionError, match="unknown entity.*temperature"):
+        test(hass)
+    with pytest.raises(ConditionError, match="unknown entity.*humidity"):
+        test(hass)
+
+    # Unknown attribute
+    with pytest.raises(ConditionError, match=r"attribute .* does not exist"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "attribute": "temperature",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Template error
+    with pytest.raises(ConditionError, match="ZeroDivisionError"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "value_template": "{{ 1 / 0 }}",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Unavailable state
+    with pytest.raises(ConditionError, match="state of .* is unavailable"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", "unavailable")
+        test(hass)
+
+    # Bad number
+    with pytest.raises(ConditionError, match="cannot be processed as a number"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": 0,
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", "fifty")
+        test(hass)
+
+    # Below entity missing
+    with pytest.raises(ConditionError, match="'below' entity"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "below": "input_number.missing",
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Below entity not a number
+    with pytest.raises(
+        ConditionError,
+        match="'below'.*input_number.missing.*cannot be processed as a number",
+    ):
+        hass.states.async_set("input_number.missing", "number")
+        test(hass)
+
+    # Above entity missing
+    with pytest.raises(ConditionError, match="'above' entity"):
+        test = await condition.async_from_config(
+            hass,
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": "input_number.missing",
+            },
+        )
+
+        hass.states.async_set("sensor.temperature", 50)
+        test(hass)
+
+    # Above entity not a number
+    with pytest.raises(
+        ConditionError,
+        match="'above'.*input_number.missing.*cannot be processed as a number",
+    ):
+        hass.states.async_set("input_number.missing", "number")
+        test(hass)
+
+
 async def test_numeric_state_multiple_entities(hass):
     """Test with multiple entities in condition."""
     test = await condition.async_from_config(
@@ -559,6 +758,7 @@ async def test_numeric_state_multiple_entities(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Numeric State Condition",
                     "condition": "numeric_state",
                     "entity_id": ["sensor.temperature_1", "sensor.temperature_2"],
                     "below": 50,
@@ -580,7 +780,7 @@ async def test_numeric_state_multiple_entities(hass):
     assert not test(hass)
 
 
-async def test_numberic_state_attribute(hass):
+async def test_numeric_state_attribute(hass):
     """Test with numeric state attribute in condition."""
     test = await condition.async_from_config(
         hass,
@@ -598,7 +798,8 @@ async def test_numberic_state_attribute(hass):
     )
 
     hass.states.async_set("sensor.temperature", 100, {"unkown_attr": 10})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        assert test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": 49})
     assert test(hass)
@@ -610,7 +811,8 @@ async def test_numberic_state_attribute(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
-    assert not test(hass)
+    with pytest.raises(ConditionError):
+        assert test(hass)
 
 
 async def test_numeric_state_using_input_number(hass):
@@ -661,12 +863,100 @@ async def test_numeric_state_using_input_number(hass):
     )
     assert test(hass)
 
-    assert not condition.async_numeric_state(
-        hass, entity="sensor.temperature", below="input_number.not_exist"
+    with pytest.raises(ConditionError):
+        condition.async_numeric_state(
+            hass, entity="sensor.temperature", below="input_number.not_exist"
+        )
+    with pytest.raises(ConditionError):
+        condition.async_numeric_state(
+            hass, entity="sensor.temperature", above="input_number.not_exist"
+        )
+
+
+async def test_zone_raises(hass):
+    """Test that zone raises ConditionError on errors."""
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": "device_tracker.cat",
+            "zone": "zone.home",
+        },
     )
-    assert not condition.async_numeric_state(
-        hass, entity="sensor.temperature", above="input_number.not_exist"
+
+    with pytest.raises(ConditionError, match="no zone"):
+        condition.zone(hass, zone_ent=None, entity="sensor.any")
+
+    with pytest.raises(ConditionError, match="unknown zone"):
+        test(hass)
+
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"name": "home", "latitude": 2.1, "longitude": 1.1, "radius": 10},
     )
+
+    with pytest.raises(ConditionError, match="no entity"):
+        condition.zone(hass, zone_ent="zone.home", entity=None)
+
+    with pytest.raises(ConditionError, match="unknown entity"):
+        test(hass)
+
+    hass.states.async_set(
+        "device_tracker.cat",
+        "home",
+        {"friendly_name": "cat"},
+    )
+
+    with pytest.raises(ConditionError, match="latitude"):
+        test(hass)
+
+    hass.states.async_set(
+        "device_tracker.cat",
+        "home",
+        {"friendly_name": "cat", "latitude": 2.1},
+    )
+
+    with pytest.raises(ConditionError, match="longitude"):
+        test(hass)
+
+    hass.states.async_set(
+        "device_tracker.cat",
+        "home",
+        {"friendly_name": "cat", "latitude": 2.1, "longitude": 1.1},
+    )
+
+    # All okay, now test multiple failed conditions
+    assert test(hass)
+
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "zone",
+            "entity_id": ["device_tracker.cat", "device_tracker.dog"],
+            "zone": ["zone.home", "zone.work"],
+        },
+    )
+
+    with pytest.raises(ConditionError, match="dog"):
+        test(hass)
+
+    with pytest.raises(ConditionError, match="work"):
+        test(hass)
+
+    hass.states.async_set(
+        "zone.work",
+        "zoning",
+        {"name": "work", "latitude": 20, "longitude": 10, "radius": 25000},
+    )
+
+    hass.states.async_set(
+        "device_tracker.dog",
+        "work",
+        {"friendly_name": "dog", "latitude": 20.1, "longitude": 10.1},
+    )
+
+    assert test(hass)
 
 
 async def test_zone_multiple_entities(hass):
@@ -677,6 +967,7 @@ async def test_zone_multiple_entities(hass):
             "condition": "and",
             "conditions": [
                 {
+                    "alias": "Zone Condition",
                     "condition": "zone",
                     "entity_id": ["device_tracker.person_1", "device_tracker.person_2"],
                     "zone": "zone.home",
@@ -902,16 +1193,34 @@ async def test_extract_devices():
     )
 
 
-async def test_condition_template_error(hass, caplog):
+async def test_condition_template_error(hass):
     """Test invalid template."""
-    caplog.set_level(ERROR)
-
     test = await condition.async_from_config(
         hass, {"condition": "template", "value_template": "{{ undefined.state }}"}
     )
 
-    assert not test(hass)
-    assert len(caplog.records) == 1
-    assert caplog.records[0].message.startswith(
-        "Error during template condition: UndefinedError:"
+    with pytest.raises(ConditionError, match="template"):
+        test(hass)
+
+
+async def test_condition_template_invalid_results(hass):
+    """Test template condition render false with invalid results."""
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ 'string' }}"}
     )
+    assert not test(hass)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ 10.1 }}"}
+    )
+    assert not test(hass)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ 42 }}"}
+    )
+    assert not test(hass)
+
+    test = await condition.async_from_config(
+        hass, {"condition": "template", "value_template": "{{ [1, 2, 3] }}"}
+    )
+    assert not test(hass)

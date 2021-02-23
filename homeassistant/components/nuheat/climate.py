@@ -1,5 +1,5 @@
 """Support for NuHeat thermostats."""
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 import time
 
@@ -22,8 +22,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import callback
 from homeassistant.helpers import event as event_helper
-from homeassistant.util import Throttle
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -38,7 +39,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # The device does not have an off function.
 # To turn it off set to min_temp and PRESET_PERMANENT_HOLD
@@ -65,11 +65,10 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the NuHeat thermostat(s)."""
-    api, serial_number = hass.data[DOMAIN][config_entry.entry_id]
+    thermostat, coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     temperature_unit = hass.config.units.temperature_unit
-    thermostat = await hass.async_add_executor_job(api.get_thermostat, serial_number)
-    entity = NuHeatThermostat(thermostat, temperature_unit)
+    entity = NuHeatThermostat(coordinator, thermostat, temperature_unit)
 
     # No longer need a service as set_hvac_mode to auto does this
     # since climate 1.0 has been implemented
@@ -77,16 +76,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([entity], True)
 
 
-class NuHeatThermostat(ClimateEntity):
+class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     """Representation of a NuHeat Thermostat."""
 
-    def __init__(self, thermostat, temperature_unit):
+    def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""
+        super().__init__(coordinator)
         self._thermostat = thermostat
         self._temperature_unit = temperature_unit
         self._schedule_mode = None
         self._target_temperature = None
-        self._force_update = False
 
     @property
     def name(self):
@@ -122,7 +121,7 @@ class NuHeatThermostat(ClimateEntity):
     @property
     def available(self):
         """Return the unique id."""
-        return self._thermostat.online
+        return self.coordinator.last_update_success and self._thermostat.online
 
     def set_hvac_mode(self, hvac_mode):
         """Set the system mode."""
@@ -260,27 +259,29 @@ class NuHeatThermostat(ClimateEntity):
         # in the future to make sure the change actually
         # took effect
         event_helper.call_later(
-            self.hass, NUHEAT_API_STATE_SHIFT_DELAY, self._schedule_force_refresh
+            self.hass, NUHEAT_API_STATE_SHIFT_DELAY, self._forced_refresh
         )
 
-    def _schedule_force_refresh(self, _):
-        self._force_update = True
-        self.schedule_update_ha_state(True)
+    async def _forced_refresh(self, *_) -> None:
+        """Force a refresh."""
+        await self.coordinator.async_refresh()
 
-    def update(self):
-        """Get the latest state from the thermostat."""
-        if self._force_update:
-            self._throttled_update(no_throttle=True)
-            self._force_update = False
-        else:
-            self._throttled_update()
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._update_internal_state()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _throttled_update(self, **kwargs):
-        """Get the latest state from the thermostat with a throttle."""
-        self._thermostat.get_data()
+    @callback
+    def _update_internal_state(self):
+        """Update our internal state from the last api response."""
         self._schedule_mode = self._thermostat.schedule_mode
         self._target_temperature = self._thermostat.target_temperature
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Get the latest state from the thermostat."""
+        self._update_internal_state()
+        self.async_write_ha_state()
 
     @property
     def device_info(self):
@@ -290,4 +291,5 @@ class NuHeatThermostat(ClimateEntity):
             "name": self._thermostat.room,
             "model": "nVent Signature",
             "manufacturer": MANUFACTURER,
+            "suggested_area": self._thermostat.room,
         }

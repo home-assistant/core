@@ -1,5 +1,5 @@
 """Mock devices object to test Insteon."""
-import logging
+from unittest.mock import AsyncMock, MagicMock
 
 from pyinsteon.address import Address
 from pyinsteon.device_types import (
@@ -7,10 +7,6 @@ from pyinsteon.device_types import (
     Hub,
     SwitchedLightingControl_SwitchLinc,
 )
-
-from tests.async_mock import AsyncMock, MagicMock
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class MockSwitchLinc(SwitchedLightingControl_SwitchLinc):

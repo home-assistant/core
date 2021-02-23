@@ -1,13 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "connection_error": "WLED \u8a2d\u5099\u9023\u7dda\u5931\u6557\u3002"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "connection_error": "WLED \u8a2d\u5099\u9023\u7dda\u5931\u6557\u3002"
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "flow_title": "WLED\uff1a{name}",
         "step": {
@@ -18,8 +16,8 @@
                 "description": "\u8a2d\u5b9a WLED \u4ee5\u6574\u5408\u81f3 Home Assistant\u3002"
             },
             "zeroconf_confirm": {
-                "description": "\u662f\u5426\u8981\u65b0\u589e WLED \u540d\u7a31\u300c{name}\u300d\u8a2d\u5099\u81f3 Home Assistant\uff1f",
-                "title": "\u81ea\u52d5\u63a2\u7d22\u5230 WLED \u8a2d\u5099"
+                "description": "\u662f\u5426\u8981\u65b0\u589e WLED \u540d\u7a31\u300c{name}\u300d\u88dd\u7f6e\u81f3 Home Assistant\uff1f",
+                "title": "\u81ea\u52d5\u63a2\u7d22\u5230 WLED \u88dd\u7f6e"
             }
         }
     }

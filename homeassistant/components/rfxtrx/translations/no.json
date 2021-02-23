@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig.",
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "setup_network": {
@@ -25,7 +25,7 @@
                 "data": {
                     "device": "USB enhetsbane"
                 },
-                "title": "Sti"
+                "title": "Bane"
             },
             "user": {
                 "data": {
@@ -39,9 +39,9 @@
         "error": {
             "already_configured_device": "Enheten er allerede konfigurert",
             "invalid_event_code": "Ugyldig hendelseskode",
-            "invalid_input_2262_off": "Ugyldig inndata for kommando av",
-            "invalid_input_2262_on": "Ugyldig inndata for kommando p\u00e5",
-            "invalid_input_off_delay": "Ugyldig inndata for av forsinkelse",
+            "invalid_input_2262_off": "Ugyldig innputt for kommando av",
+            "invalid_input_2262_on": "Ugyldig innputt for kommando p\u00e5",
+            "invalid_input_off_delay": "Ugyldig innputt for av forsinkelse",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -53,7 +53,7 @@
                     "event_code": "Angi hendelseskode for \u00e5 legge til",
                     "remove_device": "Velg enhet du vil slette"
                 },
-                "title": "Rfxtrx Alternativer"
+                "title": "[%key:component::rfxtrx::title%] alternativer"
             },
             "set_device_options": {
                 "data": {
@@ -64,11 +64,11 @@
                     "off_delay": "Av forsinkelse",
                     "off_delay_enabled": "Aktiver av forsinkelse",
                     "replace_device": "Velg enheten du vil erstatte",
-                    "signal_repetitions": "Antall signalrepetisjoner"
+                    "signal_repetitions": "Antall signalrepetisjoner",
+                    "venetian_blind_mode": "Persiennemodus"
                 },
                 "title": "Konfigurer enhetsalternativer"
             }
         }
-    },
-    "title": "Rfxtrx"
+    }
 }

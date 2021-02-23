@@ -26,6 +26,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import (
+    ATTR_NAME,
     HTTP_BAD_REQUEST,
     HTTP_INTERNAL_SERVER_ERROR,
     HTTP_UNAUTHORIZED,
@@ -73,7 +74,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 ATTR_SUBSCRIPTION = "subscription"
 ATTR_BROWSER = "browser"
-ATTR_NAME = "name"
 
 ATTR_ENDPOINT = "endpoint"
 ATTR_KEYS = "keys"
@@ -242,7 +242,9 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             hass = request.app["hass"]
 
-            await hass.async_add_job(save_json, self.json_path, self.registrations)
+            await hass.async_add_executor_job(
+                save_json, self.json_path, self.registrations
+            )
             return self.json_message("Push notification subscriber registered.")
         except HomeAssistantError:
             if previous_registration is not None:
@@ -288,7 +290,9 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             hass = request.app["hass"]
 
-            await hass.async_add_job(save_json, self.json_path, self.registrations)
+            await hass.async_add_executor_job(
+                save_json, self.json_path, self.registrations
+            )
         except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(

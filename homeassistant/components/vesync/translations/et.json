@@ -4,13 +4,13 @@
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
-            "invalid_auth": "Tuvastamise viga",
-            "invalid_login": "Vale kasutajanimi v\u00f5i salas\u00f5na"
+            "invalid_auth": "Tuvastamise viga"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
+                    "password": "Salas\u00f5na",
+                    "username": "E-post"
                 },
                 "title": "Sisesta kasutajanimi ja salas\u00f5na"
             }

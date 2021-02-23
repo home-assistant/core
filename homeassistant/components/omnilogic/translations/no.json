@@ -4,7 +4,7 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },
@@ -25,6 +25,5 @@
                 }
             }
         }
-    },
-    "title": "Omnilogic"
+    }
 }

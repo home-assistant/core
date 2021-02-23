@@ -3,20 +3,18 @@
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "not_connected": "La connexi\u00f3 remota amb el teu televisor Panasonic Viera ha fallat. Consulta els registres per a m\u00e9s informaci\u00f3.",
             "unknown": "Error inesperat"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "invalid_pin_code": "El codi PIN introdu\u00eft no \u00e9s v\u00e0lid",
-            "not_connected": "No s'ha pogut establir una connexi\u00f3 remota amb el televisor Panasonic Viera"
+            "invalid_pin_code": "El Codi PIN introdu\u00eft no \u00e9s v\u00e0lid"
         },
         "step": {
             "pairing": {
                 "data": {
                     "pin": "Codi PIN"
                 },
-                "description": "Introdueix el PIN que apareix a la pantalla del televisor",
+                "description": "Introdueix el Codi PIN que apareix al televisor",
                 "title": "Vinculaci\u00f3"
             },
             "user": {
@@ -24,10 +22,9 @@
                     "host": "Adre\u00e7a IP",
                     "name": "Nom"
                 },
-                "description": "Introdueix l'adre\u00e7a IP del televisor Panasonic Viera",
+                "description": "Introdueix l'Adre\u00e7a IP del televisor Panasonic Viera",
                 "title": "Configuraci\u00f3 del televisor"
             }
         }
-    },
-    "title": "Televisor Panasonic Viera"
+    }
 }

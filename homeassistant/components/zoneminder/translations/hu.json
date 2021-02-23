@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "Nem siker\u00fclt csatlakozni a ZoneMinder szerverhez."
+        },
+        "create_entry": {
+            "default": "ZoneMinder szerver hozz\u00e1adva."
+        },
+        "error": {
+            "connection_error": "Nem siker\u00fclt csatlakozni a ZoneMinder szerverhez."
+        }
+    }
+}

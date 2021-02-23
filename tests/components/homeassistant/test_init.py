@@ -2,6 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -32,7 +33,6 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     async_capture_events,
     async_mock_service,
@@ -248,7 +248,7 @@ class TestComponentsCore(unittest.TestCase):
         assert not mock_stop.called
 
 
-async def test_turn_on_to_not_block_for_domains_without_service(hass):
+async def test_turn_on_skips_domains_without_service(hass, caplog):
     """Test if turn_on is blocking domain with no service."""
     await async_setup_component(hass, "homeassistant", {})
     async_mock_service(hass, "light", SERVICE_TURN_ON)
@@ -261,7 +261,7 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
     service_call = ha.ServiceCall(
         "homeassistant",
         "turn_on",
-        {"entity_id": ["light.test", "sensor.bla", "light.bla"]},
+        {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},
     )
     service = hass.services._services["homeassistant"]["turn_on"]
 
@@ -271,18 +271,19 @@ async def test_turn_on_to_not_block_for_domains_without_service(hass):
     ) as mock_call:
         await service.job.target(service_call)
 
-    assert mock_call.call_count == 2
+    assert mock_call.call_count == 1
     assert mock_call.call_args_list[0][0] == (
         "light",
         "turn_on",
         {"entity_id": ["light.bla", "light.test"]},
-        True,
     )
-    assert mock_call.call_args_list[1][0] == (
-        "sensor",
-        "turn_on",
-        {"entity_id": ["sensor.bla"]},
-        False,
+    assert mock_call.call_args_list[0][1] == {
+        "blocking": True,
+        "context": service_call.context,
+    }
+    assert (
+        "The service homeassistant.turn_on does not support entities binary_sensor.blub, sensor.bla"
+        in caplog.text
     )
 
 
@@ -381,6 +382,6 @@ async def test_not_allowing_recursion(hass, caplog):
             blocking=True,
         )
         assert (
-            f"Called service homeassistant.{service} with invalid entity IDs homeassistant.light"
+            f"Called service homeassistant.{service} with invalid entities homeassistant.light"
             in caplog.text
         ), service

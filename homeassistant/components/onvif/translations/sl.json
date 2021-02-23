@@ -7,9 +7,6 @@
             "no_mac": "Edinstvenega ID-ja za napravo ONVIF ni bilo mogo\u010de konfigurirati.",
             "onvif_error": "Napaka pri nastavitvi naprave ONVIF. Za ve\u010d informacij preverite dnevnike."
         },
-        "error": {
-            "connection_failed": "Ni bilo mogo\u010de povezati s storitvijo ONVIF s predlo\u017eenimi poverilnicami."
-        },
         "step": {
             "auth": {
                 "data": {

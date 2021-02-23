@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry \uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
         },
         "error": {
             "bad_dsn": "DSN \uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",

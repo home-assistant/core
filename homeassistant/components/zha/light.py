@@ -1,6 +1,7 @@
 """Lights on Zigbee Home Automation networks."""
 from collections import Counter
 from datetime import timedelta
+import enum
 import functools
 import itertools
 import logging
@@ -86,6 +87,14 @@ SUPPORT_GROUP_LIGHT = (
     | SUPPORT_TRANSITION
     | SUPPORT_WHITE_VALUE
 )
+
+
+class LightColorMode(enum.IntEnum):
+    """ZCL light color mode enum."""
+
+    HS_COLOR = 0x00
+    XY_COLOR = 0x01
+    COLOR_TEMP = 0x02
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -239,6 +248,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 self.debug("turned on: %s", t_log)
                 return
             self._color_temp = temperature
+            self._hs_color = None
 
         if (
             light.ATTR_HS_COLOR in kwargs
@@ -254,6 +264,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 self.debug("turned on: %s", t_log)
                 return
             self._hs_color = hs_color
+            self._color_temp = None
 
         if (
             effect == light.EFFECT_COLORLOOP
@@ -280,7 +291,7 @@ class BaseLight(LogMixin, light.LightEntity):
                 0x0,
                 0x0,
                 0x0,
-                0x0,  # update action only, action off, no dir,time,hue
+                0x0,  # update action only, action off, no dir, time, hue
             )
             t_log["color_loop_set"] = result
             self._effect = None
@@ -328,6 +339,7 @@ class Light(BaseLight, ZhaEntity):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._state = bool(self._on_off_channel.on_off)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
@@ -340,20 +352,30 @@ class Light(BaseLight, ZhaEntity):
         if self._level_channel:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._supported_features |= light.SUPPORT_TRANSITION
-            self._brightness = 0
+            self._brightness = self._level_channel.current_level
 
         if self._color_channel:
-            color_capabilities = self._color_channel.get_color_capabilities()
+            color_capabilities = self._color_channel.color_capabilities
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
+                self._color_temp = self._color_channel.color_temperature
 
             if color_capabilities & CAPABILITIES_COLOR_XY:
                 self._supported_features |= light.SUPPORT_COLOR
-                self._hs_color = (0, 0)
+                curr_x = self._color_channel.current_x
+                curr_y = self._color_channel.current_y
+                if curr_x is not None and curr_y is not None:
+                    self._hs_color = color_util.color_xy_to_hs(
+                        float(curr_x / 65535), float(curr_y / 65535)
+                    )
+                else:
+                    self._hs_color = (0, 0)
 
             if color_capabilities & CAPABILITIES_COLOR_LOOP:
                 self._supported_features |= light.SUPPORT_EFFECT
                 effect_list.append(light.EFFECT_COLORLOOP)
+                if self._color_channel.color_loop_active == 1:
+                    self._effect = light.EFFECT_COLORLOOP
 
         if self._identify_channel:
             self._supported_features |= light.SUPPORT_FLASH
@@ -410,76 +432,72 @@ class Light(BaseLight, ZhaEntity):
         if "effect" in last_state.attributes:
             self._effect = last_state.attributes["effect"]
 
-    async def async_get_state(self, from_cache=True):
-        """Attempt to retrieve on off state from the light."""
-        if not from_cache and not self.available:
+    async def async_get_state(self):
+        """Attempt to retrieve the state from the light."""
+        if not self.available:
             return
-        self.debug("polling current state - from cache: %s", from_cache)
+        self.debug("polling current state")
         if self._on_off_channel:
             state = await self._on_off_channel.get_attribute_value(
-                "on_off", from_cache=from_cache
+                "on_off", from_cache=False
             )
             if state is not None:
                 self._state = state
         if self._level_channel:
             level = await self._level_channel.get_attribute_value(
-                "current_level", from_cache=from_cache
+                "current_level", from_cache=False
             )
             if level is not None:
                 self._brightness = level
         if self._color_channel:
-            attributes = []
-            color_capabilities = self._color_channel.get_color_capabilities()
-            if (
-                color_capabilities is not None
-                and color_capabilities & CAPABILITIES_COLOR_TEMP
-            ):
-                attributes.append("color_temperature")
-            if (
-                color_capabilities is not None
-                and color_capabilities & CAPABILITIES_COLOR_XY
-            ):
-                attributes.append("current_x")
-                attributes.append("current_y")
-            if (
-                color_capabilities is not None
-                and color_capabilities & CAPABILITIES_COLOR_LOOP
-            ):
-                attributes.append("color_loop_active")
+            attributes = [
+                "color_mode",
+                "color_temperature",
+                "current_x",
+                "current_y",
+                "color_loop_active",
+            ]
 
             results = await self._color_channel.get_attributes(
-                attributes, from_cache=from_cache
+                attributes, from_cache=False
             )
 
-            if (
-                "color_temperature" in results
-                and results["color_temperature"] is not None
-            ):
-                self._color_temp = results["color_temperature"]
+            color_mode = results.get("color_mode")
+            if color_mode is not None:
+                if color_mode == LightColorMode.COLOR_TEMP:
+                    color_temp = results.get("color_temperature")
+                    if color_temp is not None and color_mode:
+                        self._color_temp = color_temp
+                        self._hs_color = None
+                else:
+                    color_x = results.get("current_x")
+                    color_y = results.get("current_y")
+                    if color_x is not None and color_y is not None:
+                        self._hs_color = color_util.color_xy_to_hs(
+                            float(color_x / 65535), float(color_y / 65535)
+                        )
+                        self._color_temp = None
 
-            color_x = results.get("color_x")
-            color_y = results.get("color_y")
-            if color_x is not None and color_y is not None:
-                self._hs_color = color_util.color_xy_to_hs(
-                    float(color_x / 65535), float(color_y / 65535)
-                )
-            if (
-                "color_loop_active" in results
-                and results["color_loop_active"] is not None
-            ):
-                color_loop_active = results["color_loop_active"]
+            color_loop_active = results.get("color_loop_active")
+            if color_loop_active is not None:
                 if color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
+                else:
+                    self._effect = None
+
+    async def async_update(self):
+        """Update to the latest state."""
+        await self.async_get_state()
 
     async def _refresh(self, time):
         """Call async_get_state at an interval."""
-        await self.async_get_state(from_cache=False)
+        await self.async_get_state()
         self.async_write_ha_state()
 
     async def _maybe_force_refresh(self, signal):
         """Force update the state if the signal contains the entity id for this entity."""
         if self.entity_id in signal["entity_ids"]:
-            await self.async_get_state(from_cache=False)
+            await self.async_get_state()
             self.async_write_ha_state()
 
 

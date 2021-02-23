@@ -6,17 +6,16 @@
             "no_bridges": "Ingen deCONZ broer oppdaget",
             "no_hardware_available": "Ingen radiomaskinvare koblet til deCONZ",
             "not_deconz_bridge": "Ikke en deCONZ bro",
-            "one_instance_only": "Komponenten st\u00f8tter bare \u00e9n deCONZ forekomst",
             "updated_instance": "Oppdatert deCONZ forekomst med ny vertsadresse"
         },
         "error": {
             "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
         },
-        "flow_title": "deCONZ Zigbee gateway ({host})",
+        "flow_title": "",
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegget {addon} ?",
-                "title": "deCONZ Zigbee gateway via Hass.io tillegg"
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble seg til deCONZ-gateway levert av Hass.io-tillegg {addon} ?",
+                "title": "deCONZ Zigbee gateway via Hass.io-tillegg"
             },
             "link": {
                 "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger -> Gateway -> Avansert \n 2. Trykk p\u00e5 \"Autentiser app\" knappen",
@@ -25,7 +24,7 @@
             "manual_input": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 }
             },
             "user": {
@@ -56,7 +55,7 @@
             "side_5": "",
             "side_6": "",
             "top_buttons": "\u00d8verste knappene",
-            "turn_off": "Skru av",
+            "turn_off": "Sl\u00e5 av",
             "turn_on": "Sl\u00e5 p\u00e5"
         },
         "trigger_type": {
@@ -67,24 +66,25 @@
             "remote_button_quadruple_press": "\"{subtype}\"-knappen ble firedoblet klikket",
             "remote_button_quintuple_press": "\"{subtype}\"-knappen femdobbelt klikket",
             "remote_button_rotated": "Knappen roterte \"{subtype}\"",
+            "remote_button_rotated_fast": "Knappen roterte raskt \"{subtype}\"",
             "remote_button_rotation_stopped": "Knapperotasjon \"{subtype}\" stoppet",
-            "remote_button_short_press": "\"{subtype}\" -knappen ble trykket",
+            "remote_button_short_press": "\"{subtype}\"-knappen ble trykket",
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_button_triple_press": "\"{subtype}\"-knappen trippel klikket",
-            "remote_double_tap": "Enheten \" {subtype} \" dobbeltklikket",
+            "remote_double_tap": "Enheten \"{subtype}\" dobbeltklikket",
             "remote_double_tap_any_side": "Enheten dobbeltklikket p\u00e5 alle sider",
             "remote_falling": "Enheten er i fritt fall",
             "remote_flip_180_degrees": "Enheten er snudd 180 grader",
             "remote_flip_90_degrees": "Enheten er snudd 90 grader",
             "remote_gyro_activated": "Enhet er ristet",
-            "remote_moved": "Enheten ble flyttet med \"{under type}\" opp",
-            "remote_moved_any_side": "Enheten flyttet med alle sider opp",
-            "remote_rotate_from_side_1": "Enheten rotert fra \"side 1\" til \" {subtype} \"",
-            "remote_rotate_from_side_2": "Enheten rotert fra \"side 2\" til \" {subtype} \"",
-            "remote_rotate_from_side_3": "Enheten rotert fra \"side 3\" til \" {subtype} \"",
-            "remote_rotate_from_side_4": "Enheten rotert fra \"side 4\" til \" {subtype} \"",
-            "remote_rotate_from_side_5": "Enheten rotert fra \"side 5\" til \" {subtype} \"",
-            "remote_rotate_from_side_6": "Enheten rotert fra \"side 6\" til \" {subtype} \"",
+            "remote_moved": "Enheten ble flyttet med \"{subtype}\" opp",
+            "remote_moved_any_side": "Enheten flyttet med hvilken som helst side opp",
+            "remote_rotate_from_side_1": "Enheten rotert fra \"side 1\" til \"{subtype}\"",
+            "remote_rotate_from_side_2": "Enheten rotert fra \"side 2\" til \"{subtype}\"",
+            "remote_rotate_from_side_3": "Enheten rotert fra \"side 3\" til \"{subtype}\"",
+            "remote_rotate_from_side_4": "Enheten rotert fra \"side 4\" til \"{subtype}\"",
+            "remote_rotate_from_side_5": "Enheten rotert fra \"side 5\" til \"{subtype}\"",
+            "remote_rotate_from_side_6": "Enheten rotert fra \"side 6\" til \"{subtype}\"",
             "remote_turned_clockwise": "Enheten dreide med klokken",
             "remote_turned_counter_clockwise": "Enheten dreide mot klokken"
         }

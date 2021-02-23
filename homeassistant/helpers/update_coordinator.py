@@ -3,13 +3,14 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Awaitable, Callable, Generic, List, Optional, TypeVar
+from typing import Any, Awaitable, Callable, Generic, List, Optional, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
 
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
@@ -19,6 +20,8 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
+
+# mypy: disallow-any-generics
 
 
 class UpdateFailed(Exception):
@@ -65,6 +68,10 @@ class DataUpdateCoordinator(Generic[T]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
+        )
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
@@ -138,9 +145,9 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
         self._debounced_refresh.async_cancel()
+        start = monotonic()
 
         try:
-            start = monotonic()
             self.data = await self._async_update_data()
 
         except (asyncio.TimeoutError, requests.exceptions.Timeout):
@@ -192,11 +199,41 @@ class DataUpdateCoordinator(Generic[T]):
         for update_callback in self._listeners:
             update_callback()
 
+    @callback
+    def async_set_updated_data(self, data: T) -> None:
+        """Manually update data, notify listeners and reset refresh interval."""
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+        self._debounced_refresh.async_cancel()
+
+        self.data = data
+        self.last_update_success = True
+        self.logger.debug(
+            "Manually updated %s data",
+            self.name,
+        )
+
+        if self._listeners:
+            self._schedule_refresh()
+
+        for update_callback in self._listeners:
+            update_callback()
+
+    @callback
+    def _async_stop_refresh(self, _: Event) -> None:
+        """Stop refreshing when Home Assistant is stopping."""
+        self.update_interval = None
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
 
 class CoordinatorEntity(entity.Entity):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator[Any]) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
 
@@ -227,7 +264,6 @@ class CoordinatorEntity(entity.Entity):
 
         Only used by the generic entity update service.
         """
-
         # Ignore manual update requests if the entity is disabled
         if not self.enabled:
             return

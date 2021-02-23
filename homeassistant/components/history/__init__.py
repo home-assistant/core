@@ -1,11 +1,11 @@
 """Provide pre-made queries on top of the recorder component."""
 from collections import defaultdict
-from datetime import timedelta
+from datetime import datetime as dt, timedelta
 from itertools import groupby
 import json
 import logging
 import time
-from typing import Optional, cast
+from typing import Iterable, Optional, cast
 
 from aiohttp import web
 from sqlalchemy import and_, bindparam, func, not_, or_
@@ -33,6 +33,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_ENTITY_GLOBS,
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -481,18 +482,19 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = request.query.get("end_time")
-        if end_time:
-            end_time = dt_util.parse_datetime(end_time)
+        end_time_str = request.query.get("end_time")
+        if end_time_str:
+            end_time = dt_util.parse_datetime(end_time_str)
             if end_time:
                 end_time = dt_util.as_utc(end_time)
             else:
                 return self.json_message("Invalid end_time", HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_ids = request.query.get("filter_entity_id")
-        if entity_ids:
-            entity_ids = entity_ids.lower().split(",")
+        entity_ids_str = request.query.get("filter_entity_id")
+        entity_ids = None
+        if entity_ids_str:
+            entity_ids = entity_ids_str.lower().split(",")
         include_start_time_state = "skip_initial_state" not in request.query
         significant_changes_only = (
             request.query.get("significant_changes_only", "1") != "0"
@@ -501,6 +503,13 @@ class HistoryPeriodView(HomeAssistantView):
         minimal_response = "minimal_response" in request.query
 
         hass = request.app["hass"]
+
+        if (
+            not include_start_time_state
+            and entity_ids
+            and not _entities_may_have_state_changes_after(hass, entity_ids, start_time)
+        ):
+            return self.json([])
 
         return cast(
             web.Response,
@@ -660,6 +669,19 @@ def _glob_to_like(glob_str):
     return States.entity_id.like(glob_str.translate(GLOB_TO_SQL_CHARS))
 
 
+def _entities_may_have_state_changes_after(
+    hass: HomeAssistantType, entity_ids: Iterable, start_time: dt
+) -> bool:
+    """Check the state machine to see if entities have changed since start time."""
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+
+        if state is None or state.last_changed > start_time:
+            return True
+
+    return False
+
+
 class LazyState(State):
     """A lazy version of core State."""
 
@@ -677,7 +699,7 @@ class LazyState(State):
         """Init the lazy state."""
         self._row = row
         self.entity_id = self._row.entity_id
-        self.state = self._row.state
+        self.state = self._row.state or ""
         self._attributes = None
         self._last_changed = None
         self._last_updated = None

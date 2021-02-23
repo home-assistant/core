@@ -1,4 +1,5 @@
 """The tests for UVC camera module."""
+from datetime import datetime
 import socket
 import unittest
 from unittest import mock
@@ -197,10 +198,15 @@ class TestUVC(unittest.TestCase):
         self.uvc = uvc.UnifiVideoCamera(self.nvr, self.uuid, self.name, self.password)
         self.nvr.get_camera.return_value = {
             "model": "UVC Fake",
-            "recordingSettings": {"fullTimeRecordEnabled": True},
+            "uuid": "06e3ff29-8048-31c2-8574-0852d1bd0e03",
+            "recordingSettings": {
+                "fullTimeRecordEnabled": True,
+                "motionRecordEnabled": False,
+            },
             "host": "host-a",
             "internalHost": "host-b",
             "username": "admin",
+            "lastRecordingStartTime": 1610070992367,
             "channels": [
                 {
                     "id": "0",
@@ -238,6 +244,30 @@ class TestUVC(unittest.TestCase):
         assert "Ubiquiti" == self.uvc.brand
         assert "UVC Fake" == self.uvc.model
         assert SUPPORT_STREAM == self.uvc.supported_features
+        assert "uuid" == self.uvc.unique_id
+
+    def test_motion_recording_mode_properties(self):
+        """Test the properties."""
+        self.nvr.get_camera.return_value["recordingSettings"][
+            "fullTimeRecordEnabled"
+        ] = False
+        self.nvr.get_camera.return_value["recordingSettings"][
+            "motionRecordEnabled"
+        ] = True
+        assert not self.uvc.is_recording
+        assert (
+            datetime(2021, 1, 8, 1, 56, 32, 367000)
+            == self.uvc.device_state_attributes["last_recording_start_time"]
+        )
+
+        self.nvr.get_camera.return_value["recordingIndicator"] = "DISABLED"
+        assert not self.uvc.is_recording
+
+        self.nvr.get_camera.return_value["recordingIndicator"] = "MOTION_INPROGRESS"
+        assert self.uvc.is_recording
+
+        self.nvr.get_camera.return_value["recordingIndicator"] = "MOTION_FINISHED"
+        assert self.uvc.is_recording
 
     def test_stream(self):
         """Test the RTSP stream URI."""

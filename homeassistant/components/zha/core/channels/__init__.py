@@ -1,10 +1,12 @@
 """Channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
-import logging
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import zigpy.zcl.clusters.closures
 
+from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -30,7 +32,6 @@ from .. import (
     typing as zha_typing,
 )
 
-_LOGGER = logging.getLogger(__name__)
 ChannelsDict = Dict[str, zha_typing.ChannelType]
 
 
@@ -48,7 +49,7 @@ class Channels:
         self._zha_device = zha_device
 
     @property
-    def pools(self) -> List["ChannelPool"]:
+    def pools(self) -> List[ChannelPool]:
         """Return channel pools list."""
         return self._pools
 
@@ -103,7 +104,7 @@ class Channels:
         }
 
     @classmethod
-    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> "Channels":
+    def new(cls, zha_device: zha_typing.ZhaDeviceType) -> Channels:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
@@ -159,6 +160,7 @@ class Channels:
             {
                 const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
                 const.ATTR_UNIQUE_ID: self.unique_id,
+                ATTR_DEVICE_ID: self.zha_device.device_id,
                 **event_data,
             },
         )
@@ -263,7 +265,7 @@ class ChannelPool:
         )
 
     @classmethod
-    def new(cls, channels: Channels, ep_id: int) -> "ChannelPool":
+    def new(cls, channels: Channels, ep_id: int) -> ChannelPool:
         """Create new channels for an endpoint."""
         pool = cls(channels, ep_id)
         pool.add_all_channels()

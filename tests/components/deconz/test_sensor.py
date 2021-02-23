@@ -1,15 +1,15 @@
 """deCONZ sensor platform tests."""
+
 from copy import deepcopy
 
-from homeassistant.components import deconz
+from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
-import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
+    STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -81,28 +81,19 @@ SENSORS = {
 }
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a gateway."""
-    assert (
-        await async_setup_component(
-            hass, sensor.DOMAIN, {"sensor": {"platform": deconz.DOMAIN}}
-        )
-        is True
-    )
-    assert deconz.DOMAIN not in hass.data
-
-
-async def test_no_sensors(hass):
+async def test_no_sensors(hass, aioclient_mock):
     """Test that no sensors in deconz results in no sensor entities."""
-    await setup_deconz_integration(hass)
+    await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_sensors(hass):
+async def test_sensors(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 5
@@ -161,16 +152,24 @@ async def test_sensors(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
+    states = hass.states.async_all()
+    assert len(hass.states.async_all()) == 5
+    for state in states:
+        assert state.state == STATE_UNAVAILABLE
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
 
 
-async def test_allow_clip_sensors(hass):
+async def test_allow_clip_sensors(hass, aioclient_mock):
     """Test that CLIP sensors can be allowed."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
     config_entry = await setup_deconz_integration(
         hass,
-        options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
+        aioclient_mock,
+        options={CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
 
@@ -180,7 +179,7 @@ async def test_allow_clip_sensors(hass):
     # Disallow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: False}
     )
     await hass.async_block_till_done()
 
@@ -190,7 +189,7 @@ async def test_allow_clip_sensors(hass):
     # Allow clip sensors
 
     hass.config_entries.async_update_entry(
-        config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+        config_entry, options={CONF_ALLOW_CLIP_SENSOR: True}
     )
     await hass.async_block_till_done()
 
@@ -198,9 +197,9 @@ async def test_allow_clip_sensors(hass):
     assert hass.states.get("sensor.clip_light_level_sensor")
 
 
-async def test_add_new_sensor(hass):
+async def test_add_new_sensor(hass, aioclient_mock):
     """Test that adding a new sensor works."""
-    config_entry = await setup_deconz_integration(hass)
+    config_entry = await setup_deconz_integration(hass, aioclient_mock)
     gateway = get_gateway_from_config_entry(hass, config_entry)
     assert len(hass.states.async_all()) == 0
 
@@ -218,11 +217,13 @@ async def test_add_new_sensor(hass):
     assert hass.states.get("sensor.light_level_sensor").state == "999.8"
 
 
-async def test_add_battery_later(hass):
+async def test_add_battery_later(hass, aioclient_mock):
     """Test that a sensor without an initial battery state creates a battery sensor once state exist."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = {"1": deepcopy(SENSORS["3"])}
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
     remote = gateway.api.sensors["1"]
 
@@ -238,3 +239,81 @@ async def test_add_battery_later(hass):
     assert len(remote._callbacks) == 2  # Event and battery entity
 
     assert hass.states.get("sensor.switch_1_battery_level")
+
+
+async def test_air_quality_sensor(hass, aioclient_mock):
+    """Test successful creation of air quality sensor entities."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = {
+        "0": {
+            "config": {"on": True, "reachable": True},
+            "ep": 2,
+            "etag": "c2d2e42396f7c78e11e46c66e2ec0200",
+            "lastseen": "2020-11-20T22:48Z",
+            "manufacturername": "BOSCH",
+            "modelid": "AIR",
+            "name": "Air quality",
+            "state": {
+                "airquality": "poor",
+                "airqualityppb": 809,
+                "lastupdated": "2020-11-20T22:48:00.209",
+            },
+            "swversion": "20200402",
+            "type": "ZHAAirQuality",
+            "uniqueid": "00:12:4b:00:14:4d:00:07-02-fdef",
+        }
+    }
+    await setup_deconz_integration(hass, aioclient_mock, get_state_response=data)
+
+    assert len(hass.states.async_all()) == 1
+
+    air_quality = hass.states.get("sensor.air_quality")
+    assert air_quality.state == "poor"
+
+
+async def test_time_sensor(hass, aioclient_mock):
+    """Test successful creation of time sensor entities."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = {
+        "0": {
+            "config": {"battery": 40, "on": True, "reachable": True},
+            "ep": 1,
+            "etag": "28e796678d9a24712feef59294343bb6",
+            "lastseen": "2020-11-22T11:26Z",
+            "manufacturername": "Danfoss",
+            "modelid": "eTRV0100",
+            "name": "Time",
+            "state": {
+                "lastset": "2020-11-19T08:07:08Z",
+                "lastupdated": "2020-11-22T10:51:03.444",
+                "localtime": "2020-11-22T10:51:01",
+                "utc": "2020-11-22T10:51:01Z",
+            },
+            "swversion": "20200429",
+            "type": "ZHATime",
+            "uniqueid": "cc:cc:cc:ff:fe:38:4d:b3-01-000a",
+        }
+    }
+    await setup_deconz_integration(hass, aioclient_mock, get_state_response=data)
+
+    assert len(hass.states.async_all()) == 2
+
+    time = hass.states.get("sensor.time")
+    assert time.state == "2020-11-19T08:07:08Z"
+
+    time_battery = hass.states.get("sensor.time_battery_level")
+    assert time_battery.state == "40"
+
+
+async def test_unsupported_sensor(hass, aioclient_mock):
+    """Test that unsupported sensors doesn't break anything."""
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = {
+        "0": {"type": "not supported", "name": "name", "state": {}, "config": {}}
+    }
+    await setup_deconz_integration(hass, aioclient_mock, get_state_response=data)
+
+    assert len(hass.states.async_all()) == 1
+
+    unsupported_sensor = hass.states.get("sensor.name")
+    assert unsupported_sensor.state == "unknown"

@@ -4,7 +4,7 @@
             "all_configured": "Alle knyttet servere som allerede er konfigurert",
             "already_configured": "Denne Plex-serveren er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
-            "reauth_successful": "Reautentisering var vellykket",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
             "token_request_timeout": "Tidsavbrudd ved innhenting av token",
             "unknown": "Uventet feil"
         },
@@ -15,12 +15,12 @@
             "not_found": "Plex-server ikke funnet",
             "ssl_error": "Problem med SSL-sertifikat"
         },
-        "flow_title": "{name}({host})",
+        "flow_title": "",
         "step": {
             "manual_setup": {
                 "data": {
                     "host": "Vert",
-                    "port": "",
+                    "port": "Port",
                     "ssl": "Bruker et SSL-sertifikat",
                     "token": "Token (valgfritt)",
                     "verify_ssl": "Verifisere SSL-sertifikat"

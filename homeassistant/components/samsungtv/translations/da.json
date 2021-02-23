@@ -4,7 +4,6 @@
             "already_configured": "Dette Samsung-tv er allerede konfigureret.",
             "already_in_progress": "Samsung-tv-konfiguration er allerede i gang.",
             "auth_missing": "Home Assistant er ikke godkendt til at oprette forbindelse til dette Samsung-tv. Tjek dit tvs indstillinger for at godkende Home Assistant.",
-            "not_successful": "Kan ikke oprette forbindelse til denne Samsung tv-enhed.",
             "not_supported": "Dette Samsung TV underst\u00f8ttes i \u00f8jeblikket ikke."
         },
         "flow_title": "Samsung-tv: {model}",

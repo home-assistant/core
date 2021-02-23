@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "Denne RainMachine-controller er allerede konfigureret."
         },
-        "error": {
-            "identifier_exists": "Konto er allerede registreret",
-            "invalid_credentials": "Ugyldige legitimationsoplysninger"
-        },
         "step": {
             "user": {
                 "data": {

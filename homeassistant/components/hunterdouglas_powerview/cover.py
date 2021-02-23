@@ -77,9 +77,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 name_before_refresh,
             )
             continue
+        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
+        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.append(
             PowerViewShade(
-                shade, name_before_refresh, room_data, coordinator, device_info
+                coordinator, device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
@@ -98,17 +100,14 @@ def hass_position_to_hd(hass_positon):
 class PowerViewShade(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
-    def __init__(self, shade, name, room_data, coordinator, device_info):
+    def __init__(self, coordinator, device_info, room_name, shade, name):
         """Initialize the shade."""
-        room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        super().__init__(coordinator, device_info, shade, name)
+        super().__init__(coordinator, device_info, room_name, shade, name)
         self._shade = shade
-        self._device_info = device_info
         self._is_opening = False
         self._is_closing = False
         self._last_action_timestamp = 0
         self._scheduled_transition_update = None
-        self._room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         self._current_cover_position = MIN_POSITION
 
     @property
@@ -217,7 +216,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         _LOGGER.debug("Raw data update: %s", self._shade.raw_data)
         position_data = self._shade.raw_data.get(ATTR_POSITION_DATA, {})
         if ATTR_POSITION1 in position_data:
-            self._current_cover_position = position_data[ATTR_POSITION1]
+            self._current_cover_position = int(position_data[ATTR_POSITION1])
         self._is_opening = False
         self._is_closing = False
 

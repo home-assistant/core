@@ -1,4 +1,6 @@
 """Test the DenonAVR config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
@@ -15,7 +17,6 @@ from homeassistant.components.denonavr.config_flow import (
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
@@ -389,7 +390,7 @@ async def test_config_flow_manual_host_connection_error(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_config_flow_manual_host_no_device_info(hass):
@@ -416,7 +417,7 @@ async def test_config_flow_manual_host_no_device_info(hass):
         )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "connection_error"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_config_flow_ssdp(hass):

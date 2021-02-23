@@ -4,12 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ruckus_unleashed",
   "requirements": [
-    "pyruckus==0.7"
+    "pyruckus==0.12"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@gabe565"
   ]

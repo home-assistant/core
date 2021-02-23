@@ -8,14 +8,18 @@ from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
+import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import callback
 
 from .const import (  # pylint:disable=unused-import
     CONF_DSMR_VERSION,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
+    CONF_TIME_BETWEEN_UPDATE,
+    DEFAULT_TIME_BETWEEN_UPDATE,
     DOMAIN,
 )
 
@@ -31,11 +35,15 @@ class DSMRConnection:
         self._port = port
         self._dsmr_version = dsmr_version
         self._telegram = {}
+        if dsmr_version == "5L":
+            self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
+        else:
+            self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
 
     def equipment_identifier(self):
         """Equipment identifier."""
-        if obis_ref.EQUIPMENT_IDENTIFIER in self._telegram:
-            dsmr_object = self._telegram[obis_ref.EQUIPMENT_IDENTIFIER]
+        if self._equipment_identifier in self._telegram:
+            dsmr_object = self._telegram[self._equipment_identifier]
             return getattr(dsmr_object, "value", None)
 
     def equipment_identifier_gas(self):
@@ -48,7 +56,7 @@ class DSMRConnection:
         """Test if we can validate connection with the device."""
 
         def update_telegram(telegram):
-            if obis_ref.EQUIPMENT_IDENTIFIER in telegram:
+            if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
 
@@ -115,6 +123,12 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return DSMROptionFlowHandler(config_entry)
+
     def _abort_if_host_port_configured(
         self,
         port: str,
@@ -172,6 +186,33 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(data)
 
         return self.async_create_entry(title=name, data=data)
+
+
+class DSMROptionFlowHandler(config_entries.OptionsFlow):
+    """Handle options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_TIME_BETWEEN_UPDATE,
+                        default=self.config_entry.options.get(
+                            CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                }
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

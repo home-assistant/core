@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
-            "reauth_successful": "Reautentisering var vellykket"
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "unknown": "Uventet feil"
         },

@@ -1,6 +1,4 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     BinarySensorEntity,
@@ -17,8 +15,6 @@ from . import (
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

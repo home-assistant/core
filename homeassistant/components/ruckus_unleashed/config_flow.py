@@ -1,4 +1,6 @@
 """Config flow for Ruckus Unleashed integration."""
+import logging
+
 from pyruckus import Ruckus
 from pyruckus.exceptions import AuthenticationError
 import voluptuous as vol
@@ -6,21 +8,25 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import _LOGGER, DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    API_SERIAL,
+    API_SYSTEM_OVERVIEW,
+    DOMAIN,
+)
+
+_LOGGER = logging.getLogger(__package__)
 
 DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
 
     try:
-        ruckus = await hass.async_add_executor_job(
-            Ruckus, data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
-        )
+        ruckus = Ruckus(data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD])
     except AuthenticationError as error:
         raise InvalidAuth from error
     except ConnectionError as error:
@@ -28,7 +34,16 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     mesh_name = ruckus.mesh_name()
 
-    return {"title": mesh_name}
+    system_info = ruckus.system_info()
+    try:
+        host_serial = system_info[API_SYSTEM_OVERVIEW][API_SERIAL]
+    except KeyError as error:
+        raise CannotConnect from error
+
+    return {
+        "title": mesh_name,
+        "serial": host_serial,
+    }
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,7 +57,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await self.hass.async_add_executor_job(
+                    validate_input, self.hass, user_input
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -51,7 +68,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
+                await self.async_set_unique_id(info["serial"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 

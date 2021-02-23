@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "La integraci\u00f3 de Sonarr ha de tornar a autenticar-se manualment amb l'API de Sonarr allotjada a: {host}",
-                "title": "Re-autenticaci\u00f3 amb Sonarr"
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {
                 "data": {
@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Utilitza un certificat SSL",
                     "verify_ssl": "Verifica el certificat SSL"
-                },
-                "title": "Connexi\u00f3 amb Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

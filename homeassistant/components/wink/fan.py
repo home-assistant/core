@@ -1,6 +1,4 @@
 """Support for Wink fans."""
-import logging
-
 import pywink
 
 from homeassistant.components.fan import (
@@ -13,8 +11,6 @@ from homeassistant.components.fan import (
 )
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 SPEED_AUTO = "auto"
 SPEED_LOWEST = "lowest"
@@ -44,7 +40,20 @@ class WinkFanDevice(WinkDevice, FanEntity):
         """Set the speed of the fan."""
         self.wink.set_state(True, speed)
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    def turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the fan."""
         self.wink.set_state(True, speed)
 

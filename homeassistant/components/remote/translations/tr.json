@@ -1,4 +1,14 @@
 {
+    "device_automation": {
+        "action_type": {
+            "turn_off": "{entity_name} kapat",
+            "turn_on": "{entity_name} a\u00e7\u0131n"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} kapat\u0131ld\u0131",
+            "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
+        }
+    },
     "state": {
         "_": {
             "off": "Kapal\u0131",

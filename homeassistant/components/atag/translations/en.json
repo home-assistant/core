@@ -5,7 +5,6 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "connection_error": "Failed to connect",
             "unauthorized": "Pairing denied, check device for auth request"
         },
         "step": {
@@ -18,6 +17,5 @@
                 "title": "Connect to the device"
             }
         }
-    },
-    "title": "Atag"
+    }
 }

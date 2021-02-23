@@ -2,12 +2,15 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any, Mapping
 
 import aiohttp
+from async_upnp_client.search import async_search
 from defusedxml import ElementTree
 from netdisco import ssdp, util
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.loader import async_get_ssdp
 
@@ -57,26 +60,38 @@ class Scanner:
         """Initialize class."""
         self.hass = hass
         self.seen = set()
+        self._entries = []
         self._integration_matchers = integration_matchers
         self._description_cache = {}
 
+    async def _on_ssdp_response(self, data: Mapping[str, Any]) -> None:
+        """Process an ssdp response."""
+        self.async_store_entry(
+            ssdp.UPNPEntry({key.lower(): item for key, item in data.items()})
+        )
+
+    @callback
+    def async_store_entry(self, entry):
+        """Save an entry for later processing."""
+        self._entries.append(entry)
+
     async def async_scan(self, _):
         """Scan for new entries."""
-        _LOGGER.debug("Scanning")
-        # Run 3 times as packets can get lost
-        for _ in range(3):
-            entries = await self.hass.async_add_executor_job(ssdp.scan)
-            await self._process_entries(entries)
+
+        await async_search(async_callback=self._on_ssdp_response)
+        await self._process_entries()
 
         # We clear the cache after each run. We track discovered entries
         # so will never need a description twice.
         self._description_cache.clear()
+        self._entries.clear()
 
-    async def _process_entries(self, entries):
+    async def _process_entries(self):
         """Process SSDP entries."""
-        tasks = []
+        entries_to_process = []
+        unseen_locations = set()
 
-        for entry in entries:
+        for entry in self._entries:
             key = (entry.st, entry.location)
 
             if key in self.seen:
@@ -84,21 +99,24 @@ class Scanner:
 
             self.seen.add(key)
 
-            tasks.append(self._process_entry(entry))
+            entries_to_process.append(entry)
 
-        if not tasks:
+            if (
+                entry.location is not None
+                and entry.location not in self._description_cache
+            ):
+                unseen_locations.add(entry.location)
+
+        if not entries_to_process:
             return
 
-        to_load = [
-            result for result in await asyncio.gather(*tasks) if result is not None
-        ]
-
-        if not to_load:
-            return
+        if unseen_locations:
+            await self._fetch_descriptions(list(unseen_locations))
 
         tasks = []
 
-        for entry, info, domains in to_load:
+        for entry in entries_to_process:
+            info, domains = self._process_entry(entry)
             for domain in domains:
                 _LOGGER.debug("Discovered %s at %s", domain, entry.location)
                 tasks.append(
@@ -107,9 +125,29 @@ class Scanner:
                     )
                 )
 
-        await asyncio.wait(tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
 
-    async def _process_entry(self, entry):
+    async def _fetch_descriptions(self, locations):
+        """Fetch descriptions from locations."""
+
+        for idx, result in enumerate(
+            await asyncio.gather(
+                *[self._fetch_description(location) for location in locations],
+                return_exceptions=True,
+            )
+        ):
+            location = locations[idx]
+
+            if isinstance(result, Exception):
+                _LOGGER.exception(
+                    "Failed to fetch ssdp data from: %s", location, exc_info=result
+                )
+                continue
+
+            self._description_cache[location] = result
+
+    def _process_entry(self, entry):
         """Process a single entry."""
 
         info = {"st": entry.st}
@@ -118,17 +156,13 @@ class Scanner:
                 info[key] = entry.values[key]
 
         if entry.location:
-
             # Multiple entries usually share same location. Make sure
             # we fetch it only once.
             info_req = self._description_cache.get(entry.location)
-
             if info_req is None:
-                info_req = self._description_cache[
-                    entry.location
-                ] = self.hass.async_create_task(self._fetch_description(entry.location))
+                return (None, [])
 
-            info.update(await info_req)
+            info.update(info_req)
 
         domains = set()
         for domain, matchers in self._integration_matchers.items():
@@ -137,22 +171,22 @@ class Scanner:
                     domains.add(domain)
 
         if domains:
-            return (entry, info_from_entry(entry, info), domains)
+            return (info_from_entry(entry, info), domains)
 
-        return None
+        return (None, [])
 
     async def _fetch_description(self, xml_location):
         """Fetch an XML description."""
         session = self.hass.helpers.aiohttp_client.async_get_clientsession()
         try:
             resp = await session.get(xml_location, timeout=5)
-            xml = await resp.text()
+            xml = await resp.text(errors="replace")
 
             # Samsung Smart TV sometimes returns an empty document the
             # first time. Retry once.
             if not xml:
                 resp = await session.get(xml_location, timeout=5)
-                xml = await resp.text()
+                xml = await resp.text(errors="replace")
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
             _LOGGER.debug("Error fetching %s: %s", xml_location, err)
             return {}

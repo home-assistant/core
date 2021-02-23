@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.helpers.entity_component import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockEntity,
@@ -728,6 +728,7 @@ async def test_device_info_called(hass):
                         "model": "test-model",
                         "name": "test-name",
                         "sw_version": "test-sw",
+                        "suggested_area": "Heliport",
                         "entry_type": "service",
                         "via_device": ("hue", "via-id"),
                     },
@@ -747,7 +748,7 @@ async def test_device_info_called(hass):
 
     assert len(hass.states.async_entity_ids()) == 2
 
-    device = registry.async_get_device({("hue", "1234")}, set())
+    device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
     assert device.connections == {("mac", "abcd")}
@@ -755,6 +756,7 @@ async def test_device_info_called(hass):
     assert device.model == "test-model"
     assert device.name == "test-name"
     assert device.sw_version == "test-sw"
+    assert device.suggested_area == "Heliport"
     assert device.entry_type == "service"
     assert device.via_device_id == via.id
 
@@ -975,3 +977,49 @@ async def test_setup_entry_with_entities_that_block_forever(hass, caplog):
     assert "test_domain.test1" in caplog.text
     assert "test_domain" in caplog.text
     assert "test" in caplog.text
+
+
+async def test_two_platforms_add_same_entity(hass):
+    """Test two platforms in the same domain adding an entity with the same name."""
+    entity_platform1 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity1 = SlowEntity(name="entity_1")
+
+    entity_platform2 = MockEntityPlatform(
+        hass, domain="mock_integration", platform_name="mock_platform", platform=None
+    )
+    entity2 = SlowEntity(name="entity_1")
+
+    await asyncio.gather(
+        entity_platform1.async_add_entities([entity1]),
+        entity_platform2.async_add_entities([entity2]),
+    )
+
+    entities = []
+
+    @callback
+    def handle_service(entity, *_):
+        entities.append(entity)
+
+    entity_platform1.async_register_entity_service("hello", {}, handle_service)
+    await hass.services.async_call(
+        "mock_platform", "hello", {"entity_id": "all"}, blocking=True
+    )
+
+    assert len(entities) == 2
+    assert {entity1.entity_id, entity2.entity_id} == {
+        "mock_integration.entity_1",
+        "mock_integration.entity_1_2",
+    }
+    assert entity1 in entities
+    assert entity2 in entities
+
+
+class SlowEntity(MockEntity):
+    """An entity that will sleep during add."""
+
+    async def async_added_to_hass(self):
+        """Make sure control is returned to the event loop on add."""
+        await asyncio.sleep(0.1)
+        await super().async_added_to_hass()

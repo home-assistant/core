@@ -1,31 +1,32 @@
 """Module to handle installing requirements."""
 import asyncio
-import logging
 import os
 from typing import Any, Dict, Iterable, List, Optional, Set, Union, cast
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.loader import Integration, IntegrationNotFound, async_get_integration
 import homeassistant.util.package as pkg_util
+
+# mypy: disallow-any-generics
 
 DATA_PIP_LOCK = "pip_lock"
 DATA_PKG_CACHE = "pkg_cache"
 DATA_INTEGRATIONS_WITH_REQS = "integrations_with_reqs"
 CONSTRAINT_FILE = "package_constraints.txt"
-_LOGGER = logging.getLogger(__name__)
 DISCOVERY_INTEGRATIONS: Dict[str, Iterable[str]] = {
+    "dhcp": ("dhcp",),
     "mqtt": ("mqtt",),
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
-_UNDEF = object()
 
 
 class RequirementsNotFound(HomeAssistantError):
     """Raised when a component is not found."""
 
-    def __init__(self, domain: str, requirements: List) -> None:
+    def __init__(self, domain: str, requirements: List[str]) -> None:
         """Initialize a component not found error."""
         super().__init__(f"Requirements for {domain} not found: {requirements}.")
         self.domain = domain
@@ -55,19 +56,21 @@ async def async_get_integration_with_requirements(
     if cache is None:
         cache = hass.data[DATA_INTEGRATIONS_WITH_REQS] = {}
 
-    int_or_evt: Union[Integration, asyncio.Event, None] = cache.get(domain, _UNDEF)
+    int_or_evt: Union[Integration, asyncio.Event, None, UndefinedType] = cache.get(
+        domain, UNDEFINED
+    )
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
-        int_or_evt = cache.get(domain, _UNDEF)
+        int_or_evt = cache.get(domain, UNDEFINED)
 
-        # When we have waited and it's _UNDEF, it doesn't exist
+        # When we have waited and it's UNDEFINED, it doesn't exist
         # We don't cache that it doesn't exist, or else people can't fix it
         # and then restart, because their config will never be valid.
-        if int_or_evt is _UNDEF:
+        if int_or_evt is UNDEFINED:
             raise IntegrationNotFound(domain)
 
-    if int_or_evt is not _UNDEF:
+    if int_or_evt is not UNDEFINED:
         return cast(Integration, int_or_evt)
 
     event = cache[domain] = asyncio.Event()
@@ -123,7 +126,7 @@ async def async_process_requirements(
             if pkg_util.is_installed(req):
                 continue
 
-            def _install(req: str, kwargs: Dict) -> bool:
+            def _install(req: str, kwargs: Dict[str, Any]) -> bool:
                 """Install requirement."""
                 return pkg_util.install_package(req, **kwargs)
 

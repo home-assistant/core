@@ -3,17 +3,13 @@ import asyncio
 from functools import partial
 import logging
 
-from miio import (  # pylint: disable=import-error
-    AirConditioningCompanionV3,
-    ChuangmiPlug,
-    Device,
-    DeviceException,
-    PowerStrip,
-)
+from miio import AirConditioningCompanionV3  # pylint: disable=import-error
+from miio import ChuangmiPlug, DeviceException, PowerStrip
 from miio.powerstrip import PowerMode  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -21,23 +17,25 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_TOKEN,
 )
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_DEVICE,
+    CONF_FLOW_TYPE,
+    CONF_MODEL,
     DOMAIN,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
     SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_WIFI_LED_ON,
 )
+from .device import XiaomiMiioEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Switch"
 DATA_KEY = "switch.xiaomi_miio"
 
-CONF_MODEL = "model"
 MODEL_POWER_STRIP_V2 = "zimi.powerstrip.v2"
 MODEL_PLUG_V3 = "chuangmi.plug.v3"
 
@@ -96,7 +94,7 @@ SERVICE_SCHEMA_POWER_MODE = SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_POWER_PRICE = SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRICE): vol.All(vol.Coerce(float), vol.Range(min=0))}
+    {vol.Required(ATTR_PRICE): cv.positive_float}
 )
 
 SERVICE_TO_METHOD = {
@@ -114,119 +112,124 @@ SERVICE_TO_METHOD = {
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the switch from config."""
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
+    """Import Miio configuration from YAML."""
+    _LOGGER.warning(
+        "Loading Xiaomi Miio Switch via platform setup is deprecated. Please remove it from your configuration."
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
-    host = config[CONF_HOST]
-    token = config[CONF_TOKEN]
-    name = config[CONF_NAME]
-    model = config.get(CONF_MODEL)
 
-    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the switch from a config entry."""
+    entities = []
 
-    devices = []
-    unique_id = None
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+        if DATA_KEY not in hass.data:
+            hass.data[DATA_KEY] = {}
 
-    if model is None:
-        try:
-            miio_device = Device(host, token)
-            device_info = await hass.async_add_executor_job(miio_device.info)
-            model = device_info.model
-            unique_id = f"{model}-{device_info.mac_address}"
-            _LOGGER.info(
-                "%s %s %s detected",
-                model,
-                device_info.firmware_version,
-                device_info.hardware_version,
-            )
-        except DeviceException as ex:
-            raise PlatformNotReady from ex
+        host = config_entry.data[CONF_HOST]
+        token = config_entry.data[CONF_TOKEN]
+        name = config_entry.title
+        model = config_entry.data[CONF_MODEL]
+        unique_id = config_entry.unique_id
 
-    if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
-        plug = ChuangmiPlug(host, token, model=model)
+        _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        # The device has two switchable channels (mains and a USB port).
-        # A switch device per channel will be created.
-        for channel_usb in [True, False]:
-            device = ChuangMiPlugSwitch(name, plug, model, unique_id, channel_usb)
-            devices.append(device)
+        if model in ["chuangmi.plug.v1", "chuangmi.plug.v3", "chuangmi.plug.hmi208"]:
+            plug = ChuangmiPlug(host, token, model=model)
+
+            # The device has two switchable channels (mains and a USB port).
+            # A switch device per channel will be created.
+            for channel_usb in [True, False]:
+                if channel_usb:
+                    unique_id_ch = f"{unique_id}-USB"
+                else:
+                    unique_id_ch = f"{unique_id}-mains"
+                device = ChuangMiPlugSwitch(
+                    name, plug, config_entry, unique_id_ch, channel_usb
+                )
+                entities.append(device)
+                hass.data[DATA_KEY][host] = device
+        elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
+            plug = PowerStrip(host, token, model=model)
+            device = XiaomiPowerStripSwitch(name, plug, config_entry, unique_id)
+            entities.append(device)
             hass.data[DATA_KEY][host] = device
-
-    elif model in ["qmi.powerstrip.v1", "zimi.powerstrip.v2"]:
-        plug = PowerStrip(host, token, model=model)
-        device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
-        devices.append(device)
-        hass.data[DATA_KEY][host] = device
-    elif model in [
-        "chuangmi.plug.m1",
-        "chuangmi.plug.m3",
-        "chuangmi.plug.v2",
-        "chuangmi.plug.hmi205",
-        "chuangmi.plug.hmi206",
-    ]:
-        plug = ChuangmiPlug(host, token, model=model)
-        device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
-        devices.append(device)
-        hass.data[DATA_KEY][host] = device
-    elif model in ["lumi.acpartner.v3"]:
-        plug = AirConditioningCompanionV3(host, token)
-        device = XiaomiAirConditioningCompanionSwitch(name, plug, model, unique_id)
-        devices.append(device)
-        hass.data[DATA_KEY][host] = device
-    else:
-        _LOGGER.error(
-            "Unsupported device found! Please create an issue at "
-            "https://github.com/rytilahti/python-miio/issues "
-            "and provide the following data: %s",
-            model,
-        )
-        return False
-
-    async_add_entities(devices, update_before_add=True)
-
-    async def async_service_handler(service):
-        """Map services to methods on XiaomiPlugGenericSwitch."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = {
-            key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
-        }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            devices = [
-                device
-                for device in hass.data[DATA_KEY].values()
-                if device.entity_id in entity_ids
-            ]
+        elif model in [
+            "chuangmi.plug.m1",
+            "chuangmi.plug.m3",
+            "chuangmi.plug.v2",
+            "chuangmi.plug.hmi205",
+            "chuangmi.plug.hmi206",
+        ]:
+            plug = ChuangmiPlug(host, token, model=model)
+            device = XiaomiPlugGenericSwitch(name, plug, config_entry, unique_id)
+            entities.append(device)
+            hass.data[DATA_KEY][host] = device
+        elif model in ["lumi.acpartner.v3"]:
+            plug = AirConditioningCompanionV3(host, token)
+            device = XiaomiAirConditioningCompanionSwitch(
+                name, plug, config_entry, unique_id
+            )
+            entities.append(device)
+            hass.data[DATA_KEY][host] = device
         else:
-            devices = hass.data[DATA_KEY].values()
+            _LOGGER.error(
+                "Unsupported device found! Please create an issue at "
+                "https://github.com/rytilahti/python-miio/issues "
+                "and provide the following data: %s",
+                model,
+            )
 
-        update_tasks = []
-        for device in devices:
-            if not hasattr(device, method["method"]):
-                continue
-            await getattr(device, method["method"])(**params)
-            update_tasks.append(device.async_update_ha_state(True))
+        async def async_service_handler(service):
+            """Map services to methods on XiaomiPlugGenericSwitch."""
+            method = SERVICE_TO_METHOD.get(service.service)
+            params = {
+                key: value
+                for key, value in service.data.items()
+                if key != ATTR_ENTITY_ID
+            }
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            if entity_ids:
+                devices = [
+                    device
+                    for device in hass.data[DATA_KEY].values()
+                    if device.entity_id in entity_ids
+                ]
+            else:
+                devices = hass.data[DATA_KEY].values()
 
-        if update_tasks:
-            await asyncio.wait(update_tasks)
+            update_tasks = []
+            for device in devices:
+                if not hasattr(device, method["method"]):
+                    continue
+                await getattr(device, method["method"])(**params)
+                update_tasks.append(device.async_update_ha_state(True))
 
-    for plug_service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[plug_service].get("schema", SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, plug_service, async_service_handler, schema=schema
-        )
+            if update_tasks:
+                await asyncio.wait(update_tasks)
+
+        for plug_service in SERVICE_TO_METHOD:
+            schema = SERVICE_TO_METHOD[plug_service].get("schema", SERVICE_SCHEMA)
+            hass.services.async_register(
+                DOMAIN, plug_service, async_service_handler, schema=schema
+            )
+
+    async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiPlugGenericSwitch(SwitchEntity):
+class XiaomiPlugGenericSwitch(XiaomiMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
 
-    def __init__(self, name, plug, model, unique_id):
+    def __init__(self, name, device, entry, unique_id):
         """Initialize the plug switch."""
-        self._name = name
-        self._plug = plug
-        self._model = model
-        self._unique_id = unique_id
+        super().__init__(name, device, entry, unique_id)
 
         self._icon = "mdi:power-socket"
         self._available = False
@@ -234,16 +237,6 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
         self._state_attrs = {ATTR_TEMPERATURE: None, ATTR_MODEL: self._model}
         self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
 
     @property
     def icon(self):
@@ -280,13 +273,15 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
 
             return result == SUCCESS
         except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
+            if self._available:
+                _LOGGER.error(mask_error, exc)
+                self._available = False
+
             return False
 
     async def async_turn_on(self, **kwargs):
         """Turn the plug on."""
-        result = await self._try_command("Turning the plug on failed.", self._plug.on)
+        result = await self._try_command("Turning the plug on failed", self._device.on)
 
         if result:
             self._state = True
@@ -294,7 +289,9 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the plug off."""
-        result = await self._try_command("Turning the plug off failed.", self._plug.off)
+        result = await self._try_command(
+            "Turning the plug off failed", self._device.off
+        )
 
         if result:
             self._state = False
@@ -308,7 +305,7 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
             return
 
         try:
-            state = await self.hass.async_add_executor_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -316,8 +313,9 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
             self._state_attrs[ATTR_TEMPERATURE] = state.temperature
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
@@ -325,7 +323,7 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
             return
 
         await self._try_command(
-            "Turning the wifi led on failed.", self._plug.set_wifi_led, True
+            "Turning the wifi led on failed", self._device.set_wifi_led, True
         )
 
     async def async_set_wifi_led_off(self):
@@ -334,7 +332,7 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
             return
 
         await self._try_command(
-            "Turning the wifi led off failed.", self._plug.set_wifi_led, False
+            "Turning the wifi led off failed", self._device.set_wifi_led, False
         )
 
     async def async_set_power_price(self, price: int):
@@ -343,8 +341,8 @@ class XiaomiPlugGenericSwitch(SwitchEntity):
             return
 
         await self._try_command(
-            "Setting the power price of the power strip failed.",
-            self._plug.set_power_price,
+            "Setting the power price of the power strip failed",
+            self._device.set_power_price,
             price,
         )
 
@@ -380,7 +378,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             return
 
         try:
-            state = await self.hass.async_add_executor_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -402,8 +400,9 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
@@ -411,8 +410,8 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             return
 
         await self._try_command(
-            "Setting the power mode of the power strip failed.",
-            self._plug.set_power_mode,
+            "Setting the power mode of the power strip failed",
+            self._device.set_power_mode,
             PowerMode(mode),
         )
 
@@ -420,14 +419,14 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
     """Representation of a Chuang Mi Plug V1 and V3."""
 
-    def __init__(self, name, plug, model, unique_id, channel_usb):
+    def __init__(self, name, plug, entry, unique_id, channel_usb):
         """Initialize the plug switch."""
         name = f"{name} USB" if channel_usb else name
 
         if unique_id is not None and channel_usb:
             unique_id = f"{unique_id}-usb"
 
-        super().__init__(name, plug, model, unique_id)
+        super().__init__(name, plug, entry, unique_id)
         self._channel_usb = channel_usb
 
         if self._model == MODEL_PLUG_V3:
@@ -440,11 +439,11 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         """Turn a channel on."""
         if self._channel_usb:
             result = await self._try_command(
-                "Turning the plug on failed.", self._plug.usb_on
+                "Turning the plug on failed", self._device.usb_on
             )
         else:
             result = await self._try_command(
-                "Turning the plug on failed.", self._plug.on
+                "Turning the plug on failed", self._device.on
             )
 
         if result:
@@ -455,11 +454,11 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
         """Turn a channel off."""
         if self._channel_usb:
             result = await self._try_command(
-                "Turning the plug on failed.", self._plug.usb_off
+                "Turning the plug off failed", self._device.usb_off
             )
         else:
             result = await self._try_command(
-                "Turning the plug on failed.", self._plug.off
+                "Turning the plug off failed", self._device.off
             )
 
         if result:
@@ -474,7 +473,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             return
 
         try:
-            state = await self.hass.async_add_executor_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -492,8 +491,9 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
 class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
@@ -508,7 +508,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
     async def async_turn_on(self, **kwargs):
         """Turn the socket on."""
         result = await self._try_command(
-            "Turning the socket on failed.", self._plug.socket_on
+            "Turning the socket on failed", self._device.socket_on
         )
 
         if result:
@@ -518,7 +518,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
     async def async_turn_off(self, **kwargs):
         """Turn the socket off."""
         result = await self._try_command(
-            "Turning the socket off failed.", self._plug.socket_off
+            "Turning the socket off failed", self._device.socket_off
         )
 
         if result:
@@ -533,7 +533,7 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             return
 
         try:
-            state = await self.hass.async_add_executor_job(self._plug.status)
+            state = await self.hass.async_add_executor_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
@@ -541,5 +541,6 @@ class XiaomiAirConditioningCompanionSwitch(XiaomiPlugGenericSwitch):
             self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+            if self._available:
+                self._available = False
+                _LOGGER.error("Got exception while fetching the state: %s", ex)

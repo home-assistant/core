@@ -6,11 +6,10 @@ from typing import Any, Dict
 
 from rokuecp import Roku, RokuConnectionError, RokuError
 from rokuecp.models import Device
-import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -28,17 +27,11 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SOFTWARE_VERSION,
+    ATTR_SUGGESTED_AREA,
     DOMAIN,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list, [vol.Schema({vol.Required(CONF_HOST): cv.string})]
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = [MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -48,17 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     """Set up the Roku integration."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN in config:
-        for entry_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=entry_config,
-                )
-            )
-
     return True
 
 
@@ -180,4 +162,5 @@ class RokuEntity(CoordinatorEntity):
             ATTR_MANUFACTURER: self.coordinator.data.info.brand,
             ATTR_MODEL: self.coordinator.data.info.model_name,
             ATTR_SOFTWARE_VERSION: self.coordinator.data.info.version,
+            ATTR_SUGGESTED_AREA: self.coordinator.data.info.device_location,
         }

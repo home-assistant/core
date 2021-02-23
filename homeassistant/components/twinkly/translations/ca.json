@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 (o adre\u00e7a IP) del dispositiu Twinkly"
+                },
+                "description": "Configura la teva tira LED de Twinkly",
+                "title": "Twinkly"
+            }
+        }
+    }
+}

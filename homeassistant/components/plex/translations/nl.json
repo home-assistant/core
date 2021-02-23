@@ -9,15 +9,22 @@
         },
         "error": {
             "faulty_credentials": "Autorisatie mislukt",
+            "host_or_token": "Moet ten minste \u00e9\u00e9n host of token verstrekken.",
             "no_servers": "Geen servers gekoppeld aan account",
-            "not_found": "Plex-server niet gevonden"
+            "not_found": "Plex-server niet gevonden",
+            "ssl_error": "SSL-certificaatprobleem"
         },
         "flow_title": "{name} ({host})",
         "step": {
             "manual_setup": {
                 "data": {
-                    "port": "Poort"
-                }
+                    "host": "Host",
+                    "port": "Poort",
+                    "ssl": "Maakt gebruik van een SSL-certificaat",
+                    "token": "Token (optioneel)",
+                    "verify_ssl": "Controleer het SSL-certificaat"
+                },
+                "title": "Handmatige Plex-configuratie"
             },
             "select_server": {
                 "data": {
@@ -25,6 +32,16 @@
                 },
                 "description": "Meerdere servers beschikbaar, selecteer er een:",
                 "title": "Selecteer Plex server"
+            },
+            "user": {
+                "description": "Ga verder naar [plex.tv] (https://plex.tv) om een Plex-server te koppelen.",
+                "title": "Plex Media Server"
+            },
+            "user_advanced": {
+                "data": {
+                    "setup_method": "Installatiemethode"
+                },
+                "title": "Plex Media Server"
             }
         }
     },
@@ -32,6 +49,9 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "Negeer nieuwe beheerde/gedeelde gebruikers",
+                    "ignore_plex_web_clients": "Negeer Plex-webclients",
+                    "monitored_users": "Gecontroleerde gebruikers",
                     "use_episode_art": "Gebruik aflevering kunst"
                 },
                 "description": "Opties voor Plex-mediaspelers"

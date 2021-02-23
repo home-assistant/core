@@ -8,7 +8,14 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONTENT_TYPE_JSON,
+    HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -17,12 +24,9 @@ from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE_ID = "device_id"
 ATTR_RAW = "raw"
-ATTR_TIME = "time"
 
 DEFAULT_TIMEOUT = 10
-CONF_DEVICE_ID = "device_id"
 CONF_VALUES = "values"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -147,7 +151,7 @@ class TtnDataStorage:
         self.data = data[-1]
 
         for value in self._values.items():
-            if value[0] not in self.data.keys():
+            if value[0] not in self.data:
                 _LOGGER.warning("Value not available: %s", value[0])
 
         return response

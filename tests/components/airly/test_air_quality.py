@@ -1,6 +1,5 @@
 """Test air_quality of Airly integration."""
 from datetime import timedelta
-import json
 
 from airly.exceptions import AirlyError
 
@@ -21,19 +20,21 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    HTTP_INTERNAL_SERVER_ERROR,
     STATE_UNAVAILABLE,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
+from . import API_POINT_URL
+
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.airly import init_integration
 
 
-async def test_air_quality(hass):
+async def test_air_quality(hass, aioclient_mock):
     """Test states of the air_quality."""
-    await init_integration(hass)
+    await init_integration(hass, aioclient_mock)
     registry = await hass.helpers.entity_registry.async_get_registry()
 
     state = hass.states.get("air_quality.home")
@@ -58,56 +59,55 @@ async def test_air_quality(hass):
 
     entry = registry.async_get("air_quality.home")
     assert entry
-    assert entry.unique_id == "55.55-122.12"
+    assert entry.unique_id == "123-456"
 
 
-async def test_availability(hass):
+async def test_availability(hass, aioclient_mock):
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    await init_integration(hass)
+    await init_integration(hass, aioclient_mock)
 
     state = hass.states.get("air_quality.home")
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "14"
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        API_POINT_URL, exc=AirlyError(HTTP_INTERNAL_SERVER_ERROR, "Unexpected error")
+    )
     future = utcnow() + timedelta(minutes=60)
-    with patch(
-        "airly._private._RequestsHandler.get",
-        side_effect=AirlyError(500, "Unexpected error"),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
 
-        state = hass.states.get("air_quality.home")
-        assert state
-        assert state.state == STATE_UNAVAILABLE
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
+    state = hass.states.get("air_quality.home")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
     future = utcnow() + timedelta(minutes=120)
-    with patch(
-        "airly._private._RequestsHandler.get",
-        return_value=json.loads(load_fixture("airly_valid_station.json")),
-    ):
-        async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
 
-        state = hass.states.get("air_quality.home")
-        assert state
-        assert state.state != STATE_UNAVAILABLE
-        assert state.state == "14"
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("air_quality.home")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "14"
 
 
-async def test_manual_update_entity(hass):
+async def test_manual_update_entity(hass, aioclient_mock):
     """Test manual update entity via service homeasasistant/update_entity."""
-    await init_integration(hass)
+    await init_integration(hass, aioclient_mock)
 
+    call_count = aioclient_mock.call_count
     await async_setup_component(hass, "homeassistant", {})
-    with patch(
-        "homeassistant.components.airly.AirlyDataUpdateCoordinator._async_update_data"
-    ) as mock_update:
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {ATTR_ENTITY_ID: ["air_quality.home"]},
-            blocking=True,
-        )
-        assert mock_update.call_count == 1
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["air_quality.home"]},
+        blocking=True,
+    )
+
+    assert aioclient_mock.call_count == call_count + 1

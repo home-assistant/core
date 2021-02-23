@@ -26,12 +26,15 @@
                     "armed_custom_bypass": "Zabezpe\u010deno u\u017eivatelsk\u00fdm obejit\u00edm",
                     "armed_home": "Re\u017eim domov",
                     "armed_night": "No\u010dn\u00ed re\u017eim"
-                }
+                },
+                "description": "Vyberte, do jak\u00e9ho stavu chcete nastavit alarm Risco p\u0159i aktivaci alarmu v Home Assistant",
+                "title": "Mapov\u00e1n\u00ed stav\u016f v Home Assistant na stavy v Risco"
             },
             "init": {
                 "data": {
                     "code_arm_required": "Vy\u017eadovat PIN k\u00f3d k zabezpe\u010den\u00ed",
-                    "code_disarm_required": "Vy\u017eadovat PIN k\u00f3d k odbezpe\u010den\u00ed"
+                    "code_disarm_required": "Vy\u017eadovat PIN k\u00f3d k odbezpe\u010den\u00ed",
+                    "scan_interval": "Jak \u010dasto se dotazovat Risco (v sekund\u00e1ch)"
                 },
                 "title": "Nastavte mo\u017enosti"
             },
@@ -43,7 +46,9 @@
                     "D": "Skupina D",
                     "arm": "Zabezpe\u010deno (Nep\u0159\u00edtomnost)",
                     "partial_arm": "\u010c\u00e1ste\u010dn\u011b zabezpe\u010deno (Doma)"
-                }
+                },
+                "description": "Vyberte, v jak\u00e9m stavu bude v\u00e1\u0161 alarm v Home Assistant pro ka\u017ed\u00fd stav v Risco",
+                "title": "Mapov\u00e1n\u00ed stav\u016f v Risco na stavy v Home Assistant"
             }
         }
     }

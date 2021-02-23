@@ -1,6 +1,4 @@
 """Provides device automations for Philips Hue events."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
@@ -19,8 +17,6 @@ from homeassistant.const import (
 
 from . import DOMAIN
 from .hue_event import CONF_HUE_EVENT
-
-_LOGGER = logging.getLogger(__file__)
 
 CONF_SUBTYPE = "subtype"
 
@@ -164,7 +160,7 @@ async def async_get_triggers(hass, device_id):
         return
 
     triggers = []
-    for trigger, subtype in REMOTES[device.model].keys():
+    for trigger, subtype in REMOTES[device.model]:
         triggers.append(
             {
                 CONF_DEVICE_ID: device_id,

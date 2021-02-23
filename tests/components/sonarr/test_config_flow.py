@@ -1,4 +1,6 @@
 """Test the Sonarr config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.sonarr.const import (
     CONF_UPCOMING_DAYS,
     CONF_WANTED_MAX_ITEMS,
@@ -6,7 +8,7 @@ from homeassistant.components.sonarr.const import (
     DEFAULT_WANTED_MAX_ITEMS,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_SOURCE, CONF_VERIFY_SSL
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -15,7 +17,6 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.sonarr import (
     HOST,
     MOCK_REAUTH_INPUT,
@@ -94,28 +95,6 @@ async def test_unknown_error(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
-
-
-async def test_full_import_flow_implementation(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the full manual import flow from start to finish."""
-    mock_connection(aioclient_mock)
-
-    user_input = MOCK_USER_INPUT.copy()
-
-    with _patch_async_setup(), _patch_async_setup_entry():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_IMPORT},
-            data=user_input,
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-
-    assert result["data"]
-    assert result["data"][CONF_HOST] == HOST
 
 
 async def test_full_reauth_flow_implementation(

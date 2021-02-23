@@ -1,11 +1,8 @@
 """The tests for Efergy sensor platform."""
-import unittest
 
-import requests_mock
+from homeassistant.setup import async_setup_component
 
-from homeassistant.setup import setup_component
-
-from tests.common import get_test_home_assistant, load_fixture
+from tests.common import load_fixture
 
 token = "9p6QGJ7dpZfO3fqPTBk1fyEmjV1cGoLT"
 multi_sensor_token = "9r6QGF7dpZfO3fqPTBl1fyRmjV1cGoLT"
@@ -60,49 +57,25 @@ def mock_responses(mock):
     )
 
 
-class TestEfergySensor(unittest.TestCase):
-    """Tests the Efergy Sensor platform."""
+async def test_single_sensor_readings(hass, requests_mock):
+    """Test for successfully setting up the Efergy platform."""
+    mock_responses(requests_mock)
+    assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
+    await hass.async_block_till_done()
 
-    DEVICES = []
+    assert "38.21" == hass.states.get("sensor.energy_consumed").state
+    assert "1580" == hass.states.get("sensor.energy_usage").state
+    assert "ok" == hass.states.get("sensor.energy_budget").state
+    assert "5.27" == hass.states.get("sensor.energy_cost").state
+    assert "1628" == hass.states.get("sensor.efergy_728386").state
 
-    @requests_mock.Mocker()
-    def add_entities(self, devices, mock):
-        """Mock add devices."""
-        mock_responses(mock)
-        for device in devices:
-            device.update()
-            self.DEVICES.append(device)
 
-    def setUp(self):
-        """Initialize values for this test case class."""
-        self.hass = get_test_home_assistant()
-        self.config = ONE_SENSOR_CONFIG
-        self.addCleanup(self.tear_down_cleanup)
+async def test_multi_sensor_readings(hass, requests_mock):
+    """Test for multiple sensors in one household."""
+    mock_responses(requests_mock)
+    assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
+    await hass.async_block_till_done()
 
-    def tear_down_cleanup(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-
-    @requests_mock.Mocker()
-    def test_single_sensor_readings(self, mock):
-        """Test for successfully setting up the Efergy platform."""
-        mock_responses(mock)
-        assert setup_component(self.hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
-        self.hass.block_till_done()
-
-        assert "38.21" == self.hass.states.get("sensor.energy_consumed").state
-        assert "1580" == self.hass.states.get("sensor.energy_usage").state
-        assert "ok" == self.hass.states.get("sensor.energy_budget").state
-        assert "5.27" == self.hass.states.get("sensor.energy_cost").state
-        assert "1628" == self.hass.states.get("sensor.efergy_728386").state
-
-    @requests_mock.Mocker()
-    def test_multi_sensor_readings(self, mock):
-        """Test for multiple sensors in one household."""
-        mock_responses(mock)
-        assert setup_component(self.hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
-        self.hass.block_till_done()
-
-        assert "218" == self.hass.states.get("sensor.efergy_728386").state
-        assert "1808" == self.hass.states.get("sensor.efergy_0").state
-        assert "312" == self.hass.states.get("sensor.efergy_728387").state
+    assert "218" == hass.states.get("sensor.efergy_728386").state
+    assert "1808" == hass.states.get("sensor.efergy_0").state
+    assert "312" == hass.states.get("sensor.efergy_728387").state

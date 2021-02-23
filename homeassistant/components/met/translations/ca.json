@@ -1,8 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "El servei ja est\u00e0 configurat",
-            "name_exists": "El nom ja existeix"
+            "already_configured": "El servei ja est\u00e0 configurat"
         },
         "step": {
             "user": {

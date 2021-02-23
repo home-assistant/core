@@ -28,8 +28,11 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_SOFTWARE_VERSION = "sw_version"
 ATTR_KEY_NAME = "key_name"
+# Current attribute used by homekit_controller
+ATTR_OBSTRUCTION_DETECTED = "obstruction-detected"
 
 # #### Config ####
+CONF_HOMEKIT_MODE = "mode"
 CONF_ADVERTISE_IP = "advertise_ip"
 CONF_AUDIO_CODEC = "audio_codec"
 CONF_AUDIO_MAP = "audio_map"
@@ -44,6 +47,7 @@ CONF_LINKED_BATTERY_CHARGING_SENSOR = "linked_battery_charging_sensor"
 CONF_LINKED_DOORBELL_SENSOR = "linked_doorbell_sensor"
 CONF_LINKED_MOTION_SENSOR = "linked_motion_sensor"
 CONF_LINKED_HUMIDITY_SENSOR = "linked_humidity_sensor"
+CONF_LINKED_OBSTRUCTION_SENSOR = "linked_obstruction_sensor"
 CONF_LOW_BATTERY_THRESHOLD = "low_battery_threshold"
 CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
@@ -86,6 +90,12 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
 EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED = "homekit_tv_remote_key_pressed"
 
+# #### HomeKit Modes ####
+HOMEKIT_MODE_ACCESSORY = "accessory"
+HOMEKIT_MODE_BRIDGE = "bridge"
+DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
+HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
+
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
@@ -94,6 +104,7 @@ SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 BRIDGE_MODEL = "Bridge"
 BRIDGE_NAME = "Home Assistant Bridge"
 SHORT_BRIDGE_NAME = "HASS Bridge"
+SHORT_ACCESSORY_NAME = "HASS Accessory"
 BRIDGE_SERIAL_NUMBER = "homekit.bridge"
 MANUFACTURER = "Home Assistant"
 
@@ -185,6 +196,7 @@ CHAR_MODEL = "Model"
 CHAR_MOTION_DETECTED = "MotionDetected"
 CHAR_MUTE = "Mute"
 CHAR_NAME = "Name"
+CHAR_OBSTRUCTION_DETECTED = "ObstructionDetected"
 CHAR_OCCUPANCY_DETECTED = "OccupancyDetected"
 CHAR_ON = "On"
 CHAR_OUTLET_IN_USE = "OutletInUse"
@@ -283,4 +295,5 @@ CONFIG_OPTIONS = [
     CONF_AUTO_START,
     CONF_SAFE_MODE,
     CONF_ENTITY_CONFIG,
+    CONF_HOMEKIT_MODE,
 ]

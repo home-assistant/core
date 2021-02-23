@@ -6,8 +6,9 @@ from typing import Dict
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.util.yaml import load_yaml
 
 from .model import Integration
@@ -23,16 +24,23 @@ def exists(value):
 FIELD_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
         vol.Optional("required"): bool,
+        vol.Optional("advanced"): bool,
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
 
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
+        vol.Optional("target"): vol.Any(
+            selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
+        ),
         vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
     }
 )
@@ -58,7 +66,9 @@ def validate_services(integration: Integration):
     """Validate services."""
     # Find if integration uses services
     has_services = grep_dir(
-        integration.path, "**/*.py", r"hass\.services\.(register|async_register)"
+        integration.path,
+        "**/*.py",
+        r"(hass\.services\.(register|async_register))|async_register_entity_service",
     )
 
     if not has_services:

@@ -1,14 +1,11 @@
 {
     "config": {
         "abort": {
-            "auth_failed": "Viga tuvastamisel",
             "cannot_connect": "\u00dchendamine nurjus",
-            "conn_error": "\u00dchendamine eba\u00f5nnestus",
             "invalid_auth": "Tuvastamise viga",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks sidumine."
         },
         "error": {
-            "auth_failed": "Vigane tuvastamine",
             "invalid_auth": "Tuvastamise viga"
         },
         "flow_title": "Tuya seaded",
@@ -20,7 +17,48 @@
                     "platform": "\u00c4pp kus teie konto registreeriti",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisestage oma Tuya konto andmed."
+                "description": "Sisesta oma Tuya konto andmed.",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "dev_multi_type": "Mitu h\u00e4\u00e4lestatavat seadet peavad olema sama t\u00fc\u00fcpi",
+            "dev_not_config": "Seda t\u00fc\u00fcpi seade pole seadistatav",
+            "dev_not_found": "Seadet ei leitud"
+        },
+        "step": {
+            "device": {
+                "data": {
+                    "brightness_range_mode": "Seadme kasutatav heledusvahemik",
+                    "curr_temp_divider": "Praeguse temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
+                    "max_kelvin": "Maksimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
+                    "max_temp": "Maksimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
+                    "min_kelvin": "Minimaalne v\u00f5imalik v\u00e4rvitemperatuur (Kelvinites)",
+                    "min_temp": "Minimaalne sihttemperatuur (vaikimisi kasuta min ja max = 0)",
+                    "set_temp_divided": "M\u00e4\u00e4ratud temperatuuri k\u00e4su jaoks kasuta jagatud temperatuuri v\u00e4\u00e4rtust",
+                    "support_color": "Luba v\u00e4rvuse juhtimine",
+                    "temp_divider": "Temperatuuri v\u00e4\u00e4rtuse eraldaja (0 = kasuta vaikev\u00e4\u00e4rtust)",
+                    "temp_step_override": "Sihttemperatuuri samm",
+                    "tuya_max_coltemp": "Seadme teatatud maksimaalne v\u00e4rvitemperatuur",
+                    "unit_of_measurement": "Seadme temperatuuri\u00fchik"
+                },
+                "description": "Suvandid \u00fcksuse {device_type} {device_name} kuvatava teabe muutmiseks",
+                "title": "H\u00e4\u00e4lesta Tuya seade"
+            },
+            "init": {
+                "data": {
+                    "discovery_interval": "Seadme leidmisp\u00e4ringute intervall (sekundites)",
+                    "list_devices": "Vali seadistatavad seadmed v\u00f5i j\u00e4ta s\u00e4tete salvestamiseks t\u00fchjaks",
+                    "query_device": "Vali seade, mis kasutab oleku kiiremaks v\u00e4rskendamiseks p\u00e4ringumeetodit",
+                    "query_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "\u00c4ra m\u00e4\u00e4ra k\u00fcsitlusintervalli v\u00e4\u00e4rtusi liiga madalaks, vastasel korral v\u00f5ivad p\u00e4ringud logis t\u00f5rketeate genereerida",
+                "title": "Tuya suvandite seadistamine"
             }
         }
     }

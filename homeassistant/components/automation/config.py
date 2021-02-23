@@ -3,25 +3,61 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.components import blueprint
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.config import async_log_exception, config_without_domain
+from homeassistant.const import CONF_ALIAS, CONF_CONDITION, CONF_ID, CONF_VARIABLES
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
+from homeassistant.helpers import config_per_platform, config_validation as cv, script
 from homeassistant.helpers.condition import async_validate_condition_config
-from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.loader import IntegrationNotFound
 
-from . import CONF_ACTION, CONF_CONDITION, CONF_TRIGGER, DOMAIN, PLATFORM_SCHEMA
+from .const import (
+    CONF_ACTION,
+    CONF_DESCRIPTION,
+    CONF_HIDE_ENTITY,
+    CONF_INITIAL_STATE,
+    CONF_TRIGGER,
+    CONF_TRIGGER_VARIABLES,
+    DOMAIN,
+)
+from .helpers import async_get_blueprints
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
 
+_CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
+
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HIDE_ENTITY),
+    script.make_script_schema(
+        {
+            # str on purpose
+            CONF_ID: str,
+            CONF_ALIAS: cv.string,
+            vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_HIDE_ENTITY): cv.boolean,
+            vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_TRIGGER_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+        },
+        script.SCRIPT_MODE_SINGLE,
+    ),
+)
+
 
 async def async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
+    if blueprint.is_blueprint_instance_config(config):
+        blueprints = async_get_blueprints(hass)
+        return await blueprints.async_inputs_from_config(config)
+
     config = PLATFORM_SCHEMA(config)
 
     config[CONF_TRIGGER] = await async_validate_trigger_config(
@@ -36,7 +72,9 @@ async def async_validate_config_item(hass, config, full_config=None):
             ]
         )
 
-    config[CONF_ACTION] = await async_validate_actions_config(hass, config[CONF_ACTION])
+    config[CONF_ACTION] = await script.async_validate_actions_config(
+        hass, config[CONF_ACTION]
+    )
 
     return config
 

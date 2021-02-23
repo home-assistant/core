@@ -1,13 +1,9 @@
 """Support for Netgear LTE sensors."""
-import logging
-
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.exceptions import PlatformNotReady
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
 from .sensor_types import SENSOR_SMS, SENSOR_SMS_TOTAL, SENSOR_UNITS, SENSOR_USAGE
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info):

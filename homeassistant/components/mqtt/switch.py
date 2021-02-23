@@ -1,9 +1,9 @@
 """Support for MQTT switches."""
-import logging
+import functools
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt, switch
+from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
     CONF_DEVICE,
@@ -18,29 +18,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
-    ATTR_DISCOVERY_HASH,
     CONF_COMMAND_TOPIC,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
     DOMAIN,
     PLATFORMS,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
     subscription,
 )
+from .. import mqtt
 from .debug_info import log_messages
-from .discovery import MQTT_DISCOVERY_NEW, clear_discovery_hash
-
-_LOGGER = logging.getLogger(__name__)
+from .mixins import (
+    MQTT_AVAILABILITY_SCHEMA,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_JSON_ATTRS_SCHEMA,
+    MqttEntity,
+    async_setup_entry_helper,
+)
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -52,7 +51,7 @@ CONF_STATE_OFF = "state_off"
 PLATFORM_SCHEMA = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -63,8 +62,8 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
-    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
 
@@ -73,81 +72,41 @@ async def async_setup_platform(
 ):
     """Set up MQTT switch through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, config, async_add_entities, discovery_info)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT switch dynamically through MQTT discovery."""
-
-    async def async_discover(discovery_payload):
-        """Discover and add a MQTT switch."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await _async_setup_entity(
-                hass, config, async_add_entities, config_entry, discovery_data
-            )
-        except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format(switch.DOMAIN, "mqtt"), async_discover
+    setup = functools.partial(
+        _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
+    await async_setup_entry_helper(hass, switch.DOMAIN, setup, PLATFORM_SCHEMA)
 
 
 async def _async_setup_entity(
-    hass, config, async_add_entities, config_entry=None, discovery_data=None
+    hass, async_add_entities, config, config_entry=None, discovery_data=None
 ):
     """Set up the MQTT switch."""
     async_add_entities([MqttSwitch(hass, config, config_entry, discovery_data)])
 
 
-class MqttSwitch(
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    SwitchEntity,
-    RestoreEntity,
-):
+class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     """Representation of a switch that can be toggled using MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT switch."""
-        self.hass = hass
         self._state = False
-        self._sub_state = None
 
         self._state_on = None
         self._state_off = None
         self._optimistic = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
-        # Load config
-        self._setup_from_config(config)
+        MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
-        device_config = config.get(CONF_DEVICE)
-
-        MqttAttributes.__init__(self, config)
-        MqttAvailability.__init__(self, config)
-        MqttDiscoveryUpdate.__init__(self, discovery_data, self.discovery_update)
-        MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
-
-    async def async_added_to_hass(self):
-        """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
-        await self._subscribe_topics()
-
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._setup_from_config(config)
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
+    @staticmethod
+    def config_schema():
+        """Return the config schema."""
+        return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -204,20 +163,6 @@ class MqttSwitch(
             if last_state:
                 self._state = last_state.state == STATE_ON
 
-    async def async_will_remove_from_hass(self):
-        """Unsubscribe when removed."""
-        self._sub_state = await subscription.async_unsubscribe_topics(
-            self.hass, self._sub_state
-        )
-        await MqttAttributes.async_will_remove_from_hass(self)
-        await MqttAvailability.async_will_remove_from_hass(self)
-        await MqttDiscoveryUpdate.async_will_remove_from_hass(self)
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
     @property
     def name(self):
         """Return the name of the switch."""
@@ -232,11 +177,6 @@ class MqttSwitch(
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def icon(self):

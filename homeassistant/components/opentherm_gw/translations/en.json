@@ -1,10 +1,9 @@
 {
     "config": {
         "error": {
-            "already_configured": "Gateway already configured",
-            "id_exists": "Gateway id already exists",
-            "serial_error": "Error connecting to device",
-            "timeout": "Connection attempt timed out"
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "id_exists": "Gateway id already exists"
         },
         "step": {
             "init": {

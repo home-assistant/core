@@ -192,7 +192,7 @@ class EntityComponent:
         self,
         name: str,
         schema: Union[Dict[str, Any], vol.Schema],
-        func: str,
+        func: Union[str, Callable[..., Any]],
         required_features: Optional[List[int]] = None,
     ) -> None:
         """Register an entity service."""
@@ -272,7 +272,9 @@ class EntityComponent:
         if found:
             await found.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(self, *, skip_reset: bool = False) -> Optional[dict]:
+    async def async_prepare_reload(
+        self, *, skip_reset: bool = False
+    ) -> Optional[ConfigType]:
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.

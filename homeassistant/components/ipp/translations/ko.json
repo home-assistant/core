@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
-            "connection_error": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "connection_upgrade": "\ud504\ub9b0\ud130\uc5d0 \uc5f0\uacb0\ud558\ub824\uba74 \uc5f0\uacb0\uc744 \uc5c5\uadf8\ub808\uc774\ub4dc\ud574\uc57c \ud569\ub2c8\ub2e4.",
             "ipp_error": "IPP \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.",
             "ipp_version_error": "\ud504\ub9b0\ud130\uc5d0\uc11c IPP \ubc84\uc804\uc744 \uc9c0\uc6d0\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
@@ -10,7 +10,7 @@
             "unique_id_required": "\uae30\uae30 \uac80\uc0c9\uc5d0 \ud544\uc694\ud55c \uace0\uc720\ud55c ID \uac00 \uc874\uc7ac\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4."
         },
         "error": {
-            "connection_error": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
             "connection_upgrade": "\ud504\ub9b0\ud130\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4. SSL/TLS \uc635\uc158\uc744 \ud655\uc778\ud558\uace0 \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
         },
         "flow_title": "\ud504\ub9b0\ud130: {name}",
@@ -20,8 +20,8 @@
                     "base_path": "\ud504\ub9b0\ud130\uc758 \uc0c1\ub300 \uacbd\ub85c",
                     "host": "\ud638\uc2a4\ud2b8",
                     "port": "\ud3ec\ud2b8",
-                    "ssl": "\ud504\ub9b0\ud130\ub294 SSL/TLS \ub97c \ud1b5\ud55c \ud1b5\uc2e0\uc744 \uc9c0\uc6d0\ud569\ub2c8\ub2e4",
-                    "verify_ssl": "\ud504\ub9b0\ud130\ub294 \uc62c\ubc14\ub978 SSL \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4"
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "description": "\uc778\ud130\ub137 \uc778\uc1c4 \ud504\ub85c\ud1a0\ucf5c (IPP) \ub97c \ud1b5\ud574 \ud504\ub9b0\ud130\ub97c \uc124\uc815\ud558\uc5ec Home Assistant \uc640 \uc5f0\ub3d9\ud569\ub2c8\ub2e4.",
                 "title": "\ud504\ub9b0\ud130 \uc5f0\uacb0\ud558\uae30"

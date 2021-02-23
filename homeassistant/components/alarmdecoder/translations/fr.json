@@ -7,7 +7,7 @@
             "default": "Connexion r\u00e9ussie \u00e0 AlarmDecoder."
         },
         "error": {
-            "service_unavailable": "\u00c9chec de connexion"
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
             "protocol": {

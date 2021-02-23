@@ -1,6 +1,4 @@
 """Support for Matrix notifications."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -12,8 +10,6 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SERVICE_SEND_MESSAGE
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_ROOM = "default_room"
 

@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM): vol.Coerce(float),
         vol.Optional(
             CONF_MINIMUM_MAGNITUDE, default=DEFAULT_MINIMUM_MAGNITUDE
-        ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+        ): cv.positive_float,
     }
 )
 
@@ -165,7 +165,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         """Remove this entity."""
         self._remove_signal_delete()
         self._remove_signal_update()
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):

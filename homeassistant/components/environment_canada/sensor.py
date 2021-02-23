@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
         ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
 
-    sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
+    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
 
 

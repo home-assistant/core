@@ -1,10 +1,11 @@
 """Tests for Mill config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.mill.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -87,4 +88,4 @@ async def test_connection_error(hass):
         )
 
     assert result["type"] == "form"
-    assert result["errors"]["connection_error"] == "connection_error"
+    assert result["errors"]["cannot_connect"] == "cannot_connect"

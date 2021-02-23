@@ -2,6 +2,6 @@
   "domain": "google_pubsub",
   "name": "Google Pub/Sub",
   "documentation": "https://www.home-assistant.io/integrations/google_pubsub",
-  "requirements": ["google-cloud-pubsub==0.39.1"],
+  "requirements": ["google-cloud-pubsub==2.1.0"],
   "codeowners": []
 }

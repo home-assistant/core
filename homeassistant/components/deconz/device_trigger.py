@@ -30,6 +30,7 @@ CONF_TRIPLE_PRESS = "remote_button_triple_press"
 CONF_QUADRUPLE_PRESS = "remote_button_quadruple_press"
 CONF_QUINTUPLE_PRESS = "remote_button_quintuple_press"
 CONF_ROTATED = "remote_button_rotated"
+CONF_ROTATED_FAST = "remote_button_rotated_fast"
 CONF_ROTATION_STOPPED = "remote_button_rotation_stopped"
 CONF_AWAKE = "remote_awakened"
 CONF_MOVE = "remote_moved"
@@ -74,6 +75,7 @@ CONF_SIDE_6 = "side_6"
 
 HUE_DIMMER_REMOTE_MODEL_GEN1 = "RWL020"
 HUE_DIMMER_REMOTE_MODEL_GEN2 = "RWL021"
+HUE_DIMMER_REMOTE_MODEL_GEN3 = "RWL022"
 HUE_DIMMER_REMOTE = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1000},
     (CONF_SHORT_RELEASE, CONF_TURN_ON): {CONF_EVENT: 1002},
@@ -148,7 +150,7 @@ SYMFONISK_SOUND_CONTROLLER = {
     (CONF_ROTATION_STOPPED, CONF_RIGHT): {CONF_EVENT: 3003},
 }
 
-TRADFRI_ON_OFF_SWITCH_MODEL = "TRÅDFRI on/off switch"
+TRADFRI_ON_OFF_SWITCH_MODEL = "TRADFRI on/off switch"
 TRADFRI_ON_OFF_SWITCH = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
@@ -158,7 +160,7 @@ TRADFRI_ON_OFF_SWITCH = {
     (CONF_LONG_RELEASE, CONF_TURN_OFF): {CONF_EVENT: 2003},
 }
 
-TRADFRI_OPEN_CLOSE_REMOTE_MODEL = "TRÅDFRI open/close remote"
+TRADFRI_OPEN_CLOSE_REMOTE_MODEL = "TRADFRI open/close remote"
 TRADFRI_OPEN_CLOSE_REMOTE = {
     (CONF_SHORT_PRESS, CONF_OPEN): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_OPEN): {CONF_EVENT: 1003},
@@ -166,7 +168,7 @@ TRADFRI_OPEN_CLOSE_REMOTE = {
     (CONF_LONG_PRESS, CONF_CLOSE): {CONF_EVENT: 2003},
 }
 
-TRADFRI_REMOTE_MODEL = "TRÅDFRI remote control"
+TRADFRI_REMOTE_MODEL = "TRADFRI remote control"
 TRADFRI_REMOTE = {
     (CONF_SHORT_PRESS, CONF_TURN_ON): {CONF_EVENT: 1002},
     (CONF_LONG_PRESS, CONF_TURN_ON): {CONF_EVENT: 1001},
@@ -184,10 +186,12 @@ TRADFRI_REMOTE = {
     (CONF_LONG_RELEASE, CONF_RIGHT): {CONF_EVENT: 5003},
 }
 
-TRADFRI_WIRELESS_DIMMER_MODEL = "TRÅDFRI wireless dimmer"
+TRADFRI_WIRELESS_DIMMER_MODEL = "TRADFRI wireless dimmer"
 TRADFRI_WIRELESS_DIMMER = {
+    (CONF_ROTATED_FAST, CONF_LEFT): {CONF_EVENT: 4002},
     (CONF_ROTATED, CONF_LEFT): {CONF_EVENT: 3002},
     (CONF_ROTATED, CONF_RIGHT): {CONF_EVENT: 2002},
+    (CONF_ROTATED_FAST, CONF_RIGHT): {CONF_EVENT: 1002},
 }
 
 AQARA_CUBE_MODEL = "lumi.sensor_cube"
@@ -359,6 +363,7 @@ AQARA_OPPLE_6_BUTTONS = {
 REMOTES = {
     HUE_DIMMER_REMOTE_MODEL_GEN1: HUE_DIMMER_REMOTE,
     HUE_DIMMER_REMOTE_MODEL_GEN2: HUE_DIMMER_REMOTE,
+    HUE_DIMMER_REMOTE_MODEL_GEN3: HUE_DIMMER_REMOTE,
     HUE_BUTTON_REMOTE_MODEL: HUE_BUTTON_REMOTE,
     HUE_TAP_REMOTE_MODEL: HUE_TAP_REMOTE,
     FRIENDS_OF_HUE_SWITCH_MODEL: FRIENDS_OF_HUE_SWITCH,
@@ -414,7 +419,15 @@ async def async_validate_trigger_config(hass, config):
         or device.model not in REMOTES
         or trigger not in REMOTES[device.model]
     ):
-        raise InvalidDeviceAutomationConfig
+        if not device:
+            raise InvalidDeviceAutomationConfig(
+                f"deCONZ trigger {trigger} device with id "
+                f"{config[CONF_DEVICE_ID]} not found"
+            )
+        raise InvalidDeviceAutomationConfig(
+            f"deCONZ trigger {trigger} is not valid for device "
+            f"{device} ({config[CONF_DEVICE_ID]})"
+        )
 
     return config
 

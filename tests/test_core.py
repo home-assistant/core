@@ -6,7 +6,7 @@ import functools
 import logging
 import os
 from tempfile import TemporaryDirectory
-import unittest
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 import pytz
@@ -33,12 +33,15 @@ from homeassistant.const import (
     __version__,
 )
 import homeassistant.core as ha
-from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
+from homeassistant.exceptions import (
+    InvalidEntityFormatError,
+    InvalidStateError,
+    ServiceNotFound,
+)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, PropertyMock, patch
-from tests.common import async_mock_service, get_test_home_assistant
+from tests.common import async_capture_events, async_mock_service
 
 PST = pytz.timezone("America/Los_Angeles")
 
@@ -151,27 +154,43 @@ def test_async_run_hass_job_delegates_non_async():
     assert len(hass.async_add_hass_job.mock_calls) == 1
 
 
-def test_stage_shutdown():
+async def test_stage_shutdown(hass):
     """Simulate a shutdown, test calling stuff."""
-    hass = get_test_home_assistant()
-    test_stop = []
-    test_final_write = []
-    test_close = []
-    test_all = []
+    test_stop = async_capture_events(hass, EVENT_HOMEASSISTANT_STOP)
+    test_final_write = async_capture_events(hass, EVENT_HOMEASSISTANT_FINAL_WRITE)
+    test_close = async_capture_events(hass, EVENT_HOMEASSISTANT_CLOSE)
+    test_all = async_capture_events(hass, MATCH_ALL)
 
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, lambda event: test_stop.append(event))
-    hass.bus.listen(
-        EVENT_HOMEASSISTANT_FINAL_WRITE, lambda event: test_final_write.append(event)
-    )
-    hass.bus.listen(EVENT_HOMEASSISTANT_CLOSE, lambda event: test_close.append(event))
-    hass.bus.listen("*", lambda event: test_all.append(event))
-
-    hass.stop()
+    await hass.async_stop()
 
     assert len(test_stop) == 1
     assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 2
+
+
+async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
+    hass,
+):
+    """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
+    stop_calls = []
+
+    async def _record_block_till_done():
+        nonlocal stop_calls
+        stop_calls.append("async_block_till_done")
+
+    def _record_shutdown_run_callback_threadsafe(loop):
+        nonlocal stop_calls
+        stop_calls.append(("shutdown_run_callback_threadsafe", loop))
+
+    with patch.object(hass, "async_block_till_done", _record_block_till_done), patch(
+        "homeassistant.core.shutdown_run_callback_threadsafe",
+        _record_shutdown_run_callback_threadsafe,
+    ):
+        await hass.async_stop()
+
+    assert stop_calls[-2] == ("shutdown_run_callback_threadsafe", hass.loop)
+    assert stop_calls[-1] == "async_block_till_done"
 
 
 async def test_pending_sheduler(hass):
@@ -341,147 +360,168 @@ def test_state_as_dict():
     assert state.as_dict() is state.as_dict()
 
 
-class TestEventBus(unittest.TestCase):
-    """Test EventBus methods."""
+async def test_eventbus_add_remove_listener(hass):
+    """Test remove_listener method."""
+    old_count = len(hass.bus.async_listeners())
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.bus = self.hass.bus
+    def listener(_):
+        pass
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop down stuff we started."""
-        self.hass.stop()
+    unsub = hass.bus.async_listen("test", listener)
 
-    def test_add_remove_listener(self):
-        """Test remove_listener method."""
-        self.hass.allow_pool = False
-        old_count = len(self.bus.listeners)
+    assert old_count + 1 == len(hass.bus.async_listeners())
 
-        def listener(_):
-            pass
+    # Remove listener
+    unsub()
+    assert old_count == len(hass.bus.async_listeners())
 
-        unsub = self.bus.listen("test", listener)
+    # Should do nothing now
+    unsub()
 
-        assert old_count + 1 == len(self.bus.listeners)
 
-        # Remove listener
-        unsub()
-        assert old_count == len(self.bus.listeners)
+async def test_eventbus_filtered_listener(hass):
+    """Test we can prefilter events."""
+    calls = []
 
-        # Should do nothing now
-        unsub()
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
 
-    def test_unsubscribe_listener(self):
-        """Test unsubscribe listener from returned function."""
-        calls = []
+    @ha.callback
+    def filter(event):
+        """Mock filter."""
+        return not event.data["filtered"]
 
-        @ha.callback
-        def listener(event):
-            """Mock listener."""
-            calls.append(event)
+    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
 
-        unsub = self.bus.listen("test", listener)
+    hass.bus.async_fire("test", {"filtered": True})
+    await hass.async_block_till_done()
 
-        self.bus.fire("test")
-        self.hass.block_till_done()
+    assert len(calls) == 0
 
-        assert len(calls) == 1
+    hass.bus.async_fire("test", {"filtered": False})
+    await hass.async_block_till_done()
 
-        unsub()
+    assert len(calls) == 1
 
-        self.bus.fire("event")
-        self.hass.block_till_done()
+    unsub()
 
-        assert len(calls) == 1
 
-    def test_listen_once_event_with_callback(self):
-        """Test listen_once_event method."""
-        runs = []
+async def test_eventbus_unsubscribe_listener(hass):
+    """Test unsubscribe listener from returned function."""
+    calls = []
 
-        @ha.callback
-        def event_handler(event):
-            runs.append(event)
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
 
-        self.bus.listen_once("test_event", event_handler)
+    unsub = hass.bus.async_listen("test", listener)
 
-        self.bus.fire("test_event")
-        # Second time it should not increase runs
-        self.bus.fire("test_event")
+    hass.bus.async_fire("test")
+    await hass.async_block_till_done()
 
-        self.hass.block_till_done()
-        assert len(runs) == 1
+    assert len(calls) == 1
 
-    def test_listen_once_event_with_coroutine(self):
-        """Test listen_once_event method."""
-        runs = []
+    unsub()
 
-        async def event_handler(event):
-            runs.append(event)
+    hass.bus.async_fire("event")
+    await hass.async_block_till_done()
 
-        self.bus.listen_once("test_event", event_handler)
+    assert len(calls) == 1
 
-        self.bus.fire("test_event")
-        # Second time it should not increase runs
-        self.bus.fire("test_event")
 
-        self.hass.block_till_done()
-        assert len(runs) == 1
+async def test_eventbus_listen_once_event_with_callback(hass):
+    """Test listen_once_event method."""
+    runs = []
 
-    def test_listen_once_event_with_thread(self):
-        """Test listen_once_event method."""
-        runs = []
+    @ha.callback
+    def event_handler(event):
+        runs.append(event)
 
-        def event_handler(event):
-            runs.append(event)
+    hass.bus.async_listen_once("test_event", event_handler)
 
-        self.bus.listen_once("test_event", event_handler)
+    hass.bus.async_fire("test_event")
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
 
-        self.bus.fire("test_event")
-        # Second time it should not increase runs
-        self.bus.fire("test_event")
+    await hass.async_block_till_done()
+    assert len(runs) == 1
 
-        self.hass.block_till_done()
-        assert len(runs) == 1
 
-    def test_thread_event_listener(self):
-        """Test thread event listener."""
-        thread_calls = []
+async def test_eventbus_listen_once_event_with_coroutine(hass):
+    """Test listen_once_event method."""
+    runs = []
 
-        def thread_listener(event):
-            thread_calls.append(event)
+    async def event_handler(event):
+        runs.append(event)
 
-        self.bus.listen("test_thread", thread_listener)
-        self.bus.fire("test_thread")
-        self.hass.block_till_done()
-        assert len(thread_calls) == 1
+    hass.bus.async_listen_once("test_event", event_handler)
 
-    def test_callback_event_listener(self):
-        """Test callback event listener."""
-        callback_calls = []
+    hass.bus.async_fire("test_event")
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
 
-        @ha.callback
-        def callback_listener(event):
-            callback_calls.append(event)
+    await hass.async_block_till_done()
+    assert len(runs) == 1
 
-        self.bus.listen("test_callback", callback_listener)
-        self.bus.fire("test_callback")
-        self.hass.block_till_done()
-        assert len(callback_calls) == 1
 
-    def test_coroutine_event_listener(self):
-        """Test coroutine event listener."""
-        coroutine_calls = []
+async def test_eventbus_listen_once_event_with_thread(hass):
+    """Test listen_once_event method."""
+    runs = []
 
-        async def coroutine_listener(event):
-            coroutine_calls.append(event)
+    def event_handler(event):
+        runs.append(event)
 
-        self.bus.listen("test_coroutine", coroutine_listener)
-        self.bus.fire("test_coroutine")
-        self.hass.block_till_done()
-        assert len(coroutine_calls) == 1
+    hass.bus.async_listen_once("test_event", event_handler)
+
+    hass.bus.async_fire("test_event")
+    # Second time it should not increase runs
+    hass.bus.async_fire("test_event")
+
+    await hass.async_block_till_done()
+    assert len(runs) == 1
+
+
+async def test_eventbus_thread_event_listener(hass):
+    """Test thread event listener."""
+    thread_calls = []
+
+    def thread_listener(event):
+        thread_calls.append(event)
+
+    hass.bus.async_listen("test_thread", thread_listener)
+    hass.bus.async_fire("test_thread")
+    await hass.async_block_till_done()
+    assert len(thread_calls) == 1
+
+
+async def test_eventbus_callback_event_listener(hass):
+    """Test callback event listener."""
+    callback_calls = []
+
+    @ha.callback
+    def callback_listener(event):
+        callback_calls.append(event)
+
+    hass.bus.async_listen("test_callback", callback_listener)
+    hass.bus.async_fire("test_callback")
+    await hass.async_block_till_done()
+    assert len(callback_calls) == 1
+
+
+async def test_eventbus_coroutine_event_listener(hass):
+    """Test coroutine event listener."""
+    coroutine_calls = []
+
+    async def coroutine_listener(event):
+        coroutine_calls.append(event)
+
+    hass.bus.async_listen("test_coroutine", coroutine_listener)
+    hass.bus.async_fire("test_coroutine")
+    await hass.async_block_till_done()
+    assert len(coroutine_calls) == 1
 
 
 def test_state_init():
@@ -562,117 +602,92 @@ def test_state_repr():
     )
 
 
-class TestStateMachine(unittest.TestCase):
-    """Test State machine methods."""
+async def test_statemachine_is_state(hass):
+    """Test is_state method."""
+    hass.states.async_set("light.bowl", "on", {})
+    assert hass.states.is_state("light.Bowl", "on")
+    assert not hass.states.is_state("light.Bowl", "off")
+    assert not hass.states.is_state("light.Non_existing", "on")
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.states = self.hass.states
-        self.states.set("light.Bowl", "on")
-        self.states.set("switch.AC", "off")
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop down stuff we started."""
-        self.hass.stop()
+async def test_statemachine_entity_ids(hass):
+    """Test get_entity_ids method."""
+    hass.states.async_set("light.bowl", "on", {})
+    hass.states.async_set("SWITCH.AC", "off", {})
+    ent_ids = hass.states.async_entity_ids()
+    assert len(ent_ids) == 2
+    assert "light.bowl" in ent_ids
+    assert "switch.ac" in ent_ids
 
-    def test_is_state(self):
-        """Test is_state method."""
-        assert self.states.is_state("light.Bowl", "on")
-        assert not self.states.is_state("light.Bowl", "off")
-        assert not self.states.is_state("light.Non_existing", "on")
+    ent_ids = hass.states.async_entity_ids("light")
+    assert len(ent_ids) == 1
+    assert "light.bowl" in ent_ids
 
-    def test_entity_ids(self):
-        """Test get_entity_ids method."""
-        ent_ids = self.states.entity_ids()
-        assert len(ent_ids) == 2
-        assert "light.bowl" in ent_ids
-        assert "switch.ac" in ent_ids
+    states = sorted(state.entity_id for state in hass.states.async_all())
+    assert states == ["light.bowl", "switch.ac"]
 
-        ent_ids = self.states.entity_ids("light")
-        assert len(ent_ids) == 1
-        assert "light.bowl" in ent_ids
 
-    def test_all(self):
-        """Test everything."""
-        states = sorted(state.entity_id for state in self.states.all())
-        assert ["light.bowl", "switch.ac"] == states
+async def test_statemachine_remove(hass):
+    """Test remove method."""
+    hass.states.async_set("light.bowl", "on", {})
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-    def test_remove(self):
-        """Test remove method."""
-        events = []
+    assert "light.bowl" in hass.states.async_entity_ids()
+    assert hass.states.async_remove("light.bowl")
+    await hass.async_block_till_done()
 
-        @ha.callback
-        def callback(event):
-            events.append(event)
+    assert "light.bowl" not in hass.states.async_entity_ids()
+    assert len(events) == 1
+    assert events[0].data.get("entity_id") == "light.bowl"
+    assert events[0].data.get("old_state") is not None
+    assert events[0].data["old_state"].entity_id == "light.bowl"
+    assert events[0].data.get("new_state") is None
 
-        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
+    # If it does not exist, we should get False
+    assert not hass.states.async_remove("light.Bowl")
+    await hass.async_block_till_done()
+    assert len(events) == 1
 
-        assert "light.bowl" in self.states.entity_ids()
-        assert self.states.remove("light.bowl")
-        self.hass.block_till_done()
 
-        assert "light.bowl" not in self.states.entity_ids()
-        assert len(events) == 1
-        assert events[0].data.get("entity_id") == "light.bowl"
-        assert events[0].data.get("old_state") is not None
-        assert events[0].data["old_state"].entity_id == "light.bowl"
-        assert events[0].data.get("new_state") is None
+async def test_statemachine_case_insensitivty(hass):
+    """Test insensitivty."""
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-        # If it does not exist, we should get False
-        assert not self.states.remove("light.Bowl")
-        self.hass.block_till_done()
-        assert len(events) == 1
+    hass.states.async_set("light.BOWL", "off")
+    await hass.async_block_till_done()
 
-    def test_case_insensitivty(self):
-        """Test insensitivty."""
-        runs = []
+    assert hass.states.is_state("light.bowl", "off")
+    assert len(events) == 1
 
-        @ha.callback
-        def callback(event):
-            runs.append(event)
 
-        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
+async def test_statemachine_last_changed_not_updated_on_same_state(hass):
+    """Test to not update the existing, same state."""
+    hass.states.async_set("light.bowl", "on", {})
+    state = hass.states.get("light.Bowl")
 
-        self.states.set("light.BOWL", "off")
-        self.hass.block_till_done()
+    future = dt_util.utcnow() + timedelta(hours=10)
 
-        assert self.states.is_state("light.bowl", "off")
-        assert len(runs) == 1
+    with patch("homeassistant.util.dt.utcnow", return_value=future):
+        hass.states.async_set("light.Bowl", "on", {"attr": "triggers_change"})
+        await hass.async_block_till_done()
 
-    def test_last_changed_not_updated_on_same_state(self):
-        """Test to not update the existing, same state."""
-        state = self.states.get("light.Bowl")
+    state2 = hass.states.get("light.Bowl")
+    assert state2 is not None
+    assert state.last_changed == state2.last_changed
 
-        future = dt_util.utcnow() + timedelta(hours=10)
 
-        with patch("homeassistant.util.dt.utcnow", return_value=future):
-            self.states.set("light.Bowl", "on", {"attr": "triggers_change"})
-            self.hass.block_till_done()
+async def test_statemachine_force_update(hass):
+    """Test force update option."""
+    hass.states.async_set("light.bowl", "on", {})
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
-        state2 = self.states.get("light.Bowl")
-        assert state2 is not None
-        assert state.last_changed == state2.last_changed
+    hass.states.async_set("light.bowl", "on")
+    await hass.async_block_till_done()
+    assert len(events) == 0
 
-    def test_force_update(self):
-        """Test force update option."""
-        events = []
-
-        @ha.callback
-        def callback(event):
-            events.append(event)
-
-        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
-
-        self.states.set("light.bowl", "on")
-        self.hass.block_till_done()
-        assert len(events) == 0
-
-        self.states.set("light.bowl", "on", None, True)
-        self.hass.block_till_done()
-        assert len(events) == 1
+    hass.states.async_set("light.bowl", "on", None, True)
+    await hass.async_block_till_done()
+    assert len(events) == 1
 
 
 def test_service_call_repr():
@@ -687,306 +702,282 @@ def test_service_call_repr():
     )
 
 
-class TestServiceRegistry(unittest.TestCase):
-    """Test ServicerRegistry methods."""
+async def test_serviceregistry_has_service(hass):
+    """Test has_service method."""
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    assert len(hass.services.async_services()) == 1
+    assert hass.services.has_service("tesT_domaiN", "tesT_servicE")
+    assert not hass.services.has_service("test_domain", "non_existing")
+    assert not hass.services.has_service("non_existing", "test_service")
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.services = self.hass.services
 
-        @ha.callback
-        def mock_service(call):
-            pass
+async def test_serviceregistry_call_with_blocking_done_in_time(hass):
+    """Test call with blocking."""
+    registered_events = async_capture_events(hass, EVENT_SERVICE_REGISTERED)
+    calls = async_mock_service(hass, "test_domain", "register_calls")
+    await hass.async_block_till_done()
 
-        self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
+    assert len(registered_events) == 1
+    assert registered_events[0].data["domain"] == "test_domain"
+    assert registered_events[0].data["service"] == "register_calls"
 
-        self.calls_register = []
+    assert await hass.services.async_call(
+        "test_domain", "REGISTER_CALLS", blocking=True
+    )
+    assert len(calls) == 1
 
-        @ha.callback
-        def mock_event_register(event):
-            """Mock register event."""
-            self.calls_register.append(event)
 
-        self.hass.bus.listen(EVENT_SERVICE_REGISTERED, mock_event_register)
+async def test_serviceregistry_call_non_existing_with_blocking(hass):
+    """Test non-existing with blocking."""
+    with pytest.raises(ha.ServiceNotFound):
+        await hass.services.async_call("test_domain", "i_do_not_exist", blocking=True)
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
-        """Stop down stuff we started."""
-        self.hass.stop()
 
-    def test_has_service(self):
-        """Test has_service method."""
-        assert self.services.has_service("tesT_domaiN", "tesT_servicE")
-        assert not self.services.has_service("test_domain", "non_existing")
-        assert not self.services.has_service("non_existing", "test_service")
+async def test_serviceregistry_async_service(hass):
+    """Test registering and calling an async service."""
+    calls = []
 
-    def test_services(self):
-        """Test services."""
-        assert len(self.services.services) == 1
+    async def service_handler(call):
+        """Service handler coroutine."""
+        calls.append(call)
 
-    def test_call_with_blocking_done_in_time(self):
-        """Test call with blocking."""
-        calls = []
+    hass.services.async_register("test_domain", "register_calls", service_handler)
 
-        @ha.callback
-        def service_handler(call):
-            """Service handler."""
-            calls.append(call)
+    assert await hass.services.async_call(
+        "test_domain", "REGISTER_CALLS", blocking=True
+    )
+    assert len(calls) == 1
 
-        self.services.register("test_domain", "register_calls", service_handler)
-        self.hass.block_till_done()
 
-        assert len(self.calls_register) == 1
-        assert self.calls_register[-1].data["domain"] == "test_domain"
-        assert self.calls_register[-1].data["service"] == "register_calls"
+async def test_serviceregistry_async_service_partial(hass):
+    """Test registering and calling an wrapped async service."""
+    calls = []
 
-        assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-        assert len(calls) == 1
+    async def service_handler(call):
+        """Service handler coroutine."""
+        calls.append(call)
 
-    def test_call_non_existing_with_blocking(self):
-        """Test non-existing with blocking."""
-        with pytest.raises(ha.ServiceNotFound):
-            self.services.call("test_domain", "i_do_not_exist", blocking=True)
+    hass.services.async_register(
+        "test_domain", "register_calls", functools.partial(service_handler)
+    )
+    await hass.async_block_till_done()
 
-    def test_async_service(self):
-        """Test registering and calling an async service."""
-        calls = []
+    assert await hass.services.async_call(
+        "test_domain", "REGISTER_CALLS", blocking=True
+    )
+    assert len(calls) == 1
 
-        async def service_handler(call):
-            """Service handler coroutine."""
-            calls.append(call)
 
-        self.services.register("test_domain", "register_calls", service_handler)
-        self.hass.block_till_done()
+async def test_serviceregistry_callback_service(hass):
+    """Test registering and calling an async service."""
+    calls = []
 
-        assert len(self.calls_register) == 1
-        assert self.calls_register[-1].data["domain"] == "test_domain"
-        assert self.calls_register[-1].data["service"] == "register_calls"
+    @ha.callback
+    def service_handler(call):
+        """Service handler coroutine."""
+        calls.append(call)
 
-        assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-        self.hass.block_till_done()
-        assert len(calls) == 1
+    hass.services.async_register("test_domain", "register_calls", service_handler)
 
-    def test_async_service_partial(self):
-        """Test registering and calling an wrapped async service."""
-        calls = []
+    assert await hass.services.async_call(
+        "test_domain", "REGISTER_CALLS", blocking=True
+    )
+    assert len(calls) == 1
 
-        async def service_handler(call):
-            """Service handler coroutine."""
-            calls.append(call)
 
-        self.services.register(
-            "test_domain", "register_calls", functools.partial(service_handler)
+async def test_serviceregistry_remove_service(hass):
+    """Test remove service."""
+    calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
+
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    assert hass.services.has_service("test_Domain", "test_Service")
+
+    hass.services.async_remove("test_Domain", "test_Service")
+    await hass.async_block_till_done()
+
+    assert not hass.services.has_service("test_Domain", "test_Service")
+    assert len(calls_remove) == 1
+    assert calls_remove[-1].data["domain"] == "test_domain"
+    assert calls_remove[-1].data["service"] == "test_service"
+
+
+async def test_serviceregistry_service_that_not_exists(hass):
+    """Test remove service that not exists."""
+    calls_remove = async_capture_events(hass, EVENT_SERVICE_REMOVED)
+    assert not hass.services.has_service("test_xxx", "test_yyy")
+    hass.services.async_remove("test_xxx", "test_yyy")
+    await hass.async_block_till_done()
+    assert len(calls_remove) == 0
+
+    with pytest.raises(ServiceNotFound):
+        await hass.services.async_call("test_do_not", "exist", {})
+
+
+async def test_serviceregistry_async_service_raise_exception(hass):
+    """Test registering and calling an async service raise exception."""
+
+    async def service_handler(_):
+        """Service handler coroutine."""
+        raise ValueError
+
+    hass.services.async_register("test_domain", "register_calls", service_handler)
+
+    with pytest.raises(ValueError):
+        assert await hass.services.async_call(
+            "test_domain", "REGISTER_CALLS", blocking=True
         )
-        self.hass.block_till_done()
 
-        assert len(self.calls_register) == 1
-        assert self.calls_register[-1].data["domain"] == "test_domain"
-        assert self.calls_register[-1].data["service"] == "register_calls"
-
-        assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-        self.hass.block_till_done()
-        assert len(calls) == 1
-
-    def test_callback_service(self):
-        """Test registering and calling an async service."""
-        calls = []
-
-        @ha.callback
-        def service_handler(call):
-            """Service handler coroutine."""
-            calls.append(call)
-
-        self.services.register("test_domain", "register_calls", service_handler)
-        self.hass.block_till_done()
-
-        assert len(self.calls_register) == 1
-        assert self.calls_register[-1].data["domain"] == "test_domain"
-        assert self.calls_register[-1].data["service"] == "register_calls"
-
-        assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-        self.hass.block_till_done()
-        assert len(calls) == 1
-
-    def test_remove_service(self):
-        """Test remove service."""
-        calls_remove = []
-
-        @ha.callback
-        def mock_event_remove(event):
-            """Mock register event."""
-            calls_remove.append(event)
-
-        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
-
-        assert self.services.has_service("test_Domain", "test_Service")
-
-        self.services.remove("test_Domain", "test_Service")
-        self.hass.block_till_done()
-
-        assert not self.services.has_service("test_Domain", "test_Service")
-        assert len(calls_remove) == 1
-        assert calls_remove[-1].data["domain"] == "test_domain"
-        assert calls_remove[-1].data["service"] == "test_service"
-
-    def test_remove_service_that_not_exists(self):
-        """Test remove service that not exists."""
-        calls_remove = []
-
-        @ha.callback
-        def mock_event_remove(event):
-            """Mock register event."""
-            calls_remove.append(event)
-
-        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
-
-        assert not self.services.has_service("test_xxx", "test_yyy")
-        self.services.remove("test_xxx", "test_yyy")
-        self.hass.block_till_done()
-        assert len(calls_remove) == 0
-
-    def test_async_service_raise_exception(self):
-        """Test registering and calling an async service raise exception."""
-
-        async def service_handler(_):
-            """Service handler coroutine."""
-            raise ValueError
-
-        self.services.register("test_domain", "register_calls", service_handler)
-        self.hass.block_till_done()
-
-        with pytest.raises(ValueError):
-            assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-            self.hass.block_till_done()
-
-        # Non-blocking service call never throw exception
-        self.services.call("test_domain", "REGISTER_CALLS", blocking=False)
-        self.hass.block_till_done()
-
-    def test_callback_service_raise_exception(self):
-        """Test registering and calling an callback service raise exception."""
-
-        @ha.callback
-        def service_handler(_):
-            """Service handler coroutine."""
-            raise ValueError
-
-        self.services.register("test_domain", "register_calls", service_handler)
-        self.hass.block_till_done()
-
-        with pytest.raises(ValueError):
-            assert self.services.call("test_domain", "REGISTER_CALLS", blocking=True)
-            self.hass.block_till_done()
-
-        # Non-blocking service call never throw exception
-        self.services.call("test_domain", "REGISTER_CALLS", blocking=False)
-        self.hass.block_till_done()
+    # Non-blocking service call never throw exception
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    await hass.async_block_till_done()
 
 
-class TestConfig(unittest.TestCase):
-    """Test configuration methods."""
+async def test_serviceregistry_callback_service_raise_exception(hass):
+    """Test registering and calling an callback service raise exception."""
 
-    # pylint: disable=invalid-name
-    def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.config = ha.Config(None)
-        assert self.config.config_dir is None
+    @ha.callback
+    def service_handler(_):
+        """Service handler coroutine."""
+        raise ValueError
 
-    def test_path_with_file(self):
-        """Test get_config_path method."""
-        self.config.config_dir = "/test/ha-config"
-        assert self.config.path("test.conf") == "/test/ha-config/test.conf"
+    hass.services.async_register("test_domain", "register_calls", service_handler)
 
-    def test_path_with_dir_and_file(self):
-        """Test get_config_path method."""
-        self.config.config_dir = "/test/ha-config"
-        assert self.config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
+    with pytest.raises(ValueError):
+        assert await hass.services.async_call(
+            "test_domain", "REGISTER_CALLS", blocking=True
+        )
 
-    def test_as_dict(self):
-        """Test as dict."""
-        self.config.config_dir = "/test/ha-config"
-        self.config.hass = MagicMock()
-        type(self.config.hass.state).value = PropertyMock(return_value="RUNNING")
-        expected = {
-            "latitude": 0,
-            "longitude": 0,
-            "elevation": 0,
-            CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
-            "location_name": "Home",
-            "time_zone": "UTC",
-            "components": set(),
-            "config_dir": "/test/ha-config",
-            "whitelist_external_dirs": set(),
-            "allowlist_external_dirs": set(),
-            "allowlist_external_urls": set(),
-            "version": __version__,
-            "config_source": "default",
-            "safe_mode": False,
-            "state": "RUNNING",
-            "external_url": None,
-            "internal_url": None,
-        }
+    # Non-blocking service call never throw exception
+    await hass.services.async_call("test_domain", "REGISTER_CALLS", blocking=False)
+    await hass.async_block_till_done()
 
-        assert expected == self.config.as_dict()
 
-    def test_is_allowed_path(self):
-        """Test is_allowed_path method."""
-        with TemporaryDirectory() as tmp_dir:
-            # The created dir is in /tmp. This is a symlink on OS X
-            # causing this test to fail unless we resolve path first.
-            self.config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
+def test_config_defaults():
+    """Test config defaults."""
+    hass = Mock()
+    config = ha.Config(hass)
+    assert config.hass is hass
+    assert config.latitude == 0
+    assert config.longitude == 0
+    assert config.elevation == 0
+    assert config.location_name == "Home"
+    assert config.time_zone == dt_util.UTC
+    assert config.internal_url is None
+    assert config.external_url is None
+    assert config.config_source == "default"
+    assert config.skip_pip is False
+    assert config.components == set()
+    assert config.api is None
+    assert config.config_dir is None
+    assert config.allowlist_external_dirs == set()
+    assert config.allowlist_external_urls == set()
+    assert config.media_dirs == {}
+    assert config.safe_mode is False
+    assert config.legacy_templates is False
 
-            test_file = os.path.join(tmp_dir, "test.jpg")
-            with open(test_file, "w") as tmp_file:
-                tmp_file.write("test")
 
-            valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
-            for path in valid:
-                assert self.config.is_allowed_path(path)
+def test_config_path_with_file():
+    """Test get_config_path method."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    assert config.path("test.conf") == "/test/ha-config/test.conf"
 
-            self.config.allowlist_external_dirs = {"/home", "/var"}
 
-            invalid = [
-                "/hass/config/secure",
-                "/etc/passwd",
-                "/root/secure_file",
-                "/var/../etc/passwd",
-                test_file,
-            ]
-            for path in invalid:
-                assert not self.config.is_allowed_path(path)
+def test_config_path_with_dir_and_file():
+    """Test get_config_path method."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
-            with pytest.raises(AssertionError):
-                self.config.is_allowed_path(None)
 
-    def test_is_allowed_external_url(self):
-        """Test is_allowed_external_url method."""
-        self.config.allowlist_external_urls = [
-            "http://x.com/",
-            "https://y.com/bla/",
-            "https://z.com/images/1.jpg/",
-        ]
+def test_config_as_dict():
+    """Test as dict."""
+    config = ha.Config(None)
+    config.config_dir = "/test/ha-config"
+    config.hass = MagicMock()
+    type(config.hass.state).value = PropertyMock(return_value="RUNNING")
+    expected = {
+        "latitude": 0,
+        "longitude": 0,
+        "elevation": 0,
+        CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
+        "location_name": "Home",
+        "time_zone": "UTC",
+        "components": set(),
+        "config_dir": "/test/ha-config",
+        "whitelist_external_dirs": set(),
+        "allowlist_external_dirs": set(),
+        "allowlist_external_urls": set(),
+        "version": __version__,
+        "config_source": "default",
+        "safe_mode": False,
+        "state": "RUNNING",
+        "external_url": None,
+        "internal_url": None,
+    }
 
-        valid = [
-            "http://x.com/1.jpg",
-            "http://x.com",
-            "https://y.com/bla/",
-            "https://y.com/bla/2.png",
-            "https://z.com/images/1.jpg",
-        ]
-        for url in valid:
-            assert self.config.is_allowed_external_url(url)
+    assert expected == config.as_dict()
+
+
+def test_config_is_allowed_path():
+    """Test is_allowed_path method."""
+    config = ha.Config(None)
+    with TemporaryDirectory() as tmp_dir:
+        # The created dir is in /tmp. This is a symlink on OS X
+        # causing this test to fail unless we resolve path first.
+        config.allowlist_external_dirs = {os.path.realpath(tmp_dir)}
+
+        test_file = os.path.join(tmp_dir, "test.jpg")
+        with open(test_file, "w") as tmp_file:
+            tmp_file.write("test")
+
+        valid = [test_file, tmp_dir, os.path.join(tmp_dir, "notfound321")]
+        for path in valid:
+            assert config.is_allowed_path(path)
+
+        config.allowlist_external_dirs = {"/home", "/var"}
 
         invalid = [
-            "https://a.co",
-            "https://y.com/bla_wrong",
-            "https://y.com/bla/../image.jpg",
-            "https://z.com/images",
+            "/hass/config/secure",
+            "/etc/passwd",
+            "/root/secure_file",
+            "/var/../etc/passwd",
+            test_file,
         ]
-        for url in invalid:
-            assert not self.config.is_allowed_external_url(url)
+        for path in invalid:
+            assert not config.is_allowed_path(path)
+
+        with pytest.raises(AssertionError):
+            config.is_allowed_path(None)
+
+
+def test_config_is_allowed_external_url():
+    """Test is_allowed_external_url method."""
+    config = ha.Config(None)
+    config.allowlist_external_urls = [
+        "http://x.com/",
+        "https://y.com/bla/",
+        "https://z.com/images/1.jpg/",
+    ]
+
+    valid = [
+        "http://x.com/1.jpg",
+        "http://x.com",
+        "https://y.com/bla/",
+        "https://y.com/bla/2.png",
+        "https://z.com/images/1.jpg",
+    ]
+    for url in valid:
+        assert config.is_allowed_external_url(url)
+
+    invalid = [
+        "https://a.co",
+        "https://y.com/bla_wrong",
+        "https://y.com/bla/../image.jpg",
+        "https://z.com/images",
+    ]
+    for url in invalid:
+        assert not config.is_allowed_external_url(url)
 
 
 async def test_event_on_update(hass):
@@ -1332,41 +1323,6 @@ def test_valid_entity_id():
         assert ha.valid_entity_id(valid), valid
 
 
-async def test_migration_base_url(hass, hass_storage):
-    """Test that we migrate base url to internal/external url."""
-    config = ha.Config(hass)
-    stored = {"version": 1, "data": {}}
-    hass_storage[ha.CORE_STORAGE_KEY] = stored
-    with patch.object(hass.bus, "async_listen_once") as mock_listen:
-        # Empty config
-        await config.async_load()
-        assert len(mock_listen.mock_calls) == 0
-
-        # With just a name
-        stored["data"] = {"location_name": "Test Name"}
-        await config.async_load()
-        assert len(mock_listen.mock_calls) == 1
-
-        # With external url
-        stored["data"]["external_url"] = "https://example.com"
-        await config.async_load()
-        assert len(mock_listen.mock_calls) == 1
-
-    # Test that the event listener works
-    assert mock_listen.mock_calls[0][1][0] == EVENT_HOMEASSISTANT_START
-
-    # External
-    hass.config.api = Mock(deprecated_base_url="https://loaded-example.com")
-    await mock_listen.mock_calls[0][1][1](None)
-    assert config.external_url == "https://loaded-example.com"
-
-    # Internal
-    for internal in ("http://hass.local", "http://192.168.1.100:8123"):
-        hass.config.api = Mock(deprecated_base_url=internal)
-        await mock_listen.mock_calls[0][1][1](None)
-        assert config.internal_url == internal
-
-
 async def test_additional_data_in_core_config(hass, hass_storage):
     """Test that we can handle additional data in core configuration."""
     config = ha.Config(hass)
@@ -1522,3 +1478,59 @@ async def test_async_entity_ids_count(hass):
 
     assert hass.states.async_entity_ids_count() == 5
     assert hass.states.async_entity_ids_count("light") == 3
+
+
+async def test_hassjob_forbid_coroutine():
+    """Test hassjob forbids coroutines."""
+
+    async def bla():
+        pass
+
+    coro = bla()
+
+    with pytest.raises(ValueError):
+        ha.HassJob(coro)
+
+    # To avoid warning about unawaited coro
+    await coro
+
+
+async def test_reserving_states(hass):
+    """Test we can reserve a state in the state machine."""
+
+    hass.states.async_reserve("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_set("light.bedroom", "on")
+    assert hass.states.async_available("light.bedroom") is False
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True
+    hass.states.async_set("light.bedroom", "on")
+
+    with pytest.raises(ha.HomeAssistantError):
+        hass.states.async_reserve("light.bedroom")
+
+    assert hass.states.async_available("light.bedroom") is False
+    hass.states.async_remove("light.bedroom")
+    assert hass.states.async_available("light.bedroom") is True
+
+
+async def test_state_change_events_match_state_time(hass):
+    """Test last_updated and timed_fired only call utcnow once."""
+
+    events = []
+
+    @ha.callback
+    def _event_listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
+
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state = hass.states.get("light.bedroom")
+
+    assert state.last_updated == events[0].time_fired

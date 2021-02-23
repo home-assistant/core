@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
-            "identifier_exists": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
-            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
-            "invalid_credentials": "\u6191\u8b49\u7121\u6548"
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
         "step": {
             "user": {
@@ -16,6 +14,16 @@
                     "port": "\u901a\u8a0a\u57e0"
                 },
                 "title": "\u586b\u5beb\u8cc7\u8a0a"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "zone_run_time": "\u9810\u8a2d\u5340\u57df\u57f7\u884c\u6642\u9593\uff08\u79d2\uff09"
+                },
+                "title": "\u8a2d\u5b9a RainMachine"
             }
         }
     }

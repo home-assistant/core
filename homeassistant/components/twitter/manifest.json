@@ -2,6 +2,6 @@
   "domain": "twitter",
   "name": "Twitter",
   "documentation": "https://www.home-assistant.io/integrations/twitter",
-  "requirements": ["TwitterAPI==2.5.13"],
+  "requirements": ["TwitterAPI==2.6.6"],
   "codeowners": []
 }

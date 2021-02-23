@@ -1,11 +1,5 @@
 {
     "config": {
-        "error": {
-            "connection_error": "Napaka pri povezovanju; preverite omre\u017eje in poskusite znova",
-            "identifier_exists": "E-po\u0161ta je \u017ee registrirana",
-            "invalid_credentials": "Neveljavne poverilnice",
-            "unknown_error": "Neznana napaka, sporo\u010dite podatke dnevnika"
-        },
         "step": {
             "user": {
                 "data": {

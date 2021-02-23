@@ -1,7 +1,9 @@
 """The tests for the notify smtp platform."""
 from os import path
 import re
-import unittest
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant import config as hass_config
 import homeassistant.components.notify as notify
@@ -10,9 +12,6 @@ from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import get_test_home_assistant
-
 
 class MockSMTP(MailNotificationService):
     """Test SMTP object that doesn't need a working server."""
@@ -20,77 +19,6 @@ class MockSMTP(MailNotificationService):
     def _send_email(self, msg):
         """Just return string for testing."""
         return msg.as_string()
-
-
-class TestNotifySmtp(unittest.TestCase):
-    """Test the smtp notify."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.mailer = MockSMTP(
-            "localhost",
-            25,
-            5,
-            "test@test.com",
-            1,
-            "testuser",
-            "testpass",
-            ["recip1@example.com", "testrecip@test.com"],
-            "Home Assistant",
-            0,
-        )
-        self.addCleanup(self.tear_down_cleanup)
-
-    def tear_down_cleanup(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
-
-    @patch("email.utils.make_msgid", return_value="<mock@mock>")
-    def test_text_email(self, mock_make_msgid):
-        """Test build of default text email behavior."""
-        msg = self.mailer.send_message("Test msg")
-        expected = (
-            '^Content-Type: text/plain; charset="us-ascii"\n'
-            "MIME-Version: 1.0\n"
-            "Content-Transfer-Encoding: 7bit\n"
-            "Subject: Home Assistant\n"
-            "To: recip1@example.com,testrecip@test.com\n"
-            "From: Home Assistant <test@test.com>\n"
-            "X-Mailer: Home Assistant\n"
-            "Date: [^\n]+\n"
-            "Message-Id: <[^@]+@[^>]+>\n"
-            "\n"
-            "Test msg$"
-        )
-        assert re.search(expected, msg)
-
-    @patch("email.utils.make_msgid", return_value="<mock@mock>")
-    def test_mixed_email(self, mock_make_msgid):
-        """Test build of mixed text email behavior."""
-        msg = self.mailer.send_message("Test msg", data={"images": ["test.jpg"]})
-        assert "Content-Type: multipart/related" in msg
-
-    @patch("email.utils.make_msgid", return_value="<mock@mock>")
-    def test_html_email(self, mock_make_msgid):
-        """Test build of html email behavior."""
-        html = """
-        <!DOCTYPE html>
-        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-            <head><meta charset="UTF-8"></head>
-            <body>
-              <div>
-                <h1>Intruder alert at apartment!!</h1>
-              </div>
-              <div>
-                <img alt="test.jpg" src="cid:test.jpg"/>
-              </div>
-            </body>
-        </html>"""
-        msg = self.mailer.send_message(
-            "Test msg", data={"html": html, "images": ["test.jpg"]}
-        )
-        assert "Content-Type: multipart/related" in msg
 
 
 async def test_reload_notify(hass):
@@ -139,3 +67,100 @@ async def test_reload_notify(hass):
 
 def _get_fixtures_base_path():
     return path.dirname(path.dirname(path.dirname(__file__)))
+
+
+@pytest.fixture
+def message():
+    """Return MockSMTP object with test data."""
+    mailer = MockSMTP(
+        "localhost",
+        25,
+        5,
+        "test@test.com",
+        1,
+        "testuser",
+        "testpass",
+        ["recip1@example.com", "testrecip@test.com"],
+        "Home Assistant",
+        0,
+    )
+    yield mailer
+
+
+HTML = """
+        <!DOCTYPE html>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+            <head><meta charset="UTF-8"></head>
+            <body>
+              <div>
+                <h1>Intruder alert at apartment!!</h1>
+              </div>
+              <div>
+                <img alt="tests/testing_config/notify/test.jpg" src="cid:tests/testing_config/notify/test.jpg"/>
+              </div>
+            </body>
+        </html>"""
+
+
+EMAIL_DATA = [
+    (
+        "Test msg",
+        {"images": ["tests/testing_config/notify/test.jpg"]},
+        "Content-Type: multipart/related",
+    ),
+    (
+        "Test msg",
+        {"html": HTML, "images": ["tests/testing_config/notify/test.jpg"]},
+        "Content-Type: multipart/related",
+    ),
+    (
+        "Test msg",
+        {"html": HTML, "images": ["test.jpg"]},
+        "Content-Type: multipart/related",
+    ),
+    (
+        "Test msg",
+        {"html": HTML, "images": ["tests/testing_config/notify/test.pdf"]},
+        "Content-Type: multipart/related",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "message_data, data, content_type",
+    EMAIL_DATA,
+    ids=[
+        "Tests when sending text message and images.",
+        "Tests when sending text message, HTML Template and images.",
+        "Tests when image does not exist at mentioned location.",
+        "Tests when image type cannot be detected or is of wrong type.",
+    ],
+)
+def test_send_message(message_data, data, content_type, hass, message):
+    """Verify if we can send messages of all types correctly."""
+    sample_email = "<mock@mock>"
+    with patch("email.utils.make_msgid", return_value=sample_email):
+        result = message.send_message(message_data, data=data)
+        assert content_type in result
+
+
+def test_send_text_message(hass, message):
+    """Verify if we can send simple text message."""
+    expected = (
+        '^Content-Type: text/plain; charset="us-ascii"\n'
+        "MIME-Version: 1.0\n"
+        "Content-Transfer-Encoding: 7bit\n"
+        "Subject: Home Assistant\n"
+        "To: recip1@example.com,testrecip@test.com\n"
+        "From: Home Assistant <test@test.com>\n"
+        "X-Mailer: Home Assistant\n"
+        "Date: [^\n]+\n"
+        "Message-Id: <[^@]+@[^>]+>\n"
+        "\n"
+        "Test msg$"
+    )
+    sample_email = "<mock@mock>"
+    message_data = "Test msg"
+    with patch("email.utils.make_msgid", return_value=sample_email):
+        result = message.send_message(message_data)
+        assert re.search(expected, result)

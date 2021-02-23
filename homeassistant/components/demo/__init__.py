@@ -1,13 +1,11 @@
 """Set up the demo environment that mimics interaction with devices."""
 import asyncio
-import logging
 
 from homeassistant import bootstrap, config_entries
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 import homeassistant.core as ha
 
 DOMAIN = "demo"
-_LOGGER = logging.getLogger(__name__)
 
 COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "air_quality",
@@ -21,6 +19,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "light",
     "lock",
     "media_player",
+    "number",
     "sensor",
     "switch",
     "vacuum",
@@ -106,7 +105,7 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up input boolean
+    # Set up input number
     tasks.append(
         bootstrap.async_setup_component(
             hass,

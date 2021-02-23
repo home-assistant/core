@@ -12,15 +12,12 @@
         },
         "error": {
             "authentication_error": "Ugyldig HomeKit kode. Vennligst sjekk den og pr\u00f8v igjen.",
-            "busy_error": "Enheten nekter \u00e5 sammenkoble da den allerede er sammenkoblet med en annen kontroller.",
             "max_peers_error": "Enheten nekter \u00e5 sammenkoble da den ikke har ledig sammenkoblingslagring.",
-            "max_tries_error": "Enheten nekter \u00e5 sammenkoble da den har mottatt mer enn 100 mislykkede godkjenningsfors\u00f8k.",
             "pairing_failed": "En uh\u00e5ndtert feil oppstod under fors\u00f8k p\u00e5 \u00e5 koble til denne enheten. Dette kan v\u00e6re en midlertidig feil, eller at enheten din kan ikke st\u00f8ttes for \u00f8yeblikket.",
-            "protocol_error": "Feil under kommunikasjon med tilbeh\u00f8ret. Enheten er kanskje ikke i paringsmodus og kan kreve et fysisk eller virtuelt knappetrykk.",
             "unable_to_pair": "Kunne ikke koble til, vennligst pr\u00f8v igjen.",
             "unknown_error": "Enheten rapporterte en ukjent feil. Sammenkobling mislyktes."
         },
-        "flow_title": "{name} via HomeKit Accessory Protocol",
+        "flow_title": "{name} via HomeKit tilbeh\u00f8rsprotokoll",
         "step": {
             "busy_error": {
                 "description": "Avbryt sammenkobling p\u00e5 alle kontrollere, eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter med \u00e5 fortsette sammenkoblingen.",
@@ -40,10 +37,6 @@
             "protocol_error": {
                 "description": "Enheten er kanskje ikke i paringsmodus og kan kreve et fysisk eller virtuelt knappetrykk. Kontroller at enheten er i paringsmodus eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter \u00e5 fortsette paringen.",
                 "title": "Feil ved kommunikasjon med tilbeh\u00f8ret"
-            },
-            "try_pair_later": {
-                "description": "Kontroller at enheten er i paringsmodus eller pr\u00f8v \u00e5 starte enheten p\u00e5 nytt, og fortsett deretter \u00e5 starte paringen p\u00e5 nytt.",
-                "title": "Paring utilgjengelig"
             },
             "user": {
                 "data": {
@@ -66,12 +59,12 @@
             "button7": "Knapp 7",
             "button8": "Knapp 8",
             "button9": "Knapp 9",
-            "doorbell": "D\u00f8r-klokke"
+            "doorbell": "D\u00f8rklokke"
         },
         "trigger_type": {
-            "double_press": "{subtype} trykket to ganger",
-            "long_press": "{subtype} trykket og holdt",
-            "single_press": "{subtype}\u00bb trykket"
+            "double_press": "\"{subtype}\" trykket to ganger",
+            "long_press": "\"{subtype}\" trykket og holdt",
+            "single_press": "\"{subtype}\" trykket"
         }
     },
     "title": "HomeKit-kontroller"

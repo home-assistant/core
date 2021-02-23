@@ -11,7 +11,8 @@
                 "data": {
                     "password": "Heslo",
                     "username": "E-mail"
-                }
+                },
+                "title": "Zadejte u\u017eivatelsk\u00e9 jm\u00e9no a heslo"
             }
         }
     }

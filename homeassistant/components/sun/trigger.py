@@ -1,6 +1,5 @@
 """Offer sun based automation rules."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
@@ -15,8 +14,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
-
-_LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema(
     {

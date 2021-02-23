@@ -1,12 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_setup": "\u00c8 possibile configurare una singola connessione Heos poich\u00e9 supporta tutti i dispositivi sulla rete.",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "connection_failure": "Impossibile connettersi all'host specificato."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
             "user": {

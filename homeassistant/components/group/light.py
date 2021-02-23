@@ -2,7 +2,6 @@
 import asyncio
 from collections import Counter
 import itertools
-import logging
 from typing import Any, Callable, Iterator, List, Optional, Tuple, cast
 
 import voluptuous as vol
@@ -47,8 +46,6 @@ from . import GroupEntity
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_NAME = "Light Group"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -87,6 +84,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._entity_ids = entity_ids
         self._is_on = False
         self._available = False
+        self._icon = "mdi:lightbulb-group"
         self._brightness: Optional[int] = None
         self._hs_color: Optional[Tuple[float, float]] = None
         self._color_temp: Optional[int] = None
@@ -132,6 +130,11 @@ class LightGroup(GroupEntity, light.LightEntity):
     def available(self) -> bool:
         """Return whether the light group is available."""
         return self._available
+
+    @property
+    def icon(self):
+        """Return the light group icon."""
+        return self._icon
 
     @property
     def brightness(self) -> Optional[int]:

@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Callable, List, Optional
 
-from bond_api import Action, DeviceType
+from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
 from . import BondHub
-from .const import DOMAIN
+from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice
 
@@ -27,31 +27,92 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Bond light devices."""
-    hub: BondHub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: BondHub = data[HUB]
+    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    lights: List[Entity] = [
-        BondLight(hub, device)
+    fan_lights: List[Entity] = [
+        BondLight(hub, device, bpup_subs)
         for device in hub.devices
-        if DeviceType.is_fan(device.type) and device.supports_light()
+        if DeviceType.is_fan(device.type)
+        and device.supports_light()
+        and not (device.supports_up_light() and device.supports_down_light())
+    ]
+
+    fan_up_lights: List[Entity] = [
+        BondUpLight(hub, device, bpup_subs, "up_light")
+        for device in hub.devices
+        if DeviceType.is_fan(device.type) and device.supports_up_light()
+    ]
+
+    fan_down_lights: List[Entity] = [
+        BondDownLight(hub, device, bpup_subs, "down_light")
+        for device in hub.devices
+        if DeviceType.is_fan(device.type) and device.supports_down_light()
     ]
 
     fireplaces: List[Entity] = [
-        BondFireplace(hub, device)
+        BondFireplace(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_fireplace(device.type)
     ]
 
-    async_add_entities(lights + fireplaces, True)
+    fp_lights: List[Entity] = [
+        BondLight(hub, device, bpup_subs, "light")
+        for device in hub.devices
+        if DeviceType.is_fireplace(device.type) and device.supports_light()
+    ]
+
+    lights: List[Entity] = [
+        BondLight(hub, device, bpup_subs)
+        for device in hub.devices
+        if DeviceType.is_light(device.type)
+    ]
+
+    async_add_entities(
+        fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,
+        True,
+    )
 
 
-class BondLight(BondEntity, LightEntity):
+class BondBaseLight(BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
-        """Create HA entity representing Bond fan."""
-        super().__init__(hub, device)
-        self._brightness: Optional[int] = None
+    def __init__(
+        self,
+        hub: BondHub,
+        device: BondDevice,
+        bpup_subs: BPUPSubscriptions,
+        sub_device: Optional[str] = None,
+    ):
+        """Create HA entity representing Bond light."""
+        super().__init__(hub, device, bpup_subs, sub_device)
         self._light: Optional[int] = None
+
+    @property
+    def is_on(self) -> bool:
+        """Return if light is currently on."""
+        return self._light == 1
+
+    @property
+    def supported_features(self) -> Optional[int]:
+        """Flag supported features."""
+        return 0
+
+
+class BondLight(BondBaseLight, BondEntity, LightEntity):
+    """Representation of a Bond light."""
+
+    def __init__(
+        self,
+        hub: BondHub,
+        device: BondDevice,
+        bpup_subs: BPUPSubscriptions,
+        sub_device: Optional[str] = None,
+    ):
+        """Create HA entity representing Bond light."""
+        super().__init__(hub, device, bpup_subs, sub_device)
+        self._brightness: Optional[int] = None
 
     def _apply_state(self, state: dict):
         self._light = state.get("light")
@@ -60,16 +121,9 @@ class BondLight(BondEntity, LightEntity):
     @property
     def supported_features(self) -> Optional[int]:
         """Flag supported features."""
-        features = 0
         if self._device.supports_set_brightness():
-            features |= SUPPORT_BRIGHTNESS
-
-        return features
-
-    @property
-    def is_on(self) -> bool:
-        """Return if light is currently on."""
-        return self._light == 1
+            return SUPPORT_BRIGHTNESS
+        return 0
 
     @property
     def brightness(self) -> int:
@@ -95,12 +149,50 @@ class BondLight(BondEntity, LightEntity):
         await self._hub.bond.action(self._device.device_id, Action.turn_light_off())
 
 
+class BondDownLight(BondBaseLight, BondEntity, LightEntity):
+    """Representation of a Bond light."""
+
+    def _apply_state(self, state: dict):
+        self._light = state.get("down_light") and state.get("light")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_DOWN_LIGHT_ON)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_DOWN_LIGHT_OFF)
+        )
+
+
+class BondUpLight(BondBaseLight, BondEntity, LightEntity):
+    """Representation of a Bond light."""
+
+    def _apply_state(self, state: dict):
+        self._light = state.get("up_light") and state.get("light")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_UP_LIGHT_ON)
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn off the light."""
+        await self._hub.bond.action(
+            self._device.device_id, Action(Action.TURN_UP_LIGHT_OFF)
+        )
+
+
 class BondFireplace(BondEntity, LightEntity):
     """Representation of a Bond-controlled fireplace."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
         """Create HA entity representing Bond fireplace."""
-        super().__init__(hub, device)
+        super().__init__(hub, device, bpup_subs)
 
         self._power: Optional[bool] = None
         # Bond flame level, 0-100

@@ -4,13 +4,19 @@
             "already_configured": "Konto on juba seadistatud"
         },
         "error": {
-            "invalid_auth": "Tuvastamine nurjus"
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
         },
         "step": {
             "user": {
                 "data": {
-                    "password": "Salas\u00f5na"
-                }
+                    "client_id": "Kliendi ID (valikuline)",
+                    "client_secret": "Kliendi salas\u00f5na (valikuline)",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Flick'i sisselogimisandmeid"
             }
         }
     }

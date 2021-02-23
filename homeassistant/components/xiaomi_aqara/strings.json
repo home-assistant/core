@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Xiaomi Aqara Gateway",
-        "description": "Connect to your Xiaomi Aqara Gateway, if the IP and mac addresses are left empty, auto-discovery is used",
+        "description": "Connect to your Xiaomi Aqara Gateway, if the IP and MAC addresses are left empty, auto-discovery is used",
         "data": {
           "interface": "The network interface to use",
           "host": "[%key:common::config_flow::data::ip%] (optional)",
@@ -21,9 +21,9 @@
       },
       "select": {
         "title": "Select the Xiaomi Aqara Gateway that you wish to connect",
-        "description": "Run the setup again if you want to connect aditional gateways",
+        "description": "Run the setup again if you want to connect additional gateways",
         "data": {
-          "select_ip": "Gateway IP"
+          "select_ip": "[%key:common::config_flow::data::ip%]"
         }
       }
     },

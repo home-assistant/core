@@ -13,7 +13,7 @@
         "step": {
             "reauth_confirm": {
                 "description": "Integracja Sonarr musi by\u0107 r\u0119cznie ponownie uwierzytelniona za pomoc\u0105 API Sonarr pod adresem: {host}",
-                "title": "Ponownie uwierzytelnij w Sonarr"
+                "title": "Ponownie uwierzytelnij integracj\u0119"
             },
             "user": {
                 "data": {
@@ -23,8 +23,7 @@
                     "port": "Port",
                     "ssl": "Certyfikat SSL",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
-                },
-                "title": "Po\u0142\u0105cz z Sonarr"
+                }
             }
         }
     },
@@ -37,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

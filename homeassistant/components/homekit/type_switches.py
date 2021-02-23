@@ -15,9 +15,12 @@ from homeassistant.components.vacuum import (
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
     STATE_CLEANING,
+    SUPPORT_RETURN_HOME,
+    SUPPORT_START,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -77,7 +80,7 @@ class Outlet(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state):
@@ -128,7 +131,7 @@ class Switch(HomeAccessory):
             return
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.call_service(self._domain, service, params)
+        self.async_call_service(self._domain, service, params)
 
         if self.activate_only:
             call_later(self.hass, 1, self.reset_switch)
@@ -149,16 +152,26 @@ class Switch(HomeAccessory):
             self.char_on.set_value(current_state)
 
 
-@TYPES.register("DockVacuum")
-class DockVacuum(Switch):
+@TYPES.register("Vacuum")
+class Vacuum(Switch):
     """Generate a Switch accessory."""
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_START if value else SERVICE_RETURN_TO_BASE
-        self.call_service(VACUUM_DOMAIN, service, params)
+        state = self.hass.states.get(self.entity_id)
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if value:
+            sup_start = features & SUPPORT_START
+            service = SERVICE_START if sup_start else SERVICE_TURN_ON
+        else:
+            sup_return_home = features & SUPPORT_RETURN_HOME
+            service = SERVICE_RETURN_TO_BASE if sup_return_home else SERVICE_TURN_OFF
+
+        self.async_call_service(
+            VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
+        )
 
     @callback
     def async_update_state(self, new_state):
@@ -198,7 +211,7 @@ class Valve(HomeAccessory):
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state):

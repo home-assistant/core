@@ -4,6 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
@@ -31,6 +32,7 @@ SUPPORTED_PLATFORMS = [
     BINARY_SENSOR_DOMAIN,
     CLIMATE_DOMAIN,
     COVER_DOMAIN,
+    FAN_DOMAIN,
     LIGHT_DOMAIN,
     LOCK_DOMAIN,
     SCENE_DOMAIN,
@@ -44,6 +46,7 @@ NEW_SCENE = "scenes"
 NEW_SENSOR = "sensors"
 
 ATTR_DARK = "dark"
+ATTR_LOCKED = "locked"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"
@@ -52,6 +55,9 @@ ATTR_VALVE = "valve"
 DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device", "Window covering controller"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
+
+# Fans
+FANS = ["Fan"]
 
 # Locks
 LOCKS = ["Door Lock"]

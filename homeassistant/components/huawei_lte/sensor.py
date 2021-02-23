@@ -8,6 +8,7 @@ from typing import Callable, Dict, List, NamedTuple, Optional, Pattern, Tuple, U
 import attr
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
@@ -16,6 +17,7 @@ from homeassistant.const import (
     CONF_URL,
     DATA_BYTES,
     DATA_RATE_BYTES_PER_SECOND,
+    PERCENTAGE,
     STATE_UNKNOWN,
     TIME_SECONDS,
 )
@@ -189,8 +191,14 @@ SENSOR_META: Dict[Union[str, Tuple[str, str]], SensorMeta] = {
     ),
     KEY_MONITORING_STATUS: SensorMeta(
         include=re.compile(
-            r"^(currentwifiuser|(primary|secondary).*dns)$", re.IGNORECASE
+            r"^(batterypercent|currentwifiuser|(primary|secondary).*dns)$",
+            re.IGNORECASE,
         )
+    ),
+    (KEY_MONITORING_STATUS, "BatteryPercent"): SensorMeta(
+        name="Battery",
+        device_class=DEVICE_CLASS_BATTERY,
+        unit=PERCENTAGE,
     ),
     (KEY_MONITORING_STATUS, "CurrentWifiUser"): SensorMeta(
         name="WiFi clients connected", icon="mdi:wifi"
@@ -426,12 +434,11 @@ class HuaweiLteSensor(HuaweiLteBaseEntity):
             value = self.router.data[self.key][self.item]
         except KeyError:
             _LOGGER.debug("%s[%s] not in data", self.key, self.item)
-            self._available = False
-            return
-        self._available = True
+            value = None
 
         formatter = self.meta.formatter
         if not callable(formatter):
             formatter = format_default
 
         self._state, self._unit = formatter(value)
+        self._available = value is not None

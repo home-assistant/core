@@ -1,6 +1,5 @@
 """Tests for the Bond cover device."""
 from datetime import timedelta
-import logging
 
 from bond_api import Action, DeviceType
 
@@ -23,8 +22,6 @@ from .common import (
 )
 
 from tests.common import async_fire_time_changed
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def shades(name: str):

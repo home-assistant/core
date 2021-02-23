@@ -1,6 +1,9 @@
 """The test for the Template sensor platform."""
 from asyncio import Event
 from datetime import timedelta
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor
@@ -18,7 +21,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 
@@ -403,6 +405,7 @@ async def test_setup_valid_device_class(hass):
     assert "device_class" not in state.attributes
 
 
+@pytest.mark.parametrize("load_registries", [False])
 async def test_creating_sensor_loads_group(hass):
     """Test setting up template sensor loads group component first."""
     order = []
@@ -946,3 +949,40 @@ async def test_self_referencing_icon_with_no_loop(hass, caplog):
     assert state.state == "extreme"
     assert state.attributes[ATTR_ICON] == "mdi:hazard-lights"
     assert "Template loop detected" not in caplog.text
+
+
+async def test_duplicate_templates(hass):
+    """Test template entity where the value and friendly name as the same template."""
+    hass.states.async_set("sensor.test_state", "Abc")
+
+    with assert_setup_component(1, sensor.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            sensor.DOMAIN,
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "{{ states.sensor.test_state.state }}",
+                        }
+                    },
+                }
+            },
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state.attributes["friendly_name"] == "Abc"
+    assert state.state == "Abc"
+
+    hass.states.async_set("sensor.test_state", "Def")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state.attributes["friendly_name"] == "Def"
+    assert state.state == "Def"

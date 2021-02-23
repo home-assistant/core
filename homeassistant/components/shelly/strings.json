@@ -1,10 +1,9 @@
 {
-  "title": "Shelly",
   "config": {
-    "flow_title": "Shelly: {name}",
+    "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Before set up, the battery-powered device must be woken up by pressing the button on the device.",
+        "description": "Before set up, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -16,7 +15,7 @@
         }
       },
       "confirm_discovery": {
-        "description": "Do you want to set up the {model} at {host}?\n\nBefore set up, the battery-powered device must be woken up by pressing the button on the device."
+        "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       }
     },
     "error": {
@@ -28,5 +27,21 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unsupported_firmware": "The device is using an unsupported firmware version."
     }
+  },
+  "device_automation":{
+      "trigger_subtype": {
+          "button": "Button",
+          "button1": "First button",
+          "button2": "Second button",
+          "button3": "Third button"
+      },
+      "trigger_type": {
+          "single": "{subtype} single clicked",
+          "double": "{subtype} double clicked",
+          "triple": "{subtype} triple clicked",
+          "long": " {subtype} long clicked",
+          "single_long": "{subtype} single clicked and then long clicked",
+          "long_single": "{subtype} long clicked and then single clicked"
+      }
   }
 }

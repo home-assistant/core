@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

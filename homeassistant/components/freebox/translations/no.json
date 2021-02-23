@@ -4,7 +4,7 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
+            "cannot_connect": "Tilkobling mislyktes",
             "register_failed": "Registrering feilet, vennligst pr\u00f8v igjen",
             "unknown": "Uventet feil"
         },
@@ -16,7 +16,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 },
                 "title": ""
             }

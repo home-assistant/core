@@ -1,5 +1,7 @@
 """The tests for the automation component."""
 import asyncio
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -28,7 +30,6 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
@@ -152,7 +153,7 @@ async def test_two_triggers(hass, calls):
     assert len(calls) == 2
 
 
-async def test_trigger_service_ignoring_condition(hass, calls):
+async def test_trigger_service_ignoring_condition(hass, caplog, calls):
     """Test triggers."""
     assert await async_setup_component(
         hass,
@@ -162,18 +163,24 @@ async def test_trigger_service_ignoring_condition(hass, calls):
                 "alias": "test",
                 "trigger": [{"platform": "event", "event_type": "test_event"}],
                 "condition": {
-                    "condition": "state",
+                    "condition": "numeric_state",
                     "entity_id": "non.existing",
-                    "state": "beer",
+                    "above": "1",
                 },
                 "action": {"service": "test.automation"},
             }
         },
     )
 
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
         "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
@@ -947,6 +954,7 @@ async def test_automation_with_error_in_script(hass, caplog):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert "Service not found" in caplog.text
+    assert "Traceback" not in caplog.text
 
 
 async def test_automation_with_error_in_script_2(hass, caplog):
@@ -1232,3 +1240,116 @@ async def test_automation_variables(hass, caplog):
     hass.bus.async_fire("test_event_3", {"break": 0})
     await hass.async_block_till_done()
     assert len(calls) == 3
+
+
+async def test_automation_trigger_variables(hass, caplog):
+    """Test automation trigger variables."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "variables": {
+                        "event_type": "{{ trigger.event.event_type }}",
+                    },
+                    "trigger_variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
+                    },
+                },
+                {
+                    "variables": {
+                        "event_type": "{{ trigger.event.event_type }}",
+                        "test_var": "overridden_in_config",
+                    },
+                    "trigger_variables": {
+                        "test_var": "defined_in_config",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event_2"},
+                    "action": {
+                        "service": "test.automation",
+                        "data": {
+                            "value": "{{ test_var }}",
+                            "event_type": "{{ event_type }}",
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["value"] == "defined_in_config"
+    assert calls[0].data["event_type"] == "test_event"
+
+    hass.bus.async_fire("test_event_2")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["value"] == "overridden_in_config"
+    assert calls[1].data["event_type"] == "test_event_2"
+
+    assert "Error rendering variables" not in caplog.text
+
+
+async def test_automation_bad_trigger_variables(hass, caplog):
+    """Test automation trigger variables accessing hass is rejected."""
+    calls = async_mock_service(hass, "test", "automation")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger_variables": {
+                        "test_var": "{{ states('foo.bar') }}",
+                    },
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {
+                        "service": "test.automation",
+                    },
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    assert "Use of 'states' is not supported in limited templates" in caplog.text
+
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+async def test_blueprint_automation(hass, calls):
+    """Test blueprint automation."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "use_blueprint": {
+                    "path": "test_event_service.yaml",
+                    "input": {
+                        "trigger_event": "blueprint_event",
+                        "service_to_call": "test.automation",
+                    },
+                }
+            }
+        },
+    )
+    hass.bus.async_fire("blueprint_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert automation.entities_in_automation(hass, "automation.automation_0") == [
+        "light.kitchen"
+    ]

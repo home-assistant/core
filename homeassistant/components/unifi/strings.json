@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "UniFi Network {site} ({host})",
     "step": {
       "user": {
         "title": "Set up UniFi Controller",
@@ -19,7 +20,9 @@
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
-      "already_configured": "Controller site is already configured"
+      "already_configured": "Controller site is already configured",
+      "configuration_updated": "Configuration updated.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
@@ -39,7 +42,8 @@
       "client_control": {
         "data": {
           "block_client": "Network access controlled clients",
-          "poe_clients": "Allow POE control of clients"
+          "poe_clients": "Allow POE control of clients",
+          "dpi_restrictions": "Allow control of DPI restriction groups"
         },
         "description": "Configure client controls\n\nCreate switches for serial numbers you want to control network access for.",
         "title": "UniFi options 2/3"

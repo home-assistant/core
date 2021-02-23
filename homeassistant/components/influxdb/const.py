@@ -22,6 +22,7 @@ CONF_BUCKET = "bucket"
 CONF_ORG = "organization"
 CONF_TAGS = "tags"
 CONF_DEFAULT_MEASUREMENT = "default_measurement"
+CONF_MEASUREMENT_ATTR = "measurement_attr"
 CONF_OVERRIDE_MEASUREMENT = "override_measurement"
 CONF_TAGS_ATTRIBUTES = "tags_attributes"
 CONF_COMPONENT_CONFIG = "component_config"
@@ -30,6 +31,7 @@ CONF_COMPONENT_CONFIG_DOMAIN = "component_config_domain"
 CONF_RETRY_COUNT = "max_retries"
 CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 CONF_PRECISION = "precision"
+CONF_SSL_CA_CERT = "ssl_ca_cert"
 
 CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
@@ -56,6 +58,7 @@ DEFAULT_FIELD = "value"
 DEFAULT_RANGE_START = "-15m"
 DEFAULT_RANGE_STOP = "now()"
 DEFAULT_FUNCTION_FLUX = "|> limit(n: 1)"
+DEFAULT_MEASUREMENT_ATTR = "unit_of_measurement"
 
 INFLUX_CONF_MEASUREMENT = "measurement"
 INFLUX_CONF_TAGS = "tags"
@@ -137,12 +140,13 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Optional(CONF_PATH): cv.string,
     vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_SSL_CA_CERT): cv.isfile,
     vol.Optional(CONF_PRECISION): vol.In(["ms", "s", "us", "ns"]),
     # Connection config for V1 API only.
     vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
     vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
     vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
-    vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     # Connection config for V2 API only.
     vol.Inclusive(CONF_TOKEN, "v2_authentication"): cv.string,
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,

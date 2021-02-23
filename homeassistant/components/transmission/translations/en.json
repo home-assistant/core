@@ -6,8 +6,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "name_exists": "Name already exists",
-            "wrong_credentials": "Wrong username or password"
+            "name_exists": "Name already exists"
         },
         "step": {
             "user": {

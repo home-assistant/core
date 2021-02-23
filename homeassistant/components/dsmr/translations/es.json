@@ -2,6 +2,20 @@
     "config": {
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "step": {
+            "one": "Vac\u00edo",
+            "other": "Vac\u00edo"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Tiempo m\u00ednimo entre actualizaciones de entidad [s]"
+                },
+                "title": "Opciones DSMR"
+            }
         }
     }
 }

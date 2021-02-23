@@ -11,7 +11,8 @@ from homeassistant.core import Config, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DATA_CONFIG_ENTRY, DOMAIN, SNMP
+from .utils import get_snmp_engine
 
 PLATFORMS = ["sensor"]
 
@@ -30,14 +31,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     kind = entry.data[CONF_TYPE]
 
-    coordinator = BrotherDataUpdateCoordinator(hass, host=host, kind=kind)
+    snmp_engine = get_snmp_engine(hass)
+
+    coordinator = BrotherDataUpdateCoordinator(
+        hass, host=host, kind=kind, snmp_engine=snmp_engine
+    )
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN].setdefault(DATA_CONFIG_ENTRY, {})
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id] = coordinator
+    hass.data[DOMAIN][SNMP] = snmp_engine
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -58,7 +65,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DOMAIN][DATA_CONFIG_ENTRY].pop(entry.entry_id)
+        if not hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
+            hass.data[DOMAIN].pop(SNMP)
+            hass.data[DOMAIN].pop(DATA_CONFIG_ENTRY)
 
     return unload_ok
 
@@ -66,9 +76,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class BrotherDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Brother data from the printer."""
 
-    def __init__(self, hass, host, kind):
+    def __init__(self, hass, host, kind, snmp_engine):
         """Initialize."""
-        self.brother = Brother(host, kind=kind)
+        self.brother = Brother(host, kind=kind, snmp_engine=snmp_engine)
 
         super().__init__(
             hass,

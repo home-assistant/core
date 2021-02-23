@@ -58,9 +58,25 @@ learn_command:
     command:
       description: A single command or a list of commands to learn.
       example: "Turn on"
+    command_type:
+      description: The type of command to be learned.
+      example: "rf"
     alternative:
       description: If code must be stored as alternative (useful for discrete remotes).
       example: "True"
     timeout:
       description: Timeout, in seconds, for the command to be learned.
       example: "30"
+
+delete_command:
+  description: Deletes a command or a list of commands from the database.
+  fields:
+    entity_id:
+      description: Name(s) of the remote entities holding the database.
+      example: "remote.bedroom"
+    device:
+      description: Name of the device from which commands will be deleted.
+      example: "television"
+    command:
+      description: A single command or a list of commands to delete.
+      example: "Mute"

@@ -1,6 +1,4 @@
 """Support for MelCloud device sensors."""
-import logging
-
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
 
@@ -83,8 +81,6 @@ ATW_ZONE_SENSORS = {
         ATTR_ENABLED_FN: lambda x: True,
     },
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

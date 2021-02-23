@@ -1,6 +1,5 @@
 """Offer webhook triggered automation rules."""
 from functools import partial
-import logging
 
 from aiohttp import hdrs
 import voluptuous as vol
@@ -12,8 +11,6 @@ import homeassistant.helpers.config_validation as cv
 # mypy: allow-untyped-defs
 
 DEPENDENCIES = ("webhook",)
-
-_LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): "webhook", vol.Required(CONF_WEBHOOK_ID): cv.string}

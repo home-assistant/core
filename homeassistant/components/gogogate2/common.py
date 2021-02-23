@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 from typing import Awaitable, Callable, NamedTuple, Optional
 
-import async_timeout
 from gogogate2_api import AbstractGateApi, GogoGate2Api, ISmartGateApi
 from gogogate2_api.common import AbstractDoor
 
@@ -71,8 +70,7 @@ def get_data_update_coordinator(
 
         async def async_update_data():
             try:
-                async with async_timeout.timeout(3):
-                    return await hass.async_add_executor_job(api.info)
+                return await api.async_info()
             except Exception as exception:
                 raise UpdateFailed(
                     f"Error communicating with API: {exception}"

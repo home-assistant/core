@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Passwuert",
+                    "port": "Port",
+                    "stream": "Stream",
+                    "username": "Benotzernumm"
+                }
+            }
+        }
+    },
+    "title": "Foscam"
+}

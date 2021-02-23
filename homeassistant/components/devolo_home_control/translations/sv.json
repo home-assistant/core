@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "invalid_credentials": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord"
-        },
         "step": {
             "user": {
                 "data": {
@@ -10,10 +7,8 @@
                     "mydevolo_url": "mydevolo URL",
                     "password": "L\u00f6senord",
                     "username": "E-postadress / devolo-ID"
-                },
-                "title": "devolo Home Control"
+                }
             }
         }
-    },
-    "title": "devolo Home Control"
+    }
 }

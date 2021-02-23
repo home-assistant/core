@@ -1,4 +1,6 @@
 """The tests for the Demo Media player platform."""
+from unittest.mock import patch
+
 import pytest
 import voluptuous as vol
 
@@ -13,8 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 TEST_ENTITY_ID = "media_player.walkman"
 
@@ -58,6 +58,27 @@ async def test_source_select(hass):
     )
     state = hass.states.get(entity_id)
     assert state.attributes.get(mp.ATTR_INPUT_SOURCE) == "xbox"
+
+
+async def test_repeat_set(hass):
+    """Test the repeat set service."""
+    entity_id = "media_player.walkman"
+
+    assert await async_setup_component(
+        hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(mp.ATTR_MEDIA_REPEAT) == mp.const.REPEAT_MODE_OFF
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: entity_id, mp.ATTR_MEDIA_REPEAT: mp.const.REPEAT_MODE_ALL},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(mp.ATTR_MEDIA_REPEAT) == mp.const.REPEAT_MODE_ALL
 
 
 async def test_clear_playlist(hass):

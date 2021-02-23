@@ -1,11 +1,15 @@
 {
     "config": {
         "error": {
-            "login": "Bejelentkez\u00e9si hiba: k\u00e9rj\u00fck, ellen\u0151rizze e-mail c\u00edm\u00e9t \u00e9s jelszav\u00e1t",
             "send_verification_code": "Nem siker\u00fclt elk\u00fcldeni az ellen\u0151rz\u0151 k\u00f3dot",
             "validate_verification_code": "Nem siker\u00fclt ellen\u0151rizni az ellen\u0151rz\u0151 k\u00f3dot, ki kell v\u00e1lasztania egy megb\u00edzhat\u00f3s\u00e1gi eszk\u00f6zt, \u00e9s \u00fajra kell ind\u00edtania az ellen\u0151rz\u00e9st"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Jelsz\u00f3"
+                }
+            },
             "trusted_device": {
                 "data": {
                     "trusted_device": "Megb\u00edzhat\u00f3 eszk\u00f6z"

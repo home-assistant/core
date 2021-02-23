@@ -79,7 +79,7 @@ SENSOR_TYPES = {
         True,
     ],
     "process": ["Process", " ", CPU_ICON, None, True],
-    "processor_use": ["Processor use", PERCENTAGE, CPU_ICON, None, False],
+    "processor_use": ["Processor use (percent)", PERCENTAGE, CPU_ICON, None, False],
     "processor_temperature": [
         "Processor temperature",
         TEMP_CELSIUS,
@@ -268,7 +268,7 @@ class SystemMonitorSensor(Entity):
                         return
                 except psutil.NoSuchProcess as err:
                     _LOGGER.warning(
-                        "Failed to load process with id: %s, old name: %s",
+                        "Failed to load process with ID: %s, old name: %s",
                         err.pid,
                         err.name,
                     )
@@ -316,9 +316,11 @@ class SystemMonitorSensor(Entity):
             else:
                 self._state = None
         elif self.type == "last_boot":
-            self._state = dt_util.as_local(
-                dt_util.utc_from_timestamp(psutil.boot_time())
-            ).isoformat()
+            # Only update on initial setup
+            if self._state is None:
+                self._state = dt_util.as_local(
+                    dt_util.utc_from_timestamp(psutil.boot_time())
+                ).isoformat()
         elif self.type == "load_1m":
             self._state = round(os.getloadavg()[0], 2)
         elif self.type == "load_5m":

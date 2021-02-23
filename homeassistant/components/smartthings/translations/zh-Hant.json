@@ -24,7 +24,7 @@
             },
             "select_location": {
                 "data": {
-                    "location_id": "\u4f4d\u7f6e"
+                    "location_id": "\u5ea7\u6a19"
                 },
                 "description": "\u8acb\u9078\u64c7\u6240\u8981\u52a0\u5165\u81f3 Home Assistant \u7684 SmartThings \u4f4d\u7f6e\u3002\u5c07\u6703\u958b\u555f\u65b0\u8996\u7a97\u4e26\u8a62\u554f\u767b\u5165\u8207\u8a8d\u8b49\u5b89\u88dd Home Assistant \u6574\u5408\u81f3\u6240\u9078\u4f4d\u7f6e\u3002",
                 "title": "\u9078\u64c7\u4f4d\u7f6e"

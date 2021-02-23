@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "invalid_host": "[%key::common::config_flow::error::invalid_host%]",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {

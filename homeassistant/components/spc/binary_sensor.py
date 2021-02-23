@@ -1,6 +1,4 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
-import logging
-
 from pyspcwebgw.const import ZoneInput, ZoneType
 
 from homeassistant.components.binary_sensor import (
@@ -13,8 +11,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DATA_API, SIGNAL_UPDATE_SENSOR
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def _get_device_class(zone_type):

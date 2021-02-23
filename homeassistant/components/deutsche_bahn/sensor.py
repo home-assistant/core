@@ -1,20 +1,17 @@
 """Support for information about the German train system."""
 from datetime import timedelta
-import logging
 
 import schiene
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_OFFSET
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_DESTINATION = "to"
 CONF_START = "from"
-CONF_OFFSET = "offset"
 DEFAULT_OFFSET = timedelta(minutes=0)
 CONF_ONLY_DIRECT = "only_direct"
 DEFAULT_ONLY_DIRECT = False
@@ -90,7 +87,6 @@ class SchieneData:
 
     def __init__(self, start, goal, offset, only_direct):
         """Initialize the sensor."""
-
         self.start = start
         self.goal = goal
         self.offset = offset

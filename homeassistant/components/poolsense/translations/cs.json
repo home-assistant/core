@@ -12,7 +12,8 @@
                     "email": "E-mail",
                     "password": "Heslo"
                 },
-                "description": "Chcete za\u010d\u00edt nastavovat?"
+                "description": "Chcete za\u010d\u00edt nastavovat?",
+                "title": "PoolSense"
             }
         }
     }

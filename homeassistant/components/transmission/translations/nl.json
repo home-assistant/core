@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken met host",
-            "name_exists": "Naam bestaat al",
-            "wrong_credentials": "verkeerde gebruikersnaam of wachtwoord"
+            "name_exists": "Naam bestaat al"
         },
         "step": {
             "user": {

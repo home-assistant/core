@@ -92,7 +92,7 @@ class HostICMPLib:
         ).result()
 
         return icmp_ping(
-            self.ip_address, count=PING_ATTEMPTS_COUNT, id=next_id
+            self.ip_address, count=PING_ATTEMPTS_COUNT, timeout=1, id=next_id
         ).is_alive
 
     def update(self, see):

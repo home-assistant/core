@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_SHADE,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -11,7 +12,8 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 
-from . import DOMAIN as CASETA_DOMAIN, LutronCasetaDevice
+from . import LutronCasetaDevice
+from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +26,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """
 
     entities = []
-    bridge = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data[BRIDGE_LEAP]
+    bridge_device = data[BRIDGE_DEVICE]
     cover_devices = bridge.get_devices_by_domain(DOMAIN)
 
     for cover_device in cover_devices:
-        entity = LutronCasetaCover(cover_device, bridge)
+        entity = LutronCasetaCover(cover_device, bridge, bridge_device)
         entities.append(entity)
 
     async_add_entities(entities, True)
@@ -51,6 +55,11 @@ class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     def current_cover_position(self):
         """Return the current position of cover."""
         return self._device["current_state"]
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return DEVICE_CLASS_SHADE
 
     async def async_stop_cover(self, **kwargs):
         """Top the cover."""

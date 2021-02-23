@@ -103,21 +103,21 @@ class TibberSensorElPrice(TibberSensor):
         """Get the latest data and updates the states."""
         now = dt_util.now()
         if (
+            not self._tibber_home.last_data_timestamp
+            or (self._tibber_home.last_data_timestamp - now).total_seconds()
+            < 5 * 3600 + self._spread_load_constant
+            or not self._is_available
+        ):
+            _LOGGER.debug("Asking for new data")
+            await self._fetch_data()
+
+        elif (
             self._tibber_home.current_price_total
             and self._last_updated
             and self._last_updated.hour == now.hour
             and self._tibber_home.last_data_timestamp
         ):
             return
-
-        if (
-            not self._tibber_home.last_data_timestamp
-            or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 12 * 3600 + self._spread_load_constant
-            or not self._is_available
-        ):
-            _LOGGER.debug("Asking for new data")
-            await self._fetch_data()
 
         res = self._tibber_home.current_price_data()
         self._state, price_level, self._last_updated = res

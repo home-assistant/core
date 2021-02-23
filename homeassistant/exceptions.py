@@ -1,7 +1,7 @@
 """The exceptions used by Home Assistant."""
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Generator, Optional, Sequence
 
-import jinja2
+import attr
 
 if TYPE_CHECKING:
     from .core import Context  # noqa: F401 pylint: disable=unused-import
@@ -22,9 +22,78 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception: jinja2.TemplateError) -> None:
+    def __init__(self, exception: Exception) -> None:
         """Init the error."""
         super().__init__(f"{exception.__class__.__name__}: {exception}")
+
+
+@attr.s
+class ConditionError(HomeAssistantError):
+    """Error during condition evaluation."""
+
+    # The type of the failed condition, such as 'and' or 'numeric_state'
+    type: str = attr.ib()
+
+    @staticmethod
+    def _indent(indent: int, message: str) -> str:
+        """Return indentation."""
+        return "  " * indent + message
+
+    def output(self, indent: int) -> Generator:
+        """Yield an indented representation."""
+        raise NotImplementedError()
+
+    def __str__(self) -> str:
+        """Return string representation."""
+        return "\n".join(list(self.output(indent=0)))
+
+
+@attr.s
+class ConditionErrorMessage(ConditionError):
+    """Condition error message."""
+
+    # A message describing this error
+    message: str = attr.ib()
+
+    def output(self, indent: int) -> Generator:
+        """Yield an indented representation."""
+        yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
+
+
+@attr.s
+class ConditionErrorIndex(ConditionError):
+    """Condition error with index."""
+
+    # The zero-based index of the failed condition, for conditions with multiple parts
+    index: int = attr.ib()
+    # The total number of parts in this condition, including non-failed parts
+    total: int = attr.ib()
+    # The error that this error wraps
+    error: ConditionError = attr.ib()
+
+    def output(self, indent: int) -> Generator:
+        """Yield an indented representation."""
+        if self.total > 1:
+            yield self._indent(
+                indent, f"In '{self.type}' (item {self.index+1} of {self.total}):"
+            )
+        else:
+            yield self._indent(indent, f"In '{self.type}':")
+
+        yield from self.error.output(indent + 1)
+
+
+@attr.s
+class ConditionErrorContainer(ConditionError):
+    """Condition error with subconditions."""
+
+    # List of ConditionErrors that this error wraps
+    errors: Sequence[ConditionError] = attr.ib()
+
+    def output(self, indent: int) -> Generator:
+        """Yield an indented representation."""
+        for item in self.errors:
+            yield from item.output(indent)
 
 
 class PlatformNotReady(HomeAssistantError):
@@ -82,4 +151,4 @@ class ServiceNotFound(HomeAssistantError):
 
     def __str__(self) -> str:
         """Return string representation."""
-        return f"Unable to find service {self.domain}/{self.service}"
+        return f"Unable to find service {self.domain}.{self.service}"

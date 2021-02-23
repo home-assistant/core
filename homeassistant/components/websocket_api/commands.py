@@ -1,6 +1,5 @@
 """Commands part of Websocket API."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -21,8 +20,6 @@ from homeassistant.helpers.template import Template
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
-
-_LOGGER = logging.getLogger(__name__)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -61,11 +58,11 @@ def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command."""
     # Circular dep
     # pylint: disable=import-outside-toplevel
-    from .permissions import SUBSCRIBE_WHITELIST
+    from .permissions import SUBSCRIBE_ALLOWLIST
 
     event_type = msg["event_type"]
 
-    if event_type not in SUBSCRIBE_WHITELIST and not connection.user.is_admin:
+    if event_type not in SUBSCRIBE_ALLOWLIST and not connection.user.is_admin:
         raise Unauthorized
 
     if event_type == EVENT_STATE_CHANGED:
@@ -124,6 +121,7 @@ def handle_unsubscribe_events(hass, connection, msg):
         vol.Required("type"): "call_service",
         vol.Required("domain"): str,
         vol.Required("service"): str,
+        vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
     }
 )
@@ -135,15 +133,17 @@ async def handle_call_service(hass, connection, msg):
         blocking = False
 
     try:
+        context = connection.context(msg)
         await hass.services.async_call(
             msg["domain"],
             msg["service"],
             msg.get("service_data"),
             blocking,
-            connection.context(msg),
+            context,
+            target=msg.get("target"),
         )
         connection.send_message(
-            messages.result_message(msg["id"], {"context": connection.context(msg)})
+            messages.result_message(msg["id"], {"context": context})
         )
     except ServiceNotFound as err:
         if err.domain == msg["domain"] and err.service == msg["service"]:
@@ -158,6 +158,10 @@ async def handle_call_service(hass, connection, msg):
                     msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err)
                 )
             )
+    except vol.Invalid as err:
+        connection.send_message(
+            messages.error_message(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+        )
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(
@@ -257,13 +261,20 @@ async def handle_render_template(hass, connection, msg):
     timeout = msg.get("timeout")
     info = None
 
-    if timeout and await template.async_render_will_timeout(timeout):
-        connection.send_error(
-            msg["id"],
-            const.ERR_TEMPLATE_ERROR,
-            f"Exceeded maximum execution time of {timeout}s",
-        )
-        return
+    if timeout:
+        try:
+            timed_out = await template.async_render_will_timeout(timeout)
+        except TemplateError as ex:
+            connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
+            return
+
+        if timed_out:
+            connection.send_error(
+                msg["id"],
+                const.ERR_TEMPLATE_ERROR,
+                f"Exceeded maximum execution time of {timeout}s",
+            )
+            return
 
     @callback
     def _template_listener(event, updates):

@@ -1,12 +1,12 @@
 """The tests for an update of the Twitch component."""
+from unittest.mock import MagicMock, patch
+
 from requests import HTTPError
 from twitch.resources import Channel, Follow, Stream, Subscription, User
 
 from homeassistant.components import sensor
 from homeassistant.const import CONF_CLIENT_ID
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, patch
 
 ENTITY_ID = "sensor.channel123"
 CONFIG = {

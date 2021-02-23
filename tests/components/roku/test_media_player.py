@@ -1,5 +1,6 @@
 """Tests for the Roku Media Player platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from rokuecp import RokuError
 
@@ -39,6 +40,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.roku.const import ATTR_KEYWORD, DOMAIN, SERVICE_SEARCH
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -62,16 +64,19 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
-from tests.components.roku import UPNP_SERIAL, setup_integration
+from tests.components.roku import NAME_ROKUTV, UPNP_SERIAL, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
 TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
 
 TV_HOST = "192.168.1.161"
+TV_LOCATION = "Living room"
+TV_MANUFACTURER = "Onn"
+TV_MODEL = "100005844"
 TV_SERIAL = "YN00H5555555"
+TV_SW_VERSION = "9.2.0"
 
 
 async def test_setup(
@@ -301,6 +306,29 @@ async def test_tv_attributes(
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_CHANNEL
     assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "getTV (14.3)"
     assert state.attributes.get(ATTR_MEDIA_TITLE) == "Airwolf"
+
+
+async def test_tv_device_registry(
+    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test device registered for Roku TV in the device registry."""
+    await setup_integration(
+        hass,
+        aioclient_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
+
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TV_SERIAL)})
+
+    assert reg_device.model == TV_MODEL
+    assert reg_device.sw_version == TV_SW_VERSION
+    assert reg_device.manufacturer == TV_MANUFACTURER
+    assert reg_device.suggested_area == TV_LOCATION
+    assert reg_device.name == NAME_ROKUTV
 
 
 async def test_services(
@@ -539,18 +567,14 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
     assert (
-        msg["result"]["children"][0]["thumbnail"]
-        == "http://192.168.1.161:8060/query/icon/tvinput.hdmi2"
+        "/browse_media/app/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
     )
     assert msg["result"]["children"][0]["can_play"]
 
     assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
     assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
     assert msg["result"]["children"][3]["media_content_id"] == "11"
-    assert (
-        msg["result"]["children"][3]["thumbnail"]
-        == "http://192.168.1.161:8060/query/icon/11"
-    )
+    assert "/browse_media/app/11" in msg["result"]["children"][3]["thumbnail"]
     assert msg["result"]["children"][3]["can_play"]
 
     # test channels
@@ -601,6 +625,68 @@ async def test_media_browse(hass, aioclient_mock, hass_ws_client):
     assert msg["id"] == 4
     assert msg["type"] == TYPE_RESULT
     assert not msg["success"]
+
+
+async def test_media_browse_internal(hass, aioclient_mock, hass_ws_client):
+    """Test browsing media with internal url."""
+    await async_process_ha_core_config(
+        hass,
+        {"internal_url": "http://example.local:8123"},
+    )
+
+    assert hass.config.internal_url == "http://example.local:8123"
+
+    await setup_integration(
+        hass,
+        aioclient_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host=TV_HOST,
+        unique_id=TV_SERIAL,
+    )
+
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+    ):
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "media_player/browse_media",
+                "entity_id": TV_ENTITY_ID,
+                "media_content_type": MEDIA_TYPE_APPS,
+                "media_content_id": "apps",
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["id"] == 2
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    assert msg["result"]
+    assert msg["result"]["title"] == "Apps"
+    assert msg["result"]["media_class"] == MEDIA_CLASS_DIRECTORY
+    assert msg["result"]["media_content_type"] == MEDIA_TYPE_APPS
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+    assert msg["result"]["can_expand"]
+    assert not msg["result"]["can_play"]
+    assert len(msg["result"]["children"]) == 11
+    assert msg["result"]["children_media_class"] == MEDIA_CLASS_APP
+
+    assert msg["result"]["children"][0]["title"] == "Satellite TV"
+    assert msg["result"]["children"][0]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][0]["media_content_id"] == "tvinput.hdmi2"
+    assert "/query/icon/tvinput.hdmi2" in msg["result"]["children"][0]["thumbnail"]
+    assert msg["result"]["children"][0]["can_play"]
+
+    assert msg["result"]["children"][3]["title"] == "Roku Channel Store"
+    assert msg["result"]["children"][3]["media_content_type"] == MEDIA_TYPE_APP
+    assert msg["result"]["children"][3]["media_content_id"] == "11"
+    assert "/query/icon/11" in msg["result"]["children"][3]["thumbnail"]
+    assert msg["result"]["children"][3]["can_play"]
 
 
 async def test_integration_services(

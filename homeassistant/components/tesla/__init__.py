@@ -5,10 +5,11 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from teslajsonpy import Controller as TeslaAPI, TeslaException
+from teslajsonpy import Controller as TeslaAPI
+from teslajsonpy.exceptions import IncompleteCredentials, TeslaException
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -17,8 +18,9 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.update_coordinator import (
@@ -28,12 +30,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import slugify
 
-from .config_flow import (
-    CannotConnect,
-    InvalidAuth,
-    configured_instances,
-    validate_input,
-)
+from .config_flow import CannotConnect, InvalidAuth, validate_input
 from .const import (
     CONF_WAKE_ON_START,
     DATA_LISTENER,
@@ -75,6 +72,16 @@ def _async_save_tokens(hass, config_entry, access_token, refresh_token):
     )
 
 
+@callback
+def _async_configured_emails(hass):
+    """Return a set of configured Tesla emails."""
+    return {
+        entry.data[CONF_USERNAME]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if CONF_USERNAME in entry.data
+    }
+
+
 async def async_setup(hass, base_config):
     """Set up of Tesla component."""
 
@@ -95,7 +102,7 @@ async def async_setup(hass, base_config):
     email = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
     scan_interval = config[CONF_SCAN_INTERVAL]
-    if email in configured_instances(hass):
+    if email in _async_configured_emails(hass):
         try:
             info = await validate_input(hass, config)
         except (CannotConnect, InvalidAuth):
@@ -103,6 +110,8 @@ async def async_setup(hass, base_config):
         _update_entry(
             email,
             data={
+                CONF_USERNAME: email,
+                CONF_PASSWORD: password,
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_TOKEN: info[CONF_TOKEN],
             },
@@ -136,6 +145,8 @@ async def async_setup_entry(hass, config_entry):
     try:
         controller = TeslaAPI(
             websession,
+            email=config.get(CONF_USERNAME),
+            password=config.get(CONF_PASSWORD),
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
             update_interval=config_entry.options.get(
@@ -147,7 +158,12 @@ async def async_setup_entry(hass, config_entry):
                 CONF_WAKE_ON_START, DEFAULT_WAKE_ON_START
             )
         )
+    except IncompleteCredentials:
+        _async_start_reauth(hass, config_entry)
+        return False
     except TeslaException as ex:
+        if ex.code == HTTP_UNAUTHORIZED:
+            _async_start_reauth(hass, config_entry)
         _LOGGER.error("Unable to communicate with Tesla API: %s", ex.message)
         return False
     _async_save_tokens(hass, config_entry, access_token, refresh_token)
@@ -200,6 +216,17 @@ async def async_unload_entry(hass, config_entry) -> bool:
         _LOGGER.debug("Unloaded entry for %s", username)
         return True
     return False
+
+
+def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth"},
+            data=entry.data,
+        )
+    )
+    _LOGGER.error("Credentials are no longer valid. Please reauthenticate")
 
 
 async def update_listener(hass, config_entry):
@@ -282,7 +309,7 @@ class TeslaDevice(CoordinatorEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = self._attributes.copy()
+        attr = self._attributes
         if self.tesla_device.has_battery():
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
             attr[ATTR_BATTERY_CHARGING] = self.tesla_device.battery_charging()
@@ -310,4 +337,5 @@ class TeslaDevice(CoordinatorEntity):
         This assumes the coordinator has updated the controller.
         """
         self.tesla_device.refresh()
+        self._attributes = self.tesla_device.attrs.copy()
         self.async_write_ha_state()
