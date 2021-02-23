@@ -71,7 +71,6 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
         )
-
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_2fa(self, user_input=None):
@@ -96,11 +95,11 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
-
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
     async def async_setup_hive_entry(self):
         """Finish setup and create the config entry."""
+        errors = {}
         self.data["tokens"] = self.tokens.get("AuthenticationResult")
 
         if "AccessToken" in self.data["tokens"]:
