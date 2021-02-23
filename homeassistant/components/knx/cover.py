@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -64,7 +65,10 @@ class KNXCover(KnxEntity, CoverEntity):
             supported_features |= SUPPORT_STOP
         if self._device.supports_angle:
             supported_features |= (
-                SUPPORT_SET_TILT_POSITION | SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT
+                SUPPORT_SET_TILT_POSITION
+                | SUPPORT_OPEN_TILT
+                | SUPPORT_CLOSE_TILT
+                | SUPPORT_STOP_TILT
             )
         return supported_features
 
@@ -138,6 +142,11 @@ class KNXCover(KnxEntity, CoverEntity):
     async def async_close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         await self._device.set_short_down()
+
+    async def async_stop_cover_tilt(self, **kwargs):
+        """Stop the cover tilt."""
+        await self._device.stop()
+        self.stop_auto_updater()
 
     def start_auto_updater(self):
         """Start the autoupdater to update Home Assistant while cover is moving."""
