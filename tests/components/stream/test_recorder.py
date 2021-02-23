@@ -54,7 +54,8 @@ class SaveRecordWorkerSync:
 
     def join(self):
         """Verify save worker was invoked and block on shutdown."""
-        self._save_thread.join()
+        self._save_thread.join(timeout=TEST_TIMEOUT)
+        assert not self._save_thread.is_alive()
 
     def reset(self):
         """Reset callback state for reuse in tests."""
@@ -168,9 +169,7 @@ async def test_recorder_duration(hass, hass_client, stream_worker_sync):
         await hass.async_block_till_done()
 
 
-async def test_recorder_duration_keepalive(
-    hass, hass_client, stream_worker_sync, record_worker_sync
-):
+async def test_recorder_duration_keepalive(hass, hass_client, record_worker_sync):
     """Test recorder duration firing on a keepalive stream."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
