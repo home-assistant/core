@@ -976,6 +976,7 @@ omit =
     homeassistant/components/tahoma/coordinator.py
     homeassistant/components/tahoma/lock.py
     homeassistant/components/tahoma/overkiz_executor.py
+    homeassistant/components/tahoma/scene.py
     homeassistant/components/tahoma/tahoma_entity.py
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tankerkoenig/*
