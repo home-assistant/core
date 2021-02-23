@@ -763,7 +763,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210208.0
+home-assistant-frontend==20210222.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1473,6 +1473,9 @@ pyitachip2ir==0.0.7
 # homeassistant.components.kira
 pykira==0.1.1
 
+# homeassistant.components.kmtronic
+pykmtronic==0.0.3
+
 # homeassistant.components.kodi
 pykodi==0.2.1
 
@@ -1499,6 +1502,9 @@ pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
+
+# homeassistant.components.litterrobot
+pylitterbot==2021.2.5
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1817,7 +1823,7 @@ python-qbittorrent==0.4.2
 python-ripple-api==0.0.3
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.6
+python-smarttub==0.0.17
 
 # homeassistant.components.sochain
 python-sochain-api==0.0.2
@@ -1995,7 +2001,7 @@ rxv==0.6.0
 samsungctl[websocket]==0.7.1
 
 # homeassistant.components.samsungtv
-samsungtvws==1.4.0
+samsungtvws==1.6.0
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4
@@ -2218,7 +2224,7 @@ todoist-python==8.0.0
 toonapi==0.2.0
 
 # homeassistant.components.totalconnect
-total_connect_client==0.55
+total_connect_client==0.57
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4

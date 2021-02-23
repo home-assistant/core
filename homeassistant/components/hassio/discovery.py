@@ -6,17 +6,10 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 
-from .const import (
-    ATTR_ADDON,
-    ATTR_CONFIG,
-    ATTR_DISCOVERY,
-    ATTR_NAME,
-    ATTR_SERVICE,
-    ATTR_UUID,
-)
+from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_NAME, ATTR_UUID
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
