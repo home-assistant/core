@@ -36,7 +36,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Use config values to set up a function enabling status retrieval."""
-    conf = config[DOMAIN]
+    conf = config.get(DOMAIN)
+    if conf is None:
+        return True
+
     host = conf[CONF_HOST]
     port = conf[CONF_PORT]
 
