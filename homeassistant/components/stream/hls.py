@@ -1,13 +1,12 @@
 """Provide functionality to stream HLS."""
 import io
-from typing import Callable
 
 from aiohttp import web
 
 from homeassistant.core import callback
 
-from .const import FORMAT_CONTENT_TYPE, NUM_PLAYLIST_SEGMENTS
-from .core import PROVIDERS, StreamOutput, StreamView
+from .const import FORMAT_CONTENT_TYPE, MAX_SEGMENTS, NUM_PLAYLIST_SEGMENTS
+from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
 from .fmp4utils import get_codec_string, get_init, get_m4s
 
 
@@ -159,32 +158,11 @@ class HlsSegmentView(StreamView):
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+        """Initialize recorder output."""
+        super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
+
     @property
     def name(self) -> str:
         """Return provider name."""
         return "hls"
-
-    @property
-    def format(self) -> str:
-        """Return container format."""
-        return "mp4"
-
-    @property
-    def audio_codecs(self) -> str:
-        """Return desired audio codecs."""
-        return {"aac", "mp3"}
-
-    @property
-    def video_codecs(self) -> tuple:
-        """Return desired video codecs."""
-        return {"hevc", "h264"}
-
-    @property
-    def container_options(self) -> Callable[[int], dict]:
-        """Return Callable which takes a sequence number and returns container options."""
-        return lambda sequence: {
-            # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
-            "avoid_negative_ts": "make_non_negative",
-            "fragment_index": str(sequence),
-        }
