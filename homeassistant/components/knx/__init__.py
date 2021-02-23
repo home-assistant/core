@@ -233,9 +233,9 @@ async def async_setup(hass, config):
     # deprecation warning since 2021.3
     if CONF_KNX_CONFIG in config[DOMAIN]:
         config_file_deprecation_warning = (
-            f"The 'config_file' option will soon be deprecated, please replace it with Home Assistant config schema "
-            f"directly in configuration.yaml https://www.home-assistant.io/integrations/knx/. \n"
-            f"A configuration converter tool for your `{config[DOMAIN][CONF_KNX_CONFIG]}` is available at https://xknx.io/config-converter/"
+            f"The 'config_file' option will soon be deprecated. Please replace it with Home Assistant config schema "
+            f"directly in `configuration.yaml` (see https://www.home-assistant.io/integrations/knx/). \n"
+            f"An online configuration converter tool for your `{config[DOMAIN][CONF_KNX_CONFIG]}` is available at https://xknx.io/config-converter/"
         )
         _LOGGER.warning(config_file_deprecation_warning)
         hass.components.persistent_notification.async_create(
