@@ -1,5 +1,6 @@
 select_next:
-  description: Select the next options of an input select entity
+  name: Next
+  description: Select the next options of an input select entity.
   target:
   fields:
     cycle:
@@ -11,7 +12,8 @@ select_next:
         boolean:
 
 select_option:
-  description: Select an option of an input select entity
+  name: Select
+  description: Select an option of an input select entity.
   target:
   fields:
     option:
@@ -23,7 +25,8 @@ select_option:
         text:
 
 select_previous:
-  description: Select the previous options of an input select entity
+  name: Previous
+  description: Select the previous options of an input select entity.
   target:
   fields:
     cycle:
@@ -35,15 +38,18 @@ select_previous:
         boolean:
 
 select_first:
-  description: Select the first option of an input select entity
+  name: First
+  description: Select the first option of an input select entity.
   target:
 
 select_last:
-  description: Select the last option of an input select entity
+  name: Last
+  description: Select the last option of an input select entity.
   target:
 
 set_options:
-  description: Set the options of an input select entity
+  name: Set options
+  description: Set the options of an input select entity.
   target:
   fields:
     options:
@@ -55,4 +61,5 @@ set_options:
         object:
 
 reload:
+  name: Reload
   description: Reload the input_select configuration.
