@@ -33,11 +33,9 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     ATTRIBUTION,
-    CONF_FORECAST_TYPES,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
-    DEFAULT_FORECAST_TYPE,
     DEFAULT_TIMESTEP,
     DOMAIN,
     FORECASTS,
@@ -97,7 +95,6 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
             config_entry,
             options={
                 CONF_TIMESTEP: DEFAULT_TIMESTEP,
-                CONF_FORECAST_TYPES: [DEFAULT_FORECAST_TYPE],
             },
         )
 

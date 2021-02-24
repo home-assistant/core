@@ -50,10 +50,10 @@ from .const import (
     CC_ATTR_WIND_SPEED,
     CLEAR_CONDITIONS,
     CONDITIONS,
-    CONF_FORECAST_TYPES,
     CONF_TIMESTEP,
     CURRENT,
     DAILY,
+    DEFAULT_FORECAST_TYPE,
     DOMAIN,
     FORECASTS,
     HOURLY,
@@ -156,9 +156,8 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        forecast_types = self._config_entry.options.get(CONF_FORECAST_TYPES)
-        if forecast_types:
-            return self.forecast_type in forecast_types
+        if self.forecast_type == DEFAULT_FORECAST_TYPE:
+            return True
 
         return False
 

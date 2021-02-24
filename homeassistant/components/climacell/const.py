@@ -14,7 +14,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
 )
 
-CONF_FORECAST_TYPES = "forecast_types"
 CONF_TIMESTEP = "timestep"
 
 DAILY = "daily"

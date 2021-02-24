@@ -23,7 +23,7 @@
     "step": {
       "init": {
         "title": "Update [%key:component::climacell::title%] Options",
-        "description": "If you choose the `nowcast` forecast type, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
+        "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
           "timestep": "Min. Between NowCast Forecasts",
           "forecast_types": "Forecast Type(s)"

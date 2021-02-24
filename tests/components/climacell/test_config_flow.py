@@ -15,9 +15,7 @@ from homeassistant.components.climacell.config_flow import (
     _get_unique_id,
 )
 from homeassistant.components.climacell.const import (
-    CONF_FORECAST_TYPES,
     CONF_TIMESTEP,
-    DAILY,
     DEFAULT_NAME,
     DEFAULT_TIMESTEP,
     DOMAIN,
@@ -152,7 +150,6 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
 
     assert entry.options[CONF_TIMESTEP] == DEFAULT_TIMESTEP
-    assert entry.options[CONF_FORECAST_TYPES] == [DAILY]
     assert CONF_TIMESTEP not in entry.data
 
     result = await hass.config_entries.options.async_init(entry.entry_id, data=None)

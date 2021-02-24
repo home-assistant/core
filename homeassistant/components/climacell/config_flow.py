@@ -18,16 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (
-    CONF_FORECAST_TYPES,
-    CONF_TIMESTEP,
-    DAILY,
-    DEFAULT_FORECAST_TYPE,
-    DEFAULT_NAME,
-    DEFAULT_TIMESTEP,
-    HOURLY,
-    NOWCAST,
-)
+from .const import CONF_TIMESTEP, DEFAULT_NAME, DEFAULT_TIMESTEP
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,14 +81,6 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options_schema = {
-            vol.Optional(
-                CONF_FORECAST_TYPES,
-                default=self._config_entry.options.get(
-                    CONF_FORECAST_TYPES, [DEFAULT_FORECAST_TYPE]
-                ),
-            ): cv.multi_select(
-                {DAILY: DAILY.title(), HOURLY: HOURLY.title(), NOWCAST: NOWCAST.title()}
-            ),
             vol.Required(
                 CONF_TIMESTEP,
                 default=self._config_entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
