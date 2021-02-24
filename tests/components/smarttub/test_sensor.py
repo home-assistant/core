@@ -79,7 +79,7 @@ async def test_filtration_cycles(spa, setup_entry, hass):
         "set_secondary_filtration",
         {
             "entity_id": entity_id,
-            "mode": smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode.FREQUENT.name,
+            "mode": "frequent",
         },
         blocking=True,
     )
