@@ -43,7 +43,7 @@ class HassioAddonEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for entity."""
-        return f"{self.addon_slug}_{slugify(self.sensor_name)}"
+        return f"{self.addon_slug}_{self.attribute_name}"
 
     @property
     def device_info(self) -> Dict[str, Any]:
