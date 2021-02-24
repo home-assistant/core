@@ -693,6 +693,9 @@ pycfdns==1.2.1
 # homeassistant.components.cast
 pychromecast==8.1.0
 
+# homeassistant.components.climacell
+pyclimacell==0.14.0
+
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
 
