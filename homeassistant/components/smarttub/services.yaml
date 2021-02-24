@@ -1,0 +1,22 @@
+set_primary_filtration:
+  description: Update the primary filtration settings
+  fields:
+    entity_id:
+      description: The entity to update
+      example: "sensor.jacuzzi_j_335_primary_filtration_cycle"
+    duration:
+      description: The desired duration of the primary filtration cycle (integer, hours)
+      example: 8
+    start_hour:
+      description: The desired hour at which to begin the primary filtration cycle (integer, 0-23)
+      example: 2
+
+set_secondary_filtration:
+  description: Update the secondary filtration settings
+  fields:
+    entity_id:
+      description: The entity to update
+      example: "sensor.jacuzzi_j_335_secondary_filtration_cycle"
+    mode:
+      description: The desired secondary filtration mode. Can be frequent, infrequent, or away.
+      example: infrequent
