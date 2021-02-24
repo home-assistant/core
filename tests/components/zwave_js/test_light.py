@@ -14,6 +14,7 @@ from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
 BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color"
 EATON_RF9640_ENTITY = "light.allloaddimmer"
+AEON_SMART_SWITCH_LIGHT_ENTITY = "light.smart_switch_6"
 
 
 async def test_light(hass, client, bulb_6_multi_color, integration):
@@ -403,3 +404,9 @@ async def test_v4_dimmer_light(hass, client, eaton_rf9640_dimmer, integration):
     assert state.state == STATE_ON
     # the light should pick currentvalue which has zwave value 22
     assert state.attributes[ATTR_BRIGHTNESS] == 57
+
+
+async def test_optional_light(hass, client, aeon_smart_switch_6, integration):
+    """Test a device that has an additional light endpoint being identified as light."""
+    state = hass.states.get(AEON_SMART_SWITCH_LIGHT_ENTITY)
+    assert state.state == STATE_ON

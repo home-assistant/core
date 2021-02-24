@@ -148,6 +148,12 @@ def iblinds_v2_state_fixture():
     return json.loads(load_fixture("zwave_js/cover_iblinds_v2_state.json"))
 
 
+@pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
+def aeon_smart_switch_6_state_fixture():
+    """Load the AEON Labs (ZW096) Smart Switch 6 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeon_smart_switch_6_state.json"))
+
+
 @pytest.fixture(name="ge_12730_state", scope="session")
 def ge_12730_state_fixture():
     """Load the GE 12730 node state fixture data."""
@@ -358,6 +364,14 @@ def motorized_barrier_cover_fixture(client, gdc_zw062_state):
 def iblinds_cover_fixture(client, iblinds_v2_state):
     """Mock an iBlinds v2.0 window cover node."""
     node = Node(client, copy.deepcopy(iblinds_v2_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeon_smart_switch_6")
+def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
+    """Mock an AEON Labs (ZW096) Smart Switch 6 node."""
+    node = Node(client, aeon_smart_switch_6_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
