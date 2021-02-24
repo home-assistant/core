@@ -33,7 +33,6 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.Schema(
 
 SET_SECONDARY_FILTRATION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_MODE): vol.In(
             {
                 mode.name.lower()
