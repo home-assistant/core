@@ -20,6 +20,13 @@
             "install_addon": "L\u00fctfen Z-Wave JS eklenti kurulumu bitene kadar bekleyin. Bu birka\u00e7 dakika s\u00fcrebilir."
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "A\u011f Anahtar\u0131",
+                    "usb_path": "USB Ayg\u0131t Yolu"
+                },
+                "title": "Z-Wave JS eklenti yap\u0131land\u0131rmas\u0131na girin"
+            },
             "hassio_confirm": {
                 "title": "Z-Wave JS eklentisiyle Z-Wave JS entegrasyonunu ayarlay\u0131n"
             },
@@ -37,13 +44,6 @@
                 },
                 "description": "Z-Wave JS Supervisor eklentisini kullanmak istiyor musunuz?",
                 "title": "Ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
-            },
-            "start_addon": {
-                "data": {
-                    "network_key": "A\u011f Anahtar\u0131",
-                    "usb_path": "USB Ayg\u0131t Yolu"
-                },
-                "title": "Z-Wave JS eklenti yap\u0131land\u0131rmas\u0131na girin"
             },
             "user": {
                 "data": {

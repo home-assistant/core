@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "connection_error": "Kan geen verbinding maken"
+        },
+        "error": {
+            "discovery_error": "Kan geen Motion Gateway vinden"
+        },
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "title": "Motion Blinds"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP-adres"
+                },
+                "title": "Selecteer de Motion Gateway waarmee u verbinding wilt maken"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "host": "IP-adres"
+                }
+            }
+        }
+    }
+}

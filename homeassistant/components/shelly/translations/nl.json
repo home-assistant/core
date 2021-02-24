@@ -25,5 +25,18 @@
                 }
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Knop",
+            "button1": "Eerste knop",
+            "button2": "Tweede knop",
+            "button3": "Derde knop"
+        },
+        "trigger_type": {
+            "double": "{subtype} dubbel geklikt",
+            "single_long": "{subtype} een keer geklikt en daarna lang geklikt",
+            "triple": "{subtype} driemaal geklikt"
+        }
     }
 }

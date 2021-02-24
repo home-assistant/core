@@ -20,6 +20,13 @@
             "install_addon": "\u8acb\u7a0d\u7b49 Z-Wave JS add-on \u5b89\u88dd\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002"
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "\u7db2\u8def\u5bc6\u9470",
+                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u8a2d\u5b9a"
+            },
             "hassio_confirm": {
                 "title": "\u4ee5 Z-Wave JS add-on \u8a2d\u5b9a Z-Wave JS \u6574\u5408"
             },
@@ -37,13 +44,6 @@
                 },
                 "description": "\u662f\u5426\u8981\u4f7f\u7528 Z-Wave JS Supervisor add-on\uff1f",
                 "title": "\u9078\u64c7\u9023\u7dda\u985e\u578b"
-            },
-            "start_addon": {
-                "data": {
-                    "network_key": "\u7db2\u8def\u5bc6\u9470",
-                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
-                },
-                "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u8a2d\u5b9a"
             },
             "user": {
                 "data": {

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Habitica"
+}

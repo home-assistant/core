@@ -2,7 +2,11 @@
     "config": {
         "abort": {
             "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "single_instance_allowed": "Al geconfigureerd. Er is maar een configuratie mogelijk."
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "flow_title": "Tuya-configuratie",
         "step": {
@@ -19,7 +23,16 @@
         }
     },
     "options": {
+        "abort": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "dev_not_found": "Apparaat niet gevonden"
+        },
         "step": {
+            "device": {
+                "title": "Configureer Tuya Apparaat"
+            },
             "init": {
                 "title": "Configureer Tuya opties"
             }

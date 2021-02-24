@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured_device": "Dit apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
             "updated_entry": "Dit item is al ingesteld, maar de naam en/of opties die zijn gedefinieerd in de configuratie komen niet overeen met de eerder ge\u00efmporteerde configuratie, dus het configuratie-item is dienovereenkomstig bijgewerkt."
         },
         "error": {

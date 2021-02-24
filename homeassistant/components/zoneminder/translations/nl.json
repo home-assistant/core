@@ -12,7 +12,8 @@
         "error": {
             "auth_fail": "Gebruikersnaam of wachtwoord is onjuist.",
             "cannot_connect": "Kon niet verbinden",
-            "connection_error": "Kan geen verbinding maken met een ZoneMinder-server."
+            "connection_error": "Kan geen verbinding maken met een ZoneMinder-server.",
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "flow_title": "ZoneMinder",
         "step": {

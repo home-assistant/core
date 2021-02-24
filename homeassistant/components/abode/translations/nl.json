@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Herauthenticatie was succesvol",
             "single_instance_allowed": "Slechts een enkele configuratie van Abode is toegestaan."
         },
         "error": {
@@ -12,9 +13,14 @@
             "mfa": {
                 "data": {
                     "mfa_code": "MFA-code (6-cijfers)"
-                }
+                },
+                "title": "Voer uw MFA-code voor Abode in"
             },
             "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
+                },
                 "title": "Vul uw Abode-inloggegevens in"
             },
             "user": {

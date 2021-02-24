@@ -1,9 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "auth_new_token_not_granted_error": "Nieuw aangemaakte token is niet goedgekeurd in Hyperion UI",
+            "auth_new_token_not_work_error": "Verificatie met nieuw aangemaakt token mislukt",
+            "auth_required_error": "Kan niet bepalen of autorisatie vereist is",
+            "cannot_connect": "Kan geen verbinding maken",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_access_token": "Ongeldig toegangstoken"
+        },
         "step": {
             "auth": {
                 "data": {
                     "create_token": "Maak automatisch een nieuw token aan"
+                }
+            },
+            "create_token_external": {
+                "title": "Accepteer nieuwe token in Hyperion UI"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort"
                 }
             }
         }

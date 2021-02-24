@@ -20,6 +20,13 @@
             "install_addon": "Palun oota kuni Z-Wave JS lisandmoodul on paigaldatud. See v\u00f5ib v\u00f5tta mitu minutit."
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "V\u00f5rgu v\u00f5ti",
+                    "usb_path": "USB-seadme asukoha rada"
+                },
+                "title": "Sisesta Z-Wave JS lisandmooduli seaded"
+            },
             "hassio_confirm": {
                 "title": "Seadista Z-Wave JS-i sidumine Z-Wave JS-i lisandmooduliga"
             },
@@ -37,13 +44,6 @@
                 },
                 "description": "Kas soovid kasutada Z-Wave JSi halduri lisandmoodulit?",
                 "title": "Vali \u00fchendusviis"
-            },
-            "start_addon": {
-                "data": {
-                    "network_key": "V\u00f5rgu v\u00f5ti",
-                    "usb_path": "USB-seadme asukoha rada"
-                },
-                "title": "Sisesta Z-Wave JS lisandmooduli seaded"
             },
             "user": {
                 "data": {

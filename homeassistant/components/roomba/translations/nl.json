@@ -28,6 +28,12 @@
                 "description": "Het wachtwoord kon niet automatisch van het apparaat worden opgehaald. Volg de stappen zoals beschreven in de documentatie op: {auth_help_url}",
                 "title": "Voer wachtwoord in"
             },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                }
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

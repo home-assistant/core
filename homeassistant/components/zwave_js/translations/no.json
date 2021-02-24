@@ -20,6 +20,13 @@
             "install_addon": "Vent mens installasjonen av Z-Wave JS-tillegg er ferdig. Dette kan ta flere minutter."
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Nettverksn\u00f8kkel",
+                    "usb_path": "USB enhetsbane"
+                },
+                "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
+            },
             "hassio_confirm": {
                 "title": "Sett opp Z-Wave JS-integrasjon med Z-Wave JS-tillegg"
             },
@@ -37,13 +44,6 @@
                 },
                 "description": "Vil du bruke Z-Wave JS Supervisor-tillegg?",
                 "title": "Velg tilkoblingsmetode"
-            },
-            "start_addon": {
-                "data": {
-                    "network_key": "Nettverksn\u00f8kkel",
-                    "usb_path": "USB enhetsbane"
-                },
-                "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "user": {
                 "data": {
