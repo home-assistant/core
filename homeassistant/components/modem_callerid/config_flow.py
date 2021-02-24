@@ -19,13 +19,12 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             name = user_input[CONF_NAME]
             device = user_input[CONF_DEVICE]
-
-            await self.async_set_unique_id(device)
-            self._abort_if_unique_id_configured()
 
             try:
                 api = PhoneModem(device)  # noqa pylint:disable=unused-variable

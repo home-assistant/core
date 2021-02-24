@@ -49,27 +49,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     def hangup_call(call) -> None:
         """Accept Incoming Call."""
-        api.hang_up()
+        api.hangup_call()
 
     def reject_call(call) -> None:
         """Reject Incoming Call."""
         api.reject_call()
 
-    hangup_call_schema = cv.make_entity_service_schema(
-        {vol.Optional(SERVICE_HANGUP_CALL, default=True): cv.boolean}
-    )
+    hass.services.async_register(DOMAIN, SERVICE_HANGUP_CALL, hangup_call, {})
 
-    reject_call_schema = cv.make_entity_service_schema(
-        {vol.Optional(SERVICE_REJECT_CALL, default=True): cv.boolean}
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_HANGUP_CALL, hangup_call, hangup_call_schema
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_REJECT_CALL, reject_call, reject_call_schema
-    )
+    hass.services.async_register(DOMAIN, SERVICE_REJECT_CALL, reject_call, {})
 
 
 class ModemCalleridSensor(Entity):

@@ -60,7 +60,7 @@ async def test_flow_user(hass):
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_flow_user_error(hass):
