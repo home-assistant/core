@@ -4,6 +4,7 @@ set_primary_filtration:
   target:
     entity:
       integration: smarttub
+      domain: sensor
   fields:
     duration:
       name: Duration
@@ -15,6 +16,7 @@ set_primary_filtration:
           min: 1
           max: 24
           unit_of_measurement: "hours"
+          mode: slider
       example: 8
     start_hour:
       description: The hour of the day at which to begin the primary filtration cycle
@@ -33,6 +35,7 @@ set_secondary_filtration:
   target:
     entity:
       integration: smarttub
+      domain: sensor
   fields:
     mode:
       description: The secondary filtration mode.
