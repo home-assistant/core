@@ -22,7 +22,7 @@ async def async_setup_entry(
 
     tado = hass.data[DOMAIN][entry.entry_id][DATA]
 
-    async_add_entities([TadoWeatherEntity(tado)], True)
+    async_add_entities([TadoWeatherEntity(tado)])
 
 
 def format_condition(condition: str) -> str:
