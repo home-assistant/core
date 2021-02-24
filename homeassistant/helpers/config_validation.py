@@ -847,6 +847,9 @@ PLATFORM_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 ENTITY_SERVICE_FIELDS = {
+    # Either accept static entity IDs, a single dynamic template or a mixed list
+    # of static and dynamic templates. While this could be solved with a single
+    # complex template, handling it like this, keeps config validation useful.
     vol.Optional(ATTR_ENTITY_ID): vol.Any(
         comp_entity_ids, dynamic_template, vol.All(list, template_complex)
     ),
