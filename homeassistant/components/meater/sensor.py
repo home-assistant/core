@@ -150,11 +150,7 @@ class MeaterProbeTemperature(CoordinatorEntity):
         """Return the unique ID for the sensor."""
         return f"{self.device_id}-{self.temperature_reading_type}"
 
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
+    
 
 
 class TemperatureMeasurement(Enum):
