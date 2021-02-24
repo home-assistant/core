@@ -9,9 +9,9 @@ from .const import DOMAIN
 
 BINARY_SENSORS = (
     {
-        "id": "mullvad_exit_ip",
-        "name": "Mullvad Exit IP",
-        "device_class": DEVICE_CLASS_CONNECTIVITY,
+        CONF_ID: "mullvad_exit_ip",
+        CONF_NAME: "Mullvad Exit IP",
+        CONF_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
     },
 )
 
