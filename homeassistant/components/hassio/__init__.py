@@ -515,9 +515,6 @@ async def async_unload_entry(
         hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER]()
         hass.data.pop(ADDONS_COORDINATOR_UNSUB_LISTENER)
 
-    # Pop add-on data
-    hass.data.pop(ADDONS_COORDINATOR, None)
-
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -526,6 +523,9 @@ async def async_unload_entry(
             ]
         )
     )
+
+    # Pop add-on data
+    hass.data.pop(ADDONS_COORDINATOR, None)
 
     return unload_ok
 
