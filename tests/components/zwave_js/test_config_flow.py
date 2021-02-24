@@ -7,7 +7,7 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.components.zwave_js.config_flow import TITLE
+from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -138,7 +138,7 @@ def server_version_side_effect_fixture():
 
 
 @pytest.fixture(name="get_server_version", autouse=True)
-def mock_get_server_version(server_version_side_effect):
+def mock_get_server_version(server_version_side_effect, server_version_timeout):
     """Mock server version."""
     version_info = VersionInfo(
         driver_version="mock-driver-version",
@@ -149,8 +149,17 @@ def mock_get_server_version(server_version_side_effect):
         "homeassistant.components.zwave_js.config_flow.get_server_version",
         side_effect=server_version_side_effect,
         return_value=version_info,
-    ) as mock_version:
+    ) as mock_version, patch(
+        "homeassistant.components.zwave_js.config_flow.SERVER_VERSION_TIMEOUT",
+        new=server_version_timeout,
+    ):
         yield mock_version
+
+
+@pytest.fixture(name="server_version_timeout")
+def mock_server_version_timeout():
+    """Patch the timeout for getting server version."""
+    return SERVER_VERSION_TIMEOUT
 
 
 @pytest.fixture(name="addon_setup_time", autouse=True)
@@ -198,22 +207,30 @@ async def test_manual(hass):
     assert result2["result"].unique_id == 1234
 
 
+async def slow_server_version(*args):
+    """Simulate a slow server version."""
+    await asyncio.sleep(0.1)
+
+
 @pytest.mark.parametrize(
-    "url, server_version_side_effect, error",
+    "url, server_version_side_effect, server_version_timeout, error",
     [
         (
             "not-ws-url",
             None,
+            SERVER_VERSION_TIMEOUT,
             "invalid_ws_url",
         ),
         (
             "ws://localhost:3000",
-            asyncio.TimeoutError,
+            slow_server_version,
+            0,
             "cannot_connect",
         ),
         (
             "ws://localhost:3000",
             Exception("Boom"),
+            SERVER_VERSION_TIMEOUT,
             "unknown",
         ),
     ],
