@@ -40,34 +40,34 @@ def create_knx_device(
     config: ConfigType,
 ) -> XknxDevice:
     """Return the requested XKNX device."""
-    if platform is SupportedPlatforms.light:
+    if platform is SupportedPlatforms.LIGHT:
         return _create_light(knx_module, config)
 
-    if platform is SupportedPlatforms.cover:
+    if platform is SupportedPlatforms.COVER:
         return _create_cover(knx_module, config)
 
-    if platform is SupportedPlatforms.climate:
+    if platform is SupportedPlatforms.CLIMATE:
         return _create_climate(knx_module, config)
 
-    if platform is SupportedPlatforms.switch:
+    if platform is SupportedPlatforms.SWITCH:
         return _create_switch(knx_module, config)
 
-    if platform is SupportedPlatforms.sensor:
+    if platform is SupportedPlatforms.SENSOR:
         return _create_sensor(knx_module, config)
 
-    if platform is SupportedPlatforms.notify:
+    if platform is SupportedPlatforms.NOTIFY:
         return _create_notify(knx_module, config)
 
-    if platform is SupportedPlatforms.scene:
+    if platform is SupportedPlatforms.SCENE:
         return _create_scene(knx_module, config)
 
-    if platform is SupportedPlatforms.binary_sensor:
+    if platform is SupportedPlatforms.BINARY_SENSOR:
         return _create_binary_sensor(knx_module, config)
 
-    if platform is SupportedPlatforms.weather:
+    if platform is SupportedPlatforms.WEATHER:
         return _create_weather(knx_module, config)
 
-    if platform is SupportedPlatforms.fan:
+    if platform is SupportedPlatforms.FAN:
         return _create_fan(knx_module, config)
 
 
@@ -121,12 +121,12 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     group_address_tunable_white_state = None
     group_address_color_temp = None
     group_address_color_temp_state = None
-    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.absolute:
+    if config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.ABSOLUTE:
         group_address_color_temp = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
         group_address_color_temp_state = config.get(
             LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
         )
-    elif config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.relative:
+    elif config[LightSchema.CONF_COLOR_TEMP_MODE] == ColorTempModes.RELATIVE:
         group_address_tunable_white = config.get(LightSchema.CONF_COLOR_TEMP_ADDRESS)
         group_address_tunable_white_state = config.get(
             LightSchema.CONF_COLOR_TEMP_STATE_ADDRESS
