@@ -38,7 +38,7 @@ async def test_config_switch(hass, do_options, read_type):
     else:
         device_config = {
             CONF_NAME: device_name,
-            read_type: 1234,
+            CALL_TYPE_COIL: 1234,
             CONF_SLAVE: 10,
         }
         array_type = CONF_COILS

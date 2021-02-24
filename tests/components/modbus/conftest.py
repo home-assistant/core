@@ -5,14 +5,20 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
+from homeassistant.components.modbus.const import (
+    CONF_REGISTER,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN as DOMAIN,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -29,6 +35,56 @@ class ReadResult:
         """Init."""
         self.registers = register_words
         self.bits = register_words
+
+
+@pytest.fixture
+def config_modbus_server():
+    """Fixture to provide a modbus slave configuration."""
+    return {
+        DOMAIN: {
+            CONF_NAME: DEFAULT_HUB,
+            CONF_TYPE: "tcpserver",
+            CONF_HOST: "modbusTest",
+            CONF_PORT: 5001,
+        },
+    }
+
+
+class AsyncTcpServerMock:
+    """Mock AsyncTcpServer."""
+
+    async def serve_forever(self):
+        """Mock serve_forever call."""
+        pass
+
+    def __bool__(self):
+        """Convert to bool."""
+        return True
+
+    def server_close(self):
+        """Do nothing."""
+        pass
+
+    @property
+    def active_connections(self):
+        """Return active server connections array."""
+        return ["some"]
+
+
+class MockModbusDataBlock:
+    """Mock Modbus data block."""
+
+    def __init__(self):
+        """Mock init method."""
+        self._values = []
+
+    def getValues(self, address, count):
+        """Mock get values method."""
+        return self._values
+
+    def setValues(self, address, values):
+        """Mock set values method."""
+        self._values = values
 
 
 async def base_test(
@@ -58,6 +114,10 @@ async def base_test(
         }
 
     mock_sync = mock.MagicMock()
+
+    # Create a server block with the necessary methods
+    server_blocks = {config_device.get(CONF_SLAVE, 0): MockModbusDataBlock()}
+
     with mock.patch(
         "homeassistant.components.modbus.modbus_client.ModbusTcpClient",
         return_value=mock_sync,
@@ -67,6 +127,12 @@ async def base_test(
     ), mock.patch(
         "homeassistant.components.modbus.modbus_client.ModbusUdpClient",
         return_value=mock_sync,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus_server.StartTcpServer",
+        return_value=AsyncTcpServerMock(),
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus_server.build_server_blocks",
+        return_value=server_blocks,
     ):
 
         # Setup inputs for the sensor
@@ -75,6 +141,12 @@ async def base_test(
         mock_sync.read_discrete_inputs.return_value = read_result
         mock_sync.read_input_registers.return_value = read_result
         mock_sync.read_holding_registers.return_value = read_result
+
+        # If slave specified, update the server block
+        if CONF_SLAVE in config_device and CONF_REGISTER in config_device:
+            server_blocks[config_device[CONF_SLAVE]].setValues(
+                config_device[CONF_REGISTER], register_words
+            )
 
         # mock timer and add old/new config
         now = dt_util.utcnow()
@@ -104,6 +176,10 @@ async def base_test(
                     config_device[entity_domain][CONF_SCAN_INTERVAL] = scan_interval
                 assert await async_setup_component(hass, entity_domain, config_device)
                 await hass.async_block_till_done()
+
+            # Modbus server initialize the server block on the started event
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+            await hass.async_block_till_done()
 
         assert DOMAIN in hass.data
         if config_device is not None:

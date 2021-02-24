@@ -1,8 +1,6 @@
 """Support for Modbus Register sensors."""
 import logging
 import struct
-import traceback
-
 from typing import Any, Optional, Union
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -256,7 +254,10 @@ class ModbusRegisterSensor(RestoreEntity):
             return
 
         registers = result.registers
+
         if self._reverse_order:
+            # copy registers to avoid changing the order in the source
+            registers = [*registers]
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])

@@ -24,7 +24,8 @@ from .conftest import base_config_test, base_test
 
 
 @pytest.mark.parametrize("do_options", [False, True])
-async def test_config_sensor(hass, do_options):
+@pytest.mark.parametrize("do_server", [False, True])
+async def test_config_sensor(hass, do_options, do_server, config_modbus_server):
     """Run test for sensor."""
     sensor_name = "test_sensor"
     config_sensor = {
@@ -52,6 +53,7 @@ async def test_config_sensor(hass, do_options):
         None,
         CONF_REGISTERS,
         method_discovery=False,
+        config_modbus=config_modbus_server if do_server else None,
     )
 
 
@@ -265,12 +267,13 @@ async def test_config_sensor(hass, do_options):
         ),
     ],
 )
-async def test_all_sensor(hass, cfg, regs, expected):
+@pytest.mark.parametrize("do_server", [False, True])
+async def test_all_sensor(hass, cfg, regs, do_server, config_modbus_server, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
     state = await base_test(
         hass,
-        {CONF_NAME: sensor_name, CONF_REGISTER: 1234, **cfg},
+        {CONF_NAME: sensor_name, CONF_REGISTER: 1234, CONF_SLAVE: 10, **cfg},
         sensor_name,
         SENSOR_DOMAIN,
         None,
@@ -279,5 +282,6 @@ async def test_all_sensor(hass, cfg, regs, expected):
         expected,
         method_discovery=False,
         scan_interval=5,
+        config_modbus=config_modbus_server if do_server else None,
     )
     assert state == expected
