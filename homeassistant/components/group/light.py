@@ -88,8 +88,8 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._brightness: Optional[int] = None
         self._hs_color: Optional[Tuple[float, float]] = None
         self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 154
-        self._max_mireds: Optional[int] = 500
+        self._min_mireds: int = 154
+        self._max_mireds: int = 500
         self._white_value: Optional[int] = None
         self._effect_list: Optional[List[str]] = None
         self._effect: Optional[str] = None
@@ -152,12 +152,12 @@ class LightGroup(GroupEntity, light.LightEntity):
         return self._color_temp
 
     @property
-    def min_mireds(self) -> Optional[int]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light group supports."""
         return self._min_mireds
 
     @property
-    def max_mireds(self) -> Optional[int]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light group supports."""
         return self._max_mireds
 
