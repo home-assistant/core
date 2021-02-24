@@ -80,6 +80,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "async_set_primary_filtration",
     )
 
+    platform.async_register_entity_service(
+        "set_secondary_filtration",
+        SET_SECONDARY_FILTRATION_SCHEMA,
+        "async_set_secondary_filtration",
+    )
+
 
 class SmartTubSensor(SmartTubSensorBase):
     """Generic class for SmartTub status sensors."""
@@ -151,3 +157,10 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
             ATTR_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
         }
+
+    async def async_set_secondary_filtration(self, **kwargs):
+        """Update primary filtration settings."""
+        mode = smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode[
+            kwargs.get(ATTR_MODE)
+        ]
+        await self._state.set_mode(mode)

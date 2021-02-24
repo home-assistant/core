@@ -1,5 +1,7 @@
 """Test the SmartTub sensor platform."""
 
+import smarttub
+
 from . import trigger_update
 
 
@@ -71,3 +73,16 @@ async def test_filtration_cycles(spa, setup_entry, hass):
     assert state.state == "inactive"
     assert state.attributes["last_updated"] is not None
     assert state.attributes["mode"] == "away"
+
+    await hass.services.async_call(
+        "smarttub",
+        "set_secondary_filtration",
+        {
+            "entity_id": entity_id,
+            "mode": smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode.FREQUENT.name,
+        },
+        blocking=True,
+    )
+    spa.get_status.return_value.secondary_filtration.set_mode.assert_called_with(
+        mode=smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode.FREQUENT
+    )

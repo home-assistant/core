@@ -70,6 +70,9 @@ def mock_spa_state():
     state.primary_filtration.set = create_autospec(
         smarttub.SpaPrimaryFiltrationCycle, instance=True
     ).set
+    state.secondary_filtration.set_mode = create_autospec(
+        smarttub.SpaSecondaryFiltrationCycle, instance=True
+    ).set_mode
     return state
 
 
