@@ -3,10 +3,21 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_ENTITIES, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    CONF_ENTITIES,
+    DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_TIMESTAMP,
+)
 import homeassistant.util.dt as dt_util
 
-from .const import ATTR_VALUE, BSH_OPERATION_STATE, DOMAIN
+from .const import (
+    ATTR_TIMESTAMP,
+    ATTR_UNIT,
+    ATTR_VALUE,
+    BSH_ACTIVE_PROGRAM,
+    BSH_OPERATION_STATE,
+    DOMAIN,
+)
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,17 +80,40 @@ class HomeConnectSensor(HomeConnectEntity):
                     self._state = None
                 else:
                     seconds = self._sign * float(status[self._key][ATTR_VALUE])
-                    self._state = (
-                        dt_util.utcnow() + timedelta(seconds=seconds)
-                    ).isoformat()
+                    result_time = dt_util.utc_from_timestamp(
+                        status[self._key][ATTR_TIMESTAMP]
+                    ) + timedelta(seconds=seconds)
+
+                    if self._sign == 1 and result_time < dt_util.utcnow():
+                        # if the date is supposed to be in the future but we're
+                        # already past it, set state to None.
+                        self._state = None
+                    elif (
+                        # prevent 1 second jitter
+                        self._state is None
+                        or abs(
+                            (
+                                dt_util.parse_datetime(self._state) - result_time
+                            ).total_seconds()
+                        )
+                        > 1
+                    ):
+                        self._state = result_time.isoformat()
+            elif self.device_class == DEVICE_CLASS_TEMPERATURE:
+                self._state = round(status[self._key].get(ATTR_VALUE))
+                self._unit = status[self._key].get(ATTR_UNIT).lstrip("Â")
             else:
                 self._state = status[self._key].get(ATTR_VALUE)
-                if self._key == BSH_OPERATION_STATE:
+                if (
+                    self._key in (BSH_OPERATION_STATE, BSH_ACTIVE_PROGRAM)
+                    and self._state is not None
+                ):
                     # Value comes back as an enum, we only really care about the
                     # last part, so split it off
                     # https://developer.home-connect.com/docs/status/operation_state
                     self._state = self._state.split(".")[-1]
         _LOGGER.debug("Updated, new state: %s", self._state)
+        # print(self._device)
 
     @property
     def unit_of_measurement(self):

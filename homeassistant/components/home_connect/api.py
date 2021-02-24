@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_ICON,
     CONF_DEVICE,
     CONF_ENTITIES,
+    DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TIME_SECONDS,
@@ -32,6 +33,7 @@ from .const import (
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
+    COOKING_OVEN_TEMPERATURE,
     SIGNAL_UPDATE_ENTITIES,
 )
 
@@ -174,6 +176,15 @@ class DeviceWithPrograms(HomeConnectDevice):
                 ATTR_SIGN: sign,
             }
             for k, (unit, icon, device_class, sign) in sensors.items()
+        ] + [
+            {
+                ATTR_DEVICE: self,
+                ATTR_DESC: "Active Program",
+                ATTR_KEY: BSH_ACTIVE_PROGRAM,
+                ATTR_ICON: "mdi:play",
+                ATTR_UNIT: None,
+                ATTR_DEVICE_CLASS: None,
+            }
         ]
 
 
@@ -249,12 +260,38 @@ class DeviceWithRemoteStart(HomeConnectDevice):
         }
 
 
+class DeviceWithLocalControl(HomeConnectDevice):
+    """Device that has Local Control binary sensor."""
+
+    def get_local_control(self):
+        """Get a dictionary with info about the local control sensor."""
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Local Control",
+            ATTR_SENSOR_TYPE: "local_control",
+        }
+
+
+class DeviceWithProgramFinished(HomeConnectDevice):
+    """Device that has Program Finished binary sensor."""
+
+    def get_program_finished(self):
+        """Get a dictionary with info about the program finished sensor."""
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Program Finished",
+            ATTR_SENSOR_TYPE: "program_finished",
+        }
+
+
 class Dryer(
     DeviceWithDoor,
     DeviceWithOpState,
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithLocalControl,
+    DeviceWithProgramFinished,
 ):
     """Dryer class."""
 
@@ -282,11 +319,19 @@ class Dryer(
         door_entity = self.get_door_entity()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
+        local_control = self.get_local_control()
+        program_finished = self.get_program_finished()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [
+                door_entity,
+                remote_control,
+                remote_start,
+                local_control,
+                program_finished,
+            ],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -299,6 +344,7 @@ class Dishwasher(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithProgramFinished,
 ):
     """Dishwasher class."""
 
@@ -332,11 +378,17 @@ class Dishwasher(
         door_entity = self.get_door_entity()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
+        program_finished = self.get_program_finished()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [
+                door_entity,
+                remote_control,
+                remote_start,
+                program_finished,
+            ],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -348,31 +400,49 @@ class Oven(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithLocalControl,
+    DeviceWithProgramFinished,
 ):
     """Oven class."""
 
-    PROGRAMS = [
-        {"name": "Cooking.Oven.Program.HeatingMode.PreHeating"},
-        {"name": "Cooking.Oven.Program.HeatingMode.HotAir"},
-        {"name": "Cooking.Oven.Program.HeatingMode.TopBottomHeating"},
-        {"name": "Cooking.Oven.Program.HeatingMode.PizzaSetting"},
-        {"name": "Cooking.Oven.Program.Microwave.600Watt"},
-    ]
+    """Oven programs can't run by switches."""
 
     power_off_state = BSH_POWER_STANDBY
+
+    def get_oven_only_sensors(self):
+        """Get a dictionary with info about oven only sensors."""
+        return [
+            {
+                ATTR_DEVICE: self,
+                ATTR_DESC: "Temperature",
+                ATTR_KEY: COOKING_OVEN_TEMPERATURE,
+                ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+                ATTR_UNIT: None,
+                ATTR_ICON: None,
+            }
+        ]
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
+        local_control = self.get_local_control()
+        program_finished = self.get_program_finished()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
+        oven_only_sensors = self.get_oven_only_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [
+                door_entity,
+                remote_control,
+                remote_start,
+                local_control,
+                program_finished,
+            ],
             "switch": program_switches,
-            "sensor": program_sensors + op_state_sensor,
+            "sensor": program_sensors + op_state_sensor + oven_only_sensors,
         }
 
 
@@ -382,6 +452,8 @@ class Washer(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithLocalControl,
+    DeviceWithProgramFinished,
 ):
     """Washer class."""
 
@@ -414,17 +486,30 @@ class Washer(
         door_entity = self.get_door_entity()
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
+        local_control = self.get_local_control()
+        program_finished = self.get_program_finished()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [
+                door_entity,
+                remote_control,
+                remote_start,
+                local_control,
+                program_finished,
+            ],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
 
 
-class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
+class CoffeeMaker(
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteStart,
+    DeviceWithLocalControl,
+):
     """Coffee maker class."""
 
     PROGRAMS = [
@@ -449,11 +534,12 @@ class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         remote_start = self.get_remote_start()
+        local_control = self.get_local_control()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [remote_start],
+            "binary_sensor": [remote_start, local_control],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
@@ -466,6 +552,8 @@ class Hood(
     DeviceWithPrograms,
     DeviceWithRemoteControl,
     DeviceWithRemoteStart,
+    DeviceWithLocalControl,
+    DeviceWithProgramFinished,
 ):
     """Hood class."""
 
@@ -479,13 +567,20 @@ class Hood(
         """Get a dictionary with infos about the associated entities."""
         remote_control = self.get_remote_control()
         remote_start = self.get_remote_start()
+        local_control = self.get_local_control()
+        program_finished = self.get_program_finished()
         light_entity = self.get_light_entity()
         ambientlight_entity = self.get_ambientlight_entity()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [remote_control, remote_start],
+            "binary_sensor": [
+                remote_control,
+                remote_start,
+                local_control,
+                program_finished,
+            ],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
             "light": [light_entity, ambientlight_entity],
@@ -501,7 +596,13 @@ class FridgeFreezer(DeviceWithDoor):
         return {"binary_sensor": [door_entity]}
 
 
-class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
+class Hob(
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithLocalControl,
+    DeviceWithProgramFinished,
+):
     """Hob class."""
 
     PROGRAMS = [{"name": "Cooking.Hob.Program.PowerLevelMode"}]
@@ -509,11 +610,13 @@ class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         remote_control = self.get_remote_control()
+        local_control = self.get_local_control()
+        program_finished = self.get_program_finished()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [remote_control],
+            "binary_sensor": [remote_control, local_control, program_finished],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }

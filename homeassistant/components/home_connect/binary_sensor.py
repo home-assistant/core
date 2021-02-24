@@ -10,6 +10,11 @@ from .const import (
     BSH_DOOR_STATE_CLOSED,
     BSH_DOOR_STATE_LOCKED,
     BSH_DOOR_STATE_OPEN,
+    BSH_LOCAL_CONTROL_STATE,
+    BSH_PROGRAM_FINISHED,
+    BSH_PROGRAM_FINISHED_CONFIRMED,
+    BSH_PROGRAM_FINISHED_OFF,
+    BSH_PROGRAM_FINISHED_PRESENT,
     BSH_REMOTE_CONTROL_ACTIVATION_STATE,
     BSH_REMOTE_START_ALLOWANCE_STATE,
     DOMAIN,
@@ -54,6 +59,17 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._update_key = BSH_REMOTE_START_ALLOWANCE_STATE
             self._false_value_list = [False]
             self._true_value_list = [True]
+        elif self._type == "local_control":
+            self._update_key = BSH_LOCAL_CONTROL_STATE
+            self._false_value_list = [False]
+            self._true_value_list = [True]
+        elif self._type == "program_finished":
+            self._update_key = BSH_PROGRAM_FINISHED
+            self._false_value_list = (
+                BSH_PROGRAM_FINISHED_OFF,
+                BSH_PROGRAM_FINISHED_CONFIRMED,
+            )
+            self._true_value_list = [BSH_PROGRAM_FINISHED_PRESENT]
 
     @property
     def is_on(self):
