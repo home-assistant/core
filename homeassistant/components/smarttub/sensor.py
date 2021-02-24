@@ -22,23 +22,24 @@ ATTR_START_HOUR = "start_hour"
 
 
 SET_PRIMARY_FILTRATION_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        # TODO: at least one of these two should be required
-        vol.Optional(ATTR_DURATION): vol.All(int, vol.Range(min=1, max=24)),
-        vol.Optional(ATTR_START_HOUR): vol.All(int, vol.Range(min=0, max=23)),
-    }
+    vol.All(
+        cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
+        {
+            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Optional(ATTR_DURATION): vol.All(int, vol.Range(min=1, max=24)),
+            vol.Optional(ATTR_START_HOUR): vol.All(int, vol.Range(min=0, max=23)),
+        },
+    )
 )
 
 SET_SECONDARY_FILTRATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_MODE): vol.Any(
-            str,
-            [
+        vol.Required(ATTR_MODE): vol.In(
+            {
                 mode.name.lower()
                 for mode in smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode
-            ],
+            }
         ),
     }
 )
