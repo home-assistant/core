@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -193,7 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
 
-    services = ZWaveServices(hass)
+    services = ZWaveServices(hass, entity_registry.async_get(hass))
     services.async_register()
 
     # Set up websocket API

@@ -174,7 +174,7 @@ class LightSchema:
                 vol.Optional(CONF_COLOR_TEMP_STATE_ADDRESS): cv.string,
                 vol.Optional(
                     CONF_COLOR_TEMP_MODE, default=DEFAULT_COLOR_TEMP_MODE
-                ): cv.enum(ColorTempModes),
+                ): vol.All(vol.Upper, cv.enum(ColorTempModes)),
                 vol.Exclusive(CONF_RGBW_ADDRESS, "color"): cv.string,
                 vol.Optional(CONF_RGBW_STATE_ADDRESS): cv.string,
                 vol.Optional(CONF_MIN_KELVIN, default=DEFAULT_MIN_KELVIN): vol.All(
@@ -256,7 +256,7 @@ class ClimateSchema:
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(
                     CONF_SETPOINT_SHIFT_MODE, default=DEFAULT_SETPOINT_SHIFT_MODE
-                ): cv.enum(SetpointShiftMode),
+                ): vol.All(vol.Upper, cv.enum(SetpointShiftMode)),
                 vol.Optional(
                     CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
                 ): vol.All(int, vol.Range(min=0, max=32)),
@@ -327,7 +327,6 @@ class ExposeSchema:
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_DEFAULT = "default"
-    CONF_KNX_EXPOSE_ADDRESS = CONF_ADDRESS
 
     SCHEMA = vol.Schema(
         {
@@ -335,7 +334,7 @@ class ExposeSchema:
             vol.Optional(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
-            vol.Required(CONF_KNX_EXPOSE_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): cv.string,
         }
     )
 

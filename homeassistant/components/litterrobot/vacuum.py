@@ -14,6 +14,7 @@ from homeassistant.components.vacuum import (
     VacuumEntity,
 )
 from homeassistant.const import STATE_OFF
+import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .hub import LitterRobotEntity
@@ -118,9 +119,21 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
+        [sleep_mode_start_time, sleep_mode_end_time] = [None, None]
+
+        if self.robot.sleep_mode_active:
+            sleep_mode_start_time = dt_util.as_local(
+                self.robot.sleep_mode_start_time
+            ).strftime("%H:%M:00")
+            sleep_mode_end_time = dt_util.as_local(
+                self.robot.sleep_mode_end_time
+            ).strftime("%H:%M:00")
+
         return {
             "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
+            "sleep_mode_start_time": sleep_mode_start_time,
+            "sleep_mode_end_time": sleep_mode_end_time,
             "power_status": self.robot.power_status,
             "unit_status_code": self.robot.unit_status.name,
             "last_seen": self.robot.last_seen,
