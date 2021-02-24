@@ -14,13 +14,13 @@ from .const import DATA_CLIENT, DOMAIN
 
 
 @callback
-def get_old_value_id(node: ZwaveNode, value: ZwaveValue) -> str:
+def get_old_value_id(value: ZwaveValue) -> str:
     """Get old value ID so we can migrate entity unique ID."""
     command_class = value.command_class
     endpoint = value.endpoint or "00"
     property_ = value.property_
     property_key_name = value.property_key_name or "00"
-    return f"{node.node_id}-{command_class}-{endpoint}-{property_}-{property_key_name}"
+    return f"{value.node.node_id}-{command_class}-{endpoint}-{property_}-{property_key_name}"
 
 
 @callback

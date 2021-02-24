@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
 
-            old_value_id = get_old_value_id(node, disc_info.primary_value)
+            old_value_id = get_old_value_id(disc_info.primary_value)
             old_unique_id = get_unique_id(
                 client.driver.controller.home_id, old_value_id
             )
