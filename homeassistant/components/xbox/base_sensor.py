@@ -52,12 +52,10 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         # to point to the correct image, with the correct domain and certificate
         # using YARL URL lib, we can replace the domain part of a url and append
         # only the queries we need (url and format) and omit unnecessary ones (padding)
-        original_url = URL(self.data.display_pic)
-        return str(
-            original_url.with_host("images-eds-ssl.xboxlive.com").with_query(
-                url=original_url.query["url"], format=original_url.query["format"]
-            )
-        )
+        url = URL(self.data.display_pic)
+        if url.host == "images-eds.xboxlive.com":
+            url = url.with_host("images-eds-ssl.xboxlive.com")
+        return str(url.with_query(url=url.query["url"], format=url.query["format"]))
 
     @property
     def entity_registry_enabled_default(self) -> bool:
