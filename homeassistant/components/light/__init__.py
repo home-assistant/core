@@ -407,46 +407,46 @@ class LightEntity(ToggleEntity):
     """Representation of a light."""
 
     @property
-    def brightness(self):
+    def brightness(self) -> Optional[int]:
         """Return the brightness of this light between 0..255."""
         return None
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> Optional[Tuple[float, float]]:
         """Return the hue and saturation color value [float, float]."""
         return None
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> Optional[int]:
         """Return the CT color value in mireds."""
         return None
 
     @property
-    def min_mireds(self):
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
         return 153
 
     @property
-    def max_mireds(self):
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
         # https://developers.meethue.com/documentation/core-concepts
         return 500
 
     @property
-    def white_value(self):
+    def white_value(self) -> Optional[int]:
         """Return the white value of this light between 0..255."""
         return None
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> Optional[List[str]]:
         """Return the list of supported effects."""
         return None
 
     @property
-    def effect(self):
+    def effect(self) -> Optional[str]:
         """Return the current effect."""
         return None
 
@@ -495,7 +495,7 @@ class LightEntity(ToggleEntity):
         return {key: val for key, val in data.items() if val is not None}
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return 0
 
