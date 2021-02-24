@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This airport is already configured."
+        },
+        "error": {
+            "invalid_airport": "Airport code is not valid"
+        },
+        "step": {
+            "user": {
+                "title": "FAA Delays",
+                "description": "Enter a US Airport Code in IATA Format",
+                "data": {
+                    "id": "Airport"
+                }
+            }
+        }
+    }
+}
