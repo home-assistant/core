@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from freebox_api import Freepybox
-from freebox_api.api.wifi import Wifi
 from freebox_api.api.connection import Connection
+from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
