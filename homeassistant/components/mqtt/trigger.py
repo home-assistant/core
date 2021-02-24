@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM
+from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 
@@ -23,6 +23,7 @@ TRIGGER_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
             vol.Coerce(int), vol.In([0, 1, 2])
@@ -36,7 +37,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     topic = config[CONF_TOPIC]
-    payload = config.get(CONF_PAYLOAD)
+    wanted_payload = config.get(CONF_PAYLOAD)
+    value_template = config.get(CONF_VALUE_TEMPLATE)
     encoding = config[CONF_ENCODING] or None
     qos = config[CONF_QOS]
     job = HassJob(action)
@@ -44,19 +46,29 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if automation_info:
         variables = automation_info.get("variables")
 
-    template.attach(hass, payload)
-    if payload:
-        payload = payload.async_render(variables, limited=True)
+    template.attach(hass, wanted_payload)
+    if wanted_payload:
+        wanted_payload = wanted_payload.async_render(variables, limited=True)
 
     template.attach(hass, topic)
     if isinstance(topic, template.Template):
         topic = topic.async_render(variables, limited=True)
         topic = mqtt.util.valid_subscribe_topic(topic)
 
+    template.attach(hass, value_template)
+
     @callback
     def mqtt_automation_listener(mqttmsg):
         """Listen for MQTT messages."""
-        if payload is None or payload == mqttmsg.payload:
+        payload = mqttmsg.payload
+
+        if value_template is not None:
+            payload = value_template.async_render_with_possible_json_value(
+                payload,
+                error_value=None,
+            )
+
+        if wanted_payload is None or wanted_payload == payload:
             data = {
                 "platform": "mqtt",
                 "topic": mqttmsg.topic,
@@ -73,7 +85,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             hass.async_run_hass_job(job, {"trigger": data})
 
     _LOGGER.debug(
-        "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, payload
+        "Attaching MQTT trigger for topic: '%s', payload: '%s'", topic, wanted_payload
     )
 
     remove = await mqtt.async_subscribe(

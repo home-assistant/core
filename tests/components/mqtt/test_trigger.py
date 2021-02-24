@@ -111,6 +111,37 @@ async def test_if_fires_on_templated_topic_and_payload_match(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_on_payload_template(hass, calls):
+    """Test if message is fired on templated topic and payload match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "mqtt",
+                    "topic": "test-topic",
+                    "payload": "hello",
+                    "value_template": "{{ value_json.wanted_key }}",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_mqtt_message(hass, "test-topic", "hello")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_mqtt_message(hass, "test-topic", '{"unwanted_key":"hello"}')
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    async_fire_mqtt_message(hass, "test-topic", '{"wanted_key":"hello"}')
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_non_allowed_templates(hass, calls, caplog):
     """Test non allowed function in template."""
     assert await async_setup_component(
