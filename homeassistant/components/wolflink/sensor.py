@@ -65,8 +65,10 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     @property
     def state(self):
         """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
-        if self.wolf_object.value_id in self.coordinator.data:
-            self._state = self.coordinator.data[self.wolf_object.value_id]
+        if self.wolf_object.parameter_id in self.coordinator.data:
+            new_state = self.coordinator.data[self.wolf_object.parameter_id]
+            self.wolf_object.value_id = new_state[0]
+            self._state = new_state[1]
         return self._state
 
     @property
