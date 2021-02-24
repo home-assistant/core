@@ -531,7 +531,7 @@ async def async_unload_entry(
 
 
 @callback
-def register_addons_in_dev_reg(
+def async_register_addons_in_dev_reg(
     entry_id: str, dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
 ) -> None:
     """Register addons in the device registry."""
@@ -587,7 +587,9 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
-            register_addons_in_dev_reg(self.entry_id, self.dev_reg, addons.values())
+            async_register_addons_in_dev_reg(
+                self.entry_id, self.dev_reg, addons.values()
+            )
             return addons
 
         # Remove add-ons that are no longer installed from device registry
