@@ -1,11 +1,11 @@
 """Base for Hass.io entities."""
 from typing import Any, Dict
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from . import DOMAIN, HassioAddonsDataUpdateCoordinator
-from .const import ATTR_NAME, ATTR_SLUG
+from .const import ATTR_SLUG
 
 
 class HassioAddonEntity(CoordinatorEntity):
@@ -33,7 +33,7 @@ class HassioAddonEntity(CoordinatorEntity):
     @property
     def name(self) -> str:
         """Return entity name."""
-        return f"{self.addon_name} Hass.io Add-on: {self.sensor_name.replace('_', ' ').title()}"
+        return f"{self.addon_name}: {self.sensor_name.replace('_', ' ').title()}"
 
     @property
     def entity_registry_enabled_default(self) -> bool:
