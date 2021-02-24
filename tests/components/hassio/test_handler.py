@@ -149,30 +149,6 @@ async def test_api_core_info_error(hassio_handler, aioclient_mock):
     assert aioclient_mock.call_count == 1
 
 
-async def test_api_addons_info(hassio_handler, aioclient_mock):
-    """Test setup with API Home Assistant Add-ons info."""
-    aioclient_mock.get(
-        "http://127.0.0.1/addons",
-        json={
-            "result": "ok",
-            "data": {
-                "addons": [
-                    {
-                        "name": "test",
-                        "slug": "test",
-                        "version": "1.0.0",
-                        "version_latest": "1.0.0",
-                    }
-                ]
-            },
-        },
-    )
-
-    data = await hassio_handler.get_addons_info()
-    assert aioclient_mock.call_count == 1
-    assert "addons" in data
-
-
 async def test_api_homeassistant_stop(hassio_handler, aioclient_mock):
     """Test setup with API Home Assistant stop."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/stop", json={"result": "ok"})
