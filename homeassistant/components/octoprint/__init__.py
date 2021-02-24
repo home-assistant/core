@@ -2,8 +2,7 @@
 from datetime import timedelta
 import logging
 
-import aiohttp
-from pyoctoprintapi import OctoprintClient
+from pyoctoprintapi import OctoprintClient, PrinterOffline
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_OCTOPRINT
@@ -203,22 +202,16 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         """Update data via API."""
+        printer = None
+        job = await self._octoprint.get_job_info()
+
         # If octoprint is on, but the printer is disconnected
         # printer will return a 409, so continue using the last
         # reading if there is one
-        job = None
-        printer = None
-        try:
-            job = await self._octoprint.get_job_info()
-        except aiohttp.ClientResponseError as error:
-            _LOGGER.error("Failed to update job data %s", error)
-            if self.data and "job" in self.data:
-                job = self.data["job"]
-
         try:
             printer = await self._octoprint.get_printer_info()
-        except aiohttp.ClientResponseError as error:
-            _LOGGER.error("Failed to update printer data %s", error)
+        except PrinterOffline:
+            _LOGGER.error("Unable to retrieve printer information: Printer offline")
             if self.data and "printer" in self.data:
                 printer = self.data["printer"]
 
