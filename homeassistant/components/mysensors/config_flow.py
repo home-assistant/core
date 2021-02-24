@@ -19,6 +19,7 @@ from homeassistant.components.mysensors import (
     is_persistence_file,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
@@ -99,6 +100,10 @@ def _is_same_device(
 class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    def __init__(self) -> None:
+        """Set up config flow."""
+        self._gw_type: Optional[str] = None
+
     async def async_step_import(self, user_input: Optional[Dict[str, str]] = None):
         """Import a config entry.
 
@@ -130,7 +135,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(schema)
 
         if user_input is not None:
-            gw_type = user_input[CONF_GATEWAY_TYPE]
+            gw_type = self._gw_type = user_input[CONF_GATEWAY_TYPE]
             input_pass = user_input if CONF_DEVICE in user_input else None
             if gw_type == CONF_GATEWAY_TYPE_MQTT:
                 return await self.async_step_gw_mqtt(input_pass)
@@ -149,9 +154,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.validate_common(CONF_GATEWAY_TYPE_SERIAL, errors, user_input)
             )
             if not errors:
-                return self.async_create_entry(
-                    title=f"{user_input[CONF_DEVICE]}", data=user_input
-                )
+                return self._async_create_entry(user_input)
 
         schema = _get_schema_common()
         schema[
@@ -177,9 +180,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.validate_common(CONF_GATEWAY_TYPE_TCP, errors, user_input)
             )
             if not errors:
-                return self.async_create_entry(
-                    title=f"{user_input[CONF_DEVICE]}", data=user_input
-                )
+                return self._async_create_entry(user_input)
 
         schema = _get_schema_common()
         schema[vol.Required(CONF_DEVICE, default="127.0.0.1")] = str
@@ -228,9 +229,8 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.validate_common(CONF_GATEWAY_TYPE_MQTT, errors, user_input)
             )
             if not errors:
-                return self.async_create_entry(
-                    title=f"{user_input[CONF_DEVICE]}", data=user_input
-                )
+                return self._async_create_entry(user_input)
+
         schema = _get_schema_common()
         schema[vol.Required(CONF_RETAIN, default=True)] = bool
         schema[vol.Required(CONF_TOPIC_IN_PREFIX)] = str
@@ -239,6 +239,16 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(schema)
         return self.async_show_form(
             step_id="gw_mqtt", data_schema=schema, errors=errors
+        )
+
+    @callback
+    def _async_create_entry(
+        self, user_input: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]:
+        """Create the config entry."""
+        return self.async_create_entry(
+            title=f"{user_input[CONF_DEVICE]}",
+            data={**user_input, CONF_GATEWAY_TYPE: self._gw_type},
         )
 
     def _normalize_persistence_file(self, path: str) -> str:
