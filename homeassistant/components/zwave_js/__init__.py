@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
 
-            # TODO: Migration logic added in 2021.3 to handle breaking change to
+            # This migration logic was added in 2021.3 to handle breaking change to
             # value_id format. Some time in the future, this code block
             # (and get_old_value_id helper) can be removed.
             old_value_id = get_old_value_id(disc_info.primary_value)
