@@ -10,14 +10,14 @@
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
+                }
+            },
             "manual": {
                 "data": {
                     "url": "URL \uc8fc\uc18c"
-                }
-            },
-            "start_addon": {
-                "data": {
-                    "usb_path": "USB \uc7a5\uce58 \uacbd\ub85c"
                 }
             },
             "user": {

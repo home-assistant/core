@@ -48,6 +48,8 @@ from .schema import (
     SensorSchema,
     SwitchSchema,
     WeatherSchema,
+    ga_validator,
+    ia_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +95,7 @@ CONFIG_SCHEMA = vol.Schema(
                     ),
                     vol.Optional(
                         CONF_KNX_INDIVIDUAL_ADDRESS, default=XKNX.DEFAULT_ADDRESS
-                    ): cv.string,
+                    ): ia_validator,
                     vol.Optional(
                         CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP
                     ): cv.string,
@@ -107,34 +109,34 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_KNX_EXPOSE): vol.All(
                         cv.ensure_list, [ExposeSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.cover.value): vol.All(
+                    vol.Optional(SupportedPlatforms.COVER.value): vol.All(
                         cv.ensure_list, [CoverSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.binary_sensor.value): vol.All(
+                    vol.Optional(SupportedPlatforms.BINARY_SENSOR.value): vol.All(
                         cv.ensure_list, [BinarySensorSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.light.value): vol.All(
+                    vol.Optional(SupportedPlatforms.LIGHT.value): vol.All(
                         cv.ensure_list, [LightSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.climate.value): vol.All(
+                    vol.Optional(SupportedPlatforms.CLIMATE.value): vol.All(
                         cv.ensure_list, [ClimateSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.notify.value): vol.All(
+                    vol.Optional(SupportedPlatforms.NOTIFY.value): vol.All(
                         cv.ensure_list, [NotifySchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.switch.value): vol.All(
+                    vol.Optional(SupportedPlatforms.SWITCH.value): vol.All(
                         cv.ensure_list, [SwitchSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.sensor.value): vol.All(
+                    vol.Optional(SupportedPlatforms.SENSOR.value): vol.All(
                         cv.ensure_list, [SensorSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.scene.value): vol.All(
+                    vol.Optional(SupportedPlatforms.SCENE.value): vol.All(
                         cv.ensure_list, [SceneSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.weather.value): vol.All(
+                    vol.Optional(SupportedPlatforms.WEATHER.value): vol.All(
                         cv.ensure_list, [WeatherSchema.SCHEMA]
                     ),
-                    vol.Optional(SupportedPlatforms.fan.value): vol.All(
+                    vol.Optional(SupportedPlatforms.FAN.value): vol.All(
                         cv.ensure_list, [FanSchema.SCHEMA]
                     ),
                 }
@@ -149,7 +151,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
         {
             vol.Required(CONF_ADDRESS): vol.All(
                 cv.ensure_list,
-                [cv.string],
+                [ga_validator],
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
@@ -160,7 +162,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
         {
             vol.Required(CONF_ADDRESS): vol.All(
                 cv.ensure_list,
-                [cv.string],
+                [ga_validator],
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
@@ -173,7 +175,7 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ADDRESS): vol.All(
             cv.ensure_list,
-            [cv.string],
+            [ga_validator],
         )
     }
 )
@@ -182,7 +184,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ADDRESS): vol.All(
             cv.ensure_list,
-            [cv.string],
+            [ga_validator],
         ),
         vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
     }
@@ -197,7 +199,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
     vol.Schema(
         # for removing only `address` is required
         {
-            vol.Required(CONF_ADDRESS): cv.string,
+            vol.Required(CONF_ADDRESS): ga_validator,
             vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
         },
         extra=vol.ALLOW_EXTRA,
