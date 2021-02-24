@@ -75,6 +75,8 @@ FAN_MODE_MAP = {
 }
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
 
+MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
+
 
 async def async_setup_sdm_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -322,4 +324,7 @@ class ThermostatEntity(ClimateEntity):
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
         trait = self._device.traits[FanTrait.NAME]
-        await trait.set_timer(FAN_INV_MODE_MAP[fan_mode])
+        duration = None
+        if fan_mode != FAN_OFF:
+            duration = MAX_FAN_DURATION
+        await trait.set_timer(FAN_INV_MODE_MAP[fan_mode], duration=duration)
