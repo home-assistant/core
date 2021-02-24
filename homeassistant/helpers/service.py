@@ -197,7 +197,7 @@ def async_prepare_call_from_config(
             template.attach(hass, conf)
             target.update(template.render_complex(conf, variables))
             if CONF_ENTITY_ID in target:
-                cv.comp_entity_ids(target[CONF_ENTITY_ID])
+                target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
