@@ -12,6 +12,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
+    ATTR_CONDITION_WINDY,
 )
 
 CONF_TIMESTEP = "timestep"
@@ -33,6 +34,7 @@ ATTRIBUTION = "Powered by ClimaCell"
 MAX_REQUESTS_PER_DAY = 1000
 
 CONDITIONS = {
+    "breezy": ATTR_CONDITION_WINDY,
     "freezing_rain_heavy": ATTR_CONDITION_SNOWY_RAINY,
     "freezing_rain": ATTR_CONDITION_SNOWY_RAINY,
     "freezing_rain_light": ATTR_CONDITION_SNOWY_RAINY,
