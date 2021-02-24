@@ -47,6 +47,6 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state for this binary sensor."""
         return self.coordinator.data[self.id]
