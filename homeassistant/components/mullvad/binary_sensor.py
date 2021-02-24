@@ -31,8 +31,9 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(self, coordinator, sensor):  # pylint: disable=super-init-not-called
         """Initialize the Mullvad binary sensor."""
         self.coordinator = coordinator
-        self.id = sensor["id"]
-        self._name = sensor["name"]
+        self.id = sensor[CONF_ID]
+        self._name = sensor[CONF_NAME]
+        self._device_class = sensor[CONF_DEVICE_CLASS]
 
     @property
     def device_class(self):
