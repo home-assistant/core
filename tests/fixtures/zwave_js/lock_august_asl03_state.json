@@ -6,17 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Routing Slave",
-        "generic": "Entry Control",
-        "specific": "Secure Keypad Door Lock",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Door Lock",
-            "User Code",
-            "Manufacturer Specific",
-            "Security",
-            "Version"
-        ],
+        "basic": {"key": 4, "label":"Routing Slave"},
+        "generic": {"key": 64, "label":"Entry Control"},
+        "specific": {"key": 3, "label":"Secure Keypad Door Lock"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": false,
@@ -73,6 +66,7 @@
             "userIcon": 768
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Door Lock",

@@ -345,7 +345,6 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"]
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -366,7 +365,6 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"]
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -393,7 +391,6 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"]
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1

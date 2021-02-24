@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Generator, List, Optional, Set, Union
 
 from zwave_js_server.const import CommandClass
+from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
@@ -72,11 +73,11 @@ class ZWaveDiscoverySchema:
     # [optional] the node's firmware_version must match ANY of these values
     firmware_version: Optional[Set[str]] = None
     # [optional] the node's basic device class must match ANY of these values
-    device_class_basic: Optional[Set[str]] = None
+    device_class_basic: Optional[Set[Union[str, int]]] = None
     # [optional] the node's generic device class must match ANY of these values
-    device_class_generic: Optional[Set[str]] = None
+    device_class_generic: Optional[Set[Union[str, int]]] = None
     # [optional] the node's specific device class must match ANY of these values
-    device_class_specific: Optional[Set[str]] = None
+    device_class_specific: Optional[Set[Union[str, int]]] = None
     # [optional] additional values that ALL need to be present on the node for this scheme to pass
     required_values: Optional[List[ZWaveValueDiscoverySchema]] = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
@@ -416,21 +417,18 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             ):
                 continue
             # check device_class_basic
-            if (
-                schema.device_class_basic is not None
-                and value.node.device_class.basic not in schema.device_class_basic
+            if not check_device_class(
+                value.node.device_class.basic, schema.device_class_basic
             ):
                 continue
             # check device_class_generic
-            if (
-                schema.device_class_generic is not None
-                and value.node.device_class.generic not in schema.device_class_generic
+            if not check_device_class(
+                value.node.device_class.generic, schema.device_class_generic
             ):
                 continue
             # check device_class_specific
-            if (
-                schema.device_class_specific is not None
-                and value.node.device_class.specific not in schema.device_class_specific
+            if not check_device_class(
+                value.node.device_class.specific, schema.device_class_specific
             ):
                 continue
             # check primary value
@@ -474,3 +472,18 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.type is not None and value.metadata.type not in schema.type:
         return False
     return True
+
+
+@callback
+def check_device_class(
+    device_class: DeviceClassItem, required_value: Optional[Set[Union[str, int]]]
+) -> bool:
+    """Check if device class id or label matches."""
+    if required_value is None:
+        return True
+    for val in required_value:
+        if isinstance(val, str) and device_class.label == val:
+            return True
+        if isinstance(val, int) and device_class.key == val:
+            return True
+    return False

@@ -302,15 +302,15 @@ async def test_poll_value(
 ):
     """Test the poll_value service."""
     # Test polling the primary value
-    client.async_send_command.return_value = {"result": 2}
+    client.async_send_command_no_wait.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_VALUE,
         {ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY},
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.poll_value"
     assert args["nodeId"] == 26
     assert args["valueId"] == {
@@ -339,10 +339,10 @@ async def test_poll_value(
         "ccVersion": 2,
     }
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test polling all watched values
-    client.async_send_command.return_value = {"result": 2}
+    client.async_send_command_no_wait.return_value = {"result": 2}
     await hass.services.async_call(
         DOMAIN,
         SERVICE_REFRESH_VALUE,
@@ -352,7 +352,7 @@ async def test_poll_value(
         },
         blocking=True,
     )
-    assert len(client.async_send_command.call_args_list) == 8
+    assert len(client.async_send_command_no_wait.call_args_list) == 8
 
     # Test polling against an invalid entity raises ValueError
     with pytest.raises(ValueError):
