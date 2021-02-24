@@ -308,8 +308,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
         if os.environ.get(env):
             continue
         _LOGGER.error("Missing %s environment variable", env)
-        config_entries = hass.config_entries.async_entries(DOMAIN)
-        if config_entries:
+        if config_entries := hass.config_entries.async_entries(DOMAIN):
             hass.async_create_task(
                 hass.config_entries.async_remove(config_entries[0].entry_id)
             )
