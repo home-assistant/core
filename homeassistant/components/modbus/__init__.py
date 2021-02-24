@@ -53,6 +53,11 @@ from .const import (
     CONF_STEP,
     CONF_STOPBITS,
     CONF_TARGET_TEMP,
+    CONF_TYPE_RTUOVERTCP,
+    CONF_TYPE_SERIAL,
+    CONF_TYPE_TCP,
+    CONF_TYPE_TCPSERVER,
+    CONF_TYPE_UDP,
     CONF_UNIT,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
@@ -64,11 +69,6 @@ from .const import (
     DEFAULT_STRUCTURE_PREFIX,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
-    CONF_TYPE_SERIAL,
-    CONF_TYPE_RTUOVERTCP,
-    CONF_TYPE_TCP,
-    CONF_TYPE_TCPSERVER,
-    CONF_TYPE_UDP,
 )
 from .modbus import modbus_setup
 
@@ -146,12 +146,19 @@ ETHERNET_SCHEMA = BASE_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
         vol.Required(CONF_TYPE): vol.Any(
-            CONF_TYPE_RTUOVERTCP, CONF_TYPE_TCP, CONF_TYPE_TCPSERVER, CONF_TYPE_UDP
+            CONF_TYPE_RTUOVERTCP, CONF_TYPE_TCP, CONF_TYPE_UDP
         ),
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
         vol.Optional(CONF_CLIMATES): vol.All(cv.ensure_list, [CLIMATE_SCHEMA]),
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
+    }
+)
+
+ETHERNET_SERVER_SCHEMA = ETHERNET_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): vol.Any(CONF_TYPE_TCPSERVER),
+        vol.Optional(CONF_HOST, default="0.0.0.0"): cv.string,
     }
 )
 
@@ -180,7 +187,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.ensure_list,
             [
-                vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
+                vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA, ETHERNET_SERVER_SCHEMA),
             ],
         ),
     },

@@ -5,7 +5,7 @@ from pymodbus.datastore import ModbusServerContext, ModbusSlaveContext
 from pymodbus.exceptions import ConnectionException
 from pymodbus.server.asyncio import StartTcpServer
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_ON
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, STATE_ON
 
 from .modbus_base import BaseModbusHub
 from .utils import build_registers, build_server_blocks
@@ -40,6 +40,7 @@ class ModbusServerHub(BaseModbusHub):
 
         self._entities = []
         # network configuration
+        self._config_host = client_config.get(CONF_HOST, "0.0.0.0")
         self._server = None
         self._block = None
 
@@ -149,7 +150,7 @@ class ModbusServerHub(BaseModbusHub):
 
         self._server = await StartTcpServer(
             context,
-            address=("0.0.0.0", self._config_port),
+            address=(self._config_host, self._config_port),
             allow_reuse_address=True,
             defer_start=True,
         )
