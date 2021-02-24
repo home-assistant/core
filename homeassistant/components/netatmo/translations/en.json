@@ -15,6 +15,28 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "away",
+            "hg": "frost guard",
+            "schedule": "schedule"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} detected an alarm",
+            "animal": "{entity_name} detected an animal",
+            "cancel_set_point": "{entity_name} has resumed its schedule",
+            "human": "{entity_name} detected a human",
+            "movement": "{entity_name} detected movement",
+            "outdoor": "{entity_name} detected an outdoor event",
+            "person": "{entity_name} detected a person",
+            "person_away": "{entity_name} detected a person has left",
+            "set_point": "Target temperature {entity_name} set manually",
+            "therm_mode": "{entity_name} switched to \"{subtype}\"",
+            "turned_off": "{entity_name} turned off",
+            "turned_on": "{entity_name} turned on",
+            "vehicle": "{entity_name} detected a vehicle"
+        }
+    },
     "options": {
         "step": {
             "public_weather": {
