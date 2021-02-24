@@ -577,13 +577,9 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
-        data = await self.hass.data[DOMAIN].get_addons_info()
+        data = get_supervisor_info(self.hass)
 
-        addons = {
-            addon[ATTR_SLUG]: addon
-            for addon in data.get("addons", [])
-            if addon[ATTR_INSTALLED]
-        }
+        addons = {addon[ATTR_SLUG]: addon for addon in data.get("addons", [])}
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:

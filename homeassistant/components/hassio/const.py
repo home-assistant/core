@@ -41,7 +41,6 @@ EVENT_SUPERVISOR_EVENT = "supervisor_event"
 # Add-on keys
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
-ATTR_INSTALLED = "installed"
 ATTR_UPDATE_AVAILABLE = "update_available"
 ATTR_SLUG = "slug"
 ATTR_URL = "url"

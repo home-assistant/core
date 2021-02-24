@@ -498,7 +498,8 @@ async def test_device_registry(hass):
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.HassIO.get_addons_info", return_value=mock_data
+        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        return_value=mock_data,
     ), patch(
         "homeassistant.components.hassio.async_register_addons_in_dev_reg"
     ) as func_mock:
@@ -523,7 +524,8 @@ async def test_device_registry(hass):
 
     # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
     with patch(
-        "homeassistant.components.hassio.HassIO.get_addons_info", return_value=mock_data
+        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        return_value=mock_data,
     ), patch(
         "homeassistant.components.hassio.async_remove_addons_from_dev_reg"
     ) as func_mock:
