@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM
 from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 
@@ -13,6 +13,7 @@ from .. import mqtt
 # mypy: allow-untyped-defs
 
 CONF_ENCODING = "encoding"
+CONF_PAYLOAD_TEMPLATE = "payload_template"
 CONF_QOS = "qos"
 CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
@@ -23,7 +24,7 @@ TRIGGER_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
         vol.Optional(CONF_PAYLOAD): cv.template,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PAYLOAD_TEMPLATE): cv.template,
         vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.All(
             vol.Coerce(int), vol.In([0, 1, 2])
@@ -38,7 +39,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     topic = config[CONF_TOPIC]
     wanted_payload = config.get(CONF_PAYLOAD)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
+    payload_template = config.get(CONF_PAYLOAD_TEMPLATE)
     encoding = config[CONF_ENCODING] or None
     qos = config[CONF_QOS]
     job = HassJob(action)
@@ -55,15 +56,15 @@ async def async_attach_trigger(hass, config, action, automation_info):
         topic = topic.async_render(variables, limited=True)
         topic = mqtt.util.valid_subscribe_topic(topic)
 
-    template.attach(hass, value_template)
+    template.attach(hass, payload_template)
 
     @callback
     def mqtt_automation_listener(mqttmsg):
         """Listen for MQTT messages."""
         payload = mqttmsg.payload
 
-        if value_template is not None:
-            payload = value_template.async_render_with_possible_json_value(
+        if payload_template is not None:
+            payload = payload_template.async_render_with_possible_json_value(
                 payload,
                 error_value=None,
             )

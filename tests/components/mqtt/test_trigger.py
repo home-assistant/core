@@ -122,7 +122,7 @@ async def test_if_fires_on_payload_template(hass, calls):
                     "platform": "mqtt",
                     "topic": "test-topic",
                     "payload": "hello",
-                    "value_template": "{{ value_json.wanted_key }}",
+                    "payload_template": "{{ value_json.wanted_key }}",
                 },
                 "action": {"service": "test.automation"},
             }
