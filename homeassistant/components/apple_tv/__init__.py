@@ -353,6 +353,7 @@ class AppleTVManager:
 
             attrs["model"] = "Apple TV " + dev_info.model.name.replace("Gen", "")
             attrs["sw_version"] = dev_info.version
+            attrs["suggested_area"] = self.atv.name
 
             if dev_info.mac:
                 attrs["connections"] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
