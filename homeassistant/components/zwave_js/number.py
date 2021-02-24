@@ -43,7 +43,13 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     ) -> None:
         """Initialize a ZwaveNumberEntity entity."""
         super().__init__(config_entry, client, info)
-        self._name = self.generate_name(include_value_name=True)
+        self._name = self.generate_name(
+            include_value_name=True, alternate_value_name=info.platform_hint
+        )
+        if self.info.primary_value.metadata.writeable:
+            self._target_value = self.info.primary_value
+        else:
+            self._target_value = self.get_zwave_value("targetValue")
 
     @property
     def min_value(self) -> float:
@@ -60,10 +66,10 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         return float(self.info.primary_value.metadata.max)
 
     @property
-    def value(self) -> float:
+    def value(self) -> Optional[float]:  # type: ignore
         """Return the entity value."""
         if self.info.primary_value.value is None:
-            return 0
+            return None
         return float(self.info.primary_value.value)
 
     @property
@@ -75,8 +81,4 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        if self.info.primary_value.metadata.writeable:
-            target_value = self.info.primary_value
-        else:
-            target_value = self.get_zwave_value("targetValue")
-        await self.info.node.async_set_value(target_value, value)
+        await self.info.node.async_set_value(self._target_value, value)

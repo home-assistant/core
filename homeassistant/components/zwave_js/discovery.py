@@ -385,7 +385,7 @@ DISCOVERY_SCHEMAS = [
     # valve control for thermostats
     ZWaveDiscoverySchema(
         platform="number",
-        hint="valve_control",
+        hint="Valve control",
         device_class_generic={"Thermostat"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
