@@ -547,7 +547,7 @@ def register_addons_in_dev_reg(
 
 
 @callback
-def remove_addons_from_dev_reg(
+def async_remove_addons_from_dev_reg(
     dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
 ) -> None:
     """Remove addons from the device registry."""
@@ -591,7 +591,7 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Remove add-ons that are no longer installed from device registry
         if removed_addons := list(set(self.data.keys()) - set(addons.keys())):
-            remove_addons_from_dev_reg(self.dev_reg, removed_addons)
+            async_remove_addons_from_dev_reg(self.dev_reg, removed_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
