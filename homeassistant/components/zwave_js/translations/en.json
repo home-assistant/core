@@ -49,6 +49,11 @@
             },
             "start_addon": {
                 "title": "The Z-Wave JS add-on is starting."
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
             }
         }
     },
