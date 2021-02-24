@@ -217,7 +217,7 @@ class TestServiceHelpers(unittest.TestCase):
         """Test legacy service_template call with templating."""
         config = {
             "service_template": "{{ 'test_domain.test_service' }}",
-            "target": {"area_id": "test-area-id", "entity_id": "will.be_overridden"},
+            "entity_id": "hello.world",
             "data": {"hello": "goodbye"},
         }
 
