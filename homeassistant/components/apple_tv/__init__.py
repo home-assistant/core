@@ -349,9 +349,9 @@ class AppleTVManager:
         }
 
         area = attrs["name"]
-        appletv_name_trailer = f" {DEFAULT_NAME}"
-        if area.endswith(appletv_name_trailer):
-            area = area[: -len(appletv_name_trailer)]
+        name_trailer = f" {DEFAULT_NAME}"
+        if area.endswith(name_trailer):
+            area = area[: -len(name_trailer)]
         attrs["suggested_area"] = area
 
         if self.atv:
