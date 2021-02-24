@@ -12,7 +12,7 @@
         "title": "Location Usercodes",
         "description": "Enter the usercode for this user at this location",
         "data": {
-        	"location": "Location"
+          "location": "[%key:common::config_flow::data::location%]"
         }
       },
       "reauth_confirm": {
