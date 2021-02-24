@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -49,7 +48,6 @@ async def handle_webhook(hass, webhook_id, request):
         await async_evaluate_event(hass, data)
 
 
-@callback
 async def async_evaluate_event(hass, event_data):
     """Evaluate events from webhook."""
     event_type = event_data.get(ATTR_EVENT_TYPE)
@@ -70,7 +68,6 @@ async def async_evaluate_event(hass, event_data):
         await async_send_event(hass, event_type, event_data)
 
 
-@callback
 async def async_send_event(hass, event_type, data):
     """Send events."""
     _LOGGER.debug("%s: %s", event_type, data)
