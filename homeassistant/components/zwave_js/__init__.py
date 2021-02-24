@@ -43,7 +43,7 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .helpers import get_device_id
+from .helpers import get_device_id, get_old_value_id, get_unique_id
 from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
@@ -83,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     dev_reg = await device_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -95,6 +96,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
+
+            # This migration logic was added in 2021.3 to handle breaking change to
+            # value_id format. Some time in the future, this code block
+            # (and get_old_value_id helper) can be removed.
+            old_value_id = get_old_value_id(disc_info.primary_value)
+            old_unique_id = get_unique_id(
+                client.driver.controller.home_id, old_value_id
+            )
+            if entity_id := ent_reg.async_get_entity_id(
+                disc_info.platform, DOMAIN, old_unique_id
+            ):
+                LOGGER.debug(
+                    "Entity %s is using old unique ID, migrating to new one", entity_id
+                )
+                ent_reg.async_update_entity(
+                    entity_id,
+                    new_unique_id=get_unique_id(
+                        client.driver.controller.home_id,
+                        disc_info.primary_value.value_id,
+                    ),
+                )
+
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
@@ -193,7 +216,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
 
-    services = ZWaveServices(hass, entity_registry.async_get(hass))
+    services = ZWaveServices(hass, ent_reg)
     services.async_register()
 
     # Set up websocket API
