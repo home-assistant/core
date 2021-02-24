@@ -31,16 +31,14 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.Schema(
     )
 )
 
-SET_SECONDARY_FILTRATION_SCHEMA = vol.Schema(
-    {
+SET_SECONDARY_FILTRATION_SCHEMA = {
         vol.Required(ATTR_MODE): vol.In(
             {
                 mode.name.lower()
                 for mode in smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode
             }
         ),
-    }
-)
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
