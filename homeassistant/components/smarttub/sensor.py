@@ -5,7 +5,6 @@ import logging
 import smarttub
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -21,24 +20,26 @@ ATTR_MODE = "mode"
 ATTR_START_HOUR = "start_hour"
 
 
-SET_PRIMARY_FILTRATION_SCHEMA = vol.Schema(
-    vol.All(
-        cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
+SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
+    cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
+    cv.make_entity_service_schema(
         {
             vol.Optional(ATTR_DURATION): vol.All(int, vol.Range(min=1, max=24)),
             vol.Optional(ATTR_START_HOUR): vol.All(int, vol.Range(min=0, max=23)),
         },
-    )
+    ),
 )
 
-SET_SECONDARY_FILTRATION_SCHEMA = {
+SET_SECONDARY_FILTRATION_SCHEMA = cv.make_entity_service_schema(
+    {
         vol.Required(ATTR_MODE): vol.In(
             {
                 mode.name.lower()
                 for mode in smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode
             }
         ),
-}
+    }
+)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
