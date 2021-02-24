@@ -44,7 +44,7 @@ event_register:
       required: true
       example: "1/1/0"
       selector:
-        text:
+        object:
     remove:
       name: "Remove event registration"
       description: "Optional. If `True` the group address(es) will be removed."
