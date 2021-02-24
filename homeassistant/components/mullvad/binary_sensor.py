@@ -3,6 +3,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
