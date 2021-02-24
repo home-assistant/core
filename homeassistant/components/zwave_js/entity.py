@@ -31,6 +31,9 @@ class ZWaveBaseEntity(Entity):
         self.client = client
         self.info = info
         self._name = self.generate_name()
+        self._unique_id = get_unique_id(
+            self.client.driver.controller.home_id, self.info.value_id
+        )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -128,7 +131,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique_id of the entity."""
-        return get_unique_id(self.client.driver.controller.home_id, self.info.value_id)
+        return self._unique_id
 
     @property
     def available(self) -> bool:
