@@ -506,6 +506,9 @@ minio==4.0.9
 # homeassistant.components.motion_blinds
 motionblinds==0.4.8
 
+# homeassistant.components.mullvad
+mullvad-api==1.0.0
+
 # homeassistant.components.tts
 mutagen==1.45.1
 
@@ -698,6 +701,9 @@ pycfdns==1.2.1
 
 # homeassistant.components.cast
 pychromecast==8.1.0
+
+# homeassistant.components.climacell
+pyclimacell==0.14.0
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.4
