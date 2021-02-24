@@ -32,6 +32,7 @@ from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
+UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -269,7 +270,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
         self.hass.loop.call_later(
-            0.2,
+            UPDATE_GROUP_FROM_CHILD_DELAY,
             lambda: self.async_schedule_update_ha_state(True),
         )
 
