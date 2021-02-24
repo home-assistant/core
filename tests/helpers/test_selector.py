@@ -122,6 +122,15 @@ def test_number_selector_schema(schema):
     "schema",
     ({},),
 )
+def test_addon_selector_schema(schema):
+    """Test add-on selector."""
+    selector.validate_selector({"addon": schema})
+
+
+@pytest.mark.parametrize(
+    "schema",
+    ({},),
+)
 def test_boolean_selector_schema(schema):
     """Test boolean selector."""
     selector.validate_selector({"boolean": schema})
