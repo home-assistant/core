@@ -10,7 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 from .hub import LitterRobotHub
 
-PLATFORMS = ["vacuum"]
+PLATFORMS = ["sensor", "switch", "vacuum"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
