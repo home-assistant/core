@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
-from .helpers import get_device_id
+from .helpers import get_device_id, get_unique_id
 
 LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique_id of the entity."""
-        return f"{self.client.driver.controller.home_id}.{self.info.value_id}"
+        return get_unique_id(self.client.driver.controller.home_id, self.info.value_id)
 
     @property
     def available(self) -> bool:
