@@ -117,7 +117,8 @@ async def prepare_usb_device(hass, device_info):
 
 async def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
-    ais_global.G_USB_DEVICES.remove(device_info)
+    if device_info in ais_global.G_USB_DEVICES:
+        ais_global.G_USB_DEVICES.remove(device_info)
 
     if device_info["id"] in G_ZIGBEE_DEVICES_ID:
         # Unregister the built-in zigbee panel

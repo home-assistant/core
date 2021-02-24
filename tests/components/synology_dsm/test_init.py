@@ -1,4 +1,6 @@
 """Tests for the Synology DSM component."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.synology_dsm.const import DOMAIN, SERVICES
@@ -14,7 +16,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

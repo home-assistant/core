@@ -1,0 +1,60 @@
+{
+    "config": {
+        "abort": {
+            "port_name_in_use": "Ayn\u0131 ada veya ba\u011flant\u0131 noktas\u0131na sahip bir aksesuar veya k\u00f6pr\u00fc zaten yap\u0131land\u0131r\u0131lm\u0131\u015f."
+        },
+        "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Varl\u0131k"
+                },
+                "description": "Dahil edilecek varl\u0131\u011f\u0131 se\u00e7in. Aksesuar modunda, yaln\u0131zca tek bir varl\u0131k dahildir.",
+                "title": "Dahil edilecek varl\u0131\u011f\u0131 se\u00e7in"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "\u0130\u00e7erecek etki alanlar\u0131"
+                },
+                "description": "Dahil edilecek alanlar\u0131 se\u00e7in. Etki alan\u0131ndaki t\u00fcm desteklenen varl\u0131klar dahil edilecektir.",
+                "title": "Dahil edilecek etki alanlar\u0131n\u0131 se\u00e7in"
+            },
+            "pairing": {
+                "description": "{name} haz\u0131r olur olmaz e\u015fle\u015ftirme, \"Bildirimler\" i\u00e7inde \"HomeKit K\u00f6pr\u00fc Kurulumu\" olarak mevcut olacakt\u0131r.",
+                "title": "HomeKit'i E\u015fle\u015ftir"
+            },
+            "user": {
+                "data": {
+                    "mode": "Mod"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "advanced": {
+                "data": {
+                    "safe_mode": "G\u00fcvenli Mod (yaln\u0131zca e\u015fle\u015ftirme ba\u015far\u0131s\u0131z olursa etkinle\u015ftirin)"
+                }
+            },
+            "cameras": {
+                "data": {
+                    "camera_copy": "Yerel H.264 ak\u0131\u015flar\u0131n\u0131 destekleyen kameralar"
+                },
+                "description": "Yerel H.264 ak\u0131\u015flar\u0131n\u0131 destekleyen t\u00fcm kameralar\u0131 kontrol edin. Kamera bir H.264 ak\u0131\u015f\u0131 vermezse, sistem videoyu HomeKit i\u00e7in H.264'e d\u00f6n\u00fc\u015ft\u00fcr\u00fcr. Kod d\u00f6n\u00fc\u015ft\u00fcrme, y\u00fcksek performansl\u0131 bir CPU gerektirir ve tek kartl\u0131 bilgisayarlarda \u00e7al\u0131\u015fma olas\u0131l\u0131\u011f\u0131 d\u00fc\u015f\u00fckt\u00fcr.",
+                "title": "Kamera video codec bile\u015fenini se\u00e7in."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Varl\u0131klar",
+                    "mode": "Mod"
+                },
+                "title": "Dahil edilecek varl\u0131klar\u0131 se\u00e7in"
+            },
+            "init": {
+                "data": {
+                    "mode": "Mod"
+                }
+            }
+        }
+    }
+}

@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -78,24 +77,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the RMV departure sensor."""
     timeout = config.get(CONF_TIMEOUT)
 
-    session = async_get_clientsession(hass)
-
-    sensors = []
-    for next_departure in config.get(CONF_NEXT_DEPARTURE):
-        sensors.append(
-            RMVDepartureSensor(
-                session,
-                next_departure[CONF_STATION],
-                next_departure.get(CONF_DESTINATIONS),
-                next_departure.get(CONF_DIRECTION),
-                next_departure.get(CONF_LINES),
-                next_departure.get(CONF_PRODUCTS),
-                next_departure.get(CONF_TIME_OFFSET),
-                next_departure.get(CONF_MAX_JOURNEYS),
-                next_departure.get(CONF_NAME),
-                timeout,
-            )
+    sensors = [
+        RMVDepartureSensor(
+            next_departure[CONF_STATION],
+            next_departure.get(CONF_DESTINATIONS),
+            next_departure.get(CONF_DIRECTION),
+            next_departure.get(CONF_LINES),
+            next_departure.get(CONF_PRODUCTS),
+            next_departure.get(CONF_TIME_OFFSET),
+            next_departure.get(CONF_MAX_JOURNEYS),
+            next_departure.get(CONF_NAME),
+            timeout,
         )
+        for next_departure in config.get(CONF_NEXT_DEPARTURE)
+    ]
 
     tasks = [sensor.async_update() for sensor in sensors]
     if tasks:
@@ -112,7 +107,6 @@ class RMVDepartureSensor(Entity):
 
     def __init__(
         self,
-        session,
         station,
         destinations,
         direction,
@@ -128,7 +122,6 @@ class RMVDepartureSensor(Entity):
         self._name = name
         self._state = None
         self.data = RMVDepartureData(
-            session,
             station,
             destinations,
             direction,
@@ -204,7 +197,6 @@ class RMVDepartureData:
 
     def __init__(
         self,
-        session,
         station_id,
         destinations,
         direction,
@@ -223,7 +215,7 @@ class RMVDepartureData:
         self._products = products
         self._time_offset = time_offset
         self._max_journeys = max_journeys
-        self.rmv = RMVtransport(session, timeout)
+        self.rmv = RMVtransport(timeout)
         self.departures = []
         self._error_notification = False
 
@@ -263,10 +255,10 @@ class RMVDepartureData:
                 if not dest_found:
                     continue
 
-            if self._lines and journey["number"] not in self._lines:
+            elif self._lines and journey["number"] not in self._lines:
                 continue
 
-            if journey["minutes"] < self._time_offset:
+            elif journey["minutes"] < self._time_offset:
                 continue
 
             for attr in ["direction", "departure_time", "product", "minutes"]:

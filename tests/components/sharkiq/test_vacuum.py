@@ -2,6 +2,7 @@
 from copy import deepcopy
 import enum
 from typing import Any, Iterable, List, Optional
+from unittest.mock import patch
 
 import pytest
 from sharkiqpy import AylaApi, SharkIqAuthError, SharkIqNotAuthedError, SharkIqVacuum
@@ -56,7 +57,6 @@ from .const import (
     TEST_USERNAME,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 VAC_ENTITY_ID = f"vacuum.{SHARK_DEVICE_DICT['product_name'].lower()}"
@@ -200,7 +200,7 @@ async def test_device_properties(
 ):
     """Test device properties."""
     registry = await hass.helpers.device_registry.async_get_registry()
-    device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")}, [])
+    device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 
 

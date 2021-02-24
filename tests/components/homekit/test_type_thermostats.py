@@ -1,4 +1,6 @@
 """Test different accessory types: Thermostats."""
+from unittest.mock import patch
+
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
 
@@ -61,7 +63,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState
 from homeassistant.helpers import entity_registry
 
-from tests.async_mock import patch
 from tests.common import async_mock_service
 
 
@@ -1598,11 +1599,15 @@ async def test_water_heater(hass, hk_driver, events):
     hass.states.async_set(
         entity_id,
         HVAC_MODE_HEAT,
-        {ATTR_HVAC_MODE: HVAC_MODE_HEAT, ATTR_TEMPERATURE: 56.0},
+        {
+            ATTR_HVAC_MODE: HVAC_MODE_HEAT,
+            ATTR_TEMPERATURE: 56.0,
+            ATTR_CURRENT_TEMPERATURE: 35.0,
+        },
     )
     await hass.async_block_till_done()
     assert acc.char_target_temp.value == 56.0
-    assert acc.char_current_temp.value == 50.0
+    assert acc.char_current_temp.value == 35.0
     assert acc.char_target_heat_cool.value == 1
     assert acc.char_current_heat_cool.value == 1
     assert acc.char_display_units.value == 0

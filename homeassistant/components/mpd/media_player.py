@@ -105,7 +105,7 @@ class MpdDevice(MediaPlayerEntity):
         self._currentplaylist = None
         self._is_connected = False
         self._muted = False
-        self._muted_volume = 0
+        self._muted_volume = None
         self._media_position_updated_at = None
         self._media_position = None
         self._commands = None
@@ -281,20 +281,22 @@ class MpdDevice(MediaPlayerEntity):
             try:
                 response = await self._client.readpicture(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `readpicture` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `readpicture` command failed: %s",
+                        error,
+                    )
 
         # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 response = await self._client.albumart(file)
             except mpd.CommandError as error:
-                _LOGGER.warning(
-                    "Retrieving artwork through `albumart` command failed: %s",
-                    error,
-                )
+                if error.errno is not mpd.FailureResponseCode.NO_EXIST:
+                    _LOGGER.warning(
+                        "Retrieving artwork through `albumart` command failed: %s",
+                        error,
+                    )
 
         if not response:
             return None, None
@@ -401,7 +403,7 @@ class MpdDevice(MediaPlayerEntity):
             if mute:
                 self._muted_volume = self.volume_level
                 await self.async_set_volume_level(0)
-            else:
+            elif self._muted_volume is not None:
                 await self.async_set_volume_level(self._muted_volume)
             self._muted = mute
 

@@ -1,4 +1,6 @@
 """Tests for the PS4 media player platform."""
+from unittest.mock import MagicMock, patch
+
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
@@ -36,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
@@ -287,11 +288,11 @@ async def test_media_attributes_are_loaded(hass, patch_load_json):
     assert mock_attrs.get(ATTR_MEDIA_CONTENT_TYPE) == MOCK_TITLE_TYPE
 
 
-async def test_device_info_is_set_from_status_correctly(hass):
+async def test_device_info_is_set_from_status_correctly(hass, patch_get_status):
     """Test that device info is set correctly from status update."""
     mock_d_registry = mock_device_registry(hass)
-    with patch("pyps4_2ndscreen.ps4.get_status", return_value=MOCK_STATUS_STANDBY):
-        mock_entity_id = await setup_mock_component(hass)
+    patch_get_status.return_value = MOCK_STATUS_STANDBY
+    mock_entity_id = await setup_mock_component(hass)
 
     await hass.async_block_till_done()
 
@@ -303,9 +304,7 @@ async def test_device_info_is_set_from_status_correctly(hass):
     mock_state = hass.states.get(mock_entity_id).state
 
     mock_d_entries = mock_d_registry.devices
-    mock_entry = mock_d_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_HOST_ID)}, connections={()}
-    )
+    mock_entry = mock_d_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
     assert mock_state == STATE_STANDBY
 
     assert len(mock_d_entries) == 1

@@ -1,4 +1,6 @@
 """Tests for 1-Wire sensor platform."""
+from unittest.mock import patch
+
 from pyownet.protocol import Error as ProtocolError
 import pytest
 
@@ -8,7 +10,6 @@ from homeassistant.setup import async_setup_component
 
 from . import setup_onewire_patched_owserver_integration
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, mock_registry
 
 MOCK_COUPLERS = {

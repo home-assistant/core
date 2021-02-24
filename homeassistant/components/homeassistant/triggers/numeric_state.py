@@ -32,6 +32,9 @@ def validate_above_below(value):
     if above is None or below is None:
         return value
 
+    if isinstance(above, str) or isinstance(below, str):
+        return value
+
     if above > below:
         raise vol.Invalid(
             f"A value can never be above {above} and below {below} at the same time. You probably want two different triggers.",
@@ -45,8 +48,8 @@ TRIGGER_SCHEMA = vol.All(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
             vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
+            vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
+            vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_FOR): cv.positive_time_period_template,
             vol.Optional(CONF_ATTRIBUTE): cv.match_all,

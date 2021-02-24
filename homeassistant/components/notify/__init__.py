@@ -173,7 +173,10 @@ class BaseNotificationService:
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)
-                if target_name in self.registered_targets:
+                if (
+                    target_name in self.registered_targets
+                    and target == self.registered_targets[target_name]
+                ):
                     continue
                 self.registered_targets[target_name] = target
                 self.hass.services.async_register(

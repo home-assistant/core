@@ -3,6 +3,7 @@ from asyncio import TimeoutError as AsyncIOTimeoutError
 from contextlib import nullcontext
 from datetime import timedelta
 from typing import Any, Dict, Optional
+from unittest.mock import patch
 
 from homeassistant import core
 from homeassistant.components.bond.const import DOMAIN as BOND_DOMAIN
@@ -10,7 +11,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 

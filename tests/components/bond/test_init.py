@@ -70,9 +70,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
 
     # verify hub device is registered correctly
     device_registry = await dr.async_get_registry(hass)
-    hub = device_registry.async_get_device(
-        identifiers={(DOMAIN, "test-bond-id")}, connections=set()
-    )
+    hub = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert hub.name == "test-bond-id"
     assert hub.manufacturer == "Olibra"
     assert hub.model == "test-model"

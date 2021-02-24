@@ -2,9 +2,7 @@
 import aioharmony.exceptions as harmony_exceptions
 from aioharmony.harmonyapi import HarmonyAPI
 
-from homeassistant.const import CONF_HOST, CONF_NAME
-
-from .const import DOMAIN
+from homeassistant.const import CONF_NAME
 
 
 def find_unique_id_for_remote(harmony: HarmonyAPI):
@@ -41,22 +39,3 @@ async def get_harmony_client_if_available(ip_address: str):
     await harmony.close()
 
     return harmony
-
-
-def find_matching_config_entries_for_host(hass, host):
-    """Search existing config entries for one matching the host."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_HOST] == host:
-            return entry
-    return None
-
-
-def list_names_from_hublist(hub_list):
-    """Extract the name key value from a hub list of names."""
-    if not hub_list:
-        return []
-    return [
-        element["name"]
-        for element in hub_list
-        if element.get("name") and element.get("id") != -1
-    ]

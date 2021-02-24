@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Stadt bereits konfiguriert",
-            "unknown": "Unbekannter Fehler: Bitte versuchen Sie es sp\u00e4ter erneut"
+            "already_configured": "Standort ist bereits konfiguriert",
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "empty": "Kein Ergebnis bei der Stadtsuche: Bitte \u00fcberpr\u00fcfe das Stadtfeld"

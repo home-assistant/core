@@ -2,6 +2,7 @@
 
 import asyncio
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.deconz import (
     DeconzGateway,
@@ -12,8 +13,6 @@ from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import patch
 
 ENTRY1_HOST = "1.2.3.4"
 ENTRY1_PORT = 80

@@ -1,6 +1,7 @@
 """The tests for Home Assistant frontend."""
 from datetime import timedelta
 import re
+from unittest.mock import patch
 
 import pytest
 
@@ -19,7 +20,6 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from tests.async_mock import patch
 from tests.common import async_capture_events, async_fire_time_changed
 
 CONFIG_THEMES = {

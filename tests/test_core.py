@@ -6,6 +6,7 @@ import functools
 import logging
 import os
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 import pytz
@@ -40,7 +41,6 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import async_capture_events, async_mock_service
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -167,6 +167,30 @@ async def test_stage_shutdown(hass):
     assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 2
+
+
+async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
+    hass,
+):
+    """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
+    stop_calls = []
+
+    async def _record_block_till_done():
+        nonlocal stop_calls
+        stop_calls.append("async_block_till_done")
+
+    def _record_shutdown_run_callback_threadsafe(loop):
+        nonlocal stop_calls
+        stop_calls.append(("shutdown_run_callback_threadsafe", loop))
+
+    with patch.object(hass, "async_block_till_done", _record_block_till_done), patch(
+        "homeassistant.core.shutdown_run_callback_threadsafe",
+        _record_shutdown_run_callback_threadsafe,
+    ):
+        await hass.async_stop()
+
+    assert stop_calls[-2] == ("shutdown_run_callback_threadsafe", hass.loop)
+    assert stop_calls[-1] == "async_block_till_done"
 
 
 async def test_pending_sheduler(hass):

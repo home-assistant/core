@@ -128,13 +128,15 @@ async def async_call_from_config(
 ) -> None:
     """Call a service based on a config hash."""
     try:
-        parms = async_prepare_call_from_config(hass, config, variables, validate_config)
+        params = async_prepare_call_from_config(
+            hass, config, variables, validate_config
+        )
     except HomeAssistantError as ex:
         if blocking:
             raise
         _LOGGER.error(ex)
     else:
-        await hass.services.async_call(*parms, blocking, context)
+        await hass.services.async_call(*params, blocking, context)
 
 
 @ha.callback

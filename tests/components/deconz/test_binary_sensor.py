@@ -1,6 +1,7 @@
 """deCONZ binary sensor platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
@@ -20,8 +21,6 @@ from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import patch
 
 SENSORS = {
     "1": {

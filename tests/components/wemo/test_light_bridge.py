@@ -1,4 +1,6 @@
 """Tests for the Wemo light entity via the bridge."""
+from unittest.mock import create_autospec, patch
+
 import pytest
 import pywemo
 
@@ -12,8 +14,6 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import entity_test_helpers
-
-from tests.async_mock import create_autospec, patch
 
 
 @pytest.fixture

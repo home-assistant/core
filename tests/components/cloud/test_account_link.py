@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from time import time
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -10,7 +11,6 @@ from homeassistant.components.cloud import account_link
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed, mock_platform
 
 TEST_DOMAIN = "oauth2_test"

@@ -1,4 +1,6 @@
 """Tests for the srp_energy sensor platform."""
+from unittest.mock import MagicMock
+
 from homeassistant.components.srp_energy.const import (
     ATTRIBUTION,
     DEFAULT_NAME,
@@ -9,8 +11,6 @@ from homeassistant.components.srp_energy.const import (
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
 from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
-
-from tests.async_mock import MagicMock
 
 
 async def test_async_setup_entry(hass):

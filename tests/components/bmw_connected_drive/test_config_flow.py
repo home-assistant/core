@@ -1,4 +1,6 @@
 """Test the for the BMW Connected Drive config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import (
@@ -8,7 +10,6 @@ from homeassistant.components.bmw_connected_drive.const import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 FIXTURE_USER_INPUT = {

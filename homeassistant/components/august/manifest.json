@@ -5,5 +5,9 @@
   "requirements": ["py-august==0.25.2"],
   "dependencies": ["configurator"],
   "codeowners": ["@bdraco"],
+  "dhcp": [
+      {"hostname":"connect","macaddress":"D86162*"},
+      {"hostname":"connect","macaddress":"B8B7F1*"}
+  ],
   "config_flow": true
 }

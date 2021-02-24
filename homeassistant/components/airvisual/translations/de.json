@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Diese Koordinaten oder Node/Pro ID sind bereits registriert."
+            "already_configured": "Diese Koordinaten oder Node/Pro ID sind bereits registriert.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler",
-            "general_error": "Es gab einen unbekannten Fehler.",
-            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel bereitgestellt."
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "general_error": "Unerwarteter Fehler",
+            "invalid_api_key": "Ung\u00fcltiger API-Schl\u00fcssel"
         },
         "step": {
             "geography": {
@@ -19,7 +20,7 @@
             },
             "node_pro": {
                 "data": {
-                    "ip_address": "IP-Adresse/Hostname des Ger\u00e4ts",
+                    "ip_address": "Host",
                     "password": "Passwort"
                 },
                 "description": "\u00dcberwachen Sie eine pers\u00f6nliche AirVisual-Einheit. Das Passwort kann von der Benutzeroberfl\u00e4che des Ger\u00e4ts abgerufen werden.",

@@ -1,9 +1,8 @@
 """Tests for the auth store."""
 import asyncio
+from unittest.mock import patch
 
 from homeassistant.auth import auth_store
-
-from tests.async_mock import patch
 
 
 async def test_loading_no_group_data_format(hass, hass_storage):

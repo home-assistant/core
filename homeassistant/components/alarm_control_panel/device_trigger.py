@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -143,13 +142,10 @@ async def async_attach_trigger(
         from_state = STATE_ALARM_DISARMED
         to_state = STATE_ALARM_ARMING
     elif config[CONF_TYPE] == "armed_home":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_HOME
     elif config[CONF_TYPE] == "armed_away":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == "armed_night":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_NIGHT
 
     state_config = {

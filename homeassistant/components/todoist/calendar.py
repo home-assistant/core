@@ -39,6 +39,9 @@ from .const import (
     PROJECT_ID,
     PROJECT_NAME,
     PROJECTS,
+    REMINDER_DATE,
+    REMINDER_DATE_LANG,
+    REMINDER_DATE_STRING,
     SERVICE_NEW_TASK,
     START,
     SUMMARY,
@@ -56,6 +59,11 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
         vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
         vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
         vol.Exclusive(DUE_DATE, "due_date"): cv.string,
+        vol.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
+        vol.Optional(REMINDER_DATE_LANG): vol.All(
+            cv.string, vol.In(DUE_DATE_VALID_LANGS)
+        ),
+        vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
     }
 )
 
@@ -181,12 +189,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 due_date = datetime(due.year, due.month, due.day)
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
-            date_format = "%Y-%m-%dT%H:%M"
+            date_format = "%Y-%m-%dT%H:%M%S"
             due_date = datetime.strftime(due_date, date_format)
             _due["date"] = due_date
 
         if _due:
             item.update(due=_due)
+
+        _reminder_due: dict = {}
+        if REMINDER_DATE_STRING in call.data:
+            _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
+
+        if REMINDER_DATE_LANG in call.data:
+            _reminder_due["lang"] = call.data[REMINDER_DATE_LANG]
+
+        if REMINDER_DATE in call.data:
+            due_date = dt.parse_datetime(call.data[REMINDER_DATE])
+            if due_date is None:
+                due = dt.parse_date(call.data[REMINDER_DATE])
+                due_date = datetime(due.year, due.month, due.day)
+            # Format it in the manner Todoist expects
+            due_date = dt.as_utc(due_date)
+            date_format = "%Y-%m-%dT%H:%M:%S"
+            due_date = datetime.strftime(due_date, date_format)
+            _reminder_due["date"] = due_date
+
+        if _reminder_due:
+            api.reminders.add(item["id"], due=_reminder_due)
 
         # Commit changes
         api.commit()

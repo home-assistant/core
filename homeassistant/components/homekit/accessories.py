@@ -8,7 +8,7 @@ from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
-from homeassistant.components import cover, vacuum
+from homeassistant.components import cover
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     DEVICE_CLASS_GATE,
@@ -215,11 +215,7 @@ def get_accessory(hass, driver, state, aid, config):
         a_type = SWITCH_TYPES[switch_type]
 
     elif state.domain == "vacuum":
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if features & (vacuum.SUPPORT_START | vacuum.SUPPORT_RETURN_HOME):
-            a_type = "DockVacuum"
-        else:
-            a_type = "Switch"
+        a_type = "Vacuum"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"

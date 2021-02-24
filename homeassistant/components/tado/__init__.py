@@ -6,10 +6,9 @@ import logging
 from PyTado.interface import Tado
 from requests import RequestException
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.climate.const import PRESET_AWAY, PRESET_HOME
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -22,7 +21,9 @@ from .const import (
     CONF_FALLBACK,
     DATA,
     DOMAIN,
+    INSIDE_TEMPERATURE_MEASUREMENT,
     SIGNAL_TADO_UPDATE_RECEIVED,
+    TEMP_OFFSET,
     UPDATE_LISTENER,
     UPDATE_TRACK,
 )
@@ -35,39 +36,13 @@ TADO_COMPONENTS = ["binary_sensor", "sensor", "climate", "water_heater"]
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 SCAN_INTERVAL = timedelta(seconds=15)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_FALLBACK, default=True): cv.boolean,
-                }
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Tado component."""
 
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN not in config:
-        return True
-
-    for conf in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=conf,
-            )
-        )
 
     return True
 
@@ -173,6 +148,7 @@ class TadoConnector:
         self.zones = None
         self.devices = None
         self.data = {
+            "device": {},
             "zone": {},
         }
 
@@ -193,15 +169,23 @@ class TadoConnector:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
+        for device in self.devices:
+            self.update_sensor("device", device["shortSerialNo"])
         for zone in self.zones:
             self.update_sensor("zone", zone["id"])
-        self.devices = self.tado.getDevices()
 
     def update_sensor(self, sensor_type, sensor):
         """Update the internal data from Tado."""
         _LOGGER.debug("Updating %s %s", sensor_type, sensor)
         try:
-            if sensor_type == "zone":
+            if sensor_type == "device":
+                data = self.tado.getDeviceInfo(sensor)
+                if (
+                    INSIDE_TEMPERATURE_MEASUREMENT
+                    in data["characteristics"]["capabilities"]
+                ):
+                    data[TEMP_OFFSET] = self.tado.getDeviceInfo(sensor, TEMP_OFFSET)
+            elif sensor_type == "zone":
                 data = self.tado.getZoneState(sensor)
             else:
                 _LOGGER.debug("Unknown sensor: %s", sensor_type)
@@ -299,3 +283,10 @@ class TadoConnector:
             _LOGGER.error("Could not set zone overlay: %s", exc)
 
         self.update_sensor("zone", zone_id)
+
+    def set_temperature_offset(self, device_id, offset):
+        """Set temperature offset of device."""
+        try:
+            self.tado.setTempOffset(device_id, offset)
+        except RequestException as exc:
+            _LOGGER.error("Could not set temperature offset: %s", exc)

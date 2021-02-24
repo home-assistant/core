@@ -21,6 +21,14 @@ EVENTS = [
     },
     {
         "operation": "Initialized",
+        "topic": "tns1:PTZController/tnsaxis:PTZPresets/Channel_1",
+        "source": "PresetToken",
+        "source_idx": "0",
+        "type": "on_preset",
+        "value": "1",
+    },
+    {
+        "operation": "Initialized",
         "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
         "type": "active",
         "value": "1",
@@ -54,8 +62,7 @@ async def test_binary_sensors(hass):
     config_entry = await setup_axis_integration(hass)
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
-    for event in EVENTS:
-        device.api.event.process_event(event)
+    device.api.event.update(EVENTS)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 2

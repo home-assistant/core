@@ -1,4 +1,6 @@
 """Test the Roku config flow."""
+from unittest.mock import patch
+
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
@@ -10,7 +12,6 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.components.roku import (
     HOMEKIT_HOST,
     HOST,

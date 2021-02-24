@@ -1,4 +1,6 @@
 """Tests for the Toon config flow."""
+from unittest.mock import patch
+
 from toonapi import Agreement, ToonError
 
 from homeassistant import data_entry_flow
@@ -9,7 +11,6 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

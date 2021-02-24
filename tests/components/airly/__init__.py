@@ -3,6 +3,7 @@ from homeassistant.components.airly.const import DOMAIN
 
 from tests.common import MockConfigEntry, load_fixture
 
+API_NEAREST_URL = "https://airapi.airly.eu/v2/measurements/nearest?lat=123.000000&lng=456.000000&maxDistanceKM=5.000000"
 API_POINT_URL = (
     "https://airapi.airly.eu/v2/measurements/point?lat=123.000000&lng=456.000000"
 )

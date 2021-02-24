@@ -2,7 +2,7 @@
 import asyncio
 import functools
 import logging
-from types import MappingProxyType
+from types import MappingProxyType, MethodType
 from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import weakref
 
@@ -29,6 +29,7 @@ SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+SOURCE_DHCP = "dhcp"
 
 # If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
 # websocket command creates a config entry with this source and while it exists normal discoveries
@@ -180,7 +181,9 @@ class ConfigEntry:
         self.supports_unload = False
 
         # Listeners to call on update
-        self.update_listeners: List[weakref.ReferenceType[UpdateListenerType]] = []
+        self.update_listeners: List[
+            Union[weakref.ReferenceType[UpdateListenerType], weakref.WeakMethod]
+        ] = []
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Optional[Callable[[], Any]] = None
@@ -245,7 +248,8 @@ class ConfigEntry:
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
             _LOGGER.warning(
-                "Config entry for %s not ready yet. Retrying in %d seconds",
+                "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                self.title,
                 self.domain,
                 wait_time,
             )
@@ -412,7 +416,12 @@ class ConfigEntry:
 
         Returns function to unlisten.
         """
-        weak_listener = weakref.ref(listener)
+        weak_listener: Any
+        # weakref.ref is not applicable to a bound method, e.g. method of a class instance, as reference will die immediately
+        if hasattr(listener, "__self__"):
+            weak_listener = weakref.WeakMethod(cast(MethodType, listener))
+        else:
+            weak_listener = weakref.ref(listener)
         self.update_listeners.append(weak_listener)
 
         return lambda: self.update_listeners.remove(weak_listener)
@@ -973,7 +982,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Ignore this config flow."""
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        return self.async_create_entry(title="Ignored", data={})
+        return self.async_create_entry(title=user_input["title"], data={})
 
     async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
         """Rediscover a config entry by it's unique_id."""
@@ -1043,6 +1052,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     async_step_mqtt = async_step_discovery
     async_step_ssdp = async_step_discovery
     async_step_zeroconf = async_step_discovery
+    async_step_dhcp = async_step_discovery
 
 
 class OptionsFlowManager(data_entry_flow.FlowManager):

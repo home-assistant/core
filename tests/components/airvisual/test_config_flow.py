@@ -1,4 +1,6 @@
 """Define tests for the AirVisual config flow."""
+from unittest.mock import patch
+
 from pyairvisual.errors import InvalidKeyError, NodeProError
 
 from homeassistant import data_entry_flow
@@ -20,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

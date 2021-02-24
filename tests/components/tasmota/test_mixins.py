@@ -1,6 +1,7 @@
 """The tests for the Tasmota mixins."""
 import copy
 import json
+from unittest.mock import call
 
 from hatasmota.const import CONF_MAC
 from hatasmota.utils import config_get_state_online, get_topic_tele_will
@@ -9,7 +10,6 @@ from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 
 from .test_common import DEFAULT_CONFIG
 
-from tests.async_mock import call
 from tests.common import async_fire_mqtt_message
 
 

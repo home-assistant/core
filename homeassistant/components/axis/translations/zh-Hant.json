@@ -11,7 +11,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
         },
-        "flow_title": "Axis \u88dd\u7f6e\uff1a{name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

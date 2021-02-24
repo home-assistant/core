@@ -1,5 +1,6 @@
 """The tests for the Netgear Arlo sensors."""
 from collections import namedtuple
+from unittest.mock import patch
 
 import pytest
 
@@ -10,8 +11,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
 )
-
-from tests.async_mock import patch
 
 
 def _get_named_tuple(input_dict):

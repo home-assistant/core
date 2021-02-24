@@ -1,6 +1,7 @@
 """deCONZ scene platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.deconz import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
@@ -9,8 +10,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
-
-from tests.async_mock import patch
 
 GROUPS = {
     "1": {

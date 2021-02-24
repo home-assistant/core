@@ -1,6 +1,7 @@
 """The tests for the generic_thermostat."""
 import datetime
 from os import path
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -37,7 +38,6 @@ from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,

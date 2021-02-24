@@ -1,5 +1,6 @@
 """Common test objects."""
 import time
+from unittest.mock import AsyncMock, Mock
 
 from zigpy.device import Device as zigpy_dev
 from zigpy.endpoint import Endpoint as zigpy_ep
@@ -12,8 +13,6 @@ import zigpy.zdo.types
 
 import homeassistant.components.zha.core.const as zha_const
 from homeassistant.util import slugify
-
-from tests.async_mock import AsyncMock, Mock
 
 
 class FakeEndpoint:

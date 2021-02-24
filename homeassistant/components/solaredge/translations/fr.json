@@ -4,7 +4,9 @@
             "site_exists": "Ce site est d\u00e9j\u00e0 configur\u00e9"
         },
         "error": {
-            "site_exists": "Ce site est d\u00e9j\u00e0 configur\u00e9"
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "site_exists": "Ce site est d\u00e9j\u00e0 configur\u00e9",
+            "site_not_active": "The site n'est pas actif"
         },
         "step": {
             "user": {

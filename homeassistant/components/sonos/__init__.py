@@ -4,11 +4,9 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOSTS
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.loader import bind_hass
 
-from .const import DATA_SONOS, DOMAIN
+from .const import DOMAIN
 
 CONF_ADVERTISE_ADDR = "advertise_addr"
 CONF_INTERFACE_ADDR = "interface_addr"
@@ -55,23 +53,3 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
     )
     return True
-
-
-@bind_hass
-def get_coordinator_name(hass, entity_id):
-    """Obtain the room/name of a device's coordinator.
-
-    Used by the Plex integration.
-
-    This function is safe to run inside the event loop.
-    """
-    if DATA_SONOS not in hass.data:
-        raise HomeAssistantError("Sonos integration not set up")
-
-    device = next(
-        (x for x in hass.data[DATA_SONOS].entities if x.entity_id == entity_id), None
-    )
-
-    if device.is_coordinator:
-        return device.name
-    return device.coordinator.name

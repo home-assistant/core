@@ -2,6 +2,6 @@
   "domain": "verisure",
   "name": "Verisure",
   "documentation": "https://www.home-assistant.io/integrations/verisure",
-  "requirements": ["jsonpath==0.82", "vsure==1.5.4"],
+  "requirements": ["jsonpath==0.82", "vsure==1.6.1"],
   "codeowners": ["@frenck"]
 }

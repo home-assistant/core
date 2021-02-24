@@ -9,6 +9,7 @@ import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -24,15 +25,19 @@ from homeassistant.helpers import (
 )
 
 from .const import (
+    AIOSHELLY_DEVICE_TIMEOUT_SEC,
+    ATTR_CHANNEL,
+    ATTR_CLICK_TYPE,
+    ATTR_DEVICE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     COAP,
     DATA_CONFIG_ENTRY,
     DOMAIN,
+    EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
     POLLING_TIMEOUT_MULTIPLIER,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
-    SETUP_ENTRY_TIMEOUT_SEC,
     SLEEP_PERIOD_MULTIPLIER,
     UPDATE_PERIOD_MULTIPLIER,
 )
@@ -79,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coap_context = await get_coap_context(hass)
 
     try:
-        async with async_timeout.timeout(SETUP_ENTRY_TIMEOUT_SEC):
+        async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             device = await aioshelly.Device.create(
                 aiohttp_client.async_get_clientsession(hass),
                 coap_context,
@@ -170,12 +175,12 @@ class ShellyDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
             if event_type in INPUTS_EVENTS_DICT:
                 self.hass.bus.async_fire(
-                    "shelly.click",
+                    EVENT_SHELLY_CLICK,
                     {
-                        "device_id": self.device_id,
-                        "device": self.device.settings["device"]["hostname"],
-                        "channel": channel,
-                        "click_type": INPUTS_EVENTS_DICT[event_type],
+                        ATTR_DEVICE_ID: self.device_id,
+                        ATTR_DEVICE: self.device.settings["device"]["hostname"],
+                        ATTR_CHANNEL: channel,
+                        ATTR_CLICK_TYPE: INPUTS_EVENTS_DICT[event_type],
                     },
                 )
             else:
@@ -263,7 +268,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data."""
         try:
-            async with async_timeout.timeout(5):
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 _LOGGER.debug("REST update for %s", self.name)
                 return await self.device.update_status()
         except OSError as err:

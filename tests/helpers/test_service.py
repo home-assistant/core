@@ -2,6 +2,7 @@
 from collections import OrderedDict
 from copy import deepcopy
 import unittest
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -26,7 +27,6 @@ from homeassistant.helpers import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import (
     MockEntity,
     get_test_home_assistant,

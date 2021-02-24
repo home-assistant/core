@@ -1,4 +1,6 @@
 """Tests for the Risco binary sensors."""
+from unittest.mock import PropertyMock, patch
+
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -7,7 +9,6 @@ from homeassistant.helpers.entity_component import async_update_entity
 from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
 from .util import two_zone_alarm  # noqa: F401
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import MockConfigEntry
 
 FIRST_ENTITY_ID = "binary_sensor.zone_0"
@@ -59,11 +60,11 @@ async def test_setup(hass, two_zone_alarm):  # noqa: F811
     assert registry.async_is_registered(SECOND_ENTITY_ID)
 
     registry = await hass.helpers.device_registry.async_get_registry()
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_0")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_1")}, {})
+    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_zone_1")})
     assert device is not None
     assert device.manufacturer == "Risco"
 
