@@ -6,7 +6,6 @@ from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -22,7 +21,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TIME_SECONDS,
 )
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import slugify as util_slugify
@@ -131,12 +129,6 @@ def setup(hass, config):
     """Set up the OctoPrint component."""
     printers = hass.data[DOMAIN] = {}
     success = False
-
-    def device_discovered(service, info):
-        """Get called when an Octoprint server has been discovered."""
-        _LOGGER.debug("Found an Octoprint server: %s", info)
-
-    discovery.listen(hass, SERVICE_OCTOPRINT, device_discovered)
 
     if DOMAIN not in config:
         # Skip the setup if there is no configuration present
