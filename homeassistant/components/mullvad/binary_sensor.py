@@ -41,11 +41,6 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._device_class
 
     @property
-    def icon(self):
-        """Return the icon for this binary sensor."""
-        return "mdi:vpn"
-
-    @property
     def name(self):
         """Return the name for this binary sensor."""
         return self._name
