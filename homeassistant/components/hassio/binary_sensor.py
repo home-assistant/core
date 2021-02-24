@@ -21,7 +21,9 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            HassioAddonBinarySensor(coordinator, addon, ATTR_UPDATE_AVAILABLE)
+            HassioAddonBinarySensor(
+                coordinator, addon, ATTR_UPDATE_AVAILABLE, "Update Available"
+            )
             for addon in coordinator.data.values()
         ]
     )

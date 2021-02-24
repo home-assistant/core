@@ -16,13 +16,13 @@ class HassioAddonEntity(CoordinatorEntity):
         coordinator: HassioAddonsDataUpdateCoordinator,
         addon: Dict[str, Any],
         attribute_name: str,
-        sensor_name: str = None,
+        sensor_name: str,
     ) -> None:
         """Initialize binary sensor."""
         self.addon_slug = addon[ATTR_SLUG]
         self.addon_name = addon[ATTR_NAME]
         self.attribute_name = attribute_name
-        self.sensor_name = sensor_name or attribute_name
+        self.sensor_name = sensor_name
         super().__init__(coordinator)
 
     @property
@@ -33,7 +33,7 @@ class HassioAddonEntity(CoordinatorEntity):
     @property
     def name(self) -> str:
         """Return entity name."""
-        return f"{self.addon_name}: {self.sensor_name.replace('_', ' ').title()}"
+        return f"{self.addon_name}: {self.sensor_name}"
 
     @property
     def entity_registry_enabled_default(self) -> bool:
