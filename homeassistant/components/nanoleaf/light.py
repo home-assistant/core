@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     token = ""
     if discovery_info is not None:
         host = discovery_info["host"]
-        name = discovery_info["hostname"]
+        name = None
         device_id = discovery_info["properties"]["id"]
 
         # if device already exists via config, skip discovery setup
@@ -98,10 +98,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     nanoleaf_light.token = token
 
     try:
-        nanoleaf_light.available
+        info = nanoleaf_light.info
     except Unavailable:
         _LOGGER.error("Could not connect to Nanoleaf Light: %s on %s", name, host)
         return
+
+    if name is None:
+        name = info.name
 
     hass.data[DATA_NANOLEAF][host] = nanoleaf_light
     add_entities([NanoleafLight(nanoleaf_light, name)], True)
