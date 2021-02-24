@@ -8,19 +8,18 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.components.hassio.const import (
-    ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
     WS_TYPE_API,
-    WS_TYPE_EVENT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events
+from tests.common import async_mock_signal
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
 
@@ -361,23 +360,39 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
     assert aioclient_mock.call_count == 5
 
 
-async def test_websocket_supervisor_event(
-    hassio_env, hass: HomeAssistant, hass_ws_client
-):
-    """Test Supervisor websocket event."""
+async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
+    """Test websocket subscription."""
     assert await async_setup_component(hass, "hassio", {})
-    websocket_client = await hass_ws_client(hass)
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "supervisor/subscribe"})
+    response = await client.receive_json()
+    assert response["success"]
 
-    test_event = async_capture_events(hass, EVENT_SUPERVISOR_EVENT)
+    dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, {"lorem": "ipsum"})
+    calls = async_mock_signal(hass, EVENT_SUPERVISOR_EVENT)
 
-    await websocket_client.send_json(
-        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, ATTR_DATA: {"event": "test"}}
+    response = await client.receive_json()
+    assert response["event"]["lorem"] == "ipsum"
+    assert len(calls) == 1
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "supervisor/event",
+            "data": {"event": "test", "lorem": "ipsum"},
+        }
     )
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(calls) == 2
 
-    assert await websocket_client.receive_json()
-    await hass.async_block_till_done()
+    response = await client.receive_json()
+    assert response["event"]["lorem"] == "ipsum"
 
-    assert test_event[0].data == {"event": "test"}
+    # Unsubscribe
+    await client.send_json({"id": 7, "type": "unsubscribe_events", "subscription": 5})
+    response = await client.receive_json()
+    assert response["success"]
 
 
 async def test_websocket_supervisor_api(

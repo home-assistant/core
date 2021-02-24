@@ -63,6 +63,7 @@ async def websocket_subscribe(
         subscriptions[EVENT_SUPERVISOR_EVENT]()
 
     connection.subscriptions[msg["id"]] = unsubscribe
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.async_response
