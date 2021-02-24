@@ -20,6 +20,13 @@
             "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 kilka minut."
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Klucz sieci",
+                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
+                },
+                "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
+            },
             "hassio_confirm": {
                 "title": "Skonfiguruj integracj\u0119 Z-Wave JS z dodatkiem Z-Wave JS"
             },
@@ -37,13 +44,6 @@
                 },
                 "description": "Czy chcesz skorzysta\u0107 z dodatku Z-Wave JS Supervisor?",
                 "title": "Wybierz metod\u0119 po\u0142\u0105czenia"
-            },
-            "start_addon": {
-                "data": {
-                    "network_key": "Klucz sieci",
-                    "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
-                },
-                "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
             },
             "user": {
                 "data": {
