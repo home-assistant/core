@@ -1,6 +1,8 @@
 """Base Sensor for the Xbox Integration."""
 from typing import Optional
 
+from yarl import URL
+
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PresenceData, XboxUpdateCoordinator
@@ -44,7 +46,18 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         if not self.data:
             return None
 
-        return self.data.display_pic.replace("&mode=Padding", "")
+        # Xbox sometimes returns a domain that uses a wrong certificate which creates issues
+        # with loading the image.
+        # The correct domain is images-eds-ssl which can just be replaced
+        # to point to the correct image, with the correct domain and certificate
+        # using YARL URL lib, we can replace the domain part of a url and append
+        # only the queries we need (url and format) and omit unnecessary ones (padding)
+        original_url = URL(self.data.display_pic)
+        return str(
+            original_url.with_host("images-eds-ssl.xboxlive.com").with_query(
+                url=original_url.query["url"], format=original_url.query["format"]
+            )
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:
