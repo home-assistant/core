@@ -160,6 +160,12 @@ def ge_12730_state_fixture():
     return json.loads(load_fixture("zwave_js/fan_ge_12730_state.json"))
 
 
+@pytest.fixture(name="aeotec_radiator_thermostat_state", scope="session")
+def aeotec_radiator_thermostat_state_fixture():
+    """Load the Aeotec Radiator Thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeotec_radiator_thermostat_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -307,6 +313,14 @@ def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
 def nortek_thermostat_fixture(client, nortek_thermostat_state):
     """Mock a nortek thermostat node."""
     node = Node(client, copy.deepcopy(nortek_thermostat_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_radiator_thermostat")
+def aeotec_radiator_thermostat_fixture(client, aeotec_radiator_thermostat_state):
+    """Mock a Aeotec thermostat node."""
+    node = Node(client, aeotec_radiator_thermostat_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 

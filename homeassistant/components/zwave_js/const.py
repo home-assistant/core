@@ -9,6 +9,7 @@ PLATFORMS = [
     "fan",
     "light",
     "lock",
+    "number",
     "sensor",
     "switch",
 ]
