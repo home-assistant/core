@@ -25,7 +25,6 @@ SET_PRIMARY_FILTRATION_SCHEMA = vol.Schema(
     vol.All(
         cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
         {
-            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
             vol.Optional(ATTR_DURATION): vol.All(int, vol.Range(min=1, max=24)),
             vol.Optional(ATTR_START_HOUR): vol.All(int, vol.Range(min=0, max=23)),
         },
