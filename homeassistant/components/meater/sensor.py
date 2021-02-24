@@ -8,8 +8,11 @@ import async_timeout
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DOMAIN
 
@@ -85,7 +88,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     await coordinator.async_refresh()
 
 
-class MeaterProbeTemperature(Entity):
+class MeaterProbeTemperature(CoordinatorEntity):
     """Meater Temperature Sensor Entity."""
 
     def __init__(self, coordinator, device_id, temperature_reading_type):
@@ -143,26 +146,6 @@ class MeaterProbeTemperature(Entity):
         }
 
     @property
-    def available(self):
-        """Return if entity is available."""
-        if not self.coordinator.last_update_success:
-            return False
-
-        # See if the device was returned from the API. If not, it's offline
-        device = None
-
-        for dev in self.coordinator.data:
-            if dev.id == self.device_id:
-                device = dev
-
-        return device is not None
-
-    @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
     def unique_id(self):
         """Return the unique ID for the sensor."""
         return f"{self.device_id}-{self.temperature_reading_type}"
@@ -172,13 +155,6 @@ class MeaterProbeTemperature(Entity):
         self.async_on_remove(
             self.coordinator.async_add_listener(self.async_write_ha_state)
         )
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()
 
 
 class TemperatureMeasurement(Enum):
