@@ -97,9 +97,13 @@ class SmartTubSensor(SmartTubSensorBase):
             return self._state.name.lower()
         return self._state.lower()
 
-    async def async_set_primary_filtration(self, service_call):
+    async def async_set_primary_filtration(self, **kwargs):
         """Fail service calls to the wrong type of entity."""
         raise HomeAssistantError("supported only on primary filtration entities")
+
+    async def async_set_secondary_filtration(self, **kwargs):
+        """Fail service calls to the wrong type of entity."""
+        raise HomeAssistantError("supported only on secondary filtration entities")
 
 
 class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
