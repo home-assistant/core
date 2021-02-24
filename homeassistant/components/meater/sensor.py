@@ -146,11 +146,24 @@ class MeaterProbeTemperature(CoordinatorEntity):
         }
 
     @property
+    def available(self):
+        """Return if entity is available."""
+        if not self.coordinator.last_update_success:
+            return False
+
+        # See if the device was returned from the API. If not, it's offline
+        device = None
+
+        for dev in self.coordinator.data:
+            if dev.id == self.device_id:
+                device = dev
+
+        return device is not None
+
+    @property
     def unique_id(self):
         """Return the unique ID for the sensor."""
         return f"{self.device_id}-{self.temperature_reading_type}"
-
-    
 
 
 class TemperatureMeasurement(Enum):
