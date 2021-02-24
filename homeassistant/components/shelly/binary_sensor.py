@@ -73,6 +73,11 @@ SENSORS = {
         default_enabled=False,
         removal_condition=is_momentary_input,
     ),
+    ("sensor", "extInput"): BlockAttributeDescription(
+        name="External input",
+        device_class=DEVICE_CLASS_POWER,
+        default_enabled=False,
+    ),
     ("sensor", "motion"): BlockAttributeDescription(
         name="Motion", device_class=DEVICE_CLASS_MOTION
     ),
