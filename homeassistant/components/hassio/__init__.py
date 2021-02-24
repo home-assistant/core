@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.homeassistant import SERVICE_CHECK_CONFIG
 import homeassistant.config as conf_util
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -475,7 +475,7 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     await async_setup_addon_panel(hass, hassio)
 
     hass.async_create_task(
-        hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_HASSIO})
+        hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
     )
 
     return True

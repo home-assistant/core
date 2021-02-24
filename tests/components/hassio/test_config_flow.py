@@ -1,7 +1,7 @@
 """Test the Home Assistant Supervisor config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import setup
 from homeassistant.components.hassio import DOMAIN
 
 
@@ -15,7 +15,7 @@ async def test_config_flow(hass):
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_HASSIO}
+            DOMAIN, context={"source": "system"}
         )
         assert result["type"] == "create_entry"
         assert result["title"] == DOMAIN.title()
@@ -30,7 +30,7 @@ async def test_multiple_entries(hass):
     """Test creating multiple hassio entries."""
     await test_config_flow(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_HASSIO}
+        DOMAIN, context={"source": "system"}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
