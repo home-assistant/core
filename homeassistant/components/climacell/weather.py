@@ -275,7 +275,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
                     (
                         self._get_cc_value(item, CC_ATTR_TEMPERATURE_LOW)
                         for item in forecast[CC_ATTR_TEMPERATURE]
-                        if "max" in item
+                        if "min" in item
                     ),
                     temp_low,
                 )
