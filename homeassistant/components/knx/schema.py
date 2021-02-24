@@ -31,13 +31,13 @@ from .const import (
 
 ga_validator = vol.Any(
     cv.matches_regex(GroupAddress.ADDRESS_RE),
-    vol.All(int, vol.Range(min=1, max=65535)),
+    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123')",
 )
 
 ia_validator = vol.Any(
     cv.matches_regex(IndividualAddress.ADDRESS_RE),
-    vol.All(int, vol.Range(min=1, max=65535)),
+    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
 
