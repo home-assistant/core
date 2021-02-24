@@ -166,6 +166,6 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
     async def async_set_secondary_filtration(self, **kwargs):
         """Update primary filtration settings."""
         mode = smarttub.SpaSecondaryFiltrationCycle.SecondaryFiltrationMode[
-            kwargs.get(ATTR_MODE).upper()
+            kwargs[ATTR_MODE].upper()
         ]
         await self._state.set_mode(mode)
