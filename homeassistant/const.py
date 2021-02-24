@@ -210,7 +210,6 @@ EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
-EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_SERVICE_REGISTERED = "service_registered"
 EVENT_SERVICE_REMOVED = "service_removed"
 EVENT_STATE_CHANGED = "state_changed"
@@ -312,9 +311,6 @@ CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
-
-# Contains the information that is discovered
-ATTR_DISCOVERED = "discovered"
 
 # Location of the device/sensor
 ATTR_LOCATION = "location"
