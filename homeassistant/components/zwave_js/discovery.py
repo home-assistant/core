@@ -417,17 +417,17 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             ):
                 continue
             # check device_class_basic
-            if schema.device_class_basic is not None and not check_device_class(
+            if not check_device_class(
                 value.node.device_class.basic, schema.device_class_basic
             ):
                 continue
             # check device_class_generic
-            if schema.device_class_generic is not None and not check_device_class(
+            if not check_device_class(
                 value.node.device_class.generic, schema.device_class_generic
             ):
                 continue
             # check device_class_specific
-            if schema.device_class_specific is not None and not check_device_class(
+            if not check_device_class(
                 value.node.device_class.specific, schema.device_class_specific
             ):
                 continue
@@ -476,9 +476,11 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
 
 @callback
 def check_device_class(
-    device_class: DeviceClassItem, required_value: Set[Union[str, int]]
+    device_class: DeviceClassItem, required_value: Optional[Set[Union[str, int]]]
 ) -> bool:
     """Check if device class id or label matches."""
+    if required_value is None:
+        return True
     for val in required_value:
         if isinstance(val, str) and device_class.label == val:
             return True
