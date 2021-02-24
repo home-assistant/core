@@ -5,8 +5,9 @@ import logging
 import smarttub
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
@@ -91,6 +92,7 @@ class SmartTubSensor(SmartTubSensorBase):
         return self._state.lower()
 
     async def async_set_primary_filtration(self, service_call):
+        """Fail service calls to the wrong type of entity."""
         raise HomeAssistantError("supported only on primary filtration entities")
 
 
@@ -119,10 +121,11 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
             ATTR_START_HOUR: state.start_hour,
         }
 
-    async def async_set_primary_filtration(self, service_call):
+    async def async_set_primary_filtration(self, **kwargs):
+        """Update primary filtration settings."""
         await self._state.set(
-            duration=service_call.data.get(ATTR_DURATION),
-            start_hour=service_call.data.get(ATTR_START_HOUR),
+            duration=kwargs.get(ATTR_DURATION),
+            start_hour=kwargs.get(ATTR_START_HOUR),
         )
 
 

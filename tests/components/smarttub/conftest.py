@@ -34,15 +34,11 @@ async def setup_component(hass):
     assert await async_setup_component(hass, DOMAIN, {}) is True
 
 
-@pytest.fixture(name="spa")
-def mock_spa():
-    """Mock a smarttub.Spa."""
+@pytest.fixture(name="spa_state")
+def mock_spa_state():
+    """Create a smarttub.SpaState with mocks."""
 
-    mock_spa = create_autospec(smarttub.Spa, instance=True)
-    mock_spa.id = "mockspa1"
-    mock_spa.brand = "mockbrand1"
-    mock_spa.model = "mockmodel1"
-    mock_spa.get_status.return_value = smarttub.SpaState(
+    state = smarttub.SpaState(
         mock_spa,
         **{
             "setTemperature": 39,
@@ -71,6 +67,23 @@ def mock_spa():
             "cleanupCycle": "INACTIVE",
         },
     )
+    state.primary_filtration.set = create_autospec(
+        smarttub.SpaPrimaryFiltrationCycle, instance=True
+    ).set
+    return state
+
+
+@pytest.fixture(name="spa")
+def mock_spa(spa_state):
+    """Mock a smarttub.Spa."""
+
+    mock_spa = create_autospec(smarttub.Spa, instance=True)
+    mock_spa.id = "mockspa1"
+    mock_spa.brand = "mockbrand1"
+    mock_spa.model = "mockmodel1"
+
+    mock_spa.get_status.return_value = spa_state
+
     mock_circulation_pump = create_autospec(smarttub.SpaPump, instance=True)
     mock_circulation_pump.id = "CP"
     mock_circulation_pump.spa = mock_spa
