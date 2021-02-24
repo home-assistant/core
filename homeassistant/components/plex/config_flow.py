@@ -240,7 +240,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
 
-        return self.async_create_entry(title=plex_server.friendly_name, data=data)
+        return self.async_create_entry(title=url, data=data)
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
