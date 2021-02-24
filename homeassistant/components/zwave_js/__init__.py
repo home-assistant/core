@@ -15,12 +15,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ADDON_SLUG,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DEVICE_ID,
@@ -42,7 +43,8 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .entity import get_device_id
+from .helpers import get_device_id, get_old_value_id, get_unique_id
+from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
@@ -81,6 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     dev_reg = await device_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -93,6 +96,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
+
+            # This migration logic was added in 2021.3 to handle breaking change to
+            # value_id format. Some time in the future, this code block
+            # (and get_old_value_id helper) can be removed.
+            old_value_id = get_old_value_id(disc_info.primary_value)
+            old_unique_id = get_unique_id(
+                client.driver.controller.home_id, old_value_id
+            )
+            if entity_id := ent_reg.async_get_entity_id(
+                disc_info.platform, DOMAIN, old_unique_id
+            ):
+                LOGGER.debug(
+                    "Entity %s is using old unique ID, migrating to new one", entity_id
+                )
+                ent_reg.async_update_entity(
+                    entity_id,
+                    new_unique_id=get_unique_id(
+                        client.driver.controller.home_id,
+                        disc_info.primary_value.value_id,
+                    ),
+                )
+
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
@@ -191,6 +216,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
 
+    services = ZWaveServices(hass, ent_reg)
+    services.async_register()
+
     # Set up websocket API
     async_register_api(hass)
 
@@ -218,7 +246,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
 
-        await driver_ready.wait()
+        try:
+            await driver_ready.wait()
+        except asyncio.CancelledError:
+            LOGGER.debug("Cancelling start platforms")
+            return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
 
@@ -270,6 +302,9 @@ async def client_listen(
         should_reload = False
     except BaseZwaveJSServerError as err:
         LOGGER.error("Failed to listen: %s", err)
+    except Exception as err:  # pylint: disable=broad-except
+        # We need to guard against unknown exceptions to not crash this task.
+        LOGGER.exception("Unexpected exception: %s", err)
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
@@ -333,11 +368,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     try:
-        await hass.components.hassio.async_stop_addon("core_zwave_js")
+        await hass.components.hassio.async_stop_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
         return
     try:
-        await hass.components.hassio.async_uninstall_addon("core_zwave_js")
+        await hass.components.hassio.async_uninstall_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)

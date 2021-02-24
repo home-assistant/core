@@ -96,7 +96,7 @@ WazeRouteCalculator==0.12
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.0.11
+accuweather==0.1.0
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
@@ -371,7 +371,7 @@ blockchain==1.4.4
 # bme680==1.0.5
 
 # homeassistant.components.bond
-bond-api==0.1.10
+bond-api==0.1.11
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -955,6 +955,9 @@ mitemp_bt==0.0.3
 # homeassistant.components.motion_blinds
 motionblinds==0.4.8
 
+# homeassistant.components.mullvad
+mullvad-api==1.0.0
+
 # homeassistant.components.tts
 mutagen==1.45.1
 
@@ -1313,6 +1316,9 @@ pychromecast==8.1.0
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
 
+# homeassistant.components.climacell
+pyclimacell==0.14.0
+
 # homeassistant.components.cmus
 pycmus==0.1.1
 
@@ -1501,7 +1507,7 @@ pylgnetcast-homeassistant==0.2.0.dev0
 pylibrespot-java==0.1.0
 
 # homeassistant.components.litejet
-pylitejet==0.1
+pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
 pylitterbot==2021.2.5
@@ -1552,7 +1558,7 @@ pymsteams==0.1.12
 pymusiccast==0.1.6
 
 # homeassistant.components.myq
-pymyq==3.0.1
+pymyq==3.0.4
 
 # homeassistant.components.mysensors
 pymysensors==0.20.1
@@ -2333,7 +2339,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.17.0
+xknx==0.17.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

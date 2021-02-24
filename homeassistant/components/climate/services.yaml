@@ -1,7 +1,8 @@
 # Describes the format for available climate services
 
 set_aux_heat:
-  description: Turn auxiliary heater on/off for climate device
+  name: Turn on/off auxiliary heater
+  description: Turn auxiliary heater on/off for climate device.
   target:
   fields:
     aux_heat:
@@ -13,7 +14,8 @@ set_aux_heat:
         boolean:
 
 set_preset_mode:
-  description: Set preset mode for climate device
+  name: Set preset mode
+  description: Set preset mode for climate device.
   target:
   fields:
     preset_mode:
@@ -25,7 +27,8 @@ set_preset_mode:
         text:
 
 set_temperature:
-  description: Set target temperature of climate device
+  name: Set temperature
+  description: Set target temperature of climate device.
   target:
   fields:
     temperature:
@@ -76,7 +79,8 @@ set_temperature:
             - "heat"
 
 set_humidity:
-  description: Set target humidity of climate device
+  name: Set target humidity
+  description: Set target humidity of climate device.
   target:
   fields:
     humidity:
@@ -93,7 +97,8 @@ set_humidity:
           mode: slider
 
 set_fan_mode:
-  description: Set fan operation for climate device
+  name: Set fan mode
+  description: Set fan operation for climate device.
   target:
   fields:
     fan_mode:
@@ -105,7 +110,8 @@ set_fan_mode:
         text:
 
 set_hvac_mode:
-  description: Set HVAC operation mode for climate device
+  name: Set HVAC mode
+  description: Set HVAC operation mode for climate device.
   target:
   fields:
     hvac_mode:
@@ -124,7 +130,8 @@ set_hvac_mode:
             - "heat"
 
 set_swing_mode:
-  description: Set swing operation for climate device
+  name: Set swing mode
+  description: Set swing operation for climate device.
   target:
   fields:
     swing_mode:
@@ -136,9 +143,11 @@ set_swing_mode:
         text:
 
 turn_on:
-  description: Turn climate device on
+  name: Turn on
+  description: Turn climate device on.
   target:
 
 turn_off:
-  description: Turn climate device off
+  name: Turn off
+  description: Turn climate device off.
   target:

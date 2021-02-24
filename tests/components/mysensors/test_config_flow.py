@@ -81,6 +81,7 @@ async def test_config_mqtt(hass: HomeAssistantType):
         CONF_TOPIC_IN_PREFIX: "bla",
         CONF_TOPIC_OUT_PREFIX: "blub",
         CONF_VERSION: "2.4",
+        CONF_GATEWAY_TYPE: "MQTT",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -120,6 +121,7 @@ async def test_config_serial(hass: HomeAssistantType):
         CONF_DEVICE: "/dev/ttyACM0",
         CONF_BAUD_RATE: 115200,
         CONF_VERSION: "2.4",
+        CONF_GATEWAY_TYPE: "Serial",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -156,6 +158,7 @@ async def test_config_tcp(hass: HomeAssistantType):
         CONF_DEVICE: "127.0.0.1",
         CONF_TCP_PORT: 5003,
         CONF_VERSION: "2.4",
+        CONF_GATEWAY_TYPE: "TCP",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
