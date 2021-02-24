@@ -272,6 +272,8 @@ omit =
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/*
     homeassistant/components/familyhub/camera.py
+    homeassistant/components/faa_delays/__init__.py
+    homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/*
