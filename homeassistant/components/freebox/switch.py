@@ -97,10 +97,9 @@ class FreeboxLteSwitch(FreeboxWifiSwitch):
 
     def __init__(self, router: FreeboxRouter) -> None:
         """Initialize the LTE switch."""
+        super().__init__(router)
         self._name = "Freebox LTE"
         self._icon = "mdi:signal-4g"
-        self._state = None
-        self._router = router
         self._unique_id = f"{self._router.mac} {self._name}"
 
     async def _async_set_state(self, enabled: bool):
