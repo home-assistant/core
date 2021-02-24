@@ -25,6 +25,11 @@ class RegisterResult:
         """Get registers."""
         return self._registers
 
+    @property
+    def bits(self):
+        """Get bits."""
+        return self._registers
+
 
 class ModbusServerHub(BaseModbusHub):
     """ModbusServerHub acts as a modbus slave."""
@@ -113,7 +118,7 @@ class ModbusServerHub(BaseModbusHub):
         if data_type is None:
             data = 1 if last_state == STATE_ON else 0
             entity = {"name": name, "unit": unit, "register": register, "data": [data]}
-            if bit_mask > 0:
+            if bit_mask is not None and bit_mask > 0:
                 entity["bit_mask"] = bit_mask
         else:
             entity = {

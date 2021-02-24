@@ -11,6 +11,7 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN as DOMAIN,
 )
 from homeassistant.const import (
+    CONF_ADDRESS,
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
@@ -143,10 +144,12 @@ async def base_test(
         mock_sync.read_holding_registers.return_value = read_result
 
         # If slave specified, update the server block
-        if CONF_SLAVE in config_device and CONF_REGISTER in config_device:
-            server_blocks[config_device[CONF_SLAVE]].setValues(
-                config_device[CONF_REGISTER], register_words
-            )
+        if CONF_SLAVE in config_device:
+            register = config_device.get(CONF_REGISTER, config_device.get(CONF_ADDRESS))
+            if register is not None:
+                server_blocks[config_device[CONF_SLAVE]].setValues(
+                    register, register_words
+                )
 
         # mock timer and add old/new config
         now = dt_util.utcnow()

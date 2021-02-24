@@ -1,4 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
+import logging
 from typing import Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -23,6 +24,9 @@ from .const import (
     DEFAULT_HUB,
     MODBUS_DOMAIN,
 )
+from .modbus_server import ModbusServerHub
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_COILS, CONF_INPUTS),
@@ -55,6 +59,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     for entry in config[CONF_INPUTS]:
         hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
+
+        if isinstance(hub, ModbusServerHub):
+            _LOGGER.warning(
+                "Modbus binary sensor does not hold the state after the restart. Consider using Modbus sensor instead or manually set the state of the sensor."
+            )
+
         sensors.append(
             ModbusBinarySensor(
                 hub,
@@ -82,6 +92,15 @@ class ModbusBinarySensor(BinarySensorEntity):
         self._input_type = input_type
         self._value = None
         self._available = True
+
+    async def async_added_to_hass(self):
+        """Handle entity."""
+        self._hub.register_entity(
+            self._name,
+            self._slave,
+            self._address,
+            None,
+        )
 
     @property
     def name(self):
