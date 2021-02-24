@@ -38,7 +38,7 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the device class for this binary sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return self._device_class
 
     @property
     def icon(self):
