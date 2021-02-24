@@ -348,12 +348,17 @@ class AppleTVManager:
             "name": self.config_entry.data[CONF_NAME],
         }
 
+        area = attrs["name"]
+        appletv_name_trailer = f" {DEFAULT_NAME}"
+        if area.endswith(appletv_name_trailer):
+            area = area[: -len(appletv_name_trailer)]
+        attrs["suggested_area"] = area
+
         if self.atv:
             dev_info = self.atv.device_info
 
-            attrs["model"] = "Apple TV " + dev_info.model.name.replace("Gen", "")
+            attrs["model"] = DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
             attrs["sw_version"] = dev_info.version
-            attrs["suggested_area"] = self.atv.name
 
             if dev_info.mac:
                 attrs["connections"] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
