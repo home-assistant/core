@@ -74,6 +74,7 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert result[key]["property"] == 2
     assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
+    assert result[key]["metadata"]["states"]
 
 
 async def test_add_node(
@@ -344,7 +345,6 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"]
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -365,7 +365,6 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"]
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -392,7 +391,6 @@ async def test_update_log_config(hass, client, integration, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
-    assert msg["result"]
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1
