@@ -431,7 +431,7 @@ class Oven(
         program_finished = self.get_program_finished()
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
-        oven_only_sensors = self.get_oven_only_sensors()
+        oven_temp_sensors = self.get_oven_temperature_sensors()
         program_switches = self.get_program_switches()
         return {
             "binary_sensor": [
