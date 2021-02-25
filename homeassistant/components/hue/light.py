@@ -130,19 +130,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not light_coordinator.last_update_success:
         raise PlatformNotReady
 
-    update_lights = partial(
-        async_update_items,
-        bridge,
-        bridge.api.lights,
-        {},
-        async_add_entities,
-        partial(create_light, HueLight, light_coordinator, bridge, False, rooms),
-    )
-
-    # We add a listener after fetching the data, so manually trigger listener
-    bridge.reset_jobs.append(light_coordinator.async_add_listener(update_lights))
-
     if not supports_groups:
+        update_lights_without_group_support = partial(
+            async_update_items,
+            bridge,
+            bridge.api.lights,
+            {},
+            async_add_entities,
+            partial(create_light, HueLight, light_coordinator, bridge, False, rooms),
+            None,
+        )
+        # We add a listener after fetching the data, so manually trigger listener
+        bridge.reset_jobs.append(
+            light_coordinator.async_add_listener(update_lights_without_group_support)
+        )
         return
 
     group_coordinator = DataUpdateCoordinator(
@@ -156,8 +157,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ),
     )
 
-    update_rooms = partial(async_update_rooms, bridge.api.groups, rooms)
-
     if allow_groups:
         update_groups = partial(
             async_update_items,
@@ -166,13 +165,55 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             {},
             async_add_entities,
             partial(create_light, HueLight, group_coordinator, bridge, True, None),
+            None,
         )
 
         bridge.reset_jobs.append(group_coordinator.async_add_listener(update_groups))
 
-    bridge.reset_jobs.append(group_coordinator.async_add_listener(update_rooms))
+    cancel_update_rooms_listener = None
+
+    @callback
+    def _async_update_rooms():
+        """Update rooms."""
+        nonlocal cancel_update_rooms_listener
+        rooms.clear()
+        for item_id in bridge.api.groups:
+            group = bridge.api.groups[item_id]
+            if group.type != GROUP_TYPE_ROOM:
+                continue
+            for light_id in group.lights:
+                rooms[light_id] = group.name
+
+        # Once we do a rooms update, we cancel the listener
+        # until the next time lights are added
+        bridge.reset_jobs.remove(cancel_update_rooms_listener)
+        cancel_update_rooms_listener()
+
+    @callback
+    def _setup_rooms_listener():
+        nonlocal cancel_update_rooms_listener
+        cancel_update_rooms_listener = group_coordinator.async_add_listener(
+            _async_update_rooms
+        )
+        bridge.reset_jobs.append(cancel_update_rooms_listener)
+
+    _setup_rooms_listener()
     await group_coordinator.async_refresh()
-    update_lights()
+
+    update_lights_with_group_support = partial(
+        async_update_items,
+        bridge,
+        bridge.api.lights,
+        {},
+        async_add_entities,
+        partial(create_light, HueLight, light_coordinator, bridge, False, rooms),
+        _setup_rooms_listener,
+    )
+    # We add a listener after fetching the data, so manually trigger listener
+    bridge.reset_jobs.append(
+        light_coordinator.async_add_listener(update_lights_with_group_support)
+    )
+    update_lights_with_group_support()
 
 
 async def async_safe_fetch(bridge, fetch_method):
@@ -188,7 +229,9 @@ async def async_safe_fetch(bridge, fetch_method):
 
 
 @callback
-def async_update_items(bridge, api, current, async_add_entities, create_item):
+def async_update_items(
+    bridge, api, current, async_add_entities, create_item, new_items_callback
+):
     """Update items."""
     new_items = []
 
@@ -202,21 +245,10 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
     bridge.hass.async_create_task(remove_devices(bridge, api, current))
 
     if new_items:
+        # This is currently used to setup the listener to update rooms
+        if new_items_callback:
+            new_items_callback()
         async_add_entities(new_items)
-
-
-@callback
-def async_update_rooms(api, rooms):
-    """Update rooms."""
-    new_rooms = {}
-    for item_id in api:
-        group = api[item_id]
-        if group.type != GROUP_TYPE_ROOM:
-            continue
-        for light_id in group.lights:
-            new_rooms[light_id] = group.name
-    rooms.clear()
-    rooms.update(new_rooms)
 
 
 def hue_brightness_to_hass(value):
