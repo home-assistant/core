@@ -560,7 +560,7 @@ async def test_update_unauthorized(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 1
+    assert len(mock_bridge.handle_unauthorized_error.mock_calls) == 2
 
 
 async def test_light_turn_on_service(hass, mock_bridge):
