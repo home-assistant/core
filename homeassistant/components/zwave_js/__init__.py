@@ -137,26 +137,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     ),
                 )
                 # Most entities have the same ID format, but notification binary sensors
-                # have a state key in their ID
+                # have a state key in their ID so we need to handle them differently
                 if (
-                    disc_info.platform != "binary_sensor"
-                    or disc_info.platform_hint != "notification"
+                    disc_info.platform == "binary_sensor"
+                    and disc_info.platform_hint == "notification"
                 ):
-                    migrate_entity(
-                        disc_info.platform, f"{old_unique_id}", f"{new_unique_id}"
-                    )
+                    for state_key in disc_info.primary_value.metadata.states:
+                        # ignore idle key (0)
+                        if state_key == "0":
+                            continue
+
+                        migrate_entity(
+                            disc_info.platform,
+                            f"{old_unique_id}.{state_key}",
+                            f"{new_unique_id}.{state_key}",
+                        )
+
+                    # Once we've iterated through all state keys, we can move on to the
+                    # next item
                     continue
 
-                for state_key in disc_info.primary_value.metadata.states:
-                    # ignore idle key (0)
-                    if state_key == "0":
-                        continue
-
-                    migrate_entity(
-                        disc_info.platform,
-                        f"{old_unique_id}.{state_key}",
-                        f"{new_unique_id}.{state_key}",
-                    )
+                migrate_entity(
+                    disc_info.platform, f"{old_unique_id}", f"{new_unique_id}"
+                )
 
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
