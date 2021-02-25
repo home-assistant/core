@@ -371,8 +371,8 @@ async def test_new_light_discovered(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 3
 
     light = hass.states.get("light.hue_lamp_3")
