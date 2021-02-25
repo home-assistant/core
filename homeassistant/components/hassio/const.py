@@ -33,7 +33,8 @@ X_HASS_IS_ADMIN = "X-Hass-Is-Admin"
 WS_TYPE = "type"
 WS_ID = "id"
 
-WS_TYPE_EVENT = "supervisor/event"
 WS_TYPE_API = "supervisor/api"
+WS_TYPE_EVENT = "supervisor/event"
+WS_TYPE_SUBSCRIBE = "supervisor/subscribe"
 
 EVENT_SUPERVISOR_EVENT = "supervisor_event"
