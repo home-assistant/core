@@ -918,6 +918,7 @@ async def test_group_features(hass, mock_bridge):
     mock_bridge.mock_light_responses.append(light_response)
     mock_bridge.mock_group_responses.append(group_response)
     await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
 
     color_temp_feature = hue_light.SUPPORT_HUE["Color temperature light"]
     extended_color_feature = hue_light.SUPPORT_HUE["Extended color light"]
