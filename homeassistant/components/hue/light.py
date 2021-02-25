@@ -112,37 +112,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if allow_groups and not supports_groups:
         _LOGGER.warning("Please update your Hue bridge to support groups")
 
-    if supports_groups:
-        group_coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            name="group",
-            update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
-            update_interval=SCAN_INTERVAL,
-            request_refresh_debouncer=Debouncer(
-                bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
-            ),
-        )
-
-        update_rooms = partial(async_update_rooms, bridge.api.groups, rooms)
-
-        if allow_groups:
-            update_groups = partial(
-                async_update_items,
-                bridge,
-                bridge.api.groups,
-                {},
-                async_add_entities,
-                partial(create_light, HueLight, group_coordinator, bridge, True, None),
-            )
-
-            bridge.reset_jobs.append(
-                group_coordinator.async_add_listener(update_groups)
-            )
-
-        bridge.reset_jobs.append(group_coordinator.async_add_listener(update_rooms))
-        await group_coordinator.async_refresh()
-
     light_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -173,6 +142,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # We add a listener after fetching the data, so manually trigger listener
     bridge.reset_jobs.append(light_coordinator.async_add_listener(update_lights))
     update_lights()
+
+    if not supports_groups:
+        return
+
+    group_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="group",
+        update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
+        update_interval=SCAN_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+        ),
+    )
+
+    update_rooms = partial(async_update_rooms, bridge.api.groups, rooms)
+
+    if allow_groups:
+        update_groups = partial(
+            async_update_items,
+            bridge,
+            bridge.api.groups,
+            {},
+            async_add_entities,
+            partial(create_light, HueLight, group_coordinator, bridge, True, None),
+        )
+
+        bridge.reset_jobs.append(group_coordinator.async_add_listener(update_groups))
+
+    bridge.reset_jobs.append(group_coordinator.async_add_listener(update_rooms))
+    await group_coordinator.async_refresh()
 
 
 async def async_safe_fetch(bridge, fetch_method):
