@@ -21,7 +21,8 @@
         "step": {
             "user": {
                 "data": {
-                    "interfaces": "Kies interfaces om te scannen"
+                    "interfaces": "Kies interfaces om te scannen",
+                    "scan_interval": "Scaninterval"
                 }
             }
         }

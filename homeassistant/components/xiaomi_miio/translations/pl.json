@@ -14,6 +14,7 @@
             "device": {
                 "data": {
                     "host": "Adres IP",
+                    "model": "Model urz\u0105dzenia (opcjonalnie)",
                     "name": "Nazwa urz\u0105dzenia",
                     "token": "Token API"
                 },
