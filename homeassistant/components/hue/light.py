@@ -193,7 +193,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def _setup_rooms_listener():
         nonlocal cancel_update_rooms_listener
         if cancel_update_rooms_listener is not None:
-            # If there are multiple light updates before _async_update_rooms
+            # If there are new lights added before _async_update_rooms
             # is called we should not add another listener
             return
 
