@@ -129,11 +129,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
             for value_id in value_ids:
-                old_unique_id = (
-                    get_unique_id(
-                        client.driver.controller.home_id,
-                        f"{disc_info.primary_value.node.node_id}.{value_id}",
-                    ),
+                old_unique_id = get_unique_id(
+                    client.driver.controller.home_id,
+                    f"{disc_info.primary_value.node.node_id}.{value_id}",
                 )
                 # Most entities have the same ID format, but notification binary sensors
                 # have a state key in their ID so we need to handle them differently
@@ -156,9 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     # next item
                     continue
 
-                migrate_entity(
-                    disc_info.platform, f"{old_unique_id}", f"{new_unique_id}"
-                )
+                migrate_entity(disc_info.platform, old_unique_id, new_unique_id)
 
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
