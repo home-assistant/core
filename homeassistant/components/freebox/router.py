@@ -31,16 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
-    """Get the Freebox API."""
-    freebox_path = Path(hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path)
-    freebox_path.mkdir(exist_ok=True)
-
-    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
-
-    return Freepybox(APP_DESC, token_file, API_VERSION)
-
-
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
@@ -198,3 +188,13 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
+
+
+async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
+    """Get the Freebox API."""
+    freebox_path = Path(hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path)
+    freebox_path.mkdir(exist_ok=True)
+
+    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+
+    return Freepybox(APP_DESC, token_file, API_VERSION)
