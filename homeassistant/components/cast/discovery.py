@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    DEFAULT_PORT,
     INTERNAL_DISCOVERY_RUNNING_KEY,
     KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
@@ -51,72 +52,52 @@ def setup_internal_discovery(hass: HomeAssistant) -> None:
         # Internal discovery is already running
         return
 
-    def internal_add_update_callback(uuid, service_name):
-        """Handle zeroconf discovery of a new or updated chromecast."""
-        service = listener.services[uuid]
+    class CastListener(pychromecast.discovery.AbstractCastListener):
+        def _add_update_cast(self, uuid):
+            """Handle zeroconf discovery of a new or updated chromecast."""
+            device_info = browser.devices[uuid]
 
-        # For support of deprecated IP based white listing
-        zconf = ChromeCastZeroconf.get_zeroconf()
-        service_info = None
-        tries = 0
-        while service_info is None and tries < 4:
-            try:
-                service_info = zconf.get_service_info(
-                    "_googlecast._tcp.local.", service_name
-                )
-            except OSError:
-                # If the zeroconf fails to receive the necessary data we abort
-                # adding the service
-                break
-            tries += 1
-
-        if not service_info:
-            _LOGGER.warning(
-                "setup_internal_discovery failed to get info for %s, %s",
-                uuid,
-                service_name,
+            discover_chromecast(
+                hass,
+                ChromecastInfo(
+                    services=device_info.services,
+                    uuid=device_info.uuid,
+                    model_name=device_info.model_name,
+                    friendly_name=device_info.friendly_name,
+                    is_audio_group=device_info.port != DEFAULT_PORT,
+                ),
             )
-            return
 
-        addresses = service_info.parsed_addresses()
-        host = addresses[0] if addresses else service_info.server
+        def add_cast(self, uuid, _):
+            """Handle zeroconf discovery of a new chromecast."""
+            self._add_update_cast(uuid)
 
-        discover_chromecast(
-            hass,
-            ChromecastInfo(
-                services=service[0],
-                uuid=service[1],
-                model_name=service[2],
-                friendly_name=service[3],
-                host=host,
-                port=service_info.port,
-            ),
-        )
+        def update_cast(self, uuid, _):
+            """Handle zeroconf discovery of an updated chromecast."""
+            self._add_update_cast(uuid)
 
-    def internal_remove_callback(uuid, service_name, service):
-        """Handle zeroconf discovery of a removed chromecast."""
-        _remove_chromecast(
-            hass,
-            ChromecastInfo(
-                services=service[0],
-                uuid=service[1],
-                model_name=service[2],
-                friendly_name=service[3],
-            ),
-        )
+        def remove_cast(self, uuid, service, device_info):
+            """Handle zeroconf discovery of a removed chromecast."""
+            _remove_chromecast(
+                hass,
+                ChromecastInfo(
+                    services=device_info.services,
+                    uuid=device_info.uuid,
+                    model_name=device_info.model_name,
+                    friendly_name=device_info.friendly_name,
+                ),
+            )
 
     _LOGGER.debug("Starting internal pychromecast discovery")
-    listener = pychromecast.CastListener(
-        internal_add_update_callback,
-        internal_remove_callback,
-        internal_add_update_callback,
+    browser = pychromecast.discovery.CastBrowser(
+        CastListener(), ChromeCastZeroconf.get_zeroconf()
     )
-    browser = pychromecast.start_discovery(listener, ChromeCastZeroconf.get_zeroconf())
+    browser.start_discovery()
 
     def stop_discovery(event):
         """Stop discovery of new chromecasts."""
         _LOGGER.debug("Stopping internal pychromecast discovery")
-        pychromecast.discovery.stop_discovery(browser)
+        browser.stop_discovery()
         hass.data[INTERNAL_DISCOVERY_RUNNING_KEY].release()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_discovery)
