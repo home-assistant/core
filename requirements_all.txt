@@ -1101,7 +1101,7 @@ pencompy==0.0.3
 pexpect==4.6.0
 
 # homeassistant.components.modem_callerid
-phone_modem==0.0.1
+phone_modem==0.0.2
 
 # homeassistant.components.onewire
 pi1wire==0.1.0

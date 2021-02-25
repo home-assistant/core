@@ -1,14 +1,17 @@
 """A sensor for incoming calls using a USB modem that supports caller ID."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_DEVICE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -17,7 +20,6 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     ICON,
-    SERVICE_HANGUP_CALL,
     SERVICE_REJECT_CALL,
     STATE_CALLERID,
     STATE_RING,
@@ -29,6 +31,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     }
 )
+
+SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -47,17 +53,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
     async_add_entities(sensor, True)
 
-    def hangup_call(call) -> None:
-        """Accept Incoming Call."""
-        api.hangup_call()
+    platform = entity_platform.current_platform.get()
 
-    def reject_call(call) -> None:
-        """Reject Incoming Call."""
-        api.reject_call()
-
-    hass.services.async_register(DOMAIN, SERVICE_HANGUP_CALL, hangup_call, {})
-
-    hass.services.async_register(DOMAIN, SERVICE_REJECT_CALL, reject_call, {})
+    platform.async_register_entity_service(
+        SERVICE_REJECT_CALL, SERVICE_SCHEMA, "reject_call"
+    )
 
 
 class ModemCalleridSensor(Entity):
@@ -136,6 +136,10 @@ class ModemCalleridSensor(Entity):
         elif newstate == self.api.STATE_IDLE:
             self._state = STATE_IDLE
             self.schedule_update_ha_state()
+
+    def reject_call(self) -> None:
+        """Reject Incoming Call."""
+        self.api.reject_call(self.device)
 
 
 def setup(hass):

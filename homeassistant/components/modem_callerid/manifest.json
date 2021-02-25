@@ -3,6 +3,6 @@
   "name": "Phone Modem",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/modem_callerid",
-  "requirements": ["phone_modem==0.0.1", "pydub==0.24.1"],
+  "requirements": ["phone_modem==0.0.2", "pydub==0.24.1"],
   "codeowners": ["@tkdrob"]
 }

@@ -1,4 +1,6 @@
-hangup_call:
-  description: Hangup active call.
 reject_call:
   description: Reject incoming call.
+  fields:
+    entity_id:
+      description: Target sensor entity
+      example: modem_callerid.phone_modem

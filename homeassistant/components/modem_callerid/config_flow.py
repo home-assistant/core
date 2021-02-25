@@ -19,13 +19,14 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if user_input is not None:
             name = user_input[CONF_NAME]
             device = user_input[CONF_DEVICE]
 
+            for entry in self._async_current_entries():
+                if device == entry.data.get(CONF_DEVICE):
+                    return self.async_abort(reason="already_configured")
             try:
                 api = PhoneModem(device)  # noqa pylint:disable=unused-variable
 
@@ -66,6 +67,6 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning(
                 "Already configured. This yaml configuration has already been imported. Please remove it."
             )
-            return self.async_abort(reason="single_instance_allowed")
+            return self.async_abort(reason="already_configured")
 
         return await self.async_step_user(import_config)
