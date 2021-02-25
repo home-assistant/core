@@ -409,7 +409,7 @@ class Oven(
 
     power_off_state = BSH_POWER_STANDBY
 
-    def get_oven_only_sensors(self):
+    def get_oven_temperature_sensors(self):
         """Get a dictionary with info about oven temperature sensors."""
         return [
             {
