@@ -50,8 +50,7 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         # with loading the image.
         # The correct domain is images-eds-ssl which can just be replaced
         # to point to the correct image, with the correct domain and certificate.
-        # Using YARL URL lib, we can replace the domain part of an url and remove
-        # the mode=padding query.
+        # We need to also remove the 'mode=Padding' query because with it, it results in an error 400.
         url = URL(self.data.display_pic)
         if url.host == "images-eds.xboxlive.com":
             url = url.with_host("images-eds-ssl.xboxlive.com")
