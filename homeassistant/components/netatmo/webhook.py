@@ -38,16 +38,16 @@ async def handle_webhook(hass, webhook_id, request):
     event_type = data.get(ATTR_EVENT_TYPE)
 
     if event_type in EVENT_TYPE_MAP:
-        send_event(hass, event_type, data)
+        async_send_event(hass, event_type, data)
 
         for event_data in data.get(EVENT_TYPE_MAP[event_type], []):
-            evaluate_event(hass, event_data)
+            async_evaluate_event(hass, event_data)
 
     else:
-        evaluate_event(hass, data)
+        async_evaluate_event(hass, data)
 
 
-def evaluate_event(hass, event_data):
+def async_evaluate_event(hass, event_data):
     """Evaluate events from webhook."""
     event_type = event_data.get(ATTR_EVENT_TYPE)
 
@@ -61,13 +61,13 @@ def evaluate_event(hass, event_data):
             person_event_data[ATTR_IS_KNOWN] = person.get(ATTR_IS_KNOWN)
             person_event_data[ATTR_FACE_URL] = person.get(ATTR_FACE_URL)
 
-            send_event(hass, event_type, person_event_data)
+            async_send_event(hass, event_type, person_event_data)
 
     else:
-        send_event(hass, event_type, event_data)
+        async_send_event(hass, event_type, event_data)
 
 
-def send_event(hass, event_type, data):
+def async_send_event(hass, event_type, data):
     """Send events."""
     _LOGGER.debug("%s: %s", event_type, data)
     async_dispatcher_send(
