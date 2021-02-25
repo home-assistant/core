@@ -19,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import device_registry, discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_utc_time_change
@@ -219,9 +219,8 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccou
         vehicle = None
 
         if not vin and device_id:
-            vin = next(
-                iter(hass.data["device_registry"].devices[device_id].identifiers)
-            )[1]
+            device = device_registry.async_get(hass).async_get(device_id)
+            vin = next(iter(device.identifiers))[1]
 
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
