@@ -41,7 +41,7 @@ async def validate_input(
     if not hub.system:
         raise ConnectionFailure("System data is empty")
 
-    return hub.system, hub
+    return hub
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         system = self._current[CONF_SYSTEM]
         return self.async_create_entry(
-            title=f"{system['name']} ({system.get('serialnumber', )})",
+            title=f"{system['name']} ({system.get('serialnumber')})",
             data=self._current,
         )
 
@@ -132,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             self._current = user_input
             try:
-                system, hub = await validate_input(
+                hub = await validate_input(
                     self.hass, user_input[CONF_HOST], user_input[CONF_API_VERSION]
                 )
             except ConnectionFailure as exc:
@@ -143,11 +143,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
 
-                if "serialnumber" in system:
-                    await self.async_set_unique_id(system["serialnumber"])
+                if "serialnumber" in hub.system:
+                    await self.async_set_unique_id(hub.system["serialnumber"])
                     self._abort_if_unique_id_configured()
 
-                self._current[CONF_SYSTEM] = system
+                self._current[CONF_SYSTEM] = hub.system
                 self._current[CONF_API_VERSION] = hub.api_version
                 self._hub = hub
 
