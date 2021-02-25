@@ -126,9 +126,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         update_rooms = partial(async_update_rooms, bridge.api.groups, rooms)
 
-        bridge.reset_jobs.append(group_coordinator.async_add_listener(update_rooms))
-        await group_coordinator.async_refresh()
-
         if allow_groups:
             update_groups = partial(
                 async_update_items,
@@ -142,6 +139,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             bridge.reset_jobs.append(
                 group_coordinator.async_add_listener(update_groups)
             )
+
+        bridge.reset_jobs.append(group_coordinator.async_add_listener(update_rooms))
+        await group_coordinator.async_refresh()
 
     light_coordinator = DataUpdateCoordinator(
         hass,
