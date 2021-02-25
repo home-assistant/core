@@ -25,26 +25,20 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the Freebox component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
-        return True
-
-    for freebox_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=freebox_conf,
+    """Set up the Freebox integration."""
+    if DOMAIN in config:
+        for entry_config in config[DOMAIN]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
+                )
             )
-        )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Set up Freebox component."""
+    """Set up Freebox entry."""
     router = FreeboxRouter(hass, entry)
     await router.setup()
 
