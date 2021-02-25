@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Deze co\u00f6rdinaten zijn al geregistreerd."
         },
+        "error": {
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "user": {
                 "data": {

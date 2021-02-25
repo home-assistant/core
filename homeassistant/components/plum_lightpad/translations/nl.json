@@ -9,7 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Wachtwoord"
+                    "password": "Wachtwoord",
+                    "username": "E-mail"
                 }
             }
         }

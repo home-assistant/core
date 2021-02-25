@@ -14,7 +14,8 @@
             "reauth": {
                 "data": {
                     "password": "Wachtwoord"
-                }
+                },
+                "description": "Authenticatietokens zijn ongeldig geworden, log in om ze opnieuw te maken."
             },
             "user": {
                 "data": {

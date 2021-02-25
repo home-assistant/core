@@ -10,7 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "name": "Naam"
+                    "name": "Naam",
+                    "url": "Webinterface URL"
                 }
             }
         }

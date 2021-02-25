@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Account reeds geconfigureerd",
-            "no_device": "Op geen van uw apparaten is \"Find my iPhone\" geactiveerd"
+            "no_device": "Op geen van uw apparaten is \"Find my iPhone\" geactiveerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
@@ -14,7 +15,8 @@
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Uw eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update uw wachtwoord om deze integratie te blijven gebruiken."
+                "description": "Uw eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update uw wachtwoord om deze integratie te blijven gebruiken.",
+                "title": "Verifieer de integratie opnieuw"
             },
             "trusted_device": {
                 "data": {
