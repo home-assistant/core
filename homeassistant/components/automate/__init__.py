@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .hub import PulseHub
 
-PLATFORMS = ["cover", "sensor"]
+PLATFORMS = ["cover"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -46,10 +46,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    if not await hub.async_reset():
-        return False
-
     if unload_ok:
+        if not await hub.async_reset():
+            return False
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

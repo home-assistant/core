@@ -65,8 +65,6 @@ htmlcov/
 test-reports/
 test-results.xml
 test-output.xml
-homeassistant-*
-homeassistant.egg*
 
 # Translations
 *.mo
