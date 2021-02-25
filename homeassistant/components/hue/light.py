@@ -212,6 +212,7 @@ def async_update_rooms(api, rooms):
     new_rooms = {}
     for item_id in api:
         group = api[item_id]
+        _LOGGER.debug("async_update_rooms: group: %s group type: %s", group, group.type)
         if group.type != GROUP_TYPE_ROOM:
             continue
         for light_id in group.lights:
