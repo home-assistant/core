@@ -28,7 +28,7 @@
             ]
         },
         {
-            "name": "Modbus Unit 77 register 27 bit 1 ON (overlaping OFFed bit mask 0x2)",
+            "name": "Modbus Unit 77 register 27 bit 1 ON (overlapping OFFed bit mask 0x2)",
             "register": 27,
             "unit": 77,
             "bit_mask": 2,

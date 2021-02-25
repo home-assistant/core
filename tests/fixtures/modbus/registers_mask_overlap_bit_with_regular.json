@@ -12,7 +12,7 @@
             ]
         },
         {
-            "name": "Modbus Unit 77 register 31 bit 0 OFF (overlap wiht 28-32)",
+            "name": "Modbus Unit 77 register 31 bit 0 OFF (overlap with 28-32)",
             "register": 31,
             "unit": 77,
             "bit_mask": 1,
