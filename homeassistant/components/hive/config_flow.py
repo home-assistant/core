@@ -99,7 +99,6 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_setup_hive_entry(self):
         """Finish setup and create the config entry."""
-        errors = {}
         self.data["tokens"] = self.tokens.get("AuthenticationResult")
 
         if "AccessToken" in self.data["tokens"]:
@@ -111,6 +110,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
             return self.async_create_entry(title=self.data["username"], data=self.data)
+
         raise UnknownHiveError
 
     async def async_step_reauth(self, user_input=None):
@@ -173,3 +173,5 @@ class HiveOptionsFlowHandler(config_entries.OptionsFlow):
 
 class UnknownHiveError(Exception):
     """Catch unknown hive error."""
+
+    pass
