@@ -100,10 +100,9 @@ async def test_user(hass, service):
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["placeholders"][CONF_URL] is None
 
 
-async def test_import_required(hass, autodetect_url, service):
+async def test_import_required(hass, service):
     """Test import step, with required config only."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD}
@@ -111,16 +110,15 @@ async def test_import_required(hass, autodetect_url, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) == URL
+    assert result["data"].get(CONF_URL) is None
     assert result["data"].get(CONF_HOST) is None
     assert result["data"].get(CONF_PORT) is None
     assert result["data"].get(CONF_SSL) is None
     assert result["data"].get(CONF_USERNAME) is None
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["placeholders"][CONF_URL] is None
 
 
-async def test_import_required_login_failed(hass, autodetect_url, service_failed):
+async def test_import_required_login_failed(hass, service_failed):
     """Test import step, with required config only, while wrong password or connection issue."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_PASSWORD: PASSWORD}
@@ -128,10 +126,9 @@ async def test_import_required_login_failed(hass, autodetect_url, service_failed
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "config"}
-    assert result["placeholders"][CONF_URL] is None
 
 
-async def test_import_all(hass, autodetect_url, service):
+async def test_import_all(hass, service):
     """Test import step, with all config provided."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -153,10 +150,9 @@ async def test_import_all(hass, autodetect_url, service):
     assert result["data"].get(CONF_SSL) == SSL
     assert result["data"].get(CONF_USERNAME) == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["placeholders"][CONF_URL] is None
 
 
-async def test_import_all_connection_failed(hass, autodetect_url, service_failed):
+async def test_import_all_connection_failed(hass, service_failed):
     """Test import step, with all config provided, while wrong host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -172,10 +168,9 @@ async def test_import_all_connection_failed(hass, autodetect_url, service_failed
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "config"}
-    assert result["placeholders"][CONF_URL] is None
 
 
-async def test_abort_if_already_setup(hass, autodetect_url, service):
+async def test_abort_if_already_setup(hass, service):
     """Test we abort if the router is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -191,7 +186,6 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert result["placeholders"][CONF_URL] is None
 
     # Should fail, same SERIAL (flow)
     result = await hass.config_entries.flow.async_init(
@@ -206,10 +200,9 @@ async def test_abort_if_already_setup(hass, autodetect_url, service):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert result["placeholders"][CONF_URL] is None
 
 
-async def test_form_ssdp_already_configured(hass):
+async def test_ssdp_already_configured(hass):
     """Test ssdp abort when the router is already configured."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -229,10 +222,9 @@ async def test_form_ssdp_already_configured(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert result["placeholders"][CONF_URL] == f"http://{HOST}"
 
 
-async def test_form_ssdp(hass, autodetect_url, service):
+async def test_ssdp(hass, service):
     """Test ssdp step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -253,10 +245,9 @@ async def test_form_ssdp(hass, autodetect_url, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) == URL
+    assert result["data"].get(CONF_URL) == HOST
     assert result["data"].get(CONF_HOST) is None
     assert result["data"].get(CONF_PORT) is None
     assert result["data"].get(CONF_SSL) is None
     assert result["data"].get(CONF_USERNAME) is None
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["placeholders"][CONF_URL] == f"http://{HOST}"

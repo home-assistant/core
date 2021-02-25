@@ -131,13 +131,13 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info):
-        """Handle a discovered device."""
+    async def async_step_ssdp(self, discovery_info: dict):
+        """Initialize flow from ssdp."""
         await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured()
 
         self.placeholders[CONF_NAME] = discovery_info[ssdp.ATTR_UPNP_MODEL_NUMBER]
-        self.placeholders[
-            CONF_URL
-        ] = f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/"
+        self.placeholders[CONF_URL] = urlparse(
+            discovery_info[ssdp.ATTR_SSDP_LOCATION]
+        ).hostname
         return await self._show_setup_form()

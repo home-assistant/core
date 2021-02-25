@@ -73,9 +73,9 @@ class NetgearRouter:
             self._url,
         )
 
-        await self.async_update_devices()
+        await self.async_update_device_trackers()
         self._unsub_dispatcher = async_track_time_interval(
-            self.hass, self.async_update_devices, SCAN_INTERVAL
+            self.hass, self.async_update_device_trackers, SCAN_INTERVAL
         )
 
     async def async_unload(self) -> None:
@@ -83,7 +83,7 @@ class NetgearRouter:
         self._unsub_dispatcher()
         self._unsub_dispatcher = None
 
-    async def async_update_devices(self, now=None) -> None:
+    async def async_update_device_trackers(self, now=None) -> None:
         """Update Netgear devices."""
         new_device = False
         ntg_devices: Dict[str, any] = await self.hass.async_add_executor_job(
