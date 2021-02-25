@@ -43,7 +43,7 @@ from .const import (
     OAUTH2_TOKEN,
 )
 from .data_handler import NetatmoDataHandler
-from .webhook import handle_webhook
+from .webhook import async_handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,18 +157,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
         try:
             webhook_register(
-                hass, DOMAIN, "Netatmo", entry.data[CONF_WEBHOOK_ID], handle_webhook
+                hass,
+                DOMAIN,
+                "Netatmo",
+                entry.data[CONF_WEBHOOK_ID],
+                async_handle_webhook,
             )
 
             async def handle_event(event):
                 """Handle webhook events."""
                 if event["data"]["push_type"] == "webhook_activation":
                     if activation_listener is not None:
-                        _LOGGER.debug("sub called")
                         activation_listener()
 
                     if activation_timeout is not None:
-                        _LOGGER.debug("Unsub called")
                         activation_timeout()
 
             activation_listener = async_dispatcher_connect(
