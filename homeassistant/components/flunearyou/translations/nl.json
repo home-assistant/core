@@ -6,6 +6,9 @@
         "error": {
             "unknown": "Onverwachte fout"
         },
+        "error": {
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "user": {
                 "data": {
