@@ -49,13 +49,15 @@ class XboxBaseSensorEntity(CoordinatorEntity):
         # Xbox sometimes returns a domain that uses a wrong certificate which creates issues
         # with loading the image.
         # The correct domain is images-eds-ssl which can just be replaced
-        # to point to the correct image, with the correct domain and certificate
-        # using YARL URL lib, we can replace the domain part of a url and append
-        # only the queries we need (url and format) and omit unnecessary ones (padding)
+        # to point to the correct image, with the correct domain and certificate.
+        # Using YARL URL lib, we can replace the domain part of an url and remove
+        # the padding query.
         url = URL(self.data.display_pic)
         if url.host == "images-eds.xboxlive.com":
             url = url.with_host("images-eds-ssl.xboxlive.com")
-        return str(url.with_query(url=url.query["url"], format=url.query["format"]))
+        query = dict(url.query)
+        query.pop("padding", None)
+        return str(url.with_query(query))
 
     @property
     def entity_registry_enabled_default(self) -> bool:
