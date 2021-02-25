@@ -59,7 +59,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_DEVELOPMENT = "0"
 # Cast to be able to load custom cards.
 # My to be able to check url and version info.
-DEFAULT_CORS = ["https://cast.home-assistant.io", "https://my.home-assistant.io"]
+DEFAULT_CORS = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
