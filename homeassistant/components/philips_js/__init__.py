@@ -110,6 +110,28 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
+    def __init__(self, hass, api: PhilipsTV) -> None:
+        """Set up the coordinator."""
+        self.api = api
+        self._notify_future: Optional[asyncio.Task] = None
+
+        @callback
+        def _update_listeners():
+            for update_callback in self._listeners:
+                update_callback()
+
+        self.turn_on = PluggableAction(_update_listeners)
+
+        super().__init__(
+            hass,
+            LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=30),
+            request_refresh_debouncer=Debouncer(
+                hass, LOGGER, cooldown=2.0, immediate=False
+            ),
+        )
+
     async def _notify_task(self):
         while self.api.on and self.api.notify_change_supported:
             if await self.api.notifyChange(130):
@@ -141,28 +163,6 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _async_stop_refresh(self, event: asyncio.Event) -> None:
         super()._async_stop_refresh(event)
         self._async_notify_stop()
-
-    def __init__(self, hass, api: PhilipsTV) -> None:
-        """Set up the coordinator."""
-        self.api = api
-        self._notify_future: Optional[asyncio.Task] = None
-
-        @callback
-        def _update_listeners():
-            for update_callback in self._listeners:
-                update_callback()
-
-        self.turn_on = PluggableAction(_update_listeners)
-
-        super().__init__(
-            hass,
-            LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=30),
-            request_refresh_debouncer=Debouncer(
-                hass, LOGGER, cooldown=2.0, immediate=False
-            ),
-        )
 
     @callback
     async def _async_update_data(self):
