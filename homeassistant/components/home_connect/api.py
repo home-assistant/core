@@ -442,7 +442,7 @@ class Oven(
                 program_finished,
             ],
             "switch": program_switches,
-            "sensor": program_sensors + op_state_sensor + oven_only_sensors,
+            "sensor": program_sensors + op_state_sensor + oven_temp_sensors,
         }
 
 
