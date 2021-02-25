@@ -406,6 +406,8 @@ class HueLight(CoordinatorEntity, LightEntity):
             "sw_version": self.light.raw["swversion"],
             "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
+
+        _LOGGER.debug("%s: Rooms: %s", self.entity_id, self._rooms)
         if self.device_id in self._rooms:
             info["suggested_area"] = self._rooms[self.device_id]
 
