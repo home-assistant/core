@@ -116,11 +116,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="pair", data_schema=schema, errors=errors
                 )
-            else:
-                return self.async_abort(
-                    reason="pairing_failure",
-                    description_placeholders={"error_id": exc.data.get("error_id")},
-                )
+
+            return self.async_abort(
+                reason="pairing_failure",
+                description_placeholders={"error_id": exc.data.get("error_id")},
+            )
 
         self._current[CONF_USERNAME] = username
         self._current[CONF_PASSWORD] = password
@@ -144,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
 
                 if "serialnumber" in hub.system:
-                    await self.async_set_unique_id(hub.system["serialnumber"])
+                    await self.async_seta_unique_id(hub.system["serialnumber"])
                     self._abort_if_unique_id_configured()
 
                 self._current[CONF_SYSTEM] = hub.system
