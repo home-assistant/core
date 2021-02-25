@@ -86,14 +86,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ent_reg = entity_registry.async_get(hass)
 
     @callback
-    def check_and_migrate_entity(
-        platform: str, old_unique_id: str, new_unique_id: str
-    ) -> None:
+    def migrate_entity(platform: str, old_unique_id: str, new_unique_id: str) -> None:
         """Check if entity with old unique ID exists, and if so migrate it to new ID."""
         if entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id):
             LOGGER.debug(
-                "Entity %s is using old unique ID, migrating to new one",
+                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
                 entity_id,
+                old_unique_id,
+                new_unique_id,
             )
             ent_reg.async_update_entity(
                 entity_id,
@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     disc_info.platform != "binary_sensor"
                     or disc_info.platform_hint != "notification"
                 ):
-                    check_and_migrate_entity(
+                    migrate_entity(
                         disc_info.platform, f"{old_unique_id}", f"{new_unique_id}"
                     )
                     continue
@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     if state_key == "0":
                         continue
 
-                    check_and_migrate_entity(
+                    migrate_entity(
                         disc_info.platform,
                         f"{old_unique_id}.{state_key}",
                         f"{new_unique_id}.{state_key}",
