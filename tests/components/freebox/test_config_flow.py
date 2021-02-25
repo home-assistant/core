@@ -10,13 +10,32 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
 HOST = "myrouter.freeboxos.fr"
 PORT = 1234
+
+MOCK_ZEROCONF_DATA = {
+    "host": "192.168.0.254",
+    "port": 80,
+    "hostname": "Freebox-Server.local.",
+    "type": "_fbx-api._tcp.local.",
+    "name": "Freebox Server._fbx-api._tcp.local.",
+    "properties": {
+        "api_version": "8.0",
+        "device_type": "FreeboxServer1,2",
+        "api_base_url": "/api/",
+        "uid": "b15ab20debb399f95001a9ca207d2777",
+        "https_available": "1",
+        "https_port": f"{PORT}",
+        "box_model": "fbxgw-r2/full",
+        "box_model_name": "Freebox Server (r2)",
+        "api_domain": HOST,
+    },
+}
 
 
 @pytest.fixture(name="connect")
@@ -66,12 +85,12 @@ async def test_import(hass):
     assert result["step_id"] == "link"
 
 
-async def test_discovery(hass):
-    """Test discovery step."""
+async def test_zeroconf(hass):
+    """Test zeroconf step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_DISCOVERY},
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        context={"source": SOURCE_ZEROCONF},
+        data=MOCK_ZEROCONF_DATA,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"

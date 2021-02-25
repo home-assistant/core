@@ -242,9 +242,6 @@ construct==2.10.56
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
 
-# homeassistant.scripts.credstash
-# credstash==1.15.0
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -355,7 +352,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.1.5
+gios==0.2.0
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -446,7 +443,7 @@ hyperion-py==0.7.0
 iaqualink==0.3.4
 
 # homeassistant.components.ping
-icmplib==2.0
+icmplib==2.0.2
 
 # homeassistant.components.influxdb
 influxdb-client==1.14.0
@@ -457,12 +454,6 @@ influxdb==5.2.3
 # homeassistant.components.rest
 # homeassistant.components.verisure
 jsonpath==0.82
-
-# homeassistant.scripts.keyring
-keyring==21.2.0
-
-# homeassistant.scripts.keyring
-keyrings.alt==3.4.0
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -871,7 +862,7 @@ pyotgw==1.0b1
 pyotp==2.3.0
 
 # homeassistant.components.openweathermap
-pyowm==3.1.1
+pyowm==3.2.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
