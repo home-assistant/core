@@ -201,7 +201,7 @@ async def test_unique_id_migration_notification_binary_sensor(
     # Create entity RegistryEntry using old unique ID format
     old_unique_id = f"{client.driver.controller.home_id}.52.52-113-00-Home Security-Motion sensor status.8"
     entity_entry = ent_reg.async_get_or_create(
-        "sensor",
+        "binary_sensor",
         DOMAIN,
         old_unique_id,
         suggested_object_id=entity_name,
