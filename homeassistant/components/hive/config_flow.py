@@ -62,7 +62,10 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return await self.async_step_2fa()
 
                 # Complete the entry setup.
-                return await self.async_step_finish()
+                try:
+                    return await self.async_setup_hive_entry()
+                except UnknownHiveError:
+                    errors["base"] = "unknown"
 
         # Show User Input form.
         schema = vol.Schema(
@@ -86,14 +89,16 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
             elif "AuthenticationResult" in result:
                 self.tokens = result
-                return await self.async_step_finish()
+                try:
+                    return await self.async_setup_hive_entry()
+                except UnknownHiveError:
+                    errors["base"] = "unknown"
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
-    async def async_step_finish(self):
+    async def async_setup_hive_entry(self):
         """Finish setup and create the config entry."""
-        errors = {}
         self.data["tokens"] = self.tokens.get("AuthenticationResult")
 
         if "AccessToken" in self.data["tokens"]:
@@ -106,11 +111,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="reauth_successful")
             return self.async_create_entry(title=self.data["username"], data=self.data)
 
-        errors["base"] = "unknown"
-        schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-        )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        raise UnknownHiveError
 
     async def async_step_reauth(self, user_input=None):
         """Re Authenticate a user."""
@@ -168,3 +169,9 @@ class HiveOptionsFlowHandler(config_entries.OptionsFlow):
             {vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): int}
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+
+class UnknownHiveError(Exception):
+    """Catch unknown hive error."""
+
+    pass
