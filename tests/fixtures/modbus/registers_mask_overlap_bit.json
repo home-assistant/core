@@ -1,0 +1,61 @@
+[
+    [
+        {
+            "name": "Modbus Unit 77 register 27 bit 0 ON",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 1,
+            "data": [
+                1
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 27 bit 1 OFF",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 2,
+            "data": [
+                0
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 27 bit 2 ON",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 4,
+            "data": [
+                1
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 27 bit 1 ON (overlaping OFFed bit mask 0x2)",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 2,
+            "data": [
+                1
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 28",
+            "register": 28,
+            "unit": 77,
+            "data": [
+                33,
+                34,
+                35,
+                36
+            ]
+        },
+        {
+            "name": "Modbus Unit 78 register 25",
+            "register": 25,
+            "unit": 78,
+            "data": [
+                44
+            ]
+        }
+    ],
+    {
+    }
+]

@@ -1,0 +1,98 @@
+[
+    [
+        {
+            "name": "Modbus Unit 77 register 27 bit 0 ON",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 1,
+            "data": [
+                1
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 27 bit 1 OFF",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 2,
+            "data": [
+                0
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 27 bit 2 ON",
+            "register": 27,
+            "unit": 77,
+            "bit_mask": 4,
+            "data": [
+                1
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 28",
+            "register": 28,
+            "unit": 77,
+            "data": [
+                33,
+                34,
+                35,
+                36
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 32 (mask is 0xFF00_0000 so skip reg 32 and set reg 33 to 0xFF00 which is 65280)",
+            "register": 32,
+            "unit": 77,
+            "bit_mask": 4278190080,
+            "data": [
+                65535,
+                65535
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 32 (reg 32 not occupied by the ^^ due to the 0xFF00_0000 mask)",
+            "register": 32,
+            "unit": 77,
+            "data": [
+                48000
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 34 (8 bytes. note data acts as ON/OFF if bit_mask is set to set the bit mask portion in the registers. note the last value is 0xF00F)",
+            "register": 34,
+            "unit": 77,
+            "bit_mask": 17298326168730075135,
+            "data": [
+                32768,
+                32769,
+                32770,
+                32771
+            ]
+        },
+        {
+            "name": "Modbus Unit 78 register 25",
+            "register": 25,
+            "unit": 78,
+            "data": [
+                44
+            ]
+        }
+    ],
+    {
+        "77": {
+            "27": 5,
+            "28": 33,
+            "29": 34,
+            "30": 35,
+            "31": 36,
+            "32": 48000,
+            "33": 65280,
+            "34": 65535,
+            "35": 65535,
+            "36": 65535,
+            "37": 61455
+        },
+        "78": {
+            "25": 44
+        }
+    }
+]

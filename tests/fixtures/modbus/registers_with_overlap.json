@@ -1,0 +1,33 @@
+[
+    [
+        {
+            "name": "Modbus Unit 77 register 27",
+            "register": 27,
+            "unit": 77,
+            "data": [
+                32
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 25",
+            "register": 24,
+            "unit": 77,
+            "data": [
+                33,
+                34,
+                35,
+                36
+            ]
+        },
+        {
+            "name": "Modbus Unit 78 register 25",
+            "register": 25,
+            "unit": 78,
+            "data": [
+                44
+            ]
+        }
+    ],
+    {
+    }
+]

@@ -136,6 +136,9 @@ class ModbusServerHub(BaseModbusHub):
         with self._lock:
             self._block = build_server_blocks(self._entities)
 
+        if self._block is None:
+            return
+
         slaves = {
             unit: ModbusSlaveContext(
                 di=self._block[unit],

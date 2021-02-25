@@ -1,0 +1,34 @@
+[
+    [
+        {
+            "name": "Modbus Unit 77 register 28",
+            "register": 28,
+            "unit": 77,
+            "data": [
+                33,
+                34,
+                35,
+                36
+            ]
+        },
+        {
+            "name": "Modbus Unit 77 register 31 bit 0 OFF (overlap wiht 28-32)",
+            "register": 31,
+            "unit": 77,
+            "bit_mask": 1,
+            "data": [
+                0
+            ]
+        },
+        {
+            "name": "Modbus Unit 78 register 25",
+            "register": 25,
+            "unit": 78,
+            "data": [
+                44
+            ]
+        }
+    ],
+    {
+    }
+]
