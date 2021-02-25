@@ -12,7 +12,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
 from homeassistant.util.dt import utcnow
 
-from .conftest import setup_hub
+from .conftest import setup_integration
 
 from tests.common import async_fire_time_changed
 
@@ -20,9 +20,9 @@ NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
 
 
-async def test_switch(hass, mock_hub):
+async def test_switch(hass, mock_account):
     """Tests the switch entity was set up."""
-    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
     switch = hass.states.get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert switch
@@ -36,9 +36,9 @@ async def test_switch(hass, mock_hub):
         (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout"),
     ],
 )
-async def test_on_off_commands(hass, mock_hub, entity_id, robot_command):
+async def test_on_off_commands(hass, mock_account, entity_id, robot_command):
     """Test sending commands to the switch."""
-    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
     switch = hass.states.get(entity_id)
     assert switch
@@ -48,12 +48,14 @@ async def test_on_off_commands(hass, mock_hub, entity_id, robot_command):
     count = 0
     for service in [SERVICE_TURN_ON, SERVICE_TURN_OFF]:
         count += 1
+
         await hass.services.async_call(
             PLATFORM_DOMAIN,
             service,
             data,
             blocking=True,
         )
+
         future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME)
         async_fire_time_changed(hass, future)
-        assert getattr(mock_hub.account.robots[0], robot_command).call_count == count
+        assert getattr(mock_account.robots[0], robot_command).call_count == count

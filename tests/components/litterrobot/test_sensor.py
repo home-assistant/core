@@ -2,14 +2,14 @@
 from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import PERCENTAGE
 
-from .conftest import setup_hub
+from .conftest import setup_integration
 
 ENTITY_ID = "sensor.test_waste_drawer"
 
 
-async def test_sensor(hass, mock_hub):
+async def test_sensor(hass, mock_account):
     """Tests the sensor entity was set up."""
-    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
     sensor = hass.states.get(ENTITY_ID)
     assert sensor

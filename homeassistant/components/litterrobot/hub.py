@@ -4,11 +4,11 @@ import logging
 from types import MethodType
 from typing import Any, Optional
 
-from pylitterbot import Account, Robot
+import pylitterbot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -49,7 +49,7 @@ class LitterRobotHub:
     async def login(self, load_robots: bool = False):
         """Login to Litter-Robot."""
         self.logged_in = False
-        self.account = Account()
+        self.account = pylitterbot.Account()
         try:
             await self.account.connect(
                 username=self._data[CONF_USERNAME],
@@ -69,7 +69,7 @@ class LitterRobotHub:
 class LitterRobotEntity(CoordinatorEntity):
     """Generic Litter-Robot entity representing common data and methods."""
 
-    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub):
+    def __init__(self, robot: pylitterbot.Robot, entity_type: str, hub: LitterRobotHub):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
@@ -101,10 +101,13 @@ class LitterRobotEntity(CoordinatorEntity):
 
     async def perform_action_and_refresh(self, action: MethodType, *args: Any):
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
+
+        @callback
+        async def async_call_later_callback(*_) -> None:
+            await self.hub.coordinator.async_request_refresh()
+
         await action(*args)
-        async_call_later(
-            self.hass, REFRESH_WAIT_TIME, self.hub.coordinator.async_request_refresh
-        )
+        async_call_later(self.hass, REFRESH_WAIT_TIME, async_call_later_callback)
 
     @staticmethod
     def parse_time_at_default_timezone(time_str: str) -> Optional[time]:
