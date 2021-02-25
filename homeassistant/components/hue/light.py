@@ -208,18 +208,15 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
 @callback
 def async_update_rooms(api, rooms):
     """Update rooms."""
-    _LOGGER.debug("async_update_rooms: api: %s rooms: %s", api, rooms)
     new_rooms = {}
     for item_id in api:
         group = api[item_id]
-        _LOGGER.debug("async_update_rooms: group: %s group type: %s", group, group.type)
         if group.type != GROUP_TYPE_ROOM:
             continue
         for light_id in group.lights:
-            rooms[light_id] = group.name
+            new_rooms[light_id] = group.name
     rooms.clear()
     rooms.update(new_rooms)
-    _LOGGER.debug("did async_update_rooms: api: %s rooms: %s", api, rooms)
 
 
 def hue_brightness_to_hass(value):
