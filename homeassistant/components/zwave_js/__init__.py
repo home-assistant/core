@@ -117,17 +117,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # (and get_old_value_id helper) can be removed.
             # Beta users may have a different unique ID from what we expect, so let's
             # make all entities have the same format
-            old_unique_ids = [
+            value_ids = [
                 # 2021.2.* format
-                get_unique_id(
-                    client.driver.controller.home_id,
-                    get_old_value_id(disc_info.primary_value),
-                ),
+                get_old_value_id(disc_info.primary_value),
                 # 2021.3.0b0 format
-                get_unique_id(
-                    client.driver.controller.home_id,
-                    f"{disc_info.primary_value.node.node_id}.{disc_info.primary_value.value_id}",
-                ),
+                disc_info.primary_value.value_id,
             ]
 
             new_unique_id = get_unique_id(
@@ -135,7 +129,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 disc_info.primary_value.value_id,
             )
 
-            for unique_id in old_unique_ids:
+            for value_id in value_ids:
+                old_unique_id = (
+                    get_unique_id(
+                        client.driver.controller.home_id,
+                        f"{disc_info.primary_value.node.node_id}.{value_id}",
+                    ),
+                )
                 # Most entities have the same ID format, but notification binary sensors
                 # have a state key in their ID
                 if (
@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     or disc_info.platform_hint != "notification"
                 ):
                     check_and_migrate_entity(
-                        disc_info.platform, f"{unique_id}", f"{new_unique_id}"
+                        disc_info.platform, f"{old_unique_id}", f"{new_unique_id}"
                     )
                     continue
 
@@ -154,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
                     check_and_migrate_entity(
                         disc_info.platform,
-                        f"{unique_id}.{state_key}",
+                        f"{old_unique_id}.{state_key}",
                         f"{new_unique_id}.{state_key}",
                     )
 
