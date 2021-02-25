@@ -3,7 +3,12 @@
 import pypck
 
 from homeassistant.components.climate import ClimateEntity, const
-from homeassistant.const import ATTR_TEMPERATURE, CONF_ADDRESS, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_ADDRESS,
+    CONF_SOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+)
 
 from . import LcnEntity
 from .const import (
@@ -12,7 +17,6 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_SETPOINT,
-    CONF_SOURCE,
     DATA_LCN,
 )
 from .helpers import get_connection

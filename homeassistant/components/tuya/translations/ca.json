@@ -40,8 +40,10 @@
                     "max_temp": "Temperatura desitjada m\u00e0xima (utilitza min i max = 0 per defecte)",
                     "min_kelvin": "Temperatura del color m\u00ednima suportada, en Kelvin",
                     "min_temp": "Temperatura desitjada m\u00ednima (utilitza min i max = 0 per defecte)",
+                    "set_temp_divided": "Utilitza el valor de temperatura dividit per a ordres de configuraci\u00f3 de temperatura",
                     "support_color": "For\u00e7a el suport de color",
                     "temp_divider": "Divisor del valor de temperatura (0 = predeterminat)",
+                    "temp_step_override": "Pas de temperatura objectiu",
                     "tuya_max_coltemp": "Temperatura de color m\u00e0xima enviada pel dispositiu",
                     "unit_of_measurement": "Unitat de temperatura utilitzada pel dispositiu"
                 },

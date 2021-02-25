@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 2021
-MINOR_VERSION = 2
+MINOR_VERSION = 4
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -202,6 +202,7 @@ CONF_ZONE = "zone"
 # #### EVENTS ####
 EVENT_CALL_SERVICE = "call_service"
 EVENT_COMPONENT_LOADED = "component_loaded"
+EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED = "config_entry_disabled_by_updated"
 EVENT_CORE_CONFIG_UPDATE = "core_config_updated"
 EVENT_HOMEASSISTANT_CLOSE = "homeassistant_close"
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -209,7 +210,6 @@ EVENT_HOMEASSISTANT_STARTED = "homeassistant_started"
 EVENT_HOMEASSISTANT_STOP = "homeassistant_stop"
 EVENT_HOMEASSISTANT_FINAL_WRITE = "homeassistant_final_write"
 EVENT_LOGBOOK_ENTRY = "logbook_entry"
-EVENT_PLATFORM_DISCOVERED = "platform_discovered"
 EVENT_SERVICE_REGISTERED = "service_registered"
 EVENT_SERVICE_REMOVED = "service_removed"
 EVENT_STATE_CHANGED = "state_changed"
@@ -311,9 +311,6 @@ CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
-
-# Contains the information that is discovered
-ATTR_DISCOVERED = "discovered"
 
 # Location of the device/sensor
 ATTR_LOCATION = "location"

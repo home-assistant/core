@@ -1,14 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
-            "cannot_connect": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {
                 "data": {
                     "password": "Passwort",
-                    "pin": "PIN Code",
+                    "pin": "PIN-Code",
                     "username": "Benutzername"
                 }
             }
@@ -16,6 +20,12 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "code_arm_required": "PIN-Code zum Entsperren vorgeben",
+                    "code_disarm_required": "PIN-Code zum Entsperren vorgeben"
+                }
+            },
             "risco_to_ha": {
                 "data": {
                     "A": "Gruppe A",

@@ -80,7 +80,7 @@ class Outlet(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state):
@@ -131,7 +131,7 @@ class Switch(HomeAccessory):
             return
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.call_service(self._domain, service, params)
+        self.async_call_service(self._domain, service, params)
 
         if self.activate_only:
             call_later(self.hass, 1, self.reset_switch)
@@ -169,7 +169,9 @@ class Vacuum(Switch):
             sup_return_home = features & SUPPORT_RETURN_HOME
             service = SERVICE_RETURN_TO_BASE if sup_return_home else SERVICE_TURN_OFF
 
-        self.call_service(VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id})
+        self.async_call_service(
+            VACUUM_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
+        )
 
     @callback
     def async_update_state(self, new_state):
@@ -209,7 +211,7 @@ class Valve(HomeAccessory):
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state):

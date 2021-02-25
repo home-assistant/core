@@ -1,0 +1,61 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "No s'ha pogut obtenir la informaci\u00f3 de descobriment del complement Z-Wave JS.",
+            "addon_info_failed": "No s'ha pogut obtenir la informaci\u00f3 del complement Z-Wave JS.",
+            "addon_install_failed": "No s'ha pogut instal\u00b7lar el complement Z-Wave JS.",
+            "addon_missing_discovery_info": "Falta la informaci\u00f3 de descobriment del complement Z-Wave JS.",
+            "addon_set_config_failed": "No s'ha pogut establir la configuraci\u00f3 de Z-Wave JS.",
+            "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS.",
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "addon_start_failed": "No s'ha pogut iniciar el complement Z-Wave JS. Comprova la configuraci\u00f3.",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_ws_url": "URL del websocket inv\u00e0lid",
+            "unknown": "Error inesperat"
+        },
+        "progress": {
+            "install_addon": "Espera mentre finalitza la instal\u00b7laci\u00f3 del complement Z-Wave JS. Pot tardar uns quants minuts.",
+            "start_addon": "Espera mentre es completa la inicialitzaci\u00f3 del complement Z-Wave JS. Pot tardar uns segons."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Clau de xarxa",
+                    "usb_path": "Ruta del port USB del dispositiu"
+                },
+                "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
+            },
+            "hassio_confirm": {
+                "title": "Configura la integraci\u00f3 Z-Wave JS mitjan\u00e7ant el complement Z-Wave JS"
+            },
+            "install_addon": {
+                "title": "Ha comen\u00e7at la instal\u00b7laci\u00f3 del complement Z-Wave JS"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Utilitza el complement Z-Wave JS Supervisor"
+                },
+                "description": "Vols utilitzar el complement Supervisor de Z-Wave JS?",
+                "title": "Selecciona el m\u00e8tode de connexi\u00f3"
+            },
+            "start_addon": {
+                "title": "El complement Z-Wave JS s'est\u00e0 iniciant."
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "title": "Z-Wave JS"
+}

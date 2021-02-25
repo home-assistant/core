@@ -1,5 +1,6 @@
 """Test the Lutron Caseta config flow."""
 import asyncio
+import ssl
 from unittest.mock import AsyncMock, patch
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY
@@ -20,6 +21,14 @@ from homeassistant.components.zeroconf import ATTR_HOSTNAME
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
+
+EMPTY_MOCK_CONFIG_ENTRY = {
+    CONF_HOST: "",
+    CONF_KEYFILE: "",
+    CONF_CERTFILE: "",
+    CONF_CA_CERTS: "",
+}
+
 
 MOCK_ASYNC_PAIR_SUCCESS = {
     PAIR_KEY: "mock_key",
@@ -115,21 +124,34 @@ async def test_bridge_cannot_connect(hass):
 async def test_bridge_cannot_connect_unknown_error(hass):
     """Test checking for connection and encountering an unknown error."""
 
-    entry_mock_data = {
-        CONF_HOST: "",
-        CONF_KEYFILE: "",
-        CONF_CERTFILE: "",
-        CONF_CA_CERTS: "",
-    }
-
     with patch.object(Smartbridge, "create_tls") as create_tls:
         mock_bridge = MockBridge()
-        mock_bridge.connect = AsyncMock(side_effect=Exception())
+        mock_bridge.connect = AsyncMock(side_effect=asyncio.TimeoutError)
         create_tls.return_value = mock_bridge
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=entry_mock_data,
+            data=EMPTY_MOCK_CONFIG_ENTRY,
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == STEP_IMPORT_FAILED
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
+
+
+async def test_bridge_invalid_ssl_error(hass):
+    """Test checking for connection and encountering invalid ssl certs."""
+
+    with patch.object(Smartbridge, "create_tls", side_effect=ssl.SSLError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=EMPTY_MOCK_CONFIG_ENTRY,
         )
 
     assert result["type"] == "form"
@@ -351,23 +373,25 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(hass, tmpdir)
     assert result["errors"] is None
     assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "1.1.1.1",
-        },
-    )
-    await hass.async_block_till_done()
+    with patch.object(Smartbridge, "create_tls") as create_tls:
+        create_tls.return_value = MockBridge(can_connect=True)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
     assert result2["type"] == "form"
     assert result2["step_id"] == "link"
 
-    with patch.object(Smartbridge, "create_tls") as create_tls, patch(
+    with patch(
         "homeassistant.components.lutron_caseta.async_setup", return_value=True
     ), patch(
         "homeassistant.components.lutron_caseta.async_setup_entry",
         return_value=True,
     ):
-        create_tls.return_value = MockBridge(can_connect=True)
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {},

@@ -10,7 +10,7 @@
             "step": {
                 "init": {
                     "description": "Vali \u00fcks teavitusteenustest:",
-                    "title": "Seadistage Notify poolt edastatud \u00fchekordne parool"
+                    "title": "Seadista Notify poolt edastatud \u00fchekordne parool"
                 },
                 "setup": {
                     "description": "\u00dchekordne parool on saadetud **notify. {notify_service}**. Palun sisesta see allpool:",
@@ -26,7 +26,7 @@
             "step": {
                 "init": {
                     "description": "Kahefaktorilise autentimise aktiveerimiseks ajap\u00f5histe \u00fchekordsete paroolide abil skanni QR-kood oma autentimisrakendusega. Kui seda pole, soovitame kas [Google Authenticator] (https://support.google.com/accounts/answer/1066447) v\u00f5i [Authy] (https://authy.com/).\n\n {qr_code}\n\n P\u00e4rast koodi skannimist sisesta seadistuse kinnitamiseks rakenduse kuuekohaline kood. Kui on probleeme QR-koodi skannimisega, tehke koodiga **' {code}' ** k\u00e4sitsi seadistamine.",
-                    "title": "Seadistage TOTP-ga kaheastmeline autentimine"
+                    "title": "Seadista TOTP-ga kaheastmeline autentimine"
                 }
             },
             "title": ""

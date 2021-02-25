@@ -1,7 +1,12 @@
 """Support for Alexa skill service end point."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_NAME,
+    CONF_PASSWORD,
+)
 from homeassistant.helpers import config_validation as cv, entityfilter
 
 from . import flash_briefings, intent, smart_home_http
@@ -14,7 +19,6 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_LOCALE,
-    CONF_PASSWORD,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,

@@ -38,6 +38,8 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_NAME,
+    CONF_PAYLOAD_OFF,
+    CONF_PAYLOAD_ON,
     CONF_TEMPERATURE_UNIT,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
@@ -98,8 +100,6 @@ CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
 CONF_MODE_STATE_TEMPLATE = "mode_state_template"
 CONF_MODE_STATE_TOPIC = "mode_state_topic"
-CONF_PAYLOAD_OFF = "payload_off"
-CONF_PAYLOAD_ON = "payload_on"
 CONF_POWER_COMMAND_TOPIC = "power_command_topic"
 CONF_POWER_STATE_TEMPLATE = "power_state_template"
 CONF_POWER_STATE_TOPIC = "power_state_topic"
@@ -274,7 +274,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT climate device dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

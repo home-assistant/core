@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Keine Google Cast Ger\u00e4te im Netzwerk gefunden.",
-            "single_instance_allowed": "Nur eine einzige Konfiguration von Google Cast ist notwendig."
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden.",
+            "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine Konfiguration m\u00f6glich."
         },
         "step": {
             "confirm": {

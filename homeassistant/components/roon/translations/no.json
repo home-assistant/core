@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Vert"
                 },
-                "description": "Vennligst skriv inn Roon-serverens vertsnavn eller IP."
+                "description": "Kunne ikke oppdage Roon-serveren. Angi vertsnavnet eller IP-adressen."
             }
         }
     }

@@ -64,7 +64,8 @@
                     "off_delay": "D\u00e9lai d'arr\u00eat",
                     "off_delay_enabled": "Activer le d\u00e9lai d'arr\u00eat",
                     "replace_device": "S\u00e9lectionnez l'appareil \u00e0 remplacer",
-                    "signal_repetitions": "Nombre de r\u00e9p\u00e9titions du signal"
+                    "signal_repetitions": "Nombre de r\u00e9p\u00e9titions du signal",
+                    "venetian_blind_mode": "Mode store v\u00e9nitien"
                 },
                 "title": "Configurer les options de l'appareil"
             }

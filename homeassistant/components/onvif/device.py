@@ -250,14 +250,14 @@ class ONVIFDevice:
         pullpoint = False
         try:
             pullpoint = await self.events.async_start()
-        except (ONVIFError, Fault):
+        except (ONVIFError, Fault, RequestError):
             pass
 
         ptz = False
         try:
             self.device.get_definition("ptz")
             ptz = True
-        except ONVIFError:
+        except (ONVIFError, Fault, RequestError):
             pass
 
         return Capabilities(snapshot, pullpoint, ptz)
