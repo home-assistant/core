@@ -6,6 +6,7 @@
             "addon_install_failed": "Z-Wave JS lisandmooduli paigaldamine nurjus.",
             "addon_missing_discovery_info": "Z-Wave JS lisandmooduli tuvastusteave puudub.",
             "addon_set_config_failed": "Z-Wave JS konfiguratsiooni m\u00e4\u00e4ramine nurjus.",
+            "addon_start_failed": "Z-Wave JS-i lisandmooduli k\u00e4ivitamine nurjus.",
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
             "cannot_connect": "\u00dchendamine nurjus"
@@ -17,7 +18,8 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "progress": {
-            "install_addon": "Palun oota kuni Z-Wave JS lisandmoodul on paigaldatud. See v\u00f5ib v\u00f5tta mitu minutit."
+            "install_addon": "Palun oota kuni Z-Wave JS lisandmoodul on paigaldatud. See v\u00f5ib v\u00f5tta mitu minutit.",
+            "start_addon": "Palun oota kuni Z-Wave JS lisandmooduli ak\u00e4ivitumine l\u00f5ppeb. See v\u00f5ib v\u00f5tta m\u00f5ned sekundid."
         },
         "step": {
             "configure_addon": {
@@ -44,6 +46,9 @@
                 },
                 "description": "Kas soovid kasutada Z-Wave JSi halduri lisandmoodulit?",
                 "title": "Vali \u00fchendusviis"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS lisandmoodul k\u00e4ivitub."
             },
             "user": {
                 "data": {
