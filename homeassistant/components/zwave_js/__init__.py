@@ -86,6 +86,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ent_reg = entity_registry.async_get(hass)
 
     @callback
+    def migrate_entity(platform: str, old_unique_id: str, new_unique_id: str) -> None:
+        """Check if entity with old unique ID exists, and if so migrate it to new ID."""
+        if entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id):
+            LOGGER.debug(
+                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            ent_reg.async_update_entity(
+                entity_id,
+                new_unique_id=new_unique_id,
+            )
+
+    @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
@@ -97,26 +112,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
 
-            # This migration logic was added in 2021.3 to handle breaking change to
-            # value_id format. Some time in the future, this code block
-            # (and get_old_value_id helper) can be removed.
-            old_value_id = get_old_value_id(disc_info.primary_value)
-            old_unique_id = get_unique_id(
-                client.driver.controller.home_id, old_value_id
+            # This migration logic was added in 2021.3 to handle a breaking change to
+            # the value_id format. Some time in the future, this code block
+            # (as well as get_old_value_id helper and migrate_entity closure) can be
+            # removed.
+            value_ids = [
+                # 2021.2.* format
+                get_old_value_id(disc_info.primary_value),
+                # 2021.3.0b0 format
+                disc_info.primary_value.value_id,
+            ]
+
+            new_unique_id = get_unique_id(
+                client.driver.controller.home_id,
+                disc_info.primary_value.value_id,
             )
-            if entity_id := ent_reg.async_get_entity_id(
-                disc_info.platform, DOMAIN, old_unique_id
-            ):
-                LOGGER.debug(
-                    "Entity %s is using old unique ID, migrating to new one", entity_id
+
+            for value_id in value_ids:
+                old_unique_id = get_unique_id(
+                    client.driver.controller.home_id,
+                    f"{disc_info.primary_value.node.node_id}.{value_id}",
                 )
-                ent_reg.async_update_entity(
-                    entity_id,
-                    new_unique_id=get_unique_id(
-                        client.driver.controller.home_id,
-                        disc_info.primary_value.value_id,
-                    ),
-                )
+                # Most entities have the same ID format, but notification binary sensors
+                # have a state key in their ID so we need to handle them differently
+                if (
+                    disc_info.platform == "binary_sensor"
+                    and disc_info.platform_hint == "notification"
+                ):
+                    for state_key in disc_info.primary_value.metadata.states:
+                        # ignore idle key (0)
+                        if state_key == "0":
+                            continue
+
+                        migrate_entity(
+                            disc_info.platform,
+                            f"{old_unique_id}.{state_key}",
+                            f"{new_unique_id}.{state_key}",
+                        )
+
+                    # Once we've iterated through all state keys, we can move on to the
+                    # next item
+                    continue
+
+                migrate_entity(disc_info.platform, old_unique_id, new_unique_id)
 
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
