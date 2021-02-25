@@ -584,10 +584,10 @@ async def test_light_turn_on_service(hass, mock_bridge):
         {"entity_id": "light.hue_lamp_2", "brightness": 100, "color_temp": 300},
         blocking=True,
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
 
-    assert mock_bridge.mock_requests[1]["json"] == {
+    assert mock_bridge.mock_requests[2]["json"] == {
         "bri": 100,
         "on": True,
         "ct": 300,
@@ -608,9 +608,9 @@ async def test_light_turn_on_service(hass, mock_bridge):
         blocking=True,
     )
 
-    assert len(mock_bridge.mock_requests) == 5
+    assert len(mock_bridge.mock_requests) == 6
 
-    assert mock_bridge.mock_requests[3]["json"] == {
+    assert mock_bridge.mock_requests[4]["json"] == {
         "on": True,
         "xy": (0.138, 0.08),
         "alert": "none",
