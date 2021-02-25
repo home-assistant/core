@@ -253,8 +253,8 @@ async def test_lights_color_mode(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.hue_lamp_2"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
 
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
@@ -339,7 +339,7 @@ async def test_new_light_discovered(hass, mock_bridge):
     mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
 
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    assert len(mock_bridge.mock_requests) == 2
     assert len(hass.states.async_all()) == 2
 
     new_light_response = dict(LIGHT_RESPONSE)
