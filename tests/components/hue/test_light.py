@@ -415,7 +415,7 @@ async def test_light_removed(hass, mock_bridge):
     mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
 
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    assert len(mock_bridge.mock_requests) == 2
     assert len(hass.states.async_all()) == 2
 
     mock_bridge.mock_light_responses.clear()
@@ -426,8 +426,8 @@ async def test_light_removed(hass, mock_bridge):
         "light", "turn_on", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
 
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
+    # 2x light update, 1 group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 1
 
     light = hass.states.get("light.hue_lamp_1")
