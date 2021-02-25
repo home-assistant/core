@@ -365,24 +365,26 @@ class CoverTemplate(TemplateEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
-        if self._open_script:
-            await self._open_script.async_run(context=self._context)
-        elif self._position_script:
-            await self._position_script.async_run(
-                {"position": 100}, context=self._context
-            )
+        if self._optimistic or (not self._optimistic and self._position != 0):
+            if self._open_script:
+                await self._open_script.async_run(context=self._context)
+            elif self._position_script:
+                await self._position_script.async_run(
+                    {"position": 100}, context=self._context
+                )
         if self._optimistic:
             self._position = 100
             self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs):
         """Move the cover down."""
-        if self._close_script:
-            await self._close_script.async_run(context=self._context)
-        elif self._position_script:
-            await self._position_script.async_run(
-                {"position": 0}, context=self._context
-            )
+        if self._optimistic or (not self._optimistic and self._position != 100):
+            if self._close_script:
+                await self._close_script.async_run(context=self._context)
+            elif self._position_script:
+                await self._position_script.async_run(
+                    {"position": 0}, context=self._context
+                )
         if self._optimistic:
             self._position = 0
             self.async_write_ha_state()
