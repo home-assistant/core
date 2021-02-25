@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from homeassistant.components.deconz.const import CONF_ALLOW_CLIP_SENSOR
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -239,6 +240,142 @@ async def test_add_battery_later(hass, aioclient_mock):
     assert len(remote._callbacks) == 2  # Event and battery entity
 
     assert hass.states.get("sensor.switch_1_battery_level")
+
+
+async def test_special_danfoss_battery_creation(hass, aioclient_mock):
+    """Test the special Danfoss battery creation works.
+
+    Normally there should only be one battery sensor per device from deCONZ.
+    With specific Danfoss devices each endpoint can report its own battery state.
+    """
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["sensors"] = {
+        "1": {
+            "config": {
+                "battery": 70,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 1,
+            "etag": "982d9acc38bee5b251e24a9be26558e4",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": "0x8030",
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:07.994",
+                "on": False,
+                "temperature": 2307,
+            },
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-01-0201",
+        },
+        "2": {
+            "config": {
+                "battery": 86,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 2,
+            "etag": "62f12749f9f51c950086aff37dd02b61",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": "0x8030",
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:22.399",
+                "on": False,
+                "temperature": 2316,
+            },
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-02-0201",
+        },
+        "3": {
+            "config": {
+                "battery": 86,
+                "heatsetpoint": 2350,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 3,
+            "etag": "f50061174bb7f18a3d95789bab8b646d",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": "0x8030",
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:25.466",
+                "on": False,
+                "temperature": 2337,
+            },
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-03-0201",
+        },
+        "4": {
+            "config": {
+                "battery": 85,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 4,
+            "etag": "eea97adf8ce1b971b8b6a3a31793f96b",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": "0x8030",
+            "name": "0x8030",
+            "state": {
+                "lastupdated": "2021-02-15T12:23:41.939",
+                "on": False,
+                "temperature": 2333,
+            },
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-04-0201",
+        },
+        "5": {
+            "config": {
+                "battery": 83,
+                "heatsetpoint": 2300,
+                "offset": 0,
+                "on": True,
+                "reachable": True,
+                "schedule": {},
+                "schedule_on": False,
+            },
+            "ep": 5,
+            "etag": "1f7cd1a5d66dc27ac5eb44b8c47362fb",
+            "lastseen": "2021-02-15T12:23Z",
+            "manufacturername": "Danfoss",
+            "modelid": "0x8030",
+            "name": "0x8030",
+            "state": {"lastupdated": "none", "on": False, "temperature": 2325},
+            "swversion": "YYYYMMDD",
+            "type": "ZHAThermostat",
+            "uniqueid": "58:8e:81:ff:fe:00:11:22-05-0201",
+        },
+    }
+    await setup_deconz_integration(hass, aioclient_mock, get_state_response=data)
+
+    assert len(hass.states.async_all()) == 10
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 5
 
 
 async def test_air_quality_sensor(hass, aioclient_mock):
