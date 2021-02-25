@@ -187,10 +187,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         # until the next time lights are added
         bridge.reset_jobs.remove(cancel_update_rooms_listener)
         cancel_update_rooms_listener()
+        cancel_update_rooms_listener = None
 
     @callback
     def _setup_rooms_listener():
         nonlocal cancel_update_rooms_listener
+        if cancel_update_rooms_listener is not None:
+            # If there are new lights added before _async_update_rooms
+            # is called we should not add another listener
+            return
+
         cancel_update_rooms_listener = group_coordinator.async_add_listener(
             _async_update_rooms
         )
