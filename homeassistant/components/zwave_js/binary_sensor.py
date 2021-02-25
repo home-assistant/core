@@ -287,7 +287,7 @@ class ZWaveBooleanBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
         if self.info.primary_value.command_class == CommandClass.SENSOR_BINARY:
             # Legacy binary sensors are phased out (replaced by notification sensors)
             # Disable by default to not confuse users
-            if self.info.node.device_class.generic != "Binary Sensor":
+            if self.info.node.device_class.generic.key != 0x20:
                 return False
         return True
 

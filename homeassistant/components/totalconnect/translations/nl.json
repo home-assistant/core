@@ -8,6 +8,11 @@
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Locatie"
+                }
+            },
             "reauth_confirm": {
                 "title": "Verifieer de integratie opnieuw"
             },
