@@ -9,6 +9,7 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     CalendarEventDevice,
     calculate_offset,
+    get_normalized_event,
     is_offset_reached,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
@@ -74,6 +75,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             data.get(CONF_MAX_RESULTS),
         )
         self._event = None
+        self._other_events = []
         self._name = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_reached = False
@@ -82,7 +84,10 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {"offset_reached": self._offset_reached}
+        return {
+            "offset_reached": self._offset_reached,
+            "other_events": self._other_events,
+        }
 
     @property
     def event(self):
@@ -108,6 +113,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         event = calculate_offset(event, self._offset)
         self._offset_reached = is_offset_reached(event)
         self._event = event
+        self._other_events = copy.deepcopy(self.data.other_events)
 
 
 class GoogleCalendarData:
@@ -123,6 +129,7 @@ class GoogleCalendarData:
         self.ignore_availability = ignore_availability
         self.max_results = max_results
         self.event = None
+        self.other_events = []
 
     def _prepare_query(self):
         try:
@@ -160,6 +167,16 @@ class GoogleCalendarData:
                 event_list.append(item)
         return event_list
 
+    def getDateTime(self, inputValue):
+        """Parse and format dateTime."""
+        outputDateTime = None
+        if "dateTime" in inputValue:
+            outputDateTime = dt.parse_datetime(inputValue["dateTime"]).isoformat("T")
+        else:
+            outputDateTime = dt.parse_datetime(inputValue["date"]).isoformat("T")
+
+        return outputDateTime
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
@@ -184,3 +201,21 @@ class GoogleCalendarData:
                 break
 
         self.event = new_event
+
+        if new_event is not None:
+
+            eventStartTime = self.getDateTime(new_event["start"])
+            eventEndTime = self.getDateTime(new_event["end"])
+
+            other_events = []
+            for item in items:
+                if new_event is not item:
+
+                    startTime = self.getDateTime(item["start"])
+                    endTime = self.getDateTime(item["end"])
+
+                    if startTime >= eventStartTime and endTime <= eventEndTime:
+                        other_events.append(get_normalized_event(item))
+                    break
+
+            self.other_events = other_events
