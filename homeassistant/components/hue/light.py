@@ -214,7 +214,7 @@ def async_update_rooms(api, rooms):
         if group.type != GROUP_TYPE_ROOM:
             continue
         for light_id in group.lights:
-            rooms[light_id] = group.name
+            new_rooms[light_id] = group.name
     rooms.clear()
     rooms.update(new_rooms)
 
@@ -406,8 +406,9 @@ class HueLight(CoordinatorEntity, LightEntity):
             "sw_version": self.light.raw["swversion"],
             "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
-        if self.device_id in self._rooms:
-            info["suggested_area"] = self._rooms[self.device_id]
+
+        if self.light.id in self._rooms:
+            info["suggested_area"] = self._rooms[self.light.id]
 
         return info
 
