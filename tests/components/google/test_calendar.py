@@ -58,6 +58,37 @@ TEST_EVENT = {
     "status": "confirmed",
 }
 
+TEST_OTHER_EVENT = {
+    "summary": "Test Other All Day Event",
+    "start": {},
+    "end": {},
+    "location": "Test Cases",
+    "description": "test event",
+    "kind": "calendar#event",
+    "created": "2016-06-23T16:37:57.000Z",
+    "transparency": "transparent",
+    "updated": "2016-06-24T01:57:21.045Z",
+    "reminders": {"useDefault": True},
+    "organizer": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "sequence": 0,
+    "creator": {
+        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
+        "displayName": "Organizer Name",
+        "self": True,
+    },
+    "id": "_c8rinwq863h45qnucyoi43ny8",
+    "etag": '"2933466882090000"',
+    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
+    "iCalUID": "cydrevtfuybguinhomj@google.com",
+    "status": "confirmed",
+}
+
+TEST_MULTIPLE_EVENTS = [TEST_EVENT, TEST_OTHER_EVENT]
+
 
 def get_calendar_info(calendar):
     """Convert data from Google into DEVICE_SCHEMA."""

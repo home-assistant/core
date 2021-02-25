@@ -217,6 +217,5 @@ class GoogleCalendarData:
 
                     if start_time >= event_start_time and end_time <= event_end_time:
                         other_events.append(get_normalized_event(item))
-                    break
 
             self.other_events = other_events
