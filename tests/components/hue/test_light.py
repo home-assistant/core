@@ -7,6 +7,12 @@ import aiohue
 from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import light as hue_light
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_device_registry,
+)
+from homeassistant.helpers.entity_registry import (
+    async_get_registry as async_get_entity_registry,
+)
 from homeassistant.util import color
 
 HUE_LIGHT_NS = "homeassistant.components.light.hue."
@@ -759,7 +765,7 @@ async def test_group_features(hass, mock_bridge):
         "1": {
             "name": "Group 1",
             "lights": ["1", "2"],
-            "type": "Room",
+            "type": "LightGroup",
             "action": {
                 "on": True,
                 "bri": 254,
@@ -774,8 +780,8 @@ async def test_group_features(hass, mock_bridge):
             "state": {"any_on": True, "all_on": False},
         },
         "2": {
-            "name": "Group 2",
-            "lights": ["3", "4"],
+            "name": "Living Room",
+            "lights": ["2", "3"],
             "type": "Room",
             "action": {
                 "on": True,
@@ -791,8 +797,8 @@ async def test_group_features(hass, mock_bridge):
             "state": {"any_on": True, "all_on": False},
         },
         "3": {
-            "name": "Group 3",
-            "lights": ["1", "3"],
+            "name": "Dining Room",
+            "lights": ["4"],
             "type": "Room",
             "action": {
                 "on": True,
@@ -925,8 +931,27 @@ async def test_group_features(hass, mock_bridge):
     group_1 = hass.states.get("light.group_1")
     assert group_1.attributes["supported_features"] == color_temp_feature
 
-    group_2 = hass.states.get("light.group_2")
+    group_2 = hass.states.get("light.living_room")
     assert group_2.attributes["supported_features"] == extended_color_feature
 
-    group_3 = hass.states.get("light.group_3")
+    group_3 = hass.states.get("light.dining_room")
     assert group_3.attributes["supported_features"] == extended_color_feature
+
+    entity_registry = await async_get_entity_registry(hass)
+    device_registry = await async_get_device_registry(hass)
+
+    entry = entity_registry.async_get("light.hue_lamp_1")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area is None
+
+    entry = entity_registry.async_get("light.hue_lamp_2")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area == "Living Room"
+
+    entry = entity_registry.async_get("light.hue_lamp_3")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area == "Living Room"
+
+    entry = entity_registry.async_get("light.hue_lamp_4")
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry.suggested_area == "Dining Room"
