@@ -52,21 +52,14 @@ async def websocket_subscribe(
 ):
     """Subscribe to supervisor events."""
 
-    async def forward_messages(data):
+    @callback
+    def forward_messages(data):
         """Forward events to websocket."""
         connection.send_message(websocket_api.event_message(msg[WS_ID], data))
 
-    subscriptions = {
-        EVENT_SUPERVISOR_EVENT: async_dispatcher_connect(
-            hass, EVENT_SUPERVISOR_EVENT, forward_messages
-        ),
-    }
-
-    @callback
-    def unsubscribe():
-        subscriptions[EVENT_SUPERVISOR_EVENT]()
-
-    connection.subscriptions[msg[WS_ID]] = unsubscribe
+    connection.subscriptions[msg[WS_ID]] = async_dispatcher_connect(
+        hass, EVENT_SUPERVISOR_EVENT, forward_messages
+    )
     connection.send_message(websocket_api.result_message(msg[WS_ID]))
 
 
