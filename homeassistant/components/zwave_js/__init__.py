@@ -86,6 +86,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ent_reg = entity_registry.async_get(hass)
 
     @callback
+    def check_and_migrate_entity(
+        platform: str, old_unique_id: str, new_unique_id: str
+    ) -> None:
+        """Check if entity with old unique ID exists, and if so migrate it to new ID."""
+        if entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id):
+            LOGGER.debug(
+                "Entity %s is using old unique ID, migrating to new one",
+                entity_id,
+            )
+            ent_reg.async_update_entity(
+                entity_id,
+                new_unique_id=new_unique_id,
+            )
+
+    @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
         LOGGER.debug("Processing node %s", node)
@@ -103,29 +118,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Beta users may have a different unique ID from what we expect, so let's
             # make all entities have the same format
             old_unique_ids = [
+                # 2021.2.* format
                 get_unique_id(
                     client.driver.controller.home_id,
                     get_old_value_id(disc_info.primary_value),
                 ),
+                # 2021.3.0b0 format
                 get_unique_id(
                     client.driver.controller.home_id,
                     f"{disc_info.primary_value.node.node_id}.{disc_info.primary_value.value_id}",
                 ),
             ]
+
+            new_unique_id = get_unique_id(
+                client.driver.controller.home_id,
+                disc_info.primary_value.value_id,
+            )
+
             for unique_id in old_unique_ids:
-                if entity_id := ent_reg.async_get_entity_id(
-                    disc_info.platform, DOMAIN, unique_id
+                # Most entities have the same ID format, but notification binary sensors
+                # have a state key in their ID
+                if (
+                    disc_info.platform != "binary_sensor"
+                    or disc_info.platform_hint != "notification"
                 ):
-                    LOGGER.debug(
-                        "Entity %s is using old unique ID, migrating to new one",
-                        entity_id,
+                    check_and_migrate_entity(
+                        disc_info.platform, f"{unique_id}", f"{new_unique_id}"
                     )
-                    ent_reg.async_update_entity(
-                        entity_id,
-                        new_unique_id=get_unique_id(
-                            client.driver.controller.home_id,
-                            disc_info.primary_value.value_id,
-                        ),
+                    continue
+
+                for state_key in disc_info.primary_value.metadata.states:
+                    # ignore idle key (0)
+                    if state_key == "0":
+                        continue
+
+                    check_and_migrate_entity(
+                        disc_info.platform,
+                        f"{unique_id}.{state_key}",
+                        f"{new_unique_id}.{state_key}",
                     )
 
             async_dispatcher_send(
