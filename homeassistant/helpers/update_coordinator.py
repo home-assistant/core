@@ -21,6 +21,8 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
 
+_LOGGER = logging.getLogger(__name__)
+
 # mypy: disallow-any-generics
 
 
@@ -196,6 +198,7 @@ class DataUpdateCoordinator(Generic[T]):
             if self._listeners:
                 self._schedule_refresh()
 
+        _LOGGER.debug("Listeners for %s: %s", self.name, self._listeners)
         for update_callback in self._listeners:
             update_callback()
 
