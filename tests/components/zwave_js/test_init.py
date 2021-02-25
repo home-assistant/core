@@ -124,9 +124,11 @@ async def test_on_node_added_ready(
     )
 
 
-async def test_unique_id_migration(hass, multisensor_6_state, client, integration):
-    """Test unique ID is migrated from old format to new."""
+async def test_unique_id_migration_1(hass, multisensor_6_state, client, integration):
+    """Test unique ID is migrated from old format to new (version 1)."""
     ent_reg = entity_registry.async_get(hass)
+
+    # Migrate version 1
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
@@ -152,6 +154,39 @@ async def test_unique_id_migration(hass, multisensor_6_state, client, integratio
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
     new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature-00-00"
+    assert entity_entry.unique_id == new_unique_id
+
+
+async def test_unique_id_migration_2(hass, multisensor_6_state, client, integration):
+    """Test unique ID is migrated from old format to new (version 2)."""
+    ent_reg = entity_registry.async_get(hass)
+    # Migrate version 2
+    ILLUMINANCE_SENSOR = "sensor.multisensor_6_illuminance"
+    entity_name = ILLUMINANCE_SENSOR.split(".")[1]
+
+    # Create entity RegistryEntry using old unique ID format
+    old_unique_id = f"{client.driver.controller.home_id}.52.52-49-0-Illuminance-00-00"
+    entity_entry = ent_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=integration,
+        original_name=entity_name,
+    )
+    assert entity_entry.entity_id == ILLUMINANCE_SENSOR
+    assert entity_entry.unique_id == old_unique_id
+
+    # Add a ready node, unique ID should be migrated
+    node = Node(client, multisensor_6_state)
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    # Check that new RegistryEntry is using new unique ID format
+    entity_entry = ent_reg.async_get(ILLUMINANCE_SENSOR)
+    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Illuminance-00-00"
     assert entity_entry.unique_id == new_unique_id
 
 

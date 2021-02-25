@@ -100,23 +100,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # This migration logic was added in 2021.3 to handle breaking change to
             # value_id format. Some time in the future, this code block
             # (and get_old_value_id helper) can be removed.
-            old_value_id = get_old_value_id(disc_info.primary_value)
-            old_unique_id = get_unique_id(
-                client.driver.controller.home_id, old_value_id
-            )
-            if entity_id := ent_reg.async_get_entity_id(
-                disc_info.platform, DOMAIN, old_unique_id
-            ):
-                LOGGER.debug(
-                    "Entity %s is using old unique ID, migrating to new one", entity_id
-                )
-                ent_reg.async_update_entity(
-                    entity_id,
-                    new_unique_id=get_unique_id(
-                        client.driver.controller.home_id,
-                        disc_info.primary_value.value_id,
-                    ),
-                )
+            # Beta users may have a different unique ID from what we expect, so let's
+            # make all entities have the same format
+            old_unique_ids = [
+                get_unique_id(
+                    client.driver.controller.home_id,
+                    get_old_value_id(disc_info.primary_value),
+                ),
+                get_unique_id(
+                    client.driver.controller.home_id,
+                    f"{disc_info.primary_value.node.node_id}.{disc_info.primary_value.value_id}",
+                ),
+            ]
+            for unique_id in old_unique_ids:
+                if entity_id := ent_reg.async_get_entity_id(
+                    disc_info.platform, DOMAIN, unique_id
+                ):
+                    LOGGER.debug(
+                        "Entity %s is using old unique ID, migrating to new one",
+                        entity_id,
+                    )
+                    ent_reg.async_update_entity(
+                        entity_id,
+                        new_unique_id=get_unique_id(
+                            client.driver.controller.home_id,
+                            disc_info.primary_value.value_id,
+                        ),
+                    )
 
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
