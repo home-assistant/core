@@ -62,8 +62,6 @@ DATA = "data"
 UPDATE_TRACK = "update_track"
 
 # Weather
-ATTRIBUTION = "Data provided by Tado"
-
 CONDITIONS_MAP = {
     ATTR_CONDITION_CLEAR_NIGHT: {"NIGHT_CLEAR"},
     ATTR_CONDITION_CLOUDY: {"CLOUDY", "CLOUDY_MOSTLY", "NIGHT_CLOUDY"},
