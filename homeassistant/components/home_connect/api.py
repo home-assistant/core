@@ -405,8 +405,6 @@ class Oven(
 ):
     """Oven class."""
 
-    """Oven programs can't run by switches."""
-
     power_off_state = BSH_POWER_STANDBY
 
     def get_oven_temperature_sensors(self):

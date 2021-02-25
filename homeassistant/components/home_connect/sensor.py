@@ -113,7 +113,6 @@ class HomeConnectSensor(HomeConnectEntity):
                     # https://developer.home-connect.com/docs/status/operation_state
                     self._state = self._state.split(".")[-1]
         _LOGGER.debug("Updated, new state: %s", self._state)
-        # print(self._device)
 
     @property
     def unit_of_measurement(self):
