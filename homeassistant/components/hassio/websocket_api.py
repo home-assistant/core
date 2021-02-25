@@ -24,6 +24,7 @@ from .const import (
     WS_TYPE,
     WS_TYPE_API,
     WS_TYPE_EVENT,
+    WS_TYPE_SUBSCRIBE,
 )
 from .handler import HassIO
 
@@ -45,7 +46,7 @@ def async_load_websocket_api(hass: HomeAssistant):
 
 @websocket_api.require_admin
 @websocket_api.async_response
-@websocket_api.websocket_command({vol.Required("type"): "supervisor/subscribe"})
+@websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
 async def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ):
@@ -53,7 +54,7 @@ async def websocket_subscribe(
 
     async def forward_messages(data):
         """Forward events to websocket."""
-        connection.send_message(websocket_api.event_message(msg["id"], data))
+        connection.send_message(websocket_api.event_message(msg[WS_ID], data))
 
     subscriptions = {
         EVENT_SUPERVISOR_EVENT: async_dispatcher_connect(
@@ -65,8 +66,8 @@ async def websocket_subscribe(
     def unsubscribe():
         subscriptions[EVENT_SUPERVISOR_EVENT]()
 
-    connection.subscriptions[msg["id"]] = unsubscribe
-    connection.send_message(websocket_api.result_message(msg["id"]))
+    connection.subscriptions[msg[WS_ID]] = unsubscribe
+    connection.send_message(websocket_api.result_message(msg[WS_ID]))
 
 
 @websocket_api.async_response

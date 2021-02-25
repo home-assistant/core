@@ -8,12 +8,15 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
 from homeassistant.components.hassio.const import (
+    ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_WS_EVENT,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
     WS_TYPE_API,
+    WS_TYPE_SUBSCRIBE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -364,12 +367,12 @@ async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
     """Test websocket subscription."""
     assert await async_setup_component(hass, "hassio", {})
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "supervisor/subscribe"})
+    await client.send_json({WS_ID: 5, WS_TYPE: WS_TYPE_SUBSCRIBE})
     response = await client.receive_json()
     assert response["success"]
 
-    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, {"lorem": "ipsum"})
     calls = async_mock_signal(hass, EVENT_SUPERVISOR_EVENT)
+    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, {"lorem": "ipsum"})
 
     response = await client.receive_json()
     assert response["event"]["lorem"] == "ipsum"
@@ -377,9 +380,9 @@ async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
 
     await client.send_json(
         {
-            "id": 6,
-            "type": "supervisor/event",
-            "data": {"event": "test", "lorem": "ipsum"},
+            WS_ID: 6,
+            WS_TYPE: "supervisor/event",
+            ATTR_DATA: {ATTR_WS_EVENT: "test", "lorem": "ipsum"},
         }
     )
     response = await client.receive_json()
@@ -390,7 +393,7 @@ async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
     assert response["event"]["lorem"] == "ipsum"
 
     # Unsubscribe
-    await client.send_json({"id": 7, "type": "unsubscribe_events", "subscription": 5})
+    await client.send_json({WS_ID: 7, WS_TYPE: "unsubscribe_events", "subscription": 5})
     response = await client.receive_json()
     assert response["success"]
 
