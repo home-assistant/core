@@ -81,21 +81,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """
 
 
-def create_light(item_class, coordinator, bridge, is_group, api, item_id, rooms):
+def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id):
     """Create the light."""
+    _LOGGER.debug("Create item from api %s with item_id %s", api, item_id)
+    api_item = api[item_id]
 
     if is_group:
         supported_features = 0
-        for light_id in api[item_id].lights:
+        for light_id in api_item.lights:
             if light_id not in bridge.api.lights:
                 continue
             light = bridge.api.lights[light_id]
             supported_features |= SUPPORT_HUE.get(light.type, SUPPORT_HUE_EXTENDED)
         supported_features = supported_features or SUPPORT_HUE_EXTENDED
     else:
-        supported_features = SUPPORT_HUE.get(api[item_id].type, SUPPORT_HUE_EXTENDED)
+        supported_features = SUPPORT_HUE.get(api_item.type, SUPPORT_HUE_EXTENDED)
     return item_class(
-        coordinator, bridge, is_group, api[item_id], supported_features, rooms
+        coordinator, bridge, is_group, api_item, supported_features, rooms
     )
 
 
