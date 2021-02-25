@@ -83,7 +83,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id):
     """Create the light."""
-    _LOGGER.debug("Create item from api %s with item_id %s", api, item_id)
     api_item = api[item_id]
 
     if is_group:
