@@ -185,6 +185,7 @@ class WebDavCalendarData:
                 "end": self.get_hass_date(self.get_end_date(vevent)),
                 "location": self.get_attr_value(vevent, "location"),
                 "description": self.get_attr_value(vevent, "description"),
+                "url": self.get_attr_value(vevent, "url"),
             }
 
             data["start"] = get_date(data["start"]).isoformat()
@@ -263,6 +264,7 @@ class WebDavCalendarData:
             "end": self.get_hass_date(self.get_end_date(vevent)),
             "location": self.get_attr_value(vevent, "location"),
             "description": self.get_attr_value(vevent, "description"),
+            "url": self.get_attr_value(vevent, "url"),
         }
 
     @staticmethod
