@@ -11,6 +11,7 @@ from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_REGION,
@@ -51,7 +52,12 @@ ACCOUNT_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: ACCOUNT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
-SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
+SERVICE_SCHEMA = vol.Schema(
+    vol.Any(
+        {vol.Required(ATTR_VIN): cv.string},
+        {vol.Required(CONF_DEVICE_ID): cv.string},
+    )
+)
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
@@ -207,8 +213,16 @@ def setup_account(entry: ConfigEntry, hass, name: str) -> BMWConnectedDriveAccou
 
     def execute_service(call):
         """Execute a service for a vehicle."""
-        vin = call.data[ATTR_VIN]
+        vin = call.data.get(ATTR_VIN)
+        device_id = call.data.get(CONF_DEVICE_ID)
+
         vehicle = None
+
+        if not vin and device_id:
+            vin = next(
+                iter(hass.data["device_registry"].devices[device_id].identifiers)
+            )[1]
+
         # Double check for read_only accounts as another account could create the services
         for entry_data in [
             e

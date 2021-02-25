@@ -5,45 +5,77 @@
 
 light_flash:
   description: >
-    Flash the lights of the vehicle. The vehicle is identified via the vin
-    (see below).
+    Flash the lights of the vehicle. The vehicle is identified either via its
+    device entry or the VIN. If a VIN is specified, the device entry will be ignored.
   fields:
+    device_id:
+      name: Car
+      description: The BMW Connected Drive device.
+      selector:
+        device:
+          integration: bmw_connected_drive
     vin:
-      description: >
-        The vehicle identification number (VIN) of the vehicle, 17 characters
+      name: VIN
+      description: The vehicle identification number (VIN) of the vehicle, 17 characters.
       example: WBANXXXXXX1234567
+      selector:
+        text:
 
 sound_horn:
   description: >
-    Sound the horn of the vehicle. The vehicle is identified via the vin
-    (see below).
+    Sound the horn of the vehicle. The vehicle is identified either via its
+    device entry or the VIN. If a VIN is specified, the device entry will be ignored.
   fields:
+    device_id:
+      name: Car
+      description: The BMW Connected Drive device.
+      selector:
+        device:
+          integration: bmw_connected_drive
     vin:
-      description: >
-        The vehicle identification number (VIN) of the vehicle, 17 characters
+      name: VIN
+      description: The vehicle identification number (VIN) of the vehicle, 17 characters.
       example: WBANXXXXXX1234567
+      selector:
+        text:
 
 activate_air_conditioning:
   description: >
     Start the air conditioning of the vehicle. What exactly is started here
     depends on the type of vehicle. It might range from just ventilation over
-    auxiliary heating to real air conditioning. The vehicle is identified via
-    the vin (see below).
+    auxiliary heating to real air conditioning. The vehicle is identified either via its
+    device entry or the VIN. If a VIN is specified, the device entry will be ignored.
   fields:
+    device_id:
+      name: Car
+      description: The BMW Connected Drive device.
+      selector:
+        device:
+          integration: bmw_connected_drive
     vin:
-      description: >
-        The vehicle identification number (VIN) of the vehicle, 17 characters
+      name: VIN
+      description: The vehicle identification number (VIN) of the vehicle, 17 characters.
       example: WBANXXXXXX1234567
+      selector:
+        text:
 
 find_vehicle:
   description: >
-    Request vehicle to update the gps location. The vehicle is identified via the vin
-    (see below).
+    Request vehicle to update the GPS location. The vehicle is identified either via its
+    device entry or the VIN. If a VIN is specified, the device entry will be ignored.
   fields:
+    device_id:
+      name: Car
+      description: The BMW Connected Drive device.
+      selector:
+        device:
+          integration: bmw_connected_drive
     vin:
-      description: >
-        The vehicle identification number (VIN) of the vehicle, 17 characters
+      name: VIN
+      description: The vehicle identification number (VIN) of the vehicle, 17 characters.
       example: WBANXXXXXX1234567
+      selector:
+        text:
 
 update_state:
   description: >
