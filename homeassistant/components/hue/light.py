@@ -141,7 +141,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     # We add a listener after fetching the data, so manually trigger listener
     bridge.reset_jobs.append(light_coordinator.async_add_listener(update_lights))
-    update_lights()
 
     if not supports_groups:
         return
@@ -173,6 +172,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     bridge.reset_jobs.append(group_coordinator.async_add_listener(update_rooms))
     await group_coordinator.async_refresh()
+    update_lights()
 
 
 async def async_safe_fetch(bridge, fetch_method):
