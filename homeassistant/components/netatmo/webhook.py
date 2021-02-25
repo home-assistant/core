@@ -19,13 +19,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_TYPE_MAP = {
+SUBEVENT_TYPE_MAP = {
     "outdoor": "",
     "therm_mode": "",
 }
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def async_handle_webhook(hass, webhook_id, request):
     """Handle webhook callback."""
     try:
         data = await request.json()
@@ -37,10 +37,10 @@ async def handle_webhook(hass, webhook_id, request):
 
     event_type = data.get(ATTR_EVENT_TYPE)
 
-    if event_type in EVENT_TYPE_MAP:
+    if event_type in SUBEVENT_TYPE_MAP:
         async_send_event(hass, event_type, data)
 
-        for event_data in data.get(EVENT_TYPE_MAP[event_type], []):
+        for event_data in data.get(SUBEVENT_TYPE_MAP[event_type], []):
             async_evaluate_event(hass, event_data)
 
     else:
