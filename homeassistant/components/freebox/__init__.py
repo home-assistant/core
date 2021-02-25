@@ -4,10 +4,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.discovery import SERVICE_FREEBOX
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, PLATFORMS
@@ -28,21 +27,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Freebox component."""
     conf = config.get(DOMAIN)
-
-    async def discovery_dispatch(service, discovery_info):
-        if conf is None:
-            host = discovery_info.get("properties", {}).get("api_domain")
-            port = discovery_info.get("properties", {}).get("https_port")
-            _LOGGER.info("Discovered Freebox server: %s:%s", host, port)
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_DISCOVERY},
-                    data={CONF_HOST: host, CONF_PORT: port},
-                )
-            )
-
-    discovery.async_listen(hass, SERVICE_FREEBOX, discovery_dispatch)
 
     if conf is None:
         return True

@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -60,17 +60,6 @@ async def test_import(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "link"
-
-
-async def test_discovery(hass):
-    """Test discovery step."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DISCOVERY},
         data={CONF_HOST: HOST, CONF_PORT: PORT},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

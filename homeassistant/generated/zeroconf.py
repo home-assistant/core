@@ -59,6 +59,11 @@ ZEROCONF = {
             "domain": "esphome"
         }
     ],
+    "_fbx-api._tcp.local.": [
+        {
+            "domain": "freebox"
+        }
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast"
