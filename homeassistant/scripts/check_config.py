@@ -141,12 +141,7 @@ def run(script_args: List) -> int:
             if sval is None:
                 print(" -", skey + ":", color("red", "not found"))
                 continue
-            print(
-                " -",
-                skey + ":",
-                sval,
-                color("cyan", "[from:", flatsecret.get(skey, "keyring") + "]"),
-            )
+            print(" -", skey + ":", sval)
 
     return len(res["except"])
 

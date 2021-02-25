@@ -21,7 +21,6 @@ COMMENT_REQUIREMENTS = (
     "blinkt",
     "bluepy",
     "bme680",
-    "credstash",
     "decora",
     "decora_wifi",
     "envirophat",
@@ -47,7 +46,7 @@ COMMENT_REQUIREMENTS = (
     "VL53L1X2",
 )
 
-IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
+IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
