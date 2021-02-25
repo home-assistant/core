@@ -35,9 +35,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             hub = LitterRobotHub(self.hass, user_input)
             try:
                 await hub.login()
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME], data=user_input
-                )
             except LitterRobotLoginException:
                 errors["base"] = "invalid_auth"
             except LitterRobotException:
@@ -45,6 +42,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
