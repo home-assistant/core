@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         system = self._current[CONF_SYSTEM]
         return self.async_create_entry(
-            title=f"{system['name']} ({system.get('serialnumber')})",
+            title=f"{system['name']} ({system['serialnumber']})",
             data=self._current,
         )
 
@@ -143,9 +143,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
 
-                if "serialnumber" in hub.system:
-                    await self.async_seta_unique_id(hub.system["serialnumber"])
-                    self._abort_if_unique_id_configured()
+                await self.async_set_unique_id(hub.system["serialnumber"])
+                self._abort_if_unique_id_configured()
 
                 self._current[CONF_SYSTEM] = hub.system
                 self._current[CONF_API_VERSION] = hub.api_version
