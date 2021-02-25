@@ -496,7 +496,7 @@ async def test_other_light_update(hass, mock_bridge):
     mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
 
     await setup_bridge(hass, mock_bridge)
-    assert len(mock_bridge.mock_requests) == 1
+    assert len(mock_bridge.mock_requests) == 2
     assert len(hass.states.async_all()) == 2
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
