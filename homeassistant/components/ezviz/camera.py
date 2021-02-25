@@ -18,8 +18,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    ACC_PASSWORD,
-    ACC_USERNAME,
     ATTR_AWAY,
     ATTR_CAMERAS,
     ATTR_DIRECTION,
@@ -50,8 +48,8 @@ CAMERA_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(ACC_USERNAME): cv.string,
-        vol.Required(ACC_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
         vol.Optional(ATTR_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
     }
@@ -68,6 +66,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         "Loading ezviz via platform config is deprecated, it will be automatically imported. Please remove it afterwards."
     )
 
+    if ATTR_CAMERAS in config:
+        cameras_conf = config.get(ATTR_CAMERAS, CAMERA_SCHEMA)
+
+        _LOGGER.debug("camera constant: %s", cameras_conf)
+        for camera in cameras_conf.items():
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=camera,
+                )
+            )
+
+    _LOGGER.debug("full config: %s", config)
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -86,7 +98,6 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    conf_cameras = entry.data.get("cameras", {})
     ffmpeg_arguments = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
     )
@@ -144,12 +155,14 @@ async def async_setup_entry(
 
         # There seem to be a bug related to localRtspPort in Ezviz API...
         local_rtsp_port = DEFAULT_RTSP_PORT
+        conf_cameras = hass.data.get(DOMAIN).get(camera["serial"], {})
+
         if camera["local_rtsp_port"] != 0:
             local_rtsp_port = camera["local_rtsp_port"]
 
-        if camera["serial"] in conf_cameras:
-            camera_username = conf_cameras[camera["serial"]][CONF_USERNAME]
-            camera_password = conf_cameras[camera["serial"]][CONF_PASSWORD]
+        if camera["serial"] == conf_cameras.get("serial"):
+            camera_username = conf_cameras[CONF_USERNAME]
+            camera_password = conf_cameras[CONF_PASSWORD]
             camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{camera['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
             _LOGGER.debug(
                 "Camera %s source stream: %s", camera["serial"], camera_rtsp_stream

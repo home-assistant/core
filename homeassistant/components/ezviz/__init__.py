@@ -12,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    ATTR_SERIAL,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
@@ -37,6 +38,10 @@ async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up Ezviz from a config entry."""
+
+    if entry.data.get(ATTR_SERIAL):
+        hass.data[DOMAIN][entry.unique_id] = entry.data
+        return True
 
     if not entry.options:
         options = {
@@ -77,6 +82,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
+    if entry.data.get(ATTR_SERIAL):
+        hass.data[DOMAIN].pop(entry.unique_id)
+        return True
+
     unload_ok = all(
         await asyncio.gather(
             *[

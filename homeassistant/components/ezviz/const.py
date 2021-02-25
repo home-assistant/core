@@ -6,6 +6,7 @@ ACC_USERNAME = "username"
 ACC_PASSWORD = "password"
 
 # Configuration
+ATTR_SERIAL = "serial"
 ATTR_CAMERAS = "cameras"
 ATTR_SWITCH = "switch"
 ATTR_ENABLE = "enable"
@@ -32,7 +33,7 @@ ATTR_AWAY = "AWAY_MODE"
 DEFAULT_REGION = "eu"
 DEFAULT_CAMERA_USERNAME = "admin"
 DEFAULT_RTSP_PORT = "554"
-DEFAULT_TIMEOUT = 15
+DEFAULT_TIMEOUT = 25
 DEFAULT_FFMPEG_ARGUMENTS = ""
 
 # Data
