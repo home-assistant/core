@@ -20,7 +20,10 @@ def get_old_value_id(value: ZwaveValue) -> str:
     endpoint = value.endpoint or "00"
     property_ = value.property_
     property_key_name = value.property_key_name or "00"
-    return f"{value.node.node_id}-{command_class}-{endpoint}-{property_}-{property_key_name}"
+    return (
+        f"{value.node.node_id}.{value.node.node_id}-{command_class}-{endpoint}-"
+        f"{property_}-{property_key_name}"
+    )
 
 
 @callback

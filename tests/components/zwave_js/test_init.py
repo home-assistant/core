@@ -130,7 +130,7 @@ async def test_unique_id_migration(hass, multisensor_6_state, client, integratio
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
 
     # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.52-49-00-Air temperature-00"
+    old_unique_id = f"{client.driver.controller.home_id}.52.52-49-00-Air temperature-00"
     entity_entry = ent_reg.async_get_or_create(
         "sensor",
         DOMAIN,
