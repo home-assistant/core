@@ -16,9 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 class RegisterResult:
     """Modbus register wrapper."""
 
-    def __init__(self, registers=[0]):
+    def __init__(self, registers=None):
         """Initialize with the defaults."""
-        self._registers = registers
+        self._registers = registers or [0]
 
     @property
     def registers(self):
@@ -48,7 +48,6 @@ class ModbusServerHub(BaseModbusHub):
 
     def setup(self):
         """No op for the server."""
-        pass
 
     def close(self):
         """Shutdown server."""
@@ -108,7 +107,7 @@ class ModbusServerHub(BaseModbusHub):
     def register_entity(
         self,
         name,
-        unit,
+        slave,
         register,
         last_state,
         data_type=None,
@@ -118,13 +117,13 @@ class ModbusServerHub(BaseModbusHub):
         """Register an entity with the Modbus server."""
         if data_type is None:
             data = 1 if last_state == STATE_ON else 0
-            entity = {"name": name, "unit": unit, "register": register, "data": [data]}
+            entity = {"name": name, "unit": slave, "register": register, "data": [data]}
             if bit_mask is not None and bit_mask > 0:
                 entity["bit_mask"] = bit_mask
         else:
             entity = {
                 "name": name,
-                "unit": unit,
+                "unit": slave,
                 "register": register,
                 "data": build_registers(last_state, data_type, data_count),
             }
