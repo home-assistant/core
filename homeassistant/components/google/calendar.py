@@ -167,15 +167,16 @@ class GoogleCalendarData:
                 event_list.append(item)
         return event_list
 
-    def getDateTime(self, inputValue):
+    @staticmethod
+    def get_date_time(input_value):
         """Parse and format dateTime."""
-        outputDateTime = None
-        if "dateTime" in inputValue:
-            outputDateTime = dt.parse_datetime(inputValue["dateTime"]).isoformat("T")
+        output_date_time = None
+        if "dateTime" in input_value:
+            output_date_time = dt.parse_datetime(input_value["dateTime"]).isoformat("T")
         else:
-            outputDateTime = dt.parse_datetime(inputValue["date"]).isoformat("T")
+            output_date_time = dt.parse_datetime(input_value["date"]).isoformat("T")
 
-        return outputDateTime
+        return output_date_time
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -204,17 +205,17 @@ class GoogleCalendarData:
 
         if new_event is not None:
 
-            eventStartTime = self.getDateTime(new_event["start"])
-            eventEndTime = self.getDateTime(new_event["end"])
+            event_start_time = self.get_date_time(new_event["start"])
+            event_end_time = self.get_date_time(new_event["end"])
 
             other_events = []
             for item in items:
                 if new_event is not item:
 
-                    startTime = self.getDateTime(item["start"])
-                    endTime = self.getDateTime(item["end"])
+                    start_time = self.get_date_time(item["start"])
+                    end_time = self.get_date_time(item["end"])
 
-                    if startTime >= eventStartTime and endTime <= eventEndTime:
+                    if start_time >= event_start_time and end_time <= event_end_time:
                         other_events.append(get_normalized_event(item))
                     break
 
