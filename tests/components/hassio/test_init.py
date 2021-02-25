@@ -2,71 +2,14 @@
 import os
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import frontend
 from homeassistant.components.hassio import STORAGE_KEY
-from homeassistant.components.hassio.const import (
-    ATTR_DATA,
-    ATTR_ENDPOINT,
-    ATTR_METHOD,
-    EVENT_SUPERVISOR_EVENT,
-    WS_ID,
-    WS_TYPE,
-    WS_TYPE_API,
-    WS_TYPE_EVENT,
-)
-from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_capture_events
+from . import mock_all  # noqa
 
 MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
-
-
-@pytest.fixture(autouse=True)
-def mock_all(aioclient_mock):
-    """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
 
 
 async def test_setup_api_ping(hass, aioclient_mock):
@@ -359,58 +302,3 @@ async def test_service_calls_core(hassio_env, hass, aioclient_mock):
         assert mock_check_config.called
 
     assert aioclient_mock.call_count == 5
-
-
-async def test_websocket_supervisor_event(
-    hassio_env, hass: HomeAssistant, hass_ws_client
-):
-    """Test Supervisor websocket event."""
-    assert await async_setup_component(hass, "hassio", {})
-    websocket_client = await hass_ws_client(hass)
-
-    test_event = async_capture_events(hass, EVENT_SUPERVISOR_EVENT)
-
-    await websocket_client.send_json(
-        {WS_ID: 1, WS_TYPE: WS_TYPE_EVENT, ATTR_DATA: {"event": "test"}}
-    )
-
-    assert await websocket_client.receive_json()
-    await hass.async_block_till_done()
-
-    assert test_event[0].data == {"event": "test"}
-
-
-async def test_websocket_supervisor_api(
-    hassio_env, hass: HomeAssistant, hass_ws_client, aioclient_mock
-):
-    """Test Supervisor websocket api."""
-    assert await async_setup_component(hass, "hassio", {})
-    websocket_client = await hass_ws_client(hass)
-    aioclient_mock.post(
-        "http://127.0.0.1/snapshots/new/partial",
-        json={"result": "ok", "data": {"slug": "sn_slug"}},
-    )
-
-    await websocket_client.send_json(
-        {
-            WS_ID: 1,
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/snapshots/new/partial",
-            ATTR_METHOD: "post",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["result"]["slug"] == "sn_slug"
-
-    await websocket_client.send_json(
-        {
-            WS_ID: 2,
-            WS_TYPE: WS_TYPE_API,
-            ATTR_ENDPOINT: "/supervisor/info",
-            ATTR_METHOD: "get",
-        }
-    )
-
-    msg = await websocket_client.receive_json()
-    assert msg["result"]["version_latest"] == "1.0.0"
