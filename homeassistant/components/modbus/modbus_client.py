@@ -19,6 +19,7 @@ class ModbusClientHub(BaseModbusHub):
         """Initialize the Modbus client hub."""
         super().__init__(client_config)
 
+        self._client = None
         if self._config_type == "serial":
             # serial configuration
             self._config_method = client_config[CONF_METHOD]

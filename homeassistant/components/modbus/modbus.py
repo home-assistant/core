@@ -33,8 +33,7 @@ def modbus_hub_factory(client_config, hass):
     """Modbus hub factory method."""
     if client_config[CONF_TYPE] == CONF_TYPE_TCPSERVER:
         return ModbusServerHub(client_config, hass)
-    else:
-        return ModbusClientHub(client_config)
+    return ModbusClientHub(client_config)
 
 
 def modbus_setup(

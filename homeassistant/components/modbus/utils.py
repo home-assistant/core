@@ -39,6 +39,43 @@ def build_registers(state, data_type, data_count):
 
 def build_server_blocks(entities):
     """Build Modbus slave server block, check unit address overlap."""
+
+    def _process_data_item(entity, server_registers, data_item, idx):
+        if "bit_mask" not in entity:
+            if register in server_registers:
+                _LOGGER.error(
+                    "Modbus slave entity `%s` register %d overlaps with the already registered entities",
+                    entity["name"],
+                    register,
+                )
+                return None
+            server_registers[register] = [data_item, 0xFFFF]
+        else:
+            shift_bits = idx * 16
+            bit_mask = (int(entity["bit_mask"]) & (0xFFFF << shift_bits)) >> shift_bits
+            # Skip register entirely if the bit mask has no set bits in this word
+            if bit_mask > 0:
+                # value_data represent a turned on bits in the result register if state is ON
+                value_data = bit_mask if data_item else 0
+                if register in server_registers:
+                    # mask holds the used positions, value holds combined bit mask for the slave
+                    value, mask = server_registers[register]
+                    if mask & bit_mask > 0:
+                        _LOGGER.error(
+                            "Modbus slave entity `%s` register %d bit mask %d overlaps with the already registered entities",
+                            entity["name"],
+                            register,
+                            bit_mask,
+                        )
+                        return None
+                    # update resulting register value and used bits mask
+                    server_registers[register] = [
+                        value | value_data,
+                        mask | bit_mask,
+                    ]
+                else:
+                    server_registers[register] = [value_data, bit_mask]
+
     assoc_array = {}
     for entity in entities:
         register = int(entity["register"])
@@ -46,44 +83,7 @@ def build_server_blocks(entities):
         assoc_array[unit_address] = server_registers = assoc_array.get(unit_address, {})
 
         for idx, data_item in enumerate(entity["data"]):
-            if "bit_mask" not in entity:
-                if register in server_registers:
-                    _LOGGER.error(
-                        "Modbus slave entity `%s` register %d overlaps with the already registered entities",
-                        entity["name"],
-                        register,
-                    )
-                    return None
-                server_registers[register] = [data_item, 0xFFFF]
-            else:
-                shift_bits = idx * 16
-                bit_mask = (
-                    int(entity["bit_mask"]) & (0xFFFF << shift_bits)
-                ) >> shift_bits
-                # Skip register entirely if the bit mask has no set bits in this word
-                if bit_mask > 0:
-                    # value_data represent a turned on bits in the result register if state is ON
-                    value_data = bit_mask if data_item else 0
-                    if register in server_registers:
-                        # mask holds the used positions, value holds combined bit mask for the slave
-                        value, mask = server_registers[register]
-                        if mask & bit_mask > 0:
-                            _LOGGER.error(
-                                "Modbus slave entity `%s` register %d bit mask %d overlaps with the already registered entities",
-                                entity["name"],
-                                register,
-                                bit_mask,
-                            )
-                            return None
-                        # update resulting register value and used bits mask
-                        server_registers[register] = [
-                            value | value_data,
-                            mask | bit_mask,
-                        ]
-                    else:
-                        server_registers[register] = [value_data, bit_mask]
-
-            # next register
+            _process_data_item(entity, server_registers, data_item, idx)
             register = register + 1
 
     def _strip_bit_maks(registers):

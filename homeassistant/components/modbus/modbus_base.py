@@ -80,4 +80,3 @@ class BaseModbusHub(ABC):
         bit_mask=None,
     ):
         """Register the entity with the Modbus hub."""
-        pass
