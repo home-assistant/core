@@ -22,7 +22,11 @@
         "description": "Options for the OpenTherm Gateway",
         "data": {
           "floor_temperature": "Floor Temperature",
-          "precision": "Precision"
+          "read_precision": "Read Precision",
+          "set_precision": "Set Precision",
+          "setpoint_ovrd_mode": "Setpoint Override Mode",
+          "ovrd_mode_temporary": "Temporary",
+          "ovrd_mode_constant": "Constant",
         }
       }
     }

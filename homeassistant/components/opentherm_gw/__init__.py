@@ -38,7 +38,11 @@ from .const import (
     ATTR_LEVEL,
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
-    CONF_PRECISION,
+    CONF_READ_PRECISION,
+    CONF_SET_PRECISION,
+    CONF_SETPOINT_OVRD_MODE,
+    CONF_OVRD_MODE_TEMPORARY,
+    CONF_OVRD_MODE_CONSTANT,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     DOMAIN,
@@ -59,8 +63,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CLIMATE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_PRECISION): vol.In(
+        vol.Optional(CONF_READ_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
+        vol.Optional(CONF_SET_PRECISION): vol.In(
+            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
+        vol.Optional(CONF_SETPOINT_OVRD_MODE, default=CONF_OVRD_MODE_TEMPORARY): vol.In(
+            [CONF_OVRD_MODE_TEMPORARY, CONF_OVRD_MODE_CONSTANT]
         ),
         vol.Optional(CONF_FLOOR_TEMP, default=False): cv.boolean,
     }
