@@ -239,9 +239,6 @@ construct==2.10.56
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
 
-# homeassistant.scripts.credstash
-# credstash==1.15.0
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -454,12 +451,6 @@ influxdb==5.2.3
 # homeassistant.components.rest
 # homeassistant.components.verisure
 jsonpath==0.82
-
-# homeassistant.scripts.keyring
-keyring==21.2.0
-
-# homeassistant.scripts.keyring
-keyrings.alt==3.4.0
 
 # homeassistant.components.konnected
 konnected==1.2.0
