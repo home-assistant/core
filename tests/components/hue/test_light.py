@@ -635,10 +635,11 @@ async def test_light_turn_off_service(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.hue_lamp_1"}, blocking=True
     )
-    # 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 3
 
-    assert mock_bridge.mock_requests[1]["json"] == {"on": False, "alert": "none"}
+    # 2x light update, 1 for group update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
+
+    assert mock_bridge.mock_requests[2]["json"] == {"on": False, "alert": "none"}
 
     assert len(hass.states.async_all()) == 2
 
