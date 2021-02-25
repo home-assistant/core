@@ -173,5 +173,3 @@ class HiveOptionsFlowHandler(config_entries.OptionsFlow):
 
 class UnknownHiveError(Exception):
     """Catch unknown hive error."""
-
-    pass
