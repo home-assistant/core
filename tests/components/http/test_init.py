@@ -177,7 +177,6 @@ async def test_cors_defaults(hass):
     assert len(mock_setup.mock_calls) == 1
     assert mock_setup.mock_calls[0][1][1] == [
         "https://cast.home-assistant.io",
-        "https://my.home-assistant.io",
     ]
 
 
