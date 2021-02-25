@@ -16,7 +16,7 @@ from homeassistant.components.hassio.const import (
     WS_TYPE_API,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_signal
@@ -368,7 +368,7 @@ async def test_ws_subscription(hassio_env, hass: HomeAssistant, hass_ws_client):
     response = await client.receive_json()
     assert response["success"]
 
-    dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, {"lorem": "ipsum"})
+    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, {"lorem": "ipsum"})
     calls = async_mock_signal(hass, EVENT_SUPERVISOR_EVENT)
 
     response = await client.receive_json()

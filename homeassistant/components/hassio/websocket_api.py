@@ -7,7 +7,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 
 from .const import (
     ATTR_DATA,
@@ -77,7 +77,7 @@ async def websocket_supervisor_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ):
     """Publish events from the Supervisor."""
-    dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
+    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
     connection.send_result(msg[WS_ID])
 
 
