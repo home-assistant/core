@@ -408,7 +408,12 @@ class HueLight(CoordinatorEntity, LightEntity):
         }
 
         _LOGGER.debug(
-            "%s: device_id=%s Rooms: %s", self.entity_id, self.device_id, self._rooms
+            "%s: id=%s unique_id=%s device_id=%s Rooms: %s",
+            self.entity_id,
+            self.light.id,
+            self.light.unique_id,
+            self.device_id,
+            self._rooms,
         )
         if self.device_id in self._rooms:
             info["suggested_area"] = self._rooms[self.device_id]
