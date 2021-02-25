@@ -80,26 +80,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self._hub
 
         errors = {}
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_PIN): str,
+            }
+        )
 
-        if user_input:
-            try:
-                username, password = await self._hub.pairGrant(
-                    self._pair_state, user_input[CONF_PIN]
-                )
-            except PairingFailure as exc:
-                LOGGER.debug(str(exc))
-                if exc.data.get("error_id") == "INVALID_PIN":
-                    errors[CONF_PIN] = "invalid_pin"
-                else:
-                    return self.async_abort(
-                        reason="pairing_failure",
-                        description_placeholders={"error_id": exc.data.get("error_id")},
-                    )
-            else:
-                self._current[CONF_USERNAME] = username
-                self._current[CONF_PASSWORD] = password
-                return await self._async_create_current()
-        else:
+        if not user_input:
             try:
                 self._pair_state = await self._hub.pairRequest(
                     CONST_APP_ID,
@@ -114,14 +101,30 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     reason="pairing_failure",
                     description_placeholders={"error_id": exc.data.get("error_id")},
                 )
+            return self.async_show_form(
+                step_id="pair", data_schema=schema, errors=errors
+            )
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_PIN): str,
-            }
-        )
+        try:
+            username, password = await self._hub.pairGrant(
+                self._pair_state, user_input[CONF_PIN]
+            )
+        except PairingFailure as exc:
+            LOGGER.debug(str(exc))
+            if exc.data.get("error_id") == "INVALID_PIN":
+                errors[CONF_PIN] = "invalid_pin"
+                return self.async_show_form(
+                    step_id="pair", data_schema=schema, errors=errors
+                )
+            else:
+                return self.async_abort(
+                    reason="pairing_failure",
+                    description_placeholders={"error_id": exc.data.get("error_id")},
+                )
 
-        return self.async_show_form(step_id="pair", data_schema=schema, errors=errors)
+        self._current[CONF_USERNAME] = username
+        self._current[CONF_PASSWORD] = password
+        return await self._async_create_current()
 
     async def async_step_user(self, user_input: Optional[FlowUserDict] = None):
         """Handle the initial step."""
