@@ -6,6 +6,7 @@ from zwave_js_server.const import LogLevel
 from zwave_js_server.event import Event
 from zwave_js_server.exceptions import InvalidNewValue, NotFoundError, SetValueFailed
 
+from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     CONFIG,
     ENABLED,
@@ -87,11 +88,12 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
     # Test getting non-existent node config params fails
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 6,
             TYPE: "zwave_js/get_config_parameters",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 99999,
@@ -99,6 +101,7 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     )
     msg = await ws_client.receive_json()
     assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
 
 
 async def test_add_node(
