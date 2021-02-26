@@ -1,5 +1,6 @@
 """The gogogate2 component."""
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
@@ -36,6 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, COVER_DOMAIN)
+    )
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(config_entry, SENSOR_DOMAIN)
     )
 
     return True
