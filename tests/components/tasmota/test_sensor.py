@@ -265,9 +265,6 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == "20.5"
 
-    # Test force update flag
-    assert state.force_update
-
     # Test polled state update
     async_fire_mqtt_message(
         hass,
@@ -278,6 +275,10 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_status")
     assert state.state == "20.0"
 
+    # Test force update flag
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get("sensor.tasmota_status")
+    assert entry.force_update
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):

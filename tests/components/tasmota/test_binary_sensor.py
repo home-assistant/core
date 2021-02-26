@@ -78,9 +78,6 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_ON
 
-    # Test force update flag
-    assert state.force_update
-
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/SENSOR", '{"Switch1":"OFF"}')
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
@@ -98,6 +95,10 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
 
+    # Test force update flag
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entry = entity_registry.async_get("binary_sensor.tasmota_binary_sensor_1")
+    assert entry.force_update
 
 async def test_controlling_state_via_mqtt_switchname(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
