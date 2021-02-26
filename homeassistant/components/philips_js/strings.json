@@ -10,8 +10,10 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "pairing_failure": "Unable to pair: {error_id}",
+      "invalid_pin": "Invalid PIN"
+},
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
