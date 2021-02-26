@@ -36,6 +36,7 @@ MOCK_ZEROCONF_DATA = {
     },
 }
 
+
 async def test_user(hass: HomeAssistantType):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
