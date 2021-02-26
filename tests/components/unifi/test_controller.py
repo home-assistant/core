@@ -6,6 +6,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import aiounifi
+from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -346,19 +347,13 @@ async def test_connection_state_signalling(hass, aioclient_mock, mock_unifi_webs
     assert controller.available is True
     assert len(event_call.mock_calls) == 0
 
-    mock_unifi_websocket.return_value.state = aiounifi.websocket.STATE_DISCONNECTED
-    mock_unifi_websocket.call_args[1]["callback"](
-        aiounifi.controller.SIGNAL_CONNECTION_STATE
-    )
+    mock_unifi_websocket(state=STATE_DISCONNECTED)
     await hass.async_block_till_done()
 
     assert controller.available is False
     assert len(event_call.mock_calls) == 1
 
-    mock_unifi_websocket.return_value.state = aiounifi.websocket.STATE_RUNNING
-    mock_unifi_websocket.call_args[1]["callback"](
-        aiounifi.controller.SIGNAL_CONNECTION_STATE
-    )
+    mock_unifi_websocket(state=STATE_RUNNING)
     await hass.async_block_till_done()
 
     assert controller.available is True
@@ -377,18 +372,19 @@ async def test_wireless_client_event_calls_update_wireless_devices(
         "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
         return_value=None,
     ) as wireless_clients_mock:
-        mock_unifi_websocket.return_value.data = {
-            "meta": {"rc": "ok", "message": "events"},
-            "data": [
-                {
-                    "datetime": "2020-01-20T19:37:04Z",
-                    "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
-                    "msg": "User[11:22:33:44:55:66] has connected to WLAN",
-                    "time": 1579549024893,
-                }
-            ],
-        }
-        mock_unifi_websocket.call_args[1]["callback"]("data")
+        mock_unifi_websocket(
+            data={
+                "meta": {"rc": "ok", "message": "events"},
+                "data": [
+                    {
+                        "datetime": "2020-01-20T19:37:04Z",
+                        "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
+                        "msg": "User[11:22:33:44:55:66] has connected to WLAN",
+                        "time": 1579549024893,
+                    }
+                ],
+            },
+        )
 
         assert wireless_clients_mock.assert_called_once
 

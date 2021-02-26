@@ -2,7 +2,6 @@
 from copy import deepcopy
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
-from aiounifi.websocket import SIGNAL_DATA
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -445,11 +444,12 @@ async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     block_switch = hass.states.get("switch.block_client_2")
     assert block_switch is not None
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": MESSAGE_CLIENT_REMOVED},
-        "data": [CLIENT_1, UNBLOCKED],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT_REMOVED},
+            "data": [CLIENT_1, UNBLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -486,11 +486,12 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert unblocked is not None
     assert unblocked.state == "on"
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -498,11 +499,12 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     assert blocked is not None
     assert blocked.state == "on"
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -553,20 +555,22 @@ async def test_new_client_discovered_on_block_control(
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is None
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": "sta:sync"},
-        "data": [BLOCKED],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": "sta:sync"},
+            "data": [BLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -657,20 +661,22 @@ async def test_new_client_discovered_on_poe_control(
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": "sta:sync"},
-        "data": [CLIENT_2],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": "sta:sync"},
+            "data": [CLIENT_2],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    mock_unifi_websocket.return_value.data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_CLIENT_2_CONNECTED],
-    }
-    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_CLIENT_2_CONNECTED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
