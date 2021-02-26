@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_API_SECRET, CONF_BALANCES, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
+from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,14 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_secret = entry.data[CONF_API_SECRET]
     symbols = entry.data[CONF_MARKETS]
 
-    if CONF_BALANCES in entry.data:
-        balances = entry.data[CONF_BALANCES]
-        coordinator = BinanceDataUpdateCoordinator(
-            hass, api_key, api_secret, symbols, balances
-        )
-    else:
-        coordinator = BinanceDataUpdateCoordinator(hass, api_key, api_secret, symbols)
-
+    coordinator = BinanceDataUpdateCoordinator(hass, api_key, api_secret, symbols)
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -61,7 +54,6 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
         self._api_secret = api_secret
 
         self.symbols = symbols
-        self.balances = balances or None
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -85,16 +77,15 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
 
             result_dict = {"tickers": tickers_dict}
 
-            if self.balances:
-                all_balances = await self.binance.get_account()
-                balances_dict = {}
+            all_balances = await self.binance.get_account()
+            balances_dict = {}
 
-                for balance in all_balances["balances"]:
-                    if balance["free"] != "0.00000000":
-                        balances_dict[balance["asset"]] = {}
-                        balances_dict[balance["asset"]].update(balance)
+            for balance in all_balances["balances"]:
+                if balance["free"] != "0.00000000":
+                    balances_dict[balance["asset"]] = {}
+                    balances_dict[balance["asset"]].update(balance)
 
-                result_dict["balances"] = balances_dict
+            result_dict["balances"] = balances_dict
 
             open_orders = await self.binance.get_open_orders()
             if open_orders:
@@ -111,3 +102,5 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
         except BinanceRequestException as error:
             _LOGGER.error("Binance sensor error: %s", error)
             return None
+        finally:
+            await self.binance.close_connection()

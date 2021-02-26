@@ -6,8 +6,7 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication",
-            "invalid_market": "Invalid market(s)",
-            "invalid_balance": "Invalid balance(s)"
+            "invalid_market": "Invalid market(s)"
         },
         "flow_title": "Binance",
         "step": {
@@ -17,13 +16,6 @@
                 },
                 "title": "Select the cryptocurrency markets",
                 "description": "Select the markets that you would like to track."
-            },
-            "balances": {
-                "data": {
-                    "balances": "Balances"
-                },
-                "title": "Select the cryptocurrency balances",
-                "description": "Optional: select the balances that you would like to track."
             },
             "user": {
                 "data": {

@@ -125,41 +125,17 @@ class BinanceConfigFlow(ConfigFlow, domain=DOMAIN):
             self.binance_config.update(user_input)
             info, errors = await self._async_validate_or_error(self.binance_config)
 
+            title = "Markets: " + ", ".join(self.binance_config[CONF_MARKETS])
+
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_MARKETS])
                 self.balances = info["balances"]
 
-                return await self.async_step_balances()
+                return self.async_create_entry(title=title, data=self.binance_config)
 
         return self.async_show_form(
             step_id="markets",
             data_schema=_markets_schema(self.markets),
-            errors=errors,
-        )
-
-    async def async_step_balances(self, user_input: Optional[Dict] = None):
-        """Handle the picking of the balances."""
-        errors = {}
-
-        if user_input is not None:
-            self.binance_config.update(user_input)
-            title = "Markets: " + ", ".join(self.binance_config[CONF_MARKETS])
-
-            if CONF_BALANCES in self.binance_config:
-                await self.async_set_unique_id(user_input[CONF_BALANCES])
-
-                title = (
-                    title
-                    + " - "
-                    + "Balances: "
-                    + ", ".join(self.binance_config[CONF_BALANCES])
-                )
-
-            return self.async_create_entry(title=title, data=self.binance_config)
-
-        return self.async_show_form(
-            step_id="balances",
-            data_schema=_balances_schema(self.balances),
             errors=errors,
         )
 
