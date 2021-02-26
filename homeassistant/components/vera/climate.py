@@ -9,6 +9,11 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_ON,
     HVAC_MODE_COOL,
@@ -86,6 +91,23 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         Need to be a subset of HVAC_MODES.
         """
         return SUPPORT_HVAC
+
+    @property
+    def hvac_action(self) -> str:
+        """Return hvac action ie. heating, cooling.
+
+        Need to be one of CURRENT_HVAC_*.
+        """
+        mode = self.vera_device.get_hvac_state()
+        if mode == "Cooling":
+            return CURRENT_HVAC_COOL
+        if mode == "Drying":
+            return CURRENT_HVAC_DRY
+        if mode == "Heating":
+            return CURRENT_HVAC_HEAT
+        if mode == "Idle":
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
 
     @property
     def fan_mode(self) -> Optional[str]:
