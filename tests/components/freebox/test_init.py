@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_CONFIG, MOCK_HOST, MOCK_PORT
+from .const import MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
@@ -39,7 +39,7 @@ async def test_unload_remove(hass: HomeAssistantType, router: Mock):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_CONFIG[DOMAIN],
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
     )
     entry.add_to_hass(hass)
 

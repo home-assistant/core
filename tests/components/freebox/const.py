@@ -1,17 +1,7 @@
 """Test constants."""
 
-from homeassistant.components.freebox.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
-
 MOCK_HOST = "myrouter.freeboxos.fr"
 MOCK_PORT = 1234
-
-MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_HOST: MOCK_HOST,
-        CONF_PORT: MOCK_PORT,
-    }
-}
 
 # router
 DATA_SYSTEM_GET_CONFIG = {
