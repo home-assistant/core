@@ -188,14 +188,6 @@ DISCOVERY_SCHEMAS = [
     # climate
     ZWaveDiscoverySchema(
         platform="climate",
-        device_class_generic={"Thermostat"},
-        device_class_specific={
-            "Setback Thermostat",
-            "Thermostat General",
-            "Thermostat General V2",
-            "General Thermostat",
-            "General Thermostat V2",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
             property={"mode"},
@@ -206,11 +198,6 @@ DISCOVERY_SCHEMAS = [
     # setpoint thermostats
     ZWaveDiscoverySchema(
         platform="climate",
-        device_class_generic={"Thermostat"},
-        device_class_specific={
-            "Setpoint Thermostat",
-            "Unused",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
             property={"setpoint"},
