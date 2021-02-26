@@ -276,7 +276,9 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "20.0"
 
     # Test force update flag
-    entity = hass.data["entity_components"]["sensor"].get_entity("sensor.tasmota_status")
+    entity = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.tasmota_status"
+    )
     assert entity.force_update
 
 
