@@ -277,7 +277,7 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
 
     # Test force update flag
     entity = hass.data["entity_components"]["sensor"].get_entity("sensor.tasmota_status")
-    assert entry.force_update
+    assert entity.force_update
 
 
 @pytest.mark.parametrize("status_sensor_disabled", [False])
