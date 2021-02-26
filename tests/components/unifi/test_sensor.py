@@ -63,7 +63,7 @@ async def test_no_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
-async def test_sensors(hass, aioclient_mock):
+async def test_sensors(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass,
@@ -104,8 +104,11 @@ async def test_sensors(hass, aioclient_mock):
     clients[1]["tx_bytes"] = 6789000000
     clients[1]["uptime"] = 1600180860
 
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": clients}
-    controller.api.message_handler(event)
+    mock_unifi_websocket.return_value.data = {
+        "meta": {"message": MESSAGE_CLIENT},
+        "data": clients,
+    }
+    mock_unifi_websocket.call_args[1]["callback"](SIGNAL_DATA)
     await hass.async_block_till_done()
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
