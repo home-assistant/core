@@ -20,8 +20,17 @@ from .helpers import ChromecastInfo, ChromeCastZeroconf
 _LOGGER = logging.getLogger(__name__)
 
 
-def discover_chromecast(hass: HomeAssistant, info: ChromecastInfo):
+def discover_chromecast(hass: HomeAssistant, device_info):
     """Discover a Chromecast."""
+
+    info = ChromecastInfo(
+        services=device_info.services,
+        uuid=device_info.uuid,
+        model_name=device_info.model_name,
+        friendly_name=device_info.friendly_name,
+        is_audio_group=device_info.port != DEFAULT_PORT,
+    )
+
     if info.uuid is None:
         _LOGGER.error("Discovered chromecast without uuid %s", info)
         return
@@ -53,38 +62,25 @@ def setup_internal_discovery(hass: HomeAssistant) -> None:
         return
 
     class CastListener(pychromecast.discovery.AbstractCastListener):
-        def _add_update_cast(self, uuid):
-            """Handle zeroconf discovery of a new or updated chromecast."""
-            device_info = browser.devices[uuid]
-
-            discover_chromecast(
-                hass,
-                ChromecastInfo(
-                    services=device_info.services,
-                    uuid=device_info.uuid,
-                    model_name=device_info.model_name,
-                    friendly_name=device_info.friendly_name,
-                    is_audio_group=device_info.port != DEFAULT_PORT,
-                ),
-            )
+        """Listener for discovering chromecasts."""
 
         def add_cast(self, uuid, _):
             """Handle zeroconf discovery of a new chromecast."""
-            self._add_update_cast(uuid)
+            discover_chromecast(hass, browser.devices[uuid])
 
         def update_cast(self, uuid, _):
             """Handle zeroconf discovery of an updated chromecast."""
-            self._add_update_cast(uuid)
+            discover_chromecast(hass, browser.devices[uuid])
 
-        def remove_cast(self, uuid, service, device_info):
+        def remove_cast(self, uuid, service, cast_info):
             """Handle zeroconf discovery of a removed chromecast."""
             _remove_chromecast(
                 hass,
                 ChromecastInfo(
-                    services=device_info.services,
-                    uuid=device_info.uuid,
-                    model_name=device_info.model_name,
-                    friendly_name=device_info.friendly_name,
+                    services=cast_info.services,
+                    uuid=cast_info.uuid,
+                    model_name=cast_info.model_name,
+                    friendly_name=cast_info.friendly_name,
                 ),
             )
 
