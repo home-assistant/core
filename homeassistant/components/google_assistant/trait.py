@@ -696,7 +696,7 @@ class TemperatureSettingTrait(_Trait):
         climate.HVAC_MODE_HEAT: "heat",
         climate.HVAC_MODE_COOL: "cool",
         climate.HVAC_MODE_OFF: "off",
-        climate.HVAC_MODE_AUTO: "auto",
+        climate.HVAC_MODE_AUTO: "heat",
         climate.HVAC_MODE_HEAT_COOL: "heatcool",
         climate.HVAC_MODE_FAN_ONLY: "fan-only",
         climate.HVAC_MODE_DRY: "dry",
@@ -801,7 +801,7 @@ class TemperatureSettingTrait(_Trait):
             if current_humidity is not None:
                 response["thermostatHumidityAmbient"] = current_humidity
 
-            if operation in (climate.HVAC_MODE_AUTO, climate.HVAC_MODE_HEAT_COOL):
+            if operation in (climate.HVAC_MODE_HEAT_COOL):
                 if supported & climate.SUPPORT_TARGET_TEMPERATURE_RANGE:
                     response["thermostatTemperatureSetpointHigh"] = round(
                         temp_util.convert(
