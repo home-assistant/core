@@ -76,6 +76,30 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert result[key]["configuration_value_type"] == "enumerated"
     assert result[key]["metadata"]["states"]
 
+    # Test getting non-existent node fails
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/node_status",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
+    # Test getting non-existent node config params fails
+    await ws_client.send_json(
+        {
+            ID: 5,
+            TYPE: "zwave_js/get_config_parameters",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 99999,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+
 
 async def test_add_node(
     hass, integration, client, hass_ws_client, nortek_thermostat_added_event
