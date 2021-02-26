@@ -17,7 +17,6 @@ from typing import (
     Set,
     Tuple,
     Union,
-    cast,
 )
 
 import attr
@@ -73,11 +72,12 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_state_changed_event_listeners(
     hass: HomeAssistant,
-) -> Dict[str, Callable[[Event], Any]]:
-    """Return the callback for state change event listeners."""
-    return cast(
-        Dict[str, Callable[[Event], Any]], hass.data[TRACK_STATE_CHANGE_CALLBACKS]
-    )
+) -> Dict[str, int]:
+    """Return the callback counts for state change event listeners."""
+    return {
+        entity_id: len(callbacks)
+        for entity_id, callbacks in hass.data[TRACK_STATE_CHANGE_CALLBACKS].items()
+    }
 
 
 @dataclass
