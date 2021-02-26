@@ -17,12 +17,16 @@ from tests.common import MockConfigEntry
 
 async def test_setup(hass: HomeAssistantType, router: Mock):
     """Test setup of integration."""
-    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        unique_id=MOCK_HOST,
+    )
+    entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries()
-    assert entries
-    assert entries[0].data[CONF_HOST] == MOCK_HOST
-    assert entries[0].data[CONF_PORT] == MOCK_PORT
+    assert hass.config_entries.async_entries() == [entry]
+
     assert router.call_count == 1
     assert router().open.call_count == 1
 
