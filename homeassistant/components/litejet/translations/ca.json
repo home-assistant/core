@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "open_failed": "No s'ha pogut obrir el port s\u00e8rie especificat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                },
+                "description": "Connecta el port RS232-2 LiteJet a l'ordinador i introdueix la ruta al port s\u00e8rie del dispositiu.\n\nEl LiteJet MCP ha d'estar configurat amb una velocitat de 19.2 k baudis, 8 bits de dades, 1 bit de parada, sense paritat i ha de transmetre un 'CR' despr\u00e9s de cada resposta.",
+                "title": "Connexi\u00f3 amb LiteJet"
+            }
+        }
+    }
+}
