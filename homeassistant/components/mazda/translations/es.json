@@ -6,6 +6,7 @@
         "step": {
             "reauth": {
                 "data": {
+                    "password": "Contrase\u00f1a",
                     "region": "Regi\u00f3n"
                 },
                 "description": "Ha fallado la autenticaci\u00f3n para los Servicios Conectados de Mazda. Por favor, introduce tus credenciales actuales.",
