@@ -106,7 +106,12 @@ def websocket_node_status(
     entry_id = msg[ENTRY_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node_id = msg[NODE_ID]
-    node = client.driver.controller.nodes[node_id]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     data = {
         "node_id": node.node_id,
         "is_routing": node.is_routing,
@@ -354,7 +359,12 @@ def websocket_get_config_parameters(
     entry_id = msg[ENTRY_ID]
     node_id = msg[NODE_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
-    node = client.driver.controller.nodes[node_id]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
     values = node.get_configuration_values()
     result = {}
     for value_id, zwave_value in values.items():
