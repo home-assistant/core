@@ -25,17 +25,17 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (  # pylint:disable=unused-import
     ADDON_SLUG,
+    CONF_ADDON_DEVICE,
+    CONF_ADDON_NETWORK_KEY,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_NETWORK_KEY,
+    CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ADDON_DEVICE = "device"
-CONF_ADDON_NETWORK_KEY = "network_key"
-CONF_NETWORK_KEY = "network_key"
-CONF_USB_PATH = "usb_path"
 DEFAULT_URL = "ws://localhost:3000"
 TITLE = "Z-Wave JS"
 
