@@ -535,7 +535,7 @@ def async_register_addons_in_dev_reg(
 
 @callback
 def async_register_os_in_dev_reg(
-    entry_id: str, dev_reg: DeviceRegistry, os: Dict[str, Any]
+    entry_id: str, dev_reg: DeviceRegistry, os_dict: Dict[str, Any]
 ) -> None:
     """Register OS in the device registry."""
     dev_reg.async_get_or_create(
@@ -543,7 +543,7 @@ def async_register_os_in_dev_reg(
         identifiers={(DOMAIN, "OS")},
         manufacturer="Home Assistant",
         model="Home Assistant Operating System",
-        sw_version=os[ATTR_VERSION],
+        sw_version=os_dict[ATTR_VERSION],
         name="Home Assistant Operating System",
         entry_type=ATTR_SERVICE,
     )
