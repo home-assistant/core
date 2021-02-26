@@ -476,7 +476,7 @@ async def test_migration_off_hassio(hass):
 
 async def test_device_registry(hass):
     """Test device registry entries for hassio."""
-    mock_data = {
+    supervisor_mock_data = {
         "addons": [
             {
                 "name": "test",
@@ -496,20 +496,33 @@ async def test_device_registry(hass):
             },
         ]
     }
+    os_mock_data = {
+        "board": "odroid-n2",
+        "boot": "A",
+        "update_available": False,
+        "version": "5.12",
+        "version_latest": "5.12",
+    }
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
         "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value=mock_data,
+        return_value=supervisor_mock_data,
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_os_info",
+        return_value=os_mock_data,
     ), patch(
         "homeassistant.components.hassio.async_register_addons_in_dev_reg"
-    ) as func_mock:
+    ) as register_addons_mock, patch(
+        "homeassistant.components.hassio.async_register_os_in_dev_reg"
+    ) as register_os_mock:
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(func_mock.mock_calls) == 1
+        assert len(register_addons_mock.mock_calls) == 1
+        assert len(register_os_mock.mock_calls) == 1
 
-    mock_data = {
+    supervisor_mock_data = {
         "addons": [
             {
                 "name": "test2",
@@ -525,14 +538,21 @@ async def test_device_registry(hass):
     # Test that when addon is removed, next update will remove the add-on and subsequent updates won't
     with patch(
         "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value=mock_data,
+        return_value=supervisor_mock_data,
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_os_info",
+        return_value=os_mock_data,
     ), patch(
         "homeassistant.components.hassio.async_remove_addons_from_dev_reg"
-    ) as func_mock:
+    ) as register_addons_mock, patch(
+        "homeassistant.components.hassio.async_register_os_in_dev_reg"
+    ) as register_os_mock:
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done()
-        assert len(func_mock.mock_calls) == 1
+        assert len(register_addons_mock.mock_calls) == 1
+        assert len(register_os_mock.mock_calls) == 0
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done()
-        assert len(func_mock.mock_calls) == 1
+        assert len(register_addons_mock.mock_calls) == 1
+        assert len(register_os_mock.mock_calls) == 0

@@ -73,7 +73,6 @@ DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
-ADDONS_COORDINATOR_UNSUB_LISTENER = "hassio_addons_coordinator_unsub_listener"
 
 SERVICE_ADDON_START = "addon_start"
 SERVICE_ADDON_STOP = "addon_stop"
@@ -421,6 +420,8 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
             hass.data[DATA_CORE_INFO] = await hassio.get_core_info()
             hass.data[DATA_SUPERVISOR_INFO] = await hassio.get_supervisor_info()
             hass.data[DATA_OS_INFO] = await hassio.get_os_info()
+            if ADDONS_COORDINATOR in hass.data:
+                await hass.data[ADDONS_COORDINATOR].async_refresh()
         except HassioAPIError as err:
             _LOGGER.warning("Can't read last version: %s", err)
 
@@ -484,18 +485,9 @@ async def async_setup(hass: HomeAssistant, config: Config) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = await async_get_registry(hass)
-    coordinator = HassioAddonsDataUpdateCoordinator(hass, config_entry, dev_reg)
+    coordinator = HassioDataUpdateCoordinator(hass, config_entry, dev_reg)
     hass.data[ADDONS_COORDINATOR] = coordinator
     await coordinator.async_refresh()
-
-    def noop_listener():
-        """Noop listener to force coordinator to refresh."""
-        return
-
-    # add a noop listener to force coordinator to refresh since entities are disabled by default
-    hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER] = coordinator.async_add_listener(
-        noop_listener
-    )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -509,11 +501,6 @@ async def async_unload_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    # Unsubscribe from coordinator listener
-    if ADDONS_COORDINATOR_UNSUB_LISTENER in hass.data:
-        hass.data[ADDONS_COORDINATOR_UNSUB_LISTENER]()
-        hass.data.pop(ADDONS_COORDINATOR_UNSUB_LISTENER)
-
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -547,6 +534,22 @@ def async_register_addons_in_dev_reg(
 
 
 @callback
+def async_register_os_in_dev_reg(
+    entry_id: str, dev_reg: DeviceRegistry, os: Dict[str, Any]
+) -> None:
+    """Register OS in the device registry."""
+    dev_reg.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, "OS")},
+        manufacturer="Home Assistant",
+        model="Home Assistant Operating System",
+        sw_version=os[ATTR_VERSION],
+        name="Home Assistant Operating System",
+        entry_type=ATTR_SERVICE,
+    )
+
+
+@callback
 def async_remove_addons_from_dev_reg(
     dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
 ) -> None:
@@ -556,8 +559,8 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
-    """Class to retrieve Hass.io addons status."""
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):
+    """Class to retrieve Hass.io status."""
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: DeviceRegistry
@@ -567,7 +570,6 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=HASSIO_UPDATE_INTERVAL,
             update_method=self._async_update_data,
         )
         self.data = {}
@@ -576,28 +578,35 @@ class HassioAddonsDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
-        data = get_supervisor_info(self.hass)
+        new_data = {}
+        addon_data = get_supervisor_info(self.hass)
 
-        addons = {addon[ATTR_SLUG]: addon for addon in data.get("addons", [])}
+        new_data["addons"] = {
+            addon[ATTR_SLUG]: addon for addon in addon_data.get("addons", [])
+        }
+        new_data["os"] = get_os_info(self.hass)
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
             async_register_addons_in_dev_reg(
-                self.entry_id, self.dev_reg, addons.values()
+                self.entry_id, self.dev_reg, new_data["addons"].values()
             )
-            return addons
+            async_register_os_in_dev_reg(self.entry_id, self.dev_reg, new_data["os"])
+            return new_data
 
         # Remove add-ons that are no longer installed from device registry
-        if removed_addons := list(set(self.data.keys()) - set(addons.keys())):
+        if removed_addons := list(
+            set(self.data["addons"].keys()) - set(new_data["addons"].keys())
+        ):
             async_remove_addons_from_dev_reg(self.dev_reg, removed_addons)
 
         # If there are new add-ons, we should reload the config entry so we can
         # create new devices and entities. We can return an empty dict because
         # coordinator will be recreated.
-        if list(set(addons.keys()) - set(self.data.keys())):
+        if list(set(new_data["addons"].keys()) - set(self.data["addons"].keys())):
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.entry_id)
             )
             return {}
 
-        return addons
+        return new_data

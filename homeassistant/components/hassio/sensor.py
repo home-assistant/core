@@ -7,7 +7,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import ADDONS_COORDINATOR
 from .const import ATTR_VERSION, ATTR_VERSION_LATEST
-from .entity import HassioAddonEntity
+from .entity import HassioAddonEntity, HassioOSEntity
 
 
 async def async_setup_entry(
@@ -20,14 +20,15 @@ async def async_setup_entry(
 
     entities = []
 
-    for addon in coordinator.data.values():
-        for attribute_name, sensor_name in (
-            (ATTR_VERSION, "Version"),
-            (ATTR_VERSION_LATEST, "Newest Version"),
-        ):
+    for attribute_name, sensor_name in (
+        (ATTR_VERSION, "Version"),
+        (ATTR_VERSION_LATEST, "Newest Version"),
+    ):
+        for addon in coordinator.data.values():
             entities.append(
                 HassioAddonSensor(coordinator, addon, attribute_name, sensor_name)
             )
+        entities.append(HassioOSSensor(coordinator, attribute_name, sensor_name))
 
     async_add_entities(entities)
 
@@ -39,3 +40,12 @@ class HassioAddonSensor(HassioAddonEntity):
     def state(self) -> str:
         """Return state of entity."""
         return self.addon_info[self.attribute_name]
+
+
+class HassioOSSensor(HassioOSEntity):
+    """Sensor to track a Hass.io add-on attribute."""
+
+    @property
+    def state(self) -> str:
+        """Return state of entity."""
+        return self.os_info[self.attribute_name]

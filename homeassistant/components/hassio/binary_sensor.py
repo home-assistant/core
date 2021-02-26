@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import Entity
 
 from . import ADDONS_COORDINATOR
 from .const import ATTR_UPDATE_AVAILABLE
-from .entity import HassioAddonEntity
+from .entity import HassioAddonEntity, HassioOSEntity
 
 
 async def async_setup_entry(
@@ -19,14 +19,16 @@ async def async_setup_entry(
     """Binary sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    async_add_entities(
-        [
-            HassioAddonBinarySensor(
-                coordinator, addon, ATTR_UPDATE_AVAILABLE, "Update Available"
-            )
-            for addon in coordinator.data.values()
-        ]
+    entities = [
+        HassioAddonBinarySensor(
+            coordinator, addon, ATTR_UPDATE_AVAILABLE, "Update Available"
+        )
+        for addon in coordinator.data.values()
+    ]
+    entities.append(
+        HassioOSBinarySensor(coordinator, ATTR_UPDATE_AVAILABLE, "Update Available")
     )
+    async_add_entities(entities)
 
 
 class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
@@ -36,3 +38,12 @@ class HassioAddonBinarySensor(HassioAddonEntity, BinarySensorEntity):
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.addon_info[self.attribute_name]
+
+
+class HassioOSBinarySensor(HassioOSEntity, BinarySensorEntity):
+    """Binary sensor to track whether an update is available for Hass.io OS."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the binary sensor is on."""
+        return self.os_info[self.attribute_name]
