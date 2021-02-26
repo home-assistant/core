@@ -1,8 +1,5 @@
 ARG BUILD_VERSION
-FROM homeassistant/amd64-homeassistant:$BUILD_VERSION
-
-# NOTE: intel-nuc will be replaced by generic-x86-64. Make sure to apply
-# changes in generic-x86-64 as well.
+FROM agners/amd64-homeassistant:$BUILD_VERSION
 
 RUN apk --no-cache add \
     libva-intel-driver \
