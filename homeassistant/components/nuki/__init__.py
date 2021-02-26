@@ -10,7 +10,7 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -77,10 +77,15 @@ async def async_setup_entry(hass, entry):
         )
 
         locks, openers = await hass.async_add_executor_job(_get_bridge_devices, bridge)
-    except InvalidCredentialsException as err:
-        raise InvalidAuth from err
+    except InvalidCredentialsException:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
+            )
+        )
+        return False
     except RequestException as err:
-        raise CannotConnect from err
+        raise exceptions.ConfigEntryNotReady from err
 
     async def async_update_data():
         """Fetch data from Nuki bridge."""
@@ -88,10 +93,7 @@ async def async_setup_entry(hass, entry):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                for device in (
-                    hass.data[DOMAIN][entry.entry_id][DATA_LOCKS]
-                    + hass.data[DOMAIN][entry.entry_id][DATA_OPENERS]
-                ):
+                for device in locks + openers:
                     for level in (False, True):
                         try:
                             await hass.async_add_executor_job(device.update, level)
@@ -139,7 +141,7 @@ async def async_unload_entry(hass, entry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in NUKI_PLATFORMS
+                for platform in PLATFORMS
             ]
         )
     )
@@ -164,11 +166,3 @@ class NukiEntity(CoordinatorEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

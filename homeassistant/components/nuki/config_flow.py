@@ -26,6 +26,8 @@ USER_SCHEMA = vol.Schema(
     }
 )
 
+REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+
 
 async def validate_input(hass, data):
     """Validate the user input allows us to connect.
@@ -59,6 +61,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Nuki config flow."""
         self.discovery_schema = {}
 
+        # When invoked for reauth, allows updating an existing config entry
+        self._reauth = False
+
     async def async_step_import(self, user_input=None):
         """Handle a flow initiated by import."""
         return await self.async_step_validate(user_input)
@@ -82,6 +87,21 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return await self.async_step_validate()
+        
+    async def async_step_reauth(self, data):
+        """Perform reauth upon an API authentication error."""
+        self._data = data
+        self._reauth = True
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that inform the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=REAUTH_SCHEMA
+            )
+        return await self.async_step_validate(user_input)
 
     async def async_step_validate(self, user_input=None):
         """Handle init step of a flow."""
@@ -89,7 +109,15 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                conf = user_input
+                if self._reauth:
+                    conf = {
+                        CONF_HOST: self._data[CONF_HOST],
+                        CONF_PORT: self._data[CONF_PORT],
+                        CONF_TOKEN: user_input[CONF_TOKEN],
+                    }
+
+                info = await validate_input(self.hass, conf)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -99,14 +127,26 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                await self.async_set_unique_id(info["ids"]["hardwareId"])
+                existing_entry = await self.async_set_unique_id(
+                    info["ids"]["hardwareId"]
+                )
+                if self._reauth and existing_entry:
+                    self.hass.config_entries.async_update_entry(
+                        existing_entry, data=conf
+                    )
+                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                    return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=info["ids"]["hardwareId"], data=user_input
+                    title=info["ids"]["hardwareId"], data=conf
                 )
 
-        data_schema = self.discovery_schema or USER_SCHEMA
+        if self._reauth:
+            return self.async_show_form(
+                step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
+            )
 
+        data_schema = self.discovery_schema or USER_SCHEMA
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
