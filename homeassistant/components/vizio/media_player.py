@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -115,10 +114,6 @@ async def async_setup_entry(
         timeout=DEFAULT_TIMEOUT,
     )
 
-    if not await device.can_connect_with_auth_check():
-        _LOGGER.warning("Failed to connect to %s", host)
-        raise PlatformNotReady
-
     apps_coordinator = hass.data[DOMAIN].get(CONF_APPS)
 
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
@@ -183,12 +178,6 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        if not self._model:
-            self._model = await self._device.get_model_name(log_api_exception=False)
-
-        if not self._sw_version:
-            self._sw_version = await self._device.get_version(log_api_exception=False)
-
         is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
@@ -204,6 +193,12 @@ class VizioDevice(MediaPlayerEntity):
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._available = True
+
+        if not self._model:
+            self._model = await self._device.get_model_name(log_api_exception=False)
+
+        if not self._sw_version:
+            self._sw_version = await self._device.get_version(log_api_exception=False)
 
         if not is_on:
             self._state = STATE_OFF

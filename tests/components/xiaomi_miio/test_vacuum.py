@@ -22,6 +22,7 @@ from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_ERROR,
 )
+from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.const import DOMAIN as XIAOMI_DOMAIN
 from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_CLEANED_AREA,
@@ -38,7 +39,6 @@ from homeassistant.components.xiaomi_miio.vacuum import (
     ATTR_SIDE_BRUSH_LEFT,
     ATTR_TIMERS,
     CONF_HOST,
-    CONF_NAME,
     CONF_TOKEN,
     SERVICE_CLEAN_SEGMENT,
     SERVICE_CLEAN_ZONE,
@@ -51,12 +51,14 @@ from homeassistant.components.xiaomi_miio.vacuum import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    CONF_PLATFORM,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
+
+from .test_config_flow import TEST_MAC
+
+from tests.common import MockConfigEntry
 
 PLATFORM = "xiaomi_miio"
 
@@ -521,17 +523,21 @@ async def setup_component(hass, entity_name):
     """Set up vacuum component."""
     entity_id = f"{DOMAIN}.{entity_name}"
 
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {
-            DOMAIN: {
-                CONF_PLATFORM: PLATFORM,
-                CONF_HOST: "192.168.1.100",
-                CONF_NAME: entity_name,
-                CONF_TOKEN: "12345678901234567890123456789012",
-            }
+    config_entry = MockConfigEntry(
+        domain=XIAOMI_DOMAIN,
+        unique_id="123456",
+        title=entity_name,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_DEVICE,
+            CONF_HOST: "192.168.1.100",
+            CONF_TOKEN: "12345678901234567890123456789012",
+            const.CONF_MODEL: const.MODELS_VACUUM[0],
+            const.CONF_MAC: TEST_MAC,
         },
     )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
     return entity_id

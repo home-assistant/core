@@ -83,6 +83,7 @@ homeassistant/components/circuit/* @braam
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
+homeassistant/components/climacell/* @raman325
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus @ctalkington
 homeassistant/components/color_extractor/* @GenericStudent
@@ -145,6 +146,7 @@ homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @baqs
+homeassistant/components/faa_delays/* @ntilley905
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filesize/* @spacegaier
@@ -244,6 +246,7 @@ homeassistant/components/keba/* @dannerph
 homeassistant/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
 homeassistant/components/keyboard_remote/* @bendavid
+homeassistant/components/kmtronic/* @dgomes
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
 homeassistant/components/konnected/* @heythisisnate @kit-klein
@@ -253,6 +256,8 @@ homeassistant/components/launch_library/* @ludeeus
 homeassistant/components/lcn/* @alengwenus
 homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linux_battery/* @fabaff
+homeassistant/components/litejet/* @joncar
+homeassistant/components/litterrobot/* @natekspencer
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
@@ -290,6 +295,7 @@ homeassistant/components/motion_blinds/* @starkillerOG
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @emontnemery
 homeassistant/components/msteams/* @peroyvind
+homeassistant/components/mullvad/* @meichthys
 homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
@@ -384,6 +390,7 @@ homeassistant/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
 homeassistant/components/ring/* @balloob
 homeassistant/components/risco/* @OnFreund
+homeassistant/components/rituals_perfume_genie/* @milanmeu
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roku/* @ctalkington
 homeassistant/components/roomba/* @pschmitt @cyr-ius @shenxn
@@ -450,6 +457,7 @@ homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg
 homeassistant/components/stream/* @hunterjm @uvjustin
 homeassistant/components/stt/* @pvizeli
+homeassistant/components/subaru/* @G-Two
 homeassistant/components/suez_water/* @ooii
 homeassistant/components/sun/* @Swamp-Ig
 homeassistant/components/supla/* @mwegrzynek

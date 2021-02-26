@@ -154,15 +154,15 @@ async def _async_setup_platform(
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
     hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
-    info = None
+    wanted_uuid = None
     if CONF_UUID in config:
-        info = ChromecastInfo(uuid=config[CONF_UUID], services=None)
+        wanted_uuid = config[CONF_UUID]
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
         """Handle discovery of a new chromecast."""
-        # If info is set, we're handling a specific cast device identified by UUID
-        if info is not None and (info.uuid is not None and info.uuid != discover.uuid):
+        # If wanted_uuid is set, we're handling a specific cast device identified by UUID
+        if wanted_uuid is not None and wanted_uuid != discover.uuid:
             # UUID not matching, this is not it.
             return
 
@@ -251,8 +251,8 @@ class CastDevice(MediaPlayerEntity):
             self.services,
         )
         chromecast = await self.hass.async_add_executor_job(
-            pychromecast.get_chromecast_from_service,
-            (
+            pychromecast.get_chromecast_from_cast_info,
+            pychromecast.discovery.CastInfo(
                 self.services,
                 self._cast_info.uuid,
                 self._cast_info.model_name,
@@ -875,8 +875,8 @@ class DynamicCastGroup:
             self.services,
         )
         chromecast = await self.hass.async_add_executor_job(
-            pychromecast.get_chromecast_from_service,
-            (
+            pychromecast.get_chromecast_from_cast_info,
+            pychromecast.discovery.CastInfo(
                 self.services,
                 self._cast_info.uuid,
                 self._cast_info.model_name,

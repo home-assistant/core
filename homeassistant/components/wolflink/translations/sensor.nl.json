@@ -1,0 +1,16 @@
+{
+    "state": {
+        "wolflink__state": {
+            "frost_warmwasser": "DHW vorst",
+            "frostschutz": "Vorstbescherming",
+            "gasdruck": "Gasdruk",
+            "glt_betrieb": "BMS-modus",
+            "heizbetrieb": "Verwarmingsmodus",
+            "heizgerat_mit_speicher": "Boiler met cilinder",
+            "heizung": "Verwarmen",
+            "initialisierung": "Initialisatie",
+            "kalibration": "Kalibratie",
+            "kalibration_heizbetrieb": "Kalibratie verwarmingsmodus"
+        }
+    }
+}

@@ -1,23 +1,28 @@
 # Describes the format for available camera services
 
 turn_off:
-  description: Turn off camera
+  name: Turn off
+  description: Turn off camera.
   target:
 
 turn_on:
-  description: Turn on camera
+  name: Turn on
+  description: Turn on camera.
   target:
 
 enable_motion_detection:
-  description: Enable the motion detection in a camera
+  name: Enable motion detection
+  description: Enable the motion detection in a camera.
   target:
 
 disable_motion_detection:
-  description: Disable the motion detection in a camera
+  name: Disable motion detection
+  description: Disable the motion detection in a camera.
   target:
 
 snapshot:
-  description: Take a snapshot from a camera
+  name: Take snapshot
+  description: Take a snapshot from a camera.
   target:
   fields:
     filename:
@@ -29,7 +34,8 @@ snapshot:
         text:
 
 play_stream:
-  description: Play camera stream on supported media player
+  name: Play stream
+  description: Play camera stream on supported media player.
   target:
   fields:
     media_player:
@@ -51,7 +57,8 @@ play_stream:
             - "hls"
 
 record:
-  description: Record live camera feed
+  name: Record
+  description: Record live camera feed.
   target:
   fields:
     filename:

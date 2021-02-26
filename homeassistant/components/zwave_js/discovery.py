@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Generator, List, Optional, Set, Union
 
 from zwave_js_server.const import CommandClass
+from zwave_js_server.model.device_class import DeviceClassItem
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue
 
@@ -22,11 +23,6 @@ class ZwaveDiscoveryInfo:
     platform: str
     # hint for the platform about this discovered entity
     platform_hint: Optional[str] = ""
-
-    @property
-    def value_id(self) -> str:
-        """Return the unique value_id belonging to primary value."""
-        return f"{self.node.node_id}.{self.primary_value.value_id}"
 
 
 @dataclass
@@ -72,16 +68,24 @@ class ZWaveDiscoverySchema:
     # [optional] the node's firmware_version must match ANY of these values
     firmware_version: Optional[Set[str]] = None
     # [optional] the node's basic device class must match ANY of these values
-    device_class_basic: Optional[Set[str]] = None
+    device_class_basic: Optional[Set[Union[str, int]]] = None
     # [optional] the node's generic device class must match ANY of these values
-    device_class_generic: Optional[Set[str]] = None
+    device_class_generic: Optional[Set[Union[str, int]]] = None
     # [optional] the node's specific device class must match ANY of these values
-    device_class_specific: Optional[Set[str]] = None
+    device_class_specific: Optional[Set[Union[str, int]]] = None
     # [optional] additional values that ALL need to be present on the node for this scheme to pass
     required_values: Optional[List[ZWaveValueDiscoverySchema]] = None
+    # [optional] additional values that MAY NOT be present on the node for this scheme to pass
+    absent_values: Optional[List[ZWaveValueDiscoverySchema]] = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
 
+
+SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
+    command_class={CommandClass.SWITCH_MULTILEVEL},
+    property={"currentValue"},
+    type={"number"},
+)
 
 # For device class mapping see:
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
@@ -93,11 +97,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0039},
         product_id={0x3131},
         product_type={0x4944},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # GE/Jasco fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
@@ -105,11 +105,7 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x0063},
         product_id={0x3034, 0x3131, 0x3138},
         product_type={0x4944},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Leviton ZW4SF fan controllers using switch multilevel CC
     ZWaveDiscoverySchema(
@@ -117,50 +113,39 @@ DISCOVERY_SCHEMAS = [
         manufacturer_id={0x001D},
         product_id={0x0002},
         product_type={0x0038},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x010F},
         product_id={0x1000},
         product_type={0x0302},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Qubino flush shutter
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x0159},
         product_id={0x0052},
         product_type={0x0003},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # Graber/Bali/Spring Fashion Covers
     ZWaveDiscoverySchema(
         platform="cover",
-        hint="fibaro_fgs222",
         manufacturer_id={0x026E},
         product_id={0x5A31},
         product_type={0x4353},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # iBlinds v2 window blind motor
+    ZWaveDiscoverySchema(
+        platform="cover",
+        manufacturer_id={0x0287},
+        product_id={0x000D},
+        product_type={0x0003},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
@@ -203,56 +188,30 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     # climate
+    # thermostats supporting mode (and optional setpoint)
     ZWaveDiscoverySchema(
         platform="climate",
-        device_class_generic={"Thermostat"},
-        device_class_specific={
-            "Setback Thermostat",
-            "Thermostat General",
-            "Thermostat General V2",
-            "General Thermostat",
-            "General Thermostat V2",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
             property={"mode"},
             type={"number"},
         ),
     ),
-    # climate
-    # setpoint thermostats
+    # thermostats supporting setpoint only (and thus not mode)
     ZWaveDiscoverySchema(
         platform="climate",
-        device_class_generic={"Thermostat"},
-        device_class_specific={
-            "Setpoint Thermostat",
-            "Unused",
-        },
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_SETPOINT},
             property={"setpoint"},
             type={"number"},
         ),
-    ),
-    # lights
-    # primary value is the currentValue (brightness)
-    ZWaveDiscoverySchema(
-        platform="light",
-        device_class_generic={"Multilevel Switch", "Remote Switch"},
-        device_class_specific={
-            "Tunable Color Light",
-            "Binary Tunable Color Light",
-            "Tunable Color Switch",
-            "Multilevel Remote Switch",
-            "Multilevel Power Switch",
-            "Multilevel Scene Switch",
-            "Unused",
-        },
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        absent_values=[  # mode must not be present to prevent dupes
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.THERMOSTAT_MODE},
+                property={"mode"},
+                type={"number"},
+            ),
+        ],
     ),
     # binary sensors
     ZWaveDiscoverySchema(
@@ -370,11 +329,7 @@ DISCOVERY_SCHEMAS = [
             "Motor Control Class C",
             "Multiposition Motor",
         },
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
     # cover
     # motorized barriers
@@ -400,11 +355,24 @@ DISCOVERY_SCHEMAS = [
         hint="fan",
         device_class_generic={"Multilevel Switch"},
         device_class_specific={"Fan Switch"},
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SWITCH_MULTILEVEL},
-            property={"currentValue"},
-            type={"number"},
-        ),
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # number platform
+    # valve control for thermostats
+    ZWaveDiscoverySchema(
+        platform="number",
+        hint="Valve control",
+        device_class_generic={"Thermostat"},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+    ),
+    # lights
+    # primary value is the currentValue (brightness)
+    # catch any device with multilevel CC as light
+    # NOTE: keep this at the bottom of the discovery scheme,
+    # to handle all others that need the multilevel CC first
+    ZWaveDiscoverySchema(
+        platform="light",
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
 ]
 
@@ -440,21 +408,18 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
             ):
                 continue
             # check device_class_basic
-            if (
-                schema.device_class_basic is not None
-                and value.node.device_class.basic not in schema.device_class_basic
+            if not check_device_class(
+                value.node.device_class.basic, schema.device_class_basic
             ):
                 continue
             # check device_class_generic
-            if (
-                schema.device_class_generic is not None
-                and value.node.device_class.generic not in schema.device_class_generic
+            if not check_device_class(
+                value.node.device_class.generic, schema.device_class_generic
             ):
                 continue
             # check device_class_specific
-            if (
-                schema.device_class_specific is not None
-                and value.node.device_class.specific not in schema.device_class_specific
+            if not check_device_class(
+                value.node.device_class.specific, schema.device_class_specific
             ):
                 continue
             # check primary value
@@ -465,6 +430,13 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 if not all(
                     any(check_value(val, val_scheme) for val in node.values.values())
                     for val_scheme in schema.required_values
+                ):
+                    continue
+            # check for values that may not be present
+            if schema.absent_values is not None:
+                if any(
+                    any(check_value(val, val_scheme) for val in node.values.values())
+                    for val_scheme in schema.absent_values
                 ):
                     continue
             # all checks passed, this value belongs to an entity
@@ -498,3 +470,18 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
     if schema.type is not None and value.metadata.type not in schema.type:
         return False
     return True
+
+
+@callback
+def check_device_class(
+    device_class: DeviceClassItem, required_value: Optional[Set[Union[str, int]]]
+) -> bool:
+    """Check if device class id or label matches."""
+    if required_value is None:
+        return True
+    for val in required_value:
+        if isinstance(val, str) and device_class.label == val:
+            return True
+        if isinstance(val, int) and device_class.key == val:
+            return True
+    return False

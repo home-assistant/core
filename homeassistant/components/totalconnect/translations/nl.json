@@ -1,12 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account al geconfigureerd"
+            "already_configured": "Account al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "Locatie"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Verifieer de integratie opnieuw"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

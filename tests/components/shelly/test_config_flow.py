@@ -512,6 +512,36 @@ async def test_zeroconf_confirm_error(hass, error):
     assert result2["errors"] == {"base": base_error}
 
 
+async def test_zeroconf_confirm_auth_error(hass):
+    """Test we get credentials form after an auth error when confirming discovery."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    with patch(
+        "aioshelly.get_info",
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.Device.create",
+        new=AsyncMock(side_effect=aioshelly.AuthRequired),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "credentials"
+    assert result2["errors"] == {}
+
+
 async def test_zeroconf_already_configured(hass):
     """Test we get the form."""
     await setup.async_setup_component(hass, "persistent_notification", {})
