@@ -144,6 +144,8 @@ def mock_get_server_version(server_version_side_effect, server_version_timeout):
         driver_version="mock-driver-version",
         server_version="mock-server-version",
         home_id=1234,
+        min_schema_version=0,
+        max_schema_version=1,
     )
     with patch(
         "homeassistant.components.zwave_js.config_flow.get_server_version",
