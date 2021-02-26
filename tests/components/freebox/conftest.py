@@ -24,27 +24,18 @@ def mock_path():
 def mock_router():
     """Mock a successful connection."""
     with patch("homeassistant.components.freebox.router.Freepybox") as service_mock:
-        service_mock.return_value.open = AsyncMock()
-        service_mock.return_value.system.get_config = AsyncMock(
-            return_value=DATA_SYSTEM_GET_CONFIG
-        )
+        instance = service_mock.return_value
+        instance.open = AsyncMock()
+        instance.system.get_config = AsyncMock(return_value=DATA_SYSTEM_GET_CONFIG)
         # sensor
-        service_mock.return_value.call.get_calls_log = AsyncMock(
-            return_value=DATA_CALL_GET_CALLS_LOG
-        )
-        service_mock.return_value.storage.get_disks = AsyncMock(
-            return_value=DATA_STORAGE_GET_DISKS
-        )
-        service_mock.return_value.connection.get_status = AsyncMock(
+        instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
+        instance.storage.get_disks = AsyncMock(return_value=DATA_STORAGE_GET_DISKS)
+        instance.connection.get_status = AsyncMock(
             return_value=DATA_CONNECTION_GET_STATUS
         )
         # switch
-        service_mock.return_value.wifi.get_global_config = AsyncMock(
-            return_value=WIFI_GET_GLOBAL_CONFIG
-        )
+        instance.wifi.get_global_config = AsyncMock(return_value=WIFI_GET_GLOBAL_CONFIG)
         # device_tracker
-        service_mock.return_value.lan.get_hosts_list = AsyncMock(
-            return_value=DATA_LAN_GET_HOSTS_LIST
-        )
-        service_mock.return_value.close = AsyncMock()
+        instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
+        instance.close = AsyncMock()
         yield service_mock
