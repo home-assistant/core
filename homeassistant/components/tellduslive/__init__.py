@@ -123,8 +123,8 @@ async def async_unload_entry(hass, config_entry):
     interval_tracker()
     await asyncio.wait(
         [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
         ]
     )
     del hass.data[DOMAIN]
