@@ -6,6 +6,7 @@ import logging
 import requests
 from tesla_powerwall import (
     AccessDeniedError,
+    APIError,
     MissingAttributeError,
     Powerwall,
     PowerwallUnreachableError,
@@ -105,6 +106,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         powerwall_data = await hass.async_add_executor_job(
             _login_and_fetch_base_info, power_wall, password
         )
+    except APIError as err:
+        # Many restart of Home Assistant may cause the
+        # rate limit to be hit
+        http_session.close()
+        raise ConfigEntryNotReady from err
     except PowerwallUnreachableError as err:
         http_session.close()
         raise ConfigEntryNotReady from err
