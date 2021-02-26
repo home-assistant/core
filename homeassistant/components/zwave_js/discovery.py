@@ -75,6 +75,8 @@ class ZWaveDiscoverySchema:
     device_class_specific: Optional[Set[Union[str, int]]] = None
     # [optional] additional values that ALL need to be present on the node for this scheme to pass
     required_values: Optional[List[ZWaveValueDiscoverySchema]] = None
+    # [optional] additional values that MAY NOT be present on the node for this scheme to pass
+    absent_values: Optional[List[ZWaveValueDiscoverySchema]] = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
 
@@ -186,6 +188,7 @@ DISCOVERY_SCHEMAS = [
         ),
     ),
     # climate
+    # thermostats supporting mode (and optional setpoint)
     ZWaveDiscoverySchema(
         platform="climate",
         primary_value=ZWaveValueDiscoverySchema(
@@ -194,8 +197,7 @@ DISCOVERY_SCHEMAS = [
             type={"number"},
         ),
     ),
-    # climate
-    # setpoint thermostats
+    # thermostats supporting setpoint only (and thus not mode)
     ZWaveDiscoverySchema(
         platform="climate",
         primary_value=ZWaveValueDiscoverySchema(
@@ -203,6 +205,13 @@ DISCOVERY_SCHEMAS = [
             property={"setpoint"},
             type={"number"},
         ),
+        absent_values=[  # mode may not be present to prevent dupes
+            ZWaveValueDiscoverySchema(
+                command_class={CommandClass.THERMOSTAT_MODE},
+                property={"mode"},
+                type={"number"},
+            ),
+        ],
     ),
     # binary sensors
     ZWaveDiscoverySchema(
@@ -421,6 +430,13 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 if not all(
                     any(check_value(val, val_scheme) for val in node.values.values())
                     for val_scheme in schema.required_values
+                ):
+                    continue
+            # check for values that may not be present
+            if schema.absent_values is not None:
+                if any(
+                    any(check_value(val, val_scheme) for val in node.values.values())
+                    for val_scheme in schema.absent_values
                 ):
                     continue
             # all checks passed, this value belongs to an entity
