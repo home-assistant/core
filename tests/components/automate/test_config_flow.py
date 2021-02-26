@@ -26,7 +26,7 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     with patch("aiopulse2.Hub", return_value=mock_Hub()), patch(
         "homeassistant.components.automate.async_setup", return_value=True

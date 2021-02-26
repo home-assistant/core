@@ -21,17 +21,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step once we have info from the user."""
-        errors = {}
         if user_input is not None:
             try:
                 hub = aiopulse2.Hub(user_input["host"])
                 await hub.test()
-                info = {"title": hub.name}
-
-                return self.async_create_entry(title=info["title"], data=user_input)
+                title = hub.name
             except Exception:  # pylint: disable=broad-except
-                errors["base"] = "cannot_connect"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=DATA_SCHEMA,
+                    errors={"base": "cannot_connect"},
+                )
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+            return self.async_create_entry(title=title, data=user_input)
+
+        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
