@@ -178,6 +178,7 @@ async def test_all_day_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "other_events": [],
     }
 
 
@@ -207,6 +208,7 @@ async def test_future_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "other_events": [],
     }
 
 
@@ -226,6 +228,7 @@ async def test_multiple_events(hass, mock_next_event):
     other_events = []
     for i in range(len(events)):
         event = events[i]
+        mock_next_event.return_value.event = event
         if i == 0:
             state_attributes["friendly_name"] = TEST_ENTITY_NAME
             state_attributes["message"] = event["summary"]
@@ -247,7 +250,9 @@ async def test_multiple_events(hass, mock_next_event):
             other_event["description"] = event["description"]
             other_events.append(other_event)
 
-    assert dict(state.attributes) == {state_attributes, other_events}
+    state_attributes["other_events"] = other_events
+
+    assert dict(state.attributes) == {state_attributes}
 
 
 async def test_in_progress_event(hass, mock_next_event):
@@ -276,6 +281,7 @@ async def test_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "other_events": [],
     }
 
 
@@ -307,6 +313,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "other_events": [],
     }
 
 
@@ -339,6 +346,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "other_events": [],
     }
 
 
@@ -371,6 +379,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "other_events": [],
     }
 
 
