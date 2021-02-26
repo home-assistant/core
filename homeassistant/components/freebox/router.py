@@ -1,6 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 from datetime import datetime, timedelta
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -33,8 +34,10 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
     """Get the Freebox API."""
-    freebox_path = Path(hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path)
-    freebox_path.mkdir(exist_ok=True)
+    freebox_path = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path
+
+    if not os.path.exists(freebox_path):
+        await hass.async_add_executor_job(os.makedirs, freebox_path)
 
     token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
 
