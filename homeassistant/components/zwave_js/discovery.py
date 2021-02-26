@@ -205,7 +205,7 @@ DISCOVERY_SCHEMAS = [
             property={"setpoint"},
             type={"number"},
         ),
-        absent_values=[  # mode may not be present to prevent dupes
+        absent_values=[  # mode must not be present to prevent dupes
             ZWaveValueDiscoverySchema(
                 command_class={CommandClass.THERMOSTAT_MODE},
                 property={"mode"},
