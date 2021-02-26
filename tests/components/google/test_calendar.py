@@ -207,8 +207,47 @@ async def test_future_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
+
+
+async def test_multiple_events(hass, mock_next_event):
+    """Test that we can create a multiple event trigger on device."""
+    middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
+    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    events = copy.deepcopy(TEST_MULTIPLE_EVENTS)
+
+    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_ON
+    state_attributes = {}
+    other_events = []
+    for i in range(len(events)):
+        event = events[i]
+        if i == 0:
+            state_attributes["friendly_name"] = TEST_ENTITY_NAME
+            state_attributes["message"] = event["summary"]
+            state_attributes["all_day"] = False
+            state_attributes["offset_reached"] = False
+            state_attributes["start_time"] = middle_of_event.strftime(DATE_STR_FORMAT)
+            state_attributes["end_time"] = end_event.strftime(DATE_STR_FORMAT)
+            state_attributes["location"] = event["location"]
+            state_attributes["description"] = event["description"]
+        else:
+            other_event = {}
+            other_event["friendly_name"] = TEST_ENTITY_NAME
+            other_event["message"] = event["summary"]
+            other_event["all_day"] = False
+            other_event["offset_reached"] = False
+            other_event["start_time"] = middle_of_event.strftime(DATE_STR_FORMAT)
+            other_event["end_time"] = end_event.strftime(DATE_STR_FORMAT)
+            other_event["location"] = event["location"]
+            other_event["description"] = event["description"]
+            other_events.append(other_event)
+
+    assert dict(state.attributes) == {state_attributes, other_events}
 
 
 async def test_in_progress_event(hass, mock_next_event):
@@ -237,7 +276,6 @@ async def test_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
 
 
@@ -269,7 +307,6 @@ async def test_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
 
 
@@ -302,7 +339,6 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
 
 
@@ -335,7 +371,6 @@ async def test_all_day_offset_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
 
 
