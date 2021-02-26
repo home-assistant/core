@@ -640,6 +640,15 @@ async def test_options_flow(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert (
+        _get_schema_default(schema, const.CONF_ALLOW_HUE_GROUPS)
+        == const.DEFAULT_ALLOW_HUE_GROUPS
+    )
+    assert (
+        _get_schema_default(schema, const.CONF_ALLOW_UNREACHABLE)
+        == const.DEFAULT_ALLOW_UNREACHABLE
+    )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -654,3 +663,11 @@ async def test_options_flow(hass):
         const.CONF_ALLOW_HUE_GROUPS: True,
         const.CONF_ALLOW_UNREACHABLE: True,
     }
+
+
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
