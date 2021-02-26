@@ -100,6 +100,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     entry = entity_registry.async_get("binary_sensor.tasmota_binary_sensor_1")
     assert entry.force_update
 
+
 async def test_controlling_state_via_mqtt_switchname(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
