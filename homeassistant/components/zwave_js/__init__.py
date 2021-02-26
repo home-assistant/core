@@ -95,10 +95,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 old_unique_id,
                 new_unique_id,
             )
-            ent_reg.async_update_entity(
-                entity_id,
-                new_unique_id=new_unique_id,
-            )
+            try:
+                ent_reg.async_update_entity(
+                    entity_id,
+                    new_unique_id=new_unique_id,
+                )
+            except ValueError:
+                LOGGER.debug(
+                    (
+                        "Entity %s can't be migrated because the unique ID is taken. "
+                        "Cleaning it up since it is likely no longer valid."
+                    ),
+                    entity_id,
+                )
+                ent_reg.async_remove(entity_id)
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
