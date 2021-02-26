@@ -233,7 +233,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=None,
             value_property_key_name=None,
         )
-        if combined_color_val and combined_color_val.property_key is None:
+        if combined_color_val and isinstance(combined_color_val.value, dict):
             colors_dict = {}
             for color, value in colors.items():
                 color_name = MULTI_COLOR_MAP[color]
