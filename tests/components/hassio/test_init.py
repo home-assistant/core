@@ -10,6 +10,7 @@ from homeassistant.components import frontend
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.hassio import ADDONS_COORDINATOR, DOMAIN, STORAGE_KEY
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.helpers.device_registry import async_get
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -63,6 +64,7 @@ def mock_all(aioclient_mock, request):
                     "name": "test",
                     "slug": "test",
                     "installed": True,
+                    "update_available": False,
                     "version": "1.0.0",
                     "version_latest": "1.0.0",
                     "url": "https://github.com/home-assistant/addons/test",
@@ -71,6 +73,7 @@ def mock_all(aioclient_mock, request):
                     "name": "test2",
                     "slug": "test2",
                     "installed": True,
+                    "update_available": False,
                     "version": "1.0.0",
                     "version_latest": "1.0.0",
                     "url": "https://github.com",
@@ -404,22 +407,26 @@ async def test_migration_off_hassio(hass):
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
-async def test_device_registry(hass):
+async def test_device_registry_calls(hass):
     """Test device registry entries for hassio."""
+    dev_reg = async_get(hass)
     supervisor_mock_data = {
         "addons": [
             {
                 "name": "test",
                 "slug": "test",
                 "installed": True,
+                "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
+                "repository": "test",
                 "url": "https://github.com/home-assistant/addons/test",
             },
             {
                 "name": "test2",
                 "slug": "test2",
                 "installed": True,
+                "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "url": "https://github.com",
@@ -440,17 +447,12 @@ async def test_device_registry(hass):
     ), patch(
         "homeassistant.components.hassio.HassIO.get_os_info",
         return_value=os_mock_data,
-    ), patch(
-        "homeassistant.components.hassio.async_register_addons_in_dev_reg"
-    ) as register_addons_mock, patch(
-        "homeassistant.components.hassio.async_register_os_in_dev_reg"
-    ) as register_os_mock:
+    ):
         config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert len(register_addons_mock.mock_calls) == 1
-        assert len(register_os_mock.mock_calls) == 1
+        assert len(dev_reg.devices) == 3
 
     supervisor_mock_data = {
         "addons": [
@@ -458,6 +460,7 @@ async def test_device_registry(hass):
                 "name": "test2",
                 "slug": "test2",
                 "installed": True,
+                "update_available": False,
                 "version": "1.0.0",
                 "version_latest": "1.0.0",
                 "url": "https://github.com",
@@ -472,17 +475,47 @@ async def test_device_registry(hass):
     ), patch(
         "homeassistant.components.hassio.HassIO.get_os_info",
         return_value=os_mock_data,
-    ), patch(
-        "homeassistant.components.hassio.async_remove_addons_from_dev_reg"
-    ) as register_addons_mock, patch(
-        "homeassistant.components.hassio.async_register_os_in_dev_reg"
-    ) as register_os_mock:
+    ):
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=1))
         await hass.async_block_till_done()
-        assert len(register_addons_mock.mock_calls) == 1
-        assert len(register_os_mock.mock_calls) == 0
+        assert len(dev_reg.devices) == 2
 
         async_fire_time_changed(hass, dt_util.now() + timedelta(hours=2))
         await hass.async_block_till_done()
-        assert len(register_addons_mock.mock_calls) == 1
-        assert len(register_os_mock.mock_calls) == 0
+        assert len(dev_reg.devices) == 2
+
+    supervisor_mock_data = {
+        "addons": [
+            {
+                "name": "test2",
+                "slug": "test2",
+                "installed": True,
+                "update_available": False,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "url": "https://github.com",
+            },
+            {
+                "name": "test3",
+                "slug": "test3",
+                "installed": True,
+                "update_available": False,
+                "version": "1.0.0",
+                "version_latest": "1.0.0",
+                "url": "https://github.com",
+            },
+        ]
+    }
+
+    # Test that when addon is added, next update will reload the entry so we register
+    # a new device
+    with patch(
+        "homeassistant.components.hassio.HassIO.get_supervisor_info",
+        return_value=supervisor_mock_data,
+    ), patch(
+        "homeassistant.components.hassio.HassIO.get_os_info",
+        return_value=os_mock_data,
+    ):
+        async_fire_time_changed(hass, dt_util.now() + timedelta(hours=3))
+        await hass.async_block_till_done()
+        assert len(dev_reg.devices) == 3
