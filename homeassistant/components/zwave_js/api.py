@@ -350,7 +350,7 @@ async def websocket_set_config_parameter(
 def websocket_get_config_parameters(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
-    """Get a list of configuration parameterss for a Z-Wave node."""
+    """Get a list of configuration parameters for a Z-Wave node."""
     entry_id = msg[ENTRY_ID]
     node_id = msg[NODE_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
@@ -446,7 +446,7 @@ async def websocket_update_log_config(
 async def websocket_get_log_config(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
-    """Cancel removing a node from the Z-Wave network."""
+    """Get log configuration for the Z-Wave JS driver."""
     entry_id = msg[ENTRY_ID]
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     result = await client.driver.async_get_log_config()
