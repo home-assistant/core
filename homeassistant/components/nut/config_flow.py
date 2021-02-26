@@ -253,7 +253,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors[CONF_BASE] = "unknown"
 
         if errors:
-            info["available_resources"] = resources
+            return self.async_show_form(step_id="init", errors=errors)
 
         base_schema = _resource_schema_base(info["available_resources"], resources)
         base_schema[
