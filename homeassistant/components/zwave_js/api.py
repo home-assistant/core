@@ -21,12 +21,13 @@ from homeassistant.components.websocket_api.const import (
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DATA_CLIENT, DOMAIN, EVENT_DEVICE_ADDED_TO_REGISTRY
+from .helpers import get_device_id
 
 # general API constants
 ID = "id"
@@ -51,6 +52,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     """Register all of our api endpoints."""
     websocket_api.async_register_command(hass, websocket_network_status)
     websocket_api.async_register_command(hass, websocket_node_status)
+    websocket_api.async_register_command(hass, websocket_get_device_from_node)
     websocket_api.async_register_command(hass, websocket_add_node)
     websocket_api.async_register_command(hass, websocket_stop_inclusion)
     websocket_api.async_register_command(hass, websocket_remove_node)
@@ -122,6 +124,50 @@ def websocket_node_status(
     connection.send_result(
         msg[ID],
         data,
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_device_from_node",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(NODE_ID): int,
+    }
+)
+def websocket_get_device_from_node(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
+    """Get the device registry information for a Z-Wave JS node."""
+    entry_id = msg[ENTRY_ID]
+    client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+    node_id = msg[NODE_ID]
+    node = client.driver.controller.nodes.get(node_id)
+
+    if node is None:
+        connection.send_error(msg[ID], ERR_NOT_FOUND, f"Node {node_id} not found")
+        return
+
+    registry = device_registry.async_get(hass)
+    device_id = get_device_id(client, node)
+    entry = registry.async_get_device({device_id})
+    result = {}
+
+    if entry is not None:
+        result = {
+            "manufacturer": entry.manufacturer,
+            "model": entry.model,
+            "name": entry.name,
+            "sw_version": entry.sw_version,
+            "id": entry.id,
+            "via_device_id": entry.via_device_id,
+            "area_id": entry.area_id,
+            "name_by_user": entry.name_by_user,
+            "disabled_by": entry.disabled_by,
+        }
+
+    connection.send_result(
+        msg[ID],
+        result,
     )
 
 
