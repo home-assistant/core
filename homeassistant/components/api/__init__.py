@@ -68,6 +68,7 @@ async def async_setup(hass, config):
     hass.http.register_view(APIEntityStateView)
     hass.http.register_view(APIEventListenersView)
     hass.http.register_view(APIEventView)
+    hass.http.register_view(APIStateChangedEventListenersView)
     hass.http.register_view(APIServicesView)
     hass.http.register_view(APIDomainServicesView)
     hass.http.register_view(APIComponentsView)
