@@ -266,7 +266,7 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == "20.5"
 
     # Test force update flag
-    assert state.force_update == True
+    assert state.force_update
 
     # Test polled state update
     async_fire_mqtt_message(
