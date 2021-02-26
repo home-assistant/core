@@ -96,8 +96,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert state.state == STATE_OFF
 
     # Test force update flag
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    entry = entity_registry.async_get("binary_sensor.tasmota_binary_sensor_1")
+    entity = hass.data["entity_components"]["binary_sensor"].get_entity("binary_sensor.tasmota_binary_sensor_1")
     assert entry.force_update
 
 
