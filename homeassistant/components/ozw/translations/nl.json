@@ -1,8 +1,23 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "mqtt_required": "De [%%] integratie is niet ingesteld",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
+        },
+        "step": {
+            "hassio_confirm": {
+                "title": "OpenZWave integratie instellen met de OpenZWave add-on"
+            },
+            "install_addon": {
+                "title": "De OpenZWave add-on installatie is gestart"
+            },
+            "start_addon": {
+                "data": {
+                    "usb_path": "USB-apparaatpad"
+                }
+            }
         }
     }
 }

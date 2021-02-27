@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -43,7 +43,7 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .helpers import get_device_id
+from .helpers import get_device_id, get_old_value_id, get_unique_id
 from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
@@ -83,6 +83,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     dev_reg = await device_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
+
+    @callback
+    def migrate_entity(platform: str, old_unique_id: str, new_unique_id: str) -> None:
+        """Check if entity with old unique ID exists, and if so migrate it to new ID."""
+        if entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id):
+            LOGGER.debug(
+                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            try:
+                ent_reg.async_update_entity(
+                    entity_id,
+                    new_unique_id=new_unique_id,
+                )
+            except ValueError:
+                LOGGER.debug(
+                    (
+                        "Entity %s can't be migrated because the unique ID is taken. "
+                        "Cleaning it up since it is likely no longer valid."
+                    ),
+                    entity_id,
+                )
+                ent_reg.async_remove(entity_id)
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -95,6 +121,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
+
+            # This migration logic was added in 2021.3 to handle a breaking change to
+            # the value_id format. Some time in the future, this code block
+            # (as well as get_old_value_id helper and migrate_entity closure) can be
+            # removed.
+            value_ids = [
+                # 2021.2.* format
+                get_old_value_id(disc_info.primary_value),
+                # 2021.3.0b0 format
+                disc_info.primary_value.value_id,
+            ]
+
+            new_unique_id = get_unique_id(
+                client.driver.controller.home_id,
+                disc_info.primary_value.value_id,
+            )
+
+            for value_id in value_ids:
+                old_unique_id = get_unique_id(
+                    client.driver.controller.home_id,
+                    f"{disc_info.primary_value.node.node_id}.{value_id}",
+                )
+                # Most entities have the same ID format, but notification binary sensors
+                # have a state key in their ID so we need to handle them differently
+                if (
+                    disc_info.platform == "binary_sensor"
+                    and disc_info.platform_hint == "notification"
+                ):
+                    for state_key in disc_info.primary_value.metadata.states:
+                        # ignore idle key (0)
+                        if state_key == "0":
+                            continue
+
+                        migrate_entity(
+                            disc_info.platform,
+                            f"{old_unique_id}.{state_key}",
+                            f"{new_unique_id}.{state_key}",
+                        )
+
+                    # Once we've iterated through all state keys, we can move on to the
+                    # next item
+                    continue
+
+                migrate_entity(disc_info.platform, old_unique_id, new_unique_id)
+
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
@@ -193,7 +264,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
 
-    services = ZWaveServices(hass)
+    services = ZWaveServices(hass, ent_reg)
     services.async_register()
 
     # Set up websocket API

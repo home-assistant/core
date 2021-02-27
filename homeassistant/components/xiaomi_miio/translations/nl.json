@@ -5,9 +5,19 @@
             "already_in_progress": "De configuratiestroom voor dit Xiaomi Miio-apparaat is al bezig."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "IP-adres",
+                    "model": "Apparaatmodel (Optioneel)",
+                    "name": "Naam van het apparaat",
+                    "token": "API-token"
+                }
+            },
             "gateway": {
                 "data": {
                     "host": "IP-adres",

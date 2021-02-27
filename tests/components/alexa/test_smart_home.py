@@ -26,7 +26,7 @@ from homeassistant.components.media_player.const import (
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import Context, callback
+from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 
@@ -42,17 +42,13 @@ from . import (
     reported_properties,
 )
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 
 @pytest.fixture
 def events(hass):
     """Fixture that catches alexa events."""
-    events = []
-    hass.bus.async_listen(
-        smart_home.EVENT_ALEXA_SMART_HOME, callback(lambda e: events.append(e))
-    )
-    yield events
+    return async_capture_events(hass, smart_home.EVENT_ALEXA_SMART_HOME)
 
 
 @pytest.fixture

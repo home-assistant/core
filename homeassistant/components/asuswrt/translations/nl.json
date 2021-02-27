@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_host": "Ongeldige hostnaam of IP-adres",
+            "ssh_not_file": "SSH-sleutelbestand niet gevonden",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "mode": "Mode",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "AsusWRT"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "track_unknown": "Volg onbekende / naamloze apparaten"
+                },
+                "title": "AsusWRT-opties"
+            }
+        }
+    }
+}

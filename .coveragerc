@@ -145,6 +145,7 @@ omit =
     homeassistant/components/clickatell/notify.py
     homeassistant/components/clicksend/notify.py
     homeassistant/components/clicksend_tts/notify.py
+    homeassistant/components/climacell/weather.py
     homeassistant/components/cmus/media_player.py
     homeassistant/components/co2signal/*
     homeassistant/components/coinbase/*
@@ -271,6 +272,8 @@ omit =
     homeassistant/components/evohome/*
     homeassistant/components/ezviz/*
     homeassistant/components/familyhub/camera.py
+    homeassistant/components/faa_delays/__init__.py
+    homeassistant/components/faa_delays/binary_sensor.py
     homeassistant/components/fastdotcom/*
     homeassistant/components/ffmpeg/camera.py
     homeassistant/components/fibaro/*
@@ -585,6 +588,9 @@ omit =
     homeassistant/components/mpd/media_player.py
     homeassistant/components/mqtt_room/sensor.py
     homeassistant/components/msteams/notify.py
+    homeassistant/components/mullvad/__init__.py
+    homeassistant/components/mullvad/binary_sensor.py
+    homeassistant/components/nest/const.py
     homeassistant/components/mvglive/sensor.py
     homeassistant/components/mychevy/*
     homeassistant/components/mycroft/*

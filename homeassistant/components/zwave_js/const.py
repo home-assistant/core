@@ -9,6 +9,7 @@ PLATFORMS = [
     "fan",
     "light",
     "lock",
+    "number",
     "sensor",
     "switch",
 ]
@@ -39,5 +40,9 @@ SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_PARAMETER_BITMASK = "bitmask"
 ATTR_CONFIG_VALUE = "value"
+
+SERVICE_REFRESH_VALUE = "refresh_value"
+
+ATTR_REFRESH_ALL_VALUES = "refresh_all_values"
 
 ADDON_SLUG = "core_zwave_js"

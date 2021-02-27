@@ -1,10 +1,8 @@
 """Test the Litter-Robot vacuum entity."""
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import litterrobot
 from homeassistant.components.litterrobot.hub import REFRESH_WAIT_TIME
 from homeassistant.components.vacuum import (
     ATTR_PARAMS,
@@ -18,32 +16,19 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID
 from homeassistant.util.dt import utcnow
 
-from .common import CONFIG
+from .conftest import setup_hub
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = "vacuum.test_litter_box"
 
 
-async def setup_hub(hass, mock_hub):
-    """Load the Litter-Robot vacuum platform with the provided hub."""
-    hass.config.components.add(litterrobot.DOMAIN)
-    entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
-    )
-
-    with patch.dict(hass.data, {litterrobot.DOMAIN: {entry.entry_id: mock_hub}}):
-        await hass.config_entries.async_forward_entry_setup(entry, PLATFORM_DOMAIN)
-        await hass.async_block_till_done()
-
-
 async def test_vacuum(hass, mock_hub):
     """Tests the vacuum entity was set up."""
-    await setup_hub(hass, mock_hub)
+    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
 
     vacuum = hass.states.get(ENTITY_ID)
-    assert vacuum is not None
+    assert vacuum
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
 
@@ -71,7 +56,7 @@ async def test_vacuum(hass, mock_hub):
 )
 async def test_commands(hass, mock_hub, service, command, extra):
     """Test sending commands to the vacuum."""
-    await setup_hub(hass, mock_hub)
+    await setup_hub(hass, mock_hub, PLATFORM_DOMAIN)
 
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum is not None

@@ -30,7 +30,12 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_mock_service,
+    mock_restore_cache,
+)
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
@@ -496,10 +501,7 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
-    test_reload_event = []
-    hass.bus.async_listen(
-        EVENT_AUTOMATION_RELOADED, lambda event: test_reload_event.append(event)
-    )
+    test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
 
     with patch(
         "homeassistant.config.load_yaml_config_file",

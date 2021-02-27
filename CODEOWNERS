@@ -83,6 +83,7 @@ homeassistant/components/circuit/* @braam
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
+homeassistant/components/climacell/* @raman325
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus @ctalkington
 homeassistant/components/color_extractor/* @GenericStudent
@@ -146,6 +147,7 @@ homeassistant/components/esphome/* @OttoWinter
 homeassistant/components/essent/* @TheLastProject
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @baqs
+homeassistant/components/faa_delays/* @ntilley905
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
@@ -293,6 +295,7 @@ homeassistant/components/motion_blinds/* @starkillerOG
 homeassistant/components/mpd/* @fabaff
 homeassistant/components/mqtt/* @emontnemery
 homeassistant/components/msteams/* @peroyvind
+homeassistant/components/mullvad/* @meichthys
 homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco
 homeassistant/components/mysensors/* @MartinHjelmare @functionpointer

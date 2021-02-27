@@ -1,11 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang"
+        },
+        "error": {
+            "invalid_host": "Ongeldige hostnaam of IP-adres, zie https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
+            "invalid_mac": "Ongeldig MAC-adres"
         },
         "flow_title": "Xiaomi Aqara Gateway: {name}",
         "step": {
             "select": {
+                "data": {
+                    "select_ip": "IP-adres"
+                },
                 "description": "Voer de installatie opnieuw uit als u extra gateways wilt aansluiten",
                 "title": "Selecteer de Xiaomi Aqara Gateway waarmee u verbinding wilt maken"
             },
