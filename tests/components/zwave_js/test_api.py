@@ -104,14 +104,7 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
 
-    # Test getting device registry entry for a node
-    dev_reg = device_registry.async_get(hass)
-    dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "3245146787-52")},
-        name="Node 52",
-        model="Mock Multisensor 6",
-    )
+    # Test getting non-existent device for a node fails
     await ws_client.send_json(
         {
             ID: 7,
@@ -121,15 +114,41 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
         }
     )
     msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERR_NOT_FOUND
+
+    # Test getting device registry entry for a node
+    dev_reg = device_registry.async_get(hass)
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "3245146787-52")},
+        name="Node 52",
+        model="Mock Multisensor 6",
+        manufacturer="Aeotec",
+        sw_version="1.0",
+        disabled_by=None,
+    )
+    await ws_client.send_json(
+        {
+            ID: 8,
+            TYPE: "zwave_js/get_device_from_node",
+            ENTRY_ID: entry.entry_id,
+            NODE_ID: 52,
+        }
+    )
+    msg = await ws_client.receive_json()
     result = msg["result"]
-    print(result)
     assert result["name"] == "Node 52"
     assert result["model"] == "Mock Multisensor 6"
+    assert result["manufacturer"] == "Aeotec"
+    assert result["sw_version"] == "1.0"
+    assert result["disabled_by"] is None
+    assert result["id"] is not None
 
     # Test getting device for non-existent fails
     await ws_client.send_json(
         {
-            ID: 8,
+            ID: 9,
             TYPE: "zwave_js/get_device_from_node",
             ENTRY_ID: entry.entry_id,
             NODE_ID: 99999,
