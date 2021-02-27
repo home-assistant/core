@@ -258,7 +258,7 @@ class Stream:
         recorder.video_path = video_path
 
         self.start()
-        _LOGGER.debug("Stared stream recording for %s seconds", duration)
+        _LOGGER.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls = self.outputs().get("hls")
