@@ -18,6 +18,7 @@ from aiounifi.events import (
 from homeassistant.components.switch import DOMAIN, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -52,17 +53,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Store previously known POE control entities in case their POE are turned off.
     previously_known_poe_clients = []
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    for entity in entity_registry.entities.values():
+    for entry in async_entries_for_config_entry(entity_registry, config_entry.entry_id):
 
-        if (
-            entity.config_entry_id != config_entry.entry_id
-            or not entity.unique_id.startswith(POE_SWITCH)
-        ):
+        if not entry.unique_id.startswith(POE_SWITCH):
             continue
 
-        mac = entity.unique_id.replace(f"{POE_SWITCH}-", "")
-        if mac in controller.api.clients or mac in controller.api.clients_all:
-            previously_known_poe_clients.append(entity.unique_id)
+        mac = entry.unique_id.replace(f"{POE_SWITCH}-", "")
+        if mac not in controller.api.clients and mac not in controller.api.clients_all:
+            continue
+
+        previously_known_poe_clients.append(mac)
 
     for mac in controller.option_block_clients:
         if mac not in controller.api.clients and mac in controller.api.clients_all:
@@ -123,10 +123,9 @@ def add_poe_entities(
         if mac in controller.entities[DOMAIN][POE_SWITCH]:
             continue
 
-        poe_client_id = f"{POE_SWITCH}-{mac}"
         client = controller.api.clients[mac]
 
-        if poe_client_id not in previously_known_poe_clients and (
+        if mac not in previously_known_poe_clients and (
             mac in controller.wireless_clients
             or client.sw_mac not in devices
             or not devices[client.sw_mac].ports[client.sw_port].port_poe
@@ -139,7 +138,7 @@ def add_poe_entities(
         multi_clients_on_port = False
         for client2 in controller.api.clients.values():
 
-            if poe_client_id in previously_known_poe_clients:
+            if mac in previously_known_poe_clients:
                 break
 
             if (
@@ -196,18 +195,20 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
 
+        if self.poe_mode:  # POE is enabled and client in a known state
+            return
+
         state = await self.async_get_last_state()
         if state is None:
             return
 
-        if self.poe_mode is None:
-            self.poe_mode = state.attributes["poe_mode"]
+        self.poe_mode = state.attributes.get("poe_mode")
 
         if not self.client.sw_mac:
-            self.client.raw["sw_mac"] = state.attributes["switch"]
+            self.client.raw["sw_mac"] = state.attributes.get("switch")
 
         if not self.client.sw_port:
-            self.client.raw["sw_port"] = state.attributes["port"]
+            self.client.raw["sw_port"] = state.attributes.get("port")
 
     @property
     def is_on(self):
@@ -218,16 +219,14 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     def available(self):
         """Return if switch is available.
 
-        Poe_mode None means its poe state is unknown.
+        Poe_mode None means its POE state is unknown.
         Sw_mac unavailable means restored client.
         """
         return (
-            self.poe_mode is None
-            or self.client.sw_mac
-            and (
-                self.controller.available
-                and self.client.sw_mac in self.controller.api.devices
-            )
+            self.poe_mode is not None
+            and self.controller.available
+            and self.client.sw_mac
+            and self.client.sw_mac in self.controller.api.devices
         )
 
     async def async_turn_on(self, **kwargs):
