@@ -98,11 +98,14 @@ class AsusWrtSensorDataHandler:
 
         return ret_dict
 
-    def update_device_count(self, conn_devices):
+    def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
+        if self._connected_devices == conn_devices:
+            return False
         self._connected_devices = conn_devices
+        return True
 
-    async def get_coordinator(self, sensor_type: str):
+    async def get_coordinator(self, sensor_type: str, should_poll=True):
         """Get the coordinator for a specific sensor type."""
         if sensor_type == SENSORS_TYPE_COUNT:
             method = self._get_connected_devices
@@ -119,7 +122,7 @@ class AsusWrtSensorDataHandler:
             name=sensor_type,
             update_method=method,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=SCAN_INTERVAL,
+            update_interval=SCAN_INTERVAL if should_poll else None,
         )
         await coordinator.async_refresh()
 
@@ -266,10 +269,6 @@ class AsusWrtRouter:
             self._connect_error = False
             _LOGGER.info("Reconnected to ASUS router %s", self._host)
 
-        self._connected_devices = len(wrt_devices)
-        if self._sensors_data_handler:
-            self._sensors_data_handler.update_device_count(self._connected_devices)
-
         consider_home = self._options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
@@ -293,6 +292,9 @@ class AsusWrtRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_device_new)
 
+        self._connected_devices = len(wrt_devices)
+        await self._update_unpolled_sensors()
+
     async def init_sensors_coordinator(self) -> None:
         """Init AsusWrt sensors coordinators."""
         if self._sensors_data_handler:
@@ -302,7 +304,7 @@ class AsusWrtRouter:
         self._sensors_data_handler.update_device_count(self._connected_devices)
 
         conn_dev_coordinator = await self._sensors_data_handler.get_coordinator(
-            SENSORS_TYPE_COUNT
+            SENSORS_TYPE_COUNT, False
         )
         if conn_dev_coordinator:
             self._sensors_coordinator[SENSORS_TYPE_COUNT] = {
@@ -327,6 +329,16 @@ class AsusWrtRouter:
                 KEY_COORDINATOR: rates_coordinator,
                 KEY_SENSORS: [SENSOR_RX_RATES, SENSOR_TX_RATES],
             }
+
+    async def _update_unpolled_sensors(self) -> None:
+        """Request refrsh for AsusWrt unpolled sensors."""
+        if not self._sensors_data_handler:
+            return
+
+        if SENSORS_TYPE_COUNT in self._sensors_coordinator:
+            coordinator = self._sensors_coordinator[SENSORS_TYPE_COUNT][KEY_COORDINATOR]
+            if self._sensors_data_handler.update_device_count(self._connected_devices):
+                await coordinator.async_refresh()
 
     async def close(self) -> None:
         """Close the connection."""
