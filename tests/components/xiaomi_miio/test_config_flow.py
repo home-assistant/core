@@ -21,6 +21,7 @@ TEST_TOKEN = "12345678901234567890123456789012"
 TEST_NAME = "Test_Gateway"
 TEST_MODEL = const.MODELS_GATEWAY[0]
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
+TEST_MAC_DEVICE = "abcdefghijkl"
 TEST_GATEWAY_ID = TEST_MAC
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
@@ -346,7 +347,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         data={
             zeroconf.ATTR_HOST: TEST_HOST,
             ZEROCONF_NAME: zeroconf_name_to_test,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
+            ZEROCONF_PROP: {"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
         },
     )
 

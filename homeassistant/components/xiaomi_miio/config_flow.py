@@ -67,10 +67,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not name or not self.host or not self.mac:
             return self.async_abort(reason="not_xiaomi_miio")
 
+        self.mac = format_mac(self.mac)
+
         # Check which device is discovered.
         for gateway_model in MODELS_GATEWAY:
             if name.startswith(gateway_model.replace(".", "-")):
-                unique_id = format_mac(self.mac)
+                unique_id = self.mac
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
@@ -82,7 +84,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for device_model in MODELS_ALL_DEVICES:
             if name.startswith(device_model.replace(".", "-")):
-                unique_id = format_mac(self.mac)
+                unique_id = self.mac
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
