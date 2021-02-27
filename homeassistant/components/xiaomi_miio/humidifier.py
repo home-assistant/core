@@ -535,13 +535,11 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         if self._device_features & FEATURE_SET_TARGET_HUMIDITY == 0:
             return
 
-        # Allowed values are 30, 40, 50, 60, 70, 80 percent
-        humidity = round(humidity, -1)
-
+        # Allowed target humidity values are 30, 40, 50, 60, 70, 80 percent
         await self._try_command(
             "Setting the target humidity of the miio device failed.",
             self._device.set_target_humidity,
-            humidity,
+            round(humidity, -1),
         )
 
     async def async_set_dry_on(self):
