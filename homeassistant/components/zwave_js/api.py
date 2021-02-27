@@ -151,20 +151,24 @@ def websocket_get_device_from_node(
     registry = device_registry.async_get(hass)
     device_id = get_device_id(client, node)
     entry = registry.async_get_device({device_id})
-    result = {}
 
-    if entry is not None:
-        result = {
-            "manufacturer": entry.manufacturer,
-            "model": entry.model,
-            "name": entry.name,
-            "sw_version": entry.sw_version,
-            "id": entry.id,
-            "via_device_id": entry.via_device_id,
-            "area_id": entry.area_id,
-            "name_by_user": entry.name_by_user,
-            "disabled_by": entry.disabled_by,
-        }
+    if entry is None:
+        connection.send_error(
+            msg[ID], ERR_NOT_FOUND, f"No device found for node {node_id}"
+        )
+        return
+
+    result = {
+        "manufacturer": entry.manufacturer,
+        "model": entry.model,
+        "name": entry.name,
+        "sw_version": entry.sw_version,
+        "id": entry.id,
+        "via_device_id": entry.via_device_id,
+        "area_id": entry.area_id,
+        "name_by_user": entry.name_by_user,
+        "disabled_by": entry.disabled_by,
+    }
 
     connection.send_result(
         msg[ID],
