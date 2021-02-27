@@ -42,7 +42,6 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     """
 
     markets_list = []
-    balances_list = []
 
     api_key = data[CONF_API_KEY]
     api_secret = data[CONF_API_SECRET]
@@ -54,12 +53,6 @@ async def validate_input(hass: HomeAssistant, data: Dict):
         for market in markets:
             markets_list.append(market["symbol"])
         markets_list.sort()
-
-        balances = await binance.get_account()
-        for balance in balances["balances"]:
-            if balance["free"] != "0.00000000":
-                balances_list.append(balance["asset"])
-        balances_list.sort()
     except BinanceAPIException as error:
         if (
             error.message == "Invalid API-key, IP, or permissions for action."
@@ -72,7 +65,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     finally:
         await binance.close_connection()
 
-    return {"markets": markets_list, "balances": balances_list}
+    return {"markets": markets_list}
 
 
 class BinanceConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -85,7 +78,6 @@ class BinanceConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the Binance config flow."""
         self.binance_config = {}
         self.markets = None
-        self.balances = None
 
     async def async_step_user(self, user_input: Optional[Dict] = None):
         """Handle a flow initiated by the user."""
@@ -115,13 +107,12 @@ class BinanceConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.binance_config.update(user_input)
-            info, errors = await self._async_validate_or_error(self.binance_config)
+            errors = await self._async_validate_or_error(self.binance_config)
 
             title = "Markets: " + ", ".join(self.binance_config[CONF_MARKETS])
 
             if not errors:
                 await self.async_set_unique_id(user_input[CONF_MARKETS])
-                self.balances = info["balances"]
 
                 return self.async_create_entry(title=title, data=self.binance_config)
 

@@ -3,10 +3,12 @@ import logging
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (  # CURRENCY_ICONS,; DEFAULT_COIN_ICON,
+from .const import (
     CONF_BALANCES,
     CONF_OPEN_ORDERS,
     CONF_TICKERS,
+    CURRENCY_ICONS,
+    DEFAULT_COIN_ICON,
     DOMAIN,
 )
 
@@ -38,8 +40,6 @@ class Ticker(CoordinatorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._symbol = symbol
-        # self._currency = self._symbol.split("-")[0]
-        # self._unit_of_measurement = self._symbol.split("-")[1]
 
         self._name = f"BIN Ticker - {self._symbol}"
         self._unique_id = f"bin_ticker_{self._symbol})"
@@ -63,15 +63,15 @@ class Ticker(CoordinatorEntity):
         """Return a unique id for the sensor."""
         return self._unique_id
 
-    # @property
-    # def unit_of_measurement(self):
-    #     """Return the unit the value is expressed in."""
-    #     return self._unit_of_measurement
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._get_data_property("quoteAsset")
 
-    # @property
-    # def icon(self):
-    #     """Icon to use in the frontend."""
-    #     return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
     def device_state_attributes(self):
@@ -79,10 +79,14 @@ class Ticker(CoordinatorEntity):
         return {
             "symbol": self._symbol,
             "last_price": self._get_data_property("lastPrice"),
+            "price_change": self._get_data_property("priceChange"),
+            "price_change_pct": self._get_data_property("priceChangePercent"),
+            "volume": self._get_data_property("volume"),
             "bid_price": self._get_data_property("bidPrice"),
             "ask_price": self._get_data_property("askPrice"),
-            # "currency": self._currency,
-            # "unit_of_measurement": self._unit_of_measurement,
+            "currency": self._get_data_property("baseAsset"),
+            "quote_asset": self._get_data_property("quoteAsset"),
+            "unit_of_measurement": self.unit_of_measurement,
             "source": "Binance",
         }
 

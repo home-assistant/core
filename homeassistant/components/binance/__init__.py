@@ -65,15 +65,21 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
             )
 
             all_tickers = await binance.get_ticker()
+            all_markets = await binance.get_exchange_info()
+
             tickers_dict = {}
 
             for sym in self.symbols:
                 if sym not in tickers_dict:
                     tickers_dict[sym] = {}
-                    details = next(
+                    ticker_details = next(
                         item for item in all_tickers if item["symbol"] == sym
                     )
-                    tickers_dict[sym].update(details)
+                    market_details = next(
+                        item for item in all_markets["symbols"] if item["symbol"] == sym
+                    )
+                    combined_details_dict = {**ticker_details, **market_details}
+                    tickers_dict[sym].update(combined_details_dict)
 
             result_dict = {"tickers": tickers_dict}
 
