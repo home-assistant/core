@@ -190,15 +190,12 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             warm = 255 - cold
             await self._async_set_colors(
                 {
-                    ColorComponent.WARM_WHITE: warm,
-                    ColorComponent.COLD_WHITE: cold,
                     # turn off color leds when setting color temperature
                     ColorComponent.RED: 0,
                     ColorComponent.GREEN: 0,
                     ColorComponent.BLUE: 0,
-                    ColorComponent.AMBER: 0,
-                    ColorComponent.CYAN: 0,
-                    ColorComponent.PURPLE: 0,
+                    ColorComponent.WARM_WHITE: warm,
+                    ColorComponent.COLD_WHITE: cold,
                 }
             )
 
