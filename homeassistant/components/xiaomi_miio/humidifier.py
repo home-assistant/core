@@ -20,12 +20,18 @@ from miio.airhumidifier_miot import (  # pylint: disable=import-error, import-er
 )
 import voluptuous as vol
 
-from homeassistant.components.humidifier import HumidifierEntity
+from homeassistant.components.humidifier import PLATFORM_SCHEMA, HumidifierEntity
 from homeassistant.components.humidifier.const import (
     DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_TOKEN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_TOKEN,
+)
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -61,6 +67,15 @@ DATA_KEY = "humidifier.xiaomi_miio"
 CONF_MODEL = "model"
 
 ATTR_MODEL = "model"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_MODEL): vol.In(MODELS_HUMIDIFIER),
+    }
+)
 
 ATTR_TEMPERATURE = "temperature"
 ATTR_HUMIDITY = "humidity"
