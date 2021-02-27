@@ -19,6 +19,7 @@ from homeassistant.util import Throttle
 
 ALL_IMAGES = [
     "default",
+    "generic-x86-64",
     "intel-nuc",
     "qemux86",
     "qemux86-64",
@@ -32,6 +33,7 @@ ALL_IMAGES = [
     "raspberrypi4-64",
     "tinker",
     "odroid-c2",
+    "odroid-c4",
     "odroid-n2",
     "odroid-xu",
 ]
