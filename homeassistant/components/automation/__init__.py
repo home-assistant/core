@@ -10,6 +10,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ALIAS,
+    CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_ENTITY_ID,
     CONF_ID,
@@ -31,7 +32,12 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    ConditionError,
+    ConditionErrorContainer,
+    ConditionErrorIndex,
+    HomeAssistantError,
+)
 from homeassistant.helpers import condition, extract_domain_configs, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -57,9 +63,9 @@ from .config import PLATFORM_SCHEMA  # noqa
 from .config import async_validate_config_item
 from .const import (
     CONF_ACTION,
-    CONF_CONDITION,
     CONF_INITIAL_STATE,
     CONF_TRIGGER,
+    CONF_TRIGGER_VARIABLES,
     DEFAULT_INITIAL_STATE,
     DOMAIN,
     LOGGER,
@@ -223,6 +229,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         action_script,
         initial_state,
         variables,
+        trigger_variables,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -238,6 +245,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._referenced_devices: Optional[Set[str]] = None
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
+        self._trigger_variables: ScriptVariables = trigger_variables
 
     @property
     def name(self):
@@ -473,6 +481,16 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         def log_cb(level, msg, **kwargs):
             self._logger.log(level, "%s %s", msg, self._name, **kwargs)
 
+        variables = None
+        if self._trigger_variables:
+            try:
+                variables = self._trigger_variables.async_render(
+                    cast(HomeAssistant, self.hass), None, limited=True
+                )
+            except template.TemplateError as err:
+                self._logger.error("Error rendering trigger variables: %s", err)
+                return None
+
         return await async_initialize_triggers(
             cast(HomeAssistant, self.hass),
             self._trigger_config,
@@ -481,6 +499,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             self._name,
             log_cb,
             home_assistant_start,
+            variables,
         )
 
     @property
@@ -551,12 +570,24 @@ async def _async_process_config(
             )
 
             if CONF_CONDITION in config_block:
-                cond_func = await _async_process_if(hass, config, config_block)
+                cond_func = await _async_process_if(hass, name, config, config_block)
 
                 if cond_func is None:
                     continue
             else:
                 cond_func = None
+
+            # Add trigger variables to variables
+            variables = None
+            if CONF_TRIGGER_VARIABLES in config_block:
+                variables = ScriptVariables(
+                    dict(config_block[CONF_TRIGGER_VARIABLES].as_dict())
+                )
+            if CONF_VARIABLES in config_block:
+                if variables:
+                    variables.variables.update(config_block[CONF_VARIABLES].as_dict())
+                else:
+                    variables = config_block[CONF_VARIABLES]
 
             entity = AutomationEntity(
                 automation_id,
@@ -565,7 +596,8 @@ async def _async_process_config(
                 cond_func,
                 action_script,
                 initial_state,
-                config_block.get(CONF_VARIABLES),
+                variables,
+                config_block.get(CONF_TRIGGER_VARIABLES),
             )
 
             entities.append(entity)
@@ -576,7 +608,7 @@ async def _async_process_config(
     return blueprints_used
 
 
-async def _async_process_if(hass, config, p_config):
+async def _async_process_if(hass, name, config, p_config):
     """Process if checks."""
     if_configs = p_config[CONF_CONDITION]
 
@@ -590,7 +622,27 @@ async def _async_process_if(hass, config, p_config):
 
     def if_action(variables=None):
         """AND all conditions."""
-        return all(check(hass, variables) for check in checks)
+        errors = []
+        for index, check in enumerate(checks):
+            try:
+                if not check(hass, variables):
+                    return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex(
+                        "condition", index=index, total=len(checks), error=ex
+                    )
+                )
+
+        if errors:
+            LOGGER.warning(
+                "Error evaluating condition in '%s':\n%s",
+                name,
+                ConditionErrorContainer("condition", errors=errors),
+            )
+            return False
+
+        return True
 
     if_action.config = if_configs
 

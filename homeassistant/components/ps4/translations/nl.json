@@ -8,6 +8,7 @@
             "port_997_bind_error": "Kon niet binden aan poort 997. Raadpleeg de [documentatie] (https://www.home-assistant.io/components/ps4/) voor aanvullende informatie."
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "credential_timeout": "Time-out van inlog service. Druk op Submit om opnieuw te starten.",
             "login_failed": "Kan niet koppelen met PlayStation 4. Controleer of de pincode juist is.",
             "no_ipaddress": "Voer het IP-adres in van de PlayStation 4 die je wilt configureren."

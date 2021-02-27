@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import Any, Dict, List, Optional, Union
 
-from pkg_resources import parse_version
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -114,7 +114,7 @@ class Blueprint:
         metadata = self.metadata
         min_version = metadata.get(CONF_HOMEASSISTANT, {}).get(CONF_MIN_VERSION)
 
-        if min_version is not None and parse_version(__version__) < parse_version(
+        if min_version is not None and AwesomeVersion(__version__) < AwesomeVersion(
             min_version
         ):
             errors.append(f"Requires at least Home Assistant {min_version}")

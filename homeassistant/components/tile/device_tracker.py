@@ -16,9 +16,10 @@ ATTR_ALTITUDE = "altitude"
 ATTR_CONNECTION_STATE = "connection_state"
 ATTR_IS_DEAD = "is_dead"
 ATTR_IS_LOST = "is_lost"
+ATTR_LAST_LOST_TIMESTAMP = "last_lost_timestamp"
 ATTR_RING_STATE = "ring_state"
-ATTR_VOIP_STATE = "voip_state"
 ATTR_TILE_NAME = "tile_name"
+ATTR_VOIP_STATE = "voip_state"
 
 DEFAULT_ATTRIBUTION = "Data provided by Tile"
 DEFAULT_ICON = "mdi:view-grid"
@@ -135,6 +136,7 @@ class TileDeviceTracker(CoordinatorEntity, TrackerEntity):
             {
                 ATTR_ALTITUDE: self._tile.altitude,
                 ATTR_IS_LOST: self._tile.lost,
+                ATTR_LAST_LOST_TIMESTAMP: self._tile.lost_timestamp,
                 ATTR_RING_STATE: self._tile.ring_state,
                 ATTR_VOIP_STATE: self._tile.voip_state,
             }

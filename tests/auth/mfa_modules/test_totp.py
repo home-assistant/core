@@ -127,7 +127,7 @@ async def test_login_flow_validates_mfa(hass):
             result["flow_id"], {"code": MOCK_CODE}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"].id == "mock-user"
+        assert result["data"].id == "mock-id"
 
 
 async def test_race_condition_in_data_loading(hass):

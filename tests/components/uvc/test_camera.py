@@ -257,7 +257,7 @@ class TestUVC(unittest.TestCase):
         assert not self.uvc.is_recording
         assert (
             datetime(2021, 1, 8, 1, 56, 32, 367000)
-            == self.uvc.state_attributes["last_recording_start_time"]
+            == self.uvc.device_state_attributes["last_recording_start_time"]
         )
 
         self.nvr.get_camera.return_value["recordingIndicator"] = "DISABLED"

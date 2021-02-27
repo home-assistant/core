@@ -442,7 +442,7 @@ async def async_remove_entity(
 ) -> None:
     """Remove WLED segment light from Home Assistant."""
     entity = current[index]
-    await entity.async_remove()
+    await entity.async_remove(force_remove=True)
     registry = await async_get_entity_registry(coordinator.hass)
     if entity.entity_id in registry.entities:
         registry.async_remove(entity.entity_id)

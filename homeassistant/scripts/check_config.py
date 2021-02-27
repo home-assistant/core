@@ -17,7 +17,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.6.2",)
+REQUIREMENTS = ("colorlog==4.7.2",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -141,12 +141,7 @@ def run(script_args: List) -> int:
             if sval is None:
                 print(" -", skey + ":", color("red", "not found"))
                 continue
-            print(
-                " -",
-                skey + ":",
-                sval,
-                color("cyan", "[from:", flatsecret.get(skey, "keyring") + "]"),
-            )
+            print(" -", skey + ":", sval)
 
     return len(res["except"])
 

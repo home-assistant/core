@@ -17,7 +17,7 @@ async def remove_devices(bridge, api_ids, current):
         # Device is removed from Hue, so we remove it from Home Assistant
         entity = current[item_id]
         removed_items.append(item_id)
-        await entity.async_remove()
+        await entity.async_remove(force_remove=True)
         ent_registry = await get_ent_reg(bridge.hass)
         if entity.entity_id in ent_registry.entities:
             ent_registry.async_remove(entity.entity_id)

@@ -4,13 +4,19 @@
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
+        },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API \ud0a4",
                     "host": "\ud638\uc2a4\ud2b8",
                     "password": "\ube44\ubc00\ubc88\ud638"
                 },
-                "description": "\ub2e4\uc774\ud0a8 \uc5d0\uc5b4\ucee8\uc758 IP \uc8fc\uc18c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.\n\nAPI \ud0a4 \ubc0f \ube44\ubc00\ubc88\ud638\ub294 BRP072Cxx \uc640 SKYFi \uae30\uae30\uc5d0\uc11c \uc0ac\uc6a9\ub41c\ub2e4\ub294 \uc810\uc5d0 \uc720\uc758\ud558\uc138\uc694.",
+                "description": "\ub2e4\uc774\ud0a8 \uc5d0\uc5b4\ucee8\uc758 IP \uc8fc\uc18c\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.\n\nAPI \ud0a4 \ubc0f \ube44\ubc00\ubc88\ud638\ub294 BRP072Cxx \uc640 SKYFi \uae30\uae30\uc5d0\uc11c \uc0ac\uc6a9\ub41c\ub2e4\ub294 \uc810\uc5d0 \uc720\uc758\ud574\uc8fc\uc138\uc694.",
                 "title": "\ub2e4\uc774\ud0a8 \uc5d0\uc5b4\ucee8 \uad6c\uc131\ud558\uae30"
             }
         }
