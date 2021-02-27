@@ -134,6 +134,7 @@ def websocket_node_status(
         vol.Required(NODE_ID): int,
     }
 )
+@callback
 def websocket_get_device_from_node(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ) -> None:
