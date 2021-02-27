@@ -63,6 +63,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # When invoked for reauth, allows updating an existing config entry
         self._reauth = False
+        self._data = {}
 
     async def async_step_import(self, user_input=None):
         """Handle a flow initiated by import."""
