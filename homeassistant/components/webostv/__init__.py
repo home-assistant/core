@@ -5,8 +5,8 @@ import logging
 import os
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
-import voluptuous as vol
 from sqlitedict import SqliteDict
+import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant.components.webostv.const import (
@@ -105,9 +105,7 @@ async def async_setup(hass, config):
 
 
 def convert_client_keys(config_file):
-    """
-    In case the config file contains JSON, convert it to a Sqlite config file.
-    """
+    """ In case the config file contains JSON, convert it to a Sqlite config file. """
     # Return early if config file is non-existing
     if not os.path.isfile(config_file):
         return

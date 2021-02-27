@@ -134,6 +134,7 @@ async def test_command_with_optional_arg(hass, client):
 
 
 async def test_migrate_keyfile_to_sqlite(hass, client):
+    """ Test migration from JSON key-file to Sqlite based one. """
     key = "3d5b1aeeb98e"
     # Create config file with JSON content
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
@@ -149,6 +150,7 @@ async def test_migrate_keyfile_to_sqlite(hass, client):
 
 
 async def test_dont_migrate_sqlite_keyfile(hass, client):
+    """ Test that migration is not performed and setup still succeeds when config file is already an Sqlite DB. """
     key = "3d5b1aeeb98e"
 
     # Create config file with Sqlite DB
