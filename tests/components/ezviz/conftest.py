@@ -21,7 +21,7 @@ def ezviz(hass):
             "test-username",
             "test-password",
             "test-region",
-            1,
+            "test-timeout",
         )
 
         instance.login = MagicMock(return_value=True)
@@ -39,7 +39,7 @@ def ezviz_config_flow(hass):
             "test-username",
             "test-password",
             "test-region",
-            1,
+            "test-timeout",
         )
 
         instance.login = MagicMock(return_value=True)

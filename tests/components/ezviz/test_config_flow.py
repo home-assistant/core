@@ -10,7 +10,7 @@ from homeassistant.components.ezviz.const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -19,7 +19,14 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.setup import async_setup_component
 
-from . import USER_INPUT, _patch_async_setup, _patch_async_setup_entry, init_integration
+from . import (
+    USER_INPUT,
+    YAML_CONFIG,
+    YAML_CONFIG_CAMERA,
+    _patch_async_setup,
+    _patch_async_setup_entry,
+    init_integration,
+)
 
 
 async def test_user_form(hass, ezviz_config_flow):
@@ -41,7 +48,7 @@ async def test_user_form(hass, ezviz_config_flow):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "test-username"
-    assert result["data"] == {**USER_INPUT, CONF_TIMEOUT: DEFAULT_TIMEOUT}
+    assert result["data"] == {**USER_INPUT}
 
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -64,8 +71,28 @@ async def test_user_form_unexpected_exception(hass, ezviz_config_flow):
     assert result["reason"] == "unknown"
 
 
-async def test_user_form_single_instance_allowed(hass, ezviz_config_flow):
-    """Test that configuring more than one instance is rejected."""
+async def test_async_step_import(hass, ezviz_config_flow):
+    """Test the config import flow."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_async_step_import_abort(hass, ezviz_config_flow):
+    """Test the config import flow."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG_CAMERA
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+
+
+async def test_user_form_2nd_instance_returns_form(hass, ezviz_config_flow):
+    """Test that configuring 2nd instance returns form."""
     await init_integration(hass, skip_entry_setup=True)
 
     result = await hass.config_entries.flow.async_init(
@@ -73,8 +100,7 @@ async def test_user_form_single_instance_allowed(hass, ezviz_config_flow):
         context={"source": SOURCE_USER},
         data=USER_INPUT,
     )
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["type"] == RESULT_TYPE_FORM
 
 
 async def test_options_flow(hass, ezviz):
