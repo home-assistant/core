@@ -1,6 +1,7 @@
 """Support for Flux lights."""
 import logging
 import random
+import socket
 
 from flux_led import BulbScanner, WifiLedBulb
 import voluptuous as vol
@@ -166,7 +167,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ipaddr = device["ipaddr"]
         if ipaddr in light_ips:
             continue
-        device["name"] = f"{device['id']} {ipaddr}"
+        device["name"] = "{} {}".format(device["id"], ipaddr)
         device[ATTR_MODE] = None
         device[CONF_PROTOCOL] = None
         device[CONF_CUSTOM_EFFECT] = None
@@ -276,6 +277,8 @@ class FluxLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
+#        if not self.is_on:
+#            self._bulb.turnOn()
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
@@ -337,7 +340,7 @@ class FluxLight(LightEntity):
         
         if brightness is None or brightness == 0:
             brightness = 100
-
+        
         # Preserve color on brightness/white level change
         if rgb is None:
             rgb = self._bulb.getRgb()
@@ -367,7 +370,7 @@ class FluxLight(LightEntity):
             try:
                 self._connect()
                 self._error_reported = False
-            except OSError:
+            except socket.error:
                 self._disconnect()
                 if not self._error_reported:
                     _LOGGER.warning(
