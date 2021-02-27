@@ -88,7 +88,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
                 self.context.update(
-                    {"title_placeholders": {"name": f"Miio {device_model} {self.host}"}}
+                    {"title_placeholders": {"name": f"{device_model} {self.host}"}}
                 )
 
                 return await self.async_step_device()
