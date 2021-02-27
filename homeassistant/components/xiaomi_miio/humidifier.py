@@ -54,6 +54,8 @@ from .device import XiaomiMiioEntity
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Device"
+DEFAULT_MIN_HUMIDITY = 30
+DEFAULT_MAX_HUMIDITY = 80
 DATA_KEY = "humidifier.xiaomi_miio"
 
 CONF_MODEL = "model"
@@ -494,6 +496,16 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         """Return the current mode."""
         return self._mode
 
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return DEFAULT_MIN_HUMIDITY
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return DEFAULT_MAX_HUMIDITY
+
     async def async_set_mode(self, mode: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features == 0:
@@ -522,6 +534,9 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         """Set the target humidity."""
         if self._device_features & FEATURE_SET_TARGET_HUMIDITY == 0:
             return
+
+        # Allowed values are 30, 40, 50, 60, 70, 80 percent
+        humidity = round(humidity, -1)
 
         await self._try_command(
             "Setting the target humidity of the miio device failed.",
