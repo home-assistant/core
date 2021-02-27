@@ -230,15 +230,12 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=None,
             value_property_key_name=None,
         )
-        if combined_color_val and isinstance(combined_color_val.value, dict):
-            colors_dict = {}
-            for color, value in colors.items():
-                color_name = MULTI_COLOR_MAP[color]
-                colors_dict[color_name] = value
-            # set updated color object
-            await self.info.node.async_set_value(combined_color_val, colors_dict)
-        else:
-            raise ValueError("Multicolor property not found")
+        colors_dict = {}
+        for color, value in colors.items():
+            color_name = MULTI_COLOR_MAP[color]
+            colors_dict[color_name] = value
+        # set updated color object
+        await self.info.node.async_set_value(combined_color_val, colors_dict)
 
     async def _async_set_brightness(
         self, brightness: Optional[int], transition: Optional[int] = None
@@ -292,7 +289,43 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @callback
     def _calculate_color_values(self) -> None:
         """Calculate light colors."""
-        # using the (new) combined color property
+        red_val = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.RED.value.key,
+            value_property_key_name=ColorComponent.RED.value.name,
+        )
+        green_val = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.RED.value.key,
+            value_property_key_name=ColorComponent.RED.value.name,
+        )
+        blue_val = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.RED.value.key,
+            value_property_key_name=ColorComponent.RED.value.name,
+        )
+        cw_val = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.COLD_WHITE.value.key,
+            value_property_key_name=ColorComponent.COLD_WHITE.value.name,
+        )
+        ww_val = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.WARM_WHITE.value.key,
+            value_property_key_name=ColorComponent.WARM_WHITE.value.name,
+        )
+        cw_val = self.get_zwave_value(
+            "currentColor",
+            CommandClass.SWITCH_COLOR,
+            value_property_key=ColorComponent.COLD_WHITE.value.key,
+            value_property_key_name=ColorComponent.COLD_WHITE.value.name,
+        )
+        # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
         combined_color_val = self.get_zwave_value(
             "currentColor",
@@ -300,24 +333,26 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=None,
             value_property_key_name=None,
         )
-        if not (combined_color_val and isinstance(combined_color_val.value, dict)):
-            # no color support
-            return
-        red = combined_color_val.value.get("red")
-        green = combined_color_val.value.get("green")
-        blue = combined_color_val.value.get("blue")
-        warm_white = combined_color_val.value.get("warmWhite")
-        cold_white = combined_color_val.value.get("coldWhite")
+        if combined_color_val and isinstance(combined_color_val.value, dict):
+            multi_color = combined_color_val.value
+        else:
+            multi_color = {}
 
         # RGB support
-        if red is not None and green is not None and blue is not None:
+        if red_val and green_val and blue_val:
+            # prefer values from the multicolor property
+            red = multi_color.get("red", red_val.value)
+            green = multi_color.get("green", green_val.value)
+            blue = multi_color.get("blue", blue_val.value)
             self._supports_color = True
             # convert to HS
             self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
 
         # color temperature support
-        if warm_white is not None and cold_white is not None:
+        if ww_val and cw_val:
             self._supports_color_temp = True
+            warm_white = multi_color.get("warmWhite", ww_val.value)
+            cold_white = multi_color.get("coldWhite", cw_val.value)
             # Calculate color temps based on whites
             if cold_white or warm_white:
                 self._color_temp = round(
@@ -327,10 +362,10 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             else:
                 self._color_temp = None
         # only one white channel (warm white) = white_level support
-        elif warm_white is not None:
+        elif ww_val:
             self._supports_white_value = True
-            self._white_value = warm_white
+            self._white_value = multi_color.get("warmWhite", ww_val.value)
         # only one white channel (cool white) = white_level support
-        elif cold_white is not None:
+        elif cw_val:
             self._supports_white_value = True
-            self._white_value = cold_white
+            self._white_value = multi_color.get("coldWhite", cw_val.value)
