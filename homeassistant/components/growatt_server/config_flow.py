@@ -58,7 +58,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle adding a "plant" to Home Assistant."""
         user_input = {**self.user_input, **user_input}
 
-        if CONF_PLANT_ID not in user_input:
+        if CONF_PLANT_ID not in user_input or user_input[CONF_PLANT_ID] == "0":
             plant_info = await self.hass.async_add_executor_job(
                 self.api.plant_list, self.user_id
             )
@@ -70,10 +70,15 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for plant in plant_info["data"]:
                 self.plants[plant["plantId"]] = plant["plantName"]
             self.user_input = user_input
-
-            if len(plant_info["data"]) > 1:
+            if (
+                CONF_PLANT_ID not in user_input or user_input[CONF_PLANT_ID] != "0"
+            ) and len(plant_info["data"]) > 1:
                 return await self._show_plant_id_form(None)
             user_input[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
 
         user_input[CONF_NAME] = self.plants[user_input[CONF_PLANT_ID]]
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+
+    async def async_step_import(self, import_data):
+        """Migrate old yaml config to config flow."""
+        return await self.async_step_user(import_data)

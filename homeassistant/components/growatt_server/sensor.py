@@ -8,6 +8,7 @@ import growattServer
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -31,7 +32,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID
+from .const import CONF_PLANT_ID, DEFAULT_NAME, DEFAULT_PLANT_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -357,7 +358,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up growatt server from yaml."""
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry, add_entities):
+    """Set up growatt server from Config Flow."""
+    hass.async_add_executor_job(_setup_entity, hass, config_entry.data, add_entities)
+
+
+def _setup_entity(hass, config, add_entities):
     """Set up the Growatt sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -413,11 +431,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             )
 
     add_entities(entities, True)
-
-
-async def async_setup_entry(hass, config_entry, add_entities):
-    """Set up growatt server from Config Flow."""
-    hass.async_add_executor_job(setup_platform, hass, config_entry.data, add_entities)
 
 
 class GrowattInverter(Entity):
