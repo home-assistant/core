@@ -316,7 +316,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if red is not None and green is not None and blue is not None:
             self._supports_color = True
             # convert to HS
-            self._hs_color = color_util.color_RGB_to_hs(red, green, blue.value)
+            self._hs_color = color_util.color_RGB_to_hs(red, green, blue)
 
         # color temperature support
         if warm_white is not None and cold_white is not None:
