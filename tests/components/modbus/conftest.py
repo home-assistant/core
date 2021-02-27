@@ -38,7 +38,7 @@ async def base_test(
     entity_domain,
     array_name_discovery,
     array_name_old_config,
-    register_words,
+    register_words_or_exception,
     expected,
     method_discovery=False,
     check_config_only=False,
@@ -58,6 +58,7 @@ async def base_test(
         }
 
     mock_sync = mock.MagicMock()
+    # Setup inputs for the sensor
     with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
     ), mock.patch(
@@ -67,8 +68,11 @@ async def base_test(
         "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
     ):
 
-        # Setup inputs for the sensor
-        read_result = ReadResult(register_words)
+        read_result = (
+            register_words_or_exception
+            if isinstance(register_words_or_exception, Exception)
+            else ReadResult(register_words_or_exception)
+        )
         mock_sync.read_coils.return_value = read_result
         mock_sync.read_discrete_inputs.return_value = read_result
         mock_sync.read_input_registers.return_value = read_result
@@ -118,7 +122,6 @@ async def base_test(
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
 
-        # Check state
         entity_id = f"{entity_domain}.{device_name}"
         return hass.states.get(entity_id).state
 

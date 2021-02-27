@@ -125,7 +125,7 @@ async def async_setup_platform(
     """Set up the Modbus sensors."""
     sensors = []
 
-    #  check for old config:
+    # check for old config:
     if discovery_info is None:
         _LOGGER.warning(
             "Sensor configuration is deprecated, will be removed in a future release"

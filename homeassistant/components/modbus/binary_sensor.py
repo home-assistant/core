@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
+from .bit_sensor import setup_bit_sensors
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -91,7 +92,9 @@ async def async_setup_platform(
         }
         config = None
 
-    for entry in discovery_info[CONF_BINARY_SENSORS]:
+    sensors.extend(setup_bit_sensors(hass, discovery_info))
+
+    for entry in discovery_info.get(CONF_BINARY_SENSORS, []):
         if CONF_HUB in entry:
             # from old config!
             discovery_info[CONF_NAME] = entry[CONF_HUB]

@@ -29,6 +29,8 @@ from .const import (
     ATTR_VALUE,
     CONF_BAUDRATE,
     CONF_BINARY_SENSOR,
+    CONF_BIT_SENSORS,
+    CONF_BIT_SWITCHES,
     CONF_BYTESIZE,
     CONF_CLIMATE,
     CONF_CLIMATES,
@@ -63,8 +65,10 @@ def modbus_setup(
             (CONF_CLIMATE, CONF_CLIMATES),
             (CONF_COVER, CONF_COVERS),
             (CONF_BINARY_SENSOR, CONF_BINARY_SENSORS),
+            (CONF_BINARY_SENSOR, CONF_BIT_SENSORS),
             (CONF_SENSOR, CONF_SENSORS),
             (CONF_SWITCH, CONF_SWITCHES),
+            (CONF_SWITCH, CONF_BIT_SWITCHES),
         ):
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, config)

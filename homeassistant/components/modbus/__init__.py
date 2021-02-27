@@ -52,8 +52,12 @@ from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
     CONF_BAUDRATE,
+    CONF_BIT_NUMBER,
+    CONF_BIT_SENSORS,
+    CONF_BIT_SWITCHES,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_COMMAND_BIT_NUMBER,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
     CONF_DATA_COUNT,
@@ -72,6 +76,7 @@ from .const import (
     CONF_STATE_ON,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
+    CONF_STATUS_BIT_NUMBER,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
@@ -183,6 +188,21 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
+BIT_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Required(CONF_COMMAND_BIT_NUMBER): cv.positive_int,
+        vol.Optional(CONF_STATUS_BIT_NUMBER): cv.positive_int,
+        vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+        ),
+        vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
+    }
+)
+
+
 SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
@@ -209,6 +229,18 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
+BIT_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Required(CONF_BIT_NUMBER): cv.positive_int,
+        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+        ),
+    }
+)
+
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
@@ -231,6 +263,8 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        vol.Optional(CONF_BIT_SENSORS): vol.All(cv.ensure_list, [BIT_SENSOR_SCHEMA]),
+        vol.Optional(CONF_BIT_SWITCHES): vol.All(cv.ensure_list, [BIT_SWITCH_SCHEMA]),
     }
 )
 

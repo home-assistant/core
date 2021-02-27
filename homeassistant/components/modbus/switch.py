@@ -26,6 +26,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from .bit_switch import setup_bit_swithes
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
@@ -93,7 +94,7 @@ async def async_setup_platform(
     """Read configuration and create Modbus switches."""
     switches = []
 
-    #  check for old config:
+    # check for old config:
     if discovery_info is None:
         _LOGGER.warning(
             "Switch configuration is deprecated, will be removed in a future release"
@@ -121,7 +122,9 @@ async def async_setup_platform(
                 entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         config = None
 
-    for entry in discovery_info[CONF_SWITCHES]:
+    switches.extend(setup_bit_swithes(hass, discovery_info))
+
+    for entry in discovery_info.get(CONF_SWITCHES, []):
         if CONF_HUB in entry:
             # from old config!
             discovery_info[CONF_NAME] = entry[CONF_HUB]
