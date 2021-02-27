@@ -23,6 +23,7 @@ from . import (
     USER_INPUT,
     YAML_CONFIG,
     YAML_CONFIG_CAMERA,
+    YAML_INVALID,
     _patch_async_setup,
     _patch_async_setup_entry,
     init_integration,
@@ -81,12 +82,27 @@ async def test_async_step_import(hass, ezviz_config_flow):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
-async def test_async_step_import_abort(hass, ezviz_config_flow):
-    """Test the config import flow."""
+async def test_async_step_import_camera(hass, ezviz_config_flow):
+    """Test the config import camera flow."""
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG_CAMERA
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        "password": "test-password",
+        "serial": "C666666",
+        "username": "test-username",
+    }
+
+
+async def test_async_step_import_abort(hass, ezviz_config_flow):
+    """Test the config import flow with invalid data."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_INVALID
     )
     assert result["type"] == RESULT_TYPE_ABORT
 

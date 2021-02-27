@@ -40,9 +40,14 @@ YAML_CONFIG = {
     },
 }
 
-YAML_CONFIG_CAMERA = {
+YAML_INVALID = {
     "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 }
+
+YAML_CONFIG_CAMERA = [
+    "C666666",
+    {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+]
 
 
 def _patch_async_setup(return_value=True):
