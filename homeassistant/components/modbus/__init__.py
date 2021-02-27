@@ -48,6 +48,8 @@ from .const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_BAUDRATE,
     CONF_BINARY_SENSORS,
+    CONF_BIT_NUMBER,
+    CONF_BIT_SENSORS,
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_COUNT,
@@ -207,6 +209,16 @@ SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     }
 )
 
+BIT_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Required(CONF_BIT_NUMBER): cv.positive_int,
+        vol.Optional(CONF_COUNT, default=1): cv.positive_int,
+        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
+)
+
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.positive_int,
@@ -229,6 +241,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_COVERS): vol.All(cv.ensure_list, [COVERS_SCHEMA]),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+        vol.Optional(CONF_BIT_SENSORS): vol.All(cv.ensure_list, [BIT_SENSOR_SCHEMA]),
     }
 )
 

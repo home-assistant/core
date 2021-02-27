@@ -63,6 +63,10 @@ DEFAULT_STRUCT_FORMAT = {
 CONF_SENSOR = "sensor"
 CONF_SENSORS = "sensors"
 
+# bit_sensor.py
+CONF_BIT_SENSORS = "bit_sensors"
+CONF_BIT_NUMBER = "bit_number"
+
 # switch.py
 CONF_STATE_OFF = "state_off"
 CONF_STATE_ON = "state_on"
