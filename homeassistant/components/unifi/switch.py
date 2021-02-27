@@ -1,4 +1,9 @@
-"""Support for devices connected to UniFi POE."""
+"""Switch platform for UniFi integration.
+
+Support for controlling power supply of clients which are powered over Ethernet (POE).
+Support for controlling network access of clients selected in option flow.
+Support for controlling deep packet inspection (DPI) restriction groups.
+"""
 import logging
 from typing import Any
 

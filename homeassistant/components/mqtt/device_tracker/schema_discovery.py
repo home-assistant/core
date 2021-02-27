@@ -1,6 +1,5 @@
 """Support for tracking MQTT enabled devices identified through discovery."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -34,8 +33,6 @@ from ..mixins import (
     async_setup_entry_helper,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"
@@ -59,7 +56,6 @@ PLATFORM_SCHEMA_DISCOVERY = (
 
 async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
     """Set up MQTT device tracker dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

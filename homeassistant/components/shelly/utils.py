@@ -6,8 +6,9 @@ from typing import List, Optional, Tuple
 
 import aioshelly
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import singleton
 from homeassistant.util.dt import parse_datetime, utcnow
 
 from .const import (
@@ -110,7 +111,7 @@ def get_device_channel_name(
 def is_momentary_input(settings: dict, block: aioshelly.Block) -> bool:
     """Return true if input button settings is set to a momentary type."""
     # Shelly Button type is fixed to momentary and no btn_type
-    if settings["device"]["type"] == "SHBTN-1":
+    if settings["device"]["type"] in ("SHBTN-1", "SHBTN-2"):
         return True
 
     button = settings.get("relays") or settings.get("lights") or settings.get("inputs")
@@ -157,7 +158,7 @@ def get_input_triggers(
     else:
         subtype = f"button{int(block.channel)+1}"
 
-    if device.settings["device"]["type"] == "SHBTN-1":
+    if device.settings["device"]["type"] in ("SHBTN-1", "SHBTN-2"):
         trigger_types = SHBTN_1_INPUTS_EVENTS_TYPES
     elif device.settings["device"]["type"] == "SHIX3-1":
         trigger_types = SHIX3_1_INPUTS_EVENTS_TYPES
@@ -182,3 +183,30 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
             return wrapper
 
     return None
+
+
+@singleton.singleton("shelly_coap")
+async def get_coap_context(hass):
+    """Get CoAP context to be used in all Shelly devices."""
+    context = aioshelly.COAP()
+    await context.initialize()
+
+    @callback
+    def shutdown_listener(ev):
+        context.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_listener)
+
+    return context
+
+
+def get_device_sleep_period(settings: dict) -> int:
+    """Return the device sleep period in seconds or 0 for non sleeping devices."""
+    sleep_period = 0
+
+    if settings.get("sleep_mode", False):
+        sleep_period = settings["sleep_mode"]["period"]
+        if settings["sleep_mode"]["unit"] == "h":
+            sleep_period *= 60  # hours to minutes
+
+    return sleep_period * 60  # minutes to seconds

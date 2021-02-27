@@ -266,7 +266,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
@@ -549,7 +549,6 @@ unit_system = vol.All(
 
 def template(value: Optional[Any]) -> template_helper.Template:
     """Validate a jinja2 template."""
-
     if value is None:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
@@ -566,13 +565,12 @@ def template(value: Optional[Any]) -> template_helper.Template:
 
 def dynamic_template(value: Optional[Any]) -> template_helper.Template:
     """Validate a dynamic (non static) jinja2 template."""
-
     if value is None:
         raise vol.Invalid("template value is None")
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not template_helper.is_template_string(str(value)):
-        raise vol.Invalid("template value does not contain a dynmamic template")
+        raise vol.Invalid("template value does not contain a dynamic template")
 
     template_value = template_helper.Template(str(value))  # type: ignore
     try:
@@ -849,11 +847,18 @@ PLATFORM_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 ENTITY_SERVICE_FIELDS = {
-    vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-    vol.Optional(ATTR_DEVICE_ID): vol.Any(
-        ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+    # Either accept static entity IDs, a single dynamic template or a mixed list
+    # of static and dynamic templates. While this could be solved with a single
+    # complex template, handling it like this, keeps config validation useful.
+    vol.Optional(ATTR_ENTITY_ID): vol.Any(
+        comp_entity_ids, dynamic_template, vol.All(list, template_complex)
     ),
-    vol.Optional(ATTR_AREA_ID): vol.Any(ENTITY_MATCH_NONE, vol.All(ensure_list, [str])),
+    vol.Optional(ATTR_DEVICE_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
+    vol.Optional(ATTR_AREA_ID): vol.Any(
+        ENTITY_MATCH_NONE, vol.All(ensure_list, [vol.Any(dynamic_template, str)])
+    ),
 }
 
 
@@ -890,9 +895,11 @@ def script_action(value: Any) -> dict:
 
 SCRIPT_SCHEMA = vol.All(ensure_list, [script_action])
 
+SCRIPT_ACTION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+
 EVENT_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_EVENT): string,
         vol.Optional(CONF_EVENT_DATA): vol.All(dict, template_complex),
         vol.Optional(CONF_EVENT_DATA_TEMPLATE): vol.All(dict, template_complex),
@@ -902,7 +909,7 @@ EVENT_SCHEMA = vol.Schema(
 SERVICE_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(CONF_ALIAS): string,
+            **SCRIPT_ACTION_BASE_SCHEMA,
             vol.Exclusive(CONF_SERVICE, "service name"): vol.Any(
                 service, dynamic_template
             ),
@@ -922,9 +929,12 @@ NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
     vol.Coerce(float), vol.All(str, entity_domain("input_number"))
 )
 
+CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
+
 NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "numeric_state",
             vol.Required(CONF_ENTITY_ID): entity_ids,
             vol.Optional(CONF_ATTRIBUTE): str,
@@ -937,6 +947,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 )
 
 STATE_CONDITION_BASE_SCHEMA = {
+    **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
     vol.Required(CONF_ENTITY_ID): entity_ids,
     vol.Optional(CONF_ATTRIBUTE): str,
@@ -977,6 +988,7 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
 SUN_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "sun",
             vol.Optional("before"): sun_event,
             vol.Optional("before_offset"): time_period,
@@ -991,6 +1003,7 @@ SUN_CONDITION_SCHEMA = vol.All(
 
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "template",
         vol.Required(CONF_VALUE_TEMPLATE): template,
     }
@@ -999,6 +1012,7 @@ TEMPLATE_CONDITION_SCHEMA = vol.Schema(
 TIME_CONDITION_SCHEMA = vol.All(
     vol.Schema(
         {
+            **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
             "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
             "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
@@ -1010,6 +1024,7 @@ TIME_CONDITION_SCHEMA = vol.All(
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
         "zone": entity_ids,
@@ -1021,6 +1036,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
 
 AND_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "and",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -1032,6 +1048,7 @@ AND_CONDITION_SCHEMA = vol.Schema(
 
 OR_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "or",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -1043,6 +1060,7 @@ OR_CONDITION_SCHEMA = vol.Schema(
 
 NOT_CONDITION_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "not",
         vol.Required(CONF_CONDITIONS): vol.All(
             ensure_list,
@@ -1054,6 +1072,7 @@ NOT_CONDITION_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
     {
+        **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "device",
         vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_DOMAIN): str,
@@ -1089,14 +1108,14 @@ TRIGGER_SCHEMA = vol.All(
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_DELAY): positive_time_period_template,
     }
 )
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_WAIT_TEMPLATE): template,
         vol.Optional(CONF_TIMEOUT): positive_time_period_template,
         vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
@@ -1104,16 +1123,22 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema(
 )
 
 DEVICE_ACTION_BASE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_DEVICE_ID): string, vol.Required(CONF_DOMAIN): str}
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(CONF_DEVICE_ID): string,
+        vol.Required(CONF_DOMAIN): str,
+    }
 )
 
 DEVICE_ACTION_SCHEMA = DEVICE_ACTION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-_SCRIPT_SCENE_SCHEMA = vol.Schema({vol.Required(CONF_SCENE): entity_domain("scene")})
+_SCRIPT_SCENE_SCHEMA = vol.Schema(
+    {**SCRIPT_ACTION_BASE_SCHEMA, vol.Required(CONF_SCENE): entity_domain("scene")}
+)
 
 _SCRIPT_REPEAT_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_REPEAT): vol.All(
             {
                 vol.Exclusive(CONF_COUNT, "repeat"): vol.Any(vol.Coerce(int), template),
@@ -1132,11 +1157,12 @@ _SCRIPT_REPEAT_SCHEMA = vol.Schema(
 
 _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_CHOOSE): vol.All(
             ensure_list,
             [
                 {
+                    vol.Optional(CONF_ALIAS): string,
                     vol.Required(CONF_CONDITIONS): vol.All(
                         ensure_list, [CONDITION_SCHEMA]
                     ),
@@ -1150,7 +1176,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
 
 _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
         vol.Optional(CONF_TIMEOUT): positive_time_period_template,
         vol.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
@@ -1159,7 +1185,7 @@ _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = vol.Schema(
 
 _SCRIPT_SET_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_ALIAS): string,
+        **SCRIPT_ACTION_BASE_SCHEMA,
         vol.Required(CONF_VARIABLES): SCRIPT_VARIABLES_SCHEMA,
     }
 )

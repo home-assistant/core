@@ -73,7 +73,6 @@ class HMDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-
         # Static attributes
         attr = {
             "id": self._hmdevice.ADDRESS,

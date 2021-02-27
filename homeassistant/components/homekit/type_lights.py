@@ -139,7 +139,7 @@ class Light(HomeAccessory):
             params[ATTR_HS_COLOR] = color
             events.append(f"set color at {color}")
 
-        self.call_service(DOMAIN, service, params, ", ".join(events))
+        self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
     @callback
     def async_update_state(self, new_state):

@@ -21,14 +21,12 @@ COMMENT_REQUIREMENTS = (
     "blinkt",
     "bluepy",
     "bme680",
-    "credstash",
     "decora",
     "decora_wifi",
     "envirophat",
     "evdev",
     "face_recognition",
     "i2csense",
-    "nuimo",
     "opencv-python-headless",
     "py_noaa",
     "pybluez",
@@ -48,7 +46,7 @@ COMMENT_REQUIREMENTS = (
     "VL53L1X2",
 )
 
-IGNORE_PIN = ("colorlog>2.1,<3", "keyring>=9.3,<10.0", "urllib3")
+IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
@@ -72,8 +70,9 @@ h11>=0.12.0
 # https://github.com/encode/httpcore/issues/239
 httpcore>=0.12.3
 
-# Constrain httplib2 to protect against CVE-2020-11078
-httplib2>=0.18.0
+# Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
+# https://github.com/advisories/GHSA-93xj-8mrv-444m
+httplib2>=0.19.0
 
 # gRPC 1.32+ currently causes issues on ARMv7, see:
 # https://github.com/home-assistant/core/issues/40148

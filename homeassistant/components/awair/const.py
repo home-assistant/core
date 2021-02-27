@@ -8,6 +8,7 @@ from python_awair.devices import AwairDevice
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -33,7 +34,6 @@ API_VOC = "volatile_organic_compounds"
 
 ATTRIBUTION = "Awair air quality sensor"
 
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 ATTR_UNIQUE_ID = "unique_id"

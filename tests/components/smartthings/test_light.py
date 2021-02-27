@@ -19,7 +19,11 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -304,4 +308,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "light")
     # Assert
-    assert not hass.states.get("light.color_dimmer_2")
+    assert hass.states.get("light.color_dimmer_2").state == STATE_UNAVAILABLE

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "El sitio del controlador ya est\u00e1 configurado",
+            "configuration_updated": "Configuraci\u00f3n actualizada.",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {

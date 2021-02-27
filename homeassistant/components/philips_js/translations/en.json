@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "unknown": "Unexpected error",
+            "pairing_failure": "Unable to pair: {error_id}",
+            "invalid_pin": "Invalid PIN"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_version": "API Version",
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Device is requested to turn on"
+        }
+    }
+}
