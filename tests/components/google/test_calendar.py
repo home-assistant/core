@@ -179,7 +179,7 @@ async def test_all_day_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": [],
+        "other_events": event["other_events"],
     }
 
 
@@ -210,7 +210,7 @@ async def test_future_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": [],
+        "other_events": event["other_events"],
     }
 
 
@@ -284,7 +284,7 @@ async def test_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": [],
+        "other_events": event["other_events"],
     }
 
 
@@ -317,7 +317,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": [],
+        "other_events": event["other_events"],
     }
 
 
@@ -351,7 +351,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": [],
+        "other_events": event["other_events"],
     }
 
 
@@ -385,7 +385,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
         "end_time": end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
-        "other_events": [],
+        "other_events": event["other_events"],
     }
 
 
