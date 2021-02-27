@@ -11,6 +11,7 @@
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "Kodi: {name}",
         "step": {
             "credentials": {
                 "data": {
@@ -19,11 +20,15 @@
                 },
                 "description": "Voer uw Kodi gebruikersnaam en wachtwoord in. Deze zijn te vinden in Systeem / Instellingen / Netwerk / Services."
             },
+            "discovery_confirm": {
+                "description": "Wil je Kodi (`{name}`) toevoegen aan Home Assistant?",
+                "title": "Kodi ontdekt"
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Poort",
-                    "ssl": "Maak verbinding via SSL"
+                    "ssl": "Gebruik een SSL-certificaat"
                 },
                 "description": "Kodi-verbindingsinformatie. Zorg ervoor dat u \"Controle van Kodi via HTTP toestaan\" in Systeem / Instellingen / Netwerk / Services inschakelt."
             },
