@@ -310,12 +310,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             value_property_key=ColorComponent.BLUE.value.key,
             value_property_key_name=ColorComponent.BLUE.value.name,
         )
-        cw_val = self.get_zwave_value(
-            "currentColor",
-            CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.COLD_WHITE.value.key,
-            value_property_key_name=ColorComponent.COLD_WHITE.value.name,
-        )
         ww_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
