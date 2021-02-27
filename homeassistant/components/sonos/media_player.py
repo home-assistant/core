@@ -81,6 +81,7 @@ from .const import (
     PLAYABLE_MEDIA_TYPES,
 )
 from .media_browser import build_item_response, get_media, library_payload
+from .sensor import SonosBatteryEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,7 +195,15 @@ async def async_setup_entry(
                 if soco.uid not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
                     hass.data[DATA_SONOS].discovered.append(soco.uid)
-                    hass.add_job(async_add_entities, [SonosEntity(soco)])
+                    entity = SonosEntity(soco)
+                    entities = [entity]
+
+                    # Enable battery status if supported
+                    battery_info = SonosBatteryEntity.fetch(soco)
+                    if battery_info is not None:
+                        entities.append(SonosBatteryEntity(entity, soco, battery_info))
+
+                    hass.add_job(async_add_entities, entities)
                 else:
                     entity = _get_entity_from_soco_uid(hass, soco.uid)
                     if entity and (entity.soco == soco or not entity.available):
@@ -221,13 +230,13 @@ async def async_setup_entry(
 
             _LOGGER.debug("Tested all hosts")
             hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
-                DISCOVERY_INTERVAL, _discovery
+                DISCOVERY_INTERVAL.seconds, _discovery
             )
         else:
             _LOGGER.debug("Starting discovery thread")
             hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
                 _discovered_player,
-                interval=DISCOVERY_INTERVAL,
+                interval=DISCOVERY_INTERVAL.seconds,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
             )
             hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"
@@ -524,7 +533,7 @@ class SonosEntity(MediaPlayerEntity):
             return
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            self.update, datetime.timedelta(seconds=SCAN_INTERVAL)
+            self.update, SCAN_INTERVAL
         )
 
         done = await self._async_attach_player()
