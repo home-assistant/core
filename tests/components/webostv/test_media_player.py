@@ -57,6 +57,7 @@ async def setup_webostv(hass):
 
 
 def cleanup_webostv(hass):
+    """Test cleanup, remove the config file"""
     os.remove(hass.config.path(WEBOSTV_CONFIG_FILE))
 
 
@@ -143,7 +144,7 @@ async def test_migrate_keyfile_to_sqlite(hass, client):
     key = "3d5b1aeeb98e"
     # Create config file with JSON content
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
-    with open(config_file, 'w+') as file:
+    with open(config_file, "w+") as file:
         json.dump({"host": key}, file)
 
     # Run the component setup
@@ -163,7 +164,7 @@ async def test_dont_migrate_sqlite_keyfile(hass, client):
     # Create config file with Sqlite DB
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
     with SqliteDict(config_file) as conf:
-        conf['host'] = key
+        conf["host"] = key
         conf.commit()
 
     # Run the component setup

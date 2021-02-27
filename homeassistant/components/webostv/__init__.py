@@ -136,7 +136,9 @@ async def async_setup_tv(hass, config, conf):
 
     host = conf[CONF_HOST]
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
-    await asyncio.get_running_loop().run_in_executor(None, convert_client_keys, config_file)
+    await asyncio.get_running_loop().run_in_executor(
+        None, convert_client_keys, config_file
+    )
 
     client = await WebOsClient.create(host, config_file)
     hass.data[DOMAIN][host] = {"client": client}
