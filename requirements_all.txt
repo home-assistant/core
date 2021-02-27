@@ -1782,6 +1782,9 @@ pytfiac==0.4
 # homeassistant.components.thinkingcleaner
 pythinkingcleaner==0.0.3
 
+# homeassistant.components.binance
+python-binance-async-ha==0.7.3.2.dev0
+
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
 

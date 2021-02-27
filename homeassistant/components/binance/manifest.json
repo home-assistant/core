@@ -3,7 +3,9 @@
   "name": "Binance",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/binance",
-  "requirements": [],
+  "requirements": [
+    "python-binance-async-ha==0.7.3.2.dev0"
+  ],
   "codeowners": [
     "@DevSecNinja"
   ]
