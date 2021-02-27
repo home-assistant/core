@@ -25,7 +25,6 @@ from .device import ConnectXiaomiDevice
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
-DEFAULT_DEVICE_NAME = "Xiaomi Device"
 
 DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
@@ -141,7 +140,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
 
                 # Setup all other Miio Devices
-                name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
+                name = user_input.get(CONF_NAME, model)
 
                 for device_model in MODELS_ALL_DEVICES:
                     if model.startswith(device_model):
