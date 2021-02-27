@@ -34,7 +34,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_and_create_auth(self, data):
         """Validate the user input allows us to connect.
 
-        Data has the keys from DATA_SCHEMA with values provided by the user.
+        Data has the keys from data_schema with values provided by the user.
         """
         await self.async_set_unique_id(data[CONF_USERNAME])
         self._abort_if_unique_id_configured()
@@ -43,7 +43,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         client = EzvizClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
-            data[CONF_REGION],
+            data.get(CONF_REGION, DEFAULT_REGION),
             data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
@@ -58,7 +58,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         auth_data = {
             "username": data[CONF_USERNAME],
             "password": data[CONF_PASSWORD],
-            "region": data[CONF_REGION],
+            "region": data.get(CONF_REGION, DEFAULT_REGION),
         }
 
         return self.async_create_entry(title=data[CONF_USERNAME], data=auth_data)
@@ -109,7 +109,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
-        DATA_SCHEMA = vol.Schema(
+        data_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
@@ -118,7 +118,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
+            step_id="user", data_schema=data_schema, errors=errors or {}
         )
 
     async def async_step_user_camera(self, user_input=None):
@@ -139,7 +139,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        CAMERA_SCHEMA = vol.Schema(
+        camera_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
@@ -148,7 +148,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user_camera", data_schema=CAMERA_SCHEMA, errors=errors or {}
+            step_id="user_camera", data_schema=camera_schema, errors=errors or {}
         )
 
     async def async_step_import(self, import_config):
@@ -175,10 +175,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         if ATTR_CAMERAS not in import_config:
             try:
                 return await self._create_camera_rstp(import_config)
-
-            except InvalidAuth:
-                _LOGGER.error("Error importing Ezviz platform config: invalid auth")
-                return self.async_abort(reason="invalid_auth")
 
             except AbortFlow:
                 raise

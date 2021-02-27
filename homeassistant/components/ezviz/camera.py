@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -31,7 +31,6 @@ from .const import (
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
     DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_REGION,
     DEFAULT_RTSP_PORT,
     DIR_DOWN,
     DIR_LEFT,
@@ -50,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_REGION, default=DEFAULT_REGION): cv.string,
         vol.Optional(ATTR_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
     }
 )
@@ -69,7 +67,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if ATTR_CAMERAS in config:
         cameras_conf = config.get(ATTR_CAMERAS, CAMERA_SCHEMA)
 
-        _LOGGER.debug("camera constant: %s", cameras_conf)
         for camera in cameras_conf.items():
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
@@ -79,7 +76,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 )
             )
 
-    _LOGGER.debug("full config: %s", config)
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
@@ -173,7 +169,7 @@ async def async_setup_entry(
             camera_password = ""
             camera_rtsp_stream = ""
             _LOGGER.info(
-                "Found camera with serial %s without configuration. Add it to configuration.yaml to see the camera stream",
+                "Found camera with serial %s without configuration. Please add an integration instance to see the camera stream",
                 camera["serial"],
             )
 
