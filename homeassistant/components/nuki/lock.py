@@ -120,11 +120,6 @@ class NukiLockEntity(NukiDeviceEntity):
         """Return true if lock is locked."""
         return self._nuki_device.is_locked
 
-    @property
-    def is_door_sensor_activated(self):
-        """Return true if door sensor is present and activated."""
-        return self._nuki_device.is_door_sensor_activated
-
     def lock(self, **kwargs):
         """Lock the device."""
         self._nuki_device.lock()
