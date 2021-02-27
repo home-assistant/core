@@ -85,7 +85,8 @@ def normalize_event(event):
     normalized_event["location"] = event.get("location", "")
     normalized_event["description"] = event.get("description", "")
     normalized_event["all_day"] = "date" in event["start"]
-    normalized_event["other_events"] = event.get("other_events", [])
+    if len(event.get("other_events", [])) > 0:
+        normalized_event["other_events"] = event.get("other_events", [])
 
     return normalized_event
 
@@ -130,15 +131,19 @@ def is_offset_reached(event):
 def get_normalized_event(event):
     """Get a normalized calendar event."""
     event = normalize_event(event)
-    return {
+
+    normalized_event = {
         "message": event["message"],
         "all_day": event["all_day"],
         "start_time": event["start"],
         "end_time": event["end"],
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
+    if len(event.get("other_events", [])) > 0:
+        normalized_event["other_events"].append(event["other_events"])
+
+    return normalized_event
 
 
 class CalendarEventDevice(Entity):

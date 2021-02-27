@@ -20,7 +20,6 @@ from . import (
     CONF_CAL_ID,
     CONF_IGNORE_AVAILABILITY,
     CONF_MAX_RESULTS,
-    CONF_OTHER_EVENTS,
     CONF_SEARCH,
     CONF_TRACK,
     DEFAULT_CONF_OFFSET,
@@ -74,7 +73,6 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             data.get(CONF_SEARCH),
             data.get(CONF_IGNORE_AVAILABILITY),
             data.get(CONF_MAX_RESULTS),
-            data.get(CONF_OTHER_EVENTS),
         )
         self._event = None
         self._other_events = []
@@ -128,7 +126,6 @@ class GoogleCalendarData:
         search,
         ignore_availability,
         max_results,
-        other_events,
     ):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
@@ -137,7 +134,6 @@ class GoogleCalendarData:
         self.ignore_availability = ignore_availability
         self.max_results = max_results
         self.event = None
-        self.other_events = other_events
 
     def _prepare_query(self):
         try:
