@@ -42,6 +42,18 @@ def _get_bridge_devices(bridge):
     return locks, openers
 
 
+def _update_devices(devices):
+    for device in devices:
+        for level in (False, True):
+            try:
+                device.update(level)
+            except RequestException:
+                continue
+
+            if device.state not in ERROR_STATES:
+                break
+
+
 async def async_setup(hass, config):
     """Set up the Nuki component."""
     hass.data.setdefault(DOMAIN, {})
@@ -93,15 +105,7 @@ async def async_setup_entry(hass, entry):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                for device in locks + openers:
-                    for level in (False, True):
-                        try:
-                            await hass.async_add_executor_job(device.update, level)
-                        except RequestException:
-                            continue
-
-                        if device.state not in ERROR_STATES:
-                            break
+                hass.async_add_executor_job(_update_devices, locks + openers)
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
