@@ -24,23 +24,25 @@ ATTR_COEFFICIENTS = "coefficients"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Compensation sensor."""
-    if discovery_info is not None:
-        compensation = discovery_info.get(CONF_COMPENSATION)
-        conf = hass.data[DATA_COMPENSATION][compensation]
+    if discovery_info is None:
+        return
 
-        async_add_entities(
-            [
-                CompensationSensor(
-                    hass,
-                    conf[CONF_ENTITY_ID],
-                    conf.get(CONF_NAME),
-                    conf.get(CONF_ATTRIBUTE),
-                    conf[CONF_PRECISION],
-                    conf[CONF_POLYNOMIAL],
-                    conf.get(CONF_UNIT_OF_MEASUREMENT),
-                )
-            ]
-        )
+    compensation = discovery_info.get(CONF_COMPENSATION)
+    conf = hass.data[DATA_COMPENSATION][compensation]
+
+    async_add_entities(
+        [
+            CompensationSensor(
+                hass,
+                conf[CONF_ENTITY_ID],
+                conf.get(CONF_NAME),
+                conf.get(CONF_ATTRIBUTE),
+                conf[CONF_PRECISION],
+                conf[CONF_POLYNOMIAL],
+                conf.get(CONF_UNIT_OF_MEASUREMENT),
+            )
+        ]
+    )
 
 
 class CompensationSensor(Entity):
@@ -66,45 +68,14 @@ class CompensationSensor(Entity):
         self._coefficients = polynomial.coefficients.tolist()
         self._state = STATE_UNKNOWN
 
-        @callback
-        def async_compensation_sensor_state_listener(event):
-            """Handle sensor state changes."""
-            new_state = event.data.get("new_state")
-            if new_state is None:
-                return
-
-            if self._unit_of_measurement is None and self._attribute is None:
-                self._unit_of_measurement = new_state.attributes.get(
-                    ATTR_UNIT_OF_MEASUREMENT
-                )
-
-            try:
-                if self._attribute:
-                    value = float(new_state.attributes.get(self._attribute))
-                else:
-                    value = (
-                        None
-                        if new_state.state == STATE_UNKNOWN
-                        else float(new_state.state)
-                    )
-                # Calculate the result
-                self._state = round(self._poly(value), self._precision)
-
-            except (ValueError, TypeError):
-                self._state = STATE_UNKNOWN
-                if self._attribute:
-                    _LOGGER.warning(
-                        "%s attribute %s is not numerical",
-                        self._entity_id,
-                        self._attribute,
-                    )
-                else:
-                    _LOGGER.warning("%s state is not numerical", self._entity_id)
-
-            self.async_write_ha_state()
-
-        async_track_state_change_event(
-            hass, [entity_id], async_compensation_sensor_state_listener
+    async def async_added_to_hass(self):
+        """Handle added to Hass."""
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass,
+                [self._entity_id],
+                self._async_compensation_sensor_state_listener,
+            )
         )
 
     @property
@@ -137,3 +108,38 @@ class CompensationSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @callback
+    def _async_compensation_sensor_state_listener(self, event):
+        """Handle sensor state changes."""
+        new_state = event.data.get("new_state")
+        if new_state is None:
+            return
+
+        if self._unit_of_measurement is None and self._attribute is None:
+            self._unit_of_measurement = new_state.attributes.get(
+                ATTR_UNIT_OF_MEASUREMENT
+            )
+
+        try:
+            if self._attribute:
+                value = float(new_state.attributes.get(self._attribute))
+            else:
+                value = (
+                    None if new_state.state == STATE_UNKNOWN else float(new_state.state)
+                )
+            # Calculate the result
+            self._state = round(self._poly(value), self._precision)
+
+        except (ValueError, TypeError):
+            self._state = STATE_UNKNOWN
+            if self._attribute:
+                _LOGGER.warning(
+                    "%s attribute %s is not numerical",
+                    self._entity_id,
+                    self._attribute,
+                )
+            else:
+                _LOGGER.warning("%s state is not numerical", self._entity_id)
+
+        self.async_write_ha_state()

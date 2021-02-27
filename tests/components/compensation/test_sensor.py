@@ -6,6 +6,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
+    EVENT_STATE_CHANGED,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
@@ -19,8 +20,8 @@ async def test_linear_state(hass):
                 "name": "compensation",
                 "entity_id": "sensor.uncompensated",
                 "data_points": [
-                    "1.0 -> 2.0",
-                    "2.0 -> 3.0",
+                    [1.0, 2.0],
+                    [2.0, 3.0],
                 ],
                 "precision": 2,
                 "unit_of_measurement": "a",
@@ -68,8 +69,8 @@ async def test_linear_state_from_attribute(hass):
                 "entity_id": "sensor.uncompensated",
                 "attribute": "value",
                 "data_points": [
-                    "1.0 -> 2.0",
-                    "2.0 -> 3.0",
+                    [1.0, 2.0],
+                    [2.0, 3.0],
                 ],
                 "precision": 2,
             }
@@ -111,21 +112,21 @@ async def test_quadratic_state(hass):
                 "name": "compensation",
                 "entity_id": "sensor.temperature",
                 "data_points": [
-                    "50 -> 3.3",
-                    "50 -> 2.8",
-                    "50 -> 2.9",
-                    "70 -> 2.3",
-                    "70 -> 2.6",
-                    "70 -> 2.1",
-                    "80 -> 2.5",
-                    "80 -> 2.9",
-                    "80 -> 2.4",
-                    "90 -> 3.0",
-                    "90 -> 3.1",
-                    "90 -> 2.8",
-                    "100 -> 3.3",
-                    "100 -> 3.5",
-                    "100 -> 3.0",
+                    [50, 3.3],
+                    [50, 2.8],
+                    [50, 2.9],
+                    [70, 2.3],
+                    [70, 2.6],
+                    [70, 2.1],
+                    [80, 2.5],
+                    [80, 2.9],
+                    [80, 2.4],
+                    [90, 3.0],
+                    [90, 3.1],
+                    [90, 2.8],
+                    [100, 3.3],
+                    [100, 3.5],
+                    [100, 3.0],
                 ],
                 "degree": 2,
                 "precision": 3,
@@ -157,16 +158,16 @@ async def test_numpy_errors(hass, caplog):
                 "name": "compensation",
                 "entity_id": "sensor.uncompensated",
                 "data_points": [
-                    "1.0 -> 1.0",
-                    "1.0 -> 1.0",
+                    [1.0, 1.0],
+                    [1.0, 1.0],
                 ],
             },
             "test2": {
                 "name": "compensation2",
                 "entity_id": "sensor.uncompensated",
                 "data_points": [
-                    "0.0 -> 1.0",
-                    "0.0 -> 1.0",
+                    [0.0, 1.0],
+                    [0.0, 1.0],
                 ],
             },
         }
@@ -189,8 +190,8 @@ async def test_datapoints_greater_than_degree(hass, caplog):
                 "name": "compensation",
                 "entity_id": "sensor.uncompensated",
                 "data_points": [
-                    "1.0 -> 2.0",
-                    "2.0 -> 3.0",
+                    [1.0, 2.0],
+                    [2.0, 3.0],
                 ],
                 "degree": 2,
             },
@@ -202,3 +203,32 @@ async def test_datapoints_greater_than_degree(hass, caplog):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
     assert "data_points must have at least 3 data_points" in caplog.text
+
+
+async def test_new_state_is_none(hass):
+    """Test compensation sensor state."""
+    config = {
+        "compensation": {
+            "test": {
+                "name": "compensation",
+                "entity_id": "sensor.uncompensated",
+                "data_points": [
+                    [1.0, 2.0],
+                    [2.0, 3.0],
+                ],
+                "precision": 2,
+                "unit_of_measurement": "a",
+            }
+        }
+    }
+
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    last_changed = hass.states.get("sensor.compensation").last_changed
+
+    hass.bus.async_fire(
+        EVENT_STATE_CHANGED, event_data={"entity_id": "sensor.uncompensated"}
+    )
+
+    assert last_changed == hass.states.get("sensor.compensation").last_changed

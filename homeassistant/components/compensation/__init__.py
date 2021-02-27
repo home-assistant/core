@@ -27,7 +27,6 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_PRECISION,
     DOMAIN,
-    MATCH_DATAPOINT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def datapoints_greater_than_degree(value: dict) -> dict:
     """Validate data point list is greater than polynomial degrees."""
-    if not len(value[CONF_DATAPOINTS]) > value[CONF_DEGREE]:
+    if len(value[CONF_DATAPOINTS]) <= value[CONF_DEGREE]:
         raise vol.Invalid(
             f"{CONF_DATAPOINTS} must have at least {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
         )
@@ -46,9 +45,9 @@ def datapoints_greater_than_degree(value: dict) -> dict:
 COMPENSATION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_DATAPOINTS): vol.All(
-            cv.ensure_list(cv.matches_regex(MATCH_DATAPOINT)),
-        ),
+        vol.Required(CONF_DATAPOINTS): [
+            vol.ExactSequence([vol.Coerce(float), vol.Coerce(float)])
+        ],
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
@@ -79,15 +78,8 @@ async def async_setup(hass, config):
 
         degree = conf[CONF_DEGREE]
 
-        datapoints = []
-        for datapoint in conf[CONF_DATAPOINTS]:
-            match = re.match(MATCH_DATAPOINT, datapoint)
-            # we should always have x and y if the regex validation passed.
-            x_value, y_value = [float(v) for v in match.groups()]
-            datapoints.append((x_value, y_value))
-
         # get x values and y values from the x,y point pairs
-        x_values, y_values = zip(*datapoints)
+        x_values, y_values = zip(*conf[CONF_DATAPOINTS])
 
         # try to get valid coefficients for a polynomial
         coefficients = None
