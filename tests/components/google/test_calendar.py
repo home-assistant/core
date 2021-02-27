@@ -161,7 +161,7 @@ async def test_all_day_event(hass, mock_next_event):
     end = end_event.isoformat()
     event["start"]["date"] = start
     event["end"]["date"] = end
-    event["other_events"] = []
+
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -192,7 +192,7 @@ async def test_future_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
-    event["other_events"] = []
+
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -266,7 +266,7 @@ async def test_in_progress_event(hass, mock_next_event):
     event = copy.deepcopy(TEST_EVENT)
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
-    event["other_events"] = []
+
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -299,7 +299,7 @@ async def test_offset_in_progress_event(hass, mock_next_event):
     event["start"]["dateTime"] = start
     event["end"]["dateTime"] = end
     event["summary"] = f"{event_summary} !!-15"
-    event["other_events"] = []
+
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -333,7 +333,7 @@ async def test_all_day_offset_in_progress_event(hass, mock_next_event):
     event["start"]["date"] = start
     event["end"]["date"] = end
     event["summary"] = f"{event_summary} !!-25:0"
-    event["other_events"] = []
+
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -367,7 +367,7 @@ async def test_all_day_offset_event(hass, mock_next_event):
     event["start"]["date"] = start
     event["end"]["date"] = end
     event["summary"] = f"{event_summary} !!-{offset_hours}:0"
-    event["other_events"] = []
+
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
