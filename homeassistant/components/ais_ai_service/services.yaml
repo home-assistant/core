@@ -44,7 +44,7 @@ check_local_ip:
   description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'
 
 check_night_mode:
-  description: 'Sprawdzenie czy został włączony tryb nocny jeżeli tak to zmieniamy temat w aplikacji i redukujemy głośność. Ta usługa wykonaywana jest co minutę.'
+  description: 'Sprawdzenie czy został włączony tryb nocny jeżeli tak to zmieniamy motyw aplikacji na ciemniejszy i redukujemy głośność. Ta usługa wykonaywana jest co minutę.'
 
 on_new_iot_device_selection:
   description: 'Ustalenie nazwy nowododawanego urządzenia. Ta usługa wykonaywana jest automaycznie podczas dodawania nowego urządzenia.'
