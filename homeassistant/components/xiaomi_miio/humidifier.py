@@ -37,25 +37,17 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODELS_HUMIDIFIER,
     MODELS_HUMIDIFIER_MIOT,
-    SERVICE_SET_AUTO_DETECT_OFF,
-    SERVICE_SET_AUTO_DETECT_ON,
-    SERVICE_SET_BUZZER_OFF,
-    SERVICE_SET_BUZZER_ON,
-    SERVICE_SET_CHILD_LOCK_OFF,
-    SERVICE_SET_CHILD_LOCK_ON,
-    SERVICE_SET_DRY_OFF,
-    SERVICE_SET_DRY_ON,
-    SERVICE_SET_EXTRA_FEATURES,
-    SERVICE_SET_FAN_LED_OFF,
-    SERVICE_SET_FAN_LED_ON,
-    SERVICE_SET_FAN_LEVEL,
-    SERVICE_SET_FAVORITE_LEVEL,
-    SERVICE_SET_LEARN_MODE_OFF,
-    SERVICE_SET_LEARN_MODE_ON,
-    SERVICE_SET_LED_BRIGHTNESS,
-    SERVICE_SET_MOTOR_SPEED,
-    SERVICE_SET_TARGET_HUMIDITY,
-    SERVICE_SET_VOLUME,
+    SERVICE_HUMIDIFIER_SET_BUZZER_OFF,
+    SERVICE_HUMIDIFIER_SET_BUZZER_ON,
+    SERVICE_HUMIDIFIER_SET_CHILD_LOCK_OFF,
+    SERVICE_HUMIDIFIER_SET_CHILD_LOCK_ON,
+    SERVICE_HUMIDIFIER_SET_DRY_OFF,
+    SERVICE_HUMIDIFIER_SET_DRY_ON,
+    SERVICE_HUMIDIFIER_SET_LED_BRIGHTNESS,
+    SERVICE_HUMIDIFIER_SET_LED_OFF,
+    SERVICE_HUMIDIFIER_SET_LED_ON,
+    SERVICE_HUMIDIFIER_SET_TARGET_HUMIDITY,
+    SERVICE_HUMIDIFIER_SET_VOLUME,
 )
 from .device import XiaomiMiioEntity
 
@@ -177,20 +169,8 @@ SERVICE_SCHEMA_LED_BRIGHTNESS = HUMIDIFIER_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_BRIGHTNESS): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=2))}
 )
 
-SERVICE_SCHEMA_FAVORITE_LEVEL = HUMIDIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=17))}
-)
-
-SERVICE_SCHEMA_FAN_LEVEL = HUMIDIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3))}
-)
-
 SERVICE_SCHEMA_VOLUME = HUMIDIFIER_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_VOLUME): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100))}
-)
-
-SERVICE_SCHEMA_EXTRA_FEATURES = HUMIDIFIER_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FEATURES): cv.positive_int}
 )
 
 SERVICE_SCHEMA_TARGET_HUMIDITY = HUMIDIFIER_SERVICE_SCHEMA.extend(
@@ -201,52 +181,27 @@ SERVICE_SCHEMA_TARGET_HUMIDITY = HUMIDIFIER_SERVICE_SCHEMA.extend(
     }
 )
 
-SERVICE_SCHEMA_MOTOR_SPEED = HUMIDIFIER_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_MOTOR_SPEED): vol.All(
-            vol.Coerce(int), vol.Clamp(min=200, max=2000)
-        )
-    }
-)
-
 SERVICE_TO_METHOD = {
-    SERVICE_SET_BUZZER_ON: {"method": "async_set_buzzer_on"},
-    SERVICE_SET_BUZZER_OFF: {"method": "async_set_buzzer_off"},
-    SERVICE_SET_FAN_LED_ON: {"method": "async_set_led_on"},
-    SERVICE_SET_FAN_LED_OFF: {"method": "async_set_led_off"},
-    SERVICE_SET_CHILD_LOCK_ON: {"method": "async_set_child_lock_on"},
-    SERVICE_SET_CHILD_LOCK_OFF: {"method": "async_set_child_lock_off"},
-    SERVICE_SET_AUTO_DETECT_ON: {"method": "async_set_auto_detect_on"},
-    SERVICE_SET_AUTO_DETECT_OFF: {"method": "async_set_auto_detect_off"},
-    SERVICE_SET_LEARN_MODE_ON: {"method": "async_set_learn_mode_on"},
-    SERVICE_SET_LEARN_MODE_OFF: {"method": "async_set_learn_mode_off"},
-    SERVICE_SET_LED_BRIGHTNESS: {
+    SERVICE_HUMIDIFIER_SET_BUZZER_ON: {"method": "async_set_buzzer_on"},
+    SERVICE_HUMIDIFIER_SET_BUZZER_OFF: {"method": "async_set_buzzer_off"},
+    SERVICE_HUMIDIFIER_SET_LED_ON: {"method": "async_set_led_on"},
+    SERVICE_HUMIDIFIER_SET_LED_OFF: {"method": "async_set_led_off"},
+    SERVICE_HUMIDIFIER_SET_CHILD_LOCK_ON: {"method": "async_set_child_lock_on"},
+    SERVICE_HUMIDIFIER_SET_CHILD_LOCK_OFF: {"method": "async_set_child_lock_off"},
+    SERVICE_HUMIDIFIER_SET_LED_BRIGHTNESS: {
         "method": "async_set_led_brightness",
         "schema": SERVICE_SCHEMA_LED_BRIGHTNESS,
     },
-    SERVICE_SET_FAVORITE_LEVEL: {
-        "method": "async_set_favorite_level",
-        "schema": SERVICE_SCHEMA_FAVORITE_LEVEL,
+    SERVICE_HUMIDIFIER_SET_VOLUME: {
+        "method": "async_set_volume",
+        "schema": SERVICE_SCHEMA_VOLUME,
     },
-    SERVICE_SET_FAN_LEVEL: {
-        "method": "async_set_fan_level",
-        "schema": SERVICE_SCHEMA_FAN_LEVEL,
-    },
-    SERVICE_SET_VOLUME: {"method": "async_set_volume", "schema": SERVICE_SCHEMA_VOLUME},
-    SERVICE_SET_EXTRA_FEATURES: {
-        "method": "async_set_extra_features",
-        "schema": SERVICE_SCHEMA_EXTRA_FEATURES,
-    },
-    SERVICE_SET_TARGET_HUMIDITY: {
+    SERVICE_HUMIDIFIER_SET_TARGET_HUMIDITY: {
         "method": "async_set_humidity",
         "schema": SERVICE_SCHEMA_TARGET_HUMIDITY,
     },
-    SERVICE_SET_DRY_ON: {"method": "async_set_dry_on"},
-    SERVICE_SET_DRY_OFF: {"method": "async_set_dry_off"},
-    SERVICE_SET_MOTOR_SPEED: {
-        "method": "async_set_motor_speed",
-        "schema": SERVICE_SCHEMA_MOTOR_SPEED,
-    },
+    SERVICE_HUMIDIFIER_SET_DRY_ON: {"method": "async_set_dry_on"},
+    SERVICE_HUMIDIFIER_SET_DRY_OFF: {"method": "async_set_dry_off"},
 }
 
 
