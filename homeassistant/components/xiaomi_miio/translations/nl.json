@@ -8,6 +8,7 @@
             "cannot_connect": "Kan geen verbinding maken",
             "no_device_selected": "Geen apparaat geselecteerd, selecteer 1 apparaat alstublieft"
         },
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "device": {
                 "data": {
