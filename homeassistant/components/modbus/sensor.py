@@ -25,9 +25,12 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
+from .bit_sensor import ModbusBitSensor
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_BIT_NUMBER,
+    CONF_BIT_SENSORS,
     CONF_COUNT,
     CONF_DATA_TYPE,
     CONF_HUB,
@@ -130,6 +133,31 @@ async def async_setup_platform(
             del entry[CONF_REGISTER]
             del entry[CONF_REGISTER_TYPE]
         config = None
+
+    for entry in discovery_info[CONF_BIT_SENSORS]:
+        words_count = int(entry[CONF_COUNT])
+        bit_number = int(entry[CONF_BIT_NUMBER])
+
+        if bit_number >= words_count * 16:
+            _LOGGER.error(
+                "Bit number for the %s sensor is out of range",
+                entry[CONF_NAME],
+            )
+            continue
+
+        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
+        sensors.append(
+            ModbusBitSensor(
+                hub,
+                entry[CONF_NAME],
+                entry.get(CONF_SLAVE),
+                entry[CONF_ADDRESS],
+                bit_number,
+                entry.get(CONF_UNIT_OF_MEASUREMENT),
+                words_count,
+                entry.get(CONF_DEVICE_CLASS),
+            )
+        )
 
     for entry in discovery_info[CONF_SENSORS]:
         if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:

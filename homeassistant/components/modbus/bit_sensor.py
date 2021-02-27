@@ -5,74 +5,10 @@ from typing import Optional
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    CONF_SLAVE,
-    CONF_UNIT_OF_MEASUREMENT,
-    STATE_ON,
-)
+from homeassistant.const import STATE_ON
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
-
-from .const import CONF_BIT_NUMBER, CONF_BIT_SENSORS, CONF_COUNT, MODBUS_DOMAIN
-from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(
-    hass: HomeAssistantType,
-    config: ConfigType,
-    async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
-):
-    """Set up the Modbus sensors."""
-    sensors = []
-
-    _LOGGER.error("*** bit sensor 1, %s", discovery_info)
-    #  check for old config:
-    if discovery_info is None:
-        return
-
-    _LOGGER.error("*** bit sensor 2")
-
-    for entry in discovery_info[CONF_BIT_SENSORS]:
-
-        _LOGGER.error("*** bit sensor 3, %s", entry)
-
-        hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
-
-        words_count = int(entry[CONF_COUNT])
-        bit_number = int(entry[CONF_BIT_NUMBER])
-
-        if bit_number >= words_count * 16:
-            _LOGGER.error(
-                "Bit number for the %s sensor is out of range",
-                entry[CONF_NAME],
-            )
-
-        sensors.append(
-            ModbusBitSensor(
-                hub,
-                entry[CONF_NAME],
-                entry.get(CONF_SLAVE),
-                entry[CONF_ADDRESS],
-                bit_number,
-                entry.get(CONF_UNIT_OF_MEASUREMENT),
-                words_count,
-                entry.get(CONF_DEVICE_CLASS),
-            )
-        )
-
-    if not sensors:
-        return False
-    async_add_entities(sensors)
 
 
 class ModbusBitSensor(RestoreEntity):
@@ -94,7 +30,7 @@ class ModbusBitSensor(RestoreEntity):
         self._name = name
         self._slave = int(slave) if slave else None
         self._register = int(register)
-        self._bit_number = int(register)
+        self._bit_number = int(bit_number)
         self._unit_of_measurement = unit_of_measurement
         self._count = count
         self._device_class = device_class
