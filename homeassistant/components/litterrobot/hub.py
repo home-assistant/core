@@ -8,7 +8,7 @@ import pylitterbot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -73,7 +73,7 @@ class LitterRobotEntity(CoordinatorEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
-        self.entity_type = entity_type if entity_type else ""
+        self.entity_type = entity_type
         self.hub = hub
 
     @property
@@ -102,7 +102,6 @@ class LitterRobotEntity(CoordinatorEntity):
     async def perform_action_and_refresh(self, action: MethodType, *args: Any):
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
 
-        @callback
         async def async_call_later_callback(*_) -> None:
             await self.hub.coordinator.async_request_refresh()
 

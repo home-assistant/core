@@ -54,13 +54,13 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
     def state(self):
         """Return the state of the cleaner."""
         switcher = {
-            Robot.UnitStatus.CCP: STATE_CLEANING,
-            Robot.UnitStatus.EC: STATE_CLEANING,
-            Robot.UnitStatus.CCC: STATE_DOCKED,
-            Robot.UnitStatus.CST: STATE_DOCKED,
-            Robot.UnitStatus.DF1: STATE_DOCKED,
-            Robot.UnitStatus.DF2: STATE_DOCKED,
-            Robot.UnitStatus.RDY: STATE_DOCKED,
+            Robot.UnitStatus.CLEAN_CYCLE: STATE_CLEANING,
+            Robot.UnitStatus.EMPTY_CYCLE: STATE_CLEANING,
+            Robot.UnitStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+            Robot.UnitStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
+            Robot.UnitStatus.DRAWER_FULL_1: STATE_DOCKED,
+            Robot.UnitStatus.DRAWER_FULL_2: STATE_DOCKED,
+            Robot.UnitStatus.READY: STATE_DOCKED,
             Robot.UnitStatus.OFF: STATE_OFF,
         }
 
@@ -69,12 +69,12 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
     @property
     def error(self):
         """Return the error associated with the current state, if any."""
-        return self.robot.unit_status.value
+        return self.robot.unit_status.label
 
     @property
     def status(self):
         """Return the status of the cleaner."""
-        return f"{self.robot.unit_status.value}{' (Sleeping)' if self.robot.is_sleeping else ''}"
+        return f"{self.robot.unit_status.label}{' (Sleeping)' if self.robot.is_sleeping else ''}"
 
     async def async_turn_on(self, **kwargs):
         """Turn the cleaner on, starting a clean cycle."""
@@ -135,6 +135,6 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
             "sleep_mode_start_time": sleep_mode_start_time,
             "sleep_mode_end_time": sleep_mode_end_time,
             "power_status": self.robot.power_status,
-            "unit_status_code": self.robot.unit_status.name,
+            "unit_status_code": self.robot.unit_status.value,
             "last_seen": self.robot.last_seen,
         }

@@ -5,6 +5,10 @@ from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginExcepti
 import pytest
 
 from homeassistant.components import litterrobot
+from homeassistant.config_entries import (
+    ENTRY_STATE_SETUP_ERROR,
+    ENTRY_STATE_SETUP_RETRY,
+)
 
 from .common import CONFIG
 from .conftest import setup_integration
@@ -22,10 +26,13 @@ async def test_unload_entry(hass, mock_account):
 
 
 @pytest.mark.parametrize(
-    "exception",
-    (LitterRobotLoginException, LitterRobotException),
+    "side_effect,expected_state",
+    (
+        (LitterRobotLoginException, ENTRY_STATE_SETUP_ERROR),
+        (LitterRobotException, ENTRY_STATE_SETUP_RETRY),
+    ),
 )
-async def test_entry_not_setup(hass, exception):
+async def test_entry_not_setup(hass, side_effect, expected_state):
     """Test being able to handle config entry not setup."""
     entry = MockConfigEntry(
         domain=litterrobot.DOMAIN,
@@ -35,6 +42,7 @@ async def test_entry_not_setup(hass, exception):
 
     with patch(
         "pylitterbot.Account.connect",
-        side_effect=exception,
+        side_effect=side_effect,
     ):
-        assert await hass.config_entries.async_setup(entry.entry_id) is False
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state == expected_state
