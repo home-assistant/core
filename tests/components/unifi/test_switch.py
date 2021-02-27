@@ -760,7 +760,6 @@ async def test_restoring_client(hass, aioclient_mock):
         hass,
         aioclient_mock,
         options={
-            CONF_BLOCK_CLIENT: ["random mac"],
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         },

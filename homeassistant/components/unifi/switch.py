@@ -51,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         return
 
     # Store previously known POE control entities in case their POE are turned off.
-    previously_known_poe_clients = []
+    known_poe_clients = []
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     for entry in async_entries_for_config_entry(entity_registry, config_entry.entry_id):
 
@@ -59,10 +59,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
 
         mac = entry.unique_id.replace(f"{POE_SWITCH}-", "")
-        if mac not in controller.api.clients and mac not in controller.api.clients_all:
+        if mac not in controller.api.clients:
             continue
 
-        previously_known_poe_clients.append(mac)
+        known_poe_clients.append(mac)
 
     for mac in controller.option_block_clients:
         if mac not in controller.api.clients and mac in controller.api.clients_all:
@@ -80,9 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             add_block_entities(controller, async_add_entities, clients)
 
         if controller.option_poe_clients:
-            add_poe_entities(
-                controller, async_add_entities, clients, previously_known_poe_clients
-            )
+            add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
 
         if controller.option_dpi_restrictions:
             add_dpi_entities(controller, async_add_entities, dpi_groups)
@@ -91,7 +89,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         controller.listeners.append(async_dispatcher_connect(hass, signal, items_added))
 
     items_added()
-    previously_known_poe_clients.clear()
+    known_poe_clients.clear()
 
 
 @callback
@@ -111,9 +109,7 @@ def add_block_entities(controller, async_add_entities, clients):
 
 
 @callback
-def add_poe_entities(
-    controller, async_add_entities, clients, previously_known_poe_clients
-):
+def add_poe_entities(controller, async_add_entities, clients, known_poe_clients):
     """Add new switch entities from the controller."""
     switches = []
 
@@ -125,7 +121,7 @@ def add_poe_entities(
 
         client = controller.api.clients[mac]
 
-        if mac not in previously_known_poe_clients and (
+        if mac not in known_poe_clients and (
             mac in controller.wireless_clients
             or client.sw_mac not in devices
             or not devices[client.sw_mac].ports[client.sw_port].port_poe
@@ -138,7 +134,7 @@ def add_poe_entities(
         multi_clients_on_port = False
         for client2 in controller.api.clients.values():
 
-            if mac in previously_known_poe_clients:
+            if mac in known_poe_clients:
                 break
 
             if (
