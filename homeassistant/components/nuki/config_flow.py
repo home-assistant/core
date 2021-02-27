@@ -87,7 +87,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return await self.async_step_validate()
-        
+
     async def async_step_reauth(self, data):
         """Perform reauth upon an API authentication error."""
         self._data = data
