@@ -15,7 +15,7 @@
             },
             "reauth_confirm": {
                 "description": "De Spotify integratie moet opnieuw worden geverifieerd met Spotify voor account: {account}",
-                "title": "Verifieer opnieuw met Spotify"
+                "title": "Verifieer de integratie opnieuw"
             }
         }
     }

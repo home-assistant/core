@@ -14,7 +14,7 @@
                     "longitude": "Lengdegrad",
                     "name": "Navn"
                 },
-                "description": "Hvis Breddegrad and Lengdegrad er ikke gitt, vil standardverdiene i Home Assistant-konfigurasjonen bli brukt. Det blir opprettet en enhet for hver prognosetype, men bare de du velger blir aktivert som standard."
+                "description": "Hvis Breddegrad og Lengdegrad ikke er oppgitt, vil standardverdiene i Home Assistant-konfigurasjonen bli brukt. Det blir opprettet en enhet for hver prognosetype, men bare de du velger blir aktivert som standard."
             }
         }
     },
