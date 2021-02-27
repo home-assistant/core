@@ -1,8 +1,9 @@
 """The tests for the LG webOS media player platform."""
-
+import json
 from unittest.mock import patch
 
 import pytest
+from sqlitedict import SqliteDict
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player.const import (
@@ -17,6 +18,7 @@ from homeassistant.components.webostv.const import (
     DOMAIN,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
+    WEBOSTV_CONFIG_FILE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -129,3 +131,35 @@ async def test_command_with_optional_arg(hass, client):
     client.request.assert_called_with(
         "test", payload={"target": "https://www.google.com"}
     )
+
+
+async def test_migrate_keyfile_to_sqlite(hass, client):
+    key = "3d5b1aeeb98e"
+    # Create config file with JSON content
+    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
+    with open(config_file, 'w+') as file:
+        json.dump({"host": key}, file)
+
+    # Run the component setup
+    await setup_webostv(hass)
+
+    # Assert that the config file is a Sqlite database which contains the key
+    with SqliteDict(config_file) as conf:
+        assert conf.get("host") == key
+
+
+async def test_dont_migrate_sqlite_keyfile(hass, client):
+    key = "3d5b1aeeb98e"
+
+    # Create config file with Sqlite DB
+    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
+    with SqliteDict(config_file) as conf:
+        conf['host'] = key
+        conf.commit()
+
+    # Run the component setup
+    await setup_webostv(hass)
+
+    # Assert that the config file is still an Sqlite database and setup didn't fail
+    with SqliteDict(config_file) as conf:
+        assert conf.get("host") == key
