@@ -75,7 +75,6 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
             data.get(CONF_MAX_RESULTS),
         )
         self._event = None
-        self._other_events = []
         self._name = data[CONF_NAME]
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_reached = False
@@ -86,7 +85,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Return the device state attributes."""
         return {
             "offset_reached": self._offset_reached,
-            "other_events": self._other_events,
+            "other_events": self.data.other_events,
         }
 
     @property
@@ -113,7 +112,6 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         event = calculate_offset(event, self._offset)
         self._offset_reached = is_offset_reached(event)
         self._event = event
-        self._other_events = copy.deepcopy(self.data.other_events)
 
 
 class GoogleCalendarData:
@@ -213,7 +211,6 @@ class GoogleCalendarData:
             event_start_time = self.get_date_time(new_event["start"])
             event_end_time = self.get_date_time(new_event["end"])
 
-            other_events = []
             for item in items:
                 if new_event is not item:
 
@@ -221,6 +218,4 @@ class GoogleCalendarData:
                     end_time = self.get_date_time(item["end"])
 
                     if start_time >= event_start_time and end_time <= event_end_time:
-                        other_events.append(get_normalized_event(item))
-
-            self.other_events = other_events
+                        self.other_events.append(get_normalized_event(item))

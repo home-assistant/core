@@ -157,11 +157,11 @@ async def test_all_day_event(hass, mock_next_event):
     week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
     end_event = week_from_today + dt_util.dt.timedelta(days=1)
     event = copy.deepcopy(TEST_EVENT)
+
     start = week_from_today.isoformat()
     end = end_event.isoformat()
     event["start"]["date"] = start
     event["end"]["date"] = end
-
     mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
@@ -218,7 +218,17 @@ async def test_multiple_events(hass, mock_next_event):
     """Test that we can create a multiple event trigger on device."""
     middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
     end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+    start = middle_of_event.isoformat()
+    end = end_event.isoformat()
+
     events = copy.deepcopy(TEST_MULTIPLE_EVENTS)
+
+    state_attributes = {}
+    event = copy.deepcopy(events[0])
+    event["start"]["dateTime"] = start
+    event["end"]["dateTime"] = end
+
+    mock_next_event.return_value.event = event
 
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
@@ -226,21 +236,14 @@ async def test_multiple_events(hass, mock_next_event):
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
     assert state.state == STATE_ON
-    state_attributes = {}
+
     other_events = []
     for i in range(len(events)):
-        event = events[i]
-        mock_next_event.return_value.event = event
-        if i == 0:
-            state_attributes["friendly_name"] = TEST_ENTITY_NAME
-            state_attributes["message"] = event["summary"]
-            state_attributes["all_day"] = False
-            state_attributes["offset_reached"] = False
-            state_attributes["start_time"] = middle_of_event.strftime(DATE_STR_FORMAT)
-            state_attributes["end_time"] = end_event.strftime(DATE_STR_FORMAT)
-            state_attributes["location"] = event["location"]
-            state_attributes["description"] = event["description"]
-        else:
+        event = copy.deepcopy(events[i])
+        middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
+        end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
+
+        if i > 0:
             other_event = {}
             other_event["friendly_name"] = TEST_ENTITY_NAME
             other_event["message"] = event["summary"]
@@ -252,9 +255,20 @@ async def test_multiple_events(hass, mock_next_event):
             other_event["description"] = event["description"]
             other_events.append(other_event)
 
+    state_attributes = {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
+
     state_attributes["other_events"] = other_events
 
-    assert dict(state.attributes) == {state_attributes}
+    assert dict(state.attributes) == state_attributes
 
 
 async def test_in_progress_event(hass, mock_next_event):
@@ -389,11 +403,24 @@ async def test_all_day_offset_event(hass, mock_next_event):
     }
 
 
-async def test_update_error(hass, google_service):
+async def test_update_error(hass, google_service, mock_next_event):
     """Test that the calendar handles a server error."""
+    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
+    end_event = tomorrow + dt_util.dt.timedelta(days=1)
+    start = tomorrow.isoformat()
+    end = end_event.isoformat()
+    offset_hours = 1 + dt_util.now().hour
+    event_summary = "Test All Day Event Offset"
+    event = copy.deepcopy(TEST_EVENT)
+    event["start"]["date"] = start
+    event["end"]["date"] = end
+    event["summary"] = f"{event_summary} !!-{offset_hours}:0"
     google_service.return_value.get = Mock(
         side_effect=httplib2.ServerNotFoundError("unit test")
     )
+
+    mock_next_event.return_value.event = event
+
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
 
