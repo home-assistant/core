@@ -68,6 +68,11 @@ class MyStromSwitch(SwitchEntity):
         return self.plug.consumption
 
     @property
+    def current_temperature_c(self):
+        """Return the current temperature in ºC."""
+        return self.plug.temperature
+
+    @property
     def available(self):
         """Could the device be accessed during the last update call."""
         return self._available
