@@ -18,6 +18,15 @@
             "finish": {
                 "data": {
                     "name": "Naam"
+                },
+                "title": "Kies een naam voor het apparaat"
+            },
+            "reset": {
+                "title": "Ontgrendel het apparaat"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ja, doe het."
                 }
             },
             "user": {
