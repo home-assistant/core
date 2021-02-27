@@ -5,7 +5,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (  # CURRENCY_ICONS,; DEFAULT_COIN_ICON,
     CONF_BALANCES,
-    CONF_CLOSED_ORDERS,
     CONF_OPEN_ORDERS,
     CONF_TICKERS,
     DOMAIN,
@@ -28,9 +27,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if CONF_OPEN_ORDERS in coordinator.data:
         entities.append(OpenOrder(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
-
-    if CONF_CLOSED_ORDERS in coordinator.data:
-        entities.append(ClosedOrder(coordinator, coordinator.data[CONF_CLOSED_ORDERS]))
 
     async_add_entities(entities, False)
 
@@ -181,36 +177,6 @@ class OpenOrder(Order):
     def _get_data(self):
         """Return the data from self.coordinator.data."""
         return self.coordinator.data[CONF_OPEN_ORDERS]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return len(self._get_data())
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return self._unique_id
-
-
-class ClosedOrder(Order):
-    """Implementation of the closed order sensor."""
-
-    def __init__(self, coordinator, order):
-        """Initialize the sensor."""
-        super().__init__(coordinator, order)
-
-        self._name = "BIN Orders - Closed"
-        self._unique_id = "bin_orders_closed"
-
-    def _get_data(self):
-        """Return the data from self.coordinator.data."""
-        return self.coordinator.data[CONF_CLOSED_ORDERS]
 
     @property
     def name(self):

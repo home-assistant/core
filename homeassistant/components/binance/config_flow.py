@@ -11,7 +11,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_API_SECRET, CONF_BALANCES, CONF_MARKETS
+from .const import CONF_API_SECRET, CONF_MARKETS
 from .const import DOMAIN  # pylint:disable=unused-import
 from .errors import InvalidAuth, InvalidResponse
 
@@ -33,16 +33,6 @@ def _markets_schema(markets: Optional[List] = None):
         markets_dict = {name: name for name in markets}
 
     return vol.Schema({vol.Required(CONF_MARKETS): cv.multi_select(markets_dict)})
-
-
-def _balances_schema(balances: Optional[List] = None):
-    """Balances selection schema."""
-    balances_dict = {}
-
-    if balances:
-        balances_dict = {name: name for name in balances}
-
-    return vol.Schema({vol.Optional(CONF_BALANCES): cv.multi_select(balances_dict)})
 
 
 async def validate_input(hass: HomeAssistant, data: Dict):
@@ -71,10 +61,12 @@ async def validate_input(hass: HomeAssistant, data: Dict):
                 balances_list.append(balance["asset"])
         balances_list.sort()
     except BinanceAPIException as error:
-        if error.message == "Invalid API-key, IP, or permissions for action.":
+        if (
+            error.message == "Invalid API-key, IP, or permissions for action."
+            or error.message == "API-key format invalid."
+        ):
             raise InvalidAuth from error
-        else:
-            raise InvalidResponse from error
+        raise InvalidResponse from error
     except BinanceRequestException as error:
         raise InvalidResponse from error
     finally:

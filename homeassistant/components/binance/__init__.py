@@ -60,11 +60,11 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch Binance data."""
         try:
-            self.binance = await AsyncClient.create(
+            binance = await AsyncClient.create(
                 api_key=self._api_key, api_secret=self._api_secret
             )
 
-            all_tickers = await self.binance.get_ticker()
+            all_tickers = await binance.get_ticker()
             tickers_dict = {}
 
             for sym in self.symbols:
@@ -77,7 +77,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
 
             result_dict = {"tickers": tickers_dict}
 
-            all_balances = await self.binance.get_account()
+            all_balances = await binance.get_account()
             balances_dict = {}
 
             for balance in all_balances["balances"]:
@@ -87,20 +87,16 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
 
             result_dict["balances"] = balances_dict
 
-            open_orders = await self.binance.get_open_orders()
+            open_orders = await binance.get_open_orders()
             if open_orders:
                 result_dict["open_orders"] = open_orders
-
-            closed_orders = []  # Todo: implement closed orders in binance-api module
-            if closed_orders:
-                result_dict["closed_orders"] = closed_orders
 
             return result_dict
         except BinanceAPIException as error:
             _LOGGER.error("Binance API error: %s", error)
             raise ConfigEntryNotReady from error
         except BinanceRequestException as error:
-            _LOGGER.error("Binance sensor error: %s", error)
+            _LOGGER.error("Binance API Request error: %s", error)
             return None
         finally:
-            await self.binance.close_connection()
+            await binance.close_connection()

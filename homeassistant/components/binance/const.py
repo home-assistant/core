@@ -8,7 +8,6 @@ CONF_API_SECRET = "api_secret"
 
 CONF_BALANCES = "balances"
 CONF_MARKETS = "markets"
-CONF_CLOSED_ORDERS = "closed_orders"
 CONF_OPEN_ORDERS = "open_orders"
 CONF_TICKERS = "tickers"
 
