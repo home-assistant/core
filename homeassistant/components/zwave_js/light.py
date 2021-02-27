@@ -289,6 +289,9 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @callback
     def _calculate_color_values(self) -> None:
         """Calculate light colors."""
+        # NOTE: We lookup all values here (instead of relying on the multicolor one)
+        # to find out what colors are supported
+        # as this is a simple lookup by key, this not heavy
         red_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
@@ -298,14 +301,14 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         green_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.RED.value.key,
-            value_property_key_name=ColorComponent.RED.value.name,
+            value_property_key=ColorComponent.GREEN.value.key,
+            value_property_key_name=ColorComponent.GREEN.value.name,
         )
         blue_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.RED.value.key,
-            value_property_key_name=ColorComponent.RED.value.name,
+            value_property_key=ColorComponent.BLUE.value.key,
+            value_property_key_name=ColorComponent.BLUE.value.name,
         )
         cw_val = self.get_zwave_value(
             "currentColor",
