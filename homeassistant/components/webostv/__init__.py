@@ -105,7 +105,7 @@ async def async_setup(hass, config):
 
 
 def convert_client_keys(config_file):
-    """ In case the config file contains JSON, convert it to a Sqlite config file. """
+    """In case the config file contains JSON, convert it to a Sqlite config file."""
     # Return early if config file is non-existing
     if not os.path.isfile(config_file):
         return
@@ -126,8 +126,8 @@ def convert_client_keys(config_file):
 
         # Write the data to the Sqlite DB
         with SqliteDict(config_file) as conf:
-            for ip, key in json_conf.items():
-                conf[ip] = key
+            for host, key in json_conf.items():
+                conf[host] = key
             conf.commit()
 
 

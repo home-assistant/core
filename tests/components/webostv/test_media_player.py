@@ -1,5 +1,6 @@
 """The tests for the LG webOS media player platform."""
 import json
+import os
 from unittest.mock import patch
 
 import pytest
@@ -53,6 +54,10 @@ async def setup_webostv(hass):
         {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
     )
     await hass.async_block_till_done()
+
+
+def cleanup_webostv(hass):
+    os.remove(hass.config.path(WEBOSTV_CONFIG_FILE))
 
 
 async def test_mute(hass, client):
@@ -134,7 +139,7 @@ async def test_command_with_optional_arg(hass, client):
 
 
 async def test_migrate_keyfile_to_sqlite(hass, client):
-    """ Test migration from JSON key-file to Sqlite based one. """
+    """Test migration from JSON key-file to Sqlite based one."""
     key = "3d5b1aeeb98e"
     # Create config file with JSON content
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
@@ -148,9 +153,11 @@ async def test_migrate_keyfile_to_sqlite(hass, client):
     with SqliteDict(config_file) as conf:
         assert conf.get("host") == key
 
+    cleanup_webostv(hass)
+
 
 async def test_dont_migrate_sqlite_keyfile(hass, client):
-    """ Test that migration is not performed and setup still succeeds when config file is already an Sqlite DB. """
+    """Test that migration is not performed and setup still succeeds when config file is already an Sqlite DB."""
     key = "3d5b1aeeb98e"
 
     # Create config file with Sqlite DB
@@ -165,3 +172,5 @@ async def test_dont_migrate_sqlite_keyfile(hass, client):
     # Assert that the config file is still an Sqlite database and setup didn't fail
     with SqliteDict(config_file) as conf:
         assert conf.get("host") == key
+
+    cleanup_webostv(hass)
