@@ -1,6 +1,5 @@
 """The Compensation integration."""
 import logging
-import re
 import warnings
 
 import numpy as np
