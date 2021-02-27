@@ -57,7 +57,7 @@ async def setup_webostv(hass):
 
 
 def cleanup_webostv(hass):
-    """Test cleanup, remove the config file"""
+    """Test cleanup, remove the config file."""
     os.remove(hass.config.path(WEBOSTV_CONFIG_FILE))
 
 
