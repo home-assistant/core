@@ -134,6 +134,7 @@ class GoogleCalendarData:
         self.ignore_availability = ignore_availability
         self.max_results = max_results
         self.event = None
+        self.other_events = []
 
     def _prepare_query(self):
         try:
