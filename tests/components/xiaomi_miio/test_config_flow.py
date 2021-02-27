@@ -7,7 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.config_flow import (
-    DEFAULT_DEVICE_NAME,
     DEFAULT_GATEWAY_NAME,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
@@ -295,7 +294,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["title"] == overwrite_model
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
@@ -329,7 +328,7 @@ async def config_flow_device_success(hass, model_to_test):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["title"] == model_to_test
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
@@ -369,7 +368,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["title"] == model_to_test
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
