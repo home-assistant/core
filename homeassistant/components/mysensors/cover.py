@@ -1,5 +1,6 @@
 """Support for MySensors covers."""
 import logging
+from enum import Enum
 from typing import Callable
 
 from homeassistant.components import mysensors
@@ -13,10 +14,17 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
+class CoverState(Enum):
+    """
+    An enumeration of the standard cover states.
+    """
+    OPEN = 0
+    OPENING = 1
+    CLOSED = 2
+    CLOSING = 3
 
 async def async_setup_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
-):
+        hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
     async def async_discover(discovery_info):
@@ -43,13 +51,45 @@ async def async_setup_entry(
 class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
+    def get_cover_state(self):
+        """Returns a CoverState enum representing the state of the cover
+           as determined by the current state of each required V_"""
+        set_req = self.gateway.const.SetReq
+        v_up = self._values.get(set_req.V_UP) == STATE_ON
+        v_down = self._values.get(set_req.V_DOWN) == STATE_ON
+        v_stop = self._values.get(set_req.V_STOP) == STATE_ON
+
+        # If a V_DIMMER or V_PERCENTAGE is available, that is the amount
+        # the cover is open. Otherwise, use 0 or 100 based on the V_LIGHT
+        # or V_STATUS.
+        amount = 100
+        if set_req.V_DIMMER in self._values:
+            amount = self._values.get(set_req.V_DIMMER)
+        else:
+            amount = 100 if self._values.get(set_req.V_LIGHT) == STATE_ON else 0
+
+        if v_up and (not v_down) and (not v_stop):
+            return CoverState.OPENING
+        if (not v_up) and v_down and (not v_stop):
+            return CoverState.CLOSING
+        if (not v_up) and (not v_down) and v_stop and amount == 0:
+            return CoverState.CLOSED
+        return CoverState.OPEN
+
     @property
     def is_closed(self):
-        """Return True if cover is closed."""
-        set_req = self.gateway.const.SetReq
-        if set_req.V_DIMMER in self._values:
-            return self._values.get(set_req.V_DIMMER) == 0
-        return self._values.get(set_req.V_LIGHT) == STATE_OFF
+        """Return True if the cover is closed."""
+        return self.get_cover_state() == CoverState.CLOSED
+
+    @property
+    def is_closing(self):
+        """Return True if the cover is closing."""
+        return self.get_cover_state() == CoverState.CLOSING
+
+    @property
+    def is_opening(self):
+        """Return True if the cover is opening."""
+        return self.get_cover_state() == CoverState.OPENING
 
     @property
     def current_cover_position(self):
