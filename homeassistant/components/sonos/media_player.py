@@ -71,11 +71,12 @@ from .const import (
     PLAYABLE_MEDIA_TYPES,
 )
 from .media_browser import build_item_response, get_media, library_payload
+from .sensor import SonosBatteryEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = 10
-DISCOVERY_INTERVAL = 60
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
+DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 
 SUPPORT_SONOS = (
     SUPPORT_BROWSE_MEDIA
@@ -187,7 +188,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 if soco.uid not in hass.data[DATA_SONOS].discovered:
                     _LOGGER.debug("Adding new entity")
                     hass.data[DATA_SONOS].discovered.append(soco.uid)
-                    hass.add_job(async_add_entities, [SonosEntity(soco)])
+                    entity = SonosEntity(soco)
+                    entities = [entity]
+
+                    # Enable battery status if supported
+                    battery_info = SonosBatteryEntity.fetch(soco)
+                    if battery_info is not None:
+                        entities.append(SonosBatteryEntity(entity, soco, battery_info))
+
+                    hass.add_job(async_add_entities, entities)
                 else:
                     entity = _get_entity_from_soco_uid(hass, soco.uid)
                     if entity and (entity.soco == soco or not entity.available):
@@ -214,13 +223,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             _LOGGER.debug("Tested all hosts")
             hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
-                DISCOVERY_INTERVAL, _discovery
+                DISCOVERY_INTERVAL.seconds, _discovery
             )
         else:
             _LOGGER.debug("Starting discovery thread")
             hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
                 _discovered_player,
-                interval=DISCOVERY_INTERVAL,
+                interval=DISCOVERY_INTERVAL.seconds,
                 interface_addr=config.get(CONF_INTERFACE_ADDR),
             )
 
@@ -521,14 +530,14 @@ class SonosEntity(MediaPlayerEntity):
             self._seen_timer()
 
         self._seen_timer = self.hass.helpers.event.async_call_later(
-            2.5 * DISCOVERY_INTERVAL, self.async_unseen
+            2.5 * DISCOVERY_INTERVAL.seconds, self.async_unseen
         )
 
         if was_available:
             return
 
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
-            self.update, datetime.timedelta(seconds=SCAN_INTERVAL)
+            self.update, SCAN_INTERVAL
         )
 
         done = await self.hass.async_add_executor_job(self._attach_player)
