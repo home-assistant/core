@@ -79,18 +79,27 @@ async def test_zeroconf(hass: HomeAssistantType):
 
 async def test_link(hass: HomeAssistantType, router: Mock):
     """Test linking."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
+    with patch(
+        "homeassistant.components.freebox.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.freebox.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+        )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == MOCK_HOST
-    assert result["title"] == MOCK_HOST
-    assert result["data"][CONF_HOST] == MOCK_HOST
-    assert result["data"][CONF_PORT] == MOCK_PORT
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["result"].unique_id == MOCK_HOST
+        assert result["title"] == MOCK_HOST
+        assert result["data"][CONF_HOST] == MOCK_HOST
+        assert result["data"][CONF_PORT] == MOCK_PORT
+
+        assert len(mock_setup.mock_calls) == 1
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_abort_if_already_setup(hass: HomeAssistantType):
