@@ -57,6 +57,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = discovery_info.get("name")
         self.host = discovery_info.get("host")
         self.mac = discovery_info.get("properties", {}).get("mac")
+        if self.mac is None:
+            poch = discovery_info.get("properties", {}).get("poch", "")
+            result = re.search("mac=\w+", poch)
+            if result is not None:
+                self.mac = result.group(0).split("=")[1]
 
         if not name or not self.host or not self.mac:
             return self.async_abort(reason="not_xiaomi_miio")
@@ -81,7 +86,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
                 self.context.update(
-                    {"title_placeholders": {"name": f"Miio Device {self.host}"}}
+                    {"title_placeholders": {"name": f"Miio {device_model} {self.host}"}}
                 )
 
                 return await self.async_step_device()
