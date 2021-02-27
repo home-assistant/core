@@ -1,9 +1,9 @@
 """Config flow to configure Xiaomi Miio."""
 import logging
+from re import search
 
 import voluptuous as vol
 
-from re import search
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers.device_registry import format_mac
@@ -60,7 +60,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.mac = discovery_info.get("properties", {}).get("mac")
         if self.mac is None:
             poch = discovery_info.get("properties", {}).get("poch", "")
-            result = search("mac=\w+", poch)
+            result = search(r"mac=\w+", poch)
             if result is not None:
                 self.mac = result.group(0).split("=")[1]
 
