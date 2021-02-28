@@ -240,26 +240,6 @@ class VlcDevice(MediaPlayerEntity):
         self._vlc.set_volume(volume * MAX_VOLUME)
         self._volume = volume
 
-    def volume_up(self):
-        """Service to send VLC the command for volume up."""
-        if self._volume is None:
-            return
-
-        current_volume = self._volume
-        if current_volume < 1.0:
-            new_volume = min(current_volume + 0.05, 1.0)
-            self.set_volume_level(new_volume)
-
-    def volume_down(self):
-        """Service to send VLC the command for volume down."""
-        if self._volume is None:
-            return
-
-        current_volume = self._volume
-        if current_volume > 0:
-            new_volume = max(current_volume - 0.05, 0)
-            self.set_volume_level(new_volume)
-
     def media_play(self):
         """Send play command."""
         self._vlc.play()
