@@ -21,6 +21,9 @@ def test_purge_old_states(hass, hass_recorder):
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 6
+        assert states[0].old_state_id is None
+        assert states[-1].old_state_id == states[-2].state_id
+
         events = session.query(Events).filter(Events.event_type == "state_changed")
         assert events.count() == 6
 
@@ -28,6 +31,10 @@ def test_purge_old_states(hass, hass_recorder):
         finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
         assert not finished
         assert states.count() == 2
+
+        states_after_purge = session.query(States)
+        assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
+        assert states_after_purge[0].old_state_id is None
 
         finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
         assert finished
@@ -147,6 +154,7 @@ def _add_test_states(hass):
     wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
+        old_state_id = None
         for event_id in range(6):
             if event_id < 2:
                 timestamp = eleven_days_ago
@@ -167,18 +175,20 @@ def _add_test_states(hass):
             )
             session.add(event)
             session.flush()
-            session.add(
-                States(
-                    entity_id="test.recorder2",
-                    domain="sensor",
-                    state=state,
-                    attributes=json.dumps(attributes),
-                    last_changed=timestamp,
-                    last_updated=timestamp,
-                    created=timestamp,
-                    event_id=event.event_id,
-                )
+            state = States(
+                entity_id="test.recorder2",
+                domain="sensor",
+                state=state,
+                attributes=json.dumps(attributes),
+                last_changed=timestamp,
+                last_updated=timestamp,
+                created=timestamp,
+                event_id=event.event_id,
+                old_state_id=old_state_id,
             )
+            session.add(state)
+            session.flush()
+            old_state_id = state.state_id
 
 
 def _add_test_events(hass):
