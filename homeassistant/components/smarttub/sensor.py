@@ -18,9 +18,6 @@ ATTR_LAST_UPDATED = "last_updated"
 ATTR_MODE = "mode"
 ATTR_START_HOUR = "start_hour"
 
-SUPPORT_PRIMARY_FILTRATION = 1
-SUPPORT_SECONDARY_FILTRATION = 2
-
 SET_PRIMARY_FILTRATION_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_DURATION, ATTR_START_HOUR),
     cv.make_entity_service_schema(
@@ -75,14 +72,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "set_primary_filtration",
         SET_PRIMARY_FILTRATION_SCHEMA,
         "async_set_primary_filtration",
-        [SUPPORT_PRIMARY_FILTRATION],
     )
 
     platform.async_register_entity_service(
         "set_secondary_filtration",
         SET_SECONDARY_FILTRATION_SCHEMA,
         "async_set_secondary_filtration",
-        [SUPPORT_SECONDARY_FILTRATION],
     )
 
 
@@ -122,11 +117,6 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
             ATTR_START_HOUR: state.start_hour,
         }
 
-    @property
-    def supported_features(self):
-        """Return a bitmap of supported features."""
-        return SUPPORT_PRIMARY_FILTRATION
-
     async def async_set_primary_filtration(self, **kwargs):
         """Update primary filtration settings."""
         await self._state.set(
@@ -157,11 +147,6 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
             ATTR_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
         }
-
-    @property
-    def supported_features(self):
-        """Return a bitmap of supported features."""
-        return SUPPORT_SECONDARY_FILTRATION
 
     async def async_set_secondary_filtration(self, **kwargs):
         """Update primary filtration settings."""

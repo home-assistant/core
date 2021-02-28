@@ -2,6 +2,9 @@ set_primary_filtration:
   name: Update primary filtration settings
   description: Updates the primary filtration settings
   target:
+    entity:
+      integration: smarttub
+      domain: sensor
   fields:
     duration:
       name: Duration
@@ -30,6 +33,9 @@ set_secondary_filtration:
   name: Update secondary filtration settings
   description: Updates the secondary filtration settings
   target:
+    entity:
+      integration: smarttub
+      domain: sensor
   fields:
     mode:
       description: The secondary filtration mode.
