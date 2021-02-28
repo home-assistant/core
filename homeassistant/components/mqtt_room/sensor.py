@@ -8,7 +8,14 @@ import voluptuous as vol
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ID, CONF_NAME, CONF_TIMEOUT, STATE_NOT_HOME
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ID,
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    STATE_NOT_HOME,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -16,11 +23,9 @@ from homeassistant.util import dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DEVICE_ID = "device_id"
 ATTR_DISTANCE = "distance"
 ATTR_ROOM = "room"
 
-CONF_DEVICE_ID = "device_id"
 CONF_AWAY_TIMEOUT = "away_timeout"
 
 DEFAULT_AWAY_TIMEOUT = 0
