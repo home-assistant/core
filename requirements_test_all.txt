@@ -48,7 +48,7 @@ accuweather==0.1.0
 adb-shell[async]==0.2.1
 
 # homeassistant.components.alarmdecoder
-adext==0.3
+adext==0.4.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
