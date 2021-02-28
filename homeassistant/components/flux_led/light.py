@@ -375,5 +375,4 @@ class FluxLight(LightEntity):
                     )
                     self._error_reported = True
                 return
-
         self._bulb.update_state(retry=2)
