@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_PLATFORM,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -66,10 +67,11 @@ TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AUTOMATION_TYPE): str,
         vol.Required(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
-        vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
+        vol.Required(CONF_TOPIC): cv.string,
+        vol.Required(CONF_TYPE): cv.string,
+        vol.Optional(CONF_VALUE_TEMPLATE, default=None): vol.Any(None, cv.string),
     },
     validate_device_has_at_least_one_identifier,
 )
@@ -96,6 +98,8 @@ class TriggerInstance:
         }
         if self.trigger.payload:
             mqtt_config[CONF_PAYLOAD] = self.trigger.payload
+        if self.trigger.value_template:
+            mqtt_config[CONF_VALUE_TEMPLATE] = self.trigger.value_template
         mqtt_config = mqtt_trigger.TRIGGER_SCHEMA(mqtt_config)
 
         if self.remove:
@@ -121,6 +125,7 @@ class Trigger:
     subtype: str = attr.ib()
     topic: str = attr.ib()
     type: str = attr.ib()
+    value_template: str = attr.ib()
     trigger_instances: List[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
@@ -153,6 +158,7 @@ class Trigger:
         self.qos = config[CONF_QOS]
         topic_changed = self.topic != config[CONF_TOPIC]
         self.topic = config[CONF_TOPIC]
+        self.value_template = config[CONF_VALUE_TEMPLATE]
 
         # Unsubscribe+subscribe if this trigger is in use and topic has changed
         # If topic is same unsubscribe+subscribe will execute in the wrong order
@@ -245,6 +251,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_data):
             payload=config[CONF_PAYLOAD],
             qos=config[CONF_QOS],
             remove_signal=remove_signal,
+            value_template=config[CONF_VALUE_TEMPLATE],
         )
     else:
         await hass.data[DEVICE_TRIGGERS][discovery_id].update_trigger(
@@ -325,6 +332,7 @@ async def async_attach_trigger(
             topic=None,
             payload=None,
             qos=None,
+            value_template=None,
         )
     return await hass.data[DEVICE_TRIGGERS][discovery_id].add_trigger(
         action, automation_info
