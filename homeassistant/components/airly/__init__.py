@@ -144,6 +144,12 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             except (AirlyError, ClientConnectorError) as error:
                 raise UpdateFailed(error) from error
 
+        _LOGGER.debug(
+            "Requests remaining: %s/%s",
+            self.airly.requests_remaining,
+            self.airly.requests_per_day,
+        )
+
         values = measurements.current["values"]
         index = measurements.current["indexes"][0]
         standards = measurements.current["standards"]
