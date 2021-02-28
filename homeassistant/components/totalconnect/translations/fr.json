@@ -5,15 +5,19 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification invalide",
+            "usercode": "Code d'utilisateur non valide pour cet utilisateur \u00e0 cet emplacement"
         },
         "step": {
             "locations": {
                 "data": {
                     "location": "Emplacement"
-                }
+                },
+                "description": "Saisissez le code d'utilisateur de cet utilisateur \u00e0 cet emplacement",
+                "title": "Codes d'utilisateur de l'emplacement"
             },
             "reauth_confirm": {
+                "description": "Total Connect doit r\u00e9-authentifier votre compte",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {

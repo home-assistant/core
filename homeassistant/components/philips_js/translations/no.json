@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
+            "invalid_pin": "Ugyldig PIN",
+            "pairing_failure": "Kan ikke parre: {error_id}",
             "unknown": "Uventet feil"
         },
         "step": {

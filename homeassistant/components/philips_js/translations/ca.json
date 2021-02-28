@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_pin": "PIN inv\u00e0lid",
+            "pairing_failure": "No s'ha pogut vincular: {error_id}",
             "unknown": "Error inesperat"
         },
         "step": {
