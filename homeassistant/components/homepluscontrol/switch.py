@@ -9,15 +9,23 @@ from homeassistant.components.switch import (
     DEVICE_CLASS_SWITCH,
     SwitchEntity,
 )
-
-# from homeassistant.helpers import entity_platform
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import dispatcher
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DOMAIN, HW_TYPE
+from .const import (
+    API,
+    DATA_COORDINATOR,
+    DOMAIN,
+    ENTITY_UIDS,
+    HW_TYPE,
+    SIGNAL_ADD_ENTITIES,
+    SIGNAL_REMOVE_ENTITIES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +38,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         config_entry (ConfigEntry): ConfigEntry object that configures this platform.
         async_add_entities (function): Function called to add entities of this platform.
     """
-    # Dictionaty of entities of this integration
-    hass.data[DOMAIN]["entities"] = {}
-
     # API object stored here by __init__.py
-    api = hass.data[DOMAIN][config_entry.entry_id]
+    api = hass.data[DOMAIN][config_entry.entry_id][API]
 
     async def async_update_data():
         """Fetch data from API endpoint.
@@ -42,77 +47,63 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
-        switch_data = {}
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
                 switch_data = await api.fetch_data()
-        except Exception as err:
+        except HomeAssistantError as err:
             raise UpdateFailed(
                 f"Error communicating with API: {err} [{type(err)}]"
             ) from err
 
-        # Remove obsolete entities from the Entity and Device Registries
-        device_reg = await hass.helpers.device_registry.async_get_registry()
-
-        for ent_id, ent in api.switches_to_remove.items():
-            r_entity = hass.data[DOMAIN]["entities"].pop(ent_id, None)
-            if r_entity is None:
-                _LOGGER.debug(
-                    "Entity %s was marked from deletion, but is not registered by the integration.",
-                    str(ent),
-                )
-                continue
-            _LOGGER.debug(
-                "Remove entity %s [device: %s] from HA registries.",
-                r_entity.entity_id,
-                r_entity.registry_entry.device_id,
+        # Send out signal for removal of obsolete entities from Home Assistant
+        if len(api.switches_to_remove.keys()) > 0:
+            device_registry = hass.helpers.device_registry.async_get(hass)
+            dispatcher.async_dispatcher_send(
+                hass,
+                SIGNAL_REMOVE_ENTITIES,
+                api.switches_to_remove.keys(),
+                hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS],
+                device_registry,
             )
-            device_reg.async_remove_device(r_entity.registry_entry.device_id)
-            await r_entity.async_remove()
+            # Reset the api object dictionary of deleted elements
+            api.switches_to_remove = {}
 
-        # Reset the api object dictionary of deleted elements
-        api.switches_to_remove = {}
-
-        # Add entities to HomeAssistant domain and registries
-        new_entities = []
-        for idx in switch_data:
-            if idx not in hass.data[DOMAIN]["entities"]:
-                hass.data[DOMAIN]["entities"][idx] = HomeControlSwitchEntity(
-                    coordinator, idx
-                )
-                new_entities.append(hass.data[DOMAIN]["entities"][idx])
-
-        async_add_entities(new_entities)
+        # Send out signal for new entity addition to Home Assistant
+        new_entity_uids = []
+        for unique_id in switch_data:
+            if unique_id not in hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS]:
+                new_entity_uids.append(unique_id)
+        if len(new_entity_uids) > 0:
+            dispatcher.async_dispatcher_send(
+                hass,
+                SIGNAL_ADD_ENTITIES,
+                new_entity_uids,
+                coordinator,
+                async_add_entities,
+            )
 
         return switch_data
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        # Name of the data. For logging purposes.
-        name="switch",
-        update_method=async_update_data,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=60),
-    )
+    # Register the Data Coordinator with the integration
+    coordinator = hass.data[DOMAIN][config_entry.entry_id].get(DATA_COORDINATOR)
+    if coordinator is None:
+        coordinator = DataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            # Name of the data. For logging purposes.
+            name="switch",
+            update_method=async_update_data,
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=timedelta(seconds=60),
+        )
 
-    # Add the coordinator to the domain's data in HA
-    hass.data[DOMAIN][config_entry.entry_id + "_coordinator"] = coordinator
+        # Add the coordinator to the domain's data in HA
+        hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR] = coordinator
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
-
-
-async def view_data(hass):
-    """Debug relevant Hass objects."""
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
-    for ent in entity_reg.entities:
-        _LOGGER.debug("Entity registry entity: %s", str(ent))
-    for dev in device_reg.devices:
-        _LOGGER.debug("Device registry device: %s", str(dev))
 
 
 class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
@@ -133,11 +124,12 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self.idx = idx
+        self.module = self.coordinator.data[self.idx]
 
     @property
     def name(self):
         """Name of the device."""
-        return self.coordinator.data[self.idx].name
+        return self.module.name
 
     @property
     def unique_id(self):
@@ -154,21 +146,16 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
             },
             "name": self.name,
             "manufacturer": "Legrand",
-            "model": HW_TYPE.get(self.coordinator.data[self.idx].hw_type, "Unknown"),
-            "sw_version": self.coordinator.data[self.idx].fw,
+            "model": HW_TYPE.get(self.module.hw_type),
+            "sw_version": self.module.fw,
         }
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self.coordinator.data[self.idx].device == "plug":
+        if self.module.device == "plug":
             return DEVICE_CLASS_OUTLET
         return DEVICE_CLASS_SWITCH
-
-    @property
-    def logger(self) -> logging.Logger:
-        """Logger of entity."""
-        return logging.getLogger(__name__)
 
     @property
     def available(self) -> bool:
@@ -179,38 +166,32 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
 
         This method overrides the one of the CoordinatorEntity
         """
-        return (
-            self.coordinator.last_update_success
-            and self.coordinator.data[self.idx].reachable
-        )
+        return self.coordinator.last_update_success and self.module.reachable
 
     @property
     def is_on(self):
         """Return entity state."""
-        self.logger.debug(
-            "Status of %s : %s",
-            str(self.name),
-            str(self.coordinator.data[self.idx].status),
-        )
-        return self.coordinator.data[self.idx].status == "on"
+        return self.module.status == "on"
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         # Do the turning on.
-        await self.coordinator.data[self.idx].turn_on()
+        await self.module.turn_on()
         # Update the data
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self.coordinator.data[self.idx].turn_off()
+        await self.module.turn_off()
         # Update the data
         await self.coordinator.async_request_refresh()
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self.registry_entry is not None:
-            entity_reg = (
-                await self.coordinator.hass.helpers.entity_registry.async_get_registry()
-            )
-            entity_reg.async_remove(self.registry_entry.entity_id)
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Register with the integration's entity map
+        domain = self.registry_entry.platform
+        config_entry_id = self.registry_entry.config_entry_id
+        entity_id = self.registry_entry.entity_id
+        self.hass.data[domain][config_entry_id][ENTITY_UIDS][self.unique_id] = entity_id

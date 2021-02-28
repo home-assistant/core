@@ -7,7 +7,6 @@ from homeassistant.components.homepluscontrol.const import DOMAIN
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 SUBSCRIPTION_KEY = "12345678901234567890123456789012"
-REDIRECT_URI = "https://example.com:8213/auth/external/callback"
 
 
 @pytest.fixture()
@@ -34,7 +33,6 @@ def mock_config_entry():
             "client_id": CLIENT_ID,
             "client_secret": CLIENT_SECRET,
             "subscription_key": SUBSCRIPTION_KEY,
-            "redirect_uri": REDIRECT_URI,
         },
         "test",
         config_entries.CONN_CLASS_LOCAL_POLL,

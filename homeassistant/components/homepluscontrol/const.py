@@ -1,11 +1,15 @@
 """Constants for the Legrand Home+ Control integration."""
+API = "api"
 CONF_SUBSCRIPTION_KEY = "subscription_key"
-CONF_REDIRECT_URI = "redirect_uri"
 CONF_PLANT_UPDATE_INTERVAL = "plant_update_interval"
 CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL = "plant_topology_update_interval"
 CONF_MODULE_STATUS_UPDATE_INTERVAL = "module_status_update_interval"
 
+DATA_COORDINATOR = "coordinator"
 DOMAIN = "homepluscontrol"
+ENTITY_UIDS = "entity_unique_ids"
+OPTS_LISTENER_REMOVERS = "options_listener_removers"
+DISPATCHER_REMOVERS = "dispatcher_removers"
 
 # Legrand Model Identifiers - https://developer.legrand.com/documentation/product-cluster-list/#
 HW_TYPE = {
@@ -39,3 +43,6 @@ DEFAULT_UPDATE_INTERVALS = {
     # check often
     CONF_MODULE_STATUS_UPDATE_INTERVAL: 300,  # 5 minutes
 }
+
+SIGNAL_ADD_ENTITIES = "home_plus_control_add_entities_signal"
+SIGNAL_REMOVE_ENTITIES = "home_plus_control_remove_entities_signal"

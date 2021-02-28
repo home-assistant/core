@@ -1,5 +1,6 @@
 """Test the Legrand Home+ Control integration."""
 import asyncio
+import datetime as dt
 from unittest.mock import patch
 
 from homepluscontrol.homeplusplant import (
@@ -9,32 +10,34 @@ from homepluscontrol.homeplusplant import (
 
 from homeassistant import config_entries, setup
 from homeassistant.components.homepluscontrol import api
-from homeassistant.components.homepluscontrol.const import DOMAIN, PLANT_URL
+from homeassistant.components.homepluscontrol.const import (
+    API,
+    DOMAIN,
+    ENTITY_UIDS,
+    PLANT_URL,
+)
+
+from tests.common import async_fire_time_changed
 
 
 async def entity_assertions(
     hass,
     num_exp_entities,
     num_exp_devices=None,
-    coordinator=None,
     expected_entities=None,
     expected_devices=None,
 ):
     """Assert number of entities and devices."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-
-    if coordinator is None:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
+    entity_reg = hass.helpers.entity_registry.async_get(hass)
+    device_reg = hass.helpers.device_registry.async_get(hass)
 
     if num_exp_devices is None:
         num_exp_devices = num_exp_entities
 
-    assert len(hass.data[DOMAIN]["entities"].keys()) == num_exp_entities
-    if coordinator.data is not None:
-        assert len(coordinator.data.keys()) == num_exp_entities
+    assert (
+        len(hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].keys())
+        == num_exp_entities
+    )
     assert len(entity_reg.entities.keys()) == num_exp_entities
     assert len(device_reg.devices.keys()) == num_exp_devices
 
@@ -47,21 +50,56 @@ async def entity_assertions(
             assert bool(device_reg.async_get(exp_device)) == present
 
 
-async def test_loading(hass, mock_config_entry):
+async def one_entity_assertion(hass, entity_id, availability):
+    """Assert the presence of an entity and its specified availability."""
+    entity_reg = hass.helpers.entity_registry.async_get(hass)
+    one_entity = entity_reg.async_get(entity_id)
+    assert one_entity
+    assert (
+        hass.data["entity_platform"][DOMAIN][0].entities[entity_id].available
+        == availability
+    )
+
+
+async def test_loading(hass, mock_config_entry, current_request_with_host):
     """Test component loading."""
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await setup.async_setup_component(hass, "homepluscontrol", {})
+    await setup.async_setup_component(hass, DOMAIN, {})
 
-    await mock_config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
 
+async def test_unloading(hass, mock_config_entry, current_request_with_host):
+    """Test component unloading."""
+    await setup.async_setup_component(hass, "http", {})
+    assert hass.http.app
+    await setup.async_setup_component(hass, DOMAIN, {})
+
+    await hass.config_entries.async_add(mock_config_entry)
+    assert isinstance(
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+    )
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
+
+    # We now unload the entry
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    assert hass.data[DOMAIN].get(mock_config_entry.entry_id) is None
+
+
 async def test_plant_update(
-    hass, aioclient_mock, mock_config_entry, plant_data, plant_topology, plant_modules
+    hass,
+    aioclient_mock,
+    mock_config_entry,
+    plant_data,
+    plant_topology,
+    plant_modules,
+    current_request_with_host,
 ):
     """Test entity and device loading."""
 
@@ -82,10 +120,9 @@ async def test_plant_update(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -110,6 +147,7 @@ async def test_plant_topology_reduction_change(
     plant_topology,
     plant_modules,
     plant_topology_reduced,
+    current_request_with_host,
 ):
     """Test an entity leaving the plant topology."""
 
@@ -130,10 +168,9 @@ async def test_plant_topology_reduction_change(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -170,14 +207,14 @@ async def test_plant_topology_reduction_change(
         "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
-        await coordinator.async_refresh()
+        async_fire_time_changed(
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+        )
         await hass.async_block_till_done()
         assert len(mock_check.mock_calls) == 3
 
     # Check for plant, topology and module status - this time only 4 left
+    await hass.async_block_till_done()
     await entity_assertions(
         hass,
         num_exp_entities=4,
@@ -197,6 +234,7 @@ async def test_plant_topology_increase_change(
     plant_modules,
     plant_topology_reduced,
     plant_modules_reduced,
+    current_request_with_host,
 ):
     """Test an entity entering the plant topology."""
 
@@ -217,10 +255,9 @@ async def test_plant_topology_increase_change(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -256,10 +293,9 @@ async def test_plant_topology_increase_change(
         "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
-        await coordinator.async_refresh()
+        async_fire_time_changed(
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+        )
         await hass.async_block_till_done()
         assert len(mock_check.mock_calls) == 3
     # Check for plant, topology and module status
@@ -281,6 +317,7 @@ async def test_module_status_reduction_change(
     plant_topology,
     plant_modules,
     plant_modules_reduced,
+    current_request_with_host,
 ):
     """Test a missing module status in the plant topology."""
 
@@ -301,10 +338,9 @@ async def test_module_status_reduction_change(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -321,8 +357,10 @@ async def test_module_status_reduction_change(
     )
 
     # Confirm the availability of this particular entity
-    test_entity = hass.data[DOMAIN]["entities"].get("0000000987654321fedcba")
-    assert test_entity.available
+    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+        "0000000987654321fedcba"
+    )
+    await one_entity_assertion(hass, test_entity_id, True)
 
     # Now we refresh the topology with one module status less
     aioclient_mock.clear_requests()
@@ -344,10 +382,9 @@ async def test_module_status_reduction_change(
         "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
-        await coordinator.async_refresh()
+        async_fire_time_changed(
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+        )
         await hass.async_block_till_done()
         assert len(mock_check.mock_calls) == 3
     # Check for plant, topology and module status
@@ -361,9 +398,10 @@ async def test_module_status_reduction_change(
     )
 
     # This entity is present, but not available
-    test_entity = hass.data[DOMAIN]["entities"].get("0000000987654321fedcba")
-    assert test_entity
-    assert not test_entity.available
+    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+        "0000000987654321fedcba"
+    )
+    await one_entity_assertion(hass, test_entity_id, False)
 
 
 async def test_module_status_increase_change(
@@ -374,6 +412,7 @@ async def test_module_status_increase_change(
     plant_topology,
     plant_modules,
     plant_modules_reduced,
+    current_request_with_host,
 ):
     """Test a additional module status in the plant topology."""
 
@@ -394,10 +433,9 @@ async def test_module_status_increase_change(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -414,9 +452,10 @@ async def test_module_status_increase_change(
     )
 
     # This particular entity is not available
-    test_entity = hass.data[DOMAIN]["entities"].get("0000000987654321fedcba")
-    assert test_entity
-    assert not test_entity.available
+    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+        "0000000987654321fedcba"
+    )
+    await one_entity_assertion(hass, test_entity_id, False)
 
     # Now we refresh the topology with one module status more
     aioclient_mock.clear_requests()
@@ -438,10 +477,9 @@ async def test_module_status_increase_change(
         "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
-        await coordinator.async_refresh()
+        async_fire_time_changed(
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+        )
         await hass.async_block_till_done()
         assert len(mock_check.mock_calls) == 3
     # Check for plant, topology and module status
@@ -455,13 +493,20 @@ async def test_module_status_increase_change(
     )
 
     # Now the entity is available
-    test_entity = hass.data[DOMAIN]["entities"].get("0000000987654321fedcba")
-    assert test_entity
-    assert test_entity.available
+    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+        "0000000987654321fedcba"
+    )
+    await one_entity_assertion(hass, test_entity_id, True)
 
 
 async def test_plant_api_timeout(
-    hass, aioclient_mock, mock_config_entry, plant_data, plant_topology, plant_modules
+    hass,
+    aioclient_mock,
+    mock_config_entry,
+    plant_data,
+    plant_topology,
+    plant_modules,
+    current_request_with_host,
 ):
     """Test an API timeout when loading the plant data."""
 
@@ -475,10 +520,9 @@ async def test_plant_api_timeout(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 1 time only - fails on plant data update
@@ -486,16 +530,22 @@ async def test_plant_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
     )
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - None have been configured
     await entity_assertions(hass, num_exp_entities=0)
 
 
 async def test_plant_topology_api_timeout(
-    hass, aioclient_mock, mock_config_entry, plant_data, plant_topology, plant_modules
+    hass,
+    aioclient_mock,
+    mock_config_entry,
+    plant_data,
+    plant_topology,
+    plant_modules,
+    current_request_with_host,
 ):
     """Test an API timeout when loading the plant topology data."""
 
@@ -513,10 +563,9 @@ async def test_plant_topology_api_timeout(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 2 times - fails on plant topology update
@@ -524,16 +573,22 @@ async def test_plant_topology_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
     )
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - None have been configured
     await entity_assertions(hass, num_exp_entities=0)
 
 
 async def test_plant_status_api_timeout(
-    hass, aioclient_mock, mock_config_entry, plant_data, plant_topology, plant_modules
+    hass,
+    aioclient_mock,
+    mock_config_entry,
+    plant_data,
+    plant_topology,
+    plant_modules,
+    current_request_with_host,
 ):
     """Test an API timeout when loading the plant module status data."""
 
@@ -555,10 +610,9 @@ async def test_plant_status_api_timeout(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times - fails on plant status update
@@ -566,9 +620,9 @@ async def test_plant_status_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
     )
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - all entities should be there, but not available
     await entity_assertions(
@@ -579,9 +633,10 @@ async def test_plant_status_api_timeout(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity in hass.data[DOMAIN]["entities"].values():
-        assert test_entity
-        assert not test_entity.available
+    for test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+        ENTITY_UIDS
+    ].values():
+        await one_entity_assertion(hass, test_entity_id, False)
 
 
 async def test_update_with_plant_topology_api_timeout(
@@ -593,6 +648,7 @@ async def test_update_with_plant_topology_api_timeout(
     plant_modules,
     plant_topology_reduced,
     plant_modules_reduced,
+    current_request_with_host,
 ):
     """Test an API timeout when updating the plant topology data.
 
@@ -616,10 +672,9 @@ async def test_update_with_plant_topology_api_timeout(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -627,9 +682,9 @@ async def test_update_with_plant_topology_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
     )
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - all entities should be there
     await entity_assertions(
@@ -640,8 +695,10 @@ async def test_update_with_plant_topology_api_timeout(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity in hass.data[DOMAIN]["entities"].values():
-        assert test_entity.available
+    for test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+        ENTITY_UIDS
+    ].values():
+        await one_entity_assertion(hass, test_entity_id, True)
 
     # Attempt to update the data, but plant topology update fails
 
@@ -666,10 +723,9 @@ async def test_update_with_plant_topology_api_timeout(
         "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
-        await coordinator.async_refresh()
+        async_fire_time_changed(
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+        )
         await hass.async_block_till_done()
         assert len(mock_check.mock_calls) == 3
 
@@ -684,9 +740,10 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     # This entity has not returned a status, so appears as unavailable
-    test_entity = hass.data[DOMAIN]["entities"].get("0000000987654321fedcba")
-    assert test_entity
-    assert not test_entity.available
+    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+        "0000000987654321fedcba"
+    )
+    await one_entity_assertion(hass, test_entity_id, False)
 
 
 async def test_update_with_plant_module_status_api_timeout(
@@ -698,6 +755,7 @@ async def test_update_with_plant_module_status_api_timeout(
     plant_modules,
     plant_topology_reduced,
     plant_modules_reduced,
+    current_request_with_host,
 ):
     """Test an API timeout when updating the plant module status data.
 
@@ -721,10 +779,9 @@ async def test_update_with_plant_module_status_api_timeout(
     # Load the entry
     hass.data[DOMAIN] = {}
     hass.config.components.add(DOMAIN)
-    config_entry = mock_config_entry
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -732,16 +789,18 @@ async def test_update_with_plant_module_status_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
     )
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - all entities should be there
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    assert len(hass.data[DOMAIN]["entities"].keys()) == 4
-    for test_entity in hass.data[DOMAIN]["entities"].values():
-        assert test_entity.available
+    entity_reg = hass.helpers.entity_registry.async_get(hass)
+    device_reg = hass.helpers.device_registry.async_get(hass)
+    assert len(hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].keys()) == 4
+    for test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+        ENTITY_UIDS
+    ].values():
+        await one_entity_assertion(hass, test_entity_id, True)
     assert len(entity_reg.entities.keys()) == 4
     assert len(device_reg.devices.keys()) == 4
 
@@ -768,10 +827,9 @@ async def test_update_with_plant_module_status_api_timeout(
         "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
-        coordinator = hass.data["homepluscontrol"][
-            "homepluscontrol_entry_id_coordinator"
-        ]
-        await coordinator.async_refresh()
+        async_fire_time_changed(
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+        )
         await hass.async_block_till_done()
         assert len(mock_check.mock_calls) == 3
 
@@ -787,8 +845,10 @@ async def test_update_with_plant_module_status_api_timeout(
 
     # One entity has no status data, so appears as unavailable
     # The rest of the entities remain available
-    for test_entity in hass.data[DOMAIN]["entities"].values():
-        if test_entity.unique_id == "0000000987654321fedcba":
-            assert not test_entity.available
+    for test_uid, test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+        ENTITY_UIDS
+    ].items():
+        if test_uid == "0000000987654321fedcba":
+            await one_entity_assertion(hass, test_entity_id, False)
         else:
-            assert test_entity.available
+            await one_entity_assertion(hass, test_entity_id, True)

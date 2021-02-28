@@ -10,19 +10,15 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
-from homeassistant.helpers.network import get_url
 
-from .api import update_api_refresh_intervals
 from .const import (
     CONF_MODULE_STATUS_UPDATE_INTERVAL,
     CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL,
     CONF_PLANT_UPDATE_INTERVAL,
-    CONF_REDIRECT_URI,
     CONF_SUBSCRIPTION_KEY,
     DEFAULT_UPDATE_INTERVALS,
     DOMAIN,
 )
-from .helpers import HomePlusControlOAuth2Implementation
 
 
 class HomePlusControlFlowHandler(
@@ -47,36 +43,7 @@ class HomePlusControlFlowHandler(
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        assert self.hass
-        errors = {}
-
-        if user_input is not None:
-            # Validate user input
-            valid = await self._is_valid(user_input, errors)
-            if valid:
-                user_input["implementation"] = DOMAIN
-                self.async_register_implementation(
-                    self.hass,
-                    HomePlusControlOAuth2Implementation(self.hass, user_input),
-                )
-                return await super().async_step_user(user_input)
-
-        domain_schema = vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-                vol.Required(CONF_SUBSCRIPTION_KEY): cv.string,
-                vol.Required(
-                    CONF_REDIRECT_URI,
-                    default=get_url(self.hass)
-                    + config_entry_oauth2_flow.AUTH_CALLBACK_PATH,
-                ): cv.string,
-            }
-        )
-
-        return self.async_show_form(
-            step_id="user", data_schema=domain_schema, errors=errors
-        )
+        return await super().async_step_user(user_input)
 
     async def async_step_creation(
         self, user_input: Optional[Dict[str, Any]] = None
@@ -108,7 +75,6 @@ class HomePlusControlFlowHandler(
         config_data[CONF_CLIENT_ID] = self.flow_impl.client_id
         config_data[CONF_CLIENT_SECRET] = self.flow_impl.client_secret
         config_data[CONF_SUBSCRIPTION_KEY] = self.flow_impl.subscription_key
-        config_data[CONF_REDIRECT_URI] = self.flow_impl.redirect_uri
 
         return self.async_create_entry(
             title=self.flow_impl.name,
@@ -118,16 +84,6 @@ class HomePlusControlFlowHandler(
                 **config_data,
             },
         )
-
-    async def _is_valid(self, user_input, errors):
-        """Validate the user input."""
-        # Subscription Key has to be a 32 alphanumeric string
-        regex = "[0-9a-zA-Z]{32}"
-        compiled = re.compile(regex)
-        if not compiled.match(user_input[CONF_SUBSCRIPTION_KEY]):
-            errors[CONF_SUBSCRIPTION_KEY] = "invalid_subscription_key"
-            return False
-        return True
 
     @staticmethod
     @callback
@@ -161,10 +117,6 @@ class HomePlusControlOptionsFlowHandler(config_entries.OptionsFlow):
         """Handle the integration options."""
         assert self.hass
         errors = {}
-        if self.hass.data[DOMAIN].get("options_listener_remover") is None:
-            self.hass.data[DOMAIN][
-                "options_listener_remover"
-            ] = self.config_entry.add_update_listener(update_api_refresh_intervals)
 
         if user_input is not None:
             # Validate user input
@@ -201,12 +153,9 @@ class HomePlusControlOptionsFlowHandler(config_entries.OptionsFlow):
         compiled = re.compile(regex)
         for input_key, input_value in user_input.items():
             if compiled.match(input_value):
-                try:
-                    int_input_value = int(input_value)
-                    if 0 < int_input_value <= 86400:
-                        continue
-                except ValueError:
-                    pass
+                int_input_value = int(input_value)
+                if 0 < int_input_value <= 86400:
+                    continue
             errors[input_key] = "invalid_update_interval"
             valid = False
         return valid

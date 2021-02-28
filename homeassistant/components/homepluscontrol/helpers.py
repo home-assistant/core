@@ -1,15 +1,43 @@
 """Helper classes and functions for the Legrand Home+ Control integration."""
+import logging
+
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import (
-    CONF_REDIRECT_URI,
-    CONF_SUBSCRIPTION_KEY,
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
-)
+from .const import CONF_SUBSCRIPTION_KEY, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .switch import HomeControlSwitchEntity
+
+_LOGGER = logging.getLogger(__name__)
+
+
+async def async_add_entities(new_unique_ids, coordinator, add_entities):
+    """Add the entities to the platform.
+
+    Args:
+        new_unique_ids (str[]): Unique identifiers of entities to be added to Home Assistant.
+        coordinator (DataUpdateCoordinator): Data coordinator of this platform.
+        add_entities (function): Method called to add entities to Home Assistant.
+    """
+    new_entities = []
+    for uid in new_unique_ids:
+        new_ent = HomeControlSwitchEntity(coordinator, uid)
+        new_entities.append(new_ent)
+    add_entities(new_entities)
+
+
+async def async_remove_entities(remove_uids, entity_uid_map, device_reg):
+    """Remove the entities from the platform.
+
+    Args:
+        remove_uids (str[]): Unique identifiers of entities to be removed to Home Assistant.
+        entity_uid_map (dict): Lookup dictionary of unique_ids (key) and entity_ids (value).
+        device_reg(DeviceRegistry): Home Assistant Device Registry.
+    """
+    for uid in remove_uids:
+        entity_uid_map.pop(uid)
+        device = device_reg.async_get_device({(DOMAIN, uid)})
+        device_reg.async_remove_device(device.id)
 
 
 class HomePlusControlOAuth2Implementation(
@@ -17,8 +45,7 @@ class HomePlusControlOAuth2Implementation(
 ):
     """OAuth2 implementation that extends the HomeAssistant local implementation.
 
-    The immediate purpose of this is to override the redirect URL. It also provides
-    the name of the integration.
+    It provides the name of the integration and adds support for the subscription key.
 
     Attributes:
         hass (HomeAssistant): HomeAssistant core object.
@@ -26,7 +53,6 @@ class HomePlusControlOAuth2Implementation(
         client_secret (str): Client secret assigned by the API provider when registering an app.
         subscription_key (str): Subscription key obtained from the API provider.
         token (dict): oauth2 token used by this authentication implementation instance.
-        redirect_uri (str): URL for the redirection from the authentication provider.
         name (str): Name of the implementation (appears in the HomeAssitant GUI).
     """
 
@@ -50,7 +76,6 @@ class HomePlusControlOAuth2Implementation(
         self.client_secret = config_data[CONF_CLIENT_SECRET]
         self.authorize_url = OAUTH2_AUTHORIZE
         self.token_url = OAUTH2_TOKEN
-        self.redirect_uri = config_data[CONF_REDIRECT_URI]
         self.subscription_key = config_data[CONF_SUBSCRIPTION_KEY]
 
         super().__init__(
@@ -66,13 +91,3 @@ class HomePlusControlOAuth2Implementation(
     def name(self) -> str:
         """Name of the implementation."""
         return "Home+ Control"
-
-    @property
-    def redirect_uri(self) -> str:
-        """Return the redirect uri."""
-        return self._redirect_uri
-
-    @redirect_uri.setter
-    def redirect_uri(self, value):
-        """Set the redirect uri."""
-        self._redirect_uri = value

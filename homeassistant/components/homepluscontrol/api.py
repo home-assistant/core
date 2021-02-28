@@ -2,19 +2,21 @@
 import logging
 import time
 
+import aiohttp
 from homepluscontrol.authentication import HomePlusOAuth2Async
 from homepluscontrol.homeplusinteractivemodule import HomePlusInteractiveModule
 from homepluscontrol.homeplusplant import HomePlusPlant
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import (
+    API,
     CONF_MODULE_STATUS_UPDATE_INTERVAL,
     CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL,
     CONF_PLANT_UPDATE_INTERVAL,
-    CONF_REDIRECT_URI,
     CONF_SUBSCRIPTION_KEY,
     DEFAULT_UPDATE_INTERVALS,
     DOMAIN,
@@ -24,7 +26,7 @@ from .const import (
 
 async def update_api_refresh_intervals(hass, config_entry):
     """Update the refresh data intervals based on the config entry values."""
-    api = hass.data[DOMAIN][config_entry.entry_id]
+    api = hass.data[DOMAIN][config_entry.entry_id][API]
     api.update_refresh_intervals()
 
 
@@ -40,7 +42,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                                                        token refresh.
         logger (Logger): Logger of the object.
         switches (dict): Dictionary of HomePlusControl switches indexed by their unique ID.
-        switches_to_remove (dict): Dictionaty of the HomePlusControl switches that are to be
+        switches_to_remove (dict): Dictionary of the HomePlusControl switches that are to be
                                    removed from HomeAssistant, indexed by their unique ID.
     """
 
@@ -82,7 +84,6 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
             client_id=self.config_entry.data[CONF_CLIENT_ID],
             client_secret=self.config_entry.data[CONF_CLIENT_SECRET],
             subscription_key=self.config_entry.data[CONF_SUBSCRIPTION_KEY],
-            redirect_uri=self.config_entry.data[CONF_REDIRECT_URI],
             token=self.config_entry.data["token"],
             oauth_client=aiohttp_client.async_get_clientsession(self.hass),
         )
@@ -94,7 +95,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
 
     @property
     def switches(self):
-        """Return dictionary of switch entities of this platform."""
+        """Return dictionary of switch modules of this platform."""
         return self._switches
 
     @switches.setter
@@ -104,7 +105,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
 
     @property
     def switches_to_remove(self):
-        """Return dictionary of switch entities of this platform that should be removed from HA."""
+        """Return dictionary of switch modules of this platform that should be removed from HA."""
         return self._switches_to_remove
 
     @switches_to_remove.setter
@@ -136,7 +137,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         """Get the latest data from the API.
 
         Returns:
-            dict: Dictionary of switch entities in their updated state.
+            dict: Dictionary of switch modules in their updated state.
         """
         await self.async_handle_plant_data()
         return await self.async_handle_module_status()
@@ -179,8 +180,11 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
             CONF_PLANT_UPDATE_INTERVAL,
             self._refresh_intervals[CONF_PLANT_UPDATE_INTERVAL],
         ):
-            result = await self.get_request(PLANT_URL)  # Call the API
-            plant_info = await result.json()
+            try:
+                result = await self.get_request(PLANT_URL)  # Call the API
+                plant_info = await result.json()
+            except aiohttp.ClientError as err:
+                raise HomeAssistantError("Error retrieving plant information") from err
 
             # If all goes well, we update the last check time
             self._last_check[CONF_PLANT_UPDATE_INTERVAL] = time.monotonic()
@@ -236,12 +240,12 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         The topology indicates identifiers, type and other device information, but it contains no
         information about the state of the module.
 
-        This method returns the list of switch entities that will be registered in HomeAssistant.
+        This method returns the list of switch modules that will be registered in HomeAssistant.
         At this time the switches that are discovered through this API call are flattened into a
         single data structure.
 
         Returns:
-            dict: Dictionary of switch entities across all of the plants.
+            dict: Dictionary of switch modules across all of the plants.
         """
         for plant in self._plants.values():
 
@@ -287,7 +291,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                         CONF_MODULE_STATUS_UPDATE_INTERVAL
                     ] = time.monotonic()
 
-        return self._update_entities()
+        return self._update_modules()
 
     def _should_check(self, check_type, period):
         """Return True if the current monotonic time is > the last check time plus a fixed period.
@@ -310,11 +314,11 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
             return True
         return False
 
-    def _update_entities(self):
-        """Update the switch entities based on the collected information in the plant object.
+    def _update_modules(self):
+        """Update the switch modules based on the collected information in the plant object.
 
         Returns:
-            dict: Dictionary of switch entities across all of the plants.
+            dict: Dictionary of switch modules across all of the plants.
         """
         for plant in self._plants.values():
             # Loop through the modules in the plant and we only keep the ones that are "interactive"
