@@ -5,7 +5,6 @@ import logging
 import smarttub
 import voluptuous as vol
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
@@ -76,14 +75,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "set_primary_filtration",
         SET_PRIMARY_FILTRATION_SCHEMA,
         "async_set_primary_filtration",
-        [SUPPORT_PRIMARY_FILTRATION]
+        [SUPPORT_PRIMARY_FILTRATION],
     )
 
     platform.async_register_entity_service(
         "set_secondary_filtration",
         SET_SECONDARY_FILTRATION_SCHEMA,
         "async_set_secondary_filtration",
-        [SUPPORT_SECONDARY_FILTRATION]
+        [SUPPORT_SECONDARY_FILTRATION],
     )
 
 
@@ -125,6 +124,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
 
     @property
     def supported_features(self):
+        """Return a bitmap of supported features."""
         return SUPPORT_PRIMARY_FILTRATION
 
     async def async_set_primary_filtration(self, **kwargs):
@@ -160,6 +160,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
 
     @property
     def supported_features(self):
+        """Return a bitmap of supported features."""
         return SUPPORT_SECONDARY_FILTRATION
 
     async def async_set_secondary_filtration(self, **kwargs):
