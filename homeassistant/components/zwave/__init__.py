@@ -1140,11 +1140,11 @@ class ZWaveDeviceEntityValues:
             ].get(const.DISC_OPTIONAL):
                 return
 
-        component = self._schema[const.DISC_COMPONENT]
+        platform = self._schema[const.DISC_COMPONENT]
 
-        workaround_component = workaround.get_device_component_mapping(self.primary)
-        if workaround_component and workaround_component != component:
-            if workaround_component == workaround.WORKAROUND_IGNORE:
+        workaround_platform = workaround.get_device_component_mapping(self.primary)
+        if workaround_platform and workaround_platform != platform:
+            if workaround_platform == workaround.WORKAROUND_IGNORE:
                 _LOGGER.info(
                     "Ignoring Node %d Value %d due to workaround",
                     self.primary.node.node_id,
@@ -1153,15 +1153,15 @@ class ZWaveDeviceEntityValues:
                 # No entity will be created for this value
                 self._workaround_ignore = True
                 return
-            _LOGGER.debug("Using %s instead of %s", workaround_component, component)
-            component = workaround_component
+            _LOGGER.debug("Using %s instead of %s", workaround_platform, platform)
+            platform = workaround_platform
 
         entity_id = self._registry.async_get_entity_id(
-            component, DOMAIN, compute_value_unique_id(self._node, self.primary)
+            platform, DOMAIN, compute_value_unique_id(self._node, self.primary)
         )
         if entity_id is None:
             value_name = _value_name(self.primary)
-            entity_id = generate_entity_id(component + ".{}", value_name, [])
+            entity_id = generate_entity_id(platform + ".{}", value_name, [])
         node_config = self._device_config.get(entity_id)
 
         # Configure node
@@ -1176,7 +1176,7 @@ class ZWaveDeviceEntityValues:
             self.primary.command_class,
             self.primary.type,
             self.primary.genre,
-            component,
+            platform,
         )
 
         if node_config.get(CONF_IGNORED):
@@ -1189,9 +1189,9 @@ class ZWaveDeviceEntityValues:
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = import_module(f".{component}", __name__)
+        platform_module = import_module(f".{platform}", __name__)
 
-        device = platform.get_device(
+        device = platform_module.get_device(
             node=self._node, values=self, node_config=node_config, hass=self._hass
         )
         if device is None:
@@ -1209,7 +1209,7 @@ class ZWaveDeviceEntityValues:
                 self._node.node_id,
                 sec,
             )
-            self._hass.async_add_job(discover_device, component, device)
+            self._hass.async_add_job(discover_device, platform, device)
 
         @callback
         def _on_timeout(sec):
@@ -1220,9 +1220,9 @@ class ZWaveDeviceEntityValues:
                 self._node.node_id,
                 sec,
             )
-            self._hass.async_add_job(discover_device, component, device)
+            self._hass.async_add_job(discover_device, platform, device)
 
-        async def discover_device(component, device):
+        async def discover_device(platform, device):
             """Put device in a dictionary and call discovery on it."""
             if self._hass.data[DATA_DEVICES].get(device.unique_id):
                 return
@@ -1240,7 +1240,7 @@ class ZWaveDeviceEntityValues:
                 )
 
         if device.unique_id:
-            self._hass.add_job(discover_device, component, device)
+            self._hass.add_job(discover_device, platform, device)
         else:
             self._hass.add_job(check_has_unique_id, device, _on_ready, _on_timeout)
 
