@@ -29,7 +29,7 @@ GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
 FAN_PLATFORMS = ["fan"]
 VACUUM_PLATFORMS = ["vacuum"]
-AIR_MONITOR_PLATFORMS = ["sensor"]
+AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
