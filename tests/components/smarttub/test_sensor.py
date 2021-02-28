@@ -2,6 +2,8 @@
 
 import smarttub
 
+from homeassistant.helpers.service import async_prepare_call_from_config
+
 from . import trigger_update
 
 
@@ -56,6 +58,11 @@ async def test_filtration_cycles(spa, setup_entry, hass):
     assert state.attributes["last_updated"] is not None
     assert state.attributes["mode"] == "normal"
     assert state.attributes["start_hour"] == 2
+
+    call = async_prepare_call_from_config(hass, {
+        "service": "smarttub.set_primary_filtration",
+        "target": {},
+    })
 
     await hass.services.async_call(
         "smarttub",
