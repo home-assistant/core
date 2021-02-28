@@ -75,14 +75,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
         "set_primary_filtration",
         SET_PRIMARY_FILTRATION_SCHEMA,
         "async_set_primary_filtration",
-        # [SUPPORT_PRIMARY_FILTRATION],
+        [SUPPORT_PRIMARY_FILTRATION],
     )
 
     platform.async_register_entity_service(
         "set_secondary_filtration",
         SET_SECONDARY_FILTRATION_SCHEMA,
         "async_set_secondary_filtration",
-        # [SUPPORT_SECONDARY_FILTRATION],
+        [SUPPORT_SECONDARY_FILTRATION],
     )
 
 
