@@ -101,7 +101,7 @@ class BondHub:
     def __init__(self, bond: Bond):
         """Initialize Bond Hub."""
         self.bond: Bond = bond
-        self._bridge: Optional[dict] = None
+        self._bridge: Dict[str, Any] = {}
         self._version: Dict[str, Any] = {}
         self._devices: List[BondDevice] = []
 
@@ -134,25 +134,21 @@ class BondHub:
     def bond_id(self) -> Optional[str]:
         """Return unique Bond ID for this hub."""
         # Old firmwares are missing the bondid
-        assert self._version is not None
         return self._version.get("bondid")
 
     @property
     def target(self) -> Optional[str]:
         """Return this hub target."""
-        assert self._version is not None
         return self._version.get("target")
 
     @property
     def model(self) -> Optional[str]:
         """Return this hub model."""
-        assert self._version is not None
         return self._version.get("model")
 
     @property
     def make(self) -> str:
         """Return this hub make."""
-        assert self._version is not None
         return self._version.get("make", BRIDGE_MAKE)
 
     @property
@@ -160,7 +156,6 @@ class BondHub:
         """Get the name of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].name
-        assert self._bridge is not None
         return cast(str, self._bridge["name"])
 
     @property
@@ -168,13 +163,11 @@ class BondHub:
         """Get the location of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].location
-        assert self._bridge is not None
         return self._bridge.get("location")
 
     @property
     def fw_ver(self) -> Optional[str]:
         """Return this hub firmware version."""
-        assert self._version is not None
         return self._version.get("fw_ver")
 
     @property
