@@ -4,6 +4,9 @@ import pytest
 from smarttub import SpaLight
 
 
+# the light in light_zone should have initial state light_state. we will call
+# service_name with service_params, and expect the resultant call to
+# SpaLight.set_mode to have set_mode_args parameters
 @pytest.mark.parametrize(
     "light_zone,light_state,service_name,service_params,set_mode_args",
     [
