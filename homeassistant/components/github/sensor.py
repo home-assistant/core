@@ -236,7 +236,12 @@ class GitHubData:
 
             open_issues = repo.get_issues(state="open", sort="created")
             if open_issues is not None:
-                self.open_issue_count = open_issues.totalCount - self.pull_request_count
+                if self.pull_request_count is None:
+                    self.open_issue_count = open_issues.totalCount
+                else:
+                    # pull requests are treated as issues too so we need to reduce the received count
+                    self.open_issue_count = open_issues.totalCount - self.pull_request_count
+                    
                 if open_issues.totalCount > 0:
                     self.latest_open_issue_url = open_issues[0].html_url
 
