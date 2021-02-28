@@ -228,17 +228,17 @@ class GitHubData:
             self.stargazers = repo.stargazers_count
             self.forks = repo.forks_count
 
-            open_issues = repo.get_issues(state="open", sort="created")
-            if open_issues is not None:
-                self.open_issue_count = open_issues.totalCount
-                if open_issues.totalCount > 0:
-                    self.latest_open_issue_url = open_issues[0].html_url
-
             open_pull_requests = repo.get_pulls(state="open", sort="created")
             if open_pull_requests is not None:
                 self.pull_request_count = open_pull_requests.totalCount
                 if open_pull_requests.totalCount > 0:
                     self.latest_open_pr_url = open_pull_requests[0].html_url
+
+            open_issues = repo.get_issues(state="open", sort="created")
+            if open_issues is not None:
+                self.open_issue_count = open_issues.totalCount - self.pull_request_count
+                if open_issues.totalCount > 0:
+                    self.latest_open_issue_url = open_issues[0].html_url
 
             latest_commit = repo.get_commits()[0]
             self.latest_commit_sha = latest_commit.sha
