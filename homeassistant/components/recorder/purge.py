@@ -12,7 +12,7 @@ from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
 
-MAX_ROWS_TO_PURGE = 5000
+MAX_ROWS_TO_PURGE = 1000
 
 
 def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
