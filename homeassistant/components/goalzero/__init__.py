@@ -110,6 +110,10 @@ class YetiEntity(CoordinatorEntity):
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None
+        try:
+            self.sw_version = self.api.data["firmwareVersion"]
+        except Exception:
+            self.sw_version = None
 
     @property
     def device_info(self):
@@ -118,7 +122,7 @@ class YetiEntity(CoordinatorEntity):
             CONF_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
             CONF_NAME: self._name,
             CONF_MANUFACTURER: "Goal Zero",
-            CONF_SW_VERSION: self.api.data["firmwareVersion"],
+            CONF_SW_VERSION: self.sw_version,
         }
 
     @property
