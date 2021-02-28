@@ -240,8 +240,10 @@ class GitHubData:
                     self.open_issue_count = open_issues.totalCount
                 else:
                     # pull requests are treated as issues too so we need to reduce the received count
-                    self.open_issue_count = open_issues.totalCount - self.pull_request_count
-                    
+                    self.open_issue_count = (
+                        open_issues.totalCount - self.pull_request_count
+                    )
+
                 if open_issues.totalCount > 0:
                     self.latest_open_issue_url = open_issues[0].html_url
 
