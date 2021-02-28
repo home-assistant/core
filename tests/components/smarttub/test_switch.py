@@ -18,21 +18,13 @@ async def test_pumps(spa, setup_entry, hass):
         assert state is not None
         if pump.state == SpaPump.PumpState.OFF:
             assert state.state == "off"
-
-            await hass.services.async_call(
-                "switch",
-                "turn_on",
-                {"entity_id": entity_id},
-                blocking=True,
-            )
-            pump.toggle.assert_called()
         else:
             assert state.state == "on"
 
-            await hass.services.async_call(
-                "switch",
-                "turn_off",
-                {"entity_id": entity_id},
-                blocking=True,
-            )
-            pump.toggle.assert_called()
+        await hass.services.async_call(
+            "switch",
+            "toggle",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+        pump.toggle.assert_called()
