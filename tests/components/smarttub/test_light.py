@@ -39,5 +39,4 @@ async def test_light(
         {"entity_id": entity_id, **service_params},
         blocking=True,
     )
-    print(light.set_mode.mock_calls)
     light.set_mode.assert_called_with(*set_mode_args)
