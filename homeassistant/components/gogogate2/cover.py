@@ -35,7 +35,6 @@ from .common import (
 )
 from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
 
-#TODO: Where is this schema used?
 COVER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
@@ -140,10 +139,7 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     def state_attributes(self):
         """Return the state attributes."""
         attrs = super().state_attributes
-        door = self._get_door()
-        attrs["door_id"] = door.door_id
-        if door.sensorid is not None:
-            attrs["sensorid"] = door.door_id
+        attrs["door_id"] = self._get_door().door_id
         return attrs
 
     def _get_door(self) -> AbstractDoor:
