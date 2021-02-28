@@ -23,7 +23,7 @@ def recorder_save_worker(file_out: str, segments: Deque[Segment]):
     """Handle saving stream."""
 
     if not segments:
-        _LOGGER.error("Recording failed to capture anything.")
+        _LOGGER.error("Recording failed to capture anything")
         return
 
     if not os.path.exists(os.path.dirname(file_out)):
