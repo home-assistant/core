@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: '2020.11.0'
+    value: '2021.02.0'
   - group: docker
   - group: github
   - group: twine
@@ -114,10 +114,12 @@ stages:
     pool:
       vmImage: 'ubuntu-latest'
     strategy:
-      maxParallel: 15
+      maxParallel: 17
       matrix:
         qemux86-64:
           buildMachine: 'qemux86-64'
+        generic-x86-64:
+          buildMachine: 'generic-x86-64'
         intel-nuc:
           buildMachine: 'intel-nuc'
         qemux86:

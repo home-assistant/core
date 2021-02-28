@@ -221,7 +221,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.6.0
+aioshelly==0.6.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -233,7 +233,7 @@ aiounifi==26
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==1.0.0
+airly==1.1.0
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3
@@ -343,7 +343,7 @@ beautifulsoup4==4.9.3
 bellows==0.21.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.14
+bimmer_connected==0.7.15
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -447,9 +447,6 @@ construct==2.10.56
 
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
-
-# homeassistant.scripts.credstash
-# credstash==1.15.0
 
 # homeassistant.components.datadog
 datadog==0.15.0
@@ -626,7 +623,7 @@ fritzconnection==1.4.0
 gTTS==2.2.2
 
 # homeassistant.components.garmin_connect
-garminconnect==0.1.16
+garminconnect==0.1.19
 
 # homeassistant.components.geizhals
 geizhals==0.0.9
@@ -658,7 +655,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.1.5
+gios==0.2.0
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -685,7 +682,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.10
+google-nest-sdm==0.2.12
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -724,7 +721,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==0.1.0
+ha-philipsjs==2.3.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -766,7 +763,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210224.0
+home-assistant-frontend==20210226.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -814,7 +811,7 @@ ibm-watson==4.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.ping
-icmplib==2.0
+icmplib==2.0.2
 
 # homeassistant.components.iglo
 iglo==1.2.7
@@ -843,12 +840,6 @@ kaiterra-async-client==0.0.2
 
 # homeassistant.components.keba
 keba-kecontact==1.1.0
-
-# homeassistant.scripts.keyring
-keyring==21.2.0
-
-# homeassistant.scripts.keyring
-keyrings.alt==3.4.0
 
 # homeassistant.components.kiwi
 kiwiki-client==0.1.1
@@ -1314,7 +1305,7 @@ pycfdns==1.2.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==8.1.0
+pychromecast==9.0.0
 
 # homeassistant.components.pocketcasts
 pycketcasts==1.0.0
@@ -1620,7 +1611,7 @@ pyotgw==1.0b1
 pyotp==2.3.0
 
 # homeassistant.components.openweathermap
-pyowm==3.1.1
+pyowm==3.2.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2025,7 +2016,7 @@ schiene==0.23
 scsgate==0.1.0
 
 # homeassistant.components.sendgrid
-sendgrid==6.5.0
+sendgrid==6.6.0
 
 # homeassistant.components.sensehat
 sense-hat==2.2.0
@@ -2364,7 +2355,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.01.24.1
+youtube_dl==2021.02.22
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0
@@ -2376,7 +2367,7 @@ zengge==0.2
 zeroconf==0.28.8
 
 # homeassistant.components.zha
-zha-quirks==0.0.53
+zha-quirks==0.0.54
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2406,4 +2397,4 @@ zigpy==0.32.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.19.0
+zwave-js-server-python==0.20.0

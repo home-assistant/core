@@ -59,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize config flow."""
-        self._discovered: dict = None
+        self._discovered: Optional[dict] = None
 
     async def _async_try_automatic_configure(self):
         """Try to auto configure the device.
