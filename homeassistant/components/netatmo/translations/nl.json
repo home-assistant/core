@@ -3,7 +3,8 @@
         "abort": {
             "authorize_url_timeout": "Time-out genereren autorisatie-URL.",
             "missing_configuration": "Het component is niet geconfigureerd. Volg de documentatie.",
-            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "create_entry": {
             "default": "Succesvol geauthenticeerd met Netatmo."
@@ -41,6 +42,10 @@
             "public_weather": {
                 "data": {
                     "area_name": "Naam van het gebied",
+                    "lat_ne": "Breedtegraad Noordoostelijke hoek",
+                    "lat_sw": "Breedtegraad Zuidwestelijke hoek",
+                    "lon_ne": "Lengtegraad Noordoostelijke hoek",
+                    "lon_sw": "Lengtegraad Zuidwestelijke hoek",
                     "mode": "Berekening",
                     "show_on_map": "Toon op kaart"
                 }

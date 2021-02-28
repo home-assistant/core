@@ -143,7 +143,7 @@ aiopylgtv==0.3.3
 aiorecollect==1.0.1
 
 # homeassistant.components.shelly
-aioshelly==0.6.0
+aioshelly==0.6.1
 
 # homeassistant.components.switcher_kis
 aioswitcher==1.2.1
@@ -155,7 +155,7 @@ aiounifi==26
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==1.0.0
+airly==1.1.0
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -370,7 +370,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.2.10
+google-nest-sdm==0.2.12
 
 # homeassistant.components.gree
 greeclimate==0.10.3
@@ -385,7 +385,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==0.1.0
+ha-philipsjs==2.3.0
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -415,7 +415,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210225.0
+home-assistant-frontend==20210226.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1216,7 +1216,7 @@ zeep[async]==4.0.0
 zeroconf==0.28.8
 
 # homeassistant.components.zha
-zha-quirks==0.0.53
+zha-quirks==0.0.54
 
 # homeassistant.components.zha
 zigpy-cc==0.5.2

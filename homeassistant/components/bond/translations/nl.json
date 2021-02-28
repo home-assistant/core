@@ -10,6 +10,11 @@
         },
         "flow_title": "Bond: {bond_id} ({host})",
         "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Toegangstoken"
+                }
+            },
             "user": {
                 "data": {
                     "access_token": "Toegangstoken",

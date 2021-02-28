@@ -54,7 +54,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -84,8 +84,7 @@ async def test_brightness_light(hass):
 
     assert trt.query_attributes() == {"brightness": 95}
 
-    events = []
-    hass.bus.async_listen(EVENT_CALL_SERVICE, events.append)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await trt.execute(

@@ -24,7 +24,20 @@
                     "country": "Choisissez le pays",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "description": "Veuillez saisir vos identifiants MySubaru\n REMARQUE: la configuration initiale peut prendre jusqu'\u00e0 30 secondes",
+                "title": "Configuration de Subaru Starlink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Activer l'interrogation des v\u00e9hicules"
+                },
+                "description": "Lorsqu'elle est activ\u00e9e, l'interrogation du v\u00e9hicule enverra une commande \u00e0 distance \u00e0 votre v\u00e9hicule toutes les 2 heures pour obtenir de nouvelles donn\u00e9es de capteur. Sans interrogation du v\u00e9hicule, les nouvelles donn\u00e9es de capteur ne sont re\u00e7ues que lorsque le v\u00e9hicule pousse automatiquement les donn\u00e9es (normalement apr\u00e8s l'arr\u00eat du moteur).",
+                "title": "Options de Subaru Starlink"
             }
         }
     }
