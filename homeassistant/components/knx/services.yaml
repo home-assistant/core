@@ -33,7 +33,7 @@ read:
       required: true
       example: "1/1/0"
       selector:
-        text:
+        object:
 event_register:
   name: "Register knx_event"
   description: "Add or remove single group address to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
