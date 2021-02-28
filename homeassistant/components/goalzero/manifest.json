@@ -4,5 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/goalzero",
   "requirements": ["goalzero==0.1.6"],
+  "dhcp": [
+    {"hostname": "yeti*", "macaddress": "A4CF12*"}
+  ],
   "codeowners": ["@tkdrob"]
 }

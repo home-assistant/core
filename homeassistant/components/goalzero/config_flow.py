@@ -3,7 +3,9 @@ from goalzero import Yeti, exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import IP_ADDRESS
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SCAN_INTERVAL
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import _LOGGER
@@ -18,6 +20,20 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    def __init__(self):
+        """Initialize the goalzero flow."""
+        self.ip_address = None
+
+    async def async_step_dhcp(self, dhcp_discovery):
+        """Handle dhcp discovery."""
+        if self._async_ip_address_already_configured(dhcp_discovery[IP_ADDRESS]):
+            return self.async_abort(reason="already_configured")
+
+        self.ip_address = dhcp_discovery[IP_ADDRESS]
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {CONF_HOST: self.ip_address}
+        return await self.async_step_user()
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
@@ -57,9 +73,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST) or ""
-                    ): str,
+                    vol.Required(CONF_HOST, default=self.ip_address): str,
                     vol.Optional(
                         CONF_NAME, default=user_input.get(CONF_NAME) or DEFAULT_NAME
                     ): str,
@@ -75,3 +89,11 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         api = Yeti(host, self.hass.loop, session)
         await api.get_state()
+
+    @callback
+    def _async_ip_address_already_configured(self, ip_address):
+        """See if we already have an entry matching the ip_address."""
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_HOST) == ip_address:
+                return True
+        return False

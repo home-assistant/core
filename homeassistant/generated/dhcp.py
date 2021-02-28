@@ -42,6 +42,11 @@ DHCP = [
         "macaddress": "B4E62D*"
     },
     {
+        "domain": "goalzero",
+        "hostname": "yeti*",
+        "macaddress": "A4CF12*"
+    },
+    {
         "domain": "lyric",
         "hostname": "lyric-*",
         "macaddress": "48A2E6"
