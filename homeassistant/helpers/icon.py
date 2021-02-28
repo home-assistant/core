@@ -29,14 +29,3 @@ def icon_for_signal_level(signal_level: Optional[int] = None) -> str:
     if signal_level > 30:
         return "mdi:signal-cellular-2"
     return "mdi:signal-cellular-1"
-
-
-def icon_for_gauge_level(gauge_level: Optional[int] = None, offset: int = 0) -> str:
-    """Return a gauge icon valid identifier."""
-    if gauge_level is None or gauge_level <= 0 + offset:
-        return "mdi:gauge-empty"
-    if gauge_level > 70 + offset:
-        return "mdi:gauge-full"
-    if gauge_level > 30 + offset:
-        return "mdi:gauge"
-    return "mdi:gauge-low"

@@ -1,12 +1,24 @@
 """Support for Litter-Robot sensors."""
+from typing import Optional
+
 from pylitterbot.robot import Robot
 
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_gauge_level
 
 from .const import DOMAIN
 from .hub import LitterRobotEntity, LitterRobotHub
+
+
+def icon_for_gauge_level(gauge_level: Optional[int] = None, offset: int = 0) -> str:
+    """Return a gauge icon valid identifier."""
+    if gauge_level is None or gauge_level <= 0 + offset:
+        return "mdi:gauge-empty"
+    if gauge_level > 70 + offset:
+        return "mdi:gauge-full"
+    if gauge_level > 30 + offset:
+        return "mdi:gauge"
+    return "mdi:gauge-low"
 
 
 class LitterRobotPropertySensor(LitterRobotEntity, Entity):
@@ -46,7 +58,8 @@ class LitterRobotSleepTimeSensor(LitterRobotPropertySensor, Entity):
     def state(self):
         """Return the state."""
         if self.robot.sleep_mode_active:
-            return super().state
+            return super().state.isoformat()
+        return None
 
     @property
     def device_class(self):
