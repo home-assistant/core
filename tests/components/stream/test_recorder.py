@@ -21,7 +21,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
-TEST_TIMEOUT = 9.0  # Lower than homeassistant default timeout of 9.5
+TEST_TIMEOUT = 8.0  # Lower than homeassistant default timeout of 9.5
 RECORD_DURATION = 30
 
 
