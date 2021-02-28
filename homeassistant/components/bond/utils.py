@@ -102,7 +102,7 @@ class BondHub:
         """Initialize Bond Hub."""
         self.bond: Bond = bond
         self._bridge: Optional[dict] = None
-        self._version: Optional[Dict[str, Any]] = None
+        self._version: Dict[str, Any] = {}
         self._devices: List[BondDevice] = []
 
     async def setup(self, max_devices: Optional[int] = None) -> None:
