@@ -7,9 +7,11 @@ from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
-ATTR_LAST_UPDATED = "last_updated"
+ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 ATTR_MODE = "mode"
+# the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
 
 
@@ -73,7 +75,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         state = self._state
         return {
             ATTR_DURATION: state.duration,
-            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
             ATTR_START_HOUR: state.start_hour,
         }
@@ -98,6 +100,6 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         """Return the state attributes."""
         state = self._state
         return {
-            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
         }
