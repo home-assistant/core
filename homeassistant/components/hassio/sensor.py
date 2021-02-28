@@ -28,7 +28,8 @@ async def async_setup_entry(
             entities.append(
                 HassioAddonSensor(coordinator, addon, attribute_name, sensor_name)
             )
-        entities.append(HassioOSSensor(coordinator, attribute_name, sensor_name))
+        if coordinator.is_hass_os:
+            entities.append(HassioOSSensor(coordinator, attribute_name, sensor_name))
 
     async_add_entities(entities)
 

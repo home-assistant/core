@@ -575,6 +575,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
+        self.is_hass_os = "hassos" in get_info(self.hass)
 
     async def _async_update_data(self) -> Dict[str, Any]:
         """Update data via library."""
@@ -584,14 +585,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         new_data["addons"] = {
             addon[ATTR_SLUG]: addon for addon in addon_data.get("addons", [])
         }
-        new_data["os"] = get_os_info(self.hass)
+        if self.is_hass_os:
+            new_data["os"] = get_os_info(self.hass)
 
         # If this is the initial refresh, register all addons and return the dict
         if not self.data:
             async_register_addons_in_dev_reg(
                 self.entry_id, self.dev_reg, new_data["addons"].values()
             )
-            async_register_os_in_dev_reg(self.entry_id, self.dev_reg, new_data["os"])
+            if self.is_hass_os:
+                async_register_os_in_dev_reg(
+                    self.entry_id, self.dev_reg, new_data["os"]
+                )
             return new_data
 
         # Remove add-ons that are no longer installed from device registry
