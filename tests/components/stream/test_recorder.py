@@ -21,7 +21,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
-TEST_TIMEOUT = 10
+TEST_TIMEOUT = 9.0  # Lower than homeassistant default timeout of 9.5
 RECORD_DURATION = 30
 
 
@@ -183,7 +183,9 @@ async def test_recorder_duration_keepalive(hass, hass_client, record_worker_sync
 
     # The recorder timer starts when the first packet is received
     recorder = stream.add_provider("recorder")
-    await recorder.recv()
+    # Fail with friendly error message on failure to produce packets
+    with async_timeout.timeout(TEST_TIMEOUT):
+        await recorder.recv()
 
     future = dt_util.utcnow() + timedelta(seconds=RECORD_DURATION + 1)
     async_fire_time_changed(hass, future)
