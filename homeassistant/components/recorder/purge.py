@@ -136,9 +136,10 @@ def _repack_database(instance):
     # Execute sqlite or postgresql vacuum command to free up space on disk
     if instance.engine.dialect.name == "postgresql":
         _LOGGER.debug("Vacuuming SQL DB to free space")
-        instance.engine.conn.execution_options(isolation_level="AUTOCOMMIT").execute(
-            "VACUUM"
-        )
+        with instance.engine.connect().execution_options(
+            isolation_level="AUTOCOMMIT"
+        ) as conn:
+            conn.execute("VACUUM")
         return
 
     # Optimize mysql / mariadb tables to free up space on disk
