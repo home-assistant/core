@@ -39,4 +39,5 @@ set_secondary_filtration:
             - "frequent"
             - "infrequent"
             - "away"
+      required: true
       example: "frequent"
