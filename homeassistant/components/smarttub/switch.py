@@ -61,20 +61,6 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         """Return True if the pump is on."""
         return self.pump.state != SpaPump.PumpState.OFF
 
-    async def async_turn_on(self, **kwargs) -> None:
-        """Turn the pump on."""
-
-        # the API only supports toggling
-        if not self.is_on:
-            await self.async_toggle()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn the pump off."""
-
-        # the API only supports toggling
-        if self.is_on:
-            await self.async_toggle()
-
     async def async_toggle(self, **kwargs) -> None:
         """Toggle the pump on or off."""
         async with async_timeout.timeout(API_TIMEOUT):
