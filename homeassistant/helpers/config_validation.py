@@ -747,7 +747,10 @@ def deprecated(
         """Check if key is in config and log warning."""
         if key in config:
             KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                warning,
+                warning.replace(
+                    "'{key}' option",
+                    f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
+                ),
                 key=key,
                 replacement_key=replacement_key,
             )
