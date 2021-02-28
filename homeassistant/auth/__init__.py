@@ -1,4 +1,6 @@
 """Provide an authentication layer for Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
 from datetime import timedelta
@@ -36,7 +38,7 @@ async def auth_manager_from_config(
     hass: HomeAssistant,
     provider_configs: List[Dict[str, Any]],
     module_configs: List[Dict[str, Any]],
-) -> "AuthManager":
+) -> AuthManager:
     """Initialize an auth manager from config.
 
     CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
@@ -76,7 +78,7 @@ async def auth_manager_from_config(
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
     """Manage authentication flows."""
 
-    def __init__(self, hass: HomeAssistant, auth_manager: "AuthManager"):
+    def __init__(self, hass: HomeAssistant, auth_manager: AuthManager):
         """Init auth manager flows."""
         super().__init__(hass)
         self.auth_manager = auth_manager

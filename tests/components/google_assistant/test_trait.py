@@ -54,7 +54,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -84,8 +84,7 @@ async def test_brightness_light(hass):
 
     assert trt.query_attributes() == {"brightness": 95}
 
-    events = []
-    hass.bus.async_listen(EVENT_CALL_SERVICE, events.append)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await trt.execute(
@@ -1933,14 +1932,18 @@ async def test_openclose_cover(hass):
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {"openPercent": 75}
 
-    calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls_set = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls_open = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_OPEN_COVER)
+
     await trt.execute(trait.COMMAND_OPENCLOSE, BASIC_DATA, {"openPercent": 50}, {})
     await trt.execute(
         trait.COMMAND_OPENCLOSE_RELATIVE, BASIC_DATA, {"openRelativePercent": 50}, {}
     )
-    assert len(calls) == 2
-    assert calls[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
-    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 100}
+    assert len(calls_set) == 1
+    assert calls_set[0].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 50}
+
+    assert len(calls_open) == 1
+    assert calls_open[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
 async def test_openclose_cover_unknown_state(hass):
@@ -2111,6 +2114,7 @@ async def test_openclose_cover_secure(hass, device_class):
     assert trt.query_attributes() == {"openPercent": 75}
 
     calls = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION)
+    calls_close = async_mock_service(hass, cover.DOMAIN, cover.SERVICE_CLOSE_COVER)
 
     # No challenge data
     with pytest.raises(error.ChallengeNeeded) as err:
@@ -2136,8 +2140,8 @@ async def test_openclose_cover_secure(hass, device_class):
 
     # no challenge on close
     await trt.execute(trait.COMMAND_OPENCLOSE, PIN_DATA, {"openPercent": 0}, {})
-    assert len(calls) == 2
-    assert calls[1].data == {ATTR_ENTITY_ID: "cover.bla", cover.ATTR_POSITION: 0}
+    assert len(calls_close) == 1
+    assert calls_close[0].data == {ATTR_ENTITY_ID: "cover.bla"}
 
 
 @pytest.mark.parametrize(

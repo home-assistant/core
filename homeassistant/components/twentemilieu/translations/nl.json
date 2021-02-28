@@ -4,6 +4,7 @@
             "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_address": "Adres niet gevonden in servicegebied Twente Milieu."
         },
         "step": {

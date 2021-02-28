@@ -5,6 +5,7 @@ import ambiclimate
 
 from homeassistant import data_entry_flow
 from homeassistant.components.ambiclimate import config_flow
+from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.setup import async_setup_component
 from homeassistant.util import aiohttp
@@ -12,9 +13,11 @@ from homeassistant.util import aiohttp
 
 async def init_config_flow(hass):
     """Init a configuration flow."""
-    await async_setup_component(
-        hass, "http", {"http": {"base_url": "https://hass.com"}}
+    await async_process_ha_core_config(
+        hass,
+        {"external_url": "https://example.com"},
     )
+    await async_setup_component(hass, "http", {})
 
     config_flow.register_flow_implementation(hass, "id", "secret")
     flow = config_flow.AmbiclimateFlowHandler()
@@ -58,20 +61,20 @@ async def test_full_flow_implementation(hass):
     assert result["step_id"] == "auth"
     assert (
         result["description_placeholders"]["cb_url"]
-        == "https://hass.com/api/ambiclimate"
+        == "https://example.com/api/ambiclimate"
     )
 
     url = result["description_placeholders"]["authorization_url"]
     assert "https://api.ambiclimate.com/oauth2/authorize" in url
     assert "client_id=id" in url
     assert "response_type=code" in url
-    assert "redirect_uri=https%3A%2F%2Fhass.com%2Fapi%2Fambiclimate" in url
+    assert "redirect_uri=https%3A%2F%2Fexample.com%2Fapi%2Fambiclimate" in url
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value="test"):
         result = await flow.async_step_code("123ABC")
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Ambiclimate"
-    assert result["data"]["callback_url"] == "https://hass.com/api/ambiclimate"
+    assert result["data"]["callback_url"] == "https://example.com/api/ambiclimate"
     assert result["data"][CONF_CLIENT_SECRET] == "secret"
     assert result["data"][CONF_CLIENT_ID] == "id"
 

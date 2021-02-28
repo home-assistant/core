@@ -32,7 +32,12 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import ConditionError, HomeAssistantError
+from homeassistant.exceptions import (
+    ConditionError,
+    ConditionErrorContainer,
+    ConditionErrorIndex,
+    HomeAssistantError,
+)
 from homeassistant.helpers import condition, extract_domain_configs, template
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -563,7 +568,7 @@ async def _async_process_config(
             )
 
             if CONF_CONDITION in config_block:
-                cond_func = await _async_process_if(hass, config, config_block)
+                cond_func = await _async_process_if(hass, name, config, config_block)
 
                 if cond_func is None:
                     continue
@@ -601,7 +606,7 @@ async def _async_process_config(
     return blueprints_used
 
 
-async def _async_process_if(hass, config, p_config):
+async def _async_process_if(hass, name, config, p_config):
     """Process if checks."""
     if_configs = p_config[CONF_CONDITION]
 
@@ -615,11 +620,27 @@ async def _async_process_if(hass, config, p_config):
 
     def if_action(variables=None):
         """AND all conditions."""
-        try:
-            return all(check(hass, variables) for check in checks)
-        except ConditionError as ex:
-            LOGGER.warning("Error in 'condition' evaluation: %s", ex)
+        errors = []
+        for index, check in enumerate(checks):
+            try:
+                if not check(hass, variables):
+                    return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex(
+                        "condition", index=index, total=len(checks), error=ex
+                    )
+                )
+
+        if errors:
+            LOGGER.warning(
+                "Error evaluating condition in '%s':\n%s",
+                name,
+                ConditionErrorContainer("condition", errors=errors),
+            )
             return False
+
+        return True
 
     if_action.config = if_configs
 

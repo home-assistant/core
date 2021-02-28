@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Vuoi impostare {model} su {host} ?\n\n Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati premendo il pulsante sul dispositivo."
+                "description": "Vuoi impostare {model} su {host}? \n\nI dispositivi alimentati a batteria protetti da password devono essere riattivati prima di continuare con la configurazione.\nI dispositivi alimentati a batteria che non sono protetti da password verranno aggiunti quando il dispositivo si riattiver\u00e0, ora puoi riattivare manualmente il dispositivo utilizzando un pulsante su di esso o attendere il prossimo aggiornamento dei dati dal dispositivo."
             },
             "credentials": {
                 "data": {
@@ -24,7 +24,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati premendo il pulsante sul dispositivo."
+                "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati, ora puoi riattivare il dispositivo utilizzando un pulsante su di esso."
             }
         }
     },

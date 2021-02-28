@@ -1,7 +1,6 @@
 """Config flow for Shelly integration."""
 import asyncio
 import logging
-from socket import gethostbyname
 
 import aiohttp
 import aioshelly
@@ -33,10 +32,9 @@ async def validate_input(hass: core.HomeAssistant, host, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    ip_address = await hass.async_add_executor_job(gethostbyname, host)
 
     options = aioshelly.ConnectionOptions(
-        ip_address, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
+        host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD)
     )
     coap_context = await get_coap_context(hass)
 
@@ -168,7 +166,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except HTTP_CONNECT_ERRORS:
                 return self.async_abort(reason="cannot_connect")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": zeroconf_info.get("name", "").split(".")[0]
         }
@@ -195,6 +192,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_info = await validate_input(self.hass, self.host, {})
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
+            except aioshelly.AuthRequired:
+                return await self.async_step_credentials()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

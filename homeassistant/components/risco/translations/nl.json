@@ -30,8 +30,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Pincode vereist om in te schakelen",
-                    "code_disarm_required": "Pincode vereist om uit te schakelen"
+                    "code_arm_required": "PIN-code vereist om in te schakelen",
+                    "code_disarm_required": "PIN-code vereist om uit te schakelen"
                 },
                 "title": "Configureer opties"
             },

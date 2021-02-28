@@ -1,6 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 from collections import OrderedDict
-from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
 import re
@@ -8,6 +7,7 @@ import shutil
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Sequence, Set, Tuple, Union
 
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -75,6 +75,13 @@ GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
+
+LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
+INTEGRATION_LOAD_EXCEPTIONS = (
+    IntegrationNotFound,
+    RequirementsNotFound,
+    *LOAD_EXCEPTIONS,
+)
 
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
@@ -364,15 +371,15 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         "Upgrading configuration directory from %s to %s", conf_version, __version__
     )
 
-    version_obj = LooseVersion(conf_version)
+    version_obj = AwesomeVersion(conf_version)
 
-    if version_obj < LooseVersion("0.50"):
+    if version_obj < AwesomeVersion("0.50"):
         # 0.50 introduced persistent deps dir.
         lib_path = hass.config.path("deps")
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    if version_obj < LooseVersion("0.92"):
+    if version_obj < AwesomeVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = hass.config.path(YAML_CONFIG_FILE)
 
@@ -388,7 +395,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
 
-    if version_obj < LooseVersion("0.94") and is_docker_env():
+    if version_obj < AwesomeVersion("0.94") and is_docker_env():
         # In 0.94 we no longer install packages inside the deps folder when
         # running inside a Docker container.
         lib_path = hass.config.path("deps")
@@ -689,7 +696,7 @@ async def merge_packages_config(
                     hass, domain
                 )
                 component = integration.get_component()
-            except (IntegrationNotFound, RequirementsNotFound, ImportError) as ex:
+            except INTEGRATION_LOAD_EXCEPTIONS as ex:
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
@@ -746,7 +753,7 @@ async def async_process_component_config(
     domain = integration.domain
     try:
         component = integration.get_component()
-    except ImportError as ex:
+    except LOAD_EXCEPTIONS as ex:
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
@@ -825,7 +832,7 @@ async def async_process_component_config(
 
         try:
             platform = p_integration.get_platform(domain)
-        except ImportError:
+        except LOAD_EXCEPTIONS:
             _LOGGER.exception("Platform error: %s", domain)
             continue
 

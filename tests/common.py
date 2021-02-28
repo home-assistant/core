@@ -36,11 +36,8 @@ from homeassistant.components.device_automation import (  # noqa: F401
 from homeassistant.components.mqtt.models import Message
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
-    ATTR_DISCOVERED,
-    ATTR_SERVICE,
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     STATE_OFF,
@@ -146,7 +143,7 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop):
+async def async_test_home_assistant(loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
@@ -280,6 +277,15 @@ async def async_test_home_assistant(loop):
     hass.config_entries._entries = []
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
+    # Load the registries
+    if load_registries:
+        await asyncio.gather(
+            device_registry.async_load(hass),
+            entity_registry.async_load(hass),
+            area_registry.async_load(hass),
+        )
+        await hass.async_block_till_done()
+
     hass.state = ha.CoreState.running
 
     # Mock async_start
@@ -376,21 +382,6 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
-
-
-def fire_service_discovered(hass, service, info):
-    """Fire the MQTT message."""
-    hass.bus.fire(
-        EVENT_PLATFORM_DISCOVERED, {ATTR_SERVICE: service, ATTR_DISCOVERED: info}
-    )
-
-
-@ha.callback
-def async_fire_service_discovered(hass, service, info):
-    """Fire the MQTT message."""
-    hass.bus.async_fire(
-        EVENT_PLATFORM_DISCOVERED, {ATTR_SERVICE: service, ATTR_DISCOVERED: info}
-    )
 
 
 def load_fixture(filename):
@@ -740,6 +731,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
         unique_id=None,
+        disabled_by=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
@@ -752,6 +744,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "title": title,
             "connection_class": connection_class,
             "unique_id": unique_id,
+            "disabled_by": disabled_by,
         }
         if source is not None:
             kwargs["source"] = source

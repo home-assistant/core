@@ -176,7 +176,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, config: dict):
         """Trigger a reauthentication flow."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {CONF_HOST: config[CONF_HOST]}
 
         self.deconz_config = {
@@ -207,7 +206,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: parsed_url.hostname, CONF_PORT: parsed_url.port}
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
         self.deconz_config = {

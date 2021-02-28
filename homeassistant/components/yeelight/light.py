@@ -261,7 +261,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Yeelight from a config entry."""
-
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
@@ -563,7 +562,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-
         attributes = {
             "flowing": self.device.is_color_flow_enabled,
             "music_mode": self._bulb.music_mode,

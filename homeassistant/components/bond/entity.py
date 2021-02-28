@@ -52,6 +52,9 @@ class BondEntity(Entity):
     @property
     def name(self) -> Optional[str]:
         """Get entity name."""
+        if self._sub_device:
+            sub_device_name = self._sub_device.replace("_", " ").title()
+            return f"{self._device.name} {sub_device_name}"
         return self._device.name
 
     @property
@@ -65,7 +68,8 @@ class BondEntity(Entity):
         device_info = {
             ATTR_NAME: self.name,
             "manufacturer": self._hub.make,
-            "identifiers": {(DOMAIN, self._hub.bond_id, self._device_id)},
+            "identifiers": {(DOMAIN, self._hub.bond_id, self._device.device_id)},
+            "suggested_area": self._device.location,
             "via_device": (DOMAIN, self._hub.bond_id),
         }
         if not self._hub.is_bridge:

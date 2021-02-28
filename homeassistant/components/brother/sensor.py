@@ -24,6 +24,7 @@ from .const import (
     ATTR_YELLOW_DRUM_COUNTER,
     ATTR_YELLOW_DRUM_REMAINING_LIFE,
     ATTR_YELLOW_DRUM_REMAINING_PAGES,
+    DATA_CONFIG_ENTRY,
     DOMAIN,
     SENSOR_TYPES,
 )
@@ -37,7 +38,7 @@ ATTR_SERIAL = "serial"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Brother entities from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id]
 
     sensors = []
 
