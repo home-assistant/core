@@ -2,7 +2,6 @@
 from typing import Callable, List, Optional
 
 from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
@@ -12,14 +11,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 from .common import (
@@ -27,18 +19,7 @@ from .common import (
     GoGoGate2Entity,
     get_data_update_coordinator,
 )
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
-
-COVER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): cv.string,
-        vol.Required(CONF_DEVICE, default=DEVICE_TYPE_GOGOGATE2): vol.In(
-            (DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE)
-        ),
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-    }
-)
+from .const import DOMAIN
 
 
 async def async_setup_platform(
