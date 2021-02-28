@@ -127,10 +127,18 @@ def _purge_old_recorder_runs(instance, session, purge_before):
 def _repack_database(instance):
     """Repack based on engine type."""
 
-    # Execute sqlite or postgresql vacuum command to free up space on disk
-    if instance.engine.dialect.name in ("postgresql", "sqlite"):
+    # Execute sqlite command to free up space on disk
+    if instance.engine.dialect.name == "sqlite":
         _LOGGER.debug("Vacuuming SQL DB to free space")
         instance.engine.execute("VACUUM")
+        return
+
+    # Execute sqlite or postgresql vacuum command to free up space on disk
+    if instance.engine.dialect.name == "postgresql":
+        _LOGGER.debug("Vacuuming SQL DB to free space")
+        instance.engine.conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+            "VACUUM"
+        )
         return
 
     # Optimize mysql / mariadb tables to free up space on disk
