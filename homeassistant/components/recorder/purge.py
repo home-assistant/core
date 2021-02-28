@@ -29,7 +29,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
             event_ids = _select_event_ids_to_purge(session, purge_before)
             state_ids = _select_state_ids_to_purge(session, event_ids)
             if state_ids:
-                _disconnect_states_about_to_be_purge(session, state_ids)
+                _disconnect_states_about_to_be_purged(session, state_ids)
                 _purge_state_ids(session, state_ids)
             if event_ids:
                 _purge_event_ids(session, event_ids)
@@ -79,7 +79,7 @@ def _select_state_ids_to_purge(session, event_ids):
     return [state.state_id for state in states]
 
 
-def _disconnect_states_about_to_be_purge(session, state_ids):
+def _disconnect_states_about_to_be_purged(session, state_ids):
     # Update old_state_id to NULL before deleting to ensure
     # the delete does not fail due to a foreign key constraint
     # since some databases (MSSQL) cannot do the ON DELETE SET NULL
