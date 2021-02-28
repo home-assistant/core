@@ -1,6 +1,7 @@
 """Support for Google Domains."""
 import asyncio
 from datetime import timedelta
+import ipaddress
 import logging
 
 import aiohttp
@@ -60,7 +61,7 @@ async def async_setup(hass, config):
         new_address = await _get_ip_address(session, timeout)
         if new_address is not None and new_address != address:
             result = await _update_google_domains(
-                hass, session, domain, user, password, timeout, new_address
+                session, domain, user, password, new_address, timeout
             )
             if result:
                 address = new_address
@@ -74,7 +75,12 @@ async def _get_ip_address(session, timeout):
     try:
         with async_timeout.timeout(timeout):
             resp = await session.get(IPIFY)
-            return await resp.text()
+            address = await resp.text()
+            ipaddress.ip_address(address)
+            return address
+
+    except ValueError:
+        _LOGGER.warning("Received invalid response from %s", IPIFY)
 
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to %s", IPIFY)
@@ -95,6 +101,7 @@ async def _update_google_domains(session, domain, user, password, address, timeo
             body = await resp.text()
 
             if body.startswith("good") or body.startswith("nochg"):
+                _LOGGER.info("Updated Google Domains: %s => %s", domain, address)
                 return True
 
             _LOGGER.warning("Updating Google Domains failed: %s => %s", domain, body)
