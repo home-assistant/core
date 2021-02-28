@@ -7,7 +7,6 @@ import logging
 from math import ceil
 
 from miio import Ceil, DeviceException, PhilipsBulb, PhilipsEyecare, PhilipsMoonlight
-from miio import Device  # pylint: disable=import-error
 from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -26,22 +25,23 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP,
     LightEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
 from .const import (
-    CONF_FLOW_TYPE,
     CONF_DEVICE,
+    CONF_FLOW_TYPE,
     CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
     MODELS_LIGHT,
-    MODELS_LIGHT_EYECARE,
-    MODELS_LIGHT_CEILING,
-    MODELS_LIGHT_MOON,
     MODELS_LIGHT_BULB,
+    MODELS_LIGHT_CEILING,
+    MODELS_LIGHT_EYECARE,
     MODELS_LIGHT_MONO,
+    MODELS_LIGHT_MOON,
     SERVICE_EYECARE_MODE_OFF,
     SERVICE_EYECARE_MODE_ON,
     SERVICE_NIGHT_LIGHT_MODE_OFF,
@@ -168,9 +168,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             entities.append(entity)
             hass.data[DATA_KEY][host] = entity
 
-            secondary_device = XiaomiPhilipsEyecareLampAmbientLight(
-                name, light, config_entry, unique_id
-            )
             entities.append(
                 XiaomiPhilipsEyecareLampAmbientLight(
                     name, light, config_entry, unique_id
@@ -211,7 +208,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             """Map services to methods on Xiaomi Philips Lights."""
             method = SERVICE_TO_METHOD.get(service.service)
             params = {
-                key: value for key, value in service.data.items() if key != ATTR_ENTITY_ID
+                key: value
+                for key, value in service.data.items()
+                if key != ATTR_ENTITY_ID
             }
             entity_ids = service.data.get(ATTR_ENTITY_ID)
             if entity_ids:
