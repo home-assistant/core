@@ -25,7 +25,7 @@ def create_stream_buffer(video_stream, audio_stream, sequence):
     segment = io.BytesIO()
     container_options = {
         # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
+        "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets",
         "avoid_negative_ts": "disabled",
         "fragment_index": str(sequence),
     }

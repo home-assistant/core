@@ -1,4 +1,5 @@
 send:
+  name: "Send to KNX bus"
   description: "Send arbitrary data directly to the KNX bus."
   fields:
     address:
@@ -13,6 +14,8 @@ send:
       description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
       required: true
       example: "[0, 4]"
+      selector:
+        object:
     type:
       name: "Value type"
       description: "Optional. If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
@@ -21,6 +24,7 @@ send:
       selector:
         text:
 read:
+  name: "Read from KNX bus"
   description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."
   fields:
     address:
@@ -31,6 +35,7 @@ read:
       selector:
         text:
 event_register:
+  name: "Register knx_event"
   description: "Add or remove single group address to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
   fields:
     address:
@@ -38,14 +43,16 @@ event_register:
       description: "Group address that shall be added or removed."
       required: true
       example: "1/1/0"
+      selector:
+        text:
     remove:
       name: "Remove event registration"
       description: "Optional. If `True` the group address will be removed."
-      required: false
       default: false
       selector:
         boolean:
 exposure_register:
+  name: "Expose to KNX bus"
   description: "Add or remove exposures to KNX bus. Only exposures added with this service can be removed."
   fields:
     address:
@@ -72,19 +79,21 @@ exposure_register:
     attribute:
       name: "Entity attribute"
       description: "Optional. Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”."
-      required: false
       example: "brightness"
+      selector:
+        text:
     default:
       name: "Default value"
       description: "Optional. Default value to send to the bus if the state or attribute value is None. Eg. a light with state “off” has no brightness attribute so a default value of 0 could be used. If not set (or None) no value would be sent to the bus and a GroupReadRequest to the address would return the last known value."
-      required: false
       example: "0"
+      selector:
+        object:
     remove:
       name: "Remove exposure"
       description: "Optional. If `True` the exposure will be removed. Only `address` is required for removal."
-      required: false
       default: false
       selector:
         boolean:
 reload:
-  description: "Reload KNX configuration."
+  name: "Reload KNX configuration"
+  description: "Reload the KNX configuration from YAML."

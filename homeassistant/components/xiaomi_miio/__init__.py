@@ -17,6 +17,7 @@ from .const import (
     DOMAIN,
     KEY_COORDINATOR,
     MODELS_AIR_MONITOR,
+    MODELS_FAN,
     MODELS_SWITCH,
     MODELS_VACUUM,
 )
@@ -26,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
 SWITCH_PLATFORMS = ["switch"]
+FAN_PLATFORMS = ["fan"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["sensor"]
 
@@ -124,6 +126,8 @@ async def async_setup_device_entry(
     platforms = []
     if model in MODELS_SWITCH:
         platforms = SWITCH_PLATFORMS
+    elif model in MODELS_FAN:
+        platforms = FAN_PLATFORMS
     for vacuum_model in MODELS_VACUUM:
         if model.startswith(vacuum_model):
             platforms = VACUUM_PLATFORMS

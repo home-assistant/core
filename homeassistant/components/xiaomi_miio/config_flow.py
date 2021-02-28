@@ -73,6 +73,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 return await self.async_step_device()
+
         for device_model in MODELS_ALL_DEVICES:
             if name.startswith(device_model.replace(".", "-")):
                 unique_id = format_mac(self.mac)

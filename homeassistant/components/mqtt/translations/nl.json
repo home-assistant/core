@@ -63,6 +63,7 @@
             },
             "options": {
                 "data": {
+                    "birth_enable": "Geboortebericht inschakelen",
                     "birth_payload": "Birth message payload",
                     "birth_topic": "Birth message onderwerp"
                 }

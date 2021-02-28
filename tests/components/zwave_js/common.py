@@ -13,3 +13,6 @@ NOTIFICATION_MOTION_SENSOR = "sensor.multisensor_6_home_security_motion_sensor_s
 PROPERTY_DOOR_STATUS_BINARY_SENSOR = (
     "binary_sensor.august_smart_lock_pro_3rd_gen_the_current_status_of_the_door"
 )
+CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat"
+CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat"
+CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat"
