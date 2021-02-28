@@ -112,7 +112,7 @@ class YetiEntity(CoordinatorEntity):
         self._device_class = None
         try:
             self.sw_version = self.api.data["firmwareVersion"]
-        except Exception:
+        except KeyError:
             self.sw_version = None
 
     @property
