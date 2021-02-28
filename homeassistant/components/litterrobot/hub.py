@@ -89,14 +89,11 @@ class LitterRobotEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return the device information for a Litter-Robot."""
-        model = "Litter-Robot 3 Connect"
-        if not self.robot.serial.startswith("LR3C"):
-            model = "Other Litter-Robot Connected Device"
         return {
             "identifiers": {(DOMAIN, self.robot.serial)},
             "name": self.robot.name,
             "manufacturer": "Litter-Robot",
-            "model": model,
+            "model": self.robot.model,
         }
 
     async def perform_action_and_refresh(self, action: MethodType, *args: Any):

@@ -12,6 +12,7 @@ from homeassistant.components.vacuum import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_DOCKED,
+    STATE_ERROR,
 )
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID
 from homeassistant.util.dt import utcnow
@@ -31,6 +32,15 @@ async def test_vacuum(hass, mock_account):
     assert vacuum
     assert vacuum.state == STATE_DOCKED
     assert vacuum.attributes["is_sleeping"] is False
+
+
+async def test_vacuum_with_error(hass, mock_account_with_error):
+    """Tests a vacuum entity with an error."""
+    await setup_integration(hass, mock_account_with_error, PLATFORM_DOMAIN)
+
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == STATE_ERROR
 
 
 @pytest.mark.parametrize(
@@ -67,7 +77,7 @@ async def test_commands(hass, mock_account, service, command, extra):
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
 
     vacuum = hass.states.get(ENTITY_ID)
-    assert vacuum is not None
+    assert vacuum
     assert vacuum.state == STATE_DOCKED
 
     data = {ATTR_ENTITY_ID: ENTITY_ID}
