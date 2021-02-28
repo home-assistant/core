@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self._discovered: Optional[dict] = None
+        self._discovered: Dict[str, str] = {}
 
     async def _async_try_automatic_configure(self) -> None:
         """Try to auto configure the device.
@@ -69,7 +69,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online longer then the allowed setup period, and we will
         instead ask them to manually enter the token.
         """
-        assert self._discovered is not None
         bond = Bond(self._discovered[CONF_HOST], "")
         try:
             response = await bond.token()
@@ -111,8 +110,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
-        assert self._discovered is not None
-
         if user_input is not None:
             if CONF_ACCESS_TOKEN in self._discovered:
                 return self.async_create_entry(
