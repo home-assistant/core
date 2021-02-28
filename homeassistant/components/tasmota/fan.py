@@ -1,7 +1,5 @@
 """Support for Tasmota fans."""
 
-from typing import Optional
-
 from hatasmota import const as tasmota_const
 
 from homeassistant.components import fan
@@ -59,7 +57,7 @@ class TasmotaFan(
         )
 
     @property
-    def speed_count(self) -> Optional[int]:
+    def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
