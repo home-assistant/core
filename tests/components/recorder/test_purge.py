@@ -1,7 +1,6 @@
 """Test data purging."""
 from datetime import datetime, timedelta
 import json
-from unittest.mock import patch
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
@@ -22,15 +21,20 @@ def test_purge_old_states(hass, hass_recorder):
     with session_scope(hass=hass) as session:
         states = session.query(States)
         assert states.count() == 6
+        assert states[0].old_state_id is None
+        assert states[-1].old_state_id == states[-2].state_id
+
+        events = session.query(Events).filter(Events.event_type == "state_changed")
+        assert events.count() == 6
 
         # run purge_old_data()
         finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
         assert not finished
-        assert states.count() == 4
-
-        finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
-        assert not finished
         assert states.count() == 2
+
+        states_after_purge = session.query(States)
+        assert states_after_purge[1].old_state_id == states_after_purge[0].state_id
+        assert states_after_purge[0].old_state_id is None
 
         finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
         assert finished
@@ -47,10 +51,6 @@ def test_purge_old_events(hass, hass_recorder):
         assert events.count() == 6
 
         # run purge_old_data()
-        finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
-        assert not finished
-        assert events.count() == 4
-
         finished = purge_old_data(hass.data[DATA_INSTANCE], 4, repack=False)
         assert not finished
         assert events.count() == 2
@@ -73,11 +73,14 @@ def test_purge_old_recorder_runs(hass, hass_recorder):
 
         # run purge_old_data()
         finished = purge_old_data(hass.data[DATA_INSTANCE], 0, repack=False)
+        assert not finished
+
+        finished = purge_old_data(hass.data[DATA_INSTANCE], 0, repack=False)
         assert finished
         assert recorder_runs.count() == 1
 
 
-def test_purge_method(hass, hass_recorder):
+def test_purge_method(hass, hass_recorder, caplog):
     """Test purge method."""
     hass = hass_recorder()
     service_data = {"keep_days": 4}
@@ -131,16 +134,12 @@ def test_purge_method(hass, hass_recorder):
         assert not ("EVENT_TEST_PURGE" in (event.event_type for event in events.all()))
 
         # run purge method - correct service data, with repack
-        with patch("homeassistant.components.recorder.purge._LOGGER") as mock_logger:
-            service_data["repack"] = True
-            hass.services.call("recorder", "purge", service_data=service_data)
-            hass.block_till_done()
-            hass.data[DATA_INSTANCE].block_till_done()
-            wait_recording_done(hass)
-            assert (
-                mock_logger.debug.mock_calls[6][1][0]
-                == "Vacuuming SQL DB to free space"
-            )
+        service_data["repack"] = True
+        hass.services.call("recorder", "purge", service_data=service_data)
+        hass.block_till_done()
+        hass.data[DATA_INSTANCE].block_till_done()
+        wait_recording_done(hass)
+        assert "Vacuuming SQL DB to free space" in caplog.text
 
 
 def _add_test_states(hass):
@@ -155,6 +154,7 @@ def _add_test_states(hass):
     wait_recording_done(hass)
 
     with recorder.session_scope(hass=hass) as session:
+        old_state_id = None
         for event_id in range(6):
             if event_id < 2:
                 timestamp = eleven_days_ago
@@ -166,18 +166,29 @@ def _add_test_states(hass):
                 timestamp = now
                 state = "dontpurgeme"
 
-            session.add(
-                States(
-                    entity_id="test.recorder2",
-                    domain="sensor",
-                    state=state,
-                    attributes=json.dumps(attributes),
-                    last_changed=timestamp,
-                    last_updated=timestamp,
-                    created=timestamp,
-                    event_id=event_id + 1000,
-                )
+            event = Events(
+                event_type="state_changed",
+                event_data="{}",
+                origin="LOCAL",
+                created=timestamp,
+                time_fired=timestamp,
             )
+            session.add(event)
+            session.flush()
+            state = States(
+                entity_id="test.recorder2",
+                domain="sensor",
+                state=state,
+                attributes=json.dumps(attributes),
+                last_changed=timestamp,
+                last_updated=timestamp,
+                created=timestamp,
+                event_id=event.event_id,
+                old_state_id=old_state_id,
+            )
+            session.add(state)
+            session.flush()
+            old_state_id = state.state_id
 
 
 def _add_test_events(hass):
