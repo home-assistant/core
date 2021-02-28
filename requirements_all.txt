@@ -233,7 +233,7 @@ aiounifi==26
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==1.0.0
+airly==1.1.0
 
 # homeassistant.components.aladdin_connect
 aladdin_connect==0.3

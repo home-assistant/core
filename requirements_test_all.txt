@@ -152,7 +152,7 @@ aiounifi==26
 aioymaps==1.1.0
 
 # homeassistant.components.airly
-airly==1.0.0
+airly==1.1.0
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
