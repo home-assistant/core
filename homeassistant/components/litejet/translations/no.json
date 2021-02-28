@@ -4,7 +4,7 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "open_failed": "Kan ikke \u00e5pne den angitte serielle porten."
+            "open_failed": "Kan ikke \u00e5pne den angitte serielle porten"
         },
         "step": {
             "user": {
