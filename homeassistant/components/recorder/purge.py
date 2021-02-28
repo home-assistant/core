@@ -128,13 +128,13 @@ def _repack_database(instance):
     """Repack based on engine type."""
 
     # Execute sqlite or postgresql vacuum command to free up space on disk
-    if instance.engine.driver in ("pysqlite", "postgresql"):
+    if instance.engine.dialect.name in ("postgresql", "sqlite"):
         _LOGGER.debug("Vacuuming SQL DB to free space")
         instance.engine.execute("VACUUM")
         return
 
     # Optimize mysql / mariadb tables to free up space on disk
-    if instance.engine.driver in ("mysqldb", "pymysql"):
+    if instance.engine.dialect.name == "mysql":
         _LOGGER.debug("Optimizing SQL DB to free space")
         instance.engine.execute("OPTIMIZE TABLE states, events, recorder_runs")
         return
