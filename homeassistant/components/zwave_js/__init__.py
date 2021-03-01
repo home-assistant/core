@@ -426,6 +426,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
         addon_manager: AddonManager = get_addon_manager(hass)
+        LOGGER.debug("Stopping Z-Wave JS add-on")
         try:
             await addon_manager.async_stop_addon()
         except AddonError as err:
