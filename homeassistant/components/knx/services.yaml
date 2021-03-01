@@ -4,11 +4,11 @@ send:
   fields:
     address:
       name: "Group address"
-      description: "Group address(es) to write to."
+      description: "Group address(es) to write to. Lists will send to multiple group addresses successively."
       required: true
       example: "1/1/0"
       selector:
-        text:
+        object:
     payload:
       name: "Payload"
       description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
@@ -33,21 +33,21 @@ read:
       required: true
       example: "1/1/0"
       selector:
-        text:
+        object:
 event_register:
   name: "Register knx_event"
-  description: "Add or remove single group address to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
+  description: "Add or remove group addresses to knx_event filter for triggering `knx_event`s. Only addresses added with this service can be removed."
   fields:
     address:
       name: "Group address"
-      description: "Group address that shall be added or removed."
+      description: "Group address(es) that shall be added or removed. Lists are allowed."
       required: true
       example: "1/1/0"
       selector:
-        text:
+        object:
     remove:
       name: "Remove event registration"
-      description: "Optional. If `True` the group address will be removed."
+      description: "Optional. If `True` the group address(es) will be removed."
       default: false
       selector:
         boolean:
