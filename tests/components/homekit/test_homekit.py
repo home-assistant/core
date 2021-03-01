@@ -540,6 +540,7 @@ async def test_homekit_start(hass, hk_driver, device_reg):
     assert (device_registry.CONNECTION_NETWORK_MAC, formatted_mac) in device.connections
 
     assert len(device_reg.devices) == 1
+    assert homekit.driver.state.config_version == 2
 
 
 async def test_homekit_start_with_a_broken_accessory(hass, hk_driver, mock_zeroconf):
