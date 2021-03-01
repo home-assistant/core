@@ -1,6 +1,6 @@
 """Test the Z-Wave JS init module."""
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 from zwave_js_server.exceptions import BaseZwaveJSServerError
@@ -349,6 +349,36 @@ async def test_existing_node_not_ready(hass, client, multisensor_6, device_regis
     assert device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
+
+
+async def test_start_addon(
+    hass, addon_installed, addon_options, set_addon_options, start_addon, caplog
+):
+    """Test start the Z-Wave JS add-on during entry setup."""
+    device = "/test"
+    network_key = "abc123"
+    addon_options = {
+        "device": device,
+        "network_key": network_key,
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert set_addon_options.call_count == 1
+    assert set_addon_options.call_args == call(
+        hass, "core_zwave_js", {"options": addon_options}
+    )
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call(hass, "core_zwave_js")
 
 
 async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
