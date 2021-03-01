@@ -6,10 +6,6 @@
   "requirements": [
     "flipr-api==1.2.0",
     "pycryptodome==3.10.1"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@cnico"
   ]

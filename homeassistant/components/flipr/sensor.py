@@ -20,13 +20,13 @@ SENSORS = {
     "ph": {"unit": "ph", "icon": "mdi:pool", "name": "PH", "device_class": None},
     "temperature": {
         "unit": TEMP_CELSIUS,
-        "icon": "mdi:coolant-temperature",
+        "icon": None,
         "name": "Water Temp",
         "device_class": DEVICE_CLASS_TEMPERATURE,
     },
     "date_time": {
         "unit": None,
-        "icon": "mdi:clock",
+        "icon": None,
         "name": "Date Measure",
         "device_class": DEVICE_CLASS_TIMESTAMP,
     },
