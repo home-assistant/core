@@ -18,7 +18,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry, entity_registry
 
-from .common import AIR_TEMPERATURE_SENSOR, NOTIFICATION_MOTION_BINARY_SENSOR
+from .common import (
+    AIR_TEMPERATURE_SENSOR,
+    EATON_RF9640_ENTITY,
+    NOTIFICATION_MOTION_BINARY_SENSOR,
+)
 
 from tests.common import MockConfigEntry
 
@@ -467,3 +471,17 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     )
     assert len(entity_entries) == 15
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
+
+
+async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
+    """Test that suggested area works."""
+    dev_reg = device_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(hass)
+
+    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity = ent_reg.async_get(EATON_RF9640_ENTITY)
+    assert dev_reg.async_get(entity.device_id).area_id is not None
