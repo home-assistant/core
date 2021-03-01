@@ -6,6 +6,7 @@ from functools import partial
 from typing import Callable, Optional, cast
 
 from homeassistant.components.hassio import (
+    async_get_addon_discovery_info,
     async_get_addon_info,
     async_install_addon,
     async_set_addon_options,
@@ -88,6 +89,21 @@ class AddonManager:
         self._install_task: Optional[asyncio.Task] = None
         self._update_task: Optional[asyncio.Task] = None
         self._setup_task: Optional[asyncio.Task] = None
+
+    async def async_get_addon_discovery_info(self) -> dict:
+        """Return add-on discovery info."""
+        try:
+            discovery_info = await async_get_addon_discovery_info(
+                self._hass, ADDON_SLUG
+            )
+        except HassioAPIError as err:
+            raise AddonError("Failed to get Z-Wave JS add-on discovery info") from err
+
+        if not discovery_info:
+            raise AddonError("Failed to get Z-Wave JS add-on discovery info")
+
+        discovery_info_config: dict = discovery_info["config"]
+        return discovery_info_config
 
     async def async_get_addon_info(self) -> dict:
         """Return and cache Z-Wave JS add-on info."""
