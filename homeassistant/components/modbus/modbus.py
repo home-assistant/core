@@ -29,6 +29,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BINARY_SENSOR,
     CONF_BINARY_SENSORS,
+    CONF_BIT_SENSORS,
     CONF_BIT_SWITCHES,
     CONF_BYTESIZE,
     CONF_CLIMATE,
@@ -46,6 +47,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@lru_cache(maxsize=32)
+def _read_cached(client, what, unit, address, count, ttl_bucket):
+    """Return cached or invoke the Modbus client method."""
+
+    kwargs = {"unit": unit} if unit else {}
+    return getattr(client, f"read_{what}")(address, count, **kwargs)
 
 
 def modbus_setup(
@@ -67,6 +76,7 @@ def modbus_setup(
             (CONF_COVER, CONF_COVERS),
             (CONF_BINARY_SENSOR, CONF_BINARY_SENSORS),
             (CONF_SENSOR, CONF_SENSORS),
+            (CONF_SENSOR, CONF_BIT_SENSORS),
             (CONF_SWITCH, CONF_SWITCHES),
             (CONF_SWITCH, CONF_BIT_SWITCHES),
         ):
@@ -113,14 +123,6 @@ def modbus_setup(
         DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=service_write_coil_schema
     )
     return True
-
-
-@lru_cache(maxsize=32)
-def _read_cached(client, what, unit, address, count, ttl_bucket):
-    """Read cached or invoke the Modbus client method."""
-
-    kwargs = {"unit": unit} if unit else {}
-    return getattr(client, f"read_{what}")(address, count, **kwargs)
 
 
 class ModbusHub:
@@ -210,14 +212,16 @@ class ModbusHub:
     def read_coils(self, unit, address, count):
         """Read coils."""
         with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_coils(address, count, **kwargs)
+            return _read_cached(
+                self._client, "coils", unit, address, count, int(time.time())
+            )
 
     def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
         with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_discrete_inputs(address, count, **kwargs)
+            return _read_cached(
+                self._client, "discrete_inputs", unit, address, count, int(time.time())
+            )
 
     def read_input_registers(self, unit, address, count):
         """Read input registers."""

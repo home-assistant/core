@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
@@ -44,6 +45,7 @@ async def base_test(
     check_config_only=False,
     config_modbus=None,
     scan_interval=None,
+    **kvargs,
 ):
     """Run test on device for given config."""
 
@@ -58,6 +60,8 @@ async def base_test(
         }
 
     mock_sync = mock.MagicMock()
+    # Setup inputs for the sensor
+    read_result = ReadResult(register_words)
     with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
     ), mock.patch(
@@ -65,14 +69,9 @@ async def base_test(
         return_value=mock_sync,
     ), mock.patch(
         "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus._read_cached", return_value=read_result
     ):
-
-        # Setup inputs for the sensor
-        read_result = ReadResult(register_words)
-        mock_sync.read_coils.return_value = read_result
-        mock_sync.read_discrete_inputs.return_value = read_result
-        mock_sync.read_input_registers.return_value = read_result
-        mock_sync.read_holding_registers.return_value = read_result
 
         # mock timer and add old/new config
         now = dt_util.utcnow()
@@ -118,8 +117,24 @@ async def base_test(
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
 
-        # Check state
         entity_id = f"{entity_domain}.{device_name}"
+
+        # Call an arbitrary service
+        if "call_service" in kvargs:
+            call_service = kvargs["call_service"]
+            await hass.services.async_call(
+                call_service["domain"],
+                call_service["service"],
+                {ATTR_ENTITY_ID: entity_id, **call_service.get("data", {})},
+                blocking=True,
+            )
+            await hass.async_block_till_done()
+
+        # check write_register call
+        if "write_register" in kvargs:
+            args, kvargs = kvargs["write_register"]
+            mock_sync.write_register.assert_called_once_with(*args, **kvargs)
+
         return hass.states.get(entity_id).state
 
 
