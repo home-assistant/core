@@ -53,7 +53,6 @@ from .const import (
     SERVICE_HUMIDIFIER_SET_LED_OFF,
     SERVICE_HUMIDIFIER_SET_LED_ON,
     SERVICE_HUMIDIFIER_SET_TARGET_HUMIDITY,
-    SERVICE_HUMIDIFIER_SET_VOLUME,
 )
 from .device import XiaomiMiioEntity
 
@@ -153,11 +152,10 @@ FEATURE_SET_BUZZER = 2
 FEATURE_SET_LED = 4
 FEATURE_SET_CHILD_LOCK = 8
 FEATURE_SET_LED_BRIGHTNESS = 16
-FEATURE_SET_VOLUME = 32
-FEATURE_SET_TARGET_HUMIDITY = 64
-FEATURE_SET_DRY = 128
-FEATURE_SET_FAN_LEVEL = 256
-FEATURE_SET_MOTOR_SPEED = 512
+FEATURE_SET_TARGET_HUMIDITY = 32
+FEATURE_SET_DRY = 64
+FEATURE_SET_FAN_LEVEL = 128
+FEATURE_SET_MOTOR_SPEED = 256
 
 FEATURE_FLAGS_AIRHUMIDIFIER = (
     FEATURE_SET_BUZZER
@@ -206,10 +204,6 @@ SERVICE_TO_METHOD = {
     SERVICE_HUMIDIFIER_SET_LED_BRIGHTNESS: {
         "method": "async_set_led_brightness",
         "schema": SERVICE_SCHEMA_LED_BRIGHTNESS,
-    },
-    SERVICE_HUMIDIFIER_SET_VOLUME: {
-        "method": "async_set_volume",
-        "schema": SERVICE_SCHEMA_VOLUME,
     },
     SERVICE_HUMIDIFIER_SET_TARGET_HUMIDITY: {
         "method": "async_set_humidity",
@@ -346,6 +340,16 @@ class XiaomiGenericDevice(XiaomiMiioEntity, HumidifierEntity):
     def target_humidity(self):
         """Return the humidity we try to reach."""
         return self._target_humidity
+
+    @property
+    def min_humidity(self) -> int:
+        """Return the minimum humidity."""
+        return DEFAULT_MIN_HUMIDITY
+
+    @property
+    def max_humidity(self) -> int:
+        """Return the maximum humidity."""
+        return DEFAULT_MAX_HUMIDITY
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
@@ -505,16 +509,6 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         """Return the current mode."""
         return self._mode
 
-    @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return DEFAULT_MIN_HUMIDITY
-
-    @property
-    def max_humidity(self) -> int:
-        """Return the maximum humidity."""
-        return DEFAULT_MAX_HUMIDITY
-
     async def async_set_mode(self, mode: str) -> None:
         """Set the speed of the fan."""
         if self._device_features & FEATURE_SET_MODE == 0:
@@ -586,8 +580,8 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
 
     @property
-    def speed(self):
-        """Return the current speed."""
+    def mode(self):
+        """Return the current mode."""
         if self._state:
             return self.MODE_MAPPING.get(
                 AirhumidifierMiotOperationMode(self._state_attrs[ATTR_MODE])
@@ -605,12 +599,12 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
         return None
 
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
+    async def async_set_mode(self, mode: str) -> None:
+        """Set the mode of the fan."""
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
-            self.REVERSE_MODE_MAPPING[speed],
+            self.REVERSE_MODE_MAPPING[mode],
         )
 
     async def async_set_led_brightness(self, brightness: int = 2):
