@@ -1,8 +1,8 @@
 """Tests for the Freebox config flow."""
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from homeassistant.components.device_tracker import DOMAIN as DT_DOMAIN
-from homeassistant.components.freebox.const import DOMAIN as DOMAIN
+from homeassistant.components.freebox.const import DOMAIN as DOMAIN, SERVICE_REBOOT
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
@@ -29,6 +29,19 @@ async def test_setup(hass: HomeAssistantType, router: Mock):
 
     assert router.call_count == 1
     assert router().open.call_count == 1
+
+    assert hass.services.has_service(DOMAIN, SERVICE_REBOOT)
+
+    with patch(
+        "homeassistant.components.freebox.router.FreeboxRouter.reboot"
+    ) as mock_service:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_REBOOT,
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_service.assert_called_once()
 
 
 async def test_unload_remove(hass: HomeAssistantType, router: Mock):
@@ -60,7 +73,6 @@ async def test_unload_remove(hass: HomeAssistantType, router: Mock):
 
     await hass.config_entries.async_unload(entry.entry_id)
 
-    assert router().close.call_count == 1
     assert entry.state == ENTRY_STATE_NOT_LOADED
     state_dt = hass.states.get(entity_id_dt)
     assert state_dt.state == STATE_UNAVAILABLE
@@ -68,6 +80,9 @@ async def test_unload_remove(hass: HomeAssistantType, router: Mock):
     assert state_sensor.state == STATE_UNAVAILABLE
     state_switch = hass.states.get(entity_id_switch)
     assert state_switch.state == STATE_UNAVAILABLE
+
+    assert router().close.call_count == 1
+    assert not hass.services.has_service(DOMAIN, SERVICE_REBOOT)
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
