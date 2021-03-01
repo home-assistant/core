@@ -13,7 +13,7 @@
         },
         "error": {
             "follow_link": "\u8acb\u65bc\u50b3\u9001\u524d\uff0c\u5148\u4f7f\u7528\u9023\u7d50\u4e26\u9032\u884c\u8a8d\u8b49\u3002",
-            "no_token": "\u5b58\u53d6\u5bc6\u9470\u7121\u6548"
+            "no_token": "\u5b58\u53d6\u6b0a\u6756\u7121\u6548"
         },
         "step": {
             "auth": {
