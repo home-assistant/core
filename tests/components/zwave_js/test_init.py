@@ -37,7 +37,9 @@ def connect_timeout_fixture():
 @pytest.fixture(name="stop_addon")
 def stop_addon_fixture():
     """Mock stop add-on."""
-    with patch("homeassistant.components.hassio.async_stop_addon") as stop_addon:
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_stop_addon"
+    ) as stop_addon:
         yield stop_addon
 
 
@@ -45,7 +47,7 @@ def stop_addon_fixture():
 def uninstall_addon_fixture():
     """Mock uninstall add-on."""
     with patch(
-        "homeassistant.components.hassio.async_uninstall_addon"
+        "homeassistant.components.zwave_js.addon.async_uninstall_addon"
     ) as uninstall_addon:
         yield uninstall_addon
 
