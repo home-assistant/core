@@ -19,13 +19,13 @@ PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Bond component."""
     hass.data.setdefault(DOMAIN, {})
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
@@ -50,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
 
+    assert hub.bond_id is not None
     hub_name = hub.name or hub.bond_id
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
@@ -96,7 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def _async_remove_old_device_identifiers(
     config_entry_id: str, device_registry: dr.DeviceRegistry, hub: BondHub
-):
+) -> None:
     """Remove the non-unique device registry entries."""
     for device in hub.devices:
         dev = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
