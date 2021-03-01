@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["media_player"]
+PLATFORMS = ["media_player", "remote"]
 
 LOGGER = logging.getLogger(__name__)
 
