@@ -50,8 +50,10 @@ from .const import (
     CONF_BINARY_SENSORS,
     CONF_BIT_NUMBER,
     CONF_BIT_SENSORS,
+    CONF_BIT_SWITCHES,
     CONF_BYTESIZE,
     CONF_CLIMATES,
+    CONF_COMMAND_BIT_NUMBER,
     CONF_COUNT,
     CONF_CURRENT_TEMP,
     CONF_CURRENT_TEMP_REGISTER_TYPE,
@@ -72,6 +74,7 @@ from .const import (
     CONF_STATE_ON,
     CONF_STATE_OPEN,
     CONF_STATE_OPENING,
+    CONF_STATUS_BIT_NUMBER,
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
     CONF_STEP,
@@ -80,6 +83,7 @@ from .const import (
     CONF_TARGET_TEMP,
     CONF_UNIT,
     CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
     DATA_TYPE_CUSTOM,
     DATA_TYPE_FLOAT,
     DATA_TYPE_INT,
@@ -180,8 +184,24 @@ SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STATE_OFF): cv.positive_int,
         vol.Optional(CONF_STATE_ON): cv.positive_int,
         vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
     }
 )
+
+BIT_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ADDRESS): cv.positive_int,
+        vol.Required(CONF_COMMAND_BIT_NUMBER): cv.positive_int,
+        vol.Optional(CONF_STATUS_BIT_NUMBER): cv.positive_int,
+        vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+        ),
+        vol.Optional(CONF_VERIFY_REGISTER): cv.positive_int,
+        vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
+    }
+)
+
 
 SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
     {
@@ -215,6 +235,9 @@ BIT_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Required(CONF_BIT_NUMBER): cv.positive_int,
         vol.Optional(CONF_COUNT, default=1): cv.positive_int,
         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+            [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
@@ -242,6 +265,7 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_BIT_SENSORS): vol.All(cv.ensure_list, [BIT_SENSOR_SCHEMA]),
+        vol.Optional(CONF_BIT_SWITCHES): vol.All(cv.ensure_list, [BIT_SWITCH_SCHEMA]),
     }
 )
 

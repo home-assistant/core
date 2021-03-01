@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
+    STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -25,7 +26,6 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from .bit_sensor import ModbusBitSensor
 from .const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -134,7 +134,7 @@ async def async_setup_platform(
             del entry[CONF_REGISTER_TYPE]
         config = None
 
-    for entry in discovery_info[CONF_BIT_SENSORS]:
+    for entry in discovery_info.get(CONF_BIT_SENSORS, []):
         words_count = int(entry[CONF_COUNT])
         bit_number = int(entry[CONF_BIT_NUMBER])
 
@@ -156,10 +156,11 @@ async def async_setup_platform(
                 entry.get(CONF_UNIT_OF_MEASUREMENT),
                 words_count,
                 entry.get(CONF_DEVICE_CLASS),
+                entry[CONF_INPUT_TYPE],
             )
         )
 
-    for entry in discovery_info[CONF_SENSORS]:
+    for entry in discovery_info.get(CONF_SENSORS, []):
         if entry[CONF_DATA_TYPE] == DATA_TYPE_STRING:
             structure = str(entry[CONF_COUNT] * 2) + "s"
         elif entry[CONF_DATA_TYPE] != DATA_TYPE_CUSTOM:
@@ -216,8 +217,8 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(RestoreEntity):
-    """Modbus register sensor."""
+class ModbusSensorBase(RestoreEntity):
+    """Base class for the Modbus sensor."""
 
     def __init__(
         self,
@@ -225,41 +226,22 @@ class ModbusRegisterSensor(RestoreEntity):
         name,
         slave,
         register,
-        register_type,
         unit_of_measurement,
         count,
-        reverse_order,
-        scale,
-        offset,
-        structure,
-        precision,
-        data_type,
         device_class,
+        register_type,
     ):
-        """Initialize the modbus register sensor."""
+        """Initialize the modbus sensor."""
         self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._register = int(register)
-        self._register_type = register_type
         self._unit_of_measurement = unit_of_measurement
-        self._count = int(count)
-        self._reverse_order = reverse_order
-        self._scale = scale
-        self._offset = offset
-        self._precision = precision
-        self._structure = structure
-        self._data_type = data_type
+        self._count = count
         self._device_class = device_class
+        self._register_type = register_type
         self._value = None
         self._available = True
-
-    async def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state
 
     @property
     def state(self):
@@ -285,6 +267,54 @@ class ModbusRegisterSensor(RestoreEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
+
+
+class ModbusRegisterSensor(ModbusSensorBase):
+    """Modbus register sensor."""
+
+    def __init__(
+        self,
+        hub,
+        name,
+        slave,
+        register,
+        register_type,
+        unit_of_measurement,
+        count,
+        reverse_order,
+        scale,
+        offset,
+        structure,
+        precision,
+        data_type,
+        device_class,
+    ):
+        """Initialize the modbus register sensor."""
+        super().__init__(
+            hub,
+            name,
+            slave,
+            register,
+            unit_of_measurement,
+            count,
+            device_class,
+            register_type,
+        )
+        self._reverse_order = reverse_order
+        self._scale = scale
+        self._offset = offset
+        self._precision = precision
+        self._structure = structure
+        self._data_type = data_type
+        self._value = None
+        self._available = True
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._value = state.state
 
     def update(self):
         """Update the state of the sensor."""
@@ -338,4 +368,65 @@ class ModbusRegisterSensor(RestoreEntity):
                     # Don't process remaining datatypes (bytes and booleans)
                     self._value = str(val)
 
+        self._available = True
+
+
+class ModbusBitSensor(ModbusSensorBase):
+    """Modbus bit sensor."""
+
+    def __init__(
+        self,
+        hub,
+        name,
+        slave,
+        register,
+        bit_number,
+        unit_of_measurement,
+        count,
+        device_class,
+        register_type,
+    ):
+        """Initialize the modbus bit sensor."""
+        super().__init__(
+            hub,
+            name,
+            slave,
+            register,
+            unit_of_measurement,
+            count,
+            device_class,
+            register_type,
+        )
+        self._bit_number = int(bit_number)
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._value = state.state == STATE_ON
+
+    def update(self):
+        """Update the state of the sensor."""
+        try:
+            if self._register_type == CALL_TYPE_REGISTER_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, self._register, self._count
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, self._register, self._count
+                )
+
+        except ConnectionException:
+            self._available = False
+            return
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._available = False
+            return
+
+        register_index = self._bit_number // 16
+        register_bit_mask = 1 << (self._bit_number % 16)
+        self._value = bool(result.registers[register_index] & register_bit_mask)
         self._available = True

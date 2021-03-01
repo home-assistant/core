@@ -1,6 +1,8 @@
 """Support for Modbus."""
+from functools import lru_cache
 import logging
 import threading
+import time
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.transaction import ModbusRtuFramer
@@ -27,6 +29,7 @@ from .const import (
     CONF_BAUDRATE,
     CONF_BINARY_SENSOR,
     CONF_BINARY_SENSORS,
+    CONF_BIT_SWITCHES,
     CONF_BYTESIZE,
     CONF_CLIMATE,
     CONF_CLIMATES,
@@ -65,6 +68,7 @@ def modbus_setup(
             (CONF_BINARY_SENSOR, CONF_BINARY_SENSORS),
             (CONF_SENSOR, CONF_SENSORS),
             (CONF_SWITCH, CONF_SWITCHES),
+            (CONF_SWITCH, CONF_BIT_SWITCHES),
         ):
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, conf_hub)
@@ -109,6 +113,14 @@ def modbus_setup(
         DOMAIN, SERVICE_WRITE_COIL, write_coil, schema=service_write_coil_schema
     )
     return True
+
+
+@lru_cache(maxsize=32)
+def _read_cached(client, what, unit, address, count, ttl_bucket):
+    """Read cached or invoke the Modbus client method."""
+
+    kwargs = {"unit": unit} if unit else {}
+    return getattr(client, f"read_{what}")(address, count, **kwargs)
 
 
 class ModbusHub:
@@ -210,29 +222,42 @@ class ModbusHub:
     def read_input_registers(self, unit, address, count):
         """Read input registers."""
         with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_input_registers(address, count, **kwargs)
+            return _read_cached(
+                self._client, "input_registers", unit, address, count, int(time.time())
+            )
 
     def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
         with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_holding_registers(address, count, **kwargs)
+            return _read_cached(
+                self._client,
+                "holding_registers",
+                unit,
+                address,
+                count,
+                int(time.time()),
+            )
 
     def write_coil(self, unit, address, value):
         """Write coil."""
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_coil(address, value, **kwargs)
+            # invalidate cache on write
+            _read_cached.cache_clear()
 
     def write_register(self, unit, address, value):
         """Write register."""
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_register(address, value, **kwargs)
+            # invalidate cache on write
+            _read_cached.cache_clear()
 
     def write_registers(self, unit, address, values):
         """Write registers."""
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_registers(address, values, **kwargs)
+            # invalidate cache on write
+            _read_cached.cache_clear()

@@ -62,8 +62,6 @@ DEFAULT_STRUCT_FORMAT = {
 }
 CONF_SENSOR = "sensor"
 CONF_SENSORS = "sensors"
-
-# bit_sensor.py
 CONF_BIT_SENSORS = "bit_sensors"
 CONF_BIT_NUMBER = "bit_number"
 
@@ -74,6 +72,9 @@ CONF_VERIFY_REGISTER = "verify_register"
 CONF_VERIFY_STATE = "verify_state"
 CONF_SWITCH = "switch"
 CONF_SWITCHES = "switches"
+CONF_BIT_SWITCHES = "bit_switches"
+CONF_STATUS_BIT_NUMBER = "status_bit_number"
+CONF_COMMAND_BIT_NUMBER = "command_bit_number"
 
 # climate.py
 CONF_CLIMATES = "climates"
