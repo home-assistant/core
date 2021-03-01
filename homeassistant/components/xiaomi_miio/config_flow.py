@@ -125,7 +125,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 for gateway_model in MODELS_GATEWAY:
                     if model.startswith(gateway_model):
                         unique_id = self.mac
-                        await self.async_set_unique_id(unique_id)
+                        await self.async_set_unique_id(
+                            unique_id, raise_on_progress=False
+                        )
                         self._abort_if_unique_id_configured()
                         return self.async_create_entry(
                             title=DEFAULT_GATEWAY_NAME,
@@ -144,7 +146,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 for device_model in MODELS_ALL_DEVICES:
                     if model.startswith(device_model):
                         unique_id = self.mac
-                        await self.async_set_unique_id(unique_id)
+                        await self.async_set_unique_id(
+                            unique_id, raise_on_progress=False
+                        )
                         self._abort_if_unique_id_configured()
                         return self.async_create_entry(
                             title=name,
