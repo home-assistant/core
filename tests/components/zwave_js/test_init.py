@@ -417,7 +417,7 @@ async def test_install_addon(
 
 
 @pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
-async def test_start_addon_failure(
+async def test_addon_info_failure(
     hass,
     addon_installed,
     install_addon,
@@ -425,7 +425,7 @@ async def test_start_addon_failure(
     set_addon_options,
     start_addon,
 ):
-    """Test failure to start the Z-Wave JS add-on during entry setup."""
+    """Test failure to get add-on info for Z-Wave JS add-on during entry setup."""
     device = "/test"
     network_key = "abc123"
     entry = MockConfigEntry(
