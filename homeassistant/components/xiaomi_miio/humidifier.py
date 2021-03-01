@@ -163,7 +163,8 @@ FEATURE_FLAGS_AIRHUMIDIFIER = (
 FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB = FEATURE_FLAGS_AIRHUMIDIFIER | FEATURE_SET_DRY
 
 FEATURE_FLAGS_AIRHUMIDIFIER_CA4 = (
-    FEATURE_SET_BUZZER
+    FEATURE_SET_MODE
+    | FEATURE_SET_BUZZER
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_LED_BRIGHTNESS
     | FEATURE_SET_TARGET_HUMIDITY
@@ -596,6 +597,11 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the fan."""
+        if self._device_features & FEATURE_SET_MODE == 0:
+            return
+
+        _LOGGER.debug("Setting the operation mode to: %s", mode)
+
         await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
