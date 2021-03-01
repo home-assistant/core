@@ -1,4 +1,5 @@
 """Support for Gogogate2 garage Doors."""
+import logging
 from typing import Callable, List, Optional
 
 from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
@@ -21,11 +22,17 @@ from .common import (
 )
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
     hass: HomeAssistant, config: dict, add_entities: Callable, discovery_info=None
 ) -> None:
     """Convert old style file configs to new style configs."""
+    _LOGGER.warning(
+        "Loading gogogate2 via platform config is deprecated. The configuration"
+        " has been migrated to a config entry and can be safely removed."
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
