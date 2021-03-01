@@ -13,13 +13,13 @@
         "step": {
             "confirm": {
                 "data": {
-                    "access_token": "\u5b58\u53d6\u5bc6\u9470"
+                    "access_token": "\u5b58\u53d6\u6b0a\u6756"
                 },
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
             },
             "user": {
                 "data": {
-                    "access_token": "\u5b58\u53d6\u5bc6\u9470",
+                    "access_token": "\u5b58\u53d6\u6b0a\u6756",
                     "host": "\u4e3b\u6a5f\u7aef"
                 }
             }

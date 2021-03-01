@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_pin": "PIN \u78bc\u7121\u6548",
+            "pairing_failure": "\u7121\u6cd5\u914d\u5c0d\uff1a{error_id}",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {

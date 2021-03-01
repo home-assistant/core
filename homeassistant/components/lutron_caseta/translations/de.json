@@ -6,6 +6,13 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
         }
     }
 }
