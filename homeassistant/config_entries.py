@@ -259,16 +259,15 @@ class ConfigEntry:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
-            if wait_time < 80:
+            if tries == 1:
                 _LOGGER.warning(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
                     self.title,
                     self.domain,
-                    wait_time,
                 )
-            elif wait_time == 80:
-                _LOGGER.warning(
-                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds. This is the last logged message.",
+            else:
+                _LOGGER.debug(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
                     self.title,
                     self.domain,
                     wait_time,
