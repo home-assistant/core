@@ -157,7 +157,7 @@ class HyperionComponentSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        for component in self._client.components:
+        for component in self._client.components or []:
             if component[KEY_NAME] == self._component_name:
                 return bool(component.setdefault(KEY_ENABLED, False))
         return False
