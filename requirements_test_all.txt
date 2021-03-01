@@ -474,7 +474,7 @@ luftdaten==0.6.4
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==2.3.0
+mcstatus==5.1.1
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.1
