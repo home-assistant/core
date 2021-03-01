@@ -525,13 +525,14 @@ def async_register_addons_in_dev_reg(
         params = {
             "config_entry_id": entry_id,
             "identifiers": {(DOMAIN, addon[ATTR_SLUG])},
-            "manufacturer": addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL),
             "model": "Home Assistant Add-on",
             "sw_version": addon[ATTR_VERSION],
             "name": addon[ATTR_NAME],
             "entry_type": ATTR_SERVICE,
         }
-        dev_reg.async_get_or_create(**{k: v for k, v in params if v is not None})
+        if manufacturer := addon.get(ATTR_REPOSITORY) or addon.get(ATTR_URL):
+            params["manufacturer"] = manufacturer
+        dev_reg.async_get_or_create(**params)
 
 
 @callback
