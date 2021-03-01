@@ -22,6 +22,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     CONF_IDENTIFIERS,
     CONF_MANUFACTURER,
+    CONF_MODEL,
     CONF_SW_VERSION,
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
@@ -50,10 +51,7 @@ async def async_setup_entry(hass, entry):
     session = async_get_clientsession(hass)
     api = Yeti(host, hass.loop, session)
     try:
-        await api.get_state()
-        # Send request again if response is empty
-        if "firmwareVersion" not in api.data.keys():
-            await api.get_state()
+        await api.init_connect()
     except exceptions.ConnectError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
@@ -110,18 +108,21 @@ class YetiEntity(CoordinatorEntity):
         self._name = name
         self._server_unique_id = server_unique_id
         self._device_class = None
-        try:
-            self.sw_version = self.api.data["firmwareVersion"]
-        except KeyError:
-            self.sw_version = None
+        self.sw_version = None
+        self.model = None
 
     @property
     def device_info(self):
         """Return the device information of the entity."""
+        if self.api.data:
+            self.sw_version = self.api.data["firmwareVersion"]
+        if self.api.sysdata:
+            self.model = self.api.sysdata["model"]
         return {
             CONF_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            CONF_NAME: self._name,
             CONF_MANUFACTURER: "Goal Zero",
+            CONF_MODEL: self.model,
+            CONF_NAME: self._name,
             CONF_SW_VERSION: self.sw_version,
         }
 

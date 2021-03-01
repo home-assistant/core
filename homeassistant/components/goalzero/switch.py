@@ -50,7 +50,8 @@ class YetiSwitch(YetiEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return state of the switch."""
-        return self.api.data[self._condition]
+        if self.api.data:
+            return self.api.data[self._condition]
 
     async def async_turn_off(self, **kwargs):
         """Turn off the switch."""

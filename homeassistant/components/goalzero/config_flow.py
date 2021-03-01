@@ -88,7 +88,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_try_connect(self, host):
         session = async_get_clientsession(self.hass)
         api = Yeti(host, self.hass.loop, session)
-        await api.get_state()
+        await api.init_connect()
 
     @callback
     def _async_ip_address_already_configured(self, ip_address):

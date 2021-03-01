@@ -48,7 +48,8 @@ class YetiSensor(YetiEntity):
     @property
     def state(self):
         """Return the state."""
-        return self.api.data[self._condition]
+        if self.api.data:
+            return self.api.data[self._condition]
 
     @property
     def unit_of_measurement(self):
