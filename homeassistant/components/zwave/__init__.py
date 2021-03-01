@@ -396,7 +396,6 @@ async def async_setup_entry(hass, config_entry):
 
     Will automatically load components to support devices found on the network.
     """
-    # pylint: disable=import-error
     from openzwave.group import ZWaveGroup
     from openzwave.network import ZWaveNetwork
     from openzwave.option import ZWaveOption
@@ -1251,7 +1250,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     def __init__(self, values, domain):
         """Initialize the z-Wave device."""
-        # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher

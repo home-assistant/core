@@ -1,5 +1,4 @@
 """Data storage helper for ZHA."""
-# pylint: disable=unused-import
 from collections import OrderedDict
 import datetime
 import time
