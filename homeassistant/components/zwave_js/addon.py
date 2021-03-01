@@ -64,12 +64,10 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
 
 
 @callback
-def async_ensure_addon_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+def async_ensure_addon_updated(hass: HomeAssistant) -> None:
     """Ensure that Z-Wave JS add-on is updated and running."""
     addon_manager: AddonManager = get_addon_manager(hass)
-    usb_path: str = entry.data[CONF_USB_PATH]
-    network_key: str = entry.data[CONF_NETWORK_KEY]
-    addon_manager.async_schedule_update_addon(usb_path, network_key)
+    addon_manager.async_schedule_update_addon()
 
 
 class AddonManager:
@@ -182,9 +180,7 @@ class AddonManager:
             raise AddonError("Failed to update the Z-Wave JS add-on") from err
 
     @callback
-    def async_schedule_update_addon(
-        self, usb_path: str, network_key: str
-    ) -> asyncio.Task:
+    def async_schedule_update_addon(self) -> asyncio.Task:
         """Schedule a task that updates and sets up the Z-Wave JS add-on.
 
         Only schedule a new update task if the there's no running task.
@@ -192,8 +188,7 @@ class AddonManager:
         if not self._update_task or self._update_task.done():
             LOGGER.warning("Trying to update the Z-Wave JS add-on")
             self._update_task = self._async_schedule_addon_operation(
-                self.async_update_addon,
-                partial(self.async_setup_addon, usb_path, network_key),
+                self.async_update_addon
             )
         return self._update_task
 

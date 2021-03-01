@@ -267,7 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidServerVersion as err:
         LOGGER.error("Invalid server version: %s", err)
         if use_addon:
-            async_ensure_addon_updated(hass, entry)
+            async_ensure_addon_updated(hass)
         raise ConfigEntryNotReady from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
         LOGGER.error("Failed to connect: %s", err)
