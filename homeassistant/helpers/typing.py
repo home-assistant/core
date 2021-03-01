@@ -20,6 +20,7 @@ QueryType = Any
 
 
 class UndefinedType(Enum):
+    # pylint: disable=invalid-name
     """Singleton type for use with not set sentinel values."""
 
     _singleton = 0

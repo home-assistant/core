@@ -44,7 +44,7 @@ async def device_scan(identifier, loop, cache=None):
             return True
         if identifier == dev.name:
             return True
-        return any([service.identifier == identifier for service in dev.services])
+        return any(service.identifier == identifier for service in dev.services)
 
     def _host_filter():
         try:

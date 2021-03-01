@@ -91,7 +91,7 @@ class AnalogOutput(ZigbeeChannel):
             self.error("Could not set value: %s", ex)
             return False
         if isinstance(res, list) and all(
-            [record.status == Status.SUCCESS for record in res[0]]
+            record.status == Status.SUCCESS for record in res[0]
         ):
             return True
         return False

@@ -127,7 +127,7 @@ async def async_setup_entry(
         if (
             device_class == DEVICE_CLASS_MOTION
             and device_type is not None
-            and any([device_type.startswith(t) for t in TYPE_INSTEON_MOTION])
+            and any(device_type.startswith(t) for t in TYPE_INSTEON_MOTION)
         ):
             # Special cases for Insteon Motion Sensors I & II:
             # Some subnodes never report status until activated, so
@@ -194,10 +194,8 @@ def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
     # Other devices (incl Insteon.)
     for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ISY]:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
-            ]
+            device_type.startswith(t)
+            for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
         ):
             return device_class, device_type
     return (None, device_type)
