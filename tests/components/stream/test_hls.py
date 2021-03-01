@@ -229,7 +229,6 @@ async def test_stream_keepalive(hass):
     stream = create_stream(hass, source)
     track = stream.add_provider("hls")
     track.num_segments = 2
-    stream.start()
 
     cur_time = 0
 
