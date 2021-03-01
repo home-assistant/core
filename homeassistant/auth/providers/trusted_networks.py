@@ -111,7 +111,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
                     if (
                         user.id in user_list
                         or any(
-                            [group.id in flattened_group_list for group in user.groups]
+                            group.id in flattened_group_list for group in user.groups
                         )
                     )
                 ]

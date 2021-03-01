@@ -301,7 +301,7 @@ class KeenVent(Shade):
             self._on_off_channel.on(),
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        if any([isinstance(result, Exception) for result in results]):
+        if any(isinstance(result, Exception) for result in results):
             self.debug("couldn't open cover")
             return
 
