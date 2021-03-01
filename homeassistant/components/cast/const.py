@@ -13,6 +13,8 @@ KNOWN_CHROMECAST_INFO_KEY = "cast_known_chromecasts"
 ADDED_CAST_DEVICES_KEY = "cast_added_cast_devices"
 # Stores an audio group manager.
 CAST_MULTIZONE_MANAGER_KEY = "cast_multizone_manager"
+# Store a CastBrowser
+CAST_BROWSER_KEY = "cast_browser"
 
 # Dispatcher signal fired with a ChromecastInfo every time we discover a new
 # Chromecast or receive it through configuration
@@ -24,3 +26,5 @@ SIGNAL_CAST_REMOVED = "cast_removed"
 
 # Dispatcher signal fired when a Chromecast should show a Home Assistant Cast view.
 SIGNAL_HASS_CAST_SHOW_VIEW = "cast_show_view"
+
+CONF_KNOWN_HOSTS = "known_hosts"
