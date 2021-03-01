@@ -8,7 +8,11 @@ from serial import SerialException
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.opentherm_gw.const import (
     CONF_FLOOR_TEMP,
-    CONF_PRECISION,
+    CONF_READ_PRECISION,
+    CONF_SET_PRECISION,
+    CONF_SETPOINT_OVRD_MODE,
+    CONF_OVRD_MODE_TEMPORARY,
+    CONF_OVRD_MODE_CONSTANT,
     DOMAIN,
 )
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_NAME, PRECISION_HALVES
@@ -189,11 +193,13 @@ async def test_options_form(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_FLOOR_TEMP: True, CONF_PRECISION: PRECISION_HALVES},
+        user_input={CONF_FLOOR_TEMP: True, CONF_READ_PRECISION: PRECISION_HALVES, CONF_SET_PRECISION: PRECISION_HALVES, CONF_SETPOINT_OVRD_MODE: CONF_OVRD_MODE_TEMPORARY},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_READ_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_SETPOINT_OVRD_MODE] == CONF_OVRD_MODE_TEMPORARY
     assert result["data"][CONF_FLOOR_TEMP] is True
 
     result = await hass.config_entries.options.async_init(
@@ -201,9 +207,25 @@ async def test_options_form(hass):
     )
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_PRECISION: 0}
+        result["flow_id"], user_input={CONF_READ_PRECISION: 0}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_PRECISION] == 0.0
+    assert result["data"][CONF_READ_PRECISION] == 0.0
+    assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_SETPOINT_OVRD_MODE] == CONF_OVRD_MODE_TEMPORARY
     assert result["data"][CONF_FLOOR_TEMP] is True
+    
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_FLOOR_TEMP: False, CONF_READ_PRECISION: PRECISION_HALVES, CONF_SET_PRECISION: PRECISION_TENTHS, CONF_SETPOINT_OVRD_MODE: CONF_OVRD_MODE_CONSTANT}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
+    assert result["data"][CONF_SET_PRECISION] == PRECISION_HALVES
+    assert result["data"][CONF_SETPOINT_OVRD_MODE] == CONF_OVRD_MODE_CONSTANT
+    assert result["data"][CONF_FLOOR_TEMP] is False
