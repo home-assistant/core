@@ -507,6 +507,49 @@ async def test_not_addon(hass, supervisor):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_addon_already_configured(hass, supervisor):
+    """Test add-on already configured leads to manual step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"use_addon": True}, title=TITLE, unique_id=5678
+    )
+    entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "ws://localhost:3000",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://localhost:3000",
+        "usb_path": None,
+        "network_key": None,
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running(
     hass,
