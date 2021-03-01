@@ -163,3 +163,42 @@ warning_device_warn:
       description: >-
         Indicates the intensity of the strobe as shown in Table 8-23 of the ZCL spec. This attribute is designed to vary the output of the strobe (i.e., brightness) and not its frequency, which is detailed in section 8.4.2.3.1.6 of the ZCL spec.
       example: 2
+
+clear_lock_user_code:
+  name: Clear a user code from a lock
+  description: Clear a user code from a lock
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to clear code from
+      required: true
+      example: 1
+      selector:
+        text:
+
+set_lock_user_code:
+  name: Set a user code on a lock
+  description: Set a user code on a lock
+  target:
+    entity:
+      domain: lock
+      integration: zha
+  fields:
+    code_slot:
+      name: Code slot
+      description: Code slot to set the code.
+      required: true
+      example: 1
+      selector:
+        text:
+    user_code:
+      name: Code
+      description: Code to set.
+      required: true
+      example: 1234
+      selector:
+        text:
