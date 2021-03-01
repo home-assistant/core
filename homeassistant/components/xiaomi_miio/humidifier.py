@@ -142,9 +142,6 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
     ATTR_MOTOR_SPEED: "motor_speed",
 }
 
-
-OPERATION_MODES_HUMIDIFIER = ["Auto", "Silent", "Medium", "High"]
-
 SUCCESS = ["ok"]
 
 FEATURE_SET_MODE = 1
