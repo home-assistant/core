@@ -38,7 +38,7 @@ async def async_setup_entry(
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    fans = [
+    fans: List[Entity] = [
         BondFan(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_fan(device.type)
@@ -58,7 +58,7 @@ class BondFan(BondEntity, FanEntity):
         self._speed: Optional[int] = None
         self._direction: Optional[int] = None
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
@@ -80,7 +80,7 @@ class BondFan(BondEntity, FanEntity):
         return (1, self._device.props.get("max_speed", 3))
 
     @property
-    def percentage(self) -> Optional[str]:
+    def percentage(self) -> int:
         """Return the current speed percentage for the fan."""
         if not self._speed or not self._power:
             return 0
@@ -128,7 +128,7 @@ class BondFan(BondEntity, FanEntity):
         speed: Optional[str] = None,
         percentage: Optional[int] = None,
         preset_mode: Optional[str] = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Fan async_turn_on called with percentage %s", percentage)
@@ -142,7 +142,7 @@ class BondFan(BondEntity, FanEntity):
         """Turn the fan off."""
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
-    async def async_set_direction(self, direction: str):
+    async def async_set_direction(self, direction: str) -> None:
         """Set fan rotation direction."""
         bond_direction = (
             Direction.REVERSE if direction == DIRECTION_REVERSE else Direction.FORWARD

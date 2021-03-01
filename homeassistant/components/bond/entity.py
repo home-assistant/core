@@ -38,7 +38,7 @@ class BondEntity(Entity):
         self._sub_device = sub_device
         self._available = True
         self._bpup_subs = bpup_subs
-        self._update_lock = None
+        self._update_lock: Optional[Lock] = None
         self._initialized = False
 
     @property
@@ -58,7 +58,7 @@ class BondEntity(Entity):
         return self._device.name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed."""
         return False
 
@@ -96,15 +96,16 @@ class BondEntity(Entity):
         """Report availability of this entity based on last API call results."""
         return self._available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch assumed state of the cover from the hub using API."""
         await self._async_update_from_api()
 
-    async def _async_update_if_bpup_not_alive(self, *_):
+    async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
         """Fetch via the API if BPUP is not alive."""
         if self._bpup_subs.alive and self._initialized:
             return
 
+        assert self._update_lock is not None
         if self._update_lock.locked():
             _LOGGER.warning(
                 "Updating %s took longer than the scheduled update interval %s",
@@ -117,7 +118,7 @@ class BondEntity(Entity):
             await self._async_update_from_api()
             self.async_write_ha_state()
 
-    async def _async_update_from_api(self):
+    async def _async_update_from_api(self) -> None:
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device_id)
@@ -131,11 +132,11 @@ class BondEntity(Entity):
             self._async_state_callback(state)
 
     @abstractmethod
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         raise NotImplementedError
 
     @callback
-    def _async_state_callback(self, state):
+    def _async_state_callback(self, state: dict) -> None:
         """Process a state change."""
         self._initialized = True
         if not self._available:
@@ -147,16 +148,17 @@ class BondEntity(Entity):
         self._apply_state(state)
 
     @callback
-    def _async_bpup_callback(self, state):
+    def _async_bpup_callback(self, state: dict) -> None:
         """Process a state change from BPUP."""
         self._async_state_callback(state)
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
         self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
+        assert self.hass is not None
         self.async_on_remove(
             async_track_time_interval(
                 self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL

@@ -114,7 +114,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         super().__init__(hub, device, bpup_subs, sub_device)
         self._brightness: Optional[int] = None
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._light = state.get("light")
         self._brightness = state.get("brightness")
 
@@ -126,7 +126,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         return 0
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> Optional[int]:
         """Return the brightness of this light between 1..255."""
         brightness_value = (
             round(self._brightness * 255 / 100) if self._brightness else None
@@ -152,7 +152,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._light = state.get("down_light") and state.get("light")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -171,7 +171,7 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
 class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._light = state.get("up_light") and state.get("light")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -198,7 +198,7 @@ class BondFireplace(BondEntity, LightEntity):
         # Bond flame level, 0-100
         self._flame: Optional[int] = None
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
         self._flame = state.get("flame")
 
@@ -230,7 +230,7 @@ class BondFireplace(BondEntity, LightEntity):
         await self._hub.bond.action(self._device.device_id, Action.turn_off())
 
     @property
-    def brightness(self):
+    def brightness(self) -> Optional[int]:
         """Return the flame of this fireplace converted to HA brightness between 0..255."""
         return round(self._flame * 255 / 100) if self._flame else None
 
