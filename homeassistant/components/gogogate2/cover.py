@@ -1,12 +1,7 @@
 """Support for Gogogate2 garage Doors."""
 from typing import Callable, List, Optional
 
-from gogogate2_api.common import (
-    AbstractDoor,
-    DoorStatus,
-    get_configured_doors,
-    get_door_by_id,
-)
+from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -26,14 +21,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import (
     DeviceDataUpdateCoordinator,
-    cover_unique_id,
+    GoGoGate2Entity,
     get_data_update_coordinator,
 )
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
 
 COVER_SCHEMA = vol.Schema(
     {
@@ -74,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class DeviceCover(CoordinatorEntity, CoverEntity):
+class DeviceCover(GoGoGate2Entity, CoverEntity):
     """Cover entity for goggate2."""
 
     def __init__(
@@ -84,17 +78,9 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
-        super().__init__(data_update_coordinator)
-        self._config_entry = config_entry
-        self._door = door
+        super().__init__(config_entry, data_update_coordinator, door)
         self._api = data_update_coordinator.api
-        self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def name(self):
@@ -141,20 +127,3 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         attrs = super().state_attributes
         attrs["door_id"] = self._get_door().door_id
         return attrs
-
-    def _get_door(self) -> AbstractDoor:
-        door = get_door_by_id(self._door.door_id, self.coordinator.data)
-        self._door = door or self._door
-        return self._door
-
-    @property
-    def device_info(self):
-        """Device info for the controller."""
-        data = self.coordinator.data
-        return {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "name": self._config_entry.title,
-            "manufacturer": MANUFACTURER,
-            "model": data.model,
-            "sw_version": data.firmwareversion,
-        }
