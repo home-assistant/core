@@ -46,6 +46,8 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
         """Return the current speed percentage."""
         if self._device["fan_speed"] is None:
             return None
+        if self._device["fan_speed"] == FAN_OFF:
+            return 0
         return ordered_list_item_to_percentage(
             ORDERED_NAMED_FAN_SPEEDS, self._device["fan_speed"]
         )
