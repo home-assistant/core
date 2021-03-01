@@ -24,7 +24,7 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "description": "Aktualisiere deine Anmeldeinformationen f\u00fcr {name} ."
+                "description": "Aktualisiere deine Anmeldeinformationen f\u00fcr {name}."
             },
             "user": {
                 "data": {
