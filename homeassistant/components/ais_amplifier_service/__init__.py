@@ -81,8 +81,10 @@ def _change_sound_mode(hass, call):
     ):
         _LOGGER.error("Unrecognized mode in call: " + mode)
         return
-    comm = r'su -c "stty -F /dev/ttyS0 9600 && echo COM+SETEQ{}\r\n > /dev/ttyS0"'.format(
-        mode
+    comm = (
+        r'su -c "stty -F /dev/ttyS0 9600 && echo COM+SETEQ{}\r\n > /dev/ttyS0"'.format(
+            mode
+        )
     )
     os.system(comm)
 
@@ -96,7 +98,13 @@ def set_bt_mode():
 
 @asyncio.coroutine
 def _change_audio_to_mono(hass, call):
-    mode = hass.states.get("input_boolean.ais_audio_mono").state
+    if "mode" not in call.data:
+        mode = hass.states.get("input_boolean.ais_audio_mono").state
+    else:
+        if call.data["mode"]:
+            mode = "on"
+        else:
+            mode = "off"
     info_text = ""
     if mode == "on":
         if ais_global.has_root():

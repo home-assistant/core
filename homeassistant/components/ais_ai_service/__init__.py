@@ -2616,6 +2616,9 @@ async def async_setup(hass, config):
         session = async_get_clientsession(hass)
 
         device_id = service.data["device_id"]
+        # to allow notation with _
+        device_id = device_id.replace("mobile_ais_dom_", "mobile_ais_dom-")
+
         entry_data = None
         data = {"message": service.data["message"]}
         if "title" in service.data:
@@ -2650,6 +2653,16 @@ async def async_setup(hass, config):
         for entry in hass.config_entries.async_entries("mobile_app"):
             if entry.data["device_name"] == device_id:
                 entry_data = entry.data
+
+        # if entry_data is None:
+        #     # new way - via device id
+        #     for entry in hass.data["mobile_app"]["config_entries"]:
+        #         _LOGGER.error("entry 1: " + str(entry))
+        #     for entry in hass.config_entries.async_entries("mobile_app"):
+        #         _LOGGER.error("entry 2: " + str(entry))
+        #         _LOGGER.error("entry.data: " + str(entry.data))
+        #         # if entry["device_id"] == device_id:
+        #         #     entry_data = entry.data
 
         if entry_data is None:
             _LOGGER.error("No mob id from " + device_id)
