@@ -69,8 +69,6 @@ ENTRY_STATE_SETUP_RETRY = "setup_retry"
 ENTRY_STATE_NOT_LOADED = "not_loaded"
 # An error occurred when trying to unload the entry
 ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
-# The config entry is disabled
-ENTRY_STATE_DISABLED = "disabled"
 
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
@@ -802,11 +800,14 @@ class ConfigEntries:
         entry.disabled_by = disabled_by
         self._async_schedule_save()
 
+        # Unload the config entry, then fire an event
+        reload_result = await self.async_reload(entry_id)
+
         self.hass.bus.async_fire(
             EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED, {"config_entry_id": entry_id}
         )
 
-        return await self.async_reload(entry_id)
+        return reload_result
 
     @callback
     def async_update_entry(
