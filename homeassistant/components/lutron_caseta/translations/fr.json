@@ -2,16 +2,75 @@
     "config": {
         "abort": {
             "already_configured": "Pont Cas\u00e9ta d\u00e9j\u00e0 configur\u00e9.",
-            "cannot_connect": "Installation annul\u00e9e du pont Cas\u00e9ta en raison d'un \u00e9chec de connexion."
+            "cannot_connect": "Installation annul\u00e9e du pont Cas\u00e9ta en raison d'un \u00e9chec de connexion.",
+            "not_lutron_device": "L'appareil d\u00e9couvert n'est pas un appareil Lutron"
         },
         "error": {
             "cannot_connect": "\u00c9chec de la connexion \u00e0 la passerelle Cas\u00e9ta; v\u00e9rifiez la configuration de votre h\u00f4te et de votre certificat."
         },
+        "flow_title": "Lutron Cas\u00e9ta {name} ( {host} )",
         "step": {
             "import_failed": {
                 "description": "Impossible de configurer la passerelle (h\u00f4te: {host} ) import\u00e9 \u00e0 partir de configuration.yaml.",
                 "title": "\u00c9chec de l'importation de la configuration de la passerelle Cas\u00e9ta."
+            },
+            "link": {
+                "description": "Pour jumeler avec {name} ( {host} ), apr\u00e8s avoir soumis ce formulaire, appuyez sur le bouton noir \u00e0 l'arri\u00e8re du pont.",
+                "title": "Paire avec le pont"
+            },
+            "user": {
+                "data": {
+                    "host": "Hote"
+                },
+                "description": "Saisissez l'adresse IP de l'appareil.",
+                "title": "Se connecter automatiquement au pont"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Premier bouton",
+            "button_2": "Deuxi\u00e8me bouton",
+            "button_3": "Troisi\u00e8me bouton",
+            "button_4": "Quatri\u00e8me bouton",
+            "close_1": "Fermer 1",
+            "close_2": "Fermer 2",
+            "close_3": "Fermer 3",
+            "close_4": "Fermer 4",
+            "close_all": "Ferme tout",
+            "group_1_button_1": "Premier bouton du premier groupe",
+            "group_1_button_2": "Premier groupe deuxi\u00e8me bouton",
+            "group_2_button_1": "Premier bouton du deuxi\u00e8me groupe",
+            "group_2_button_2": "Deuxi\u00e8me bouton du deuxi\u00e8me groupe",
+            "lower": "Bas",
+            "lower_1": "Bas 1",
+            "lower_2": "Bas 2",
+            "lower_3": "Bas 3",
+            "lower_4": "Bas 4",
+            "lower_all": "Tout baisser",
+            "off": "Eteint",
+            "on": "Allumer",
+            "open_1": "Ouvrir 1",
+            "open_2": "Ouvrir 2",
+            "open_3": "Ouvrir 3",
+            "open_4": "Ouvrir 4",
+            "open_all": "Ouvre tout",
+            "raise": "Haut",
+            "raise_1": "Haut 1",
+            "raise_2": "Haut 2",
+            "raise_3": "Haut 3",
+            "raise_4": "Haut 4",
+            "raise_all": "Lever tout",
+            "stop": "Stop (favori)",
+            "stop_1": "Arr\u00eat 1",
+            "stop_2": "Arr\u00eat 2",
+            "stop_3": "Arr\u00eat 3",
+            "stop_4": "Arr\u00eat 4",
+            "stop_all": "Arr\u00eate tout"
+        },
+        "trigger_type": {
+            "press": "\" {subtype} \" appuy\u00e9",
+            "release": "\" {subtype} \" publi\u00e9"
         }
     }
 }

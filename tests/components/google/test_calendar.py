@@ -157,6 +157,7 @@ async def test_all_day_event(hass, mock_next_event):
     week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
     end_event = week_from_today + dt_util.dt.timedelta(days=1)
     event = copy.deepcopy(TEST_EVENT)
+
     start = week_from_today.isoformat()
     end = end_event.isoformat()
     event["start"]["date"] = start
@@ -402,11 +403,24 @@ async def test_all_day_offset_event(hass, mock_next_event):
     }
 
 
-async def test_update_error(hass, google_service):
+async def test_update_error(hass, google_service, mock_next_event):
     """Test that the calendar handles a server error."""
+    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
+    end_event = tomorrow + dt_util.dt.timedelta(days=1)
+    start = tomorrow.isoformat()
+    end = end_event.isoformat()
+    offset_hours = 1 + dt_util.now().hour
+    event_summary = "Test All Day Event Offset"
+    event = copy.deepcopy(TEST_EVENT)
+    event["start"]["date"] = start
+    event["end"]["date"] = end
+    event["summary"] = f"{event_summary} !!-{offset_hours}:0"
     google_service.return_value.get = Mock(
         side_effect=httplib2.ServerNotFoundError("unit test")
     )
+
+    mock_next_event.return_value.event = event
+
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
 

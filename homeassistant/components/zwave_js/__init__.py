@@ -12,19 +12,19 @@ from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import async_register_api
 from .const import (
+    ADDON_SLUG,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DEVICE_ID,
-    ATTR_DOMAIN,
     ATTR_ENDPOINT,
     ATTR_HOME_ID,
     ATTR_LABEL,
@@ -43,7 +43,8 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .entity import get_device_id
+from .helpers import get_device_id, get_old_value_id, get_unique_id
+from .services import ZWaveServices
 
 LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
@@ -82,6 +83,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     dev_reg = await device_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
+
+    @callback
+    def migrate_entity(platform: str, old_unique_id: str, new_unique_id: str) -> None:
+        """Check if entity with old unique ID exists, and if so migrate it to new ID."""
+        if entity_id := ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id):
+            LOGGER.debug(
+                "Migrating entity %s from old unique ID '%s' to new unique ID '%s'",
+                entity_id,
+                old_unique_id,
+                new_unique_id,
+            )
+            ent_reg.async_update_entity(
+                entity_id,
+                new_unique_id=new_unique_id,
+            )
 
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
@@ -94,6 +111,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # run discovery on all node values and create/update entities
         for disc_info in async_discover_values(node):
             LOGGER.debug("Discovered entity: %s", disc_info)
+
+            # This migration logic was added in 2021.3 to handle a breaking change to
+            # the value_id format. Some time in the future, this code block
+            # (as well as get_old_value_id helper and migrate_entity closure) can be
+            # removed.
+            value_ids = [
+                # 2021.2.* format
+                get_old_value_id(disc_info.primary_value),
+                # 2021.3.0b0 format
+                disc_info.primary_value.value_id,
+            ]
+
+            new_unique_id = get_unique_id(
+                client.driver.controller.home_id,
+                disc_info.primary_value.value_id,
+            )
+
+            for value_id in value_ids:
+                old_unique_id = get_unique_id(
+                    client.driver.controller.home_id,
+                    f"{disc_info.primary_value.node.node_id}.{value_id}",
+                )
+                # Most entities have the same ID format, but notification binary sensors
+                # have a state key in their ID so we need to handle them differently
+                if (
+                    disc_info.platform == "binary_sensor"
+                    and disc_info.platform_hint == "notification"
+                ):
+                    for state_key in disc_info.primary_value.metadata.states:
+                        # ignore idle key (0)
+                        if state_key == "0":
+                            continue
+
+                        migrate_entity(
+                            disc_info.platform,
+                            f"{old_unique_id}.{state_key}",
+                            f"{new_unique_id}.{state_key}",
+                        )
+
+                    # Once we've iterated through all state keys, we can move on to the
+                    # next item
+                    continue
+
+                migrate_entity(disc_info.platform, old_unique_id, new_unique_id)
+
             async_dispatcher_send(
                 hass, f"{DOMAIN}_{entry.entry_id}_add_{disc_info.platform}", disc_info
             )
@@ -131,8 +193,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # grab device in device registry attached to this node
         dev_id = get_device_id(client, node)
         device = dev_reg.async_get_device({dev_id})
-        # note: removal of entity registry is handled by core
-        dev_reg.async_remove_device(device.id)
+        # note: removal of entity registry entry is handled by core
+        dev_reg.async_remove_device(device.id)  # type: ignore
 
     @callback
     def async_on_value_notification(notification: ValueNotification) -> None:
@@ -149,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
                 ATTR_ENDPOINT: notification.endpoint,
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
@@ -170,7 +232,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id,  # type: ignore
                 ATTR_LABEL: notification.notification_label,
                 ATTR_PARAMETERS: notification.parameters,
             },
@@ -181,6 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with timeout(CONNECT_TIMEOUT):
             await client.connect()
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
+        LOGGER.error("Failed to connect: %s", err)
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
@@ -190,6 +253,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_CLIENT: client,
         DATA_UNSUBSCRIBE: unsubscribe_callbacks,
     }
+
+    services = ZWaveServices(hass, ent_reg)
+    services.async_register()
 
     # Set up websocket API
     async_register_api(hass)
@@ -218,7 +284,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
 
-        await driver_ready.wait()
+        try:
+            await driver_ready.wait()
+        except asyncio.CancelledError:
+            LOGGER.debug("Cancelling start platforms")
+            return
 
         LOGGER.info("Connection to Zwave JS Server initialized")
 
@@ -268,8 +338,11 @@ async def client_listen(
         await client.listen(driver_ready)
     except asyncio.CancelledError:
         should_reload = False
-    except BaseZwaveJSServerError:
-        pass
+    except BaseZwaveJSServerError as err:
+        LOGGER.error("Failed to listen: %s", err)
+    except Exception as err:  # pylint: disable=broad-except
+        # We need to guard against unknown exceptions to not crash this task.
+        LOGGER.exception("Unexpected exception: %s", err)
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
@@ -333,11 +406,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         return
 
     try:
-        await hass.components.hassio.async_stop_addon("core_zwave_js")
+        await hass.components.hassio.async_stop_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
         return
     try:
-        await hass.components.hassio.async_uninstall_addon("core_zwave_js")
+        await hass.components.hassio.async_uninstall_addon(ADDON_SLUG)
     except HassioAPIError as err:
         LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)

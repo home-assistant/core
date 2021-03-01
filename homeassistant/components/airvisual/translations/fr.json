@@ -7,7 +7,8 @@
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
             "general_error": "Erreur inattendue",
-            "invalid_api_key": "Cl\u00e9 API invalide"
+            "invalid_api_key": "Cl\u00e9 API invalide",
+            "location_not_found": "Emplacement introuvable"
         },
         "step": {
             "geography": {
@@ -18,6 +19,25 @@
                 },
                 "description": "Utilisez l'API cloud AirVisual pour surveiller une position g\u00e9ographique.",
                 "title": "Configurer une g\u00e9ographie"
+            },
+            "geography_by_coords": {
+                "data": {
+                    "api_key": "Clef d'API",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude"
+                },
+                "description": "Utilisez l'API cloud AirVisual pour surveiller une latitude / longitude.",
+                "title": "Configurer un lieu g\u00e9ographique"
+            },
+            "geography_by_name": {
+                "data": {
+                    "api_key": "Clef d'API",
+                    "city": "Ville",
+                    "country": "Pays",
+                    "state": "Etat"
+                },
+                "description": "Utilisez l'API cloud AirVisual pour surveiller une ville / un \u00e9tat / un pays.",
+                "title": "Configurer un lieu g\u00e9ographique"
             },
             "node_pro": {
                 "data": {

@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import frontend
 from homeassistant.config import async_hass_config_yaml, async_process_component_config
-from homeassistant.const import CONF_FILENAME
+from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
@@ -16,9 +16,7 @@ from homeassistant.loader import async_get_integration
 from . import dashboard, resources, websocket
 from .const import (
     CONF_ICON,
-    CONF_MODE,
     CONF_REQUIRE_ADMIN,
-    CONF_RESOURCES,
     CONF_SHOW_IN_SIDEBAR,
     CONF_TITLE,
     CONF_URL_PATH,

@@ -38,10 +38,8 @@ CONF_TRACK_NEW = "track_new_calendar"
 
 CONF_CAL_ID = "cal_id"
 
-
 CONF_TRACK = "track"
 CONF_SEARCH = "search"
-
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 CONF_MAX_RESULTS = "max_results"
 

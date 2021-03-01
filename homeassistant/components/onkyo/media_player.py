@@ -118,15 +118,20 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
 
-def _parse_onkyo_tuple(tup):
-    """Parse a tuple returned from the eiscp library."""
-    if len(tup) < 2:
+def _parse_onkyo_payload(payload):
+    """Parse a payload returned from the eiscp library."""
+    if isinstance(payload, bool):
+        # command not supported by the device
+        return False
+
+    if len(payload) < 2:
+        # no value
         return None
 
-    if isinstance(tup[1], str):
-        return tup[1].split(",")
+    if isinstance(payload[1], str):
+        return payload[1].split(",")
 
-    return tup[1]
+    return payload[1]
 
 
 def _tuple_get(tup, index, default=None):
@@ -267,6 +272,8 @@ class OnkyoDevice(MediaPlayerEntity):
         self._reverse_mapping = {value: key for key, value in sources.items()}
         self._attributes = {}
         self._hdmi_out_supported = True
+        self._audio_info_supported = True
+        self._video_info_supported = True
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""
@@ -309,12 +316,14 @@ class OnkyoDevice(MediaPlayerEntity):
         else:
             hdmi_out_raw = []
         preset_raw = self.command("preset query")
-        audio_information_raw = self.command("audio-information query")
-        video_information_raw = self.command("video-information query")
+        if self._audio_info_supported:
+            audio_information_raw = self.command("audio-information query")
+        if self._video_info_supported:
+            video_information_raw = self.command("video-information query")
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
-        sources = _parse_onkyo_tuple(current_source_raw)
+        sources = _parse_onkyo_payload(current_source_raw)
 
         for source in sources:
             if source in self._source_mapping:
@@ -441,7 +450,11 @@ class OnkyoDevice(MediaPlayerEntity):
         self.command(f"hdmi-output-selector={output}")
 
     def _parse_audio_information(self, audio_information_raw):
-        values = _parse_onkyo_tuple(audio_information_raw)
+        values = _parse_onkyo_payload(audio_information_raw)
+        if values is False:
+            self._audio_info_supported = False
+            return
+
         if values:
             info = {
                 "format": _tuple_get(values, 1),
@@ -456,7 +469,11 @@ class OnkyoDevice(MediaPlayerEntity):
             self._attributes.pop(ATTR_AUDIO_INFORMATION, None)
 
     def _parse_video_information(self, video_information_raw):
-        values = _parse_onkyo_tuple(video_information_raw)
+        values = _parse_onkyo_payload(video_information_raw)
+        if values is False:
+            self._video_info_supported = False
+            return
+
         if values:
             info = {
                 "input_resolution": _tuple_get(values, 1),

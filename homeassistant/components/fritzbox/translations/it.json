@@ -5,7 +5,7 @@
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "no_devices_found": "Nessun dispositivo trovato sulla rete",
             "not_supported": "Collegato a AVM FRITZ!Box ma non \u00e8 in grado di controllare i dispositivi Smart Home.",
-            "reauth_successful": "La riautenticazione ha avuto successo"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida"

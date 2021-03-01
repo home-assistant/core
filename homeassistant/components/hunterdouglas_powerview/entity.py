@@ -23,9 +23,10 @@ from .const import (
 class HDEntity(CoordinatorEntity):
     """Base class for hunter douglas entities."""
 
-    def __init__(self, coordinator, device_info, unique_id):
+    def __init__(self, coordinator, device_info, room_name, unique_id):
         """Initialize the entity."""
         super().__init__(coordinator)
+        self._room_name = room_name
         self._unique_id = unique_id
         self._device_info = device_info
 
@@ -45,6 +46,7 @@ class HDEntity(CoordinatorEntity):
                 (dr.CONNECTION_NETWORK_MAC, self._device_info[DEVICE_MAC_ADDRESS])
             },
             "name": self._device_info[DEVICE_NAME],
+            "suggested_area": self._room_name,
             "model": self._device_info[DEVICE_MODEL],
             "sw_version": sw_version,
             "manufacturer": MANUFACTURER,
@@ -54,9 +56,9 @@ class HDEntity(CoordinatorEntity):
 class ShadeEntity(HDEntity):
     """Base class for hunter douglas shade entities."""
 
-    def __init__(self, coordinator, device_info, shade, shade_name):
+    def __init__(self, coordinator, device_info, room_name, shade, shade_name):
         """Initialize the shade."""
-        super().__init__(coordinator, device_info, shade.id)
+        super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name
         self._shade = shade
 
@@ -67,6 +69,7 @@ class ShadeEntity(HDEntity):
         device_info = {
             "identifiers": {(DOMAIN, self._shade.id)},
             "name": self._shade_name,
+            "suggested_area": self._room_name,
             "manufacturer": MANUFACTURER,
             "via_device": (DOMAIN, self._device_info[DEVICE_SERIAL_NUMBER]),
         }

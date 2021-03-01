@@ -115,7 +115,12 @@ class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(
-        self, calendar_service, calendar_id, search, ignore_availability, max_results
+        self,
+        calendar_service,
+        calendar_id,
+        search,
+        ignore_availability,
+        max_results,
     ):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
@@ -124,6 +129,7 @@ class GoogleCalendarData:
         self.ignore_availability = ignore_availability
         self.max_results = max_results
         self.event = None
+        self.other_events = []
 
     def _prepare_query(self):
         try:
@@ -201,6 +207,7 @@ class GoogleCalendarData:
 
             event_start_time = self.get_date_time(new_event["start"])
             event_end_time = self.get_date_time(new_event["end"])
+
             other_events = []
             for item in items:
                 if new_event is not item:

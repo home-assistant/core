@@ -5,21 +5,12 @@ reload:
 
 turn_on:
   description: Turn on script
-  fields:
-    entity_id:
-      description: Name(s) of script to be turned on.
-      example: "script.arrive_home"
+  target:
 
 turn_off:
   description: Turn off script
-  fields:
-    entity_id:
-      description: Name(s) of script to be turned off.
-      example: "script.arrive_home"
+  target:
 
 toggle:
   description: Toggle script
-  fields:
-    entity_id:
-      description: Name(s) of script to be toggled.
-      example: "script.arrive_home"
+  target:

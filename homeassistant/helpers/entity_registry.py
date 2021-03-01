@@ -19,6 +19,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    cast,
 )
 
 import attr
@@ -30,15 +31,17 @@ from homeassistant.const import (
     ATTR_RESTORED,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
-from .singleton import singleton
 from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
@@ -115,6 +118,33 @@ class RegistryEntry:
         """Return if entry is disabled."""
         return self.disabled_by is not None
 
+    @callback
+    def write_unavailable_state(self, hass: HomeAssistantType) -> None:
+        """Write the unavailable state to the state machine."""
+        attrs: Dict[str, Any] = {ATTR_RESTORED: True}
+
+        if self.capabilities is not None:
+            attrs.update(self.capabilities)
+
+        if self.supported_features is not None:
+            attrs[ATTR_SUPPORTED_FEATURES] = self.supported_features
+
+        if self.device_class is not None:
+            attrs[ATTR_DEVICE_CLASS] = self.device_class
+
+        if self.unit_of_measurement is not None:
+            attrs[ATTR_UNIT_OF_MEASUREMENT] = self.unit_of_measurement
+
+        name = self.name or self.original_name
+        if name is not None:
+            attrs[ATTR_FRIENDLY_NAME] = name
+
+        icon = self.icon or self.original_icon
+        if icon is not None:
+            attrs[ATTR_ICON] = icon
+
+        hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
+
 
 class EntityRegistry:
     """Class to hold a registry of entities."""
@@ -127,6 +157,10 @@ class EntityRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
+        )
+        self.hass.bus.async_listen(
+            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
+            self.async_config_entry_disabled_by_changed,
         )
 
     @callback
@@ -285,7 +319,8 @@ class EntityRegistry:
         )
         self.async_schedule_save()
 
-    async def async_device_modified(self, event: Event) -> None:
+    @callback
+    def async_device_modified(self, event: Event) -> None:
         """Handle the removal or update of a device.
 
         Remove entities from the registry that are associated to a device when
@@ -305,9 +340,11 @@ class EntityRegistry:
         if event.data["action"] != "update":
             return
 
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
         device = device_registry.async_get(event.data["device_id"])
-        if not device.disabled:
+
+        # The device may be deleted already if the event handling is late
+        if not device or not device.disabled:
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
@@ -317,9 +354,48 @@ class EntityRegistry:
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
 
+        if device.disabled_by == dr.DISABLED_CONFIG_ENTRY:
+            # Handled by async_config_entry_disabled
+            return
+
+        # Fetch entities which are not already disabled
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
             self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
+
+    @callback
+    def async_config_entry_disabled_by_changed(self, event: Event) -> None:
+        """Handle a config entry being disabled or enabled.
+
+        Disable entities in the registry that are associated to a config entry when
+        the config entry is disabled.
+        """
+        config_entry = self.hass.config_entries.async_get_entry(
+            event.data["config_entry_id"]
+        )
+
+        # The config entry may be deleted already if the event handling is late
+        if not config_entry:
+            return
+
+        if not config_entry.disabled_by:
+            entities = async_entries_for_config_entry(
+                self, event.data["config_entry_id"]
+            )
+            for entity in entities:
+                if entity.disabled_by != DISABLED_CONFIG_ENTRY:
+                    continue
+                self.async_update_entity(entity.entity_id, disabled_by=None)
+            return
+
+        entities = async_entries_for_config_entry(self, event.data["config_entry_id"])
+        for entity in entities:
+            if entity.disabled:
+                # Entity already disabled, do not overwrite
+                continue
+            self.async_update_entity(
+                entity.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
+            )
 
     @callback
     def async_update_entity(
@@ -539,12 +615,26 @@ class EntityRegistry:
             self._add_index(entry)
 
 
-@singleton(DATA_REGISTRY)
+@callback
+def async_get(hass: HomeAssistantType) -> EntityRegistry:
+    """Get entity registry."""
+    return cast(EntityRegistry, hass.data[DATA_REGISTRY])
+
+
+async def async_load(hass: HomeAssistantType) -> None:
+    """Load entity registry."""
+    assert DATA_REGISTRY not in hass.data
+    hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+    await hass.data[DATA_REGISTRY].async_load()
+
+
+@bind_hass
 async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
-    """Create entity registry."""
-    reg = EntityRegistry(hass)
-    await reg.async_load()
-    return reg
+    """Get entity registry.
+
+    This is deprecated and will be removed in the future. Use async_get instead.
+    """
+    return async_get(hass)
 
 
 @callback
@@ -596,11 +686,13 @@ def async_setup_entity_restore(
     """Set up the entity restore mechanism."""
 
     @callback
+    def cleanup_restored_states_filter(event: Event) -> bool:
+        """Clean up restored states filter."""
+        return bool(event.data["action"] == "remove")
+
+    @callback
     def cleanup_restored_states(event: Event) -> None:
         """Clean up restored states."""
-        if event.data["action"] != "remove":
-            return
-
         state = hass.states.get(event.data["entity_id"])
 
         if state is None or not state.attributes.get(ATTR_RESTORED):
@@ -608,7 +700,11 @@ def async_setup_entity_restore(
 
         hass.states.async_remove(event.data["entity_id"], context=event.context)
 
-    hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
+    hass.bus.async_listen(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        cleanup_restored_states,
+        event_filter=cleanup_restored_states_filter,
+    )
 
     if hass.is_running:
         return
@@ -616,36 +712,13 @@ def async_setup_entity_restore(
     @callback
     def _write_unavailable_states(_: Event) -> None:
         """Make sure state machine contains entry for each registered entity."""
-        states = hass.states
-        existing = set(states.async_entity_ids())
+        existing = set(hass.states.async_entity_ids())
 
         for entry in registry.entities.values():
             if entry.entity_id in existing or entry.disabled:
                 continue
 
-            attrs: Dict[str, Any] = {ATTR_RESTORED: True}
-
-            if entry.capabilities is not None:
-                attrs.update(entry.capabilities)
-
-            if entry.supported_features is not None:
-                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
-
-            if entry.device_class is not None:
-                attrs[ATTR_DEVICE_CLASS] = entry.device_class
-
-            if entry.unit_of_measurement is not None:
-                attrs[ATTR_UNIT_OF_MEASUREMENT] = entry.unit_of_measurement
-
-            name = entry.name or entry.original_name
-            if name is not None:
-                attrs[ATTR_FRIENDLY_NAME] = name
-
-            icon = entry.icon or entry.original_icon
-            if icon is not None:
-                attrs[ATTR_ICON] = icon
-
-            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
+            entry.write_unavailable_state(hass)
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)
 

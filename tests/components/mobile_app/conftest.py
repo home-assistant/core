@@ -7,14 +7,6 @@ from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT
 
-from tests.common import mock_device_registry
-
-
-@pytest.fixture
-def registry(hass):
-    """Return a configured device registry."""
-    return mock_device_registry(hass)
-
 
 @pytest.fixture
 async def create_registrations(hass, authed_api_client):

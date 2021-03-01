@@ -70,7 +70,7 @@
                     "allow_uptime_sensors": "Sensory czasu pracy dla klient\u00f3w sieciowych"
                 },
                 "description": "Konfiguracja sensora statystyk",
-                "title": "Opcje UniFi"
+                "title": "Opcje UniFi 3/3"
             }
         }
     }
