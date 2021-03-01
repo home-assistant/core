@@ -3,7 +3,7 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
-from zwave_js_server.exceptions import BaseZwaveJSServerError
+from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -413,6 +413,48 @@ async def test_install_addon(
     )
     assert start_addon.call_count == 1
     assert start_addon.call_args == call(hass, "core_zwave_js")
+
+
+@pytest.mark.parametrize(
+    "addon_version, addon_version_latest, update_calls",
+    [("1.0", "1.1", 1), ("1.0", "1.0", 0)],
+)
+async def test_update_addon(
+    hass,
+    client,
+    addon_info,
+    addon_installed,
+    addon_running,
+    update_addon,
+    addon_options,
+    addon_version,
+    addon_version_latest,
+    update_calls,
+):
+    """Test update the Z-Wave JS add-on during entry setup."""
+    addon_info.return_value["version"] = addon_version
+    addon_info.return_value["version_latest"] = addon_version_latest
+    client.connect.side_effect = InvalidServerVersion("Invalid version")
+    device = "/test"
+    network_key = "abc123"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={
+            "url": "ws://host1:3001",
+            "use_addon": True,
+            "usb_path": device,
+            "network_key": network_key,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert update_addon.call_count == update_calls
 
 
 async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
