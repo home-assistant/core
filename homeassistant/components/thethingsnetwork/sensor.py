@@ -80,7 +80,10 @@ class TtnDataSensor(Entity):
     def state(self):
         """Return the state of the entity."""
         if self._ttn_data_storage.data is not None:
-            return self._state[self._value]
+            try:
+                return self._state[self._value]
+            except KeyError:
+                return None
         return None
 
     @property
