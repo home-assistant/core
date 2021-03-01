@@ -482,7 +482,8 @@ async def test_replay_past_chromecasts(hass):
     assert add_dev1.call_count == 1
 
     add_dev2 = Mock()
-    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2)
+    entry = hass.config_entries.async_entries("cast")[0]
+    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, entry)
     await hass.async_block_till_done()
     assert add_dev2.call_count == 1
 
