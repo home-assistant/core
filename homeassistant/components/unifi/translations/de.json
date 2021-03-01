@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Controller-Site ist bereits konfiguriert"
+            "already_configured": "Controller-Site ist bereits konfiguriert",
+            "configuration_updated": "Konfiguration aktualisiert.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "faulty_credentials": "Ung\u00fcltige Authentifizierung",
