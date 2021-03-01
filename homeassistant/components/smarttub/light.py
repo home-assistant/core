@@ -137,5 +137,5 @@ class SmartTubLight(SmartTubEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        await self.light.set_mode(self.light.LightMode.OFF, 0)
+        await self.light.set_mode(SpaLight.LightMode.OFF, 0)
         await self.coordinator.async_request_refresh()
