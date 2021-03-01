@@ -10,9 +10,7 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -20,7 +18,7 @@ from tests.common import MockConfigEntry, load_fixture
 @pytest.fixture(name="device_registry")
 async def device_registry_fixture(hass):
     """Return the device registry."""
-    return await async_get_device_registry(hass)
+    return async_get_device_registry(hass)
 
 
 @pytest.fixture(name="controller_state", scope="session")

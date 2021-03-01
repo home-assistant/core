@@ -12,9 +12,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 
-BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color"
-EATON_RF9640_ENTITY = "light.allloaddimmer"
-AEON_SMART_SWITCH_LIGHT_ENTITY = "light.smart_switch_6"
+from .common import (
+    AEON_SMART_SWITCH_LIGHT_ENTITY,
+    BULB_6_MULTI_COLOR_LIGHT_ENTITY,
+    EATON_RF9640_ENTITY,
+)
 
 
 async def test_light(hass, client, bulb_6_multi_color, integration):

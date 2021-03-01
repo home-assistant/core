@@ -67,14 +67,17 @@ def register_node_in_dev_reg(
     node: ZwaveNode,
 ) -> None:
     """Register node in dev reg."""
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={get_device_id(client, node)},
-        sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
-        model=node.device_config.label,
-        manufacturer=node.device_config.manufacturer,
-    )
+    params = {
+        "config_entry_id": entry.entry_id,
+        "identifiers": {get_device_id(client, node)},
+        "sw_version": node.firmware_version,
+        "name": node.name or node.device_config.description or f"Node {node.node_id}",
+        "model": node.device_config.label,
+        "manufacturer": node.device_config.manufacturer,
+    }
+    if node.location:
+        params["suggested_area"] = node.location
+    device = dev_reg.async_get_or_create(**params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
