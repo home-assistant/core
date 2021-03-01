@@ -86,7 +86,6 @@ FLOWS = [
     "gogogate2",
     "gpslogger",
     "gree",
-    "griddy",
     "guardian",
     "habitica",
     "hangouts",
