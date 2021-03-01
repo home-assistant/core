@@ -34,14 +34,19 @@ from homeassistant.core import callback
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
+    CHAR_ACTIVE_IDENTIFIER,
+    CHAR_CONFIGURED_NAME,
+    CHAR_CURRENT_VISIBILITY_STATE,
+    CHAR_IDENTIFIER,
+    CHAR_INPUT_SOURCE_TYPE,
+    CHAR_IS_CONFIGURED,
     CHAR_NAME,
-    CHAR_ON,
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
     PROP_MIN_STEP,
     SERV_FANV2,
-    SERV_SWITCH,
+    SERV_INPUT_SOURCE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +76,8 @@ class Fan(HomeAccessory):
             chars.append(CHAR_SWING_MODE)
         if features & SUPPORT_SET_SPEED:
             chars.append(CHAR_ROTATION_SPEED)
+        if preset_modes:
+            chars.append(CHAR_ACTIVE_IDENTIFIER)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
         self.set_primary_service(serv_fan)
@@ -79,7 +86,8 @@ class Fan(HomeAccessory):
         self.char_direction = None
         self.char_speed = None
         self.char_swing = None
-        self.preset_mode_chars = {}
+        self.preset_modes = preset_modes
+        self.char_input_preset_mode = None
 
         if CHAR_ROTATION_DIRECTION in chars:
             self.char_direction = serv_fan.configure_char(
@@ -97,20 +105,21 @@ class Fan(HomeAccessory):
             )
 
         if preset_modes:
-            for preset_mode in preset_modes:
-                preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
-                serv_fan.add_linked_service(preset_serv)
-                preset_serv.configure_char(
-                    CHAR_NAME, value=f"{self.display_name} {preset_mode}"
+            self.char_input_preset_mode = serv_fan.configure_char(
+                CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_preset_mode
+            )
+            for index, preset_mode in enumerate(preset_modes):
+                serv_input = self.add_preload_service(
+                    SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
                 )
-
-                self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
-                    CHAR_ON,
-                    value=False,
-                    setter_callback=lambda value, preset_mode=preset_mode: self.set_preset_mode(
-                        value, preset_mode
-                    ),
-                )
+                serv_fan.add_linked_service(serv_input)
+                serv_input.configure_char(CHAR_CONFIGURED_NAME, value=preset_mode)
+                serv_input.configure_char(CHAR_NAME, value=preset_mode)
+                serv_input.configure_char(CHAR_IDENTIFIER, value=index)
+                serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
+                serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=0)
+                serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
+                _LOGGER.debug("%s: Added preset_mode %s", self.entity_id, preset_mode)
 
         if CHAR_SWING_MODE in chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
@@ -146,17 +155,15 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in char_values:
             self.set_percentage(char_values[CHAR_ROTATION_SPEED])
 
-    def set_preset_mode(self, value, preset_mode):
+    def set_preset_mode(self, value):
         """Set preset_mode if call came from HomeKit."""
+        preset_mode = self.preset_modes[value]
         _LOGGER.debug(
             "%s: Set preset_mode %s to %d", self.entity_id, preset_mode, value
         )
         params = {ATTR_ENTITY_ID: self.entity_id}
-        if value:
-            params[ATTR_PRESET_MODE] = preset_mode
-            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
-        else:
-            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
+        params[ATTR_PRESET_MODE] = preset_mode
+        self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
@@ -232,8 +239,13 @@ class Fan(HomeAccessory):
                 if self.char_swing.value != hk_oscillating:
                     self.char_swing.set_value(hk_oscillating)
 
-        current_preset_mode = new_state.attributes.get(ATTR_PRESET_MODE)
-        for preset_mode, char in self.preset_mode_chars.items():
-            hk_value = 1 if preset_mode == current_preset_mode else 0
-            if char.value != hk_value:
-                char.set_value(hk_value)
+        # Set active preset_mode
+        if self.char_input_preset_mode:
+            current_preset_mode = new_state.attributes.get(ATTR_PRESET_MODE)
+            _LOGGER.debug(
+                "%s: Set current preset_mode to %s", self.entity_id, current_preset_mode
+            )
+            if current_preset_mode in self.preset_modes:
+                index = self.preset_modes.index(current_preset_mode)
+                if self.char_input_preset_mode.value != index:
+                    self.char_input_preset_mode.set_value(index)
