@@ -157,7 +157,7 @@ class Stream:
 
     def check_idle(self):
         """Reset access token if all providers are idle."""
-        if all([p.idle for p in self._outputs.values()]):
+        if all(p.idle for p in self._outputs.values()):
             self.access_token = None
 
     def start(self):
