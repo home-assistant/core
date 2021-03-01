@@ -160,7 +160,7 @@ class AddonManager:
     async def async_uninstall_addon(self) -> None:
         """Uninstall the Z-Wave JS add-on."""
         try:
-            await async_uninstall_addon(ADDON_SLUG)
+            await async_uninstall_addon(self._hass, ADDON_SLUG)
         except HassioAPIError as err:
             raise AddonError("Failed to uninstall the Z-Wave JS add-on") from err
 
