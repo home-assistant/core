@@ -1,6 +1,6 @@
 """Config flow for Philips TV integration."""
 import platform
-from typing import Any, Dict, Optional, Tuple, TypedDict
+from typing import Any, Dict, Optional, Tuple
 
 from haphilipsjs import ConnectionFailure, PairingFailure, PhilipsTV
 import voluptuous as vol
@@ -21,12 +21,6 @@ from .const import (  # pylint:disable=unused-import
     CONST_APP_NAME,
     DOMAIN,
 )
-
-
-class FlowUserDict(TypedDict):
-    """Data for user step."""
-
-    host: str
 
 
 async def validate_input(
@@ -57,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hub: Optional[PhilipsTV] = None
         self._pair_state: Any = None
 
-    async def async_step_import(self, conf: Dict[str, Any]):
+    async def async_step_import(self, conf: dict) -> dict:
         """Import a configuration from config.yaml."""
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == conf[CONF_HOST]:
@@ -78,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=self._current,
         )
 
-    async def async_step_pair(self, user_input: Optional[Dict] = None):
+    async def async_step_pair(self, user_input: Optional[dict] = None) -> dict:
         """Attempt to pair with device."""
         assert self._hub
 
@@ -129,7 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current[CONF_PASSWORD] = password
         return await self._async_create_current()
 
-    async def async_step_user(self, user_input: Optional[FlowUserDict] = None):
+    async def async_step_user(self, user_input: Optional[dict] = None) -> dict:
         """Handle the initial step."""
         errors = {}
         if user_input:
