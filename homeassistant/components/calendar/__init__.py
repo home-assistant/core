@@ -85,7 +85,9 @@ def normalize_event(event):
     normalized_event["location"] = event.get("location", "")
     normalized_event["description"] = event.get("description", "")
     normalized_event["all_day"] = "date" in event["start"]
-    normalized_event["other_events"] = event.get("other_events", [])
+
+    if "other_events" in event:
+        normalized_event["other_events"] = event.get("other_events", [])
 
     return normalized_event
 
@@ -138,8 +140,9 @@ def get_normalized_event(event):
         "end_time": event["end"],
         "location": event["location"],
         "description": event["description"],
-        "other_events": event["other_events"],
     }
+    if "other_events" in event:
+        normalized_event["other_events"] = event["other_events"]
 
     return normalized_event
 
