@@ -34,24 +34,6 @@ def connect_timeout_fixture():
         yield timeout
 
 
-@pytest.fixture(name="stop_addon")
-def stop_addon_fixture():
-    """Mock stop add-on."""
-    with patch(
-        "homeassistant.components.zwave_js.addon.async_stop_addon"
-    ) as stop_addon:
-        yield stop_addon
-
-
-@pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture():
-    """Mock uninstall add-on."""
-    with patch(
-        "homeassistant.components.zwave_js.addon.async_uninstall_addon"
-    ) as uninstall_addon:
-        yield uninstall_addon
-
-
 async def test_entry_setup_unload(hass, client, integration):
     """Test the integration set up and unload."""
     entry = integration
