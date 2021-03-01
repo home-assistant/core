@@ -29,6 +29,7 @@ ATTR_COUNTER = "counter"
 
 
 class ColorTempModes(Enum):
+    # pylint: disable=invalid-name
     """Color temperature modes for config validation."""
 
     ABSOLUTE = "DPT-7.600"
@@ -36,6 +37,7 @@ class ColorTempModes(Enum):
 
 
 class SupportedPlatforms(Enum):
+    # pylint: disable=invalid-name
     """Supported platforms."""
 
     BINARY_SENSOR = "binary_sensor"

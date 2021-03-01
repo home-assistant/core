@@ -17,7 +17,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.3.1
+HAP-python==3.3.2
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -108,7 +108,7 @@ adafruit-circuitpython-mcp230xx==2.2.2
 adb-shell[async]==0.2.1
 
 # homeassistant.components.alarmdecoder
-adext==0.3
+adext==0.4.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
@@ -705,9 +705,6 @@ greeneye_monitor==2.1
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
 
-# homeassistant.components.griddy
-griddypower==0.1.0
-
 # homeassistant.components.growatt_server
 growattServer==0.1.1
 
@@ -920,7 +917,7 @@ maxcube-api==0.3.0
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==2.3.0
+mcstatus==5.1.1
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -2044,7 +2041,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.4
+simplisafe-python==9.6.7
 
 # homeassistant.components.sisyphus
 sisyphus-control==3.0
@@ -2115,7 +2112,7 @@ spiderpy==1.4.2
 spotcrime==1.0.4
 
 # homeassistant.components.spotify
-spotipy==2.16.1
+spotipy==2.17.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql

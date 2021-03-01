@@ -81,6 +81,31 @@ async def test_if_fires_on_topic_and_payload_match(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_on_topic_and_payload_match2(hass, calls):
+    """Test if message is fired on topic and payload match.
+
+    Make sure a payload which would render as a non string can still be matched.
+    """
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "mqtt",
+                    "topic": "test-topic",
+                    "payload": "0",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_mqtt_message(hass, "test-topic", "0")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_if_fires_on_templated_topic_and_payload_match(hass, calls):
     """Test if message is fired on templated topic and payload match."""
     assert await async_setup_component(

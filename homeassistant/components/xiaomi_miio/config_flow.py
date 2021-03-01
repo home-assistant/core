@@ -1,5 +1,6 @@
 """Config flow to configure Xiaomi Miio."""
 import logging
+from re import search
 
 import voluptuous as vol
 
@@ -24,7 +25,6 @@ from .device import ConnectXiaomiDevice
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GATEWAY_NAME = "Xiaomi Gateway"
-DEFAULT_DEVICE_NAME = "Xiaomi Device"
 
 DEVICE_SETTINGS = {
     vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
@@ -57,14 +57,21 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = discovery_info.get("name")
         self.host = discovery_info.get("host")
         self.mac = discovery_info.get("properties", {}).get("mac")
+        if self.mac is None:
+            poch = discovery_info.get("properties", {}).get("poch", "")
+            result = search(r"mac=\w+", poch)
+            if result is not None:
+                self.mac = result.group(0).split("=")[1]
 
         if not name or not self.host or not self.mac:
             return self.async_abort(reason="not_xiaomi_miio")
 
+        self.mac = format_mac(self.mac)
+
         # Check which device is discovered.
         for gateway_model in MODELS_GATEWAY:
             if name.startswith(gateway_model.replace(".", "-")):
-                unique_id = format_mac(self.mac)
+                unique_id = self.mac
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
@@ -76,12 +83,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for device_model in MODELS_ALL_DEVICES:
             if name.startswith(device_model.replace(".", "-")):
-                unique_id = format_mac(self.mac)
+                unique_id = self.mac
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
                 self.context.update(
-                    {"title_placeholders": {"name": f"Miio Device {self.host}"}}
+                    {"title_placeholders": {"name": f"{device_model} {self.host}"}}
                 )
 
                 return await self.async_step_device()
@@ -119,7 +126,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 for gateway_model in MODELS_GATEWAY:
                     if model.startswith(gateway_model):
                         unique_id = self.mac
-                        await self.async_set_unique_id(unique_id)
+                        await self.async_set_unique_id(
+                            unique_id, raise_on_progress=False
+                        )
                         self._abort_if_unique_id_configured()
                         return self.async_create_entry(
                             title=DEFAULT_GATEWAY_NAME,
@@ -133,12 +142,14 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         )
 
                 # Setup all other Miio Devices
-                name = user_input.get(CONF_NAME, DEFAULT_DEVICE_NAME)
+                name = user_input.get(CONF_NAME, model)
 
                 for device_model in MODELS_ALL_DEVICES:
                     if model.startswith(device_model):
                         unique_id = self.mac
-                        await self.async_set_unique_id(unique_id)
+                        await self.async_set_unique_id(
+                            unique_id, raise_on_progress=False
+                        )
                         self._abort_if_unique_id_configured()
                         return self.async_create_entry(
                             title=name,
