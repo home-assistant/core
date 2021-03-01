@@ -1827,6 +1827,9 @@ python-nmap==0.6.1
 # homeassistant.components.ozw
 python-openzwave-mqtt[mqtt-client]==1.4.0
 
+# homeassistant.components.picnic
+python-picnic-api==0.2.2
+
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.2
 

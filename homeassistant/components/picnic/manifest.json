@@ -1,0 +1,16 @@
+{
+  "domain": "picnic",
+  "name": "Picnic",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/picnic",
+  "requirements": [
+    "python-picnic-api==0.2.2"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@corneyl"
+  ]
+}
