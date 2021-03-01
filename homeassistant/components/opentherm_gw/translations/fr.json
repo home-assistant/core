@@ -20,8 +20,10 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Temp\u00e9rature du sol",
-                    "precision": "Pr\u00e9cision"
+                    "floor_temperature": "Temp\u00E9rature du sol",
+                    "read_precision": "Pr\u00E9cision de la temp\u00E9rature actuelle",
+                    "set_precision": "Pr\u00E9cision de r\u00E9glage de la consigne",
+                    "setpoint_ovrd_mode": "Mode de neutralisation du point de consigne"
                 },
                 "description": "Options pour la passerelle OpenTherm"
             }

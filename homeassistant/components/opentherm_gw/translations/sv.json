@@ -19,8 +19,10 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Golvetemperatur",
-                    "precision": "Precision"
+                    "floor_temperature": "Golvtemperatur",
+                    "read_precision": "Precision f\u00F6r aktuell temperatur",
+                    "set_precision": "Precision f\u00F6r inst\u00E4llning av b\u00F6rv\u00E4rde",
+                    "setpoint_ovrd_mode": "B\u00F6rv\u00E4rde \u00C5sidos\u00E4tt l\u00E4ge"
                 },
                 "description": "Alternativ f\u00f6r OpenTherm Gateway"
             }

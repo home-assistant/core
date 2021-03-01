@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Teplota podlahy",
-                    "precision": "P\u0159esnost"
+                    "read_precision": "P\u0159esnost pro aktu\u00E1ln\u00ED teplotu",
+                    "set_precision": "P\u0159esnost pro nastaven\u00ED po\u017Eadovan\u00E9 hodnoty",
+                    "setpoint_ovrd_mode": "Re\u017Eim p\u0159eps\u00E1n\u00ED po\u017Eadovan\u00E9 hodnoty"
                 },
                 "description": "Mo\u017enosti br\u00e1ny OpenTherm"
             }

@@ -20,7 +20,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura nadstropja",
-                    "precision": "Natan\u010dnost"
+                    "read_precision": "Natan\u010Dnost trenutne temperature",
+                    "set_precision": "Natan\u010Dnost nastavitve nastavljene vrednosti",
+                    "setpoint_ovrd_mode": "Na\u010Din preglasitve nastavljene vrednosti"
                 },
                 "description": "Mo\u017enosti za prehod OpenTherm"
             }

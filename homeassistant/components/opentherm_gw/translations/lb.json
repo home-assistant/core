@@ -20,8 +20,10 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Buedem Temperatur",
-                    "precision": "Pr\u00e4zisioun"
+                    "floor_temperature": "Buedemperatur",
+                    "read_precision": "Pr\u00E4zisioun fir aktuell Temperatur",
+                    "set_precision": "Pr\u00E4zisioun fir Setpoint ze setzen",
+                    "setpoint_ovrd_mode": "Setpoint Iwwerschreiwe Modus"
                 },
                 "description": "Optioune fir OpenTherm Gateway"
             }

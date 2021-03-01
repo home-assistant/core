@@ -146,14 +146,11 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ),
                     vol.Optional(
-                    	CONF_SETPOINT_OVRD_MODE, 
-                    	default=self.config_entry.options.get(CONF_SETPOINT_OVRD_MODE, CONF_OVRD_MODE_TEMPORARY),
-                    ): vol.All(
-                    	vol.Coerce(float),
-                    	vol.In(
-            				[CONF_OVRD_MODE_TEMPORARY, CONF_OVRD_MODE_CONSTANT]
-            			),
-        			),
+                        CONF_SETPOINT_OVRD_MODE, 
+                        default=self.config_entry.options.get(CONF_SETPOINT_OVRD_MODE, CONF_OVRD_MODE_TEMPORARY),
+                    ): vol.In(
+                        [CONF_OVRD_MODE_TEMPORARY, CONF_OVRD_MODE_CONSTANT]
+                    ),
                     vol.Optional(
                         CONF_FLOOR_TEMP,
                         default=self.config_entry.options.get(CONF_FLOOR_TEMP, False),

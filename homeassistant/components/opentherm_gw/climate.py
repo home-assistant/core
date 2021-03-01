@@ -29,14 +29,14 @@ from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import DOMAIN
 from .const import (
-	CONF_FLOOR_TEMP, 
-	CONF_READ_PRECISION, 
-	CONF_SET_PRECISION,
-	CONF_SETPOINT_OVRD_MODE,
-	CONF_OVRD_MODE_TEMPORARY,
-	CONF_OVRD_MODE_CONSTANT,
-	DATA_GATEWAYS, 
-	DATA_OPENTHERM_GW
+    CONF_FLOOR_TEMP, 
+    CONF_READ_PRECISION, 
+    CONF_SET_PRECISION,
+    CONF_SETPOINT_OVRD_MODE,
+    CONF_OVRD_MODE_TEMPORARY,
+    CONF_OVRD_MODE_CONSTANT,
+    DATA_GATEWAYS, 
+    DATA_OPENTHERM_GW
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -247,7 +247,11 @@ class OpenThermClimate(ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return self.temp_set_precision
+        if self.temp_set_precision is not None and self.temp_set_precision != 0:
+            return self.temp_set_precision
+        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
+            return PRECISION_HALVES
+        return PRECISION_WHOLE
 
     @property
     def preset_mode(self):
@@ -272,13 +276,13 @@ class OpenThermClimate(ClimateEntity):
             if temp == self.target_temperature:
                 return
             if self.setpoint_ovrd_mode == CONF_OVRD_MODE_TEMPORARY:
-            	self._new_target_temperature = await self._gateway.gateway.set_target_temp(
-                	temp, True
-            	)
+                self._new_target_temperature = await self._gateway.gateway.set_target_temp(
+                    temp, True
+                )
             if self.setpoint_ovrd_mode == CONF_OVRD_MODE_CONSTANT:
-            	self._new_target_temperature = await self._gateway.gateway.set_target_temp(
-                	temp, False
-            	)
+                self._new_target_temperature = await self._gateway.gateway.set_target_temp(
+                    temp, False
+                )
             self.async_write_ha_state()
 
     @property

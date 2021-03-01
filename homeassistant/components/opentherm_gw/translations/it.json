@@ -20,8 +20,10 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Temperatura del pavimento",
-                    "precision": "Precisione"
+                    "Floor_temperature": "temperatura del pavimento",
+                    "read_precision": "Precisione per la temperatura corrente",
+                    "set_precision": "Precisione per l'impostazione del setpoint",
+                    "setpoint_ovrd_mode": "Modalit\u00E0 sostituzione setpoint"
                 },
                 "description": "Opzioni per OpenTherm Gateway"
             }

@@ -17,7 +17,10 @@
         "step": {
             "init": {
                 "data": {
-                    "precision": "Precis\u00e3o"
+                    "floor_temperature": "Floor temperature",
+                    "read_precision": "Precis\u00E3o para temperatura atual",
+                    "set_precision": "Precis\u00E3o para definir o ponto de ajuste",
+                    "setpoint_ovrd_mode": "Modo de substitui\u00E7\u00E3o do ponto de ajuste"
                 }
             }
         }

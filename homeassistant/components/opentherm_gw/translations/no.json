@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Etasje Temperatur",
-                    "precision": "Presisjon"
+                    "read_precision": "Presisjon for n\u00E5v\u00E6rende temperatur",
+                    "set_precision": "Presisjon for innstilling av settpunkt",
+                    "setpoint_ovrd_mode": "Setpoint Override Mode"
                 },
                 "description": "Alternativer for OpenTherm Gateway"
             }

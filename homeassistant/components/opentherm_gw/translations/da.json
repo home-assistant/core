@@ -20,7 +20,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Gulvtemperatur",
-                    "precision": "Pr\u00e6cision"
+                    "read_precision": "Pr\u00E6cision for aktuel temperatur",
+                    "set_precision": "Pr\u00E6cision til indstilling af s\u00E6tpunkt",
+                    "setpoint_ovrd_mode": "Setpoint Override Mode"
                 },
                 "description": "Indstillinger for OpenTherm Gateway"
             }
