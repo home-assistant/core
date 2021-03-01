@@ -352,7 +352,7 @@ async def test_existing_node_not_ready(hass, client, multisensor_6, device_regis
 
 
 async def test_start_addon(
-    hass, addon_installed, addon_options, set_addon_options, start_addon, caplog
+    hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
 ):
     """Test start the Z-Wave JS add-on during entry setup."""
     device = "/test"
@@ -373,6 +373,40 @@ async def test_start_addon(
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert install_addon.call_count == 0
+    assert set_addon_options.call_count == 1
+    assert set_addon_options.call_args == call(
+        hass, "core_zwave_js", {"options": addon_options}
+    )
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call(hass, "core_zwave_js")
+
+
+async def test_install_addon(
+    hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
+):
+    """Test install and start the Z-Wave JS add-on during entry setup."""
+    addon_installed.return_value["version"] = None
+    device = "/test"
+    network_key = "abc123"
+    addon_options = {
+        "device": device,
+        "network_key": network_key,
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert install_addon.call_count == 1
+    assert install_addon.call_args == call(hass, "core_zwave_js")
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
         hass, "core_zwave_js", {"options": addon_options}
