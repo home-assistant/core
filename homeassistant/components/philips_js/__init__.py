@@ -150,7 +150,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             and self.api.on
             and self.api.notify_change_supported
         ):
-            self._notify_future = self.hass.loop.create_task(self._notify_task())
+            self._notify_future = asyncio.create_task(self._notify_task())
 
     @callback
     def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
