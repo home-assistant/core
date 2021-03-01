@@ -5,7 +5,6 @@ from xknx.io import DEFAULT_MCAST_PORT
 from xknx.telegram.address import GroupAddress, IndividualAddress
 
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_ID,
     CONF_HOST,
@@ -21,6 +20,7 @@ from .const import (
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
     CONTROLLER_MODES,
+    KNX_ADDRESS,
     PRESET_MODES,
     ColorTempModes,
 )
@@ -256,7 +256,7 @@ class ExposeSchema:
     SCHEMA = vol.Schema(
         {
             vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(int, float, str),
-            vol.Required(CONF_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
@@ -277,7 +277,7 @@ class FanSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_validator,
             vol.Optional(CONF_OSCILLATION_ADDRESS): ga_validator,
             vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_validator,
@@ -315,7 +315,7 @@ class LightSchema:
 
     COLOR_SCHEMA = vol.Schema(
         {
-            vol.Optional(CONF_ADDRESS): ga_validator,
+            vol.Optional(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_validator,
             vol.Required(CONF_BRIGHTNESS_ADDRESS): ga_validator,
             vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_validator,
@@ -326,7 +326,7 @@ class LightSchema:
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_ADDRESS): ga_validator,
+                vol.Optional(KNX_ADDRESS): ga_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_validator,
                 vol.Optional(CONF_BRIGHTNESS_ADDRESS): ga_validator,
                 vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): ga_validator,
@@ -358,16 +358,16 @@ class LightSchema:
             vol.Schema(
                 {
                     vol.Required(CONF_INDIVIDUAL_COLORS): {
-                        vol.Required(CONF_RED): {vol.Required(CONF_ADDRESS): object},
-                        vol.Required(CONF_GREEN): {vol.Required(CONF_ADDRESS): object},
-                        vol.Required(CONF_BLUE): {vol.Required(CONF_ADDRESS): object},
+                        vol.Required(CONF_RED): {vol.Required(KNX_ADDRESS): object},
+                        vol.Required(CONF_GREEN): {vol.Required(KNX_ADDRESS): object},
+                        vol.Required(CONF_BLUE): {vol.Required(KNX_ADDRESS): object},
                     },
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
             vol.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): object,
+                    vol.Required(KNX_ADDRESS): object,
                 },
                 extra=vol.ALLOW_EXTRA,
             ),
@@ -383,7 +383,7 @@ class NotifySchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
         }
     )
 
@@ -397,7 +397,7 @@ class SceneSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
             vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
         }
     )
@@ -432,7 +432,7 @@ class SwitchSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(CONF_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_validator,
             vol.Optional(CONF_INVERT): cv.boolean,
         }

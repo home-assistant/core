@@ -18,7 +18,6 @@ from xknx.telegram import AddressFilter, GroupAddress, Telegram
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -32,7 +31,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ServiceCallType
 
-from .const import DOMAIN, SupportedPlatforms
+from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import create_knx_exposure
 from .factory import create_knx_device
 from .schema import (
@@ -150,7 +149,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Required(CONF_ADDRESS): vol.All(
+            vol.Required(KNX_ADDRESS): vol.All(
                 cv.ensure_list,
                 [ga_validator],
             ),
@@ -161,7 +160,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
     vol.Schema(
         # without type given payload is treated as raw bytes
         {
-            vol.Required(CONF_ADDRESS): vol.All(
+            vol.Required(KNX_ADDRESS): vol.All(
                 cv.ensure_list,
                 [ga_validator],
             ),
@@ -174,7 +173,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
 
 SERVICE_KNX_READ_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ADDRESS): vol.All(
+        vol.Required(KNX_ADDRESS): vol.All(
             cv.ensure_list,
             [ga_validator],
         )
@@ -183,7 +182,7 @@ SERVICE_KNX_READ_SCHEMA = vol.Schema(
 
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ADDRESS): vol.All(
+        vol.Required(KNX_ADDRESS): vol.All(
             cv.ensure_list,
             [ga_validator],
         ),
@@ -200,7 +199,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
     vol.Schema(
         # for removing only `address` is required
         {
-            vol.Required(CONF_ADDRESS): ga_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
             vol.Required(SERVICE_KNX_ATTR_REMOVE): vol.All(cv.boolean, True),
         },
         extra=vol.ALLOW_EXTRA,
@@ -421,7 +420,7 @@ class KNXModule:
 
     async def service_event_register_modify(self, call):
         """Service for adding or removing a GroupAddress to the knx_event filter."""
-        attr_address = call.data.get(CONF_ADDRESS)
+        attr_address = call.data.get(KNX_ADDRESS)
         group_addresses = map(GroupAddress, attr_address)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
@@ -444,7 +443,7 @@ class KNXModule:
 
     async def service_exposure_register_modify(self, call):
         """Service for adding or removing an exposure to KNX bus."""
-        group_address = call.data.get(CONF_ADDRESS)
+        group_address = call.data.get(KNX_ADDRESS)
 
         if call.data.get(SERVICE_KNX_ATTR_REMOVE):
             try:
@@ -475,7 +474,7 @@ class KNXModule:
 
     async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-        attr_address = call.data.get(CONF_ADDRESS)
+        attr_address = call.data.get(KNX_ADDRESS)
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
 
@@ -499,7 +498,7 @@ class KNXModule:
 
     async def service_read_to_knx_bus(self, call):
         """Service for sending a GroupValueRead telegram to the KNX bus."""
-        for address in call.data.get(CONF_ADDRESS):
+        for address in call.data.get(KNX_ADDRESS):
             telegram = Telegram(
                 destination_address=GroupAddress(address),
                 payload=GroupValueRead(),
