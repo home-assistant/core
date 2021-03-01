@@ -11,6 +11,7 @@ from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_PUSH,
+    DISABLED_USER,
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_RETRY,
@@ -489,6 +490,53 @@ async def test_update_addon(
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
     assert update_addon.call_count == update_calls
+
+
+@pytest.mark.parametrize(
+    "stop_addon_side_effect, entry_state",
+    [
+        (None, ENTRY_STATE_NOT_LOADED),
+        (HassioAPIError("Boom"), ENTRY_STATE_LOADED),
+    ],
+)
+async def test_stop_addon(
+    hass,
+    client,
+    addon_installed,
+    addon_running,
+    addon_options,
+    stop_addon,
+    stop_addon_side_effect,
+    entry_state,
+):
+    """Test stop the Z-Wave JS add-on on entry unload if entry is disabled."""
+    stop_addon.side_effect = stop_addon_side_effect
+    device = "/test"
+    network_key = "abc123"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={
+            "url": "ws://host1:3001",
+            "use_addon": True,
+            "usb_path": device,
+            "network_key": network_key,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_LOADED
+
+    await hass.config_entries.async_set_disabled_by(entry.entry_id, DISABLED_USER)
+    await hass.async_block_till_done()
+
+    assert entry.state == entry_state
+    assert stop_addon.call_count == 1
+    assert stop_addon.call_args == call(hass, "core_zwave_js")
 
 
 async def test_remove_entry(hass, stop_addon, uninstall_addon, caplog):
