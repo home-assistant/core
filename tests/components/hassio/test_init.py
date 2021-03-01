@@ -393,7 +393,7 @@ async def test_entry_load_and_unload(hass):
     assert BINARY_SENSOR_DOMAIN in hass.config.components
     assert ADDONS_COORDINATOR in hass.data
 
-    assert await config_entry.async_unload(hass)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert ADDONS_COORDINATOR not in hass.data
 
