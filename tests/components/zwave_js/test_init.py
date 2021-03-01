@@ -415,6 +415,34 @@ async def test_install_addon(
     assert start_addon.call_args == call(hass, "core_zwave_js")
 
 
+@pytest.mark.parametrize("addon_info_side_effect", [HassioAPIError("Boom")])
+async def test_start_addon_failure(
+    hass,
+    addon_installed,
+    install_addon,
+    addon_options,
+    set_addon_options,
+    start_addon,
+):
+    """Test failure to start the Z-Wave JS add-on during entry setup."""
+    device = "/test"
+    network_key = "abc123"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        connection_class=CONN_CLASS_LOCAL_PUSH,
+        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert install_addon.call_count == 0
+    assert start_addon.call_count == 0
+
+
 @pytest.mark.parametrize(
     "addon_version, addon_version_latest, update_calls",
     [("1.0", "1.1", 1), ("1.0", "1.0", 0)],
