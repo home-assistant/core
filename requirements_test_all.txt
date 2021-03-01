@@ -372,9 +372,6 @@ google-nest-sdm==0.2.12
 # homeassistant.components.gree
 greeclimate==0.10.3
 
-# homeassistant.components.griddy
-griddypower==0.1.0
-
 # homeassistant.components.profiler
 guppy3==3.1.0
 
