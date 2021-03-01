@@ -70,13 +70,13 @@ async def test_sensors(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.flipr_myfliprid_water_temp")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:coolant-temperature"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is TEMP_CELSIUS
     assert state.state == "10.5"
 
     state = hass.states.get("sensor.flipr_myfliprid_date_measure")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:clock"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2021-02-15 09:10:32+00:00"
 
@@ -96,13 +96,13 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "off"
+    assert state.state == "on"
 
     state = hass.states.get("binary_sensor.flipr_myfliprid_chlorine_status")
     assert state
     assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "on"
+    assert state.state == "off"
 
     entry = registry.async_get("binary_sensor.flipr_myfliprid_chlorine_status")
     assert entry
