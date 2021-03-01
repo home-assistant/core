@@ -305,11 +305,11 @@ ephem==3.7.7.0
 # homeassistant.components.epson
 epson-projector==0.2.3
 
-# homeassistant.components.rpi_fanshim
-# fanshim==0.0.5
-
 # homeassistant.components.faa_delays
 faadelays==0.0.6
+
+# homeassistant.components.rpi_fanshim
+# fanshim==0.0.5
 
 # homeassistant.components.feedreader
 feedparser==6.0.2
