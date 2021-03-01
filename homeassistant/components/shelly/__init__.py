@@ -108,6 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             "Setup for device %s will resume when device is online", entry.title
         )
         device.subscribe_updates(_async_device_online)
+        await device.coap_request("s")
     else:
         # Restore sensors for sleeping device
         _LOGGER.debug("Setting up offline device %s", entry.title)
