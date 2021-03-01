@@ -5,6 +5,8 @@ import asyncio
 from functools import partial
 from typing import Callable, Optional, cast
 
+from awesomeversion import AwesomeVersion
+
 from homeassistant.components.hassio import (
     async_get_addon_discovery_info,
     async_get_addon_info,
@@ -171,7 +173,7 @@ class AddonManager:
         if addon_version is None:
             raise AddonError("Z-Wave JS add-on is not installed")
 
-        if addon_version >= addon_latest_version:
+        if AwesomeVersion(addon_version) >= AwesomeVersion(addon_latest_version):
             return
 
         try:
