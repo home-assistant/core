@@ -121,6 +121,10 @@ def add_poe_entities(controller, async_add_entities, clients, known_poe_clients)
 
         client = controller.api.clients[mac]
 
+        # Try to identify new clients powered by POE.
+        # Known POE clients have been created in previous HASS sessions.
+        # If port_poe is None the port does not support POE
+        # If poe_enable is False we can't know if a POE client is available for control.
         if mac not in known_poe_clients and (
             mac in controller.wireless_clients
             or client.sw_mac not in devices
