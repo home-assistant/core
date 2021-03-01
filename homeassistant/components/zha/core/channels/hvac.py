@@ -434,7 +434,7 @@ class ThermostatChannel(ZigbeeChannel):
         if not isinstance(res, list):
             return False
 
-        return all([record.status == Status.SUCCESS for record in res[0]])
+        return all(record.status == Status.SUCCESS for record in res[0])
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(hvac.UserInterface.cluster_id)
