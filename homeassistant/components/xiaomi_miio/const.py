@@ -109,6 +109,7 @@ SERVICE_HUMIDIFIER_SET_LED_BRIGHTNESS = "humidifier_set_led_brightness"
 SERVICE_HUMIDIFIER_SET_LED_OFF = "humidifier_set_led_off"
 SERVICE_HUMIDIFIER_SET_LED_ON = "humidifier_set_led_on"
 SERVICE_HUMIDIFIER_SET_TARGET_HUMIDITY = "humidifier_set_target_humidity"
+SERVICE_HUMIDIFIER_SET_MOTOR_SPEED = "humidifier_set_motor_speed"
 
 # Light Services
 SERVICE_SET_SCENE = "light_set_scene"
