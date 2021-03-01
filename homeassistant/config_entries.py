@@ -802,11 +802,14 @@ class ConfigEntries:
         entry.disabled_by = disabled_by
         self._async_schedule_save()
 
+        # Unload the config entry, then fire an event
+        reload_result = await self.async_reload(entry_id)
+
         self.hass.bus.async_fire(
             EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED, {"config_entry_id": entry_id}
         )
 
-        return await self.async_reload(entry_id)
+        return reload_result
 
     @callback
     def async_update_entry(
