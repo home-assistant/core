@@ -50,9 +50,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    _current = {}
-    _hub: PhilipsTV
-    _pair_state: Any
+    def __init__(self) -> None:
+        """Initialize flow."""
+        super().__init__()
+        self._current = {}
+        self._hub: Optional[PhilipsTV] = None
+        self._pair_state: Any = None
 
     async def async_step_import(self, conf: Dict[str, Any]):
         """Import a configuration from config.yaml."""
