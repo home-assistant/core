@@ -491,8 +491,11 @@ class HomeKit:
         # as pyhap uses a random one until state is restored
         if os.path.exists(persist_file):
             self.driver.load()
-        else:
-            self.driver.persist()
+            self.driver.state.config_version += 1
+            if self.driver.state.config_version > 65535:
+                self.driver.state.config_version = 1
+
+        self.driver.persist()
 
     def reset_accessories(self, entity_ids):
         """Reset the accessory to load the latest configuration."""
