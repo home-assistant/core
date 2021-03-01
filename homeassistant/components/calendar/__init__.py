@@ -85,6 +85,7 @@ def normalize_event(event):
     normalized_event["location"] = event.get("location", "")
     normalized_event["description"] = event.get("description", "")
     normalized_event["all_day"] = "date" in event["start"]
+    normalized_event["other_events"] = event.get("other_events", [])
 
     return normalized_event
 
@@ -126,6 +127,23 @@ def is_offset_reached(event):
     return start + event["offset_time"] <= dt.now(start.tzinfo)
 
 
+def get_normalized_event(event):
+    """Get a normalized calendar event."""
+    event = normalize_event(event)
+
+    normalized_event = {
+        "message": event["message"],
+        "all_day": event["all_day"],
+        "start_time": event["start"],
+        "end_time": event["end"],
+        "location": event["location"],
+        "description": event["description"],
+        "other_events": event["other_events"],
+    }
+
+    return normalized_event
+
+
 class CalendarEventDevice(Entity):
     """A calendar event device."""
 
@@ -141,15 +159,7 @@ class CalendarEventDevice(Entity):
         if event is None:
             return None
 
-        event = normalize_event(event)
-        return {
-            "message": event["message"],
-            "all_day": event["all_day"],
-            "start_time": event["start"],
-            "end_time": event["end"],
-            "location": event["location"],
-            "description": event["description"],
-        }
+        return get_normalized_event(event)
 
     @property
     def state(self):

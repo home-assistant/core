@@ -9,19 +9,17 @@ from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     CalendarEventDevice,
     calculate_offset,
+    get_normalized_event,
     is_offset_reached,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.util import Throttle, dt
 
 from . import (
     CONF_CAL_ID,
-    CONF_DEVICE_ID,
-    CONF_ENTITIES,
     CONF_IGNORE_AVAILABILITY,
     CONF_MAX_RESULTS,
-    CONF_NAME,
-    CONF_OFFSET,
     CONF_SEARCH,
     CONF_TRACK,
     DEFAULT_CONF_OFFSET,
@@ -163,6 +161,17 @@ class GoogleCalendarData:
                 event_list.append(item)
         return event_list
 
+    @staticmethod
+    def get_date_time(input_value):
+        """Parse and format dateTime."""
+        output_date_time = None
+        if "dateTime" in input_value:
+            output_date_time = dt.parse_datetime(input_value["dateTime"]).isoformat("T")
+        else:
+            output_date_time = dt.parse_datetime(input_value["date"]).isoformat("T")
+
+        return output_date_time
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
@@ -187,3 +196,19 @@ class GoogleCalendarData:
                 break
 
         self.event = new_event
+
+        if new_event is not None:
+
+            event_start_time = self.get_date_time(new_event["start"])
+            event_end_time = self.get_date_time(new_event["end"])
+            other_events = []
+            for item in items:
+                if new_event is not item:
+
+                    start_time = self.get_date_time(item["start"])
+                    end_time = self.get_date_time(item["end"])
+
+                    if start_time >= event_start_time and end_time <= event_end_time:
+                        other_events.append(get_normalized_event(item))
+
+            self.event["other_events"] = other_events
