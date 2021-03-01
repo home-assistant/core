@@ -108,18 +108,18 @@ class AddonManager:
         addon_info = await self.async_get_addon_info()
         return addon_info["version"] is not None
 
-    async def async_get_addon_config(self) -> dict:
-        """Get Z-Wave JS add-on config."""
+    async def async_get_addon_options(self) -> dict:
+        """Get Z-Wave JS add-on options."""
         addon_info = await self.async_get_addon_info()
         return cast(dict, addon_info["options"])
 
-    async def async_set_addon_config(self, config: dict) -> None:
-        """Set Z-Wave JS add-on config."""
+    async def async_set_addon_options(self, config: dict) -> None:
+        """Set Z-Wave JS add-on options."""
         options = {"options": config}
         try:
             await async_set_addon_options(self._hass, ADDON_SLUG, options)
         except HassioAPIError as err:
-            raise AddonError("Failed to set the Z-Wave JS add-on config") from err
+            raise AddonError("Failed to set the Z-Wave JS add-on options") from err
 
     async def async_install_addon(self) -> None:
         """Install the Z-Wave JS add-on."""
@@ -198,15 +198,15 @@ class AddonManager:
 
     async def async_setup_addon(self, usb_path: str, network_key: str) -> None:
         """Configure and start Z-Wave JS add-on."""
-        addon_config = await self.async_get_addon_config()
+        addon_options = await self.async_get_addon_options()
 
-        new_addon_config = {
+        new_addon_options = {
             CONF_ADDON_DEVICE: usb_path,
             CONF_ADDON_NETWORK_KEY: network_key,
         }
 
-        if new_addon_config != addon_config:
-            await self.async_set_addon_config(new_addon_config)
+        if new_addon_options != addon_options:
+            await self.async_set_addon_options(new_addon_options)
 
         await self.async_start_addon()
 
