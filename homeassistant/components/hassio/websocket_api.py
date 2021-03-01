@@ -7,6 +7,10 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
     ATTR_DATA,
@@ -20,6 +24,7 @@ from .const import (
     WS_TYPE,
     WS_TYPE_API,
     WS_TYPE_EVENT,
+    WS_TYPE_SUBSCRIBE,
 )
 from .handler import HassIO
 
@@ -36,6 +41,26 @@ def async_load_websocket_api(hass: HomeAssistant):
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, websocket_supervisor_event)
     websocket_api.async_register_command(hass, websocket_supervisor_api)
+    websocket_api.async_register_command(hass, websocket_subscribe)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
+async def websocket_subscribe(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+):
+    """Subscribe to supervisor events."""
+
+    @callback
+    def forward_messages(data):
+        """Forward events to websocket."""
+        connection.send_message(websocket_api.event_message(msg[WS_ID], data))
+
+    connection.subscriptions[msg[WS_ID]] = async_dispatcher_connect(
+        hass, EVENT_SUPERVISOR_EVENT, forward_messages
+    )
+    connection.send_message(websocket_api.result_message(msg[WS_ID]))
 
 
 @websocket_api.async_response
@@ -49,7 +74,7 @@ async def websocket_supervisor_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ):
     """Publish events from the Supervisor."""
-    hass.bus.async_fire(EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
+    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
     connection.send_result(msg[WS_ID])
 
 

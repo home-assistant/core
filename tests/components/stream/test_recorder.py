@@ -193,6 +193,18 @@ async def test_recorder_discontinuity(tmpdir):
     assert os.path.exists(filename)
 
 
+async def test_recorder_no_segements(tmpdir):
+    """Test recorder behavior with a stream failure which causes no segments."""
+    # Setup
+    filename = f"{tmpdir}/test.mp4"
+
+    # Run
+    recorder_save_worker("unused-file", [])
+
+    # Assert
+    assert not os.path.exists(filename)
+
+
 async def test_record_stream_audio(
     hass, hass_client, stream_worker_sync, record_worker_sync
 ):

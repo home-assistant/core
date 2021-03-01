@@ -11,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_ID,
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_TIMEOUT,
     STATE_NOT_HOME,
@@ -25,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DISTANCE = "distance"
 ATTR_ROOM = "room"
 
-CONF_DEVICE_ID = "device_id"
 CONF_AWAY_TIMEOUT = "away_timeout"
 
 DEFAULT_AWAY_TIMEOUT = 0

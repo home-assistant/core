@@ -27,7 +27,7 @@ UPDATER_URL = "https://updater.home-assistant.io/"
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: {
+        vol.Optional(DOMAIN, default={}): {
             vol.Optional(CONF_REPORTING, default=True): cv.boolean,
             vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
         }
@@ -56,13 +56,13 @@ async def async_setup(hass, config):
         # This component only makes sense in release versions
         _LOGGER.info("Running on 'dev', only analytics will be submitted")
 
-    conf = config.get(DOMAIN, {})
-    if conf.get(CONF_REPORTING):
+    conf = config[DOMAIN]
+    if conf[CONF_REPORTING]:
         huuid = await hass.helpers.instance_id.async_get()
     else:
         huuid = None
 
-    include_components = conf.get(CONF_COMPONENT_REPORTING)
+    include_components = conf[CONF_COMPONENT_REPORTING]
 
     async def check_new_version() -> Updater:
         """Check if a new version is available and report if one is."""

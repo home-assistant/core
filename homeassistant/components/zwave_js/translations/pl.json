@@ -6,6 +6,7 @@
             "addon_install_failed": "Nie uda\u0142o si\u0119 zainstalowa\u0107 dodatku Z-Wave JS",
             "addon_missing_discovery_info": "Brak informacji wykrywania dodatku Z-Wave JS",
             "addon_set_config_failed": "Nie uda\u0142o si\u0119 skonfigurowa\u0107 Z-Wave JS",
+            "addon_start_failed": "Nie uda\u0142o si\u0119 uruchomi\u0107 dodatku Z-Wave JS.",
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
@@ -17,7 +18,8 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "progress": {
-            "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 kilka minut."
+            "install_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 instalacja dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 kilka minut.",
+            "start_addon": "Poczekaj, a\u017c zako\u0144czy si\u0119 uruchamianie dodatku Z-Wave JS. Mo\u017ce to zaj\u0105\u0107 chwil\u0119."
         },
         "step": {
             "configure_addon": {
@@ -44,6 +46,9 @@
                 },
                 "description": "Czy chcesz skorzysta\u0107 z dodatku Z-Wave JS Supervisor?",
                 "title": "Wybierz metod\u0119 po\u0142\u0105czenia"
+            },
+            "start_addon": {
+                "title": "Dodatek Z-Wave JS uruchamia si\u0119."
             },
             "user": {
                 "data": {

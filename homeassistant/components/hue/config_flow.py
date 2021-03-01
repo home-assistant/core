@@ -18,6 +18,8 @@ from .bridge import authenticate_bridge
 from .const import (  # pylint: disable=unused-import
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
     LOGGER,
 )
@@ -246,13 +248,13 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_HUE_GROUPS, False
+                            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_ALLOW_UNREACHABLE,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_UNREACHABLE, False
+                            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
                         ),
                     ): bool,
                 }

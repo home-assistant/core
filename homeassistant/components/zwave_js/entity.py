@@ -32,7 +32,7 @@ class ZWaveBaseEntity(Entity):
         self.info = info
         self._name = self.generate_name()
         self._unique_id = get_unique_id(
-            self.client.driver.controller.home_id, self.info.value_id
+            self.client.driver.controller.home_id, self.info.primary_value.value_id
         )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}

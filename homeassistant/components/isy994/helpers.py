@@ -97,10 +97,8 @@ def _check_for_insteon_type(
     platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
-            ]
+            device_type.startswith(t)
+            for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
         ):
 
             # Hacky special-cases for certain devices with different platforms
@@ -164,10 +162,8 @@ def _check_for_zwave_cat(
     platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
-            ]
+            device_type.startswith(t)
+            for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
         ):
 
             hass_isy_data[ISY994_NODES][platform].append(node)

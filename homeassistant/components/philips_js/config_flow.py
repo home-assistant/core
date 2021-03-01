@@ -1,35 +1,47 @@
 """Config flow for Philips TV integration."""
-import logging
-from typing import Any, Dict, Optional, TypedDict
+import platform
+from typing import Any, Dict, Optional, Tuple, TypedDict
 
-from haphilipsjs import ConnectionFailure, PhilipsTV
+from haphilipsjs import ConnectionFailure, PairingFailure, PhilipsTV
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_API_VERSION, CONF_HOST
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_USERNAME,
+)
 
-from .const import DOMAIN  # pylint:disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
+from . import LOGGER
+from .const import (  # pylint:disable=unused-import
+    CONF_SYSTEM,
+    CONST_APP_ID,
+    CONST_APP_NAME,
+    DOMAIN,
+)
 
 
 class FlowUserDict(TypedDict):
     """Data for user step."""
 
     host: str
-    api_version: int
 
 
-async def validate_input(hass: core.HomeAssistant, data: FlowUserDict):
+async def validate_input(
+    hass: core.HomeAssistant, host: str, api_version: int
+) -> Tuple[Dict, PhilipsTV]:
     """Validate the user input allows us to connect."""
-    hub = PhilipsTV(data[CONF_HOST], data[CONF_API_VERSION])
+    hub = PhilipsTV(host, api_version)
 
-    await hass.async_add_executor_job(hub.getSystem)
+    await hub.getSystem()
+    await hub.setTransport(hub.secured_transport)
 
-    if hub.system is None:
-        raise ConnectionFailure
+    if not hub.system:
+        raise ConnectionFailure("System data is empty")
 
-    return hub.system
+    return hub
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -38,7 +50,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    _default = {}
+    _current = {}
+    _hub: PhilipsTV
+    _pair_state: Any
 
     async def async_step_import(self, conf: Dict[str, Any]):
         """Import a configuration from config.yaml."""
@@ -53,34 +67,99 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def _async_create_current(self):
+
+        system = self._current[CONF_SYSTEM]
+        return self.async_create_entry(
+            title=f"{system['name']} ({system['serialnumber']})",
+            data=self._current,
+        )
+
+    async def async_step_pair(self, user_input: Optional[Dict] = None):
+        """Attempt to pair with device."""
+        assert self._hub
+
+        errors = {}
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_PIN): str,
+            }
+        )
+
+        if not user_input:
+            try:
+                self._pair_state = await self._hub.pairRequest(
+                    CONST_APP_ID,
+                    CONST_APP_NAME,
+                    platform.node(),
+                    platform.system(),
+                    "native",
+                )
+            except PairingFailure as exc:
+                LOGGER.debug(str(exc))
+                return self.async_abort(
+                    reason="pairing_failure",
+                    description_placeholders={"error_id": exc.data.get("error_id")},
+                )
+            return self.async_show_form(
+                step_id="pair", data_schema=schema, errors=errors
+            )
+
+        try:
+            username, password = await self._hub.pairGrant(
+                self._pair_state, user_input[CONF_PIN]
+            )
+        except PairingFailure as exc:
+            LOGGER.debug(str(exc))
+            if exc.data.get("error_id") == "INVALID_PIN":
+                errors[CONF_PIN] = "invalid_pin"
+                return self.async_show_form(
+                    step_id="pair", data_schema=schema, errors=errors
+                )
+
+            return self.async_abort(
+                reason="pairing_failure",
+                description_placeholders={"error_id": exc.data.get("error_id")},
+            )
+
+        self._current[CONF_USERNAME] = username
+        self._current[CONF_PASSWORD] = password
+        return await self._async_create_current()
+
     async def async_step_user(self, user_input: Optional[FlowUserDict] = None):
         """Handle the initial step."""
         errors = {}
         if user_input:
-            self._default = user_input
+            self._current = user_input
             try:
-                system = await validate_input(self.hass, user_input)
-            except ConnectionFailure:
+                hub = await validate_input(
+                    self.hass, user_input[CONF_HOST], user_input[CONF_API_VERSION]
+                )
+            except ConnectionFailure as exc:
+                LOGGER.error(str(exc))
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(system["serialnumber"])
-                self._abort_if_unique_id_configured(updates=user_input)
 
-                data = {**user_input, "system": system}
+                await self.async_set_unique_id(hub.system["serialnumber"])
+                self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=f"{system['name']} ({system['serialnumber']})", data=data
-                )
+                self._current[CONF_SYSTEM] = hub.system
+                self._current[CONF_API_VERSION] = hub.api_version
+                self._hub = hub
+
+                if hub.pairing_type == "digest_auth_pairing":
+                    return await self.async_step_pair()
+                return await self._async_create_current()
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=self._default.get(CONF_HOST)): str,
+                vol.Required(CONF_HOST, default=self._current.get(CONF_HOST)): str,
                 vol.Required(
-                    CONF_API_VERSION, default=self._default.get(CONF_API_VERSION)
-                ): vol.In([1, 6]),
+                    CONF_API_VERSION, default=self._current.get(CONF_API_VERSION, 1)
+                ): vol.In([1, 5, 6]),
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
