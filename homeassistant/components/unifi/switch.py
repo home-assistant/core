@@ -225,6 +225,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         return (
             self.poe_mode is not None
             and self.controller.available
+            and self.client.sw_port
             and self.client.sw_mac
             and self.client.sw_mac in self.controller.api.devices
         )
@@ -256,15 +257,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     @property
     def port(self):
         """Shortcut to the switch port that client is connected to."""
-        try:
-            return self.device.ports[self.client.sw_port]
-        except (AttributeError, KeyError, TypeError):
-            _LOGGER.warning(
-                "Entity %s reports faulty device %s or port %s",
-                self.entity_id,
-                self.client.sw_mac,
-                self.client.sw_port,
-            )
+        return self.device.ports[self.client.sw_port]
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
