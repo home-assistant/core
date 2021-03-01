@@ -53,7 +53,7 @@ async def test_filtration_cycles(spa, setup_entry, hass):
     assert state is not None
     assert state.state == "inactive"
     assert state.attributes["duration"] == 4
-    assert state.attributes["last_updated"] is not None
+    assert state.attributes["cycle_last_updated"] is not None
     assert state.attributes["mode"] == "normal"
     assert state.attributes["start_hour"] == 2
 
@@ -71,7 +71,7 @@ async def test_filtration_cycles(spa, setup_entry, hass):
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "inactive"
-    assert state.attributes["last_updated"] is not None
+    assert state.attributes["cycle_last_updated"] is not None
     assert state.attributes["mode"] == "away"
 
     await hass.services.async_call(

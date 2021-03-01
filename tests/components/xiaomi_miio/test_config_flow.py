@@ -6,10 +6,7 @@ from miio import DeviceException
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
-from homeassistant.components.xiaomi_miio.config_flow import (
-    DEFAULT_DEVICE_NAME,
-    DEFAULT_GATEWAY_NAME,
-)
+from homeassistant.components.xiaomi_miio.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 
 ZEROCONF_NAME = "name"
@@ -21,6 +18,7 @@ TEST_TOKEN = "12345678901234567890123456789012"
 TEST_NAME = "Test_Gateway"
 TEST_MODEL = const.MODELS_GATEWAY[0]
 TEST_MAC = "ab:cd:ef:gh:ij:kl"
+TEST_MAC_DEVICE = "abcdefghijkl"
 TEST_GATEWAY_ID = TEST_MAC
 TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
@@ -294,7 +292,7 @@ async def test_config_flow_step_device_manual_model_succes(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["title"] == overwrite_model
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
@@ -328,7 +326,7 @@ async def config_flow_device_success(hass, model_to_test):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["title"] == model_to_test
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
@@ -346,7 +344,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         data={
             zeroconf.ATTR_HOST: TEST_HOST,
             ZEROCONF_NAME: zeroconf_name_to_test,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
+            ZEROCONF_PROP: {"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
         },
     )
 
@@ -368,7 +366,7 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == DEFAULT_DEVICE_NAME
+    assert result["title"] == model_to_test
     assert result["data"] == {
         const.CONF_FLOW_TYPE: const.CONF_DEVICE,
         CONF_HOST: TEST_HOST,
