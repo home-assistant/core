@@ -495,6 +495,9 @@ class HomeKit:
         if os.path.exists(persist_file):
             self.driver.load()
         else:
+            self.driver.state.config_version += 1
+            if self.driver.state.config_version > 65535:
+                self.driver.state.config_version = 1
             self.driver.persist()
 
     def reset_accessories(self, entity_ids):
