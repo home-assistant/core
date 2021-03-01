@@ -19,7 +19,7 @@ def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
 
     """
     if item not in ordered_list:
-        raise ValueError
+        raise ValueError(f'The item "{item}"" is not in "{ordered_list}"')
 
     list_len = len(ordered_list)
     list_position = ordered_list.index(item) + 1
@@ -42,7 +42,7 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
     """
     list_len = len(ordered_list)
     if not list_len:
-        raise ValueError
+        raise ValueError("The ordered list is empty")
 
     for offset, speed in enumerate(ordered_list):
         list_position = offset + 1
