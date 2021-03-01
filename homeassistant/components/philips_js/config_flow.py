@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "native",
                 )
             except PairingFailure as exc:
-                LOGGER.debug(str(exc))
+                LOGGER.debug(exc)
                 return self.async_abort(
                     reason="pairing_failure",
                     description_placeholders={"error_id": exc.data.get("error_id")},
@@ -107,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._pair_state, user_input[CONF_PIN]
             )
         except PairingFailure as exc:
-            LOGGER.debug(str(exc))
+            LOGGER.debug(exc)
             if exc.data.get("error_id") == "INVALID_PIN":
                 errors[CONF_PIN] = "invalid_pin"
                 return self.async_show_form(
@@ -133,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, user_input[CONF_HOST], user_input[CONF_API_VERSION]
                 )
             except ConnectionFailure as exc:
-                LOGGER.error(str(exc))
+                LOGGER.error(exc)
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
