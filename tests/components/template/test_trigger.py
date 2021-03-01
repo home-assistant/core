@@ -135,6 +135,40 @@ async def test_if_not_fires_when_true_at_setup(hass, calls):
     assert len(calls) == 0
 
 
+async def test_if_not_fires_when_true_at_setup_variables(hass, calls):
+    """Test for not firing during startup."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"entity": "test.entity"},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ is_state(entity|default("test.entity2"), "hello") }}',
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    # The trigger will fire if the entity variable is not defined at setup
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set("test.entity", "goodbye", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The trigger will not fire if the entity variable is not defined
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_if_not_fires_because_fail(hass, calls):
     """Test for not firing after TemplateError."""
     hass.states.async_set("test.number", "1")
