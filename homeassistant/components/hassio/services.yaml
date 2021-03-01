@@ -46,6 +46,18 @@ addon_stop:
       selector:
         addon:
 
+addon_update:
+  name: Update add-on.
+  description: Update add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.
+  fields:
+    addon:
+      name: Add-on
+      required: true
+      description: The add-on slug.
+      example: core_ssh
+      selector:
+        addon:
+
 host_reboot:
   name: Reboot the host system.
   description: Reboot the host system.

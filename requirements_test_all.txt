@@ -375,9 +375,6 @@ google-nest-sdm==0.2.12
 # homeassistant.components.gree
 greeclimate==0.10.3
 
-# homeassistant.components.griddy
-griddypower==0.1.0
-
 # homeassistant.components.profiler
 guppy3==3.1.0
 
@@ -480,7 +477,7 @@ luftdaten==0.6.4
 mbddns==0.1.2
 
 # homeassistant.components.minecraft_server
-mcstatus==2.3.0
+mcstatus==5.1.1
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.0.1
@@ -1093,7 +1090,7 @@ speedtest-cli==2.1.2
 spiderpy==1.4.2
 
 # homeassistant.components.spotify
-spotipy==2.16.1
+spotipy==2.17.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
