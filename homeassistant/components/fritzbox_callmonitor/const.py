@@ -15,6 +15,7 @@ ICON_PHONE = "mdi:phone"
 ATTR_PREFIXES = "prefixes"
 
 FRITZ_ACTION_GET_INFO = "GetInfo"
+FRITZ_ATTR_NAME = "name"
 FRITZ_ATTR_SERIAL_NUMBER = "NewSerialNumber"
 FRITZ_SERVICE_DEVICE_INFO = "DeviceInfo"
 
