@@ -2115,7 +2115,7 @@ spiderpy==1.4.2
 spotcrime==1.0.4
 
 # homeassistant.components.spotify
-spotipy==2.16.1
+spotipy==2.17.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
