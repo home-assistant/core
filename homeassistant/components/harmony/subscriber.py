@@ -36,6 +36,7 @@ class HarmonySubscriberMixin:
         """Acquire the lock."""
         await self._activity_lock.acquire()
 
+    @callback
     def async_unlock_start_activity(self):
         """Release the lock."""
         if self._activity_lock.locked():
