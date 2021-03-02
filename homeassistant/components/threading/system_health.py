@@ -13,7 +13,6 @@ def async_register(
     register.async_register_info(async_system_health_info)
 
 
-@callback
-def async_system_health_info(hass):
+async def async_system_health_info(hass):
     """Get info for the info page."""
     return {thread.ident: thread.name for thread in threading.enumerate()}
