@@ -193,7 +193,6 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
 class MeteoFranceAlertSensor(MeteoFranceSensor):
     """Representation of a Meteo-France alert sensor."""
 
-    # pylint: disable=super-init-not-called
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):
         """Initialize the Meteo-France sensor."""
         super().__init__(sensor_type, coordinator)

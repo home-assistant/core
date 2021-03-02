@@ -553,7 +553,6 @@ class HyperionPriorityLight(HyperionBaseLight):
                 return True
         return False
 
-    # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
         """Determine whether to allow a Hyperion priority to update entity attributes."""
         # Black is treated as 'off' (and Home Assistant does not support selecting black
