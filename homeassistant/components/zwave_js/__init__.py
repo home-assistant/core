@@ -51,6 +51,8 @@ from .services import ZWaveServices
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_START_PLATFORM_TASK = "start_platform_task"
+DATA_CONNECT_FAILED_LOGGED = "connect_failed_logged"
+DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -256,26 +258,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
+    entry_hass_data: dict = {}
+    hass.data[DOMAIN][entry.entry_id] = entry_hass_data
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
             await client.connect()
     except InvalidServerVersion as err:
-        LOGGER.error("Invalid server version: %s", err)
+        if not entry_hass_data.get(DATA_INVALID_SERVER_VERSION_LOGGED):
+            LOGGER.error("Invalid server version: %s", err)
+            entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = True
         if use_addon:
             async_ensure_addon_updated(hass)
         raise ConfigEntryNotReady from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
-        LOGGER.error("Failed to connect: %s", err)
+        if not entry_hass_data.get(DATA_CONNECT_FAILED_LOGGED):
+            LOGGER.error("Failed to connect: %s", err)
+            entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = True
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
 
     unsubscribe_callbacks: List[Callable] = []
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_UNSUBSCRIBE: unsubscribe_callbacks,
-    }
+    entry_hass_data[DATA_CLIENT] = client
+    entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
 
     services = ZWaveServices(hass, ent_reg)
     services.async_register()
@@ -302,7 +308,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listen_task = asyncio.create_task(
             client_listen(hass, entry, client, driver_ready)
         )
-        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT_LISTEN_TASK] = listen_task
+        entry_hass_data[DATA_CLIENT_LISTEN_TASK] = listen_task
         unsubscribe_callbacks.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
@@ -344,7 +350,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     platform_task = hass.async_create_task(start_platforms())
-    hass.data[DOMAIN][entry.entry_id][DATA_START_PLATFORM_TASK] = platform_task
+    entry_hass_data[DATA_START_PLATFORM_TASK] = platform_task
 
     return True
 
