@@ -62,10 +62,10 @@ CONF_MODEL = "model"
 
 ATTR_MODEL = "model"
 
-MODE_HIGH = "High"
-MODE_SILENT = "Silent"
-MODE_MEDIUM = "Medium"
 MODE_AUTO = "Auto"
+MODE_HIGH = "High"
+MODE_LOW = "Low"
+MODE_MEDIUM = "Medium"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -471,11 +471,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4
-            self._available_modes = [
-                mode.name
-                for mode in AirhumidifierOperationMode
-                if mode is not AirhumidifierOperationMode.Strong
-            ]
+            self._available_modes = [MODE_AUTO, MODE_LOW, MODE_MEDIUM, MODE_HIGH]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
@@ -605,10 +601,10 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
     MODE_MAPPING = {
-        AirhumidifierMiotOperationMode.Low: MODE_SILENT,
-        AirhumidifierMiotOperationMode.Mid: MODE_MEDIUM,
-        AirhumidifierMiotOperationMode.High: MODE_HIGH,
         AirhumidifierMiotOperationMode.Auto: MODE_AUTO,
+        AirhumidifierMiotOperationMode.High: MODE_HIGH,
+        AirhumidifierMiotOperationMode.Low: MODE_LOW,
+        AirhumidifierMiotOperationMode.Mid: MODE_MEDIUM,
     }
 
     REVERSE_MODE_MAPPING = {v: k for k, v in MODE_MAPPING.items()}
