@@ -346,11 +346,6 @@ class XiaomiGenericDevice(XiaomiMiioEntity, HumidifierEntity):
         return DEVICE_CLASS_HUMIDIFIER
 
     @property
-    def target_humidity(self):
-        """Return the humidity we try to reach."""
-        return self._target_humidity
-
-    @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
         return DEFAULT_MIN_HUMIDITY
@@ -517,6 +512,11 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
     def mode(self):
         """Return the current mode."""
         return self._mode.name
+
+    @property
+    def target_humidity(self):
+        """Return the humidity we try to reach."""
+        return self._target_humidity
 
     async def async_set_mode(self, mode: str) -> None:
         """Set the speed of the fan."""
