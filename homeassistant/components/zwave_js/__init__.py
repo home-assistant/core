@@ -258,8 +258,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
-    entry_hass_data: dict = {}
-    hass.data[DOMAIN][entry.entry_id] = entry_hass_data
+    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
@@ -278,6 +277,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
+        entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
+        entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False        
 
     unsubscribe_callbacks: List[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
