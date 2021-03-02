@@ -8,6 +8,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "freebox"
+SERVICE_REBOOT = "reboot"
 
 APP_DESC = {
     "app_id": "hass",
