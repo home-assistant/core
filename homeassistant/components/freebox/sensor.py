@@ -199,14 +199,11 @@ class FreeboxDiskSensor(FreeboxSensor):
         sensor_type: str,
         sensor: Dict[str, any],
     ) -> None:
-        """Initialize a Freebox call sensor."""
+        """Initialize a Freebox disk sensor."""
         super().__init__(router, sensor_type, sensor)
         self._disk = disk
         self._partition = partition
         self._name = f"{partition['label']} {sensor[SENSOR_NAME]}"
-        self._unit = sensor[SENSOR_UNIT]
-        self._icon = sensor[SENSOR_ICON]
-        self._device_class = sensor[SENSOR_DEVICE_CLASS]
         self._unique_id = f"{self._router.mac} {sensor_type} {self._disk['id']} {self._partition['id']}"
 
     @property
