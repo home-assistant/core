@@ -4,12 +4,7 @@ from enum import Enum
 from functools import partial
 import logging
 
-from miio import (
-    AirFresh,
-    AirPurifier,
-    AirPurifierMiot,
-    DeviceException,
-)
+from miio import AirFresh, AirPurifier, AirPurifierMiot, DeviceException
 from miio.airfresh import (
     LedBrightness as AirfreshLedBrightness,
     OperationMode as AirfreshOperationMode,
@@ -285,8 +280,8 @@ FEATURE_SET_LEARN_MODE = 64
 FEATURE_SET_VOLUME = 128
 FEATURE_RESET_FILTER = 256
 FEATURE_SET_EXTRA_FEATURES = 512
-FEATURE_SET_FAN_LEVEL = 4096
-FEATURE_SET_MOTOR_SPEED = 8192
+FEATURE_SET_FAN_LEVEL = 1024
+FEATURE_SET_MOTOR_SPEED = 2048
 
 FEATURE_FLAGS_AIRPURIFIER = (
     FEATURE_SET_BUZZER
