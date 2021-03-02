@@ -3,13 +3,15 @@ from enum import Enum
 import logging
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity
+from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
+# the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
-ATTR_LAST_UPDATED = "last_updated"
+ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 ATTR_MODE = "mode"
+# the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
 
 
@@ -42,18 +44,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubSensor(SmartTubEntity):
-    """Generic and base class for SmartTub sensors."""
-
-    def __init__(self, coordinator, spa, sensor_name, attr_name):
-        """Initialize the entity."""
-        super().__init__(coordinator, spa, sensor_name)
-        self._attr_name = attr_name
-
-    @property
-    def _state(self):
-        """Retrieve the underlying state from the spa."""
-        return getattr(self.spa_status, self._attr_name)
+class SmartTubSensor(SmartTubSensorBase):
+    """Generic class for SmartTub status sensors."""
 
     @property
     def state(self) -> str:
@@ -83,7 +75,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         state = self._state
         return {
             ATTR_DURATION: state.duration,
-            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
             ATTR_START_HOUR: state.start_hour,
         }
@@ -108,6 +100,6 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         """Return the state attributes."""
         state = self._state
         return {
-            ATTR_LAST_UPDATED: state.last_updated.isoformat(),
+            ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
         }

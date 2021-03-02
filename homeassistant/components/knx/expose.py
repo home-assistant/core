@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
+from .const import KNX_ADDRESS
 from .schema import ExposeSchema
 
 
@@ -23,11 +24,11 @@ def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> Union["KNXExposeSensor", "KNXExposeTime"]:
     """Create exposures from config."""
-    expose_type = config.get(ExposeSchema.CONF_KNX_EXPOSE_TYPE)
-    entity_id = config.get(CONF_ENTITY_ID)
+    address = config[KNX_ADDRESS]
     attribute = config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
+    entity_id = config.get(CONF_ENTITY_ID)
+    expose_type = config.get(ExposeSchema.CONF_KNX_EXPOSE_TYPE)
     default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
-    address = config.get(ExposeSchema.CONF_KNX_EXPOSE_ADDRESS)
 
     exposure: Union["KNXExposeSensor", "KNXExposeTime"]
     if expose_type.lower() in ["time", "date", "datetime"]:
@@ -83,6 +84,7 @@ class KNXExposeSensor:
         """Prepare for deletion."""
         if self._remove_listener is not None:
             self._remove_listener()
+            self._remove_listener = None
         if self.device is not None:
             self.device.shutdown()
 

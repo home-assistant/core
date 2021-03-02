@@ -1,6 +1,5 @@
 """Test Home Assistant yaml loader."""
 import io
-import logging
 import os
 import unittest
 from unittest.mock import patch
@@ -13,14 +12,6 @@ import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_config_dir, patch_yaml_files
-
-
-@pytest.fixture(autouse=True)
-def mock_credstash():
-    """Mock credstash so it doesn't connect to the internet."""
-    with patch.object(yaml_loader, "credstash") as mock_credstash:
-        mock_credstash.getSecret.return_value = None
-        yield mock_credstash
 
 
 def test_simple_list():
@@ -294,20 +285,6 @@ def load_yaml(fname, string):
         return load_yaml_config_file(fname)
 
 
-class FakeKeyring:
-    """Fake a keyring class."""
-
-    def __init__(self, secrets_dict):
-        """Store keyring dictionary."""
-        self._secrets = secrets_dict
-
-    # pylint: disable=protected-access
-    def get_password(self, domain, name):
-        """Retrieve password."""
-        assert domain == yaml._SECRET_NAMESPACE
-        return self._secrets.get(name)
-
-
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
 
@@ -394,27 +371,6 @@ class TestSecrets(unittest.TestCase):
                 os.path.join(self._sub_folder_path, "sub.yaml"),
                 "http:\n  api_password: !secret test",
             )
-
-    def test_secrets_keyring(self):
-        """Test keyring fallback & get_password."""
-        yaml_loader.keyring = None  # Ensure its not there
-        yaml_str = "http:\n  api_password: !secret http_pw_keyring"
-        with pytest.raises(HomeAssistantError):
-            load_yaml(self._yaml_path, yaml_str)
-
-        yaml_loader.keyring = FakeKeyring({"http_pw_keyring": "yeah"})
-        _yaml = load_yaml(self._yaml_path, yaml_str)
-        assert {"http": {"api_password": "yeah"}} == _yaml
-
-    @patch.object(yaml_loader, "credstash")
-    def test_secrets_credstash(self, mock_credstash):
-        """Test credstash fallback & get_password."""
-        mock_credstash.getSecret.return_value = "yeah"
-        yaml_str = "http:\n  api_password: !secret http_pw_credstash"
-        _yaml = load_yaml(self._yaml_path, yaml_str)
-        log = logging.getLogger()
-        log.error(_yaml["http"])
-        assert {"api_password": "yeah"} == _yaml["http"]
 
     def test_secrets_logger_removed(self):
         """Ensure logger: debug was removed."""

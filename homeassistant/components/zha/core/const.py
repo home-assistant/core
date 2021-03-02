@@ -176,6 +176,7 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
 
 class RadioType(enum.Enum):
+    # pylint: disable=invalid-name
     """Possible options for radio type."""
 
     znp = (

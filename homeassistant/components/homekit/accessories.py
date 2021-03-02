@@ -71,6 +71,7 @@ from .const import (
     TYPE_VALVE,
 )
 from .util import (
+    accessory_friendly_name,
     convert_to_float,
     dismiss_setup_message,
     format_sw_version,
@@ -489,12 +490,13 @@ class HomeBridge(Bridge):
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, hass, entry_id, bridge_name, **kwargs):
+    def __init__(self, hass, entry_id, bridge_name, entry_title, **kwargs):
         """Initialize a AccessoryDriver object."""
         super().__init__(**kwargs)
         self.hass = hass
         self._entry_id = entry_id
         self._bridge_name = bridge_name
+        self._entry_title = entry_title
 
     def pair(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
@@ -506,10 +508,14 @@ class HomeDriver(AccessoryDriver):
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
+
+        if self.state.paired:
+            return
+
         show_setup_message(
             self.hass,
             self._entry_id,
-            self._bridge_name,
+            accessory_friendly_name(self._entry_title, self.accessory),
             self.state.pincode,
             self.accessory.xhm_uri(),
         )

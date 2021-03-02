@@ -1,19 +1,23 @@
 # Describes the format for available counter services
 
 decrement:
-  description: Decrement a counter
+  name: Decrement
+  description: Decrement a counter.
   target:
 
 increment:
-  description: Increment a counter
+  name: Increment
+  description: Increment a counter.
   target:
 
 reset:
-  description: Reset a counter
+  name: Reset
+  description: Reset a counter.
   target:
 
 configure:
-  description: Change counter parameters
+  name: Configure
+  description: Change counter parameters.
   target:
   fields:
     minimum:

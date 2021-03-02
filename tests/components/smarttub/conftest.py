@@ -48,6 +48,7 @@ def mock_spa():
             "setTemperature": 39,
             "water": {"temperature": 38},
             "heater": "ON",
+            "online": True,
             "heatMode": "AUTO",
             "state": "NORMAL",
             "primaryFiltration": {

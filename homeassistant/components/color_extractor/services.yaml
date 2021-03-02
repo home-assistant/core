@@ -1,7 +1,8 @@
 turn_on:
+  name: Turn on
   description:
     Set the light RGB to the predominant color found in the image provided by
-    URL or file path
+    URL or file path.
   target:
   fields:
     color_extract_url:

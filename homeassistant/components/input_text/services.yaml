@@ -1,5 +1,6 @@
 set_value:
-  description: Set the value of an input text entity
+  name: Set
+  description: Set the value of an input text entity.
   target:
   fields:
     value:
@@ -11,4 +12,5 @@ set_value:
         text:
 
 reload:
+  name: Reload
   description: Reload the input_text configuration.

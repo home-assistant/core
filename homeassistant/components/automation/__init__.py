@@ -72,7 +72,8 @@ from homeassistant.util.dt import parse_datetime
 from .config import AutomationConfig, async_validate_config_item
 
 # Not used except by packages to check config structure
-from .config import PLATFORM_SCHEMA  # noqa
+from .config import PLATFORM_SCHEMA  # noqa: F401
+from .config import async_validate_config_item
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,

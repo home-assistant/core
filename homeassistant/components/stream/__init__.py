@@ -136,7 +136,7 @@ class Stream:
 
             @callback
             def idle_callback():
-                if not self.keepalive and fmt in self._outputs:
+                if (not self.keepalive or fmt == "recorder") and fmt in self._outputs:
                     self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
@@ -157,7 +157,7 @@ class Stream:
 
     def check_idle(self):
         """Reset access token if all providers are idle."""
-        if all([p.idle for p in self._outputs.values()]):
+        if all(p.idle for p in self._outputs.values()):
             self.access_token = None
 
     def start(self):
@@ -258,6 +258,7 @@ class Stream:
         recorder.video_path = video_path
 
         self.start()
+        _LOGGER.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls = self.outputs().get("hls")

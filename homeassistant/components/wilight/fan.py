@@ -1,5 +1,7 @@
 """Support for WiLight Fan."""
 
+from typing import Optional
+
 from pywilight.const import (
     FAN_V1,
     ITEM_FAN,
@@ -77,7 +79,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         return self._status.get("direction", WL_DIRECTION_OFF) != WL_DIRECTION_OFF
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
         if "direction" in self._status:
             if self._status["direction"] == WL_DIRECTION_OFF:

@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "invalid_pin": "Invalid PIN",
+            "pairing_failure": "Unable to pair: {error_id}",
             "unknown": "Unexpected error"
         },
         "step": {

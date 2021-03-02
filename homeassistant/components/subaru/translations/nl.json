@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "error": {
+            "bad_pin_format": "De pincode moet uit 4 cijfers bestaan",
+            "cannot_connect": "Kan geen verbinding maken",
+            "incorrect_pin": "Onjuiste PIN",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "title": "Subaru Starlink Configuratie"
+            },
+            "user": {
+                "data": {
+                    "country": "Selecteer land",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Subaru Starlink-configuratie"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Subaru Starlink-opties"
+            }
+        }
+    }
+}

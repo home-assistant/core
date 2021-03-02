@@ -1,8 +1,10 @@
 clear:
-  description: Clear all log entries
+  name: Clear all
+  description: Clear all log entries.
 
 write:
-  description: Write log entry
+  name: Write
+  description: Write log entry.
   fields:
     message:
       name: Message

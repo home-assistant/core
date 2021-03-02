@@ -1,11 +1,14 @@
 toggle:
-  description: Toggle alert's notifications
+  name: Toggle
+  description: Toggle alert's notifications.
   target:
 
 turn_off:
-  description: Silence alert's notifications
+  name: Turn off
+  description: Silence alert's notifications.
   target:
 
 turn_on:
-  description: Reset alert's notifications
+  name: Turn on
+  description: Reset alert's notifications.
   target:

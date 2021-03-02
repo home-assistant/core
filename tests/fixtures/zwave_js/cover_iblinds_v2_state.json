@@ -6,13 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Routing Slave",
-        "generic": "Multilevel Switch",
-        "specific": "Unused",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Multilevel Switch"
-        ],
+        "basic": {"key": 4, "label":"Routing Slave"},
+        "generic": {"key": 17, "label":"Routing Slave"},
+        "specific": {"key": 0, "label":"Unused"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": false,
@@ -75,6 +72,7 @@
             "userIcon": 6400
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "endpoint": 0,

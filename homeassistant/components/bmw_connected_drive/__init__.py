@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     def _update_all() -> None:
         """Update all BMW accounts."""
-        for entry in hass.data[DOMAIN][DATA_ENTRIES].values():
+        for entry in hass.data[DOMAIN][DATA_ENTRIES].copy().values():
             entry[CONF_ACCOUNT].update()
 
     # Add update listener for config entry changes (options)
