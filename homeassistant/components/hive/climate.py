@@ -53,7 +53,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.devices.get("climate")
+    devices = hive.session.deviceList.get("climate")
     entities = []
     if devices:
         for dev in devices:
@@ -184,32 +184,32 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         new_mode = HASS_TO_HIVE_STATE[hvac_mode]
-        await self.hive.heating.set_mode(self.device, new_mode)
+        await self.hive.heating.setMode(self.device, new_mode)
 
     @refresh_system
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         new_temperature = kwargs.get(ATTR_TEMPERATURE)
         if new_temperature is not None:
-            await self.hive.heating.set_target_temperature(self.device, new_temperature)
+            await self.hive.heating.setTargetTemperature(self.device, new_temperature)
 
     @refresh_system
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:
-            await self.hive.heating.turn_boost_off(self.device)
+            await self.hive.heating.turnBoostOff(self.device)
         elif preset_mode == PRESET_BOOST:
             curtemp = round(self.current_temperature * 2) / 2
             temperature = curtemp + 0.5
-            await self.hive.heating.turn_boost_on(self.device, 30, temperature)
+            await self.hive.heating.turnBoostOn(self.device, 30, temperature)
 
     @refresh_system
     async def async_heating_boost(self, time_period, temperature):
         """Handle boost heating service call."""
-        await self.hive.heating.turn_boost_on(self.device, time_period, temperature)
+        await self.hive.heating.turnBoostOn(self.device, time_period, temperature)
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.heating.get_heating(self.device)
+        self.device = await self.hive.heating.getHeating(self.device)
         self.attributes.update(self.device.get("attributes", {}))

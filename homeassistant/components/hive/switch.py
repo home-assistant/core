@@ -14,7 +14,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.devices.get("switch")
+    devices = hive.session.deviceList.get("switch")
     entities = []
     if devices:
         for dev in devices:
@@ -75,15 +75,15 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         if self.device["hiveType"] == "activeplug":
-            await self.hive.switch.turn_on(self.device)
+            await self.hive.switch.turnOn(self.device)
 
     @refresh_system
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if self.device["hiveType"] == "activeplug":
-            await self.hive.switch.turn_off(self.device)
+            await self.hive.switch.turnOff(self.device)
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.switch.get_plug(self.device)
+        self.device = await self.hive.switch.getPlug(self.device)

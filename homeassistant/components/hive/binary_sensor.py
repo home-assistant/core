@@ -29,7 +29,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.devices.get("binary_sensor")
+    devices = hive.session.deviceList.get("binary_sensor")
     entities = []
     if devices:
         for dev in devices:
@@ -90,5 +90,5 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.sensor.get_sensor(self.device)
+        self.device = await self.hive.sensor.getSensor(self.device)
         self.attributes = self.device.get("attributes", {})

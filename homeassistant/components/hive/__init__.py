@@ -4,7 +4,8 @@ from functools import wraps
 import logging
 
 from aiohttp.web_exceptions import HTTPException
-from pyhiveapi import Hive
+from apyhiveapi import Hive
+from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -76,13 +77,13 @@ async def async_setup_entry(hass, entry):
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
-
-    if devices == "INVALID_REAUTH":
-        return hass.async_create_task(
+    except HiveReauthRequired:
+        hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
             )
         )
+        return False
 
     for ha_type, hive_type in PLATFORM_LOOKUP.items():
         devicelist = devices.get(hive_type)
