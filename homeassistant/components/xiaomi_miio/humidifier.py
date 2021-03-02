@@ -84,7 +84,6 @@ ATTR_BUTTON_PRESSED = "button_pressed"
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_TRANS_LEVEL = "trans_level"
-ATTR_HARDWARE_VERSION = "hardware_version"
 
 # Air Humidifier CA
 ATTR_MOTOR_SPEED = "motor_speed"
@@ -110,7 +109,6 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
     **AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_COMMON,
     ATTR_TRANS_LEVEL: "trans_level",
     ATTR_BUTTON_PRESSED: "button_pressed",
-    ATTR_HARDWARE_VERSION: "hardware_version",
 }
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB = {
@@ -118,7 +116,6 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA_AND_CB = {
     ATTR_MOTOR_SPEED: "motor_speed",
     ATTR_DEPTH: "depth",
     ATTR_DRY: "dry",
-    ATTR_HARDWARE_VERSION: "hardware_version",
 }
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4 = {
