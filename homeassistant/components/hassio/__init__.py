@@ -249,7 +249,7 @@ async def async_get_addon_discovery_info(
 async def async_create_snapshot(
     hass: HomeAssistantType, payload: dict, partial: bool = False
 ) -> dict:
-    """Create a partial snapshot.
+    """Create a full or partial snapshot.
 
     The caller of the function should handle HassioAPIError.
     """
