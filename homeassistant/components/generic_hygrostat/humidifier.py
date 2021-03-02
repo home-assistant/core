@@ -389,8 +389,16 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                     if not long_enough:
                         return
 
-            too_dry = self._target_humidity - self._cur_humidity >= self._dry_tolerance
-            too_wet = self._cur_humidity - self._target_humidity >= self._wet_tolerance
+            if force:
+                # Ignore the tolerance when switched on manually
+                dry_tolerance = 0
+                wet_tolerance = 0
+            else:
+                dry_tolerance = self._dry_tolerance
+                wet_tolerance = self._wet_tolerance
+
+            too_dry = self._target_humidity - self._cur_humidity >= dry_tolerance
+            too_wet = self._cur_humidity - self._target_humidity >= wet_tolerance
             if self._is_device_active:
                 if (self._device_class == DEVICE_CLASS_HUMIDIFIER and too_wet) or (
                     self._device_class == DEVICE_CLASS_DEHUMIDIFIER and too_dry
