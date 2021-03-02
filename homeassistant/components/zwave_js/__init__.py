@@ -278,7 +278,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         LOGGER.info("Connected to Zwave JS Server")
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
-        entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False        
+        entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
     unsubscribe_callbacks: List[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
