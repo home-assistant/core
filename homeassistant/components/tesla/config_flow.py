@@ -122,6 +122,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         info = {}
         errors = {}
         self.controller.set_authorization_code(self.data.get("code", ""))
+        self.controller.set_authorization_domain(self.data.get("domain", ""))
         try:
             info = await validate_input(self.hass, info, self.controller)
         except CannotConnect:
@@ -135,6 +136,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
                 CONF_EXPIRATION: info[CONF_EXPIRATION],
             }
+        await self.proxy.reset_data()
         if info and not errors:
             existing_entry = self._async_entry_for_username(self.data[CONF_USERNAME])
             if existing_entry and existing_entry.data == info:
