@@ -1,4 +1,5 @@
 """Provide threading info to system health."""
+import sys
 import threading
 
 from homeassistant.components import system_health
@@ -15,4 +16,12 @@ def async_register(
 
 async def async_system_health_info(hass):
     """Get info for the info page."""
-    return {thread.ident: thread.name for thread in threading.enumerate()}
+    frames = sys._current_frames()
+    info = {}
+    for thread in threading.enumerate():
+        if thread.name in info:
+            name = f"{thread.name} {thread.ident}"
+        else:
+            name = thread.name
+        info[name] = frames.get(thread.ident)
+    return info
