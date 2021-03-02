@@ -21,9 +21,11 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+PROTOCOL_TCP = "tcp"
+PROTOCOL_UDP = "udp"
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 2003
-DEFAULT_PROTOCOL = "tcp"
+DEFAULT_PROTOCOL = PROTOCOL_TCP
 DEFAULT_PREFIX = "ha"
 DOMAIN = "graphite"
 
@@ -34,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL): vol.Any(
-                    "tcp", "udp"
+                    PROTOCOL_TCP, PROTOCOL_UDP
                 ),
                 vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
             }
@@ -52,7 +54,7 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     protocol = conf.get(CONF_PROTOCOL)
 
-    if protocol == "tcp":
+    if protocol == PROTOCOL_TCP:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
             sock.connect((host, port))
@@ -110,7 +112,7 @@ class GraphiteFeeder(threading.Thread):
 
     def _send_to_graphite(self, data):
         """Send data to Graphite."""
-        if self._protocol == "tcp":
+        if self._protocol == PROTOCOL_TCP:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(10)
             sock.connect((self._host, self._port))
