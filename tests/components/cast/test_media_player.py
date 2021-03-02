@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import json
 from typing import Optional
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, patch
 from uuid import UUID
 
 import attr
@@ -387,44 +387,6 @@ async def test_create_cast_device_with_uuid(hass):
     # Sending second time should not create new entity
     cast_device = cast._async_create_cast_device(hass, info)
     assert cast_device is None
-
-
-async def test_replay_past_chromecasts(hass):
-    """Test cast platform re-playing past chromecasts when adding new one."""
-    cast_group1 = get_fake_chromecast_info(host="host1", port=8009, uuid=FakeUUID)
-    cast_group2 = get_fake_chromecast_info(
-        host="host2", port=8009, uuid=UUID("9462202c-e747-4af5-a66b-7dce0e1ebc09")
-    )
-    zconf_1 = get_fake_zconf(host="host1", port=8009)
-    zconf_2 = get_fake_zconf(host="host2", port=8009)
-
-    discover_cast, _, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"uuid": str(FakeUUID)}
-    )
-
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_2,
-    ):
-        discover_cast("service2", cast_group2)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
-    assert add_dev1.call_count == 0
-
-    with patch(
-        "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
-        return_value=zconf_1,
-    ):
-        discover_cast("service1", cast_group1)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()  # having tasks that add jobs
-    assert add_dev1.call_count == 1
-
-    add_dev2 = Mock()
-    entry = hass.config_entries.async_entries("cast")[0]
-    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, entry)
-    await hass.async_block_till_done()
-    assert add_dev2.call_count == 1
 
 
 async def test_manual_cast_chromecasts_uuid(hass):

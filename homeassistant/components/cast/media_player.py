@@ -62,7 +62,6 @@ from .const import (
     CONF_IGNORE_CEC,
     CONF_UUID,
     DOMAIN as CAST_DOMAIN,
-    KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -126,7 +125,6 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
-    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config_entry.data.get(CONF_IGNORE_CEC) or []
@@ -147,11 +145,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities([cast_device])
 
     async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
-    # Re-play the callback for all past chromecasts, store the objects in
-    # a list to avoid concurrent modification resulting in exception.
-    for chromecast in hass.data[KNOWN_CHROMECAST_INFO_KEY].values():
-        async_cast_discovered(chromecast)
-
     ChromeCastZeroconf.set_zeroconf(await zeroconf.async_get_instance(hass))
     hass.async_add_executor_job(setup_internal_discovery, hass, config_entry)
 
