@@ -6,8 +6,9 @@ import pytest
 from homeassistant.helpers import frame
 
 
-async def test_extract_frame_integration(caplog):
-    """Test extracting the current frame from integration context."""
+@pytest.fixture
+def mock_integration_frame():
+    """Mock as if we're calling code from inside an integration."""
     correct_frame = Mock(
         filename="/home/paulus/homeassistant/components/hue/light.py",
         lineno="23",
@@ -29,11 +30,16 @@ async def test_extract_frame_integration(caplog):
             ),
         ],
     ):
-        found_frame, integration, path = frame.get_integration_frame()
+        yield correct_frame
+
+
+async def test_extract_frame_integration(caplog, mock_integration_frame):
+    """Test extracting the current frame from integration context."""
+    found_frame, integration, path = frame.get_integration_frame()
 
     assert integration == "hue"
     assert path == "homeassistant/components/"
-    assert found_frame == correct_frame
+    assert found_frame == mock_integration_frame
 
 
 async def test_extract_frame_integration_with_excluded_intergration(caplog):
