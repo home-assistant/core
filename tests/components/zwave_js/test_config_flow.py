@@ -44,91 +44,11 @@ def discovery_info_side_effect_fixture():
 def mock_get_addon_discovery_info(discovery_info, discovery_info_side_effect):
     """Mock get add-on discovery info."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.async_get_addon_discovery_info",
+        "homeassistant.components.zwave_js.addon.async_get_addon_discovery_info",
         side_effect=discovery_info_side_effect,
         return_value=discovery_info,
     ) as get_addon_discovery_info:
         yield get_addon_discovery_info
-
-
-@pytest.fixture(name="addon_info_side_effect")
-def addon_info_side_effect_fixture():
-    """Return the add-on info side effect."""
-    return None
-
-
-@pytest.fixture(name="addon_info")
-def mock_addon_info(addon_info_side_effect):
-    """Mock Supervisor add-on info."""
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.async_get_addon_info",
-        side_effect=addon_info_side_effect,
-    ) as addon_info:
-        addon_info.return_value = {}
-        yield addon_info
-
-
-@pytest.fixture(name="addon_running")
-def mock_addon_running(addon_info):
-    """Mock add-on already running."""
-    addon_info.return_value["state"] = "started"
-    return addon_info
-
-
-@pytest.fixture(name="addon_installed")
-def mock_addon_installed(addon_info):
-    """Mock add-on already installed but not running."""
-    addon_info.return_value["state"] = "stopped"
-    addon_info.return_value["version"] = "1.0"
-    return addon_info
-
-
-@pytest.fixture(name="addon_options")
-def mock_addon_options(addon_info):
-    """Mock add-on options."""
-    addon_info.return_value["options"] = {}
-    return addon_info.return_value["options"]
-
-
-@pytest.fixture(name="set_addon_options_side_effect")
-def set_addon_options_side_effect_fixture():
-    """Return the set add-on options side effect."""
-    return None
-
-
-@pytest.fixture(name="set_addon_options")
-def mock_set_addon_options(set_addon_options_side_effect):
-    """Mock set add-on options."""
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.async_set_addon_options",
-        side_effect=set_addon_options_side_effect,
-    ) as set_options:
-        yield set_options
-
-
-@pytest.fixture(name="install_addon")
-def mock_install_addon():
-    """Mock install add-on."""
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.async_install_addon"
-    ) as install_addon:
-        yield install_addon
-
-
-@pytest.fixture(name="start_addon_side_effect")
-def start_addon_side_effect_fixture():
-    """Return the set add-on options side effect."""
-    return None
-
-
-@pytest.fixture(name="start_addon")
-def mock_start_addon(start_addon_side_effect):
-    """Mock start add-on."""
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.async_start_addon",
-        side_effect=start_addon_side_effect,
-    ) as start_addon:
-        yield start_addon
 
 
 @pytest.fixture(name="server_version_side_effect")
@@ -587,6 +507,49 @@ async def test_not_addon(hass, supervisor):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_addon_already_configured(hass, supervisor):
+    """Test add-on already configured leads to manual step."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"use_addon": True}, title=TITLE, unique_id=5678
+    )
+    entry.add_to_hass(hass)
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "manual"
+
+    with patch(
+        "homeassistant.components.zwave_js.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.zwave_js.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "url": "ws://localhost:3000",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        "url": "ws://localhost:3000",
+        "usb_path": None,
+        "network_key": None,
+        "use_addon": False,
+        "integration_created_addon": False,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
+
+
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running(
     hass,
@@ -654,7 +617,7 @@ async def test_addon_running(
             None,
             None,
             None,
-            "addon_missing_discovery_info",
+            "addon_get_discovery_info_failed",
         ),
         (
             {"config": ADDON_DISCOVERY_INFO},
