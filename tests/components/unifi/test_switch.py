@@ -16,7 +16,7 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -724,7 +724,7 @@ async def test_restoring_client(hass, aioclient_mock):
         entry_id=1,
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,

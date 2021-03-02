@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
@@ -132,7 +132,7 @@ async def test_unique_id_migration_dupes(
     hass, multisensor_6_state, client, integration
 ):
     """Test we remove an entity when ."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
 
@@ -183,7 +183,7 @@ async def test_unique_id_migration_dupes(
 
 async def test_unique_id_migration_v1(hass, multisensor_6_state, client, integration):
     """Test unique ID is migrated from old format to new (version 1)."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     # Migrate version 1
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
@@ -216,7 +216,7 @@ async def test_unique_id_migration_v1(hass, multisensor_6_state, client, integra
 
 async def test_unique_id_migration_v2(hass, multisensor_6_state, client, integration):
     """Test unique ID is migrated from old format to new (version 2)."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     # Migrate version 2
     ILLUMINANCE_SENSOR = "sensor.multisensor_6_illuminance"
     entity_name = ILLUMINANCE_SENSOR.split(".")[1]
@@ -251,7 +251,7 @@ async def test_unique_id_migration_notification_binary_sensor(
     hass, multisensor_6_state, client, integration
 ):
     """Test unique ID is migrated from old format to new for a notification binary sensor."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
 
@@ -442,17 +442,13 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     assert len(client.driver.controller.nodes) == 2
 
     # Make sure there are the same number of devices
-    dev_reg = await device_registry.async_get_registry(hass)
-    device_entries = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )
+    dev_reg = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 2
 
     # Check how many entities there are
-    ent_reg = await entity_registry.async_get_registry(hass)
-    entity_entries = entity_registry.async_entries_for_config_entry(
-        ent_reg, integration.entry_id
-    )
+    ent_reg = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 24
 
     # Remove a node and reload the entry
@@ -462,21 +458,17 @@ async def test_removed_device(hass, client, multiple_devices, integration):
 
     # Assert that the node and all of it's entities were removed from the device and
     # entity registry
-    device_entries = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )
+    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
-    entity_entries = entity_registry.async_entries_for_config_entry(
-        ent_reg, integration.entry_id
-    )
+    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 15
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
 
 
 async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
     """Test that suggested area works."""
-    dev_reg = device_registry.async_get(hass)
-    ent_reg = entity_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)

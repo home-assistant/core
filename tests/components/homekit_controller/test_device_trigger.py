@@ -5,6 +5,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.homekit_controller.const import DOMAIN
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -82,10 +83,10 @@ async def test_enumerate_remote(hass, utcnow):
     """Test that remote is correctly enumerated."""
     await setup_test_component(hass, create_remote)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     expected = [
@@ -118,10 +119,10 @@ async def test_enumerate_button(hass, utcnow):
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_button)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     expected = [
@@ -153,10 +154,10 @@ async def test_enumerate_doorbell(hass, utcnow):
     """Test that a button is correctly enumerated."""
     await setup_test_component(hass, create_doorbell)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     expected = [
@@ -188,10 +189,10 @@ async def test_handle_events(hass, utcnow, calls):
     """Test that events are handled."""
     helper = await setup_test_component(hass, create_remote)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("sensor.testdevice_battery")
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert await async_setup_component(

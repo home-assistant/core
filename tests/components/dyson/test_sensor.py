@@ -16,7 +16,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 from .common import (
@@ -120,12 +120,12 @@ async def test_sensors(
     # Make sure no other sensors are set up
     assert len(hass.states.async_all()) == len(sensors)
 
-    er = await entity_registry.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     for sensor in sensors:
         entity_id = _async_get_entity_id(sensor)
 
         # Test unique id
-        assert er.async_get(entity_id).unique_id == f"{SERIAL}-{sensor}"
+        assert entity_registry.async_get(entity_id).unique_id == f"{SERIAL}-{sensor}"
 
         # Test state
         state = hass.states.get(entity_id)
