@@ -16,6 +16,7 @@ from homeassistant.components.media_player import (
     DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
 )
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_DEVICE_CLASS,
@@ -500,6 +501,12 @@ def state_needs_accessory_mode(state):
     if (
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+    ):
+        return True
+
+    if (
+        state.domain == REMOTE_DOMAIN
+        and state.attributes.get(ATTR_SUPPORTED_FEATURES) & SUPPORT_ACTIVITY
     ):
         return True
 
