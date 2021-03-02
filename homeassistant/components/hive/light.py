@@ -23,7 +23,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.devices.get("light")
+    devices = hive.session.deviceList.get("light")
     entities = []
     if devices:
         for dev in devices:
@@ -123,14 +123,14 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             saturation = int(get_new_color[1])
             new_color = (hue, saturation, 100)
 
-        await self.hive.light.turn_on(
+        await self.hive.light.turnOn(
             self.device, new_brightness, new_color_temp, new_color
         )
 
     @refresh_system
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        await self.hive.light.turn_off(self.device)
+        await self.hive.light.turnOff(self.device)
 
     @property
     def supported_features(self):
@@ -148,5 +148,5 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.light.get_light(self.device)
+        self.device = await self.hive.light.getLight(self.device)
         self.attributes.update(self.device.get("attributes", {}))

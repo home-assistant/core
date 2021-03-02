@@ -40,7 +40,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.devices.get("water_heater")
+    devices = hive.session.deviceList.get("water_heater")
     entities = []
     if devices:
         for dev in devices:
@@ -116,28 +116,28 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     @refresh_system
     async def async_turn_on(self, **kwargs):
         """Turn on hotwater."""
-        await self.hive.hotwater.set_mode(self.device, "MANUAL")
+        await self.hive.hotwater.setMode(self.device, "MANUAL")
 
     @refresh_system
     async def async_turn_off(self, **kwargs):
         """Turn on hotwater."""
-        await self.hive.hotwater.set_mode(self.device, "OFF")
+        await self.hive.hotwater.setMode(self.device, "OFF")
 
     @refresh_system
     async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         new_mode = HASS_TO_HIVE_STATE[operation_mode]
-        await self.hive.hotwater.set_mode(self.device, new_mode)
+        await self.hive.hotwater.setMode(self.device, new_mode)
 
     @refresh_system
     async def async_hot_water_boost(self, time_period, on_off):
         """Handle the service call."""
         if on_off == "on":
-            await self.hive.hotwater.turn_boost_on(self.device, time_period)
+            await self.hive.hotwater.turnBoostOn(self.device, time_period)
         elif on_off == "off":
-            await self.hive.hotwater.turn_boost_off(self.device)
+            await self.hive.hotwater.turnBoostOff(self.device)
 
     async def async_update(self):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
-        self.device = await self.hive.hotwater.get_hotwater(self.device)
+        self.device = await self.hive.hotwater.getHotwater(self.device)
