@@ -327,7 +327,7 @@ async def async_unload_entry(hass, config_entry):
 
     tasks = [
         hass.config_entries.async_forward_entry_unload(config_entry, platform)
-        for platform in ("binary_sensor", "sensor")
+        for platform in PLATFORMS
     ]
 
     await asyncio.gather(*tasks)
