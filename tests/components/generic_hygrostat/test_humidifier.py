@@ -490,7 +490,10 @@ async def test_operation_mode_humidify(hass, setup_comp_2):
     Switch turns on when humidity below setpoint and mode changes.
     """
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
@@ -504,7 +507,10 @@ async def test_operation_mode_humidify(hass, setup_comp_2):
     await hass.async_block_till_done()
     calls = await _setup_switch(hass, False)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -607,14 +613,20 @@ async def test_operation_mode_dry(hass, setup_comp_3):
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -682,7 +694,10 @@ async def test_running_when_operating_mode_is_off_2(hass, setup_comp_3):
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -698,7 +713,10 @@ async def test_no_state_change_when_operation_mode_off_2(hass, setup_comp_3):
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     _setup_sensor(hass, 45)
@@ -805,7 +823,10 @@ async def test_mode_change_dry_trigger_off_not_long_enough(hass, setup_comp_4):
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -821,14 +842,20 @@ async def test_mode_change_dry_trigger_on_not_long_enough(hass, setup_comp_4):
     _setup_sensor(hass, 35)
     await hass.async_block_till_done()
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     _setup_sensor(hass, 45)
     await hass.async_block_till_done()
     assert 0 == len(calls)
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -941,7 +968,10 @@ async def test_mode_change_humidifier_trigger_off_not_long_enough(hass, setup_co
     assert 0 == len(calls)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -959,7 +989,10 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
     assert 0 == len(calls)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 0 == len(calls)
@@ -969,7 +1002,10 @@ async def test_mode_change_humidifier_trigger_on_not_long_enough(hass, setup_com
     assert 0 == len(calls)
 
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert 1 == len(calls)
@@ -1495,7 +1531,10 @@ async def test_sensor_stale_duration(hass, setup_comp_1, caplog):
 
     # Manual turn off
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY}, blocking=True,
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY},
+        blocking=True,
     )
     await hass.async_block_till_done()
     assert STATE_OFF == hass.states.get(humidifier_switch).state

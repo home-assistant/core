@@ -58,7 +58,8 @@ HYGROSTAT_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [HYGROSTAT_SCHEMA])}, extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.All(cv.ensure_list, [HYGROSTAT_SCHEMA])},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
