@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 import logging
 import os
+from pathlib import Path
 from typing import List, NamedTuple, Optional
 
 import voluptuous as vol
@@ -87,13 +88,18 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
     try:
         if not await hass.async_add_executor_job(os.path.isfile, config_path):
             return result.add_error("File configuration.yaml not found.")
-        config = await hass.async_add_executor_job(load_yaml_config_file, config_path)
+
+        assert hass.config.config_dir is not None
+
+        config = await hass.async_add_executor_job(
+            load_yaml_config_file,
+            config_path,
+            yaml_loader.Secrets(Path(hass.config.config_dir)),
+        )
     except FileNotFoundError:
         return result.add_error(f"File not found: {config_path}")
     except HomeAssistantError as err:
         return result.add_error(f"Error loading {config_path}: {err}")
-    finally:
-        yaml_loader.clear_secret_cache()
 
     # Extract and validate core [homeassistant] config
     try:
