@@ -193,6 +193,11 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         return self._state
 
     @property
+    def force_update(self):
+        """Force update."""
+        return True
+
+    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return SENSOR_UNIT_MAP.get(self._tasmota_entity.unit, self._tasmota_entity.unit)
