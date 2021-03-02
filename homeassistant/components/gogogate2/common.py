@@ -4,7 +4,7 @@ import logging
 from typing import Awaitable, Callable, NamedTuple, Optional
 
 from gogogate2_api import AbstractGateApi, GogoGate2Api, ISmartGateApi
-from gogogate2_api.common import AbstractDoor
+from gogogate2_api.common import AbstractDoor, get_door_by_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -15,10 +15,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN
+from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +61,44 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = api
 
 
+class GoGoGate2Entity(CoordinatorEntity):
+    """Base class for gogogate2 entities."""
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        data_update_coordinator: DeviceDataUpdateCoordinator,
+        door: AbstractDoor,
+    ) -> None:
+        """Initialize gogogate2 base entity."""
+        super().__init__(data_update_coordinator)
+        self._config_entry = config_entry
+        self._door = door
+        self._unique_id = cover_unique_id(config_entry, door)
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._unique_id
+
+    def _get_door(self) -> AbstractDoor:
+        door = get_door_by_id(self._door.door_id, self.coordinator.data)
+        self._door = door or self._door
+        return self._door
+
+    @property
+    def device_info(self):
+        """Device info for the controller."""
+        data = self.coordinator.data
+        return {
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "name": self._config_entry.title,
+            "manufacturer": MANUFACTURER,
+            "model": data.model,
+            "sw_version": data.firmwareversion,
+        }
+
+
 def get_data_update_coordinator(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> DeviceDataUpdateCoordinator:
@@ -67,7 +108,7 @@ def get_data_update_coordinator(
     config_entry_data = hass.data[DOMAIN][config_entry.entry_id]
 
     if DATA_UPDATE_COORDINATOR not in config_entry_data:
-        api = get_api(hass, config_entry.data)
+        api = get_api(config_entry.data)
 
         async def async_update_data():
             try:
@@ -96,7 +137,7 @@ def cover_unique_id(config_entry: ConfigEntry, door: AbstractDoor) -> str:
     return f"{config_entry.unique_id}_{door.door_id}"
 
 
-def get_api(hass: HomeAssistant, config_data: dict) -> AbstractGateApi:
+def get_api(config_data: dict) -> AbstractGateApi:
     """Get an api object for config data."""
     gate_class = GogoGate2Api
 
@@ -107,5 +148,4 @@ def get_api(hass: HomeAssistant, config_data: dict) -> AbstractGateApi:
         config_data[CONF_IP_ADDRESS],
         config_data[CONF_USERNAME],
         config_data[CONF_PASSWORD],
-        httpx_async_client=get_async_client(hass),
     )

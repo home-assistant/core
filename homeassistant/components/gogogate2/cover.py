@@ -1,13 +1,7 @@
 """Support for Gogogate2 garage Doors."""
 from typing import Callable, List, Optional
 
-from gogogate2_api.common import (
-    AbstractDoor,
-    DoorStatus,
-    TransitionDoorStatus,
-    get_configured_doors,
-    get_door_by_id,
-)
+from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
 import voluptuous as vol
 
 from homeassistant.components.cover import (
@@ -27,14 +21,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .common import (
     DeviceDataUpdateCoordinator,
-    cover_unique_id,
+    GoGoGate2Entity,
     get_data_update_coordinator,
 )
-from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
+from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
 
 COVER_SCHEMA = vol.Schema(
     {
@@ -75,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class DeviceCover(CoordinatorEntity, CoverEntity):
+class DeviceCover(GoGoGate2Entity, CoverEntity):
     """Cover entity for goggate2."""
 
     def __init__(
@@ -85,17 +78,9 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
-        super().__init__(data_update_coordinator)
-        self._config_entry = config_entry
-        self._door = door
+        super().__init__(config_entry, data_update_coordinator, door)
         self._api = data_update_coordinator.api
-        self._unique_id = cover_unique_id(config_entry, door)
         self._is_available = True
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def name(self):
@@ -105,10 +90,11 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        door_status = self._get_door_status()
-        if door_status == DoorStatus.OPENED:
+        door = self._get_door()
+
+        if door.status == DoorStatus.OPENED:
             return False
-        if door_status == DoorStatus.CLOSED:
+        if door.status == DoorStatus.CLOSED:
             return True
 
         return None
@@ -116,7 +102,8 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if self._get_door().gate:
+        door = self._get_door()
+        if door.gate:
             return DEVICE_CLASS_GATE
 
         return DEVICE_CLASS_GARAGE
@@ -126,49 +113,17 @@ class DeviceCover(CoordinatorEntity, CoverEntity):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
-    @property
-    def is_closing(self):
-        """Return if the cover is closing or not."""
-        return self._get_door_status() == TransitionDoorStatus.CLOSING
-
-    @property
-    def is_opening(self):
-        """Return if the cover is opening or not."""
-        return self._get_door_status() == TransitionDoorStatus.OPENING
-
     async def async_open_cover(self, **kwargs):
         """Open the door."""
         await self._api.async_open_door(self._get_door().door_id)
-        await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs):
         """Close the door."""
         await self._api.async_close_door(self._get_door().door_id)
-        await self.coordinator.async_refresh()
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {**super().state_attributes, "door_id": self._get_door().door_id}
-
-    def _get_door(self) -> AbstractDoor:
-        door = get_door_by_id(self._door.door_id, self.coordinator.data)
-        self._door = door or self._door
-        return self._door
-
-    def _get_door_status(self) -> AbstractDoor:
-        return self._api.async_get_door_statuses_from_info(self.coordinator.data)[
-            self._door.door_id
-        ]
-
-    @property
-    def device_info(self):
-        """Device info for the controller."""
-        data = self.coordinator.data
-        return {
-            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
-            "name": self._config_entry.title,
-            "manufacturer": MANUFACTURER,
-            "model": data.model,
-            "sw_version": data.firmwareversion,
-        }
+        attrs = super().state_attributes
+        attrs["door_id"] = self._get_door().door_id
+        return attrs
