@@ -164,7 +164,7 @@ class MySensorsDevice:
                 set_req.V_TRIPPED,
                 set_req.V_UP,
                 set_req.V_DOWN,
-                set_req.V_STOP
+                set_req.V_STOP,
             ):
                 self._values[value_type] = STATE_ON if int(value) == 1 else STATE_OFF
             elif value_type == set_req.V_DIMMER:

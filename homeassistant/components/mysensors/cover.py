@@ -1,6 +1,6 @@
 """Support for MySensors covers."""
-import logging
 from enum import Enum
+import logging
 from typing import Callable
 
 from homeassistant.components import mysensors
@@ -14,17 +14,19 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class CoverState(Enum):
-    """
-    An enumeration of the standard cover states.
-    """
+    """An enumeration of the standard cover states."""
+
     OPEN = 0
     OPENING = 1
     CLOSED = 2
     CLOSING = 3
 
+
 async def async_setup_entry(
-        hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable):
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities: Callable
+):
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
     async def async_discover(discovery_info):
@@ -52,8 +54,7 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
     def get_cover_state(self):
-        """Returns a CoverState enum representing the state of the cover
-           as determined by the current state of each required V_"""
+        """Return a CoverState enum representing the state of the cover."""
         set_req = self.gateway.const.SetReq
         v_up = self._values.get(set_req.V_UP) == STATE_ON
         v_down = self._values.get(set_req.V_DOWN) == STATE_ON
