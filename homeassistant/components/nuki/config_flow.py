@@ -60,9 +60,6 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the Nuki config flow."""
         self.discovery_schema = {}
-
-        # When invoked for reauth, allows updating an existing config entry
-        self._reauth = False
         self._data = {}
 
     async def async_step_import(self, user_input=None):
@@ -92,17 +89,43 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(self, data):
         """Perform reauth upon an API authentication error."""
         self._data = data
-        self._reauth = True
 
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
         """Dialog that inform the user that reauth is required."""
+        errors = {}
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm", data_schema=REAUTH_SCHEMA
             )
-        return await self.async_step_validate(user_input)
+
+        conf = {
+            CONF_HOST: self._data[CONF_HOST],
+            CONF_PORT: self._data[CONF_PORT],
+            CONF_TOKEN: user_input[CONF_TOKEN],
+        }
+
+        try:
+            info = await validate_input(self.hass, conf)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+
+        if "base" not in errors:
+            existing_entry = await self.async_set_unique_id(info["ids"]["hardwareId"])
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(existing_entry, data=conf)
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
+        )
 
     async def async_step_validate(self, user_input=None):
         """Handle init step of a flow."""
@@ -110,15 +133,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                conf = user_input
-                if self._reauth:
-                    conf = {
-                        CONF_HOST: self._data[CONF_HOST],
-                        CONF_PORT: self._data[CONF_PORT],
-                        CONF_TOKEN: user_input[CONF_TOKEN],
-                    }
-
-                info = await validate_input(self.hass, conf)
+                info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -128,24 +143,11 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                existing_entry = await self.async_set_unique_id(
-                    info["ids"]["hardwareId"]
-                )
-                if self._reauth and existing_entry:
-                    self.hass.config_entries.async_update_entry(
-                        existing_entry, data=conf
-                    )
-                    await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
+                await self.async_set_unique_id(info["ids"]["hardwareId"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=info["ids"]["hardwareId"], data=conf
+                    title=info["ids"]["hardwareId"], data=user_input
                 )
-
-        if self._reauth:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
-            )
 
         data_schema = self.discovery_schema or USER_SCHEMA
         return self.async_show_form(
