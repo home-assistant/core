@@ -20,6 +20,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_ACTIVITY_LIST,
+    ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
     SUPPORT_ACTIVITY,
 )
@@ -333,7 +334,7 @@ class TelevisionRemote(RemoteBase):
         super().__init__(
             [CHAR_REMOTE_KEY],
             SUPPORT_ACTIVITY,
-            ATTR_ACTIVITY,
+            ATTR_CURRENT_ACTIVITY,
             ATTR_ACTIVITY_LIST,
             *args,
         )
