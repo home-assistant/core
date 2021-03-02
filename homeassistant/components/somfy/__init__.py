@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["climate", "cover", "sensor", "switch"]
+PLATFORMS = ["climate", "cover", "sensor", "switch"]
 
 
 async def async_setup(hass, config):
@@ -134,9 +134,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             model=hub.type,
         )
 
-    for component in SOMFY_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -147,8 +147,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     hass.data[DOMAIN].pop(API, None)
     await asyncio.gather(
         *[
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in SOMFY_COMPONENTS
+            hass.config_entries.async_forward_entry_unload(entry, platform)
+            for platform in PLATFORMS
         ]
     )
     return True

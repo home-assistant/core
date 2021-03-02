@@ -43,6 +43,8 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
     {vol.Optional(CONF_FORCE, default=False): cv.boolean}
 )
 
+PLATFORMS = ["sensor", "switch"]
+
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the AdGuard Home components."""
@@ -69,9 +71,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    for component in "sensor", "switch":
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def add_url(call) -> None:
@@ -123,8 +125,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool
     hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
 
-    for component in "sensor", "switch":
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     del hass.data[DOMAIN]
 
