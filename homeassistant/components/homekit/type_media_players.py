@@ -260,9 +260,7 @@ class MediaPlayer(HomeAccessory):
 class RemoteBase(HomeAccessory):
     """Generate a Television accessory."""
 
-    def __init__(
-        self, base_chars, required_feature, source_key, source_list_key, *args
-    ):
+    def __init__(self, required_feature, source_key, source_list_key, *args):
         """Initialize a Remote accessory object."""
         super().__init__(*args, category=CATEGORY_TELEVISION)
         state = self.hass.states.get(self.entity_id)
@@ -276,9 +274,13 @@ class RemoteBase(HomeAccessory):
             if self.sources:
                 self.support_select_source = True
 
-        self.chars_tv = base_chars
+        self.chars_tv = [CHAR_REMOTE_KEY]
+
         serv_tv = self.serv_tv = self.add_preload_service(
             SERV_TELEVISION, self.chars_tv
+        )
+        self.char_remote_key = self.serv_tv.configure_char(
+            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
         )
         self.set_primary_service(serv_tv)
         serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
@@ -332,7 +334,6 @@ class TelevisionRemote(RemoteBase):
     def __init__(self, *args):
         """Initialize a Television Remote accessory object."""
         super().__init__(
-            [CHAR_REMOTE_KEY],
             SUPPORT_ACTIVITY,
             ATTR_CURRENT_ACTIVITY,
             ATTR_ACTIVITY_LIST,
@@ -355,6 +356,18 @@ class TelevisionRemote(RemoteBase):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_ACTIVITY: source}
         self.async_call_service(REMOTE_DOMAIN, SERVICE_TURN_ON, params)
 
+    def set_remote_key(self, value):
+        """Send remote key value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
+        key_name = MEDIA_PLAYER_KEYS.get(value)
+        if key_name is None:
+            _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
+            return
+        self.hass.bus.async_fire(
+            EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+            {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
+        )
+
     @callback
     def async_update_state(self, new_state):
         """Update Television remote state after state changed."""
@@ -375,7 +388,6 @@ class TelevisionMediaPlayer(RemoteBase):
     def __init__(self, *args):
         """Initialize a Television Media Player accessory object."""
         super().__init__(
-            [CHAR_REMOTE_KEY],
             SUPPORT_SELECT_SOURCE,
             ATTR_INPUT_SOURCE,
             ATTR_INPUT_SOURCE_LIST,
@@ -397,10 +409,6 @@ class TelevisionMediaPlayer(RemoteBase):
         source_list = state.attributes.get(ATTR_INPUT_SOURCE_LIST, [])
         if source_list and features & SUPPORT_SELECT_SOURCE:
             self.support_select_source = True
-
-        self.char_remote_key = self.serv_tv.configure_char(
-            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
-        )
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
@@ -486,12 +494,13 @@ class TelevisionMediaPlayer(RemoteBase):
                 service = SERVICE_MEDIA_PLAY_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.async_call_service(DOMAIN, service, params)
-        else:
-            # Unhandled keys can be handled by listening to the event bus
-            self.hass.bus.fire(
-                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
-                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
-            )
+            return
+
+        # Unhandled keys can be handled by listening to the event bus
+        self.hass.bus.async_fire(
+            EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+            {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
+        )
 
     @callback
     def async_update_state(self, new_state):
