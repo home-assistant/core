@@ -23,6 +23,7 @@ from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import DEVICE_CLASSES as SENSOR_CLASSES
 from homeassistant.components.zone.const import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
@@ -49,7 +50,6 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
     ATTR_COURSE,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
