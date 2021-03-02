@@ -360,16 +360,14 @@ class XiaomiGenericDevice(XiaomiMiioEntity, HumidifierEntity):
             result = await self.hass.async_add_executor_job(
                 partial(func, *args, **kwargs)
             )
-
-            _LOGGER.debug("Response received from miio device: %s", result)
-
-            return result == SUCCESS
         except DeviceException as exc:
             if self._available:
                 _LOGGER.error(mask_error, exc)
                 self._available = False
-
             return False
+
+        _LOGGER.debug("Response received from miio device: %s", result)
+        return result == SUCCESS
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
