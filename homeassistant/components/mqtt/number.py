@@ -28,6 +28,7 @@ from . import (
     subscription,
 )
 from .. import mqtt
+from .const import CONF_RETAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
@@ -161,6 +162,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
             self._config[CONF_COMMAND_TOPIC],
             current_number,
             self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
         )
 
     @property
