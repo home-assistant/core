@@ -49,6 +49,17 @@ class AddonManager:
         self._update_task: Optional[asyncio.Task] = None
         self._setup_task: Optional[asyncio.Task] = None
 
+    def task_in_progress(self) -> bool:
+        """Return True if any of the add-on tasks are in progress."""
+        return any(
+            task and not task.done()
+            for task in (
+                self._install_task,
+                self._setup_task,
+                self._update_task,
+            )
+        )
+
     async def async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
         try:

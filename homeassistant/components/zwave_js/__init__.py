@@ -452,6 +452,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Ensure that Z-Wave JS add-on is installed and running."""
     addon_manager: AddonManager = get_addon_manager(hass)
+    if addon_manager.task_in_progress():
+        raise ConfigEntryNotReady
     try:
         addon_is_installed = await addon_manager.async_is_addon_installed()
         addon_is_running = await addon_manager.async_is_addon_running()
@@ -475,4 +477,6 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
 def async_ensure_addon_updated(hass: HomeAssistant) -> None:
     """Ensure that Z-Wave JS add-on is updated and running."""
     addon_manager: AddonManager = get_addon_manager(hass)
+    if addon_manager.task_in_progress():
+        raise ConfigEntryNotReady
     addon_manager.async_schedule_update_addon()
