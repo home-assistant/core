@@ -2648,21 +2648,18 @@ async def async_setup(hass, config):
         else:
             data["click_action"] = ""
 
-        # entry = hass.data["mobile_app"]["config_entries"]
-        # entry = hass.config_entries.async_entries("mobile_app")[device_id]
         for entry in hass.config_entries.async_entries("mobile_app"):
             if entry.data["device_name"] == device_id:
                 entry_data = entry.data
 
-        # if entry_data is None:
-        #     # new way - via device id
-        #     for entry in hass.data["mobile_app"]["config_entries"]:
-        #         _LOGGER.error("entry 1: " + str(entry))
-        #     for entry in hass.config_entries.async_entries("mobile_app"):
-        #         _LOGGER.error("entry 2: " + str(entry))
-        #         _LOGGER.error("entry.data: " + str(entry.data))
-        #         # if entry["device_id"] == device_id:
-        #         #     entry_data = entry.data
+        if entry_data is None:
+            # new way - via device id
+            dev_registry = await hass.helpers.device_registry.async_get_registry()
+            device = dev_registry.async_get(device_id)
+            if device is not None:
+                for entry in hass.config_entries.async_entries("mobile_app"):
+                    if entry.data["device_name"] == device.name:
+                        entry_data = entry.data
 
         if entry_data is None:
             _LOGGER.error("No mob id from " + device_id)

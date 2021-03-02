@@ -15,7 +15,7 @@ change_work_mode:
   description: Ustawienie trybu działania wzmacniacza
   fields:
     mode:
-      description: Tryb dzialania wzmacniacza, wybór z listy ("AX", "BT")
+      description: Tryb dzialania wzmacniacza, wybór z listy
       example: "AX"
       selector:
         select:
@@ -27,7 +27,7 @@ change_sound_mode:
   description: Ustawienie trybu działania equalizera
   fields:
     mode:
-      description: Tryb dzialania equalizera, wybór z listy  ("NORMAL", "BOOST", "TREBLE", "POP", "ROCK", "CLASSIC", "JAZZ", "DANCE", "R&P")
+      description: Tryb dzialania equalizera, wybór z listy
       example: "ROCK"
       selector:
         select:

@@ -6,7 +6,10 @@ mob_notify:
        description: 'Identyfikator urządzenia.'
        example: 'mobile_ais_dom-'
        selector:
-         text:
+         device:
+           integration: mobile_app
+           entity:
+             domain: device_tracker
 
      message:
        description: 'Tekst wiadomości'
