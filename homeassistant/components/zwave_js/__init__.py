@@ -441,12 +441,17 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     try:
         await addon_manager.async_stop_addon()
     except AddonError as err:
-        LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
+        LOGGER.error(err)
+        return
+    try:
+        await addon_manager.async_create_snapshot()
+    except AddonError as err:
+        LOGGER.error(err)
         return
     try:
         await addon_manager.async_uninstall_addon()
     except AddonError as err:
-        LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)
+        LOGGER.error(err)
 
 
 async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:

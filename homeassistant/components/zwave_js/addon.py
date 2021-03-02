@@ -6,6 +6,7 @@ from functools import partial
 from typing import Any, Callable, Optional, TypeVar, cast
 
 from homeassistant.components.hassio import (
+    async_create_snapshot,
     async_get_addon_discovery_info,
     async_get_addon_info,
     async_install_addon,
@@ -168,7 +169,7 @@ class AddonManager:
         if not self._update_task or self._update_task.done():
             LOGGER.warning("Trying to update the Z-Wave JS add-on")
             self._update_task = self._async_schedule_addon_operation(
-                self.async_update_addon
+                self.async_create_snapshot, self.async_update_addon
             )
         return self._update_task
 
@@ -210,6 +211,18 @@ class AddonManager:
                 partial(self.async_setup_addon, usb_path, network_key)
             )
         return self._setup_task
+
+    @api_error("Failed to create a snapshot of the Z-Wave JS add-on.")
+    async def async_create_snapshot(self) -> None:
+        """Create a partial snapshot of the Z-Wave JS add-on."""
+        addon_info = await self.async_get_addon_info()
+        addon_version = addon_info["version"]
+
+        await async_create_snapshot(
+            self._hass,
+            {"name": f"addon_{ADDON_SLUG}_{addon_version}", "addons": [ADDON_SLUG]},
+            partial=True,
+        )
 
     @callback
     def _async_schedule_addon_operation(self, *funcs: Callable) -> asyncio.Task:

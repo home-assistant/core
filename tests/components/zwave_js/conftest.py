@@ -124,6 +124,15 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
+@pytest.fixture(name="create_shapshot")
+def create_snapshot_fixture():
+    """Mock create snapshot."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_create_snapshot"
+    ) as create_shapshot:
+        yield create_shapshot
+
+
 @pytest.fixture(name="device_registry")
 async def device_registry_fixture(hass):
     """Return the device registry."""
