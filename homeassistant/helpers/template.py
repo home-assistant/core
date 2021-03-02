@@ -366,7 +366,7 @@ class Template:
 
         try:
             render_result = compiled.render(kwargs)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             raise TemplateError(err) from err
 
         render_result = render_result.strip()

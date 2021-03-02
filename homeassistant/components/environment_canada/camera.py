@@ -1,7 +1,7 @@
 """Support for the Environment Canada radar imagery."""
 import datetime
 
-from env_canada import ECRadar  # pylint: disable=import-error
+from env_canada import ECRadar
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera

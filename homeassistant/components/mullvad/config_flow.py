@@ -5,7 +5,7 @@ from mullvad_api import MullvadAPI, MullvadAPIError
 
 from homeassistant import config_entries
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

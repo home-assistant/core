@@ -6,8 +6,14 @@ from functools import partial
 import logging
 from math import ceil
 
-from miio import Ceil, DeviceException, PhilipsBulb, PhilipsEyecare, PhilipsMoonlight
-from miio import Device  # pylint: disable=import-error
+from miio import (
+    Ceil,
+    Device,
+    DeviceException,
+    PhilipsBulb,
+    PhilipsEyecare,
+    PhilipsMoonlight,
+)
 from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,

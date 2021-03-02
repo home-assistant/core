@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
-from .config_flow import PlayStation4FlowHandler  # noqa: pylint: disable=unused-import
+from .config_flow import PlayStation4FlowHandler  # noqa: F401
 from .const import ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
 
 _LOGGER = logging.getLogger(__name__)

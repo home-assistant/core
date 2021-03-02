@@ -99,7 +99,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Matching flow found")
 
             raise UpdateFailed(err) from err
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             _LOGGER.exception("Unexpected error updating SharkIQ")
             raise UpdateFailed(err) from err
 
