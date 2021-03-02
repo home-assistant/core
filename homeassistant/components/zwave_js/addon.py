@@ -133,7 +133,7 @@ class AddonManager:
         Only schedule a new install task if the there's no running task.
         """
         if not self._install_task or self._install_task.done():
-            LOGGER.warning("Z-Wave JS add-on is not installed. Installing add-on")
+            LOGGER.info("Z-Wave JS add-on is not installed. Installing add-on")
             self._install_task = self._async_schedule_addon_operation(
                 self.async_install_addon,
                 partial(self.async_setup_addon, usb_path, network_key),
@@ -167,7 +167,7 @@ class AddonManager:
         Only schedule a new update task if the there's no running task.
         """
         if not self._update_task or self._update_task.done():
-            LOGGER.warning("Trying to update the Z-Wave JS add-on")
+            LOGGER.info("Trying to update the Z-Wave JS add-on")
             self._update_task = self._async_schedule_addon_operation(
                 self.async_create_snapshot, self.async_update_addon
             )
@@ -206,7 +206,7 @@ class AddonManager:
         Only schedule a new setup task if the there's no running task.
         """
         if not self._setup_task or self._setup_task.done():
-            LOGGER.warning("Z-Wave JS add-on is not running. Starting add-on")
+            LOGGER.info("Z-Wave JS add-on is not running. Starting add-on")
             self._setup_task = self._async_schedule_addon_operation(
                 partial(self.async_setup_addon, usb_path, network_key)
             )
