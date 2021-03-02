@@ -259,20 +259,23 @@ class MediaPlayer(HomeAccessory):
 class RemoteBase(HomeAccessory):
     """Generate a Television accessory."""
 
-    def __init__(self, base_chars, required_feature, source_key, *args):
+    def __init__(
+        self, base_chars, required_feature, source_key, source_list_key, *args
+    ):
         """Initialize a Remote accessory object."""
         super().__init__(*args, category=CATEGORY_TELEVISION)
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        source_list = []
+        self.source_key = source_key
+        self.sources = []
+        self.support_select_source = False
         if features & required_feature:
-            source_list = state.attributes.get(source_key, [])
+            self.sources = state.attributes.get(source_list_key, [])
+            if self.sources:
+                self.support_select_source = True
 
         self.chars_tv = base_chars
-        self.support_select_source = bool(source_list)
-        self.sources = source_list
-
         serv_tv = self.serv_tv = self.add_preload_service(
             SERV_TELEVISION, self.chars_tv
         )
@@ -284,7 +287,6 @@ class RemoteBase(HomeAccessory):
         )
 
         if self.support_select_source:
-            self.sources = source_list
             self.char_input_source = serv_tv.configure_char(
                 CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
             )
@@ -307,7 +309,7 @@ class RemoteBase(HomeAccessory):
         """Update input state after state changed."""
         # Set active input
         if self.support_select_source and self.sources:
-            source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
+            source_name = new_state.attributes.get(self.source_key)
             _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
             if source_name in self.sources:
                 index = self.sources.index(source_name)
@@ -328,7 +330,13 @@ class TelevisionRemote(RemoteBase):
 
     def __init__(self, *args):
         """Initialize a Television Remote accessory object."""
-        super().__init__([CHAR_REMOTE_KEY], SUPPORT_ACTIVITY, ATTR_ACTIVITY_LIST, *args)
+        super().__init__(
+            [CHAR_REMOTE_KEY],
+            SUPPORT_ACTIVITY,
+            ATTR_ACTIVITY,
+            ATTR_ACTIVITY_LIST,
+            *args,
+        )
         state = self.hass.states.get(self.entity_id)
         self.async_update_state(state)
 
@@ -366,7 +374,11 @@ class TelevisionMediaPlayer(RemoteBase):
     def __init__(self, *args):
         """Initialize a Television Media Player accessory object."""
         super().__init__(
-            [CHAR_REMOTE_KEY], SUPPORT_SELECT_SOURCE, ATTR_INPUT_SOURCE_LIST, *args
+            [CHAR_REMOTE_KEY],
+            SUPPORT_SELECT_SOURCE,
+            ATTR_INPUT_SOURCE,
+            ATTR_INPUT_SOURCE_LIST,
+            *args,
         )
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
