@@ -32,6 +32,8 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 VALUE_TO_STATE = dict(enumerate(STATE_LIST))
 
 SERVICE_SET_LOCK_USER_CODE = "set_lock_user_code"
+SERVICE_ENABLE_LOCK_USER_CODE = "enable_lock_user_code"
+SERVICE_DISABLE_LOCK_USER_CODE = "disable_lock_user_code"
 SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 
 
@@ -58,6 +60,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             vol.Required("user_code"): cv.string,
         },
         "async_set_lock_user_code",
+    )
+
+    platform.async_register_entity_service(  # type: ignore
+        SERVICE_ENABLE_LOCK_USER_CODE,
+        {
+            vol.Required("code_slot"): vol.Coerce(int),
+        },
+        "async_enable_lock_user_code",
+    )
+
+    platform.async_register_entity_service(  # type: ignore
+        SERVICE_DISABLE_LOCK_USER_CODE,
+        {
+            vol.Required("code_slot"): vol.Coerce(int),
+        },
+        "async_disable_lock_user_code",
     )
 
     platform.async_register_entity_service(  # type: ignore
@@ -147,6 +165,18 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
         if self._doorlock_channel:
             await self._doorlock_channel.async_set_user_code(code_slot, user_code)
             self.debug("User code at slot %s set", code_slot)
+
+    async def async_enable_lock_user_code(self, code_slot: int) -> None:
+        """Enable user_code at index X on the lock."""
+        if self._doorlock_channel:
+            await self._doorlock_channel.async_enable_user_code(code_slot)
+            self.debug("User code at slot %s enabled", code_slot)
+
+    async def async_disable_lock_user_code(self, code_slot: int) -> None:
+        """Disable user_code at index X on the lock."""
+        if self._doorlock_channel:
+            await self._doorlock_channel.async_disable_user_code(code_slot)
+            self.debug("User code at slot %s disabled", code_slot)
 
     async def async_clear_lock_user_code(self, code_slot: int) -> None:
         """Clear the user_code at index X on the lock."""

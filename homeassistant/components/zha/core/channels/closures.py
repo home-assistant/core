@@ -1,5 +1,4 @@
 """Closures channels module for Zigbee Home Automation."""
-from zigpy.exceptions import ZigbeeException
 import zigpy.zcl.clusters.closures as closures
 
 from homeassistant.core import callback
@@ -28,16 +27,13 @@ class DoorLockChannel(ZigbeeChannel):
     def cluster_command(self, tsn, command_id, args):
         """Handle a cluster command received on this cluster."""
 
-        # Operational Event
-        if (
-            command_id == 32
-            and self._cluster.client_commands is not None
-            and self._cluster.client_commands.get(command_id) is not None
-            and isinstance(args[0], closures.DoorLock.OperationEventSource)
-            and isinstance(args[1], closures.DoorLock.OperationEvent)
-        ):
+        if self._cluster.client_commands is None:
+            return
+
+        command_name = self._cluster.client_commands.get(command_id, [command_id])[0]
+        if command_name == "operation_event_notification":
             self.zha_send_event(
-                self._cluster.client_commands.get(command_id)[0],
+                command_name,
                 {
                     "source": args[0].name,
                     "operation": args[1].name,
@@ -60,35 +56,59 @@ class DoorLockChannel(ZigbeeChannel):
     async def async_set_user_code(self, code_slot: int, user_code: str) -> None:
         """Set the user code for the code slot."""
 
-        try:
-            await self.cluster.command(  # returns a response, should probably look at it
-                5,  # 0x0005 -> set_pin_code #TODO figure out pulling this out of self.cluster.server_commands
-                *(
-                    code_slot - 1,  # start code slots at 1
-                    closures.DoorLock.UserStatus.Enabled,
-                    closures.DoorLock.UserType.Unrestricted,
-                    user_code,
-                ),
-                manufacturer=None,
-                expect_reply=True,
-            )
-        except ZigbeeException as ex:
-            self.error("Could not set user code: %s", ex)
-            return
+        set_pin_code = self.__getattr__("set_pin_code")
+        await set_pin_code(
+            *(
+                code_slot - 1,  # start code slots at 1
+                closures.DoorLock.UserStatus.Enabled,
+                closures.DoorLock.UserType.Unrestricted,
+                user_code,
+            ),
+        )
+
+    async def async_enable_user_code(self, code_slot: int) -> None:
+        """Enable the code slot."""
+
+        set_user_status = self.__getattr__("set_user_status")
+        await set_user_status(*(code_slot - 1, closures.DoorLock.UserStatus.Enabled))
+
+    async def async_disable_user_code(self, code_slot: int) -> None:
+        """Disable the code slot."""
+
+        set_user_status = self.__getattr__("set_user_status")
+        await set_user_status(*(code_slot - 1, closures.DoorLock.UserStatus.Disabled))
+
+    async def async_get_user_code(self, code_slot: int) -> int:
+        """Get the user code from the code slot."""
+
+        get_pin_code = self.__getattr__("get_pin_code")
+        result = await get_pin_code(*(code_slot - 1,))
+        return result
 
     async def async_clear_user_code(self, code_slot: int) -> None:
         """Clear the code slot."""
 
-        try:
-            await self.cluster.command(  # returns a response, should probably look at it
-                7,  # 0x0007 -> clear_pin_code #TODO figure out pulling this out of self.cluster.server_commands
-                *(code_slot - 1,),  # start code slots at 1
-                manufacturer=None,
-                expect_reply=True,
-            )
-        except ZigbeeException as ex:
-            self.error("Could not clear user code: %s", ex)
-            return
+        clear_pin_code = self.__getattr__("clear_pin_code")
+        await clear_pin_code(*(code_slot - 1,))
+
+    async def async_clear_all_user_codes(self) -> None:
+        """Clear all code slots."""
+
+        clear_all_pin_codes = self.__getattr__("clear_all_pin_codes")
+        await clear_all_pin_codes(*())
+
+    async def async_set_user_type(self, code_slot: int, user_type: str) -> None:
+        """Set user type."""
+
+        set_user_type = self.__getattr__("set_user_type")
+        await set_user_type(*(code_slot - 1, user_type))
+
+    async def async_get_user_type(self, code_slot: int) -> str:
+        """Get user type."""
+
+        get_user_type = self.__getattr__("get_user_type")
+        result = await get_user_type(*(code_slot - 1))
+        return result
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
