@@ -30,10 +30,13 @@ from .const import (
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_PARAMETERS,
+    ATTR_PROPERTY,
+    ATTR_PROPERTY_KEY,
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
+    ATTR_VALUE_RAW,
     CONF_INTEGRATION_CREATED_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
@@ -213,7 +216,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        value = notification.value
+        raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
         hass.bus.async_fire(
@@ -228,9 +231,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
+                ATTR_PROPERTY: notification.property_,
                 ATTR_PROPERTY_NAME: notification.property_name,
+                ATTR_PROPERTY_KEY: notification.property_key,
                 ATTR_PROPERTY_KEY_NAME: notification.property_key_name,
                 ATTR_VALUE: value,
+                ATTR_VALUE_RAW: raw_value,
             },
         )
 
