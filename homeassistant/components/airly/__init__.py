@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from math import ceil
+from math import floor
 
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
@@ -12,6 +12,7 @@ import async_timeout
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_API_ADVICE,
@@ -20,7 +21,7 @@ from .const import (
     ATTR_API_CAQI_LEVEL,
     CONF_USE_NEAREST,
     DOMAIN,
-    MAX_REQUESTS_PER_DAY,
+    MINIMUM_UPDATE_INTERVAL,
     NO_AIRLY_SENSORS,
 )
 
@@ -29,17 +30,30 @@ PLATFORMS = ["air_quality", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def set_update_interval(hass, instances):
-    """Set update_interval to another configured Airly instances."""
+def set_update_interval(hass, instances, requests_remaining):
+    """Set update_interval to all configured Airly instances."""
+    if requests_remaining == 0:
+        return
+
     # We check how many Airly configured instances are and calculate interval to not
-    # exceed allowed numbers of requests.
-    interval = timedelta(minutes=ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances)
+    # exceed allowed numbers of requests. The number of requests is reset at midnight
+    # UTC.
+    now = dt_util.utcnow()
+    midnight = dt_util.find_next_time_expression_time(
+        now, seconds=[0], minutes=[0], hours=[0]
+    )
+    minutes_to_midnight = (midnight - now).seconds / 60
+
+    interval = timedelta(
+        max(minutes=floor(minutes_to_midnight / requests_remaining * instances)),
+        MINIMUM_UPDATE_INTERVAL,
+    )
+
+    _LOGGER.debug("Data will be update every %s", interval)
 
     if hass.data.get(DOMAIN):
         for instance in hass.data[DOMAIN].values():
             instance.update_interval = interval
-
-    return interval
 
 
 async def async_setup_entry(hass, config_entry):
@@ -56,10 +70,8 @@ async def async_setup_entry(hass, config_entry):
         )
 
     websession = async_get_clientsession(hass)
-    # Change update_interval for other Airly instances
-    update_interval = set_update_interval(
-        hass, len(hass.config_entries.async_entries(DOMAIN))
-    )
+
+    update_interval = timedelta(minutes=MINIMUM_UPDATE_INTERVAL)
 
     coordinator = AirlyDataUpdateCoordinator(
         hass, websession, api_key, latitude, longitude, update_interval, use_nearest
@@ -89,9 +101,6 @@ async def async_unload_entry(hass, config_entry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    # Change update_interval for other Airly instances
-    set_update_interval(hass, len(hass.data[DOMAIN]))
 
     return unload_ok
 
@@ -139,6 +148,14 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             self.airly.requests_remaining,
             self.airly.requests_per_day,
         )
+
+        # Airly API sometimes returns None for requests remaining
+        if self.airly.requests_remaining:
+            set_update_interval(
+                self.hass,
+                len(self.hass.config_entries.async_entries(DOMAIN)),
+                self.airly.requests_remaining,
+            )
 
         values = measurements.current["values"]
         index = measurements.current["indexes"][0]
