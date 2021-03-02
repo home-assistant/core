@@ -1051,7 +1051,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.8
+simplisafe-python==9.6.9
 
 # homeassistant.components.slack
 slackclient==2.5.0
