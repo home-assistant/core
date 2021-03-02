@@ -217,10 +217,12 @@ class AddonManager:
         """Create a partial snapshot of the Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
         addon_version = addon_info["version"]
+        name = f"addon_{ADDON_SLUG}_{addon_version}"
 
+        LOGGER.debug("Creating snapshot: %s", name)
         await async_create_snapshot(
             self._hass,
-            {"name": f"addon_{ADDON_SLUG}_{addon_version}", "addons": [ADDON_SLUG]},
+            {"name": name, "addons": [ADDON_SLUG]},
             partial=True,
         )
 
