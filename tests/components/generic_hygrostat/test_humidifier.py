@@ -1,7 +1,7 @@
 """The tests for the generic_hygrostat."""
 import datetime
+from unittest.mock import patch
 
-from asynctest import mock
 import pytest
 import voluptuous as vol
 
@@ -765,7 +765,7 @@ async def test_humidity_change_dry_trigger_on_long_enough(hass, setup_comp_4):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, False)
@@ -799,7 +799,7 @@ async def test_humidity_change_dry_trigger_off_long_enough(hass, setup_comp_4):
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, True)
@@ -921,7 +921,7 @@ async def test_humidity_change_humidifier_trigger_on_long_enough(hass, setup_com
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, False)
@@ -943,7 +943,7 @@ async def test_humidity_change_humidifier_trigger_off_long_enough(hass, setup_co
     fake_changed = datetime.datetime(
         1918, 11, 11, 11, 11, 11, tzinfo=datetime.timezone.utc
     )
-    with mock.patch(
+    with patch(
         "homeassistant.helpers.condition.dt_util.utcnow", return_value=fake_changed
     ):
         calls = await _setup_switch(hass, True)
