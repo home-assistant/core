@@ -1,6 +1,7 @@
 """Test helpers for Freebox."""
 from unittest.mock import AsyncMock, patch
 
+from freebox_api.exceptions import HttpRequestError
 import pytest
 
 from .const import (
@@ -35,6 +36,7 @@ def mock_router():
         )
         # switch
         instance.wifi.get_global_config = AsyncMock(return_value=WIFI_GET_GLOBAL_CONFIG)
+        instance.connection.get_lte_config = AsyncMock(side_effect=HttpRequestError)
         # device_tracker
         instance.lan.get_hosts_list = AsyncMock(return_value=DATA_LAN_GET_HOSTS_LIST)
         instance.close = AsyncMock()
