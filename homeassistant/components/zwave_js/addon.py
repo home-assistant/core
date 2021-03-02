@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import partial
-from typing import Callable, Optional, cast
+from typing import Any, Callable, Optional, TypeVar, cast
 
 from awesomeversion import AwesomeVersion
 
@@ -24,6 +24,8 @@ from homeassistant.helpers.singleton import singleton
 
 from .const import ADDON_SLUG, CONF_ADDON_DEVICE, CONF_ADDON_NETWORK_KEY, DOMAIN, LOGGER
 
+F = TypeVar("F", bound=Callable[..., Any])  # pylint: disable=invalid-name
+
 DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 
 
@@ -32,6 +34,26 @@ DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 def get_addon_manager(hass: HomeAssistant) -> AddonManager:
     """Get the add-on manager."""
     return AddonManager(hass)
+
+
+def api_error(error_message: str) -> Callable[[F], F]:
+    """Handle HassioAPIError and raise a specific AddonError."""
+
+    def handle_hassio_api_error(func: F) -> F:
+        """Handle a HassioAPIError."""
+
+        async def wrapper(*args, **kwargs):  # type: ignore
+            """Wrap an add-on manager method."""
+            try:
+                return_value = await func(*args, **kwargs)
+            except HassioAPIError as err:
+                raise AddonError(error_message) from err
+
+            return return_value
+
+        return cast(F, wrapper)
+
+    return handle_hassio_api_error
 
 
 class AddonManager:
@@ -60,14 +82,10 @@ class AddonManager:
             )
         )
 
+    @api_error("Failed to get Z-Wave JS add-on discovery info")
     async def async_get_addon_discovery_info(self) -> dict:
         """Return add-on discovery info."""
-        try:
-            discovery_info = await async_get_addon_discovery_info(
-                self._hass, ADDON_SLUG
-            )
-        except HassioAPIError as err:
-            raise AddonError("Failed to get Z-Wave JS add-on discovery info") from err
+        discovery_info = await async_get_addon_discovery_info(self._hass, ADDON_SLUG)
 
         if not discovery_info:
             raise AddonError("Failed to get Z-Wave JS add-on discovery info")
@@ -75,13 +93,10 @@ class AddonManager:
         discovery_info_config: dict = discovery_info["config"]
         return discovery_info_config
 
+    @api_error("Failed to get the Z-Wave JS add-on info")
     async def async_get_addon_info(self) -> dict:
         """Return and cache Z-Wave JS add-on info."""
-        try:
-            addon_info: dict = await async_get_addon_info(self._hass, ADDON_SLUG)
-        except HassioAPIError as err:
-            raise AddonError("Failed to get the Z-Wave JS add-on info") from err
-
+        addon_info: dict = await async_get_addon_info(self._hass, ADDON_SLUG)
         return addon_info
 
     async def async_is_addon_running(self) -> bool:
@@ -99,20 +114,16 @@ class AddonManager:
         addon_info = await self.async_get_addon_info()
         return cast(dict, addon_info["options"])
 
+    @api_error("Failed to set the Z-Wave JS add-on options")
     async def async_set_addon_options(self, config: dict) -> None:
         """Set Z-Wave JS add-on options."""
         options = {"options": config}
-        try:
-            await async_set_addon_options(self._hass, ADDON_SLUG, options)
-        except HassioAPIError as err:
-            raise AddonError("Failed to set the Z-Wave JS add-on options") from err
+        await async_set_addon_options(self._hass, ADDON_SLUG, options)
 
+    @api_error("Failed to install the Z-Wave JS add-on")
     async def async_install_addon(self) -> None:
         """Install the Z-Wave JS add-on."""
-        try:
-            await async_install_addon(self._hass, ADDON_SLUG)
-        except HassioAPIError as err:
-            raise AddonError("Failed to install the Z-Wave JS add-on") from err
+        await async_install_addon(self._hass, ADDON_SLUG)
 
     @callback
     def async_schedule_install_addon(
@@ -130,13 +141,12 @@ class AddonManager:
             )
         return self._install_task
 
+    @api_error("Failed to uninstall the Z-Wave JS add-on")
     async def async_uninstall_addon(self) -> None:
         """Uninstall the Z-Wave JS add-on."""
-        try:
-            await async_uninstall_addon(self._hass, ADDON_SLUG)
-        except HassioAPIError as err:
-            raise AddonError("Failed to uninstall the Z-Wave JS add-on") from err
+        await async_uninstall_addon(self._hass, ADDON_SLUG)
 
+    @api_error("Failed to update the Z-Wave JS add-on")
     async def async_update_addon(self) -> None:
         """Update the Z-Wave JS add-on if needed."""
         addon_info = await self.async_get_addon_info()
@@ -149,10 +159,7 @@ class AddonManager:
         if AwesomeVersion(addon_version) >= AwesomeVersion(addon_latest_version):
             return
 
-        try:
-            await async_update_addon(self._hass, ADDON_SLUG)
-        except HassioAPIError as err:
-            raise AddonError("Failed to update the Z-Wave JS add-on") from err
+        await async_update_addon(self._hass, ADDON_SLUG)
 
     @callback
     def async_schedule_update_addon(self) -> asyncio.Task:
@@ -167,19 +174,15 @@ class AddonManager:
             )
         return self._update_task
 
+    @api_error("Failed to start the Z-Wave JS add-on")
     async def async_start_addon(self) -> None:
         """Start the Z-Wave JS add-on."""
-        try:
-            await async_start_addon(self._hass, ADDON_SLUG)
-        except HassioAPIError as err:
-            raise AddonError("Failed to start the Z-Wave JS add-on") from err
+        await async_start_addon(self._hass, ADDON_SLUG)
 
+    @api_error("Failed to stop the Z-Wave JS add-on")
     async def async_stop_addon(self) -> None:
         """Stop the Z-Wave JS add-on."""
-        try:
-            await async_stop_addon(self._hass, ADDON_SLUG)
-        except HassioAPIError as err:
-            raise AddonError("Failed to stop the Z-Wave JS add-on") from err
+        await async_stop_addon(self._hass, ADDON_SLUG)
 
     async def async_setup_addon(self, usb_path: str, network_key: str) -> None:
         """Configure and start Z-Wave JS add-on."""
