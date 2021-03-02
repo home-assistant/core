@@ -1,10 +1,8 @@
 """The sms gateway to interact with a GSM modem."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
-from gammu.asyncworker import (  # pylint: disable=import-error, no-member
-    GammuAsyncWorker,
-)
+import gammu  # pylint: disable=import-error
+from gammu.asyncworker import GammuAsyncWorker  # pylint: disable=import-error
 
 from homeassistant.core import callback
 
@@ -165,6 +163,6 @@ async def create_sms_gateway(config, hass):
         gateway = Gateway(worker, hass)
         await gateway.init_async()
         return gateway
-    except gammu.GSMError as exc:  # pylint: disable=no-member
+    except gammu.GSMError as exc:
         _LOGGER.error("Failed to initialize, error %s", exc)
         return None

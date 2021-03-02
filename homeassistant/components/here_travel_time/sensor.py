@@ -457,11 +457,9 @@ class HERETravelTimeData:
 
             _LOGGER.debug("Raw response is: %s", response.response)
 
-            # pylint: disable=no-member
             source_attribution = response.response.get("sourceAttribution")
             if source_attribution is not None:
                 self.attribution = self._build_hass_attribution(source_attribution)
-            # pylint: disable=no-member
             route = response.response["route"]
             summary = route[0]["summary"]
             waypoint = route[0]["waypoint"]
@@ -477,7 +475,6 @@ class HERETravelTimeData:
             else:
                 # Convert to kilometers
                 self.distance = distance / 1000
-            # pylint: disable=no-member
             self.route = response.route_short
             self.origin_name = waypoint[0]["mappedRoadName"]
             self.destination_name = waypoint[1]["mappedRoadName"]
