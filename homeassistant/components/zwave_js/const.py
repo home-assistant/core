@@ -33,6 +33,8 @@ ATTR_TYPE = "type"
 ATTR_DEVICE_ID = "device_id"
 ATTR_PROPERTY_NAME = "property_name"
 ATTR_PROPERTY_KEY_NAME = "property_key_name"
+ATTR_PROPERTY = "property"
+ATTR_PROPERTY_KEY = "property_key"
 ATTR_PARAMETERS = "parameters"
 
 # service constants
