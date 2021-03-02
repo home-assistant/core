@@ -5,7 +5,8 @@ from python_picnic_api import PicnicAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from .const import DOMAIN, CONF_USERNAME, CONF_COUNTRY_CODE, CONF_PASSWORD
+from .const import DOMAIN, CONF_USERNAME, CONF_COUNTRY_CODE, CONF_PASSWORD, CONF_API, CONF_COORDINATOR
+from .coordinator import PicnicUpdateCoordinator
 
 PLATFORMS = ["sensor"]
 
@@ -31,7 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = picnic_client
+    hass.data[DOMAIN][entry.entry_id] = {
+        CONF_API: picnic_client,
+        CONF_COORDINATOR: PicnicUpdateCoordinator(hass, picnic_client)
+    }
 
     for component in PLATFORMS:
         hass.async_create_task(

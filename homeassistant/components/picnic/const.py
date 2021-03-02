@@ -3,11 +3,15 @@ from homeassistant.const import DEVICE_CLASS_TIMESTAMP, CURRENCY_EURO
 
 DOMAIN = "picnic"
 
+CONF_API = "api"
+CONF_COORDINATOR = "coordinator"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 
 COUNTRY_CODES = ["NL", "DE", "BE"]
+ATTRIBUTION = "picnic.app"
+ADDRESS = "address"
 
 SENSOR_COMPLETED_DELIVERIES = "completed_deliveries"
 SENSOR_TOTAL_DELIVERIES = "total_deliveries"

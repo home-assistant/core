@@ -16,14 +16,13 @@ from .const import SENSOR_COMPLETED_DELIVERIES, SENSOR_TOTAL_DELIVERIES, \
     SENSOR_CART_ITEMS_COUNT, SENSOR_CART_TOTAL_PRICE, SENSOR_SELECTED_SLOT_START, \
     SENSOR_SELECTED_SLOT_END, SENSOR_SELECTED_SLOT_MAX_ODER_TIME, SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE, \
     SENSOR_LAST_ORDER_SLOT_START, SENSOR_LAST_ORDER_SLOT_END, SENSOR_LAST_ORDER_STATUS, \
-    SENSOR_LAST_ORDER_DELIVERY_TIME, SENSOR_LAST_ORDER_TOTAL_PRICE, UNIQUE_ID
+    SENSOR_LAST_ORDER_DELIVERY_TIME, SENSOR_LAST_ORDER_TOTAL_PRICE, ADDRESS
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry, picnic_api_client: PicnicAPI):
+    def __init__(self, hass: HomeAssistant, picnic_api_client: PicnicAPI):
         self.picnic_api_client = picnic_api_client
-        self.unique_id = config_entry.unique_id
 
         logger = logging.getLogger(__name__)
         super().__init__(
@@ -54,9 +53,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         # Pre-process the data
         slot_data = self._get_slot_data(cart)
         last_order = self._get_last_order(deliveries)
+        address = f'{user["address"]["street"]} {user["address"]["house_number"]}{user["address"]["house_number_ext"]}'
 
         # Create a flat lookup table to be used in the entities, convert prices from cents to euros
         return {
+            ADDRESS: address,
             SENSOR_COMPLETED_DELIVERIES: user.get("completed_deliveries"),
             SENSOR_TOTAL_DELIVERIES: user.get("total_deliveries"),
             SENSOR_CART_ITEMS_COUNT: cart.get("total_count", 0),
