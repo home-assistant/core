@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SERVICE_REBOOT
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         """Handle reboot service call."""
         await router.reboot()
 
-    hass.services.async_register(DOMAIN, "reboot", async_reboot)
+    hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)
 
     async def async_close_connection(event):
         """Close Freebox connection on HA Stop."""
@@ -79,5 +79,6 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if unload_ok:
         router = hass.data[DOMAIN].pop(entry.unique_id)
         await router.close()
+        hass.services.async_remove(DOMAIN, SERVICE_REBOOT)
 
     return unload_ok
