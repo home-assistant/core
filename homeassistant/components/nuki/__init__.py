@@ -105,7 +105,7 @@ async def async_setup_entry(hass, entry):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                hass.async_add_executor_job(_update_devices, locks + openers)
+                await hass.async_add_executor_job(_update_devices, locks + openers)
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
