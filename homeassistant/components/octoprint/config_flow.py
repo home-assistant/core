@@ -1,7 +1,7 @@
 """Config flow for OctoPrint integration."""
 import logging
 
-from pyoctoprintapi import OctoprintClient
+from pyoctoprintapi import ApiError, OctoprintClient
 import requests
 import voluptuous as vol
 
@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PATH,
     CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -25,26 +26,40 @@ DEFAULT_NAME = "OctoPrint"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_PATH, default="/"): cv.string,
+        vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+STEP_IMPORT_DATA_SCHEMA = vol.Schema(
+    {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_PATH, default="/"): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
 def _schema_with_defaults(host=None, port=80, path="/"):
     return vol.Schema(
         {
-            vol.Required(CONF_API_KEY): cv.string,
+            vol.Required(CONF_USERNAME): cv.string,
             vol.Required(CONF_HOST, default=host): cv.string,
             vol.Optional(CONF_PORT, default=port): cv.port,
             vol.Optional(CONF_PATH, default=path): cv.string,
             vol.Optional(CONF_SSL, default=False): cv.boolean,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        }
+        },
+        extra=vol.ALLOW_EXTRA,
     )
 
 
@@ -55,6 +70,16 @@ async def validate_input(hass: core.HomeAssistant, data):
     octoprint = OctoprintClient(
         data[CONF_HOST], session, data[CONF_PORT], data[CONF_SSL], data[CONF_PATH]
     )
+
+    if CONF_API_KEY not in data:
+        try:
+            data[CONF_API_KEY] = await octoprint.request_app_key(
+                "Home Assistant", data[CONF_USERNAME], 30
+            )
+        except ApiError as ex:
+            _LOGGER.error("Failed to retrieve application key: %s", ex)
+            raise InvalidAuth from ex
+
     octoprint.set_api_key(data[CONF_API_KEY])
     if not await validate_connection(octoprint):
         _LOGGER.error("Failed to connect")
@@ -102,6 +127,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -117,6 +144,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
+        if not user_input:
+            return self.async_show_form(
+                step_id="user", data_schema=STEP_IMPORT_DATA_SCHEMA
+            )
+
         return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(self, discovery_info):

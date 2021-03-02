@@ -1,7 +1,7 @@
 """Test the OctoPrint config flow."""
 from unittest.mock import patch
 
-from pyoctoprintapi import DiscoverySettings
+from pyoctoprintapi import ApiError, DiscoverySettings
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.octoprint.config_flow import CannotConnect
@@ -27,6 +27,8 @@ async def test_form(hass):
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ), patch(
         "homeassistant.components.octoprint.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.octoprint.async_setup_entry",
@@ -35,8 +37,8 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                "username": "testuser",
                 "host": "1.1.1.1",
-                "api_key": "test-key",
                 "name": "Printer",
                 "port": 81,
                 "ssl": True,
@@ -48,6 +50,7 @@ async def test_form(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Printer"
     assert result2["data"] == {
+        "username": "testuser",
         "host": "1.1.1.1",
         "api_key": "test-key",
         "name": "Printer",
@@ -68,12 +71,12 @@ async def test_form_cannot_connect(hass):
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         side_effect=CannotConnect,
-    ):
+    ), patch("pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "api_key": "test-key",
+                "username": "testuser",
                 "name": "Printer",
                 "port": 81,
                 "ssl": True,
@@ -94,12 +97,12 @@ async def test_form_unknown_exception(hass):
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         side_effect=Exception,
-    ):
+    ), patch("pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "host": "1.1.1.1",
-                "api_key": "test-key",
+                "username": "testuser",
                 "name": "Printer",
                 "port": 81,
                 "ssl": True,
@@ -136,6 +139,8 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ), patch(
         "homeassistant.components.octoprint.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.octoprint.async_setup_entry",
@@ -166,6 +171,8 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
     ), patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
     ), patch(
         "homeassistant.components.octoprint.async_setup", return_value=True
     ), patch(
@@ -211,6 +218,8 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ) as request_app_key, patch(
         "homeassistant.components.octoprint.async_setup", return_value=True
     ), patch(
         "homeassistant.components.octoprint.async_setup_entry",
@@ -229,42 +238,32 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+        assert len(request_app_key.mock_calls) == 0
+
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
-async def test_duplicate_import_yaml(hass: HomeAssistant) -> None:
-    """Test that the yaml aborts on a reimport."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={"host": "192.168.1.123"},
-        source=config_entries.SOURCE_IMPORT,
-        unique_id="uuid",
-    ).add_to_hass(hass)
+async def test_failed_auth(hass: HomeAssistant) -> None:
+    """Test we handle a random error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
+        "pyoctoprintapi.OctoprintClient.request_app_key",
+        side_effect=ApiError,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "192.168.1.123",
-                "port": 80,
-                "name": "Octoprint",
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "testuser",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
                 "path": "/",
-                "api_key": "123dfuchxxkks",
-                "ssl": False,
             },
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
