@@ -352,6 +352,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            self.turn_on()
+
         if self.target_temperature == 0:
             self._home_status.set_room_thermpoint(
                 self._id,
