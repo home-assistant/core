@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 async def test_get_device_config(hass, hass_client):

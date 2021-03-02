@@ -1,7 +1,7 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
 import logging
 
-from bluepy.btle import BTLEException  # pylint: disable=import-error, no-name-in-module
+from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 

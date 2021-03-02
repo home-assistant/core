@@ -3,9 +3,8 @@ import asyncio
 from functools import partial
 import logging
 
-from miio import AirConditioningCompanionV3  # pylint: disable=import-error
-from miio import ChuangmiPlug, DeviceException, PowerStrip
-from miio.powerstrip import PowerMode  # pylint: disable=import-error
+from miio import AirConditioningCompanionV3, ChuangmiPlug, DeviceException, PowerStrip
+from miio.powerstrip import PowerMode
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity

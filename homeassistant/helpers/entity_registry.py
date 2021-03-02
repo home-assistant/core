@@ -45,7 +45,7 @@ from homeassistant.util.yaml import load_yaml
 from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry  # noqa: F401
+    from homeassistant.config_entries import ConfigEntry
 
 PATH_REGISTRY = "entity_registry.yaml"
 DATA_REGISTRY = "entity_registry"

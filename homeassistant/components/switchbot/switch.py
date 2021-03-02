@@ -1,7 +1,7 @@
 """Support for Switchbot."""
 from typing import Any, Dict
 
-# pylint: disable=import-error, no-member
+# pylint: disable=import-error
 import switchbot
 import voluptuous as vol
 

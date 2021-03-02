@@ -4,7 +4,7 @@ from enum import Enum
 from functools import partial
 import logging
 
-from miio import (  # pylint: disable=import-error
+from miio import (
     AirFresh,
     AirHumidifier,
     AirHumidifierMiot,
@@ -12,24 +12,24 @@ from miio import (  # pylint: disable=import-error
     AirPurifierMiot,
     DeviceException,
 )
-from miio.airfresh import (  # pylint: disable=import-error, import-error
+from miio.airfresh import (
     LedBrightness as AirfreshLedBrightness,
     OperationMode as AirfreshOperationMode,
 )
-from miio.airhumidifier import (  # pylint: disable=import-error, import-error
+from miio.airhumidifier import (
     LedBrightness as AirhumidifierLedBrightness,
     OperationMode as AirhumidifierOperationMode,
 )
-from miio.airhumidifier_miot import (  # pylint: disable=import-error, import-error
+from miio.airhumidifier_miot import (
     LedBrightness as AirhumidifierMiotLedBrightness,
     OperationMode as AirhumidifierMiotOperationMode,
     PressedButton as AirhumidifierPressedButton,
 )
-from miio.airpurifier import (  # pylint: disable=import-error, import-error
+from miio.airpurifier import (
     LedBrightness as AirpurifierLedBrightness,
     OperationMode as AirpurifierOperationMode,
 )
-from miio.airpurifier_miot import (  # pylint: disable=import-error, import-error
+from miio.airpurifier_miot import (
     LedBrightness as AirpurifierMiotLedBrightness,
     OperationMode as AirpurifierMiotOperationMode,
 )

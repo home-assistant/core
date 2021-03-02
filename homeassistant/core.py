@@ -642,7 +642,6 @@ class Event:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        # pylint: disable=maybe-no-member
         if self.data:
             return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
 

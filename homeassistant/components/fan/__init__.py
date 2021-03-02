@@ -344,7 +344,6 @@ class FanEntity(ToggleEntity):
         """Turn on the fan."""
         raise NotImplementedError()
 
-    # pylint: disable=arguments-differ
     async def async_turn_on_compat(
         self,
         speed: Optional[str] = None,

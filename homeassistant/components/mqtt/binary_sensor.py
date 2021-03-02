@@ -242,7 +242,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         expire_after = self._config.get(CONF_EXPIRE_AFTER)
-        # pylint: disable=no-member
         return MqttAvailability.available.fget(self) and (
             expire_after is None or not self._expired
         )

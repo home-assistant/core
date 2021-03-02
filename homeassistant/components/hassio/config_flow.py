@@ -3,7 +3,7 @@ import logging
 
 from homeassistant import config_entries
 
-from . import DOMAIN  # pylint:disable=unused-import
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Generator, Optional, Sequence
 import attr
 
 if TYPE_CHECKING:
-    from .core import Context  # noqa: F401 pylint: disable=unused-import
+    from .core import Context
 
 
 class HomeAssistantError(Exception):

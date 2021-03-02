@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
 if TYPE_CHECKING:
-    from .connection import ActiveConnection  # noqa
+    from .connection import ActiveConnection
 
 
 WebSocketCommandHandler = Callable[[HomeAssistant, "ActiveConnection", dict], None]

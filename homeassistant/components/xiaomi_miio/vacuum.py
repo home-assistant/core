@@ -2,7 +2,7 @@
 from functools import partial
 import logging
 
-from miio import DeviceException, Vacuum  # pylint: disable=import-error
+from miio import DeviceException, Vacuum
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (

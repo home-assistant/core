@@ -13,7 +13,7 @@ import homeassistant.util.dt as dt_util
 from . import async_init_integration
 
 from tests.common import async_fire_time_changed, async_mock_service
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 

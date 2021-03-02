@@ -178,12 +178,10 @@ class HyperionComponentSwitch(SwitchEntity):
             }
         )
 
-    # pylint: disable=unused-argument
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._async_send_set_component(True)
 
-    # pylint: disable=unused-argument
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_component(False)

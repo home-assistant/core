@@ -221,7 +221,6 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
-    # pylint: disable=arguments-differ
     async def async_step_user(
         self,
         user_input: Optional[ConfigType] = None,

@@ -175,7 +175,7 @@ def _create_flume_device_coordinator(hass, flume_device):
         _LOGGER.debug("Updating Flume data")
         try:
             await hass.async_add_executor_job(flume_device.update_force)
-        except Exception as ex:  # pylint: disable=broad-except
+        except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
         _LOGGER.debug(
             "Flume update details: %s",

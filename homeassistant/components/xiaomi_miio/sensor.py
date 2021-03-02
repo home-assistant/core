@@ -2,8 +2,7 @@
 from dataclasses import dataclass
 import logging
 
-from miio import AirQualityMonitor  # pylint: disable=import-error
-from miio import DeviceException
+from miio import AirQualityMonitor, DeviceException
 from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,

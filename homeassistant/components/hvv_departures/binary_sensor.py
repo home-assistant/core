@@ -92,7 +92,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             raise UpdateFailed(f"Authentication failed: {err}") from err
         except ClientConnectorError as err:
             raise UpdateFailed(f"Network not available: {err}") from err
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             raise UpdateFailed(f"Error occurred while fetching data: {err}") from err
 
     coordinator = DataUpdateCoordinator(

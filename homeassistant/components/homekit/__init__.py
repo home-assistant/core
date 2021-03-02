@@ -42,7 +42,6 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.util import get_local_ip
 
-# pylint: disable=unused-import
 from . import (  # noqa: F401
     type_cameras,
     type_covers,

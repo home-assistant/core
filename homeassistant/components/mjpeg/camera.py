@@ -144,8 +144,6 @@ class MjpegCamera(Camera):
         else:
             req = requests.get(self._mjpeg_url, stream=True, timeout=10)
 
-        # https://github.com/PyCQA/pylint/issues/1437
-        # pylint: disable=no-member
         with closing(req) as response:
             return extract_image_from_mjpeg(response.iter_content(102400))
 

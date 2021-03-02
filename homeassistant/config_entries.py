@@ -927,7 +927,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @property
     def unique_id(self) -> Optional[str]:
         """Return unique ID if available."""
-        # pylint: disable=no-member
         if not self.context:
             return None
 
@@ -976,7 +975,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         Returns optionally existing config entry with same ID.
         """
         if unique_id is None:
-            self.context["unique_id"] = None  # pylint: disable=no-member
+            self.context["unique_id"] = None
             return None
 
         if raise_on_progress:
@@ -984,7 +983,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
-        self.context["unique_id"] = unique_id  # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
 
         # Abort discoveries done using the default discovery unique id
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:

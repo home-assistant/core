@@ -23,8 +23,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
-
-# pylint: disable=unused-import
 from .const import (
     CONF_BAUD_RATE,
     CONF_GATEWAY_TYPE,

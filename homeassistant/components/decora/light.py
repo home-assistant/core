@@ -4,10 +4,8 @@ from functools import wraps
 import logging
 import time
 
-from bluepy.btle import (  # pylint: disable=import-error, no-member, no-name-in-module
-    BTLEException,
-)
-import decora  # pylint: disable=import-error, no-member
+from bluepy.btle import BTLEException  # pylint: disable=import-error
+import decora  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.light import (

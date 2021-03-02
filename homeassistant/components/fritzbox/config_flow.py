@@ -13,7 +13,6 @@ from homeassistant.components.ssdp import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-# pylint:disable=unused-import
 from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
 DATA_SCHEMA_USER = vol.Schema(

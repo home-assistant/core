@@ -1,7 +1,7 @@
 """Support for SMS dongle sensor."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
+import gammu  # pylint: disable=import-error
 
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
 from homeassistant.helpers.entity import Entity
@@ -71,7 +71,7 @@ class GSMSignalSensor(Entity):
         """Get the latest data from the modem."""
         try:
             self._state = await self._gateway.get_signal_quality_async()
-        except gammu.GSMError as exc:  # pylint: disable=no-member
+        except gammu.GSMError as exc:
             _LOGGER.error("Failed to read signal quality: %s", exc)
 
     @property
