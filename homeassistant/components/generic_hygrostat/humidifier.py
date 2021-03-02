@@ -5,7 +5,6 @@ import logging
 from homeassistant.components.humidifier import PLATFORM_SCHEMA, HumidifierEntity
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DEVICE_CLASS_DEHUMIDIFIER,
     DEVICE_CLASS_HUMIDIFIER,
     MODE_AWAY,
@@ -14,6 +13,7 @@ from homeassistant.components.humidifier.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,

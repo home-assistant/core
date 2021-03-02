@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     MODE_AWAY,
     MODE_NORMAL,
@@ -17,6 +16,7 @@ from homeassistant.components.humidifier.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
