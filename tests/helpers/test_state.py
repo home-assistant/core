@@ -22,8 +22,6 @@ import homeassistant.core as ha
 from homeassistant.helpers import state
 from homeassistant.util import dt as dt_util
 
-from .test_frame import mock_integration_frame as mock_frame  # noqa
-
 from tests.common import async_mock_service
 
 
