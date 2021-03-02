@@ -283,6 +283,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._target_temperature = self._away_temperature
             elif self._preset == PRESET_SCHEDULE:
                 self.async_update_callback()
+                await self.data_handler.async_force_update(self._home_status_class)
             self.async_write_ha_state()
             return
 
@@ -293,8 +294,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             if data["event_type"] == EVENT_TYPE_SET_POINT and self._id == room["id"]:
                 if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
                     self._hvac_mode = HVAC_MODE_OFF
+                    self._preset = STATE_NETATMO_OFF
+                    self._target_temperature = 0
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
                     self._hvac_mode = HVAC_MODE_HEAT
+                    self._preset = PRESET_MAP_NETATMO[PRESET_BOOST]
                     self._target_temperature = DEFAULT_MAX_TEMP
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
                     self._hvac_mode = HVAC_MODE_HEAT
