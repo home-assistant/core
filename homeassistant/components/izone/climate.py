@@ -612,14 +612,6 @@ class ZoneDevice(ClimateEntity):
         """Return the maximum air flow."""
         return self._zone.airflow_max
 
-    @property
-    def device_state_attributes(self):
-        """Return the optional state attributes."""
-        return {
-            "airflow_min": self._zone.airflow_min,
-            "airflow_max": self._zone.airflow_max,
-        }
-
     async def async_set_airflow_min(self, **kwargs):
         """Set new airflow minimum."""
         await self._controller.wrap_and_catch(
@@ -675,5 +667,7 @@ class ZoneDevice(ClimateEntity):
     def device_state_attributes(self):
         """Return the optional state attributes."""
         return {
+            "airflow_max": self._zone.airflow_max,
+            "airflow_min": self._zone.airflow_min,
             "zone_index": self.zone_index,
         }
