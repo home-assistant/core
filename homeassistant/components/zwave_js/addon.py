@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 from functools import partial
 from typing import Any, Callable, TypeVar, cast
 
@@ -55,6 +56,16 @@ def api_error(error_message: str) -> Callable[[F], F]:
     return handle_hassio_api_error
 
 
+class AddonState(Enum):
+    """Represent the current state of the add-on."""
+
+    NOT_INSTALLED = "not_installed"
+    INSTALLING = "installing"
+    UPDATING = "updating"
+    NOT_RUNNING = "not_running"
+    RUNNING = "running"
+
+
 class AddonManager:
     """Manage the add-on.
 
@@ -98,15 +109,22 @@ class AddonManager:
         addon_info: dict = await async_get_addon_info(self._hass, ADDON_SLUG)
         return addon_info
 
-    async def async_is_addon_running(self) -> bool:
-        """Return True if Z-Wave JS add-on is running."""
+    async def async_get_addon_state(self) -> AddonState:
+        """Return the current state of the Z-Wave JS add-on."""
         addon_info = await self.async_get_addon_info()
-        return bool(addon_info["state"] == "started")
 
-    async def async_is_addon_installed(self) -> bool:
-        """Return True if Z-Wave JS add-on is installed."""
-        addon_info = await self.async_get_addon_info()
-        return addon_info["version"] is not None
+        addon_state = AddonState.NOT_INSTALLED
+
+        if addon_info["version"] is not None:
+            addon_state = AddonState.NOT_RUNNING
+        if addon_info["state"] == "started":
+            addon_state = AddonState.RUNNING
+        if self._install_task and not self._install_task.done():
+            addon_state = AddonState.INSTALLING
+        if self._update_task and not self._update_task.done():
+            addon_state = AddonState.UPDATING
+
+        return addon_state
 
     async def async_get_addon_options(self) -> dict:
         """Get Z-Wave JS add-on options."""
