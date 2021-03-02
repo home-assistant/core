@@ -2,10 +2,6 @@
   "domain": "generic_hygrostat",
   "name": "Generic hygrostat",
   "documentation": "https://www.home-assistant.io/integrations/generic_hygrostat",
-  "dependencies": [
-    "sensor",
-    "switch"
-  ],
   "codeowners": ["@Shulyaka"],
   "quality_scale": "internal"
 }
