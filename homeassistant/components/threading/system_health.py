@@ -23,5 +23,5 @@ async def async_system_health_info(hass):
             name = f"{thread.name} {thread.ident}"
         else:
             name = thread.name
-        info[name] = frames.get(thread.ident)
+        info[name] = str(frames.get(thread.ident))
     return info
