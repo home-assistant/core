@@ -55,12 +55,13 @@ class FreeboxRouter:
         self._port = entry.data[CONF_PORT]
 
         self._api: Freepybox = None
-        self._name = None
+        self.name = None
         self.mac = None
         self._sw_v = None
         self._attrs = {}
 
-        self.devices: Dict[str, Any] = {}
+        self.devices: Dict[str, Dict[str, Any]] = {}
+        self.disks: Dict[int, Dict[str, Any]] = {}
         self.sensors_temperature: Dict[str, int] = {}
         self.sensors_connection: Dict[str, float] = {}
         self.call_list: List[Dict[str, Any]] = []
@@ -81,7 +82,7 @@ class FreeboxRouter:
         # System
         fbx_config = await self._api.system.get_config()
         self.mac = fbx_config["mac"]
-        self._name = fbx_config["model_info"]["pretty_name"]
+        self.name = fbx_config["model_info"]["pretty_name"]
         self._sw_v = fbx_config["firmware_version"]
 
         # Devices & sensors
@@ -92,18 +93,18 @@ class FreeboxRouter:
 
     async def update_all(self, now: Optional[datetime] = None) -> None:
         """Update all Freebox platforms."""
+        await self.update_device_trackers()
         await self.update_sensors()
-        await self.update_devices()
 
-    async def update_devices(self) -> None:
+    async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: Dict[str, Any] = await self._api.lan.get_hosts_list()
+        fbx_devices: [Dict[str, Any]] = await self._api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
             {
-                "primary_name": self._name,
+                "primary_name": self.name,
                 "l2ident": {"id": self.mac},
                 "vendor_name": "Freebox SAS",
                 "host_type": "router",
@@ -153,7 +154,17 @@ class FreeboxRouter:
 
         self.call_list = await self._api.call.get_calls_log()
 
+        await self._update_disks_sensors()
+
         async_dispatcher_send(self.hass, self.signal_sensor_update)
+
+    async def _update_disks_sensors(self) -> None:
+        """Update Freebox disks."""
+        # None at first request
+        fbx_disks: [Dict[str, Any]] = await self._api.storage.get_disks() or []
+
+        for fbx_disk in fbx_disks:
+            self.disks[fbx_disk["id"]] = fbx_disk
 
     async def reboot(self) -> None:
         """Reboot the Freebox."""
@@ -172,7 +183,7 @@ class FreeboxRouter:
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
-            "name": self._name,
+            "name": self.name,
             "manufacturer": "Freebox SAS",
             "sw_version": self._sw_v,
         }
