@@ -1,6 +1,4 @@
 """Provide info to system health."""
-import threading
-
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import system_info
@@ -30,5 +28,4 @@ async def system_health_info(hass):
         "os_version": info.get("os_version"),
         "arch": info.get("arch"),
         "timezone": info.get("timezone"),
-        "threads": ", ".join([thread.name for thread in threading.enumerate()]),
     }
