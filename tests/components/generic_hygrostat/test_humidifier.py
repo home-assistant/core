@@ -1136,6 +1136,60 @@ async def test_humidity_change_humidifier_trigger_off_long_enough_2(hass, setup_
     assert ENT_SWITCH == call.data["entity_id"]
 
 
+async def test_float_tolerance_values(hass):
+    """Test if dehumidifier does not turn on within floating point tolerance."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.2,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "initial_state": True,
+                "target_humidity": 40,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    calls = await _setup_switch(hass, True)
+    _setup_sensor(hass, 39.9)
+    await hass.async_block_till_done()
+    assert 0 == len(calls)
+
+
+async def test_float_tolerance_values_2(hass):
+    """Test if dehumidifier turns off when oudside of floating point tolerance values."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "humidifier": {
+                "platform": "generic_hygrostat",
+                "name": "test",
+                "dry_tolerance": 0.2,
+                "humidifier": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "device_class": "dehumidifier",
+                "initial_state": True,
+                "target_humidity": 40,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    calls = await _setup_switch(hass, True)
+    _setup_sensor(hass, 39.7)
+    await hass.async_block_till_done()
+    assert 1 == len(calls)
+    call = calls[0]
+    assert HASS_DOMAIN == call.domain
+    assert SERVICE_TURN_OFF == call.service
+    assert ENT_SWITCH == call.data["entity_id"]
+
+
 async def test_custom_setup_params(hass):
     """Test the setup with custom parameters."""
     _setup_sensor(hass, 45)
