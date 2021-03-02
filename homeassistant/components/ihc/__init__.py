@@ -219,7 +219,7 @@ PULSE_SCHEMA = vol.Schema(
 
 
 def setup(hass, config):
-    """Set up the IHC platform."""
+    """Set up the IHC integration."""
     conf = config.get(DOMAIN)
     for index, controller_conf in enumerate(conf):
         if not ihc_setup(hass, config, controller_conf, index):
@@ -229,7 +229,7 @@ def setup(hass, config):
 
 
 def ihc_setup(hass, config, conf, controller_id):
-    """Set up the IHC platform."""
+    """Set up the IHC integration."""
     url = conf[CONF_URL]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
