@@ -1,8 +1,12 @@
 """Component to embed Google Cast."""
 from homeassistant import config_entries
+from homeassistant.helpers import config_validation as cv
 
 from . import home_assistant_cast
 from .const import DOMAIN
+
+# Deprecated from 2021.4, remove in 2021.6
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def async_setup(hass, config):

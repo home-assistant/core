@@ -85,7 +85,9 @@ async def test_user_setup(hass, mqtt_mock):
     assert len(users) == 1
     assert result["type"] == "create_entry"
     assert result["result"].data == {
+        "ignore_cec": [],
         "known_hosts": [],
+        "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
 
@@ -105,7 +107,9 @@ async def test_user_setup_options(hass, mqtt_mock):
     assert len(users) == 1
     assert result["type"] == "create_entry"
     assert result["result"].data == {
+        "ignore_cec": [],
         "known_hosts": ["192.168.0.1", "192.168.0.2"],
+        "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
 
@@ -123,7 +127,9 @@ async def test_zeroconf_setup(hass):
     assert len(users) == 1
     assert result["type"] == "create_entry"
     assert result["result"].data == {
-        "known_hosts": None,
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
 
@@ -137,27 +143,79 @@ def get_suggested(schema, key):
             return k.description["suggested_value"]
 
 
-async def test_option_flow(hass):
+@pytest.mark.parametrize(
+    "parameter_data",
+    [
+        (
+            "known_hosts",
+            ["192.168.0.10", "192.168.0.11"],
+            "192.168.0.10,192.168.0.11",
+            "192.168.0.1,  ,  192.168.0.2 ",
+            ["192.168.0.1", "192.168.0.2"],
+        ),
+        (
+            "uuid",
+            ["bla", "blu"],
+            "bla,blu",
+            "foo,  ,  bar ",
+            ["foo", "bar"],
+        ),
+        (
+            "ignore_cec",
+            ["cast1", "cast2"],
+            "cast1,cast2",
+            "other_cast,  ,  some_cast ",
+            ["other_cast", "some_cast"],
+        ),
+    ],
+)
+async def test_option_flow(hass, parameter_data):
     """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain="cast", data={"known_hosts": ["192.168.0.10", "192.168.0.11"]}
-    )
+    all_parameters = ["ignore_cec", "known_hosts", "uuid"]
+    parameter, initial, suggested, user_input, updated = parameter_data
+
+    data = {
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
+    }
+    data[parameter] = initial
+    config_entry = MockConfigEntry(domain="cast", data=data)
     config_entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
+    # Reconfigure known_hosts
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "options"
     data_schema = result["data_schema"].schema
-    assert get_suggested(data_schema, "known_hosts") == "192.168.0.10,192.168.0.11"
+    for other_param in all_parameters:
+        if other_param == parameter:
+            continue
+        assert get_suggested(data_schema, other_param) == ""
+    assert get_suggested(data_schema, parameter) == suggested
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"known_hosts": "192.168.0.1,  ,  192.168.0.2 "},
+        user_input={parameter: user_input},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] is None
-    assert config_entry.data == {"known_hosts": ["192.168.0.1", "192.168.0.2"]}
+    for other_param in all_parameters:
+        if other_param == parameter:
+            continue
+        assert config_entry.data[other_param] == []
+    assert config_entry.data[parameter] == updated
+
+    # Clear known_hosts
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"known_hosts": ""},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] is None
+    assert config_entry.data == {"ignore_cec": [], "known_hosts": [], "uuid": []}
 
 
 async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock):

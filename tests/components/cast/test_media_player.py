@@ -99,11 +99,13 @@ async def async_setup_cast(hass, config=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
+    data = {**{"ignore_cec": [], "known_hosts": [], "uuid": []}, **config}
     with patch(
         "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
     ) as add_entities:
-        MockConfigEntry(domain="cast").add_to_hass(hass)
-        await async_setup_component(hass, "cast", {"cast": {"media_player": config}})
+        entry = MockConfigEntry(data=data, domain="cast")
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return add_entities
@@ -397,7 +399,7 @@ async def test_replay_past_chromecasts(hass):
     zconf_2 = get_fake_zconf(host="host2", port=8009)
 
     discover_cast, _, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"uuid": FakeUUID}
+        hass, config={"uuid": str(FakeUUID)}
     )
 
     with patch(
@@ -434,7 +436,7 @@ async def test_manual_cast_chromecasts_uuid(hass):
 
     # Manual configuration of media player with host "configured_host"
     discover_cast, _, add_dev1 = await async_setup_cast_internal_discovery(
-        hass, config={"uuid": FakeUUID}
+        hass, config={"uuid": str(FakeUUID)}
     )
     with patch(
         "homeassistant.components.cast.discovery.ChromeCastZeroconf.get_zeroconf",
@@ -1290,65 +1292,55 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
 
 
 async def test_entry_setup_no_config(hass: HomeAssistantType):
-    """Test setting up entry with no config.."""
+    """Test deprecated empty yaml config.."""
     await async_setup_component(hass, "cast", {})
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-    ) as mock_setup:
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
-
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {}
+    assert not hass.config_entries.async_entries("cast")
 
 
-async def test_entry_setup_single_config(hass: HomeAssistantType):
-    """Test setting up entry and having a single config option."""
+async def test_entry_setup_empty_config(hass: HomeAssistantType):
+    """Test deprecated empty yaml config.."""
+    await async_setup_component(hass, "cast", {"cast": {}})
+    await hass.async_block_till_done()
+
+    config_entry = hass.config_entries.async_entries("cast")[0]
+    assert config_entry.data["uuid"] == []
+    assert config_entry.data["ignore_cec"] == []
+
+
+async def test_entry_setup_single_config(hass: HomeAssistantType, pycast_mock):
+    """Test deprecated yaml config with a single config media_player."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"uuid": "bla"}}}
+        hass, "cast", {"cast": {"media_player": {"uuid": "bla", "ignore_cec": "cast1"}}}
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-    ) as mock_setup:
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
+    config_entry = hass.config_entries.async_entries("cast")[0]
+    assert config_entry.data["uuid"] == ["bla"]
+    assert config_entry.data["ignore_cec"] == ["cast1"]
 
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
+    assert pycast_mock.IGNORE_CEC == ["cast1"]
 
 
-async def test_entry_setup_list_config(hass: HomeAssistantType):
-    """Test setting up entry and having multiple config options."""
+async def test_entry_setup_list_config(hass: HomeAssistantType, pycast_mock):
+    """Test deprecated yaml config with multiple media_players."""
     await async_setup_component(
-        hass, "cast", {"cast": {"media_player": [{"uuid": "bla"}, {"uuid": "blu"}]}}
+        hass,
+        "cast",
+        {
+            "cast": {
+                "media_player": [
+                    {"uuid": "bla", "ignore_cec": "cast1"},
+                    {"uuid": "blu", "ignore_cec": ["cast2", "cast3"]},
+                ]
+            }
+        },
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-    ) as mock_setup:
-        await cast.async_setup_entry(hass, MockConfigEntry(), None)
+    config_entry = hass.config_entries.async_entries("cast")[0]
+    assert config_entry.data["uuid"] == ["bla", "blu"]
+    assert config_entry.data["ignore_cec"] == ["cast1", "cast2", "cast3"]
 
-    assert len(mock_setup.mock_calls) == 2
-    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
-    assert mock_setup.mock_calls[1][1][1] == {"uuid": "blu"}
-
-
-async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
-    """Test failed setting up entry will raise PlatformNotReady."""
-    await async_setup_component(
-        hass, "cast", {"cast": {"media_player": {"uuid": "bla"}}}
-    )
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.cast.media_player._async_setup_platform",
-        side_effect=Exception,
-    ) as mock_setup:
-        with pytest.raises(PlatformNotReady):
-            await cast.async_setup_entry(hass, MockConfigEntry(), None)
-
-    assert len(mock_setup.mock_calls) == 1
-    assert mock_setup.mock_calls[0][1][1] == {"uuid": "bla"}
+    assert pycast_mock.IGNORE_CEC == ["cast1", "cast2", "cast3"]
