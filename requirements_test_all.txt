@@ -7,7 +7,7 @@
 AEMET-OpenData==0.1.8
 
 # homeassistant.components.homekit
-HAP-python==3.3.1
+HAP-python==3.3.2
 
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
@@ -48,7 +48,7 @@ accuweather==0.1.0
 adb-shell[async]==0.2.1
 
 # homeassistant.components.alarmdecoder
-adext==0.3
+adext==0.4.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.2
@@ -1054,7 +1054,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==9.6.4
+simplisafe-python==9.6.8
 
 # homeassistant.components.slack
 slackclient==2.5.0
