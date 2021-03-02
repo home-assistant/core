@@ -4,7 +4,6 @@ import pytest
 
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     MODE_AWAY,
     MODE_ECO,
@@ -13,7 +12,13 @@ from homeassistant.components.humidifier.const import (
     SERVICE_SET_MODE,
 )
 from homeassistant.components.humidifier.reproduce_state import async_reproduce_states
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_MODE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import Context, State
 
 from tests.common import async_mock_service
