@@ -498,7 +498,6 @@ async def async_setup(hass, config):
                 "input_boolean.ais_remote_access",
                 "sensor.ais_secure_android_id_dom",
                 "script.ais_cloud_sync",
-                "script.ais_scan_network_devices",
                 "script.ais_restart_system",
                 "script.ais_stop_system",
             ],

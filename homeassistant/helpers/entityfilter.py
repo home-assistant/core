@@ -162,7 +162,6 @@ def convert_include_exclude_filter(
             "script.ais_restart_system",
             "script.ais_scan_android_wifi_network",
             "script.ais_scan_iot_devices_in_network",
-            "script.ais_scan_network_devices",
             "script.ais_stop_system",
             "script.ais_update_system",
             "sensor.ais_all_files",
