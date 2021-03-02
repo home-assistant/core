@@ -127,7 +127,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         }
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
 

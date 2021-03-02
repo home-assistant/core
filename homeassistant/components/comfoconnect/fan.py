@@ -1,6 +1,7 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 import math
+from typing import Optional
 
 from pycomfoconnect import (
     CMD_FAN_MODE_AWAY,
@@ -95,7 +96,7 @@ class ComfoConnectFan(FanEntity):
         return SUPPORT_SET_SPEED
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
         speed = self._ccb.data.get(SENSOR_FAN_SPEED_MODE)
         if speed is None:
