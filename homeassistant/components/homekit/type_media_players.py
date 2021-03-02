@@ -17,6 +17,13 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.components.remote import (
+    ATTR_ACTIVITY,
+    ATTR_ACTIVITY_LIST,
+    ATTR_CURRENT_ACTIVITY,
+    DOMAIN as REMOTE_DOMAIN,
+    SUPPORT_ACTIVITY,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -31,6 +38,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_STANDBY,
@@ -249,22 +257,146 @@ class MediaPlayer(HomeAccessory):
                 self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
 
 
+class RemoteBase(HomeAccessory):
+    """Generate a Television accessory."""
+
+    def __init__(self, required_feature, source_key, source_list_key, *args):
+        """Initialize a Remote accessory object."""
+        super().__init__(*args, category=CATEGORY_TELEVISION)
+        state = self.hass.states.get(self.entity_id)
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        self.source_key = source_key
+        self.sources = []
+        self.support_select_source = False
+        if features & required_feature:
+            self.sources = state.attributes.get(source_list_key, [])
+            if self.sources:
+                self.support_select_source = True
+
+        self.chars_tv = [CHAR_REMOTE_KEY]
+
+        serv_tv = self.serv_tv = self.add_preload_service(
+            SERV_TELEVISION, self.chars_tv
+        )
+        self.char_remote_key = self.serv_tv.configure_char(
+            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
+        )
+        self.set_primary_service(serv_tv)
+        serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
+        serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
+        self.char_active = serv_tv.configure_char(
+            CHAR_ACTIVE, setter_callback=self.set_on_off
+        )
+
+        if self.support_select_source:
+            self.char_input_source = serv_tv.configure_char(
+                CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
+            )
+            for index, source in enumerate(self.sources):
+                serv_input = self.add_preload_service(
+                    SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
+                )
+                serv_tv.add_linked_service(serv_input)
+                serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
+                serv_input.configure_char(CHAR_NAME, value=source)
+                serv_input.configure_char(CHAR_IDENTIFIER, value=index)
+                serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
+                input_type = 3 if "hdmi" in source.lower() else 0
+                serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
+                serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
+                _LOGGER.debug("%s: Added source %s", self.entity_id, source)
+
+    @callback
+    def _async_update_input_state(self, hk_state, new_state):
+        """Update input state after state changed."""
+        # Set active input
+        if self.support_select_source and self.sources:
+            source_name = new_state.attributes.get(self.source_key)
+            _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
+            if source_name in self.sources:
+                index = self.sources.index(source_name)
+                if self.char_input_source.value != index:
+                    self.char_input_source.set_value(index)
+            elif hk_state:
+                _LOGGER.warning(
+                    "%s: Sources out of sync. Restart Home Assistant",
+                    self.entity_id,
+                )
+                if self.char_input_source.value != 0:
+                    self.char_input_source.set_value(0)
+
+
+@TYPES.register("TelevisionRemote")
+class TelevisionRemote(RemoteBase):
+    """Generate a Television Remote accessory."""
+
+    def __init__(self, *args):
+        """Initialize a Television Remote accessory object."""
+        super().__init__(
+            SUPPORT_ACTIVITY,
+            ATTR_CURRENT_ACTIVITY,
+            ATTR_ACTIVITY_LIST,
+            *args,
+        )
+        state = self.hass.states.get(self.entity_id)
+        self.async_update_state(state)
+
+    def set_on_off(self, value):
+        """Move switch state to value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
+        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        self.async_call_service(REMOTE_DOMAIN, service, params)
+
+    def set_input_source(self, value):
+        """Send input set value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
+        source = self.sources[value]
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_ACTIVITY: source}
+        self.async_call_service(REMOTE_DOMAIN, SERVICE_TURN_ON, params)
+
+    def set_remote_key(self, value):
+        """Send remote key value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
+        key_name = MEDIA_PLAYER_KEYS.get(value)
+        if key_name is None:
+            _LOGGER.warning("%s: Unhandled key press for %s", self.entity_id, value)
+            return
+        self.hass.bus.async_fire(
+            EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+            {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
+        )
+
+    @callback
+    def async_update_state(self, new_state):
+        """Update Television remote state after state changed."""
+        current_state = new_state.state
+        # Power state remote
+        hk_state = 1 if current_state == STATE_ON else 0
+        _LOGGER.debug("%s: Set current active state to %s", self.entity_id, hk_state)
+        if self.char_active.value != hk_state:
+            self.char_active.set_value(hk_state)
+
+        self._async_update_input_state(hk_state, new_state)
+
+
 @TYPES.register("TelevisionMediaPlayer")
-class TelevisionMediaPlayer(HomeAccessory):
+class TelevisionMediaPlayer(RemoteBase):
     """Generate a Television Media Player accessory."""
 
     def __init__(self, *args):
-        """Initialize a Switch accessory object."""
-        super().__init__(*args, category=CATEGORY_TELEVISION)
+        """Initialize a Television Media Player accessory object."""
+        super().__init__(
+            SUPPORT_SELECT_SOURCE,
+            ATTR_INPUT_SOURCE,
+            ATTR_INPUT_SOURCE_LIST,
+            *args,
+        )
         state = self.hass.states.get(self.entity_id)
-
-        self.support_select_source = False
-
-        self.sources = []
-
-        self.chars_tv = [CHAR_REMOTE_KEY]
-        self.chars_speaker = []
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        self.chars_speaker = []
 
         self._supports_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
         if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
@@ -278,23 +410,11 @@ class TelevisionMediaPlayer(HomeAccessory):
         if source_list and features & SUPPORT_SELECT_SOURCE:
             self.support_select_source = True
 
-        serv_tv = self.add_preload_service(SERV_TELEVISION, self.chars_tv)
-        self.set_primary_service(serv_tv)
-        serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
-        serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
-        self.char_active = serv_tv.configure_char(
-            CHAR_ACTIVE, setter_callback=self.set_on_off
-        )
-
-        self.char_remote_key = serv_tv.configure_char(
-            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
-        )
-
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
                 SERV_TELEVISION_SPEAKER, self.chars_speaker
             )
-            serv_tv.add_linked_service(serv_speaker)
+            self.serv_tv.add_linked_service(serv_speaker)
 
             name = f"{self.display_name} Volume"
             serv_speaker.configure_char(CHAR_NAME, value=name)
@@ -317,25 +437,6 @@ class TelevisionMediaPlayer(HomeAccessory):
                 self.char_volume = serv_speaker.configure_char(
                     CHAR_VOLUME, setter_callback=self.set_volume
                 )
-
-        if self.support_select_source:
-            self.sources = source_list
-            self.char_input_source = serv_tv.configure_char(
-                CHAR_ACTIVE_IDENTIFIER, setter_callback=self.set_input_source
-            )
-            for index, source in enumerate(self.sources):
-                serv_input = self.add_preload_service(
-                    SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
-                )
-                serv_tv.add_linked_service(serv_input)
-                serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
-                serv_input.configure_char(CHAR_NAME, value=source)
-                serv_input.configure_char(CHAR_IDENTIFIER, value=index)
-                serv_input.configure_char(CHAR_IS_CONFIGURED, value=True)
-                input_type = 3 if "hdmi" in source.lower() else 0
-                serv_input.configure_char(CHAR_INPUT_SOURCE_TYPE, value=input_type)
-                serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
-                _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
         self.async_update_state(state)
 
@@ -393,12 +494,13 @@ class TelevisionMediaPlayer(HomeAccessory):
                 service = SERVICE_MEDIA_PLAY_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
             self.async_call_service(DOMAIN, service, params)
-        else:
-            # Unhandled keys can be handled by listening to the event bus
-            self.hass.bus.fire(
-                EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
-                {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
-            )
+            return
+
+        # Unhandled keys can be handled by listening to the event bus
+        self.hass.bus.async_fire(
+            EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
+            {ATTR_KEY_NAME: key_name, ATTR_ENTITY_ID: self.entity_id},
+        )
 
     @callback
     def async_update_state(self, new_state):
@@ -424,18 +526,4 @@ class TelevisionMediaPlayer(HomeAccessory):
             if self.char_mute.value != current_mute_state:
                 self.char_mute.set_value(current_mute_state)
 
-        # Set active input
-        if self.support_select_source and self.sources:
-            source_name = new_state.attributes.get(ATTR_INPUT_SOURCE)
-            _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
-            if source_name in self.sources:
-                index = self.sources.index(source_name)
-                if self.char_input_source.value != index:
-                    self.char_input_source.set_value(index)
-            elif hk_state:
-                _LOGGER.warning(
-                    "%s: Sources out of sync. Restart Home Assistant",
-                    self.entity_id,
-                )
-                if self.char_input_source.value != 0:
-                    self.char_input_source.set_value(0)
+        self._async_update_input_state(hk_state, new_state)
