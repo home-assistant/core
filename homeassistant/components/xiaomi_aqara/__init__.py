@@ -188,9 +188,9 @@ async def async_setup_entry(
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -208,8 +208,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platforms
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in platforms
             ]
         )
     )

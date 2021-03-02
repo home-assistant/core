@@ -89,7 +89,7 @@ DEFAULT_CONF_INVERT_PERCENT = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-SUPPORTED_PLATFORMS = [
+PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",
@@ -1060,7 +1060,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK, start_zwave)
 
-    for entry_component in SUPPORTED_PLATFORMS:
+    for entry_component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, entry_component)
         )
@@ -1228,7 +1228,7 @@ class ZWaveDeviceEntityValues:
                 return
 
             self._hass.data[DATA_DEVICES][device.unique_id] = device
-            if component in SUPPORTED_PLATFORMS:
+            if component in PLATFORMS:
                 async_dispatcher_send(self._hass, f"zwave_new_{component}", device)
             else:
                 await discovery.async_load_platform(

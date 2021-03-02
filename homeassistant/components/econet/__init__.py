@@ -60,9 +60,9 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
     hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     api.subscribe()
@@ -92,8 +92,8 @@ async def async_setup_entry(hass, config_entry):
 async def async_unload_entry(hass, entry):
     """Unload a EcoNet config entry."""
     tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in PLATFORMS
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
     ]
 
     await asyncio.gather(*tasks)

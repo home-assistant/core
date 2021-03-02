@@ -30,7 +30,7 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=5)
-WLED_COMPONENTS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
+PLATFORMS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +60,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Set up all platforms for this device/entry.
-    for component in WLED_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -75,8 +75,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(
         await asyncio.gather(
             *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in WLED_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             )
         )
     )

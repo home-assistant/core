@@ -47,6 +47,8 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
+PLATFORMS = ["camera", "sensor"]
+
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_SENSORS)): vol.All(
@@ -171,9 +173,9 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DATA_LOGI] = logi_circle
 
-    for component in "camera", "sensor":
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def service_handler(service):
@@ -219,8 +221,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    for component in "camera", "sensor":
-        await hass.config_entries.async_forward_entry_unload(entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, platform)
 
     logi_circle = hass.data.pop(DATA_LOGI)
 

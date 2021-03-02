@@ -30,7 +30,7 @@ from .const import (
     DOMAIN,
     MYSENSORS_GATEWAYS,
     MYSENSORS_ON_UNLOAD,
-    SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT,
+    PLATFORMS_WITH_ENTRY_SUPPORT,
     DevId,
     GatewayId,
     SensorType,
@@ -192,7 +192,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
             ]
         )
         await finish_setup(hass, entry, gateway)
@@ -211,7 +211,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT
+                for platform in PLATFORMS_WITH_ENTRY_SUPPORT
             ]
         )
     )

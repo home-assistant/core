@@ -62,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
+PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
 
 
 async def async_setup(hass, base_config):
@@ -125,7 +125,7 @@ async def async_setup_entry(hass, config_entry):
     bridge_device = devices[BRIDGE_DEVICE_ID]
     await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
-    # components we're setting up.
+    # platforms we're setting up.
     hass.data[DOMAIN][config_entry.entry_id] = {
         BRIDGE_LEAP: bridge,
         BRIDGE_DEVICE: bridge_device,
@@ -139,9 +139,9 @@ async def async_setup_entry(hass, config_entry):
         # pico remotes to control other devices.
         await async_setup_lip(hass, config_entry, bridge.lip_devices)
 
-    for component in LUTRON_CASETA_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -289,8 +289,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in LUTRON_CASETA_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

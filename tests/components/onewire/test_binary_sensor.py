@@ -68,7 +68,7 @@ async def test_owserver_binary_sensor(owproxy, hass, device_id):
         item["default_disabled"] = False
 
     with patch(
-        "homeassistant.components.onewire.SUPPORTED_PLATFORMS", [BINARY_SENSOR_DOMAIN]
+        "homeassistant.components.onewire.PLATFORMS", [BINARY_SENSOR_DOMAIN]
     ), patch.dict(
         "homeassistant.components.onewire.binary_sensor.DEVICE_BINARY_SENSORS",
         patch_device_binary_sensors,

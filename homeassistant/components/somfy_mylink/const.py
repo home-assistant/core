@@ -14,6 +14,6 @@ DATA_SOMFY_MYLINK = "somfy_mylink_data"
 MYLINK_STATUS = "mylink_status"
 DOMAIN = "somfy_mylink"
 
-SOMFY_MYLINK_COMPONENTS = ["cover"]
+PLATFORMS = ["cover"]
 
 MANUFACTURER = "Somfy"

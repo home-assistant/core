@@ -28,6 +28,8 @@ from .const import DATA_NEST, DATA_NEST_CONFIG, DOMAIN, SIGNAL_NEST_UPDATE
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["climate", "camera", "sensor", "binary_sensor"]
+
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
 SERVICE_SET_ETA = "set_eta"
@@ -131,9 +133,9 @@ async def async_setup_legacy_entry(hass, entry):
     if not await hass.async_add_executor_job(hass.data[DATA_NEST].initialize):
         return False
 
-    for component in "climate", "camera", "sensor", "binary_sensor":
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def validate_structures(target_structures):

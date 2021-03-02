@@ -62,7 +62,7 @@ SENSOR_NAME = "sensor_name"
 SENSOR_UNIT = "sensor_unit"
 SENSOR_DEVICE_CLASS = "sensor_device_class"
 UPDATE_LISTENER = "update_listener"
-COMPONENTS = ["sensor", "weather"]
+PLATFORMS = ["sensor", "weather"]
 
 FORECAST_MODE_HOURLY = "hourly"
 FORECAST_MODE_DAILY = "daily"

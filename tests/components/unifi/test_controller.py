@@ -22,10 +22,7 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
     UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.components.unifi.controller import (
-    SUPPORTED_PLATFORMS,
-    get_controller,
-)
+from homeassistant.components.unifi.controller import PLATFORMS, get_controller
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.const import (
     CONF_HOST,
@@ -211,7 +208,7 @@ async def test_controller_setup(hass, aioclient_mock):
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     entry = controller.config_entry
-    assert len(forward_entry_setup.mock_calls) == len(SUPPORTED_PLATFORMS)
+    assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
     assert forward_entry_setup.mock_calls[0][1] == (entry, TRACKER_DOMAIN)
     assert forward_entry_setup.mock_calls[1][1] == (entry, SENSOR_DOMAIN)
     assert forward_entry_setup.mock_calls[2][1] == (entry, SWITCH_DOMAIN)

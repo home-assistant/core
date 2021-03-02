@@ -168,8 +168,8 @@ async def test_temperature(
     device = async_get_device(DysonPureCoolLink)
     with patch(f"{BASE_PATH}.DysonAccount.login", return_value=True), patch(
         f"{BASE_PATH}.DysonAccount.devices", return_value=[device]
-    ), patch(f"{BASE_PATH}.DYSON_PLATFORMS", [PLATFORM_DOMAIN]):
-        # DYSON_PLATFORMS is patched so that only the platform being tested is set up
+    ), patch(f"{BASE_PATH}.PLATFORMS", [PLATFORM_DOMAIN]):
+        # PLATFORMS is patched so that only the platform being tested is set up
         await async_setup_component(
             hass,
             DOMAIN,

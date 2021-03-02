@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import ADVANTAGE_AIR_RETRY, DOMAIN
 
 ADVANTAGE_AIR_SYNC_INTERVAL = 15
-ADVANTAGE_AIR_PLATFORMS = ["climate", "cover", "binary_sensor", "sensor", "switch"]
+PLATFORMS = ["climate", "cover", "binary_sensor", "sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, entry):
         "async_change": async_change,
     }
 
-    for platform in ADVANTAGE_AIR_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
@@ -80,8 +80,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in ADVANTAGE_AIR_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

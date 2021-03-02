@@ -66,7 +66,7 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
-ABODE_PLATFORMS = [
+PLATFORMS = [
     "alarm_control_panel",
     "binary_sensor",
     "lock",
@@ -138,7 +138,7 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
-    for platform in ABODE_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
@@ -158,7 +158,7 @@ async def async_unload_entry(hass, config_entry):
 
     tasks = []
 
-    for platform in ABODE_PLATFORMS:
+    for platform in PLATFORMS:
         tasks.append(
             hass.config_entries.async_forward_entry_unload(config_entry, platform)
         )

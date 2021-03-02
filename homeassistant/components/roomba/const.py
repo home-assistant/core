@@ -1,6 +1,6 @@
 """The roomba constants."""
 DOMAIN = "roomba"
-COMPONENTS = ["sensor", "binary_sensor", "vacuum"]
+PLATFORMS = ["sensor", "binary_sensor", "vacuum"]
 CONF_CERT = "certificate"
 CONF_CONTINUOUS = "continuous"
 CONF_BLID = "blid"

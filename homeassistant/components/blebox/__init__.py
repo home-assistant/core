@@ -48,9 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     domain_entry = domain.setdefault(entry.entry_id, {})
     product = domain_entry.setdefault(PRODUCT, product)
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True

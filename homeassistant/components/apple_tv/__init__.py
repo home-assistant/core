@@ -62,8 +62,8 @@ async def async_setup_entry(hass, entry):
         """Set up platforms and initiate connection."""
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
         await manager.init()

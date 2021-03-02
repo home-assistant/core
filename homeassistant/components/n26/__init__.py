@@ -36,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-N26_COMPONENTS = ["sensor", "switch"]
+PLATFORMS = ["sensor", "switch"]
 
 
 def setup(hass, config):
@@ -65,9 +65,9 @@ def setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA] = api_data_list
 
-    # Load components for supported devices
-    for component in N26_COMPONENTS:
-        load_platform(hass, component, DOMAIN, {}, config)
+    # Load platforms for supported devices
+    for platform in PLATFORMS:
+        load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

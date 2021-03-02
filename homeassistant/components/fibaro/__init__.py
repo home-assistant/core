@@ -37,7 +37,7 @@ CONF_RESET_COLOR = "reset_color"
 DOMAIN = "fibaro"
 FIBARO_CONTROLLERS = "fibaro_controllers"
 FIBARO_DEVICES = "fibaro_devices"
-FIBARO_COMPONENTS = [
+PLATFORMS = [
     "binary_sensor",
     "climate",
     "cover",
@@ -365,21 +365,21 @@ def setup(hass, base_config):
             controller.disable_state_handler()
 
     hass.data[FIBARO_DEVICES] = {}
-    for component in FIBARO_COMPONENTS:
-        hass.data[FIBARO_DEVICES][component] = []
+    for platform in PLATFORMS:
+        hass.data[FIBARO_DEVICES][platform] = []
 
     for gateway in gateways:
         controller = FibaroController(gateway)
         if controller.connect():
             hass.data[FIBARO_CONTROLLERS][controller.hub_serial] = controller
-            for component in FIBARO_COMPONENTS:
-                hass.data[FIBARO_DEVICES][component].extend(
-                    controller.fibaro_devices[component]
+            for platform in PLATFORMS:
+                hass.data[FIBARO_DEVICES][platform].extend(
+                    controller.fibaro_devices[platform]
                 )
 
     if hass.data[FIBARO_CONTROLLERS]:
-        for component in FIBARO_COMPONENTS:
-            discovery.load_platform(hass, component, DOMAIN, {}, base_config)
+        for platform in PLATFORMS:
+            discovery.load_platform(hass, platform, DOMAIN, {}, base_config)
         for controller in hass.data[FIBARO_CONTROLLERS].values():
             controller.enable_state_handler()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_fibaro)

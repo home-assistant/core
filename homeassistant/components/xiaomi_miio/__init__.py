@@ -106,9 +106,9 @@ async def async_setup_gateway_entry(
         KEY_COORDINATOR: coordinator,
     }
 
-    for component in GATEWAY_PLATFORMS:
+    for platform in GATEWAY_PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -133,9 +133,9 @@ async def async_setup_device_entry(
     if not platforms:
         return False
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True

@@ -24,7 +24,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMA_COMPONENTS = ["cover", "sensor"]
+PLATFORMS = ["cover", "sensor"]
 
 
 async def async_setup(hass, config):
@@ -50,9 +50,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     devices = await hass.async_add_executor_job(hass.data[DOMAIN][API].list_devices)
     hass.data[DOMAIN][DEVICES] = devices["shades"]
 
-    for component in SOMA_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -63,8 +63,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SOMA_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

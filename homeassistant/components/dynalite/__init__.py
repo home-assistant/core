@@ -47,8 +47,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TEMPLATES,
     DOMAIN,
-    ENTITY_PLATFORMS,
     LOGGER,
+    PLATFORMS,
     SERVICE_REQUEST_AREA_PRESET,
     SERVICE_REQUEST_CHANNEL_LEVEL,
 )
@@ -267,14 +267,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # need to do it before the listener
     hass.data[DOMAIN][entry.entry_id] = bridge
     entry.add_update_listener(async_entry_changed)
+
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         hass.data[DOMAIN][entry.entry_id] = None
         raise ConfigEntryNotReady
-    for platform in ENTITY_PLATFORMS:
+
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
     return True
 
 
@@ -284,7 +287,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in ENTITY_PLATFORMS
+        for platform in PLATFORMS
     ]
     results = await asyncio.gather(*tasks)
     return False not in results

@@ -5,7 +5,11 @@ from aioambient import Client
 from aioambient.errors import WebsocketError
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
+    DOMAIN as BINARY_SENSOR,
+)
+from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
@@ -39,9 +43,9 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     LOGGER,
-    TYPE_BINARY_SENSOR,
-    TYPE_SENSOR,
 )
+
+PLATFORMS = [BINARY_SENSOR, SENSOR]
 
 DATA_CONFIG = "config"
 
@@ -141,109 +145,109 @@ TYPE_WINDSPDMPH_AVG2M = "windspdmph_avg2m"
 TYPE_WINDSPEEDMPH = "windspeedmph"
 TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_TYPES = {
-    TYPE_24HOURRAININ: ("24 Hr Rain", "in", TYPE_SENSOR, None),
-    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
-    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, TYPE_SENSOR, "pressure"),
-    TYPE_BATT10: ("Battery 10", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT1: ("Battery 1", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT2: ("Battery 2", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT3: ("Battery 3", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT4: ("Battery 4", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT5: ("Battery 5", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT6: ("Battery 6", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT7: ("Battery 7", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT8: ("Battery 8", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATT9: ("Battery 9", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_BATTOUT: ("Battery", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, TYPE_SENSOR, None),
-    TYPE_DAILYRAININ: ("Daily Rain", "in", TYPE_SENSOR, None),
-    TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_EVENTRAININ: ("Event Rain", "in", TYPE_SENSOR, None),
-    TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_HOURLYRAININ: ("Hourly Rain Rate", "in/hr", TYPE_SENSOR, None),
-    TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY3: ("Humidity 3", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY4: ("Humidity 4", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY5: ("Humidity 5", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY6: ("Humidity 6", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY7: ("Humidity 7", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY8: ("Humidity 8", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY9: ("Humidity 9", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITY: ("Humidity", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_LASTRAIN: ("Last Rain", None, TYPE_SENSOR, "timestamp"),
-    TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_MONTHLYRAININ: ("Monthly Rain", "in", TYPE_SENSOR, None),
-    TYPE_RELAY10: ("Relay 10", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY1: ("Relay 1", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY2: ("Relay 2", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY3: ("Relay 3", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY4: ("Relay 4", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY5: ("Relay 5", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY6: ("Relay 6", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY7: ("Relay 7", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY8: ("Relay 8", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_RELAY9: ("Relay 9", None, TYPE_BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
-    TYPE_SOILHUM10: ("Soil Humidity 10", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM1: ("Soil Humidity 1", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM2: ("Soil Humidity 2", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM3: ("Soil Humidity 3", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM4: ("Soil Humidity 4", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM5: ("Soil Humidity 5", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM6: ("Soil Humidity 6", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM7: ("Soil Humidity 7", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM8: ("Soil Humidity 8", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILHUM9: ("Soil Humidity 9", PERCENTAGE, TYPE_SENSOR, "humidity"),
-    TYPE_SOILTEMP10F: ("Soil Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP1F: ("Soil Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP2F: ("Soil Temp 2", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP3F: ("Soil Temp 3", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP4F: ("Soil Temp 4", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP5F: ("Soil Temp 5", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP6F: ("Soil Temp 6", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP7F: ("Soil Temp 7", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP8F: ("Soil Temp 8", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
+    TYPE_24HOURRAININ: ("24 Hr Rain", "in", SENSOR, None),
+    TYPE_BAROMABSIN: ("Abs Pressure", PRESSURE_INHG, SENSOR, "pressure"),
+    TYPE_BAROMRELIN: ("Rel Pressure", PRESSURE_INHG, SENSOR, "pressure"),
+    TYPE_BATT10: ("Battery 10", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT1: ("Battery 1", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT2: ("Battery 2", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT3: ("Battery 3", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT4: ("Battery 4", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT5: ("Battery 5", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT6: ("Battery 6", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT7: ("Battery 7", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT8: ("Battery 8", None, BINARY_SENSOR, "battery"),
+    TYPE_BATT9: ("Battery 9", None, BINARY_SENSOR, "battery"),
+    TYPE_BATTOUT: ("Battery", None, BINARY_SENSOR, "battery"),
+    TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, SENSOR, None),
+    TYPE_DAILYRAININ: ("Daily Rain", "in", SENSOR, None),
+    TYPE_DEWPOINT: ("Dew Point", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_EVENTRAININ: ("Event Rain", "in", SENSOR, None),
+    TYPE_FEELSLIKE: ("Feels Like", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_HOURLYRAININ: ("Hourly Rain Rate", "in/hr", SENSOR, None),
+    TYPE_HUMIDITY10: ("Humidity 10", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY1: ("Humidity 1", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY2: ("Humidity 2", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY3: ("Humidity 3", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY4: ("Humidity 4", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY5: ("Humidity 5", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY6: ("Humidity 6", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY7: ("Humidity 7", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY8: ("Humidity 8", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY9: ("Humidity 9", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITY: ("Humidity", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_HUMIDITYIN: ("Humidity In", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_LASTRAIN: ("Last Rain", None, SENSOR, "timestamp"),
+    TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, SENSOR, None),
+    TYPE_MONTHLYRAININ: ("Monthly Rain", "in", SENSOR, None),
+    TYPE_RELAY10: ("Relay 10", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY1: ("Relay 1", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY2: ("Relay 2", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY3: ("Relay 3", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY4: ("Relay 4", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY5: ("Relay 5", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY6: ("Relay 6", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY7: ("Relay 7", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY8: ("Relay 8", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_RELAY9: ("Relay 9", None, BINARY_SENSOR, DEVICE_CLASS_CONNECTIVITY),
+    TYPE_SOILHUM10: ("Soil Humidity 10", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM1: ("Soil Humidity 1", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM2: ("Soil Humidity 2", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM3: ("Soil Humidity 3", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM4: ("Soil Humidity 4", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM5: ("Soil Humidity 5", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM6: ("Soil Humidity 6", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM7: ("Soil Humidity 7", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM8: ("Soil Humidity 8", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILHUM9: ("Soil Humidity 9", PERCENTAGE, SENSOR, "humidity"),
+    TYPE_SOILTEMP10F: ("Soil Temp 10", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP1F: ("Soil Temp 1", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP2F: ("Soil Temp 2", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP3F: ("Soil Temp 3", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP4F: ("Soil Temp 4", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP5F: ("Soil Temp 5", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP6F: ("Soil Temp 6", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP7F: ("Soil Temp 7", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP8F: ("Soil Temp 8", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_SOILTEMP9F: ("Soil Temp 9", TEMP_FAHRENHEIT, SENSOR, "temperature"),
     TYPE_SOLARRADIATION: (
         "Solar Rad",
         IRRADIATION_WATTS_PER_SQUARE_METER,
-        TYPE_SENSOR,
+        SENSOR,
         None,
     ),
-    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", LIGHT_LUX, TYPE_SENSOR, "illuminance"),
-    TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP3F: ("Temp 3", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP4F: ("Temp 4", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP5F: ("Temp 5", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP6F: ("Temp 6", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP7F: ("Temp 7", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP8F: ("Temp 8", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMP9F: ("Temp 9", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMPF: ("Temp", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, TYPE_SENSOR, "temperature"),
-    TYPE_TOTALRAININ: ("Lifetime Rain", "in", TYPE_SENSOR, None),
-    TYPE_UV: ("uv", "Index", TYPE_SENSOR, None),
-    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, TYPE_SENSOR, None),
+    TYPE_SOLARRADIATION_LX: ("Solar Rad (lx)", LIGHT_LUX, SENSOR, "illuminance"),
+    TYPE_TEMP10F: ("Temp 10", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP1F: ("Temp 1", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP2F: ("Temp 2", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP3F: ("Temp 3", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP4F: ("Temp 4", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP5F: ("Temp 5", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP6F: ("Temp 6", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP7F: ("Temp 7", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP8F: ("Temp 8", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMP9F: ("Temp 9", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMPF: ("Temp", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TEMPINF: ("Inside Temp", TEMP_FAHRENHEIT, SENSOR, "temperature"),
+    TYPE_TOTALRAININ: ("Lifetime Rain", "in", SENSOR, None),
+    TYPE_UV: ("uv", "Index", SENSOR, None),
+    TYPE_PM25: ("PM25", CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SENSOR, None),
     TYPE_PM25_24H: (
         "PM25 24h Avg",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        TYPE_SENSOR,
+        SENSOR,
         None,
     ),
-    TYPE_WEEKLYRAININ: ("Weekly Rain", "in", TYPE_SENSOR, None),
-    TYPE_WINDDIR: ("Wind Dir", DEGREE, TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, TYPE_SENSOR, None),
-    TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDGUSTDIR: ("Gust Dir", DEGREE, TYPE_SENSOR, None),
-    TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_WINDSPEEDMPH: ("Wind Speed", SPEED_MILES_PER_HOUR, TYPE_SENSOR, None),
-    TYPE_YEARLYRAININ: ("Yearly Rain", "in", TYPE_SENSOR, None),
+    TYPE_WEEKLYRAININ: ("Weekly Rain", "in", SENSOR, None),
+    TYPE_WINDDIR: ("Wind Dir", DEGREE, SENSOR, None),
+    TYPE_WINDDIR_AVG10M: ("Wind Dir Avg 10m", DEGREE, SENSOR, None),
+    TYPE_WINDDIR_AVG2M: ("Wind Dir Avg 2m", SPEED_MILES_PER_HOUR, SENSOR, None),
+    TYPE_WINDGUSTDIR: ("Gust Dir", DEGREE, SENSOR, None),
+    TYPE_WINDGUSTMPH: ("Wind Gust", SPEED_MILES_PER_HOUR, SENSOR, None),
+    TYPE_WINDSPDMPH_AVG10M: ("Wind Avg 10m", SPEED_MILES_PER_HOUR, SENSOR, None),
+    TYPE_WINDSPDMPH_AVG2M: ("Wind Avg 2m", SPEED_MILES_PER_HOUR, SENSOR, None),
+    TYPE_WINDSPEEDMPH: ("Wind Speed", SPEED_MILES_PER_HOUR, SENSOR, None),
+    TYPE_YEARLYRAININ: ("Yearly Rain", "in", SENSOR, None),
 }
 
 CONFIG_SCHEMA = vol.Schema(
@@ -260,7 +264,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the Ambient PWS component."""
+    """Set up the Ambient PWS integration."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CLIENT] = {}
 
@@ -322,8 +326,8 @@ async def async_unload_entry(hass, config_entry):
     hass.async_create_task(ambient.ws_disconnect())
 
     tasks = [
-        hass.config_entries.async_forward_entry_unload(config_entry, component)
-        for component in ("binary_sensor", "sensor")
+        hass.config_entries.async_forward_entry_unload(config_entry, platform)
+        for platform in PLATFORMS
     ]
 
     await asyncio.gather(*tasks)
@@ -431,10 +435,10 @@ class AmbientStation:
             # attempt forward setup of the config entry (because it will have
             # already been done):
             if not self._entry_setup_complete:
-                for component in ("binary_sensor", "sensor"):
+                for platform in PLATFORMS:
                     self._hass.async_create_task(
                         self._hass.config_entries.async_forward_entry_setup(
-                            self._config_entry, component
+                            self._config_entry, platform
                         )
                     )
                 self._entry_setup_complete = True
