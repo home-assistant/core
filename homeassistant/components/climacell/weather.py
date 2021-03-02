@@ -81,7 +81,7 @@ def _translate_condition(
 
 def _forecast_dict(
     hass: HomeAssistantType,
-    time: datetime,
+    forecast_dt: datetime,
     use_datetime: bool,
     condition: str,
     precipitation: Optional[float],
@@ -93,7 +93,7 @@ def _forecast_dict(
 ) -> Dict[str, Any]:
     """Return formatted Forecast dict from ClimaCell forecast data."""
     if use_datetime:
-        translated_condition = _translate_condition(condition, is_up(hass, time))
+        translated_condition = _translate_condition(condition, is_up(hass, forecast_dt))
     else:
         translated_condition = _translate_condition(condition, True)
 
@@ -110,7 +110,7 @@ def _forecast_dict(
             wind_speed = distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
 
     data = {
-        ATTR_FORECAST_TIME: time.isoformat(),
+        ATTR_FORECAST_TIME: forecast_dt.isoformat(),
         ATTR_FORECAST_CONDITION: translated_condition,
         ATTR_FORECAST_PRECIPITATION: precipitation,
         ATTR_FORECAST_PRECIPITATION_PROBABILITY: precipitation_probability,
@@ -244,7 +244,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in self.coordinator.data[FORECASTS][self.forecast_type]:
-            timestamp = dt_util.parse_datetime(
+            forecast_dt = dt_util.parse_datetime(
                 self._get_cc_value(forecast, CC_ATTR_TIMESTAMP)
             )
             use_datetime = True
@@ -290,7 +290,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
             forecasts.append(
                 _forecast_dict(
                     self.hass,
-                    timestamp,
+                    forecast_dt,
                     use_datetime,
                     condition,
                     precipitation,
