@@ -11,7 +11,13 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_SLAVE,
+    STATE_UNAVAILABLE,
+)
 
 from .conftest import base_config_test, base_test
 
@@ -50,6 +56,11 @@ async def test_config_sensor(hass, do_options, do_type):
             {},
             [0],
             "False",
+        ),
+        (
+            {},
+            None,
+            STATE_UNAVAILABLE,
         ),
         (
             {},

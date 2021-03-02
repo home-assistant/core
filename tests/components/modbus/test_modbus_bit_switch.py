@@ -21,6 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
 from .conftest import base_config_test, base_test
@@ -90,6 +91,7 @@ async def test_config_switch(hass, do_options, read_type):
             [0x20],
             STATE_ON,
         ),
+        (None, STATE_UNAVAILABLE),
     ],
 )
 async def test_register_switch(hass, regs, expected):

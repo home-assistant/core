@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 from unittest import mock
 
+from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
@@ -61,7 +62,11 @@ async def base_test(
 
     mock_sync = mock.MagicMock()
     # Setup inputs for the sensor
-    read_result = ReadResult(register_words)
+    read_result = (
+        ReadResult(register_words)
+        if register_words
+        else ModbusException("Modbus error")
+    )
     with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
     ), mock.patch(

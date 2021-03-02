@@ -310,7 +310,7 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
         self._command_bit_mask = 1 << command_bit_numer
         self._status_bit_mask = 1 << status_bit_numer
 
-        self._available = True
+        self._available = False
         self._is_on = None
 
     def turn_on(self, **kwargs):
@@ -320,6 +320,7 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
             return
         register_value = self._read_modbus(self._verify_register)
         if register_value is None:
+            self._available = False
             return
         self._write_modbus(self._register, register_value | self._command_bit_mask)
         if not self._verify_state:
@@ -332,6 +333,7 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
             return
         register_value = self._read_modbus(self._verify_register)
         if register_value is None:
+            self._available = False
             return
         self._write_modbus(self._register, register_value & ~self._command_bit_mask)
         if not self._verify_state:
@@ -342,4 +344,8 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
         if not self._verify_state:
             return
         value = self._read_modbus(self._verify_register)
+        if value is None:
+            self._available = False
+            return
         self._is_on = bool(value & self._status_bit_mask)
+        self._available = True
