@@ -222,6 +222,7 @@ class AddonManager:
                     await func()
                 except AddonError as err:
                     LOGGER.error(err)
+                    break
 
         return self._hass.async_create_task(addon_operation())
 
