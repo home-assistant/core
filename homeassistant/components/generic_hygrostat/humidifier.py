@@ -343,7 +343,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     async def _async_update_humidity(self, humidity):
         """Update hygrostat with latest state from sensor."""
         try:
-            self._cur_humidity = int(round(float(humidity)))
+            self._cur_humidity = float(humidity)
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
             self._cur_humidity = None
