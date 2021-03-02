@@ -148,12 +148,15 @@ async def test_form_invalid_com_ports(hass):
         "aurorapy.client.AuroraSerialClient.connect",
         side_effect=AuroraError("...Some other message!!!123..."),
         return_value=None,
-    ):
+    ), patch("serial.Serial.isOpen", return_value=True,), patch(
+        "aurorapy.client.AuroraSerialClient.close",
+    ) as mock_clientclose:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
     assert result2["errors"] == {"base": "cannot_connect"}
+    assert len(mock_clientclose.mock_calls) == 1
 
 
 async def test_form_populate_defaults(hass):
