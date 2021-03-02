@@ -53,7 +53,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN]["entries"][entry.entry_id]
-    devices = hive.session.devices.get("climate")
+    devices = hive.session.deviceList.get("climate")
     entities = []
     if devices:
         for dev in devices:
@@ -216,7 +216,6 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
     @refresh_system
     async def async_heating_boost(self, time_period, temperature):
         """Handle boost heating service call."""
-        await self.hive.heating.turn_boost_on(self.device, time_period, temperature)
 
     async def async_update(self):
         """Update all Node data from Hive."""

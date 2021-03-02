@@ -77,7 +77,8 @@ async def async_setup_entry(hass, entry):
     except HTTPException as error:
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady() from error
-
+    except HiveReauthRequired:
+        hass.async_create_task(
     for ha_type, hive_type in PLATFORM_LOOKUP.items():
         devicelist = devices.get(hive_type)
         if devicelist:
