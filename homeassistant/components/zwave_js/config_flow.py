@@ -10,16 +10,12 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components.hassio import is_hassio
-from homeassistant.components.zwave_js.addon import (
-    AddonError,
-    AddonManager,
-    get_addon_manager,
-)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .addon import AddonError, AddonManager, get_addon_manager
 from .const import (  # pylint:disable=unused-import
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
