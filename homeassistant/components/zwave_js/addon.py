@@ -18,20 +18,11 @@ from homeassistant.components.hassio import (
     async_update_addon,
 )
 from homeassistant.components.hassio.handler import HassioAPIError
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.singleton import singleton
 
-from .const import (
-    ADDON_SLUG,
-    CONF_ADDON_DEVICE,
-    CONF_ADDON_NETWORK_KEY,
-    CONF_NETWORK_KEY,
-    CONF_USB_PATH,
-    DOMAIN,
-    LOGGER,
-)
+from .const import ADDON_SLUG, CONF_ADDON_DEVICE, CONF_ADDON_NETWORK_KEY, DOMAIN, LOGGER
 
 DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 
@@ -41,35 +32,6 @@ DATA_ADDON_MANAGER = f"{DOMAIN}_addon_manager"
 def get_addon_manager(hass: HomeAssistant) -> AddonManager:
     """Get the add-on manager."""
     return AddonManager(hass)
-
-
-async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Ensure that Z-Wave JS add-on is installed and running."""
-    addon_manager: AddonManager = get_addon_manager(hass)
-    try:
-        addon_is_installed = await addon_manager.async_is_addon_installed()
-        addon_is_running = await addon_manager.async_is_addon_running()
-    except AddonError as err:
-        LOGGER.error("Failed to get the Z-Wave JS add-on info")
-        raise ConfigEntryNotReady from err
-
-    usb_path: str = entry.data[CONF_USB_PATH]
-    network_key: str = entry.data[CONF_NETWORK_KEY]
-
-    if not addon_is_installed:
-        addon_manager.async_schedule_install_addon(usb_path, network_key)
-        raise ConfigEntryNotReady
-
-    if not addon_is_running:
-        addon_manager.async_schedule_setup_addon(usb_path, network_key)
-        raise ConfigEntryNotReady
-
-
-@callback
-def async_ensure_addon_updated(hass: HomeAssistant) -> None:
-    """Ensure that Z-Wave JS add-on is updated and running."""
-    addon_manager: AddonManager = get_addon_manager(hass)
-    addon_manager.async_schedule_update_addon()
 
 
 class AddonManager:
