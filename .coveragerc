@@ -725,6 +725,7 @@ omit =
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/media_player.py
+    homeassistant/components/philips_js/remote.py
     homeassistant/components/pi_hole/sensor.py
     homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
     homeassistant/components/pi4ioe5v9xxxx/switch.py
