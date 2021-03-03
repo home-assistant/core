@@ -38,7 +38,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Hive configuration setup."""
-    hass.data[DOMAIN] = {"entries": {}}
+    hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
         return True
@@ -70,7 +70,7 @@ async def async_setup_entry(hass, entry):
     hive_config["options"].update(
         {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
     )
-    hass.data[DOMAIN]["entries"][entry.entry_id] = hive
+    hass.data[DOMAIN][entry.entry_id] = hive
 
     try:
         devices = await hive.session.startSession(hive_config)
@@ -88,8 +88,8 @@ async def async_setup_entry(hass, entry):
         return False
 
     for ha_type, hive_type in PLATFORM_LOOKUP.items():
-        devicelist = devices.get(hive_type)
-        if devicelist:
+        device_list = devices.get(hive_type)
+        if device_list:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, ha_type)
             )

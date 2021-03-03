@@ -29,8 +29,8 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self.hive_auth = None
-        self.data = {"options": {}}
-        self.tokens = None
+        self.data = {}
+        self.tokens = {}
         self.entry = None
 
     async def async_step_user(self, user_input=None):
@@ -65,11 +65,12 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Complete SMS 2FA.
                 return await self.async_step_2fa()
 
-            # Complete the entry setup.
-            try:
-                return await self.async_setup_hive_entry()
-            except UnknownHiveError:
-                errors["base"] = "unknown"
+            if "AuthenticationResult" in self.tokens:
+                # Complete the entry setup.
+                try:
+                    return await self.async_setup_hive_entry()
+                except UnknownHiveError:
+                    errors["base"] = "unknown"
 
         # Show User Input form.
         schema = vol.Schema(
@@ -80,7 +81,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_2fa(self, user_input=None):
         """Handle 2fa step."""
         errors = {}
-        result = None
+        result = {}
 
         if user_input and user_input["2fa"] == "0000":
             self.tokens = await self.hive_auth.login()
@@ -162,19 +163,19 @@ class HiveOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        self.hive = self.hass.data["hive"]["entries"][self.config_entry.entry_id]
+        self.hive = self.hass.data["hive"][self.config_entry.entry_id]
         errors = {}
         if user_input is not None:
             new_interval = user_input.get(CONF_SCAN_INTERVAL)
-            if new_interval < 30:
-                new_interval = 30
-                user_input[CONF_SCAN_INTERVAL] = new_interval
-
             await self.hive.updateInterval(new_interval)
             return self.async_create_entry(title="", data=user_input)
 
         schema = vol.Schema(
-            {vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): int}
+            {
+                vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
+                    vol.Coerce(int), vol.Range(min=30)
+                )
+            }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 

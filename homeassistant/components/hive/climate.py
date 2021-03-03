@@ -52,7 +52,7 @@ SCAN_INTERVAL = timedelta(seconds=15)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
-    hive = hass.data[DOMAIN]["entries"][entry.entry_id]
+    hive = hass.data[DOMAIN][entry.entry_id]
     devices = hive.session.deviceList.get("climate")
     entities = []
     if devices:

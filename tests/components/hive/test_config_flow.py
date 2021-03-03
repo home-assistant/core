@@ -1,6 +1,8 @@
 """Test the Hive config flow."""
 from unittest.mock import patch
 
+from apyhiveapi.helper import hive_exceptions
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.hive.const import CONF_CODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
@@ -21,7 +23,7 @@ async def test_import_flow(hass):
     """Check import flow."""
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
+        "homeassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -44,13 +46,15 @@ async def test_import_flow(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == {
-        "options": {},
+        CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
         "tokens": {
-            "AccessToken": "mock-access-token",
-            "RefreshToken": "mock-refresh-token",
+            "AuthenticationResult": {
+                "AccessToken": "mock-access-token",
+                "RefreshToken": "mock-refresh-token",
+            },
+            "ChallengeName": "SUCCESS",
         },
-        CONF_USERNAME: USERNAME,
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -67,7 +71,7 @@ async def test_user_flow(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
+        "homeassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -90,12 +94,14 @@ async def test_user_flow(hass):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == USERNAME
     assert result2["data"] == {
-        "options": {},
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
         "tokens": {
-            "AccessToken": "mock-access-token",
-            "RefreshToken": "mock-refresh-token",
+            "AuthenticationResult": {
+                "AccessToken": "mock-access-token",
+                "RefreshToken": "mock-refresh-token",
+            },
+            "ChallengeName": "SUCCESS",
         },
     }
 
@@ -114,7 +120,7 @@ async def test_user_flow_2fa(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
+        "homeassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -132,7 +138,7 @@ async def test_user_flow_2fa(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.sms_2fa",
+        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -154,13 +160,15 @@ async def test_user_flow_2fa(hass):
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result3["title"] == USERNAME
     assert result3["data"] == {
-        "options": {},
+        CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
         "tokens": {
-            "AccessToken": "mock-access-token",
-            "RefreshToken": "mock-refresh-token",
+            "AuthenticationResult": {
+                "AccessToken": "mock-access-token",
+                "RefreshToken": "mock-refresh-token",
+            },
+            "ChallengeName": "SUCCESS",
         },
-        CONF_USERNAME: USERNAME,
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -192,7 +200,7 @@ async def test_reauth_flow(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
+        "homeassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SUCCESS",
             "AuthenticationResult": {
@@ -279,8 +287,8 @@ async def test_user_flow_invalid_username(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
-        return_value="INVALID_USER",
+        "homeassistant.components.hive.config_flow.Auth.login",
+        side_effect=hive_exceptions.HiveInvalidUsername(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -302,8 +310,8 @@ async def test_user_flow_invalid_password(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
-        return_value="INVALID_PASSWORD",
+        "homeassistant.components.hive.config_flow.Auth.login",
+        side_effect=hive_exceptions.HiveInvalidPassword(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -326,8 +334,8 @@ async def test_user_flow_no_internet_connection(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
-        return_value="CONNECTION_ERROR",
+        "homeassistant.components.hive.config_flow.Auth.login",
+        side_effect=hive_exceptions.HiveApiError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -349,7 +357,7 @@ async def test_user_flow_2fa_invalid_code(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.login",
+        "homeassistant.components.hive.config_flow.Auth.login",
         return_value={
             "ChallengeName": "SMS_MFA",
         },
@@ -364,8 +372,8 @@ async def test_user_flow_2fa_invalid_code(hass):
     assert result2["errors"] == {}
 
     with patch(
-        "homeassistant.components.hive.config_flow.HiveAuthAsync.sms_2fa",
-        return_value="INVALID_CODE",
+        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        side_effect=hive_exceptions.HiveInvalid2FACode(),
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
