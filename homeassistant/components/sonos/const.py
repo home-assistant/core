@@ -1,4 +1,6 @@
 """Const for Sonos."""
+import datetime
+
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
@@ -121,3 +123,8 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 ]
+
+SONOS_DISCOVERY_UPDATE = "sonos_discovery_update"
+
+SCAN_INTERVAL = datetime.timedelta(seconds=10)
+DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
