@@ -810,15 +810,15 @@ class ConfigEntries:
         ent_reg = entity_registry.async_get(self.hass)
 
         if not entry.disabled_by:
-            # The config entry is no longer disabled, enable devices and entities
+            # The config entry will no longer be disabled, enable devices and entities
             device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
             entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
 
-        # Unload the config entry, then fire an event
+        # Load or unload the config entry
         reload_result = await self.async_reload(entry_id)
 
         if entry.disabled_by:
-            # The config entry is disabled, disable devices and entities
+            # The config entry has been disabled, disable devices and entities
             device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
             entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
 
