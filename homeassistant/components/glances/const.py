@@ -37,6 +37,7 @@ SENSOR_TYPES = {
     "process_sleeping": ["processcount", "Sleeping", "Count", CPU_ICON],
     "cpu_use_percent": ["cpu", "CPU used", PERCENTAGE, CPU_ICON],
     "temperature_core": ["sensors", "temperature", TEMP_CELSIUS, "mdi:thermometer"],
+    "temperature_hdd": ["sensors", "temperature", TEMP_CELSIUS, "mdi:thermometer"],
     "fan_speed": ["sensors", "fan speed", "RPM", "mdi:fan"],
     "battery": ["sensors", "charge", PERCENTAGE, "mdi:battery"],
     "docker_active": ["docker", "Containers active", "", "mdi:docker"],
