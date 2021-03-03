@@ -103,7 +103,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_hostname,
             CONF_HOST: discovery_info[CONF_HOST],

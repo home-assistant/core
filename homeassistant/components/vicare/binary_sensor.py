@@ -23,8 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 CONF_GETTER = "getter"
 
 SENSOR_CIRCULATION_PUMP_ACTIVE = "circulationpump_active"
+
+# gas sensors
 SENSOR_BURNER_ACTIVE = "burner_active"
+
+# heatpump sensors
 SENSOR_COMPRESSOR_ACTIVE = "compressor_active"
+SENSOR_HEATINGROD_OVERALL = "heatingrod_overall"
+SENSOR_HEATINGROD_LEVEL1 = "heatingrod_level1"
+SENSOR_HEATINGROD_LEVEL2 = "heatingrod_level2"
+SENSOR_HEATINGROD_LEVEL3 = "heatingrod_level3"
 
 SENSOR_TYPES = {
     SENSOR_CIRCULATION_PUMP_ACTIVE: {
@@ -44,13 +52,39 @@ SENSOR_TYPES = {
         CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
         CONF_GETTER: lambda api: api.getCompressorActive(),
     },
+    SENSOR_HEATINGROD_OVERALL: {
+        CONF_NAME: "Heating rod overall",
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        CONF_GETTER: lambda api: api.getHeatingRodStatusOverall(),
+    },
+    SENSOR_HEATINGROD_LEVEL1: {
+        CONF_NAME: "Heating rod level 1",
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        CONF_GETTER: lambda api: api.getHeatingRodStatusLevel1(),
+    },
+    SENSOR_HEATINGROD_LEVEL2: {
+        CONF_NAME: "Heating rod level 2",
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        CONF_GETTER: lambda api: api.getHeatingRodStatusLevel2(),
+    },
+    SENSOR_HEATINGROD_LEVEL3: {
+        CONF_NAME: "Heating rod level 3",
+        CONF_DEVICE_CLASS: DEVICE_CLASS_POWER,
+        CONF_GETTER: lambda api: api.getHeatingRodStatusLevel3(),
+    },
 }
 
 SENSORS_GENERIC = [SENSOR_CIRCULATION_PUMP_ACTIVE]
 
 SENSORS_BY_HEATINGTYPE = {
     HeatingType.gas: [SENSOR_BURNER_ACTIVE],
-    HeatingType.heatpump: [SENSOR_COMPRESSOR_ACTIVE],
+    HeatingType.heatpump: [
+        SENSOR_COMPRESSOR_ACTIVE,
+        SENSOR_HEATINGROD_OVERALL,
+        SENSOR_HEATINGROD_LEVEL1,
+        SENSOR_HEATINGROD_LEVEL2,
+        SENSOR_HEATINGROD_LEVEL3,
+    ],
 }
 
 

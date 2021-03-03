@@ -9,6 +9,7 @@ from pysmartthings.device import Status
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
@@ -104,4 +105,4 @@ async def test_unload_config_entry(hass, device_factory):
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "lock")
     # Assert
-    assert not hass.states.get("lock.lock_1")
+    assert hass.states.get("lock.lock_1").state == STATE_UNAVAILABLE

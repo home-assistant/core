@@ -9,13 +9,13 @@
             "old_firmware": "Gammel fastvare som ikke st\u00f8ttes p\u00e5 Bond-enheten \u2013 vennligst oppgrader f\u00f8r du fortsetter",
             "unknown": "Uventet feil"
         },
-        "flow_title": "",
+        "flow_title": "Obligasjon: {name} ({host})",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Tilgangstoken"
                 },
-                "description": "Vil du konfigurere {bond_id}?"
+                "description": "Vil du konfigurere {name}?"
             },
             "user": {
                 "data": {

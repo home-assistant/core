@@ -1,4 +1,6 @@
 """Component to interface with various media players."""
+from __future__ import annotations
+
 import asyncio
 import base64
 import collections
@@ -851,7 +853,7 @@ class MediaPlayerEntity(Entity):
         self,
         media_content_type: Optional[str] = None,
         media_content_id: Optional[str] = None,
-    ) -> "BrowseMedia":
+    ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 
         The BrowseMedia instance will be used by the

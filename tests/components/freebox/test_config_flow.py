@@ -1,7 +1,7 @@
 """Tests for the Freebox config flow."""
 from unittest.mock import AsyncMock, patch
 
-from aiofreepybox.exceptions import (
+from freebox_api.exceptions import (
     AuthorizationError,
     HttpRequestError,
     InvalidTokenError,

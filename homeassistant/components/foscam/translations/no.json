@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
+            "invalid_response": "Ugyldig respons fra enheten",
             "unknown": "Uventet feil"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Vert",
                     "password": "Passord",
                     "port": "Port",
+                    "rtsp_port": "RTSP-port",
                     "stream": "Str\u00f8m",
                     "username": "Brukernavn"
                 }

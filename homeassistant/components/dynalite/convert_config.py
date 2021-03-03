@@ -4,7 +4,14 @@ from typing import Any, Dict
 
 from dynalite_devices_lib import const as dyn_const
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM, CONF_TYPE
+from homeassistant.const import (
+    CONF_DEFAULT,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_ROOM,
+    CONF_TYPE,
+)
 
 from .const import (
     ACTIVE_INIT,
@@ -16,7 +23,6 @@ from .const import (
     CONF_CHANNEL,
     CONF_CHANNEL_COVER,
     CONF_CLOSE_PRESET,
-    CONF_DEFAULT,
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,

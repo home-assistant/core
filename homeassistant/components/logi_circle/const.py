@@ -4,7 +4,6 @@ from homeassistant.const import PERCENTAGE
 DOMAIN = "logi_circle"
 DATA_LOGI = DOMAIN
 
-CONF_API_KEY = "api_key"
 CONF_REDIRECT_URI = "redirect_uri"
 
 DEFAULT_CACHEDB = ".logi_cache.pickle"

@@ -21,7 +21,8 @@
         "step": {
             "account_options": {
                 "data": {
-                    "read_only": "Lecture seule (uniquement capteurs et notification, pas d'ex\u00e9cution de services, pas de verrouillage)"
+                    "read_only": "Lecture seule (uniquement capteurs et notification, pas d'ex\u00e9cution de services, pas de verrouillage)",
+                    "use_location": "Utilisez la localisation de Home Assistant pour les sondages de localisation de voiture (obligatoire pour les v\u00e9hicules non i3 / i8 produits avant 7/2014)"
                 }
             }
         }

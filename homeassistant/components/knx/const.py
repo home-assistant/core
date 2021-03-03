@@ -26,22 +26,23 @@ CONF_RESET_AFTER = "reset_after"
 class ColorTempModes(Enum):
     """Color temperature modes for config validation."""
 
-    absolute = "DPT-7.600"
-    relative = "DPT-5.001"
+    ABSOLUTE = "DPT-7.600"
+    RELATIVE = "DPT-5.001"
 
 
 class SupportedPlatforms(Enum):
     """Supported platforms."""
 
-    cover = "cover"
-    light = "light"
-    binary_sensor = "binary_sensor"
-    climate = "climate"
-    switch = "switch"
-    notify = "notify"
-    scene = "scene"
-    sensor = "sensor"
-    weather = "weather"
+    BINARY_SENSOR = "binary_sensor"
+    CLIMATE = "climate"
+    COVER = "cover"
+    FAN = "fan"
+    LIGHT = "light"
+    NOTIFY = "notify"
+    SCENE = "scene"
+    SENSOR = "sensor"
+    SWITCH = "switch"
+    WEATHER = "weather"
 
 
 # Map KNX controller modes to HA modes. This list might not be complete.

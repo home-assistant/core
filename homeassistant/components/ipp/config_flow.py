@@ -106,7 +106,6 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         tls = zctype == "_ipps._tcp.local."
         base_path = discovery_info["properties"].get("rp", "ipp/print")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": name}})
 
         self.discovery_info.update(

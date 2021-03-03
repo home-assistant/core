@@ -100,28 +100,41 @@ async def test_static_config_with_invalid_host(hass):
 async def test_discovery(hass, pywemo_registry):
     """Verify that discovery dispatches devices to the platform for setup."""
 
-    def create_device(counter):
+    def create_device(uuid, location):
         """Create a unique mock Motion detector device for each counter value."""
         device = create_autospec(pywemo.Motion, instance=True)
-        device.host = f"{MOCK_HOST}_{counter}"
-        device.port = MOCK_PORT + counter
-        device.name = f"{MOCK_NAME}_{counter}"
-        device.serialnumber = f"{MOCK_SERIAL_NUMBER}_{counter}"
+        device.host = location
+        device.port = MOCK_PORT
+        device.name = f"{MOCK_NAME}_{uuid}"
+        device.serialnumber = f"{MOCK_SERIAL_NUMBER}_{uuid}"
         device.model_name = "Motion"
         device.get_state.return_value = 0  # Default to Off
         return device
 
-    pywemo_devices = [create_device(0), create_device(1)]
+    def create_upnp_entry(counter):
+        return pywemo.ssdp.UPNPEntry.from_response(
+            "\r\n".join(
+                [
+                    "",
+                    f"LOCATION: http://192.168.1.100:{counter}/setup.xml",
+                    f"USN: uuid:Socket-1_0-SERIAL{counter}::upnp:rootdevice",
+                    "",
+                ]
+            )
+        )
+
+    upnp_entries = [create_upnp_entry(0), create_upnp_entry(1)]
     # Setup the component and start discovery.
     with patch(
-        "pywemo.discover_devices", return_value=pywemo_devices
-    ) as mock_discovery:
+        "pywemo.discovery.device_from_uuid_and_location", side_effect=create_device
+    ), patch("pywemo.ssdp.scan", return_value=upnp_entries) as mock_scan:
         assert await async_setup_component(
             hass, DOMAIN, {DOMAIN: {CONF_DISCOVERY: True}}
         )
         await pywemo_registry.semaphore.acquire()  # Returns after platform setup.
-        mock_discovery.assert_called()
-        pywemo_devices.append(create_device(2))
+        mock_scan.assert_called()
+        # Add two of the same entries to test deduplication.
+        upnp_entries.extend([create_upnp_entry(2), create_upnp_entry(2)])
 
         # Test that discovery runs periodically and the async_dispatcher_send code works.
         async_fire_time_changed(

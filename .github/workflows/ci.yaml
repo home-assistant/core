@@ -30,7 +30,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -52,7 +52,7 @@ jobs:
           pip install -r requirements.txt -r requirements_test.txt
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -79,7 +79,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -95,7 +95,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -124,7 +124,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -140,7 +140,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -169,7 +169,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -185,7 +185,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -236,7 +236,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -252,7 +252,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -284,7 +284,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -300,7 +300,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -332,7 +332,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -348,7 +348,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -377,7 +377,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -393,7 +393,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -425,7 +425,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -441,7 +441,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -481,7 +481,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -497,7 +497,7 @@ jobs:
           exit 1
       - name: Restore pre-commit environment from cache
         id: cache-precommit
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: ${{ env.PRE_COMMIT_HOME }}
           key: |
@@ -528,7 +528,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -560,7 +560,7 @@ jobs:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -591,7 +591,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -630,7 +630,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -664,7 +664,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -700,7 +700,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-
@@ -760,7 +760,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
-        uses: actions/cache@v2
+        uses: actions/cache@v2.1.4
         with:
           path: venv
           key: >-

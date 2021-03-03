@@ -2,6 +2,11 @@
   "domain": "hive",
   "name": "Hive",
   "documentation": "https://www.home-assistant.io/integrations/hive",
-  "requirements": ["pyhiveapi==0.2.20.2"],
-  "codeowners": ["@Rendili", "@KJonline"]
+  "requirements": [
+    "pyhiveapi==0.3.4.4"
+  ],
+  "codeowners": [
+    "@Rendili",
+    "@KJonline"
+  ]
 }

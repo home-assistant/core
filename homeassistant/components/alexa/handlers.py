@@ -54,7 +54,6 @@ from .const import (
     API_THERMOSTAT_MODES,
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
-    PERCENTAGE_FAN_MAP,
     Cause,
     Inputs,
 )
@@ -360,17 +359,9 @@ async def async_api_set_percentage(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = "off"
-
+        service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["percentage"])
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        elif percentage <= 100:
-            speed = "high"
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -388,22 +379,12 @@ async def async_api_adjust_percentage(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = entity.attributes.get(fan.ATTR_SPEED)
-        current = PERCENTAGE_FAN_MAP.get(speed, 100)
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         # set percentage
-        percentage = max(0, percentage_delta + current)
-        speed = "off"
-
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        elif percentage <= 100:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        percentage = min(100, max(0, percentage_delta + current))
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -854,18 +835,9 @@ async def async_api_set_power_level(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = "off"
-
+        service = fan.SERVICE_SET_PERCENTAGE
         percentage = int(directive.payload["powerLevel"])
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        else:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -883,22 +855,12 @@ async def async_api_adjust_power_level(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == fan.DOMAIN:
-        service = fan.SERVICE_SET_SPEED
-        speed = entity.attributes.get(fan.ATTR_SPEED)
-        current = PERCENTAGE_FAN_MAP.get(speed, 100)
+        service = fan.SERVICE_SET_PERCENTAGE
+        current = entity.attributes.get(fan.ATTR_PERCENTAGE) or 0
 
         # set percentage
-        percentage = max(0, percentage_delta + current)
-        speed = "off"
-
-        if percentage <= 33:
-            speed = "low"
-        elif percentage <= 66:
-            speed = "medium"
-        else:
-            speed = "high"
-
-        data[fan.ATTR_SPEED] = speed
+        percentage = min(100, max(0, percentage_delta + current))
+        data[fan.ATTR_PERCENTAGE] = percentage
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context

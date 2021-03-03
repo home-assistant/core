@@ -1,7 +1,10 @@
 """Classes to help gather user submissions."""
+from __future__ import annotations
+
 import abc
 import asyncio
-from typing import Any, Dict, List, Optional, cast
+from types import MappingProxyType
+from typing import Any, Dict, List, Optional
 import uuid
 
 import voluptuous as vol
@@ -75,7 +78,7 @@ class FlowManager(abc.ABC):
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
-    ) -> "FlowHandler":
+    ) -> FlowHandler:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -262,11 +265,14 @@ class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
-    flow_id: str = None  # type: ignore
-    hass: Optional[HomeAssistant] = None
-    handler: Optional[str] = None
     cur_step: Optional[Dict[str, str]] = None
-    context: Dict
+    # Ignore types, pylint workaround: https://github.com/PyCQA/pylint/issues/3167
+    flow_id: str = None  # type: ignore
+    hass: HomeAssistant = None  # type: ignore
+    handler: str = None  # type: ignore
+    # Pylint workaround: https://github.com/PyCQA/pylint/issues/3167
+    # Ensure the attribute has a subscriptable, but immutable, default value.
+    context: Dict = MappingProxyType({})  # type: ignore
 
     # Set by _async_create_flow callback
     init_step = "init"
@@ -337,7 +343,7 @@ class FlowHandler:
     ) -> Dict[str, Any]:
         """Abort the config flow."""
         return _create_abort_data(
-            self.flow_id, cast(str, self.handler), reason, description_placeholders
+            self.flow_id, self.handler, reason, description_placeholders
         )
 
     @callback

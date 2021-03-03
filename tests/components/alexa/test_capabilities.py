@@ -323,6 +323,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Off fan",
             "speed": "off",
             "supported_features": 1,
+            "percentage": 0,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -333,6 +334,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Low speed fan",
             "speed": "low",
             "supported_features": 1,
+            "percentage": 33,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -343,6 +345,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Medium speed fan",
             "speed": "medium",
             "supported_features": 1,
+            "percentage": 66,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )
@@ -353,6 +356,7 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "High speed fan",
             "speed": "high",
             "supported_features": 1,
+            "percentage": 100,
             "speed_list": ["off", "low", "medium", "high"],
         },
     )

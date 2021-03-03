@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "not_wilight_device": "\uc774 \uc7a5\uce58\ub294 WiLight\uac00 \uc544\ub2d9\ub2c8\ub2e4."
         },
         "step": {
