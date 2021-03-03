@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "invalid_response": "Nieprawid\u0142owa odpowied\u017a z urz\u0105dzenia",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "port": "Port",
+                    "rtsp_port": "Port RTSP",
                     "stream": "Strumie\u0144",
                     "username": "Nazwa u\u017cytkownika"
                 }

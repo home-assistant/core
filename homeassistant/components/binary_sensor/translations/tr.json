@@ -75,8 +75,8 @@
             "on": "Tak\u0131l\u0131"
         },
         "presence": {
-            "off": "[%key:common::state::evde_degil%]",
-            "on": "[%key:common::state::evde%]"
+            "off": "D\u0131\u015farda",
+            "on": "Evde"
         },
         "problem": {
             "off": "Tamam",

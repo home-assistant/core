@@ -21,6 +21,7 @@ class ScriptVariables:
         run_variables: Optional[Mapping[str, Any]],
         *,
         render_as_defaults: bool = True,
+        limited: bool = False,
     ) -> Dict[str, Any]:
         """Render script variables.
 
@@ -55,7 +56,9 @@ class ScriptVariables:
             if render_as_defaults and key in rendered_variables:
                 continue
 
-            rendered_variables[key] = template.render_complex(value, rendered_variables)
+            rendered_variables[key] = template.render_complex(
+                value, rendered_variables, limited
+            )
 
         return rendered_variables
 

@@ -5,14 +5,13 @@ import logging
 import voluptuous as vol
 from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import CONF_TYPE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN, PLATFORM_SCHEMA, XBeeAnalogIn, XBeeAnalogInConfig, XBeeConfig
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TYPE = "type"
 CONF_MAX_VOLTS = "max_volts"
 
 DEFAULT_VOLTS = 1.2

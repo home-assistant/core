@@ -39,7 +39,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         host = user_input["hostname"].rstrip(".")
         name, _ = host.rsplit(".")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_HOST: user_input["host"],
@@ -62,7 +61,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[ConfigType] = None, prepare: bool = False
     ) -> Dict[str, Any]:
         """Config flow handler for WLED."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         source = self.context.get("source")
 
         # Request user input, unless we are preparing discovery flow
@@ -72,7 +70,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form()
 
         if source == SOURCE_ZEROCONF:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
             user_input[CONF_MAC] = self.context.get(CONF_MAC)
 
@@ -93,7 +90,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         title = user_input[CONF_HOST]
         if source == SOURCE_ZEROCONF:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             title = self.context.get(CONF_NAME)
 
         if prepare:
@@ -114,7 +110,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_confirm_dialog(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the confirm dialog to the user."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         name = self.context.get(CONF_NAME)
         return self.async_show_form(
             step_id="zeroconf_confirm",

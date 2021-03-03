@@ -48,7 +48,9 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
         id="hij", name="Inactive User", is_active=False, groups=[group]
     ).add_to_hass(hass)
 
-    refresh_token = await hass.auth.async_create_refresh_token(owner, CLIENT_ID)
+    refresh_token = await hass.auth.async_create_refresh_token(
+        owner, CLIENT_ID, credential=owner.credentials[0]
+    )
     access_token = hass.auth.async_create_access_token(refresh_token)
 
     client = await hass_ws_client(hass, access_token)
@@ -60,13 +62,13 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     assert len(data) == 4
     assert data[0] == {
         "id": hass_admin_user.id,
-        "username": None,
+        "username": "admin",
         "name": "Mock User",
         "is_owner": False,
         "is_active": True,
         "system_generated": False,
         "group_ids": [group.id for group in hass_admin_user.groups],
-        "credentials": [],
+        "credentials": [{"type": "homeassistant"}],
     }
     assert data[1] == {
         "id": owner.id,

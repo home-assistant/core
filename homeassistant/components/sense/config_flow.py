@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TIMEOUT
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACTIVE_UPDATE_RATE, DEFAULT_TIMEOUT, SENSE_TIMEOUT_EXCEPTIONS
 from .const import DOMAIN  # pylint:disable=unused-import; pylint:disable=unused-import
@@ -27,8 +28,11 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     timeout = data[CONF_TIMEOUT]
+    client_session = async_get_clientsession(hass)
 
-    gateway = ASyncSenseable(api_timeout=timeout, wss_timeout=timeout)
+    gateway = ASyncSenseable(
+        api_timeout=timeout, wss_timeout=timeout, client_session=client_session
+    )
     gateway.rate_limit = ACTIVE_UPDATE_RATE
     await gateway.authenticate(data[CONF_EMAIL], data[CONF_PASSWORD])
 

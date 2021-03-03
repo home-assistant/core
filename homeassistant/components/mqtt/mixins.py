@@ -387,7 +387,7 @@ class MqttDiscoveryUpdate(Entity):
                 entity_registry.async_remove(self.entity_id)
                 await cleanup_device_registry(self.hass, entity_entry.device_id)
             else:
-                await self.async_remove()
+                await self.async_remove(force_remove=True)
 
         async def discovery_callback(payload):
             """Handle discovery update."""

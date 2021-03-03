@@ -5,11 +5,14 @@
             "cannot_connect": "\u00c9chec de connexion",
             "invalid_auth": "Authentification invalide"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
             "reauth": {
                 "data": {
                     "password": "Mot de passe"
-                }
+                },
+                "description": "L'authentification a \u00e9chou\u00e9 pour OVO Energy. Veuillez saisir vos informations d'identification actuelles.",
+                "title": "R\u00e9authentification"
             },
             "user": {
                 "data": {

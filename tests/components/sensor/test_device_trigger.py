@@ -428,6 +428,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     assert hass.states.get(sensor1.entity_id).state == STATE_UNKNOWN
     assert len(calls) == 0
 
+    hass.states.async_set(sensor1.entity_id, 10)
     hass.states.async_set(sensor1.entity_id, 11)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -437,5 +438,5 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     await hass.async_block_till_done()
     assert (
         calls[0].data["some"]
-        == f"turn_off device - {sensor1.entity_id} - unknown - 11 - 0:00:05"
+        == f"turn_off device - {sensor1.entity_id} - 10 - 11 - 0:00:05"
     )

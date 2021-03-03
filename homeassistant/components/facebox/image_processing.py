@@ -15,6 +15,7 @@ from homeassistant.components.image_processing import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ID,
     ATTR_NAME,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -34,7 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_CLASSIFIER = "classifier"
 ATTR_IMAGE_ID = "image_id"
-ATTR_ID = "id"
 ATTR_MATCHED = "matched"
 FACEBOX_NAME = "name"
 CLASSIFIER = "facebox"

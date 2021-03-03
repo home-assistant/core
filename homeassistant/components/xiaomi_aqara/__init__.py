@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
@@ -26,7 +27,6 @@ from homeassistant.util.dt import utcnow
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,
-    CONF_PROTOCOL,
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,

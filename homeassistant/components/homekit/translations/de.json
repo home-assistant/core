@@ -4,12 +4,27 @@
             "port_name_in_use": "Eine HomeKit Bridge mit demselben Namen oder Port ist bereits vorhanden."
         },
         "step": {
+            "accessory_mode": {
+                "data": {
+                    "entity_id": "Entit\u00e4t"
+                },
+                "description": "W\u00e4hle die Entit\u00e4t aus, die aufgenommen werden soll. Im Zubeh\u00f6rmodus ist nur eine einzelne Entit\u00e4t enthalten.",
+                "title": "W\u00e4hle die Entit\u00e4t aus, die aufgenommen werden soll"
+            },
+            "bridge_mode": {
+                "data": {
+                    "include_domains": "Einzubeziehende Domains"
+                },
+                "description": "W\u00e4hle die Domains aus, die aufgenommen werden sollen. Alle unterst\u00fctzten Ger\u00e4te innerhalb der Domain werden aufgenommen.",
+                "title": "W\u00e4hle die Domains aus, die aufgenommen werden sollen"
+            },
             "pairing": {
                 "title": "HomeKit verbinden"
             },
             "user": {
                 "data": {
-                    "include_domains": "Einzubeziehende Domains"
+                    "include_domains": "Einzubeziehende Domains",
+                    "mode": "Modus"
                 },
                 "title": "HomeKit aktivieren"
             }
@@ -21,6 +36,7 @@
                 "data": {
                     "safe_mode": "Abgesicherter Modus (nur aktivieren, wenn das Pairing fehlschl\u00e4gt)"
                 },
+                "description": "Diese Einstellungen m\u00fcssen nur angepasst werden, wenn HomeKit nicht funktioniert.",
                 "title": "Erweiterte Konfiguration"
             },
             "cameras": {
@@ -33,7 +49,8 @@
                 "data": {
                     "entities": "Entit\u00e4ten",
                     "mode": "Modus"
-                }
+                },
+                "title": "W\u00e4hle die Entit\u00e4ten aus, die aufgenommen werden sollen"
             },
             "init": {
                 "data": {

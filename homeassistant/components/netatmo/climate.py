@@ -26,12 +26,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    DATA_DEVICE_IDS,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_SCHEDULES,
@@ -237,6 +239,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 )
             )
 
+        registry = await async_get_registry(self.hass)
+        device = registry.async_get_device({(DOMAIN, self._id)}, set())
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._home_id] = device.id
+
     async def handle_event(self, event):
         """Handle webhook events."""
         data = event["data"]
@@ -346,6 +352,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            self.turn_on()
+
         if self.target_temperature == 0:
             self._home_status.set_room_thermpoint(
                 self._id,
@@ -566,6 +575,11 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             kwargs.get(ATTR_SCHEDULE_NAME),
             schedule_id,
         )
+
+    @property
+    def device_info(self):
+        """Return the device info for the thermostat."""
+        return {**super().device_info, "suggested_area": self._room_data["name"]}
 
 
 def interpolate(batterylevel, module_type):

@@ -121,6 +121,7 @@ def handle_unsubscribe_events(hass, connection, msg):
         vol.Required("type"): "call_service",
         vol.Required("domain"): str,
         vol.Required("service"): str,
+        vol.Optional("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("service_data"): dict,
     }
 )
@@ -139,6 +140,7 @@ async def handle_call_service(hass, connection, msg):
             msg.get("service_data"),
             blocking,
             context,
+            target=msg.get("target"),
         )
         connection.send_message(
             messages.result_message(msg["id"], {"context": context})

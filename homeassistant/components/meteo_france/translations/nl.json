@@ -5,6 +5,9 @@
             "unknown": "Onbekende fout: probeer het later nog eens"
         },
         "step": {
+            "cities": {
+                "title": "M\u00e9t\u00e9o-France"
+            },
             "user": {
                 "data": {
                     "city": "Stad"

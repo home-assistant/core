@@ -183,7 +183,7 @@ async def test_derivative():
 
     config = {"platform": "dsmr"}
 
-    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config)
+    entity = DerivativeDSMREntity("test", "test_device", "5678", "1.0.0", config, False)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"

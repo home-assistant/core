@@ -32,7 +32,7 @@
             "not_konn_panel": "Ikke en anerkjent Konnected.io-enhet"
         },
         "error": {
-            "bad_host": "Ugyldig overstyr API-vertsadresse"
+            "bad_host": "Url-adresse for ugyldig overstyring av API-vert"
         },
         "step": {
             "options_binary": {
