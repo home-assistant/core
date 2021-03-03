@@ -61,10 +61,6 @@ class SuplaMqttSoftBridge(Entity):
         self._supla_mqtt_client.on_message = self.on_supla_message
         self._supla_mqtt_client.on_publish = self.on_supla_publish
 
-        self._supla_mqtt_client.connect_async(
-            self._hostname, port=self._port, keepalive=self._keepalive
-        )
-        self._supla_mqtt_client.loop_start()
         self._ignore_supla_topic = ""
         self._ignore_supla_payload = ""
         #
@@ -224,11 +220,26 @@ class SuplaMqttSoftBridge(Entity):
         _LOGGER.debug(f"on_supla_publish {mid}")
         self._supla_published = self._supla_published + 1
 
+    def ais_reconnect(self):
+        if self._supla_mqtt_client.is_connected():
+            self._supla_mqtt_client.disconnect()
+            self._supla_mqtt_client.loop_stop(force=True)
+        self._supla_mqtt_client.connect_async(
+            self._hostname, port=self._port, keepalive=self._keepalive
+        )
+        self._supla_mqtt_client.loop_start()
+
     async def async_update(self):
         """Reconnect with SUPLA MQTT to receive the discovery and status info."""
         self._sensor_update_counter = self._sensor_update_counter + 1
-        if self._supla_mqtt_client.is_connected() and self._supla_received < 2:
-            self._supla_mqtt_client.reconnect()
-        elif self._sensor_update_counter % 100 == 0:
+        if self._sensor_update_counter == 1:
+            self.ais_reconnect()
+        elif (
+            self._supla_mqtt_client.is_connected()
+            and self._sensor_update_counter > 1
+            and self._supla_received < 2
+        ):
+            self.ais_reconnect()
+        elif self._sensor_update_counter % 60 == 0:
             self._sensor_update_counter = 0
-            self._supla_mqtt_client.reconnect()
+            self.ais_reconnect()
