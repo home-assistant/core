@@ -7,8 +7,7 @@ from contextlib import suppress
 import datetime
 import functools as ft
 import logging
-import socket
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine
 import urllib.parse
 
 import async_timeout
@@ -23,7 +22,7 @@ from pysonos.core import (
     SoCo,
 )
 from pysonos.data_structures import DidlFavorite
-from pysonos.events_base import Event, SubscriptionBase
+from pysonos.events_base import Event as SonosEvent, SubscriptionBase
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -61,33 +60,27 @@ from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TIME,
-    CONF_HOSTS,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
-from . import CONF_ADVERTISE_ADDR, CONF_INTERFACE_ADDR
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
+    SCAN_INTERVAL,
+    SONOS_DISCOVERY_UPDATE,
 )
 from .media_browser import build_item_response, get_media, library_payload
-from .sensor import SonosBatteryEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = 10
-DISCOVERY_INTERVAL = 60
-SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
 
 SUPPORT_SONOS = (
     SUPPORT_BROWSE_MEDIA
@@ -147,105 +140,27 @@ ATTR_STATUS_LIGHT = "status_light"
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
 
 
-class SonosData:
-    """Storage class for platform global data."""
-
-    def __init__(self) -> None:
-        """Initialize the data."""
-        self.entities: list[SonosEntity] = []
-        self.discovered: list[str] = []
-        self.topology_condition = asyncio.Condition()
-        self.discovery_thread = None
-        self.hosts_heartbeat = None
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Sonos platform. Obsolete."""
+    _LOGGER.error(
+        "Loading Sonos by media_player platform configuration is no longer supported"
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up Sonos from a config entry."""
-    if DATA_SONOS not in hass.data:
-        hass.data[DATA_SONOS] = SonosData()
-
-    config = hass.data[SONOS_DOMAIN].get("media_player", {})
-    _LOGGER.debug("Reached async_setup_entry, config=%s", config)
-    pysonos.config.EVENTS_MODULE = events_asyncio
-
-    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
-    if advertise_addr:
-        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
-
-    def _stop_discovery(event: Event) -> None:
-        data = hass.data[DATA_SONOS]
-        if data.discovery_thread:
-            data.discovery_thread.stop()
-            data.discovery_thread = None
-        if data.hosts_heartbeat:
-            data.hosts_heartbeat()
-            data.hosts_heartbeat = None
-
-    def _discovery(now: datetime.datetime | None = None) -> None:
-        """Discover players from network or configuration."""
-        hosts = config.get(CONF_HOSTS)
-
-        def _discovered_player(soco: SoCo) -> None:
-            """Handle a (re)discovered player."""
-            try:
-                _LOGGER.debug("Reached _discovered_player, soco=%s", soco)
-
-                if soco.uid not in hass.data[DATA_SONOS].discovered:
-                    _LOGGER.debug("Adding new entity")
-                    hass.data[DATA_SONOS].discovered.append(soco.uid)
-                    entity = SonosEntity(soco)
-                    entities = [entity]
-
-                    # Enable battery status if supported
-                    battery_info = SonosBatteryEntity.fetch(soco)
-                    if battery_info is not None:
-                        entities.append(SonosBatteryEntity(entity, soco, battery_info))
-
-                    hass.add_job(async_add_entities, entities)
-                else:
-                    entity = _get_entity_from_soco_uid(hass, soco.uid)
-                    if entity and (entity.soco == soco or not entity.available):
-                        _LOGGER.debug("Seen %s", entity)
-                        hass.add_job(entity.async_seen(soco))  # type: ignore
-
-            except SoCoException as ex:
-                _LOGGER.debug("SoCoException, ex=%s", ex)
-
-        if hosts:
-            for host in hosts:
-                try:
-                    _LOGGER.debug("Testing %s", host)
-                    player = pysonos.SoCo(socket.gethostbyname(host))
-                    if player.is_visible:
-                        # Make sure that the player is available
-                        _ = player.volume
-
-                        _discovered_player(player)
-                except (OSError, SoCoException) as ex:
-                    _LOGGER.debug("Exception %s", ex)
-                    if now is None:
-                        _LOGGER.warning("Failed to initialize '%s'", host)
-
-            _LOGGER.debug("Tested all hosts")
-            hass.data[DATA_SONOS].hosts_heartbeat = hass.helpers.event.call_later(
-                DISCOVERY_INTERVAL.seconds, _discovery
-            )
-        else:
-            _LOGGER.debug("Starting discovery thread")
-            hass.data[DATA_SONOS].discovery_thread = pysonos.discover_thread(
-                _discovered_player,
-                interval=DISCOVERY_INTERVAL.seconds,
-                interface_addr=config.get(CONF_INTERFACE_ADDR),
-            )
-            hass.data[DATA_SONOS].discovery_thread.name = "Sonos-Discovery"
-
-    _LOGGER.debug("Adding discovery job")
-    hass.async_add_executor_job(_discovery)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_discovery)
 
     platform = entity_platform.current_platform.get()
+
+    async def async_create_entities(event: Event):
+        """Handle device discovery and create entities."""
+        # Make sure that all known SoCo devices have Media Player entities
+        soco = event.data.get("soco")
+        if soco and soco.uid not in hass.data[DATA_SONOS].media_player_entities:
+            hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
+            hass.add_job(async_add_entities, [SonosMediaPlayerEntity(soco)])
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:
@@ -262,22 +177,24 @@ async def async_setup_entry(
         if service_call.service == SERVICE_JOIN:
             master = platform.entities.get(service_call.data[ATTR_MASTER])
             if master:
-                await SonosEntity.join_multi(hass, master, entities)  # type: ignore[arg-type]
+                await SonosMediaPlayerEntity.join_multi(hass, master, entities)
             else:
                 _LOGGER.error(
                     "Invalid master specified for join service: %s",
                     service_call.data[ATTR_MASTER],
                 )
         elif service_call.service == SERVICE_UNJOIN:
-            await SonosEntity.unjoin_multi(hass, entities)  # type: ignore[arg-type]
+            await SonosMediaPlayerEntity.unjoin_multi(hass, entities)
         elif service_call.service == SERVICE_SNAPSHOT:
-            await SonosEntity.snapshot_multi(
-                hass, entities, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
+            await SonosMediaPlayerEntity.snapshot_multi(
+                hass, entities, service_call.data[ATTR_WITH_GROUP]
             )
         elif service_call.service == SERVICE_RESTORE:
-            await SonosEntity.restore_multi(
-                hass, entities, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
+            await SonosMediaPlayerEntity.restore_multi(
+                hass, entities, service_call.data[ATTR_WITH_GROUP]
             )
+
+    hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, async_create_entities)
 
     hass.services.async_register(
         SONOS_DOMAIN,
@@ -352,13 +269,24 @@ async def async_setup_entry(
     )
 
 
+class _ProcessSonosEventQueue:
+    """Queue like object for dispatching sonos events."""
+
+    def __init__(self, handler):
+        """Initialize Sonos event queue."""
+        self._handler = handler
+
+    def put(self, item, block=True, timeout=None):
+        """Process event."""
+        try:
+            self._handler(item)
+        except SoCoException as ex:
+            _LOGGER.warning("Error calling %s: %s", self._handler, ex)
+
+
 def _get_entity_from_soco_uid(hass: HomeAssistant, uid: str) -> SonosEntity | None:
-    """Return SonosEntity from SoCo uid."""
-    entities: list[SonosEntity] = hass.data[DATA_SONOS].entities
-    for entity in entities:
-        if uid == entity.unique_id:
-            return entity
-    return None
+    """Return SonosMediaPlayerEntity from SoCo uid."""
+    return hass.data[DATA_SONOS].media_player_entities.get(uid)
 
 
 def soco_error(errorcodes: list[str] | None = None) -> Callable:
@@ -405,7 +333,7 @@ def _timespan_secs(timespan: str | None) -> None | float:
     return sum(60 ** x[0] * int(x[1]) for x in enumerate(reversed(timespan.split(":"))))
 
 
-class SonosEntity(MediaPlayerEntity):
+class SonosMediaPlayerEntity(MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
     def __init__(self, player: SoCo) -> None:
@@ -439,6 +367,7 @@ class SonosEntity(MediaPlayerEntity):
         self._favorites: list[DidlFavorite] = []
         self._soco_snapshot: pysonos.snapshot.Snapshot | None = None
         self._snapshot_group: list[SonosEntity] | None = None
+        self._available: bool | None  = None
 
         # Set these early since device_info() needs them
         speaker_info: dict = self.soco.get_speaker_info(True)
@@ -449,9 +378,9 @@ class SonosEntity(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Subscribe sonos events."""
-        await self.async_seen(self.soco)
+        self.hass.data[DATA_SONOS].media_player_entities[self.unique_id] = self
 
-        self.hass.data[DATA_SONOS].entities.append(self)
+        await self.async_seen(self.soco)
 
         for entity in self.hass.data[DATA_SONOS].entities:
             await entity.create_update_groups_coro()
@@ -468,19 +397,21 @@ class SonosEntity(MediaPlayerEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self._name
+        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
+        return speaker_info["zone_name"]
 
     @property
     def device_info(self) -> dict:
         """Return information about the device."""
+        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
         return {
-            "identifiers": {(SONOS_DOMAIN, self._unique_id)},
-            "name": self._name,
-            "model": self._model.replace("Sonos ", ""),
-            "sw_version": self._sw_version,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
+            "identifiers": {(SONOS_DOMAIN, self._player.uid)},
+            "name": speaker_info["zone_name"],
+            "model": speaker_info["model_name"].replace("Sonos ", ""),
+            "sw_version": speaker_info["software_version"],
+            "connections": {(dr.CONNECTION_NETWORK_MAC, speaker_info["mac_address"])},
             "manufacturer": "Sonos",
-            "suggested_area": self._name,
+            "suggested_area": speaker_info["zone_name"],
         }
 
     @property  # type: ignore[misc]
@@ -532,6 +463,8 @@ class SonosEntity(MediaPlayerEntity):
         if was_available:
             return
 
+        self._available = True
+
         self._poll_timer = self.hass.helpers.event.async_track_time_interval(
             self.update, SCAN_INTERVAL
         )
@@ -546,11 +479,11 @@ class SonosEntity(MediaPlayerEntity):
 
     async def async_unseen(self, now: datetime.datetime | None = None) -> None:
         """Make this player unavailable when it was not seen recently."""
-        self._seen_timer = None
-
         if self._poll_timer:
             self._poll_timer()
             self._poll_timer = None
+
+        self._available = True
 
         for subscription in self._subscriptions:
             await subscription.unsubscribe()
@@ -562,7 +495,7 @@ class SonosEntity(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._seen_timer is not None
+        return self._available
 
     def _clear_media_position(self) -> None:
         """Clear the media_position."""
@@ -633,11 +566,11 @@ class SonosEntity(MediaPlayerEntity):
             pass
 
     @callback
-    def async_update_media(self, event: Event | None = None) -> None:
+    def async_update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
         self.hass.async_add_executor_job(self.update_media, event)
 
-    def update_media(self, event: Event | None = None) -> None:
+    def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
         variables = event and event.variables
 
@@ -783,7 +716,7 @@ class SonosEntity(MediaPlayerEntity):
             self._queue_position = playlist_position - 1
 
     @callback
-    def async_update_volume(self, event: Event) -> None:
+    def async_update_volume(self, event: SonosEvent) -> None:
         """Update information about currently volume settings."""
         variables = event.variables
 
@@ -808,20 +741,20 @@ class SonosEntity(MediaPlayerEntity):
         self._night_sound = self.soco.night_mode
         self._speech_enhance = self.soco.dialog_mode
 
-    def update_groups(self, event: Event | None = None) -> None:
+    def update_groups(self, event: SonosEvent | None = None) -> None:
         """Handle callback for topology change event."""
         coro = self.create_update_groups_coro(event)
         if coro:
             self.hass.add_job(coro)  # type: ignore
 
     @callback
-    def async_update_groups(self, event: Event | None = None) -> None:
+    def async_update_groups(self, event: SonosEvent | None = None) -> None:
         """Handle callback for topology change event."""
         coro = self.create_update_groups_coro(event)
         if coro:
             self.hass.async_add_job(coro)  # type: ignore
 
-    def create_update_groups_coro(self, event: Event | None = None) -> Coroutine | None:
+    def create_update_groups_coro(self, event: SonosEvent | None = None) -> Coroutine | None:
         """Handle callback for topology change event."""
 
         def _get_soco_group() -> list[str]:
@@ -840,7 +773,7 @@ class SonosEntity(MediaPlayerEntity):
 
             return [coordinator_uid] + slave_uids
 
-        async def _async_extract_group(event: Event) -> list[str]:
+        async def _async_extract_group(event: SonosEvent) -> list[str]:
             """Extract group layout from a topology event."""
             group = event and event.zone_player_uui_ds_in_group
             if group:
@@ -870,7 +803,7 @@ class SonosEntity(MediaPlayerEntity):
                     slave._sonos_group = sonos_group
                     slave.async_schedule_update_ha_state()
 
-        async def _async_handle_group_event(event: Event) -> None:
+        async def _async_handle_group_event(event: SonosEvent) -> None:
             """Get async lock and handle event."""
             if event and self._poll_timer:
                 # Cancel poll timer since we do receive events
@@ -891,7 +824,7 @@ class SonosEntity(MediaPlayerEntity):
         return _async_handle_group_event(event)
 
     @callback
-    def async_update_content(self, event: Event | None = None) -> None:
+    def async_update_content(self, event: SonosEvent | None = None) -> None:
         """Update information about available content."""
         if event and "favorites_update_id" in event.variables:
             self.hass.async_add_job(self._set_favorites)
@@ -1063,7 +996,8 @@ class SonosEntity(MediaPlayerEntity):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        model = self._model.upper()
+        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._player.uid]
+        model = speaker_info["model_name"].upper()
         if "PLAY:5" in model or "CONNECT" in model:
             sources += [SOURCE_LINEIN]
         elif "PLAYBAR" in model:
@@ -1201,10 +1135,10 @@ class SonosEntity(MediaPlayerEntity):
     ) -> None:
         """Form a group with other players."""
         async with hass.data[DATA_SONOS].topology_condition:
-            group: list[SonosEntity] = await hass.async_add_executor_job(
+            group: list[SonosMediaPlayerEntity] = await hass.async_add_executor_job(
                 master.join, entities
             )
-            await SonosEntity.wait_for_groups(hass, [group])
+            await SonosMediaPlayerEntity.wait_for_groups(hass, [group])
 
     @soco_error()
     def unjoin(self) -> None:
@@ -1227,7 +1161,7 @@ class SonosEntity(MediaPlayerEntity):
 
         async with hass.data[DATA_SONOS].topology_condition:
             await hass.async_add_executor_job(_unjoin_all, entities)
-            await SonosEntity.wait_for_groups(hass, [[e] for e in entities])
+            await SonosMediaPlayerEntity.wait_for_groups(hass, [[e] for e in entities])
 
     @soco_error()
     def snapshot(self, with_group: bool) -> None:
@@ -1325,7 +1259,7 @@ class SonosEntity(MediaPlayerEntity):
                 _restore_groups, entities_set, with_group
             )
 
-            await SonosEntity.wait_for_groups(hass, groups)
+            await SonosMediaPlayerEntity.wait_for_groups(hass, groups)
 
             await hass.async_add_executor_job(_restore_players, entities_set)
 
