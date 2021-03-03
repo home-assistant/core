@@ -23,7 +23,7 @@ async def async_setup_entry(
         HassioAddonBinarySensor(
             coordinator, addon, ATTR_UPDATE_AVAILABLE, "Update Available"
         )
-        for addon in coordinator.data.values()
+        for addon in coordinator.data["addons"].values()
     ]
     if coordinator.is_hass_os:
         entities.append(
