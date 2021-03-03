@@ -76,7 +76,7 @@ async def test_unload_entry(hass, aioclient_mock):
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     assert hass.data[UNIFI_DOMAIN]
 
-    assert await unifi.async_unload_entry(hass, config_entry)
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.data[UNIFI_DOMAIN]
 
 
