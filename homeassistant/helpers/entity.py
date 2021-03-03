@@ -183,6 +183,15 @@ class Entity(ABC):
         return None
 
     @property
+    def device_class(self) -> Optional[str]:
+        """Return the class of this entity, from component DEVICE_CLASSES.
+
+        This method is deprecated, platform classes should implement entity_class
+        instead.
+        """
+        return None
+
+    @property
     def entity_class(self) -> Optional[str]:
         """Return the class of this entity, from component DEVICE_CLASSES."""
         return None
@@ -350,8 +359,8 @@ class Entity(ABC):
         entity_class = self.entity_class
         # Backwards compatibility for "device_class" deprecated in 2021.4
         # Add warning in 2021.6, remove in 2021.10
-        if entity_class is None and hasattr(self, "device_class"):
-            entity_class = getattr(self, "device_class")
+        if entity_class is None:
+            entity_class = self.device_class
         if entity_class is not None:
             attr[ATTR_ENTITY_CLASS] = str(entity_class)
 
