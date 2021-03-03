@@ -67,6 +67,8 @@ class SuplaMqttSoftBridge(Entity):
         self._supla_mqtt_client.loop_start()
         self._ignore_supla_topic = ""
         self._ignore_supla_payload = ""
+        #
+        self._sensor_update_counter = 0
 
     async def async_publish_to_supla(self, topic, payload):
         if self._supla_mqtt_connection_code == 0:
@@ -226,5 +228,9 @@ class SuplaMqttSoftBridge(Entity):
 
     async def async_update(self):
         """Reconnect with SUPLA MQTT to receive the discovery and status info."""
+        self._sensor_update_counter = self._sensor_update_counter + 1
         if self._supla_mqtt_connection_code == 0 and self._supla_received < 2:
+            self._supla_mqtt_client.reconnect()
+        elif self._sensor_update_counter % 100 == 0:
+            self._sensor_update_counter = 0
             self._supla_mqtt_client.reconnect()
