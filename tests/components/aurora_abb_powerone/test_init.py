@@ -1,4 +1,6 @@
 """Pytest modules for Aurora ABB Powerone PV inverter sensor integration."""
+from unittest.mock import patch
+
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_SERIAL_NUMBER,
     DOMAIN,
@@ -6,7 +8,6 @@ from homeassistant.components.aurora_abb_powerone.const import (
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

@@ -1,5 +1,6 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
 from logging import INFO
+from unittest.mock import patch
 
 from aurorapy.client import AuroraError
 from serial.tools import list_ports_common
@@ -14,8 +15,6 @@ from homeassistant.components.aurora_abb_powerone.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):
