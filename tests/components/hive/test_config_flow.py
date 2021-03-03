@@ -193,7 +193,7 @@ async def test_reauth_flow(hass):
     )
     mock_config.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH, "entry": mock_config}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -258,7 +258,7 @@ async def test_abort_if_existing_entry(hass):
     """Check flow abort when an entry already exist."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=DOMAIN,
+        unique_id=USERNAME,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         options={CONF_SCAN_INTERVAL: SCAN_INTERVAL},
     )
