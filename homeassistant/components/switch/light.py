@@ -140,6 +140,9 @@ class LightSwitch(LightEntity):
         self._async_unsub_state_changed = async_track_state_change_event(
             self.hass, [self._switch_entity_id], async_state_changed_listener
         )
+        # Update state, the switch's state may have been updated before the state change
+        # event listener was registered.
+        await self.async_update()
 
     async def async_will_remove_from_hass(self):
         """Handle removal from Home Assistant."""
