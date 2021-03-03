@@ -39,17 +39,15 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Login to Hive with user data.
         if user_input is not None:
             self.data.update(user_input)
+            self.entry = self.context.get("entry")
             self.hive_auth = Auth(
                 username=self.data[CONF_USERNAME], password=self.data[CONF_PASSWORD]
             )
 
             # Get user from existing entry and abort if already setup
-            for entry in self._async_current_entries():
-                if (
-                    entry.data.get(CONF_USERNAME) == self.data[CONF_USERNAME]
-                    and not self.entry
-                ):
-                    return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(self.data[CONF_USERNAME])
+            if self.context["source"] != config_entries.SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
 
             # Login to the Hive.
             try:
@@ -112,7 +110,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Setup the config entry
         self.data["tokens"] = self.tokens
-        if self.entry:
+        if self.context["source"] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
                 self.entry, title=self.data["username"], data=self.data
             )
@@ -122,20 +120,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Re Authenticate a user."""
-        errors = {}
-
-        if user_input is not None:
-            for entry in self._async_current_entries():
-                if entry.unique_id == self.unique_id:
-                    self.entry = entry
-                    return await self.async_step_user(user_input)
-                return self.async_abort(reason="unknown_entry")
-
-        schema = vol.Schema(
-            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
-        )
-
-        return self.async_show_form(step_id="reauth", data_schema=schema, errors=errors)
+        return await self.async_step_user(user_input)
 
     async def async_step_import(self, user_input=None):
         """Import user."""

@@ -81,8 +81,10 @@ async def async_setup_entry(hass, entry):
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,
-                context={"source": config_entries.SOURCE_REAUTH},
-                data=entry,
+                context={
+                    "source": config_entries.SOURCE_REAUTH,
+                    "entry": entry,
+                },
             )
         )
         return False
