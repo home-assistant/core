@@ -1,35 +1,59 @@
 """Entity representing a Sonos Move battery level."""
-import datetime
-from typing import TYPE_CHECKING, Any, Dict, Optional
+import logging
+from typing import Any, Dict, Optional
 
 from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
+from homeassistant.core import Event, callback
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
-if TYPE_CHECKING:  # Avoid recursive import loops
-    from .media_player import SonosEntity
+from .const import (
+    DATA_SONOS,
+    DOMAIN as SONOS_DOMAIN,
+    SCAN_INTERVAL,
+    SONOS_DISCOVERY_UPDATE,
+)
 
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_LEVEL = "battery_level"
 ATTR_BATTERY_CHARGING = "charging"
 ATTR_BATTERY_POWERSOURCE = "power_source"
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Sonos from a config entry."""
+
+    def _async_create_entities(event: Event):
+        soco = event.data.get("soco")
+        if soco and soco.uid not in hass.data[DATA_SONOS].battery_entities:
+            hass.data[DATA_SONOS].battery_entities[soco.uid] = None
+            hass.async_add_executor_job(_discover_battery, hass, soco)
+
+    def _discover_battery(hass, soco):
+        battery_info = SonosBatteryEntity.fetch(soco)
+        if battery_info is not None:
+            hass.add_job(
+                async_add_entities, [SonosBatteryEntity(soco, battery_info)]
+            )
+
+    hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, _async_create_entities)
+
+
 class SonosBatteryEntity(Entity):
-    """Representation of a Sonos Battery entity.
+    """Representation of a Sonos Battery entity."""
 
-    Defers connection status to parent SonosEntity.
-    """
-
-    def __init__(self, parent: "SonosEntity", soco: SoCo, battery_info: Dict[str, Any]):
-        """Initialize a SonosBatteryEntity from a parent SonosEntity."""
-        self._parent = parent
+    def __init__(self, soco: SoCo, battery_info: Dict[str, Any]):
+        """Initialize a SonosBatteryEntity."""
         self._soco = soco
         self._battery_info = battery_info
+
+        self._available = True
+        self._timer = None
 
     @staticmethod
     def fetch(soco: SoCo) -> Optional[Dict[str, Any]]:
@@ -46,26 +70,56 @@ class SonosBatteryEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register polling callback when added to hass."""
-        cancel_timer = self._parent.hass.helpers.event.async_track_time_interval(
+        cancel_timer = self.hass.helpers.event.async_track_time_interval(
             self.update, SCAN_INTERVAL
         )
         self.async_on_remove(cancel_timer)
+        """Record that this entity is added to hass."""
+        self.hass.data[DATA_SONOS].battery_entities[self.unique_id] = self
+
+    async def async_seen(self, soco) -> None:
+        """Record that this player was seen right now."""
+        self._available = True
+        self._soco = soco
+
+        self.async_write_ha_state()
+
+    @callback
+    def async_unseen(self, now=None):
+        """Make this player unavailable when it was not seen recently."""
+        self._available = False
+
+        if self._timer is not None:
+            self._timer()
+            self._timer = None
+
+        self.async_write_ha_state()
 
     # Identification of this Entity
     @property
     def unique_id(self) -> str:
         """Return the unique ID of the sensor."""
-        return f"{self._parent.unique_id}-battery"
+        return self._soco.uid + "-battery"
 
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return f"{self._parent.name} Battery"
+        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._soco.uid]
+        return speaker_info["zone_name"] + " Battery"
 
     @property
     def device_info(self) -> Dict[str, Any]:
         """Return information about the device."""
-        return self._parent.device_info
+        speaker_info = self.hass.data[DATA_SONOS].speaker_info[self._soco.uid]
+        return {
+            "identifiers": {(SONOS_DOMAIN, self._soco.uid)},
+            "name": speaker_info["zone_name"],
+            "model": speaker_info["model_name"].replace("Sonos ", ""),
+            "sw_version": speaker_info["software_version"],
+            "connections": {(dr.CONNECTION_NETWORK_MAC, speaker_info["mac_address"])},
+            "manufacturer": "Sonos",
+            "suggested_area": speaker_info["zone_name"],
+        }
 
     @property
     def device_class(self) -> str:
@@ -92,7 +146,7 @@ class SonosBatteryEntity(Entity):
     @property
     def available(self) -> bool:
         """Return whether this device is available."""
-        return self._parent.available
+        return self._soco.uid in self.hass.data[DATA_SONOS].seen_timers
 
     @property
     def battery_level(self) -> int:

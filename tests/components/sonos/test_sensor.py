@@ -21,7 +21,7 @@ async def test_entity_registry_unsupported(hass, config_entry, config, soco):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     assert "media_player.zone_a" in entity_registry.entities
-    assert "media_player.zone_a_battery" not in entity_registry.entities
+    assert "sensor.zone_a_battery" not in entity_registry.entities
 
 
 async def test_entity_registry_supported(hass, config_entry, config, soco):
@@ -30,21 +30,37 @@ async def test_entity_registry_supported(hass, config_entry, config, soco):
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    print("Finding")
-    for e in entity_registry.entities.values():
-        print("Found entity " + str(e.entity_id))
-
     assert "media_player.zone_a" in entity_registry.entities
-    assert "media_player.zone_a_battery" in entity_registry.entities
+    assert "sensor.zone_a_battery" in entity_registry.entities
 
 
-async def test_battery_attributes(hass, config_entry, config, soco):
-    """Test sonos device with battery updates state."""
+async def test_battery_missing_attributes(hass, config_entry, config, soco):
+    """Test sonos device with unknown battery state."""
+    soco.get_battery_info.return_value = {}
+
     await setup_platform(hass, config_entry, config)
 
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
-    battery = entity_registry.entities["media_player.zone_a_battery"]
+    battery = entity_registry.entities["sensor.zone_a_battery"]
+    battery_state = hass.states.get(battery.entity_id)
+
+    # confirm initial state from conftest
+    assert battery_state.state == "unknown"
+    assert battery_state.attributes.get("unit_of_measurement") == "%"
+    assert battery_state.attributes.get("icon") == "mdi:battery-alert"
+    assert battery_state.attributes.get("battery_level") == 0
+    assert not battery_state.attributes.get("charging")
+    assert battery_state.attributes.get("power_source") == "unknown"
+
+
+async def test_battery_attributes(hass, config_entry, config, soco):
+    """Test sonos device with battery state."""
+    await setup_platform(hass, config_entry, config)
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    battery = entity_registry.entities["sensor.zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
 
     # confirm initial state from conftest
