@@ -48,7 +48,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Printer"
+    assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {
         "username": "testuser",
         "host": "1.1.1.1",
@@ -182,10 +182,7 @@ async def test_show_discovery_form(hass: HomeAssistant) -> None:
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
     ), patch(
         "homeassistant.components.octoprint.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    ) as mock_setup:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
@@ -193,18 +190,10 @@ async def test_show_discovery_form(hass: HomeAssistant) -> None:
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
     """Test that the yaml import works."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    assert result["type"] == "form"
-    assert not result["errors"]
-
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         return_value=True,
@@ -219,9 +208,10 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
         "homeassistant.components.octoprint.async_setup_entry",
         return_value=True,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
                 "host": "1.1.1.1",
                 "api_key": "test-key",
                 "name": "Printer",
@@ -231,8 +221,8 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert "errors" not in result
 
 
 async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
@@ -243,13 +233,6 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         source=config_entries.SOURCE_IMPORT,
         unique_id="uuid",
     ).add_to_hass(hass)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    assert result["type"] == "form"
-    assert not result["errors"]
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
@@ -265,9 +248,10 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         "homeassistant.components.octoprint.async_setup_entry",
         return_value=True,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
                 "host": "1.1.1.1",
                 "api_key": "test-key",
                 "name": "Printer",
@@ -277,10 +261,9 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-
         assert len(request_app_key.mock_calls) == 0
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
 async def test_failed_auth(hass: HomeAssistant) -> None:

@@ -23,11 +23,11 @@ async def test_sensors(hass):
     assert state.state == STATE_ON
     assert state.name == "Octoprint Printing"
     entry = entity_registry.async_get("binary_sensor.octoprint_printing")
-    assert entry.unique_id == "Octoprint Printing-uuid"
+    assert entry.unique_id == "Printing-uuid"
 
     state = hass.states.get("binary_sensor.octoprint_printing_error")
     assert state is not None
     assert state.state == STATE_OFF
     assert state.name == "Octoprint Printing Error"
     entry = entity_registry.async_get("binary_sensor.octoprint_printing_error")
-    assert entry.unique_id == "Octoprint Printing Error-uuid"
+    assert entry.unique_id == "Printing Error-uuid"

@@ -35,8 +35,7 @@ async def async_setup_entry(
         ),
     ]
 
-    async_add_entities(entities, True)
-    return True
+    async_add_entities(entities)
 
 
 class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
@@ -55,7 +54,6 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         self._name = f"{sensor_name} {sensor_type}"
         self.sensor_type = sensor_type
         self._device_id = device_id
-        _LOGGER.debug("Created OctoPrint binary sensor %r", self)
 
     @property
     def device_info(self):
@@ -68,7 +66,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self._name}-{self._device_id}"
+        return f"{self.sensor_type}-{self._device_id}"
 
     @property
     def name(self):

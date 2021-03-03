@@ -35,18 +35,15 @@ async def async_setup_entry(
     entities = []
     sensor_name = config_entry.data[CONF_NAME]
     if coordinator.data["printer"]:
-        try:
-            printer_info = coordinator.data["printer"]
-            types = ["actual", "target"]
-            for tool in printer_info.temperatures:
-                for temp_type in types:
-                    entities.append(
-                        OctoPrintTemperatureSensor(
-                            coordinator, sensor_name, tool.name, temp_type, device_id
-                        )
+        printer_info = coordinator.data["printer"]
+        types = ["actual", "target"]
+        for tool in printer_info.temperatures:
+            for temp_type in types:
+                entities.append(
+                    OctoPrintTemperatureSensor(
+                        coordinator, sensor_name, tool.name, temp_type, device_id
                     )
-        except BaseException as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Error getting printering information %s", ex)
+                )
     else:
         _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
 
@@ -75,6 +72,7 @@ class OctoPrintSensorBase(CoordinatorEntity, Entity):
         super().__init__(coordinator)
         self._state = None
         self._sensor_name = sensor_name
+        self._sensor_type = sensor_type
         self._name = f"{sensor_name} {sensor_type}"
         self._device_id = device_id
 
@@ -89,7 +87,7 @@ class OctoPrintSensorBase(CoordinatorEntity, Entity):
     @property
     def unique_id(self):
         """Return a unique id."""
-        return f"{self._name}-{self._device_id}"
+        return f"{self._sensor_type}-{self._device_id}"
 
     @property
     def name(self):

@@ -81,9 +81,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise InvalidAuth from ex
 
     octoprint.set_api_key(data[CONF_API_KEY])
-    if not await validate_connection(octoprint):
-        _LOGGER.error("Failed to connect")
-        raise CannotConnect
+    await validate_connection(octoprint)
 
     discovery = await octoprint.get_discovery_info()
     uuid = None
@@ -91,7 +89,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         uuid = discovery.upnp_uuid
 
     # Return info that you want to store in the config entry.
-    return {"title": data[CONF_NAME], "uuid": uuid}
+    return {"title": data[CONF_HOST], "uuid": uuid}
 
 
 async def validate_connection(octoprint: OctoprintClient):
@@ -101,8 +99,6 @@ async def validate_connection(octoprint: OctoprintClient):
     except requests.exceptions.RequestException as conn_err:
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
         raise CannotConnect from conn_err
-
-    return True
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -144,11 +140,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        if not user_input:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_IMPORT_DATA_SCHEMA
-            )
-
         return await self.async_step_user(user_input)
 
     async def async_step_discovery(self, discovery_info):
