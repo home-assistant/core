@@ -334,7 +334,7 @@ class FluxLight(LightEntity):
         # If these are 0 then bulb.isOn will return false, not what we want
         if hs_color is None or (hs_color[0] == 0 and hs_color[1] == 0):
             hs_color = (1, 1, 1)
-        
+
         if brightness is None or brightness == 0:
             brightness = 100
 
