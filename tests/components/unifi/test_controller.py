@@ -390,38 +390,27 @@ async def test_wireless_client_event_calls_update_wireless_devices(
         assert wireless_clients_mock.assert_called_once
 
 
-async def test_reconnect_method(hass, aioclient_mock, caplog):
-    """Verify reconnect prints only when explicitly told to do so."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket, caplog):
+    """Verify reconnect prints only on first reconnection try."""
+    await setup_unifi_integration(hass, aioclient_mock)
 
     caplog.clear()
-    with patch.object(controller, "async_reconnect") as mock_reconnect:
-        controller.reconnect()
-        assert mock_reconnect.call_count == 1
-        assert len(caplog.records) == 0
+    aioclient_mock.post(f"https://{DEFAULT_HOST}:1234/api/login", status=502)
 
-        controller.reconnect(log=True)
-        assert mock_reconnect.call_count == 2
-        assert len(caplog.records) == 1
+    mock_unifi_websocket(state=STATE_DISCONNECTED)
+    await hass.async_block_till_done()
 
-        controller.reconnect(log=False)
-        assert mock_reconnect.call_count == 3
-        assert len(caplog.records) == 1
+    assert len(caplog.records) == 1
 
+    new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
+    async_fire_time_changed(hass, new_time)
 
-async def test_reconnect_mechanism_success(hass, aioclient_mock):
-    """Verify async_reconnect calls expected methods."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    assert len(caplog.records) == 2
 
-    with patch("aiounifi.Controller.login") as mock_login, patch(
-        "aiounifi.Controller.start_websocket"
-    ) as mock_start_websocket:
-        await controller.async_reconnect()
+    new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
+    async_fire_time_changed(hass, new_time)
 
-        mock_login.assert_called_once()
-        mock_start_websocket.assert_called_once()
+    assert len(caplog.records) == 2
 
 
 @pytest.mark.parametrize(
@@ -433,15 +422,17 @@ async def test_reconnect_mechanism_success(hass, aioclient_mock):
         aiounifi.AiounifiException,
     ],
 )
-async def test_reconnect_mechanism_exceptions(hass, aioclient_mock, exception):
+async def test_reconnect_mechanism_exceptions(
+    hass, aioclient_mock, mock_unifi_websocket, exception
+):
     """Verify async_reconnect calls expected methods."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    await setup_unifi_integration(hass, aioclient_mock)
 
-    with patch("aiounifi.Controller.login", side_effect=exception), patch.object(
-        controller, "reconnect"
+    with patch("aiounifi.Controller.login", side_effect=exception), patch(
+        "homeassistant.components.unifi.controller.UniFiController.reconnect"
     ) as mock_reconnect:
-        await controller.async_reconnect()
+        mock_unifi_websocket(state=STATE_DISCONNECTED)
+        await hass.async_block_till_done()
 
         new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
         async_fire_time_changed(hass, new_time)
