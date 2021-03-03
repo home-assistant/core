@@ -50,10 +50,9 @@ class DoorSensor(GoGoGate2Entity):
         return door.voltage  # This is a percentage, not an absolute voltage
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes or {}
         door = self._get_door()
         if door.sensorid is not None:
-            attrs["sensorid"] = door.door_id
-        return attrs
+            return {"door_id": door.door_id, "sensor_id": door.sensorid}
+        return None
