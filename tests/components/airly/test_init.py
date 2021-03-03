@@ -1,5 +1,6 @@
 """Test init of Airly integration."""
-from datetime import timedelta
+from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import (
@@ -8,6 +9,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.util.dt import NATIVE_UTC
 
 from . import API_POINT_URL
 
@@ -88,37 +90,51 @@ async def test_config_with_turned_off_station(hass, aioclient_mock):
 
 async def test_update_interval(hass, aioclient_mock):
     """Test correct update interval when the number of configured instances changes."""
-    entry = await init_integration(hass, aioclient_mock)
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state == ENTRY_STATE_LOADED
-    for instance in hass.data[DOMAIN].values():
-        assert instance.update_interval == timedelta(minutes=15)
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Work",
-        unique_id="66.66-111.11",
-        data={
-            "api_key": "foo",
-            "latitude": 66.66,
-            "longitude": 111.11,
-            "name": "Work",
-        },
+    point = datetime(
+        year=2020, month=3, day=2, hour=21, minute=21, second=0, tzinfo=NATIVE_UTC
     )
+    with patch("homeassistant.core.dt_util.utcnow") as mock_utcnow:
+        mock_utcnow.return_value = point
 
-    aioclient_mock.get(
-        "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
-        text=load_fixture("airly_valid_station.json"),
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        entry = await init_integration(hass, aioclient_mock)
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert entry.state == ENTRY_STATE_LOADED
-    for instance in hass.data[DOMAIN].values():
-        assert instance.update_interval == timedelta(minutes=30)
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+        assert entry.state == ENTRY_STATE_LOADED
+        await hass.async_block_till_done()
+
+        instance1 = list(hass.data[DOMAIN].values())[0]
+        assert instance1.airly.requests_remaining == 11
+        assert instance1.airly.requests_per_day == 100
+        assert instance1.update_interval == timedelta(minutes=14)
+
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title="Work",
+            unique_id="66.66-111.11",
+            data={
+                "api_key": "foo",
+                "latitude": 66.66,
+                "longitude": 111.11,
+                "name": "Work",
+            },
+        )
+        headers = {"X-RateLimit-Limit-day": "100", "X-RateLimit-Remaining-day": "10"}
+
+        aioclient_mock.get(
+            "https://airapi.airly.eu/v2/measurements/point?lat=66.660000&lng=111.110000",
+            text=load_fixture("airly_valid_station.json"),
+            headers=headers,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+        assert entry.state == ENTRY_STATE_LOADED
+        instance2 = list(hass.data[DOMAIN].values())[1]
+        assert instance2.airly.requests_remaining == 10
+        assert instance2.airly.requests_per_day == 100
+        assert instance2.update_interval == timedelta(minutes=31)
 
 
 async def test_unload_entry(hass, aioclient_mock):

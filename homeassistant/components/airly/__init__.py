@@ -30,30 +30,29 @@ PLATFORMS = ["air_quality", "sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def set_update_interval(hass, instances, requests_remaining):
-    """Set update_interval to all configured Airly instances."""
-    if requests_remaining == 0:
-        return
+def set_update_interval(instances, requests_remaining):
+    """
+    Return data update interval.
 
-    # We check how many Airly configured instances are and calculate interval to not
-    # exceed allowed numbers of requests. The number of requests is reset at midnight
-    # UTC.
+    The number of requests is reset at midnight UTC so we calculate the update
+    interval from the number of minutes until midnight and the number of Airly
+    instances.
+    """
     now = dt_util.utcnow()
     midnight = dt_util.find_next_time_expression_time(
         now, seconds=[0], minutes=[0], hours=[0]
     )
     minutes_to_midnight = (midnight - now).seconds / 60
-
     interval = timedelta(
-        max(minutes=floor(minutes_to_midnight / requests_remaining * instances)),
-        MINIMUM_UPDATE_INTERVAL,
+        minutes=max(
+            floor(minutes_to_midnight / requests_remaining * instances),
+            MINIMUM_UPDATE_INTERVAL,
+        )
     )
 
     _LOGGER.debug("Data will be update every %s", interval)
 
-    if hass.data.get(DOMAIN):
-        for instance in hass.data[DOMAIN].values():
-            instance.update_interval = interval
+    return interval
 
 
 async def async_setup_entry(hass, config_entry):
@@ -149,10 +148,10 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             self.airly.requests_per_day,
         )
 
-        # Airly API sometimes returns None for requests remaining
-        if self.airly.requests_remaining:
-            set_update_interval(
-                self.hass,
+        # Airly API sometimes returns None for requests remaining so we update
+        # update_interval only if we have valid value.
+        if self.airly.requests_remaining and self.airly.requests_remaining > 0:
+            self.update_interval = set_update_interval(
                 len(self.hass.config_entries.async_entries(DOMAIN)),
                 self.airly.requests_remaining,
             )
