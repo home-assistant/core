@@ -295,8 +295,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def media_image_url(self):
         """Image url of current playing media."""
         if self._media_content_id and self._media_content_type in (
-            MEDIA_CLASS_APP,
-            MEDIA_CLASS_CHANNEL,
+            MEDIA_TYPE_APP,
+            MEDIA_TYPE_CHANNEL,
         ):
             return self.get_browse_image_url(
                 self._media_content_type, self._media_content_id, media_image_id=None
