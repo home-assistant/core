@@ -26,14 +26,13 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
     CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
