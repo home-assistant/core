@@ -4,8 +4,8 @@ from typing import Dict
 
 from freebox_api.exceptions import InsufficientPermissionsError
 
-from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities([FreeboxWifiSwitch(router)], True)
 
 
-class FreeboxWifiSwitch(SwitchEntity):
+class FreeboxWifiSwitch(ToggleEntity):
     """Representation of a freebox wifi switch."""
 
     def __init__(self, router: FreeboxRouter) -> None:
