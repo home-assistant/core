@@ -91,7 +91,7 @@ async def test_availability(hass, aioclient_mock):
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(API_POINT_URL, exc=ConnectionError())
-    future = utcnow() + timedelta(minutes=90)
+    future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
@@ -101,7 +101,7 @@ async def test_availability(hass, aioclient_mock):
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
-    future = utcnow() + timedelta(minutes=180)
+    future = utcnow() + timedelta(minutes=120)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 

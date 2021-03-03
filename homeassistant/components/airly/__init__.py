@@ -35,8 +35,8 @@ def set_update_interval(instances, requests_remaining):
     Return data update interval.
 
     The number of requests is reset at midnight UTC so we calculate the update
-    interval from the number of minutes until midnight and the number of Airly
-    instances.
+    interval based on number of minutes until midnight, the number of Airly instances
+    and the number of remaining requests.
     """
     now = dt_util.utcnow()
     midnight = dt_util.find_next_time_expression_time(
