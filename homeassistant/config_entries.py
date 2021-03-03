@@ -257,12 +257,19 @@ class ConfigEntry:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
-            _LOGGER.warning(
-                "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
-                self.title,
-                self.domain,
-                wait_time,
-            )
+            if tries == 1:
+                _LOGGER.warning(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
+                    self.title,
+                    self.domain,
+                )
+            else:
+                _LOGGER.debug(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    self.title,
+                    self.domain,
+                    wait_time,
+                )
 
             async def setup_again(now: Any) -> None:
                 """Run setup again."""
@@ -927,7 +934,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @property
     def unique_id(self) -> Optional[str]:
         """Return unique ID if available."""
-        # pylint: disable=no-member
         if not self.context:
             return None
 
@@ -976,7 +982,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         Returns optionally existing config entry with same ID.
         """
         if unique_id is None:
-            self.context["unique_id"] = None  # pylint: disable=no-member
+            self.context["unique_id"] = None
             return None
 
         if raise_on_progress:
@@ -984,7 +990,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
-        self.context["unique_id"] = unique_id  # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
 
         # Abort discoveries done using the default discovery unique id
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:

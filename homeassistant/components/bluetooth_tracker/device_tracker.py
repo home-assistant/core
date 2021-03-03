@@ -3,8 +3,7 @@ import asyncio
 import logging
 from typing import List, Optional, Set, Tuple
 
-# pylint: disable=import-error
-import bluetooth
+import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 

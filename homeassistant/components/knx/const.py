@@ -17,14 +17,18 @@ from homeassistant.components.climate.const import (
 
 DOMAIN = "knx"
 
+# Address is used for configuration and services by the same functions so the key has to match
+KNX_ADDRESS = "address"
+
 CONF_INVERT = "invert"
 CONF_STATE_ADDRESS = "state_address"
 CONF_SYNC_STATE = "sync_state"
 CONF_RESET_AFTER = "reset_after"
 
+ATTR_COUNTER = "counter"
+
 
 class ColorTempModes(Enum):
-    # pylint: disable=invalid-name
     """Color temperature modes for config validation."""
 
     ABSOLUTE = "DPT-7.600"
@@ -32,7 +36,6 @@ class ColorTempModes(Enum):
 
 
 class SupportedPlatforms(Enum):
-    # pylint: disable=invalid-name
     """Supported platforms."""
 
     BINARY_SENSOR = "binary_sensor"
@@ -66,5 +69,3 @@ PRESET_MODES = {
     "Standby": PRESET_AWAY,
     "Comfort": PRESET_COMFORT,
 }
-
-ATTR_COUNTER = "counter"

@@ -1,7 +1,7 @@
 """Config flow for SMS integration."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions

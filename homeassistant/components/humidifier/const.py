@@ -1,6 +1,4 @@
 """Provides the constants needed for component."""
-from homeassistant.const import ATTR_MODE  # noqa: F401 pylint: disable=unused-import
-
 MODE_NORMAL = "normal"
 MODE_ECO = "eco"
 MODE_AWAY = "away"

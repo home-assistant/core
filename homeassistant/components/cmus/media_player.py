@@ -98,7 +98,6 @@ class CmusRemote:
 class CmusDevice(MediaPlayerEntity):
     """Representation of a running cmus."""
 
-    # pylint: disable=no-member
     def __init__(self, device, name, server):
         """Initialize the CMUS device."""
 

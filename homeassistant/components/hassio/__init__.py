@@ -185,6 +185,18 @@ async def async_uninstall_addon(hass: HomeAssistantType, slug: str) -> dict:
 
 @bind_hass
 @api_data
+async def async_update_addon(hass: HomeAssistantType, slug: str) -> dict:
+    """Update add-on.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    command = f"/addons/{slug}/update"
+    return await hassio.send_command(command, timeout=None)
+
+
+@bind_hass
+@api_data
 async def async_start_addon(hass: HomeAssistantType, slug: str) -> dict:
     """Start add-on.
 
@@ -230,6 +242,21 @@ async def async_get_addon_discovery_info(
     data = await hassio.retrieve_discovery_messages()
     discovered_addons = data[ATTR_DISCOVERY]
     return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
+
+
+@bind_hass
+@api_data
+async def async_create_snapshot(
+    hass: HomeAssistantType, payload: dict, partial: bool = False
+) -> dict:
+    """Create a full or partial snapshot.
+
+    The caller of the function should handle HassioAPIError.
+    """
+    hassio = hass.data[DOMAIN]
+    snapshot_type = "partial" if partial else "full"
+    command = f"/snapshots/new/{snapshot_type}"
+    return await hassio.send_command(command, payload=payload, timeout=None)
 
 
 @callback

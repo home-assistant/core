@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -31,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ACTIVITY = "activity"
 ATTR_ACTIVITY_LIST = "activity_list"
 ATTR_CURRENT_ACTIVITY = "current_activity"
-ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE = "device"
 ATTR_NUM_REPEATS = "num_repeats"
