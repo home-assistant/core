@@ -887,13 +887,21 @@ class MediaPlayerEntity(Entity):
         """
         raise NotImplementedError()
 
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        raise NotImplementedError()
+
     async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
+        await self.hass.async_add_executor_job(self.join_players)
+
+    def unjoin(self):
+        """Remove this player from any group."""
         raise NotImplementedError()
 
     async def async_unjoin(self):
         """Remove this player from any group."""
-        raise NotImplementedError()
+        await self.hass.async_add_executor_job(self.unjoin)
 
     async def _async_fetch_image_from_cache(self, url):
         """Fetch image.

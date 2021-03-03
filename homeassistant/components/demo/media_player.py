@@ -407,14 +407,14 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._repeat = repeat
         self.schedule_update_ha_state()
 
-    async def async_join_players(self, group_members):
+    def join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
         self._group_members = [
             self.entity_id,
         ] + group_members
         self.async_write_ha_state()
 
-    async def async_unjoin(self):
+    def unjoin(self):
         """Remove this player from any group."""
         self._group_members = []
         self.async_write_ha_state()
