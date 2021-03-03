@@ -33,5 +33,5 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
     state = hass.states.get("light.family_room_combo")
     assert state.state == "off"
 
-    state = hass.states.get("fan.family_room_combo")
+    state = hass.states.get("fan.family_room_combo_2")
     assert state
