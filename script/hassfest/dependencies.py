@@ -106,6 +106,7 @@ ALLOWED_USED_COMPONENTS = {
     "onboarding",
     "persistent_notification",
     "person",
+    "remote",
     "script",
     "shopping_list",
     "sun",
