@@ -61,9 +61,10 @@ from homeassistant.helpers import (
     entity_platform,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.network import is_internal_request
 import homeassistant.util.dt as dt_util
 
-from .browse_media import build_item_response, library_payload
+from .browse_media import build_item_response, get_media_info, library_payload
 from .const import (
     CONF_WS_PORT,
     DATA_CONNECTION,
@@ -871,16 +872,49 @@ class KodiEntity(MediaPlayerEntity):
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+
+        is_internal = is_internal_request(self.hass)
+
+        async def _get_thumbnail_url(
+            media_content_type, media_content_id, media_image_id=None
+        ):
+            if is_internal:
+                item = await get_media_info(
+                    self._kodi,
+                    media_content_id,
+                    media_content_type,
+                )
+                return getattr(item, "album_art_uri", None)
+
+            return self.get_browse_image_url(
+                media_content_type, media_content_id, media_image_id
+            )
+
         if media_content_type in [None, "library"]:
-            return await self.hass.async_add_executor_job(library_payload, self._kodi)
+            return await library_payload(self._kodi)
 
         payload = {
             "search_type": media_content_type,
             "search_id": media_content_id,
         }
-        response = await build_item_response(self._kodi, payload)
+
+        response = await build_item_response(self._kodi, payload, _get_thumbnail_url)
         if response is None:
             raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Get media image from kodi server."""
+        image_url, _, _ = await get_media_info(
+            self._kodi, media_content_id, media_content_type
+        )
+
+        if image_url:
+            result = await self._async_fetch_image(image_url)
+            return result
+
+        return (None, None)
