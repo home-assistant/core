@@ -26,14 +26,13 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_ENTITY_ID,
     CONF_EXCLUDE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -63,14 +62,11 @@ ATTR_AIRFLOW = "airflow"
 IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
-IZONE_SERVICE_AIRFLOW_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_AIRFLOW): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100), msg="invalid airflow"
-        ),
-    }
-)
+IZONE_SERVICE_AIRFLOW_SCHEMA = {
+    vol.Required(ATTR_AIRFLOW): vol.All(
+        vol.Coerce(int), vol.Range(min=0, max=100), msg="invalid airflow"
+    ),
+}
 
 
 async def async_setup_entry(
