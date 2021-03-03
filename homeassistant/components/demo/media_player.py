@@ -412,12 +412,12 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._group_members = [
             self.entity_id,
         ] + group_members
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def unjoin(self):
         """Remove this player from any group."""
         self._group_members = []
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
