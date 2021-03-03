@@ -122,8 +122,6 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         await self._api.async_close_door(self._get_door().door_id)
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().state_attributes
-        attrs["door_id"] = self._get_door().door_id
-        return attrs
+        return {"door_id": self._get_door().door_id}
