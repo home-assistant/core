@@ -166,6 +166,15 @@ class Entity(ABC):
         return None
 
     @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return entity specific state attributes.
+
+        This method is deprecated, platform classes should implement
+        entity_state_attributes instead.
+        """
+        return None
+
+    @property
     def entity_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return entity specific state attributes.
 
@@ -322,10 +331,8 @@ class Entity(ABC):
             entity_state_attributes = self.entity_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Add warning in 2021.6, remove in 2021.10
-            if entity_state_attributes is None and hasattr(
-                self, "device_state_attributes"
-            ):
-                entity_state_attributes = getattr(self, "device_state_attributes")
+            if entity_state_attributes is None:
+                entity_state_attributes = self.device_state_attributes
             attr.update(entity_state_attributes or {})
 
         unit_of_measurement = self.unit_of_measurement
