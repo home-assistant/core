@@ -1,9 +1,12 @@
 """The keenetic_ndms2 component."""
+import logging
 
-from homeassistant.components import binary_sensor, device_tracker
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -20,7 +23,8 @@ from .const import (
 )
 from .router import KeeneticRouter
 
-PLATFORMS = [device_tracker.DOMAIN, binary_sensor.DOMAIN]
+PLATFORMS = [DEVICE_TRACKER_DOMAIN, BINARY_SENSOR_DOMAIN]
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -56,6 +60,24 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await router.async_teardown()
 
     hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    if router.tracked_interfaces - set(config_entry.options[CONF_INTERFACES]):
+        _LOGGER.debug(
+            "Removing device_tracker entities since some interfaces are now untracked"
+        )
+        ent_reg = await entity_registry.async_get_registry(hass)
+        dev_reg = await device_registry.async_get_registry(hass)
+        for entity_entry in list(ent_reg.entities.values()):
+            if (
+                entity_entry.config_entry_id == config_entry.entry_id
+                and entity_entry.domain == DEVICE_TRACKER_DOMAIN
+            ):
+                _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
+
+                ent_reg.async_remove(entity_entry.entity_id)
+                dev_reg.async_update_device(
+                    entity_entry.device_id, remove_config_entry_id=config_entry.entry_id
+                )
 
     return unload_ok
 
