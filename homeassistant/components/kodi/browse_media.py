@@ -1,5 +1,6 @@
 """Support for media browsing."""
 from contextlib import suppress
+import asyncio
 import logging
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
@@ -206,13 +207,21 @@ async def library_payload(media_library):
         MEDIA_TYPE_TVSHOW: "TV shows",
         MEDIA_TYPE_CHANNEL: "Channels",
     }
+    tasks = []
     for item in [{"label": name, "type": type_} for type_, name in library.items()]:
-        library_info.children.append(
-            await item_payload(
+        tasks.append(
+            item_payload(
                 {"label": item["label"], "type": item["type"], "uri": item["type"]},
                 media_library,
             )
         )
+        # library_info.children.append(
+        #     await item_payload(
+        #         {"label": item["label"], "type": item["type"], "uri": item["type"]},
+        #         media_library,
+        #     )
+        # )
+    library_info.children = await asyncio.gather(*tasks)
 
     return library_info
 
