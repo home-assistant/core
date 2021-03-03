@@ -73,6 +73,11 @@ SENSORS = {
         default_enabled=False,
         removal_condition=is_momentary_input,
     ),
+    ("sensor", "extInput"): BlockAttributeDescription(
+        name="External Input",
+        device_class=DEVICE_CLASS_POWER,
+        default_enabled=False,
+    ),
     ("sensor", "motion"): BlockAttributeDescription(
         name="Motion", device_class=DEVICE_CLASS_MOTION
     ),
@@ -86,7 +91,7 @@ REST_SENSORS = {
         default_enabled=False,
     ),
     "fwupdate": RestAttributeDescription(
-        name="Firmware update",
+        name="Firmware Update",
         icon="mdi:update",
         value=lambda status, _: status["update"]["has_update"],
         default_enabled=False,

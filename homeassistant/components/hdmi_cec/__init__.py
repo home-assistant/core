@@ -4,13 +4,9 @@ from functools import reduce
 import logging
 import multiprocessing
 
-from pycec.cec import CecAdapter  # pylint: disable=import-error
-from pycec.commands import (  # pylint: disable=import-error
-    CecCommand,
-    KeyPressCommand,
-    KeyReleaseCommand,
-)
-from pycec.const import (  # pylint: disable=import-error
+from pycec.cec import CecAdapter
+from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
+from pycec.const import (
     ADDR_AUDIOSYSTEM,
     ADDR_BROADCAST,
     ADDR_UNREGISTERED,
@@ -25,8 +21,8 @@ from pycec.const import (  # pylint: disable=import-error
     STATUS_STILL,
     STATUS_STOP,
 )
-from pycec.network import HDMINetwork, PhysicalAddress  # pylint: disable=import-error
-from pycec.tcp import TcpAdapter  # pylint: disable=import-error
+from pycec.network import HDMINetwork, PhysicalAddress
+from pycec.tcp import TcpAdapter
 import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER

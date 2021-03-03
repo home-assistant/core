@@ -28,9 +28,11 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 
-CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat"
-CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat"
-CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat"
+from .common import (
+    CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_FLOOR_THERMOSTAT_ENTITY,
+    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+)
 
 
 async def test_thermostat_v2(
@@ -67,8 +69,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -90,7 +92,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 1
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting hvac mode
     await hass.services.async_call(
@@ -103,8 +105,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -126,7 +128,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 2
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting temperature
     await hass.services.async_call(
@@ -140,8 +142,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 2
+    args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -162,7 +164,7 @@ async def test_thermostat_v2(
         "value": 1,
     }
     assert args["value"] == 2
-    args = client.async_send_command.call_args_list[1][0][0]
+    args = client.async_send_command_no_wait.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -184,7 +186,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test cool mode update from value updated event
     event = Event(
@@ -235,7 +237,7 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting temperature with heat_cool
     await hass.services.async_call(
@@ -249,8 +251,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 2
+    args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -272,7 +274,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    args = client.async_send_command.call_args_list[1][0][0]
+    args = client.async_send_command_no_wait.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -294,7 +296,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 86
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     with pytest.raises(ValueError):
         # Test setting unknown preset mode
@@ -308,7 +310,7 @@ async def test_thermostat_v2(
             blocking=True,
         )
 
-    assert len(client.async_send_command.call_args_list) == 0
+    assert len(client.async_send_command_no_wait.call_args_list) == 0
 
     # Test setting invalid hvac mode
     with pytest.raises(ValueError):
@@ -334,7 +336,7 @@ async def test_thermostat_v2(
             blocking=True,
         )
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting fan mode
     await hass.services.async_call(
@@ -347,8 +349,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -371,7 +373,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 1
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting invalid fan mode
     with pytest.raises(ValueError):
@@ -406,7 +408,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting temperature
     await hass.services.async_call(
@@ -419,8 +421,8 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
@@ -442,7 +444,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     }
     assert args["value"] == 21.5
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setpoint mode update from value updated event
     event = Event(
@@ -469,7 +471,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert state.state == HVAC_MODE_HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
 
 async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integration):

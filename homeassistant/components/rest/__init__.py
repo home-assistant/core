@@ -35,7 +35,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import COORDINATOR, DOMAIN, PLATFORM_IDX, REST, REST_IDX
 from .data import RestData
-from .schema import CONFIG_SCHEMA  # noqa:F401 pylint: disable=unused-import
+from .schema import CONFIG_SCHEMA  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 

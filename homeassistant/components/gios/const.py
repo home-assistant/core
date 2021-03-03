@@ -1,7 +1,6 @@
 """Constants for GIOS integration."""
 from datetime import timedelta
 
-ATTR_NAME = "name"
 ATTR_STATION = "station"
 CONF_STATION_ID = "station_id"
 DEFAULT_NAME = "GIOŚ"

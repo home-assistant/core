@@ -179,7 +179,9 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         discovery = await Device.async_supplement_discovery(self.hass, discovery)
         unique_id = discovery[DISCOVERY_UNIQUE_ID]
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={CONFIG_ENTRY_HOSTNAME: discovery[DISCOVERY_HOSTNAME]}
+        )
 
         # Handle devices changing their UDN, only allow a single
         existing_entries = self.hass.config_entries.async_entries(DOMAIN)

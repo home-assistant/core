@@ -102,7 +102,7 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (
+PLATFORMS = (
     BINARY_SENSOR,
     CLIMATE,
     COVER,
@@ -174,6 +174,7 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
 
 class RadioType(enum.Enum):
+    # pylint: disable=invalid-name
     """Possible options for radio type."""
 
     znp = (

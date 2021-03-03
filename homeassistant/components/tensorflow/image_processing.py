@@ -341,9 +341,8 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
+            import cv2  # pylint: disable=import-outside-toplevel
 
-            # pylint: disable=no-member
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)

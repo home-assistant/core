@@ -11,8 +11,14 @@ import pyqrcode
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, media_player, sensor
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_TV,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_PORT,
@@ -328,9 +334,7 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(
-        message, "HomeKit Bridge Setup", entry_id
-    )
+    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
 
 
 def dismiss_setup_message(hass, entry_id):
@@ -472,4 +476,31 @@ def pid_is_alive(pid) -> bool:
         return True
     except OSError:
         pass
+    return False
+
+
+def accessory_friendly_name(hass_name, accessory):
+    """Return the combined name for the accessory.
+
+    The mDNS name and the Home Assistant config entry
+    name are usually different which means they need to
+    see both to identify the accessory.
+    """
+    accessory_mdns_name = accessory.display_name
+    if hass_name.startswith(accessory_mdns_name):
+        return hass_name
+    return f"{hass_name} ({accessory_mdns_name})"
+
+
+def state_needs_accessory_mode(state):
+    """Return if the entity represented by the state must be paired in accessory mode."""
+    if state.domain == CAMERA_DOMAIN:
+        return True
+
+    if (
+        state.domain == MEDIA_PLAYER_DOMAIN
+        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+    ):
+        return True
+
     return False

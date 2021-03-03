@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from hyperion import client, const
 
@@ -147,7 +147,7 @@ class HyperionBaseLight(LightEntity):
             self._static_effect_list += list(const.KEY_COMPONENTID_EXTERNAL_SOURCES)
         self._effect_list: List[str] = self._static_effect_list[:]
 
-        self._client_callbacks = {
+        self._client_callbacks: Mapping[str, Callable[[Dict[str, Any]], None]] = {
             f"{const.KEY_ADJUSTMENT}-{const.KEY_UPDATE}": self._update_adjustment,
             f"{const.KEY_COMPONENTS}-{const.KEY_UPDATE}": self._update_components,
             f"{const.KEY_EFFECTS}-{const.KEY_UPDATE}": self._update_effect_list,
@@ -236,7 +236,7 @@ class HyperionBaseLight(LightEntity):
         # == Set brightness ==
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-            for item in self._client.adjustment:
+            for item in self._client.adjustment or []:
                 if const.KEY_ID in item:
                     if not await self._client.async_send_set_adjustment(
                         **{
@@ -423,7 +423,12 @@ class HyperionBaseLight(LightEntity):
     def _get_priority_entry_that_dictates_state(self) -> Optional[Dict[str, Any]]:
         """Get the relevant Hyperion priority entry to consider."""
         # Return the visible priority (whether or not it is the HA priority).
-        return self._client.visible_priority  # type: ignore[no-any-return]
+
+        # Explicit type specifier to ensure this works when the underlying (typed)
+        # library is installed along with the tests. Casts would trigger a
+        # redundant-cast warning in this case.
+        priority: Optional[Dict[str, Any]] = self._client.visible_priority
+        return priority
 
     # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
@@ -530,7 +535,11 @@ class HyperionPriorityLight(HyperionBaseLight):
             if candidate[const.KEY_PRIORITY] == self._get_option(
                 CONF_PRIORITY
             ) and candidate.get(const.KEY_ACTIVE, False):
-                return candidate  # type: ignore[no-any-return]
+                # Explicit type specifier to ensure this works when the underlying
+                # (typed) library is installed along with the tests. Casts would trigger
+                # a redundant-cast warning in this case.
+                output: Dict[str, Any] = candidate
+                return output
         return None
 
     @classmethod
@@ -544,7 +553,6 @@ class HyperionPriorityLight(HyperionBaseLight):
                 return True
         return False
 
-    # pylint: disable=no-self-use
     def _allow_priority_update(self, priority: Optional[Dict[str, Any]] = None) -> bool:
         """Determine whether to allow a Hyperion priority to update entity attributes."""
         # Black is treated as 'off' (and Home Assistant does not support selecting black

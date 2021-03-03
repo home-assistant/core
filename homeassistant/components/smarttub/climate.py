@@ -1,11 +1,16 @@
 """Platform for climate integration."""
 import logging
 
+from smarttub import Spa
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_HEAT,
+    PRESET_ECO,
+    PRESET_NONE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -15,6 +20,21 @@ from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLL
 from .entity import SmartTubEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PRESET_DAY = "day"
+
+PRESET_MODES = {
+    Spa.HeatMode.AUTO: PRESET_NONE,
+    Spa.HeatMode.ECONOMY: PRESET_ECO,
+    Spa.HeatMode.DAY: PRESET_DAY,
+}
+
+HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
+
+HVAC_ACTIONS = {
+    "OFF": CURRENT_HVAC_IDLE,
+    "ON": CURRENT_HVAC_HEAT,
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -44,12 +64,7 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     @property
     def hvac_action(self):
         """Return the current running hvac operation."""
-        heater_status = self.get_spa_status("heater")
-        if heater_status == "ON":
-            return CURRENT_HVAC_HEAT
-        if heater_status == "OFF":
-            return CURRENT_HVAC_IDLE
-        return None
+        return HVAC_ACTIONS.get(self.spa_status.heater)
 
     @property
     def hvac_modes(self):
@@ -92,20 +107,36 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
 
         Only target temperature is supported.
         """
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+
+    @property
+    def preset_mode(self):
+        """Return the current preset mode."""
+        return PRESET_MODES[self.spa_status.heat_mode]
+
+    @property
+    def preset_modes(self):
+        """Return the available preset modes."""
+        return list(PRESET_MODES.values())
 
     @property
     def current_temperature(self):
         """Return the current water temperature."""
-        return self.get_spa_status("water.temperature")
+        return self.spa_status.water.temperature
 
     @property
     def target_temperature(self):
         """Return the target water temperature."""
-        return self.get_spa_status("setTemperature")
+        return self.spa_status.set_temperature
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
+        await self.coordinator.async_refresh()
+
+    async def async_set_preset_mode(self, preset_mode: str):
+        """Activate the specified preset mode."""
+        heat_mode = HEAT_MODES[preset_mode]
+        await self.spa.set_heat_mode(heat_mode)
         await self.coordinator.async_refresh()

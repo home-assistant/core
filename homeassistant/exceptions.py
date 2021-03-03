@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Generator, Optional, Sequence
 import attr
 
 if TYPE_CHECKING:
-    from .core import Context  # noqa: F401 pylint: disable=unused-import
+    from .core import Context
 
 
 class HomeAssistantError(Exception):
@@ -85,7 +85,7 @@ class ConditionErrorIndex(ConditionError):
 
 @attr.s
 class ConditionErrorContainer(ConditionError):
-    """Condition error with index."""
+    """Condition error with subconditions."""
 
     # List of ConditionErrors that this error wraps
     errors: Sequence[ConditionError] = attr.ib()

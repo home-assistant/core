@@ -342,12 +342,25 @@ def async_numeric_state_from_config(
         if value_template is not None:
             value_template.hass = hass
 
-        return all(
-            async_numeric_state(
-                hass, entity_id, below, above, value_template, variables, attribute
-            )
-            for entity_id in entity_ids
-        )
+        errors = []
+        for index, entity_id in enumerate(entity_ids):
+            try:
+                if not async_numeric_state(
+                    hass, entity_id, below, above, value_template, variables, attribute
+                ):
+                    return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex(
+                        "numeric_state", index=index, total=len(entity_ids), error=ex
+                    )
+                )
+
+        # Raise the errors if no check was false
+        if errors:
+            raise ConditionErrorContainer("numeric_state", errors=errors)
+
+        return True
 
     return if_numeric_state
 
@@ -429,10 +442,23 @@ def state_from_config(
 
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
-        return all(
-            state(hass, entity_id, req_states, for_period, attribute)
-            for entity_id in entity_ids
-        )
+        errors = []
+        for index, entity_id in enumerate(entity_ids):
+            try:
+                if not state(hass, entity_id, req_states, for_period, attribute):
+                    return False
+            except ConditionError as ex:
+                errors.append(
+                    ConditionErrorIndex(
+                        "state", index=index, total=len(entity_ids), error=ex
+                    )
+                )
+
+        # Raise the errors if no check was false
+        if errors:
+            raise ConditionErrorContainer("state", errors=errors)
+
+        return True
 
     return if_state
 

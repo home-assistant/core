@@ -96,7 +96,7 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            with async_timeout.timeout(5):
+            with async_timeout.timeout(20):
                 await gateway_ready
                 return True
         except asyncio.TimeoutError:

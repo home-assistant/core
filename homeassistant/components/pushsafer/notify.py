@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import HTTP_OK
+from homeassistant.const import ATTR_ICON, HTTP_OK
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,6 @@ CONF_TIMEOUT = 15
 # Top level attributes in 'data'
 ATTR_SOUND = "sound"
 ATTR_VIBRATION = "vibration"
-ATTR_ICON = "icon"
 ATTR_ICONCOLOR = "iconcolor"
 ATTR_URL = "url"
 ATTR_URLTITLE = "urltitle"

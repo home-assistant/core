@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Kan geen verbinding maken"
+        }
+    }
+}

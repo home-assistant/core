@@ -38,6 +38,15 @@ from .const import (
     SERVICE_ENABLE_AUTOLOCK,
 )
 
+PLATFORMS = [
+    "sensor",
+    "switch",
+    "alarm_control_panel",
+    "lock",
+    "camera",
+    "binary_sensor",
+]
+
 HUB = None
 
 CONFIG_SCHEMA = vol.Schema(
@@ -70,7 +79,7 @@ DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 
 def setup(hass, config):
-    """Set up the Verisure component."""
+    """Set up the Verisure integration."""
     global HUB  # pylint: disable=global-statement
     HUB = VerisureHub(config[DOMAIN])
     HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
@@ -81,15 +90,8 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: HUB.logout())
     HUB.update_overview()
 
-    for component in (
-        "sensor",
-        "switch",
-        "alarm_control_panel",
-        "lock",
-        "camera",
-        "binary_sensor",
-    ):
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     async def capture_smartcam(service):
         """Capture a new picture from a smartcam."""

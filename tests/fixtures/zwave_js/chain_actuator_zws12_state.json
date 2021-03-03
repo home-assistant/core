@@ -6,16 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-      "basic": "Routing Slave",
-      "generic": "Multilevel Switch",
-      "specific": "Motor Control Class C",
-      "mandatorySupportedCCs": [
-        "Basic",
-        "Multilevel Switch",
-        "Binary Switch",
-        "Manufacturer Specific",
-        "Version"
-      ],
+      "basic": {"key": 4, "label":"Routing Slave"},
+      "generic": {"key": 17, "label":"Multilevel Switch"},
+      "specific": {"key": 7, "label":"Motor Control Class C"},
+      "mandatorySupportedCCs": [],
       "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -52,6 +46,7 @@
     "endpoints": [
       { "nodeId": 6, "index": 0, "installerIcon": 6656, "userIcon": 6656 }
     ],
+    "commandClasses": [],
     "values": [
       {
         "commandClassName": "Multilevel Switch",

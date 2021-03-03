@@ -158,7 +158,7 @@ for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
 
-SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
+PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
     "notify",
     "device_tracker",
 }

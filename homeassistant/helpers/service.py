@@ -28,6 +28,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
     CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
@@ -61,7 +62,7 @@ from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity  # noqa
+    from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_platform import EntityPlatform
 
 
@@ -189,7 +190,22 @@ def async_prepare_call_from_config(
 
     domain, service = domain_service.split(".", 1)
 
-    target = config.get(CONF_TARGET)
+    target = {}
+    if CONF_TARGET in config:
+        conf = config.get(CONF_TARGET)
+        try:
+            template.attach(hass, conf)
+            target.update(template.render_complex(conf, variables))
+            if CONF_ENTITY_ID in target:
+                target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
+        except TemplateError as ex:
+            raise HomeAssistantError(
+                f"Error rendering service target template: {ex}"
+            ) from ex
+        except vol.Invalid as ex:
+            raise HomeAssistantError(
+                f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
+            ) from ex
 
     service_data = {}
 
@@ -449,6 +465,7 @@ async def async_get_all_descriptions(
                 # positives for things like scripts, that register as a service
 
                 description = {
+                    "name": yaml_description.get("name", ""),
                     "description": yaml_description.get("description", ""),
                     "fields": yaml_description.get("fields", {}),
                 }
@@ -472,9 +489,13 @@ def async_set_service_schema(
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
-        "description": schema.get("description") or "",
-        "fields": schema.get("fields") or {},
+        "name": schema.get("name", ""),
+        "description": schema.get("description", ""),
+        "fields": schema.get("fields", {}),
     }
+
+    if "target" in schema:
+        description["target"] = schema["target"]
 
     hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
 
