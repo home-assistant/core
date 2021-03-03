@@ -256,7 +256,8 @@ class ClimaCellEntity(CoordinatorEntity):
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            "name": self.name,
+            "name": "ClimaCell",
             "manufacturer": "ClimaCell",
+            "sw_version": "v3",
             "entry_type": "service",
         }
