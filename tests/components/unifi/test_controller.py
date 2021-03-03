@@ -337,29 +337,30 @@ async def test_reset_fails(hass, aioclient_mock):
 
 
 async def test_connection_state_signalling(hass, aioclient_mock, mock_unifi_websocket):
-    """Verify signalling and connection state are properly represented."""
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    """Verify connection statesignalling and connection state are working."""
+    client = {
+        "hostname": "client",
+        "ip": "10.0.0.1",
+        "is_wired": True,
+        "last_seen": dt_util.as_timestamp(dt_util.utcnow()),
+        "mac": "00:00:00:00:00:01",
+    }
+    await setup_unifi_integration(hass, aioclient_mock, clients_response=[client])
 
-    event_call = Mock()
-    unsub = async_dispatcher_connect(hass, controller.signal_reachable, event_call)
-
-    assert controller.available is True
-    assert len(event_call.mock_calls) == 0
+    # Controller is connected
+    assert hass.states.get("device_tracker.client").state == "home"
 
     mock_unifi_websocket(state=STATE_DISCONNECTED)
     await hass.async_block_till_done()
 
-    assert controller.available is False
-    assert len(event_call.mock_calls) == 1
+    # Controller is disconnected
+    assert hass.states.get("device_tracker.client").state == "unavailable"
 
     mock_unifi_websocket(state=STATE_RUNNING)
     await hass.async_block_till_done()
 
-    assert controller.available is True
-    assert len(event_call.mock_calls) == 2
-
-    unsub()
+    # Controller is once again connected
+    assert hass.states.get("device_tracker.client").state == "home"
 
 
 async def test_wireless_client_event_calls_update_wireless_devices(
