@@ -8,6 +8,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.components import blueprint
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_CONDITION,
@@ -46,7 +47,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
-    ATTR_MODE,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
