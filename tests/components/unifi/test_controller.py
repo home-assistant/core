@@ -27,8 +27,8 @@ from homeassistant.components.unifi.const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.components.unifi.controller import (
-    RETRY_TIMER,
     PLATFORMS,
+    RETRY_TIMER,
     get_controller,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
