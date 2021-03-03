@@ -62,8 +62,7 @@ ATTR_AIRFLOW = "airflow"
 IZONE_SERVICE_AIRFLOW_MIN = "airflow_min"
 IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
-IZONE_SERVICE_AIRFLOW_SCHEMA = vol.Schema(
-    {
+IZONE_SERVICE_AIRFLOW_SCHEMA = {
         vol.Required(ATTR_AIRFLOW): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=100), msg="invalid airflow"
         ),
