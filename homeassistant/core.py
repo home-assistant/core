@@ -153,6 +153,7 @@ def is_callback(func: Callable[..., Any]) -> bool:
 
 @enum.unique
 class HassJobType(enum.Enum):
+    # pylint: disable=invalid-name
     """Represent a job type."""
 
     Coroutinefunction = 1
@@ -198,6 +199,7 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
 
 
 class CoreState(enum.Enum):
+    # pylint: disable=invalid-name
     """Represent the current state of Home Assistant."""
 
     not_running = "NOT_RUNNING"
@@ -589,6 +591,7 @@ class Context:
 
 
 class EventOrigin(enum.Enum):
+    # pylint: disable=invalid-name
     """Represent the origin of an event."""
 
     local = "LOCAL"
@@ -639,7 +642,6 @@ class Event:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        # pylint: disable=maybe-no-member
         if self.data:
             return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
 

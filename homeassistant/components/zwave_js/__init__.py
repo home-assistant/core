@@ -1,16 +1,14 @@
 """The Z-Wave JS integration."""
 import asyncio
-import logging
 from typing import Callable, List
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.exceptions import BaseZwaveJSServerError
+from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
 
-from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
@@ -19,9 +17,9 @@ from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .addon import AddonError, AddonManager, get_addon_manager
 from .api import async_register_api
 from .const import (
-    ADDON_SLUG,
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
     ATTR_DEVICE_ID,
@@ -30,15 +28,22 @@ from .const import (
     ATTR_LABEL,
     ATTR_NODE_ID,
     ATTR_PARAMETERS,
+    ATTR_PROPERTY,
+    ATTR_PROPERTY_KEY,
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
+    ATTR_VALUE_RAW,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_NETWORK_KEY,
+    CONF_USB_PATH,
+    CONF_USE_ADDON,
     DATA_CLIENT,
     DATA_UNSUBSCRIBE,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    LOGGER,
     PLATFORMS,
     ZWAVE_JS_EVENT,
 )
@@ -46,10 +51,11 @@ from .discovery import async_discover_values
 from .helpers import get_device_id, get_old_value_id, get_unique_id
 from .services import ZWaveServices
 
-LOGGER = logging.getLogger(__package__)
 CONNECT_TIMEOUT = 10
 DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_START_PLATFORM_TASK = "start_platform_task"
+DATA_CONNECT_FAILED_LOGGED = "connect_failed_logged"
+DATA_INVALID_SERVER_VERSION_LOGGED = "invalid_server_version_logged"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -67,20 +73,27 @@ def register_node_in_dev_reg(
     node: ZwaveNode,
 ) -> None:
     """Register node in dev reg."""
-    device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={get_device_id(client, node)},
-        sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
-        model=node.device_config.label,
-        manufacturer=node.device_config.manufacturer,
-    )
+    params = {
+        "config_entry_id": entry.entry_id,
+        "identifiers": {get_device_id(client, node)},
+        "sw_version": node.firmware_version,
+        "name": node.name or node.device_config.description or f"Node {node.node_id}",
+        "model": node.device_config.label,
+        "manufacturer": node.device_config.manufacturer,
+    }
+    if node.location:
+        params["suggested_area"] = node.location
+    device = dev_reg.async_get_or_create(**params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave JS from a config entry."""
+    use_addon = entry.data.get(CONF_USE_ADDON)
+    if use_addon:
+        await async_ensure_addon_running(hass, entry)
+
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))
     dev_reg = await device_registry.async_get_registry(hass)
     ent_reg = entity_registry.async_get(hass)
@@ -210,7 +223,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def async_on_value_notification(notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        value = notification.value
+        raw_value = value = notification.value
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
         hass.bus.async_fire(
@@ -225,9 +238,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 ATTR_COMMAND_CLASS: notification.command_class,
                 ATTR_COMMAND_CLASS_NAME: notification.command_class_name,
                 ATTR_LABEL: notification.metadata.label,
+                ATTR_PROPERTY: notification.property_,
                 ATTR_PROPERTY_NAME: notification.property_name,
+                ATTR_PROPERTY_KEY: notification.property_key,
                 ATTR_PROPERTY_KEY_NAME: notification.property_key_name,
                 ATTR_VALUE: value,
+                ATTR_VALUE_RAW: raw_value,
             },
         )
 
@@ -248,21 +264,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
+    entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     # connect and throw error if connection failed
     try:
         async with timeout(CONNECT_TIMEOUT):
             await client.connect()
+    except InvalidServerVersion as err:
+        if not entry_hass_data.get(DATA_INVALID_SERVER_VERSION_LOGGED):
+            LOGGER.error("Invalid server version: %s", err)
+            entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = True
+        if use_addon:
+            async_ensure_addon_updated(hass)
+        raise ConfigEntryNotReady from err
     except (asyncio.TimeoutError, BaseZwaveJSServerError) as err:
-        LOGGER.error("Failed to connect: %s", err)
+        if not entry_hass_data.get(DATA_CONNECT_FAILED_LOGGED):
+            LOGGER.error("Failed to connect: %s", err)
+            entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = True
         raise ConfigEntryNotReady from err
     else:
         LOGGER.info("Connected to Zwave JS Server")
+        entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
+        entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
     unsubscribe_callbacks: List[Callable] = []
-    hass.data[DOMAIN][entry.entry_id] = {
-        DATA_CLIENT: client,
-        DATA_UNSUBSCRIBE: unsubscribe_callbacks,
-    }
+    entry_hass_data[DATA_CLIENT] = client
+    entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
 
     services = ZWaveServices(hass, ent_reg)
     services.async_register()
@@ -275,8 +301,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # wait until all required platforms are ready
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
 
@@ -289,7 +315,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         listen_task = asyncio.create_task(
             client_listen(hass, entry, client, driver_ready)
         )
-        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT_LISTEN_TASK] = listen_task
+        entry_hass_data[DATA_CLIENT_LISTEN_TASK] = listen_task
         unsubscribe_callbacks.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, handle_ha_shutdown)
         )
@@ -331,7 +357,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     platform_task = hass.async_create_task(start_platforms())
-    hass.data[DOMAIN][entry.entry_id][DATA_START_PLATFORM_TASK] = platform_task
+    entry_hass_data[DATA_START_PLATFORM_TASK] = platform_task
 
     return True
 
@@ -385,8 +411,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -407,6 +433,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             platform_task=info[DATA_START_PLATFORM_TASK],
         )
 
+    if entry.data.get(CONF_USE_ADDON) and entry.disabled_by:
+        addon_manager: AddonManager = get_addon_manager(hass)
+        LOGGER.debug("Stopping Z-Wave JS add-on")
+        try:
+            await addon_manager.async_stop_addon()
+        except AddonError as err:
+            LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
+            return False
+
     return True
 
 
@@ -415,12 +450,51 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if not entry.data.get(CONF_INTEGRATION_CREATED_ADDON):
         return
 
+    addon_manager: AddonManager = get_addon_manager(hass)
     try:
-        await hass.components.hassio.async_stop_addon(ADDON_SLUG)
-    except HassioAPIError as err:
-        LOGGER.error("Failed to stop the Z-Wave JS add-on: %s", err)
+        await addon_manager.async_stop_addon()
+    except AddonError as err:
+        LOGGER.error(err)
         return
     try:
-        await hass.components.hassio.async_uninstall_addon(ADDON_SLUG)
-    except HassioAPIError as err:
-        LOGGER.error("Failed to uninstall the Z-Wave JS add-on: %s", err)
+        await addon_manager.async_create_snapshot()
+    except AddonError as err:
+        LOGGER.error(err)
+        return
+    try:
+        await addon_manager.async_uninstall_addon()
+    except AddonError as err:
+        LOGGER.error(err)
+
+
+async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Ensure that Z-Wave JS add-on is installed and running."""
+    addon_manager: AddonManager = get_addon_manager(hass)
+    if addon_manager.task_in_progress():
+        raise ConfigEntryNotReady
+    try:
+        addon_is_installed = await addon_manager.async_is_addon_installed()
+        addon_is_running = await addon_manager.async_is_addon_running()
+    except AddonError as err:
+        LOGGER.error("Failed to get the Z-Wave JS add-on info")
+        raise ConfigEntryNotReady from err
+
+    usb_path: str = entry.data[CONF_USB_PATH]
+    network_key: str = entry.data[CONF_NETWORK_KEY]
+
+    if not addon_is_installed:
+        addon_manager.async_schedule_install_addon(usb_path, network_key)
+        raise ConfigEntryNotReady
+
+    if not addon_is_running:
+        addon_manager.async_schedule_setup_addon(usb_path, network_key)
+        raise ConfigEntryNotReady
+
+
+@callback
+def async_ensure_addon_updated(hass: HomeAssistant) -> None:
+    """Ensure that Z-Wave JS add-on is updated and running."""
+    addon_manager: AddonManager = get_addon_manager(hass)
+    if addon_manager.task_in_progress():
+        raise ConfigEntryNotReady
+    addon_manager.async_schedule_update_addon()

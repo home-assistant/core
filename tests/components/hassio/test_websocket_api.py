@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from . import mock_all  # noqa
+from . import mock_all  # noqa: F401
 
 from tests.common import async_mock_signal
 

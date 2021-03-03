@@ -314,7 +314,6 @@ omit =
     homeassistant/components/foscam/camera.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
-    homeassistant/components/freebox/__init__.py
     homeassistant/components/freebox/device_tracker.py
     homeassistant/components/freebox/router.py
     homeassistant/components/freebox/sensor.py
@@ -377,6 +376,9 @@ omit =
     homeassistant/components/harmony/data.py
     homeassistant/components/harmony/remote.py
     homeassistant/components/harmony/util.py
+    homeassistant/components/hassio/binary_sensor.py
+    homeassistant/components/hassio/entity.py
+    homeassistant/components/hassio/sensor.py
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/hdmi_cec/*
     homeassistant/components/heatmiser/climate.py

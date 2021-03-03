@@ -10,7 +10,7 @@ from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import (  # noqa: F401 # pylint: disable=unused-import
+from . import (  # noqa: F401
     base,
     closures,
     general,

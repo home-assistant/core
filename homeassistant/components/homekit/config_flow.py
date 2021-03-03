@@ -36,13 +36,13 @@ from .const import (
     DEFAULT_AUTO_START,
     DEFAULT_CONFIG_FLOW_PORT,
     DEFAULT_HOMEKIT_MODE,
+    DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
     HOMEKIT_MODES,
     SHORT_BRIDGE_NAME,
     VIDEO_CODEC_COPY,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_COPY = "camera_copy"

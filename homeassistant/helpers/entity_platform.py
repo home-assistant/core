@@ -62,7 +62,7 @@ class EntityPlatform:
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.config_entry: Optional[config_entries.ConfigEntry] = None
-        self.entities: Dict[str, Entity] = {}  # pylint: disable=used-before-assignment
+        self.entities: Dict[str, Entity] = {}
         self._tasks: List[asyncio.Future] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False

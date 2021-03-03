@@ -10,7 +10,7 @@ from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class AwairFlowHandler(ConfigFlow, domain=DOMAIN):

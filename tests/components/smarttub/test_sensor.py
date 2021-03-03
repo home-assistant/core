@@ -1,52 +1,31 @@
 """Test the SmartTub sensor platform."""
 
+import pytest
 import smarttub
 
-from . import trigger_update
 
-
-async def test_simple_sensors(spa, setup_entry, hass):
+@pytest.mark.parametrize(
+    "entity_suffix,expected_state",
+    [
+        ("state", "normal"),
+        ("flow_switch", "open"),
+        ("ozone", "off"),
+        ("uv", "off"),
+        ("blowout_cycle", "inactive"),
+        ("cleanup_cycle", "inactive"),
+    ],
+)
+async def test_sensor(spa, setup_entry, hass, entity_suffix, expected_state):
     """Test simple sensors."""
 
-    entity_id = f"sensor.{spa.brand}_{spa.model}_state"
+    entity_id = f"sensor.{spa.brand}_{spa.model}_{entity_suffix}"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "normal"
-
-    spa.get_status.return_value.state = "BAD"
-    await trigger_update(hass)
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "bad"
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_flow_switch"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "open"
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_ozone"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "off"
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_uv"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "off"
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_blowout_cycle"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "inactive"
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_cleanup_cycle"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == "inactive"
+    assert state.state == expected_state
 
 
-async def test_filtration_cycles(spa, setup_entry, hass):
-    """Test filtration cycles, which also have services."""
+async def test_primary_filtration(spa, setup_entry, hass):
+    """Test the primary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_primary_filtration_cycle"
     state = hass.states.get(entity_id)
@@ -66,6 +45,10 @@ async def test_filtration_cycles(spa, setup_entry, hass):
     spa.get_status.return_value.primary_filtration.set.assert_called_with(
         duration=8, start_hour=1
     )
+
+
+async def test_secondary_filtration(spa, setup_entry, hass):
+    """Test the secondary filtration cycle sensor."""
 
     entity_id = f"sensor.{spa.brand}_{spa.model}_secondary_filtration_cycle"
     state = hass.states.get(entity_id)

@@ -73,7 +73,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -368,7 +368,7 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        for platform in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -465,7 +465,7 @@ class UniFiController:
                     self.hass.config_entries.async_forward_entry_unload(
                         self.config_entry, platform
                     )
-                    for platform in SUPPORTED_PLATFORMS
+                    for platform in PLATFORMS
                 ]
             )
         )

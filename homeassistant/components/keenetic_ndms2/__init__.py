@@ -44,9 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -56,8 +56,8 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload a config entry."""
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
 
     router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
 

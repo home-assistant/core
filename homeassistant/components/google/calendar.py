@@ -3,7 +3,7 @@ import copy
 from datetime import timedelta
 import logging
 
-from httplib2 import ServerNotFoundError  # pylint: disable=import-error
+from httplib2 import ServerNotFoundError
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,

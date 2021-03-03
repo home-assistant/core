@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import json
 from typing import Optional
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
@@ -34,70 +34,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.media_player import common
-
-
-@pytest.fixture()
-def dial_mock():
-    """Mock pychromecast dial."""
-    dial_mock = MagicMock()
-    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
-    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
-    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
-    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
-    dial_mock.get_multizone_status.return_value.dynamic_groups = []
-    return dial_mock
-
-
-@pytest.fixture()
-def castbrowser_mock():
-    """Mock pychromecast CastBrowser."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def mz_mock():
-    """Mock pychromecast MultizoneManager."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def pycast_mock(castbrowser_mock):
-    """Mock pychromecast."""
-    pycast_mock = MagicMock()
-    pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
-    pycast_mock.discovery.AbstractCastListener = (
-        pychromecast.discovery.AbstractCastListener
-    )
-    return pycast_mock
-
-
-@pytest.fixture()
-def quick_play_mock():
-    """Mock pychromecast quick_play."""
-    return MagicMock()
-
-
-@pytest.fixture(autouse=True)
-def cast_mock(dial_mock, mz_mock, pycast_mock, quick_play_mock):
-    """Mock pychromecast."""
-    with patch(
-        "homeassistant.components.cast.media_player.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.discovery.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.helpers.dial", dial_mock
-    ), patch(
-        "homeassistant.components.cast.media_player.MultizoneManager",
-        return_value=mz_mock,
-    ), patch(
-        "homeassistant.components.cast.media_player.zeroconf.async_get_instance",
-        AsyncMock(),
-    ), patch(
-        "homeassistant.components.cast.media_player.quick_play",
-        quick_play_mock,
-    ):
-        yield
-
 
 # pylint: disable=invalid-name
 FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
@@ -482,7 +418,8 @@ async def test_replay_past_chromecasts(hass):
     assert add_dev1.call_count == 1
 
     add_dev2 = Mock()
-    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2)
+    entry = hass.config_entries.async_entries("cast")[0]
+    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, entry)
     await hass.async_block_till_done()
     assert add_dev2.call_count == 1
 

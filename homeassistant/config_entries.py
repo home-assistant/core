@@ -69,8 +69,6 @@ ENTRY_STATE_SETUP_RETRY = "setup_retry"
 ENTRY_STATE_NOT_LOADED = "not_loaded"
 # An error occurred when trying to unload the entry
 ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
-# The config entry is disabled
-ENTRY_STATE_DISABLED = "disabled"
 
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
@@ -259,12 +257,19 @@ class ConfigEntry:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
-            _LOGGER.warning(
-                "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
-                self.title,
-                self.domain,
-                wait_time,
-            )
+            if tries == 1:
+                _LOGGER.warning(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
+                    self.title,
+                    self.domain,
+                )
+            else:
+                _LOGGER.debug(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    self.title,
+                    self.domain,
+                    wait_time,
+                )
 
             async def setup_again(now: Any) -> None:
                 """Run setup again."""
@@ -802,11 +807,14 @@ class ConfigEntries:
         entry.disabled_by = disabled_by
         self._async_schedule_save()
 
+        # Unload the config entry, then fire an event
+        reload_result = await self.async_reload(entry_id)
+
         self.hass.bus.async_fire(
             EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED, {"config_entry_id": entry_id}
         )
 
-        return await self.async_reload(entry_id)
+        return reload_result
 
     @callback
     def async_update_entry(
@@ -926,7 +934,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @property
     def unique_id(self) -> Optional[str]:
         """Return unique ID if available."""
-        # pylint: disable=no-member
         if not self.context:
             return None
 
@@ -975,7 +982,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         Returns optionally existing config entry with same ID.
         """
         if unique_id is None:
-            self.context["unique_id"] = None  # pylint: disable=no-member
+            self.context["unique_id"] = None
             return None
 
         if raise_on_progress:
@@ -983,7 +990,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
-        self.context["unique_id"] = unique_id  # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
 
         # Abort discoveries done using the default discovery unique id
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:

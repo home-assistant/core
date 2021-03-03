@@ -180,7 +180,6 @@ homeassistant/components/google_cloud/* @lufton
 homeassistant/components/gpsd/* @fabaff
 homeassistant/components/gree/* @cmroche
 homeassistant/components/greeneye_monitor/* @jkeljo
-homeassistant/components/griddy/* @bdraco
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/guardian/* @bachya
