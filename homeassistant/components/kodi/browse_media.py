@@ -207,21 +207,22 @@ async def library_payload(media_library):
         MEDIA_TYPE_TVSHOW: "TV shows",
         MEDIA_TYPE_CHANNEL: "Channels",
     }
-    tasks = []
-    for item in [{"label": name, "type": type_} for type_, name in library.items()]:
-        tasks.append(
+
+    library_info.children = await asyncio.gather(
+        *[
             item_payload(
-                {"label": item["label"], "type": item["type"], "uri": item["type"]},
+                {
+                    "label": item["label"],
+                    "type": item["type"],
+                    "uri": item["type"],
+                },
                 media_library,
             )
-        )
-        # library_info.children.append(
-        #     await item_payload(
-        #         {"label": item["label"], "type": item["type"], "uri": item["type"]},
-        #         media_library,
-        #     )
-        # )
-    library_info.children = await asyncio.gather(*tasks)
+            for item in [
+                {"label": name, "type": type_} for type_, name in library.items()
+            ]
+        ]
+    )
 
     return library_info
 
