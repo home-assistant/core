@@ -164,6 +164,13 @@ def _mocked_ismartgate_sensor_response(battery_level: int):
 async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     """Test data update."""
 
+    expected_attributes = {
+        "device_class": "battery",
+        "door_id": 1,
+        "friendly_name": "Door1 battery",
+        "sensor_id": "ABCD",
+    }
+
     api = MagicMock(GogoGate2Api)
     api.async_activate.return_value = GogoGate2ActivateResponse(result=True)
     api.async_info.return_value = _mocked_gogogate_sensor_response(25)
@@ -192,6 +199,9 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     assert hass.states.get("cover.door2")
     assert hass.states.get("cover.door2")
     assert hass.states.get("sensor.door1_battery").state == "25"
+    assert (
+        dict(hass.states.get("sensor.door1_battery").attributes) == expected_attributes
+    )
     assert hass.states.get("sensor.door2_battery") is None
     assert hass.states.get("sensor.door2_battery") is None
 
@@ -212,6 +222,13 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
 async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     """Test availability."""
+    expected_attributes = {
+        "device_class": "battery",
+        "door_id": 1,
+        "friendly_name": "Door1 battery",
+        "sensor_id": "ABCD",
+    }
+
     sensor_response = _mocked_ismartgate_sensor_response(35)
     api = MagicMock(ISmartGateApi)
     api.async_info.return_value = sensor_response
@@ -259,3 +276,6 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.door1_battery").state == "35"
+    assert (
+        dict(hass.states.get("sensor.door1_battery").attributes) == expected_attributes
+    )
