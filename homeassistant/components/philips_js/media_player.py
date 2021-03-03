@@ -295,8 +295,8 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def media_image_url(self):
         """Image url of current playing media."""
         if self._media_content_id and self._media_content_type in (
-            MEDIA_CLASS_APP,
-            MEDIA_CLASS_CHANNEL,
+            MEDIA_TYPE_APP,
+            MEDIA_TYPE_CHANNEL,
         ):
             return self.get_browse_image_url(
                 self._media_content_type, self._media_content_id, media_image_id=None
@@ -384,7 +384,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="channels",
             media_content_type=MEDIA_TYPE_CHANNELS,
-            children_media_class=MEDIA_TYPE_CHANNEL,
+            children_media_class=MEDIA_CLASS_CHANNEL,
             can_play=False,
             can_expand=True,
             children=children,
@@ -427,7 +427,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id=f"favorites/{list_id}",
             media_content_type=MEDIA_TYPE_CHANNELS,
-            children_media_class=MEDIA_TYPE_CHANNEL,
+            children_media_class=MEDIA_CLASS_CHANNEL,
             can_play=False,
             can_expand=True,
             children=children,
@@ -458,7 +458,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="applications",
             media_content_type=MEDIA_TYPE_APPS,
-            children_media_class=MEDIA_TYPE_APP,
+            children_media_class=MEDIA_CLASS_APP,
             can_play=False,
             can_expand=True,
             children=children,
@@ -479,7 +479,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_id="favorite_lists",
             media_content_type=MEDIA_TYPE_CHANNELS,
-            children_media_class=MEDIA_TYPE_CHANNEL,
+            children_media_class=MEDIA_CLASS_CHANNEL,
             can_play=False,
             can_expand=True,
             children=children,
