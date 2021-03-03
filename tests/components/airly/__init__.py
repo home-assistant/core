@@ -22,11 +22,8 @@ async def init_integration(hass, aioclient_mock) -> MockConfigEntry:
             "name": "Home",
         },
     )
-    headers = {"X-RateLimit-Limit-day": "100", "X-RateLimit-Remaining-day": "11"}
 
-    aioclient_mock.get(
-        API_POINT_URL, text=load_fixture("airly_valid_station.json"), headers=headers
-    )
+    aioclient_mock.get(API_POINT_URL, text=load_fixture("airly_valid_station.json"))
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

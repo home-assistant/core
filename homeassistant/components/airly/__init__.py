@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from math import floor
+from math import ceil
 
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
@@ -45,7 +45,7 @@ def set_update_interval(instances, requests_remaining):
     minutes_to_midnight = (midnight - now).seconds / 60
     interval = timedelta(
         minutes=max(
-            floor(minutes_to_midnight / requests_remaining * instances),
+            ceil(minutes_to_midnight / requests_remaining * instances),
             MINIMUM_UPDATE_INTERVAL,
         )
     )
