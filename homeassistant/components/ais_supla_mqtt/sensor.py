@@ -71,7 +71,7 @@ class SuplaMqttSoftBridge(Entity):
         self._sensor_update_counter = 0
 
     async def async_publish_to_supla(self, topic, payload):
-        if self._supla_mqtt_connection_code == 0:
+        if self._supla_mqtt_client.is_connected():
             # remember to ignore own message when received from SUPLA mqtt
             self._ignore_supla_topic = topic
             self._ignore_supla_payload = payload
@@ -187,16 +187,15 @@ class SuplaMqttSoftBridge(Entity):
         """Return the icon to use in the frontend."""
         return "mdi:bridge"
 
-    def on_supla_connect(self, client_, userdata, flags, result_code, properties):
+    def on_supla_connect(self, client_, userdata, flags, result_code, prop):
         """Handle connection result."""
         _LOGGER.debug(f"on_supla_connect {result_code}")
         self._try_to_connect_no = self._try_to_connect_no + 1
         self._supla_mqtt_connection_code = result_code
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
-        if result_code == 0:
-            client_.subscribe("homeassistant/#")
-            client_.subscribe("supla/#")
+        client_.subscribe("homeassistant/#")
+        client_.subscribe("supla/#")
 
     def on_supla_disconnect(self, client_, userdata, result_code):
         """Handle connection result."""
@@ -205,7 +204,6 @@ class SuplaMqttSoftBridge(Entity):
 
     def on_supla_message(self, client, userdata, msg):
         """The callback for when a message is received from SUPLA broker."""
-        _LOGGER.debug(f"on_message {msg.topic} / {msg.payload}")
         # 1. echo reduction check if source is AIS
         if hasattr(msg.properties, "UserProperty"):
             user_properties = msg.properties.UserProperty
@@ -229,7 +227,7 @@ class SuplaMqttSoftBridge(Entity):
     async def async_update(self):
         """Reconnect with SUPLA MQTT to receive the discovery and status info."""
         self._sensor_update_counter = self._sensor_update_counter + 1
-        if self._supla_mqtt_connection_code == 0 and self._supla_received < 2:
+        if self._supla_mqtt_client.is_connected() and self._supla_received < 2:
             self._supla_mqtt_client.reconnect()
         elif self._sensor_update_counter % 100 == 0:
             self._sensor_update_counter = 0
