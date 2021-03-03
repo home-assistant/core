@@ -10,7 +10,6 @@ mob_notify:
            integration: mobile_app
            entity:
              domain: device_tracker
-
      message:
        description: 'Tekst wiadomości'
        example: 'Dzwonek do drzwi.'
@@ -58,12 +57,24 @@ mob_request:
      device_id:
        description: 'Identyfikator urządzenia.'
        example: 'mobile_ais_dom-'
+       selector:
+         device:
+           integration: mobile_app
+           entity:
+             domain: device_tracker
      request:
-       description: 'Komenda np.: locationUpdate, micOn'
+       description: 'Komenda'
        example: 'micOn'
+       selector:
+         select:
+           options:
+             - "locationUpdate"
+             - "micOn"
      data:
-       description: 'Opcjonalne dane komendy'
+       description: 'Dodatkowe dane komendy (opcjonalnie)'
        example: '{}'
+       selector:
+         object:
 
 check_local_ip:
   description: 'Sprawdzenie lokalnego IP bramki i ustawienie go jako wartość encji sensor.internal_ip_address. Ta usługa wykonaywana jest automatycznie przy starcie urządzenia.'
@@ -87,6 +98,8 @@ process:
     text:
       description: 'Tekst pynia/komendy.'
       example: 'Włącz radio RMF'
+      selector:
+        text:
 
 process_code:
   description: 'Przetwarzanie kodu z klawiatury/pilota. Ta usługa wykonywana jest automatycznie po otrzymaniu kodu z klawiatury/pilota.'
@@ -94,6 +107,8 @@ process_code:
     text:
       description: 'Wiadomość z kodem z pilota oraz akcją (0 - down, 1 - up, 2 - hold)'
       example: '{"text": "{\"KeyCode\": 92, \"Action\": \"0\"}"} '
+      selector:
+        object:
 
 process_command_from_frame:
   description: 'Przetwarzanie wiadomości/komendy otrzymanej z systemu Android.'
@@ -101,6 +116,8 @@ process_command_from_frame:
     data:
       description: 'Przykładowy komunikat o zmianie adresu IP.'
       example: '{"topic": "ais/ip_state_change_info", "payload": "{\"ip\": \"192.168.1.1\"}"}'
+      selector:
+        object:
 
 publish_command_to_frame:
   description: 'Publikowanie komendy do systemu Android.'
@@ -111,6 +128,8 @@ publish_command_to_frame:
     val:
       description: 'Wiadomość / dane do akcji.'
       example: 'https://test/audio.mp3'
+      selector:
+        text:
 
 say_in_browser:
   description: 'Wysłanie tekstu do przeczytania w przeglądarce'
@@ -118,6 +137,8 @@ say_in_browser:
     text:
       description: 'Tekst do przeczytania przez przeglądarkę'
       example: 'Cześć, tu przeglądarka'
+      selector:
+        text:
 
 say_it:
   description: 'Zamiana tekstu na mowę, czytanie tekstu. Za pomocą mechanizmu TTS w systemie Android na bramce.'
