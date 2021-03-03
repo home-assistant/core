@@ -156,6 +156,46 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_show_discovery_form(hass: HomeAssistant) -> None:
+    """Test that the zeroconf confirmation form is served."""
+
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DISCOVERY},
+        data={
+            "host": "192.168.1.123",
+            "port": 80,
+            "und": "uuid:83747482",
+        },
+    )
+    assert result["type"] == "form"
+    assert not result["errors"]
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_server_info",
+        return_value=True,
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ), patch(
+        "homeassistant.components.octoprint.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.octoprint.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "user"
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_import_yaml(hass: HomeAssistant) -> None:
     """Test that the yaml import works."""
     await setup.async_setup_component(hass, "persistent_notification", {})

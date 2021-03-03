@@ -41,6 +41,7 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_TELLDUSLIVE: "tellduslive",
     "logitech_mediaserver": "squeezebox",
+    SERVICE_OCTOPRINT: "octoprint",
 }
 
 # These have no config flows
