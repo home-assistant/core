@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
+            "invalid_pin": "NIP invalide",
+            "pairing_failure": "Association impossible: {error_id}",
             "unknown": "Erreur inattendue"
         },
         "step": {

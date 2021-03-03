@@ -4,15 +4,17 @@
             "already_configured": "This airport is already configured."
         },
         "error": {
-            "invalid_airport": "Airport code is not valid"
+            "cannot_connect": "Failed to connect",
+            "invalid_airport": "Airport code is not valid",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
-                "title": "FAA Delays",
-                "description": "Enter a US Airport Code in IATA Format",
                 "data": {
                     "id": "Airport"
-                }
+                },
+                "description": "Enter a US Airport Code in IATA Format",
+                "title": "FAA Delays"
             }
         }
     }
