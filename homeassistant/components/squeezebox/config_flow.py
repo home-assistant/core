@@ -182,7 +182,6 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # update schema with suggested values from discovery
         self.data_schema = _base_schema(discovery_info)
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
 
         return await self.async_step_edit()

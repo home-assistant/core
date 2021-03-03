@@ -16,7 +16,7 @@
                     "host": "Host",
                     "type": "Printeri t\u00fc\u00fcp"
                 },
-                "description": "Seadistage Brotheri printeri sidumine. Kui teil on seadistamisega probleeme minge aadressile https://www.home-assistant.io/integrations/brother"
+                "description": "Seadista Brotheri printeri sidumine. Kui seadistamisega on probleeme mine aadressile https://www.home-assistant.io/integrations/brother"
             },
             "zeroconf_confirm": {
                 "data": {

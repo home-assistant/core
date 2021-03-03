@@ -2,10 +2,10 @@
 import pypck
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_SOURCE
 
 from . import LcnEntity
-from .const import BINSENSOR_PORTS, CONF_CONNECTIONS, CONF_SOURCE, DATA_LCN, SETPOINTS
+from .const import BINSENSOR_PORTS, CONF_CONNECTIONS, DATA_LCN, SETPOINTS
 from .helpers import get_connection
 
 

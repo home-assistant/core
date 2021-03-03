@@ -18,7 +18,7 @@
                 "data": {
                     "select_ip": "Indirizzo IP"
                 },
-                "description": "Eseguire nuovamente l'installazione se si desidera connettere gateway adizionali",
+                "description": "Esegui di nuovo la configurazione se desideri connettere gateway aggiuntivi",
                 "title": "Selezionare il Gateway Xiaomi Aqara che si desidera collegare"
             },
             "settings": {
@@ -35,7 +35,7 @@
                     "interface": "L'interfaccia di rete da utilizzare",
                     "mac": "Indirizzo Mac (opzionale)"
                 },
-                "description": "Connettiti al tuo Xiaomi Aqara Gateway, se gli indirizzi IP e mac sono lasciati vuoti, verr\u00e0 utilizzato il rilevamento automatico",
+                "description": "Connettiti al tuo Xiaomi Aqara Gateway, se gli indirizzi IP e MAC sono lasciati vuoti, verr\u00e0 utilizzato il rilevamento automatico",
                 "title": "Xiaomi Aqara Gateway"
             }
         }

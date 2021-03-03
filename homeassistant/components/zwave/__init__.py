@@ -36,7 +36,6 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 
-from . import config_flow  # noqa: F401 pylint: disable=unused-import
 from . import const, websocket_api as wsapi, workaround
 from .const import (
     CONF_AUTOHEAL,

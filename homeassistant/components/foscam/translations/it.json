@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
+            "invalid_response": "Risposta non valida dal dispositivo",
             "unknown": "Errore imprevisto"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Host",
                     "password": "Password",
                     "port": "Porta",
+                    "rtsp_port": "Porta RTSP",
                     "stream": "Flusso",
                     "username": "Nome utente"
                 }

@@ -6,14 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Static Controller",
-        "generic": "Multilevel Switch",
-        "specific": "Multilevel Power Switch",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Multilevel Switch",
-            "All Switch"
-        ],
+        "basic": {"key": 2, "label": "Static Controller"},
+        "generic": {"key": 17, "label":"Multilevel Switch"},
+        "specific": {"key": 1, "label":"Multilevel Power Switch"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -67,6 +63,7 @@
             "userIcon": 1536
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Multilevel Switch",

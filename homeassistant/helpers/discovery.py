@@ -9,6 +9,7 @@ from typing import Any, Callable, Collection, Dict, Optional, Union
 
 from homeassistant import core, setup
 from homeassistant.const import ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED
+from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -16,10 +17,14 @@ from homeassistant.util.async_ import run_callback_threadsafe
 EVENT_LOAD_PLATFORM = "load_platform.{}"
 ATTR_PLATFORM = "platform"
 
+# mypy: disallow-any-generics
+
 
 @bind_hass
 def listen(
-    hass: core.HomeAssistant, service: Union[str, Collection[str]], callback: Callable
+    hass: core.HomeAssistant,
+    service: Union[str, Collection[str]],
+    callback: CALLBACK_TYPE,
 ) -> None:
     """Set up listener for discovery of specific service.
 
@@ -31,7 +36,9 @@ def listen(
 @core.callback
 @bind_hass
 def async_listen(
-    hass: core.HomeAssistant, service: Union[str, Collection[str]], callback: Callable
+    hass: core.HomeAssistant,
+    service: Union[str, Collection[str]],
+    callback: CALLBACK_TYPE,
 ) -> None:
     """Set up listener for discovery of specific service.
 
@@ -94,7 +101,7 @@ async def async_discover(
 
 @bind_hass
 def listen_platform(
-    hass: core.HomeAssistant, component: str, callback: Callable
+    hass: core.HomeAssistant, component: str, callback: CALLBACK_TYPE
 ) -> None:
     """Register a platform loader listener."""
     run_callback_threadsafe(

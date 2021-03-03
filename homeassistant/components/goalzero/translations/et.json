@@ -14,7 +14,7 @@
                     "host": "",
                     "name": "Nimi"
                 },
-                "description": "Alustuseks peate alla laadima rakenduse Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\n Yeti Wifi-v\u00f5rguga \u00fchendamiseks j\u00e4rgige juhiseid. Seej\u00e4rel hankige oma ruuterilt host IP. DHCP peab olema ruuteri seadetes seadistatud, et tagada, et host-IP ei muutuks. Vaadake ruuteri kasutusjuhendit.",
+                "description": "Alustuseks pead alla laadima rakenduse Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\n Yeti Wifi-v\u00f5rguga \u00fchendamiseks j\u00e4rgi juhiseid. Seej\u00e4rel hangi oma ruuterilt host IP. DHCP peab olema ruuteri seadetes seadistatud, et tagada, et host-IP ei muutuks. Vaata ruuteri kasutusjuhendit.",
                 "title": ""
             }
         }

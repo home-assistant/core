@@ -1,6 +1,5 @@
 """Support for MQTT switches."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -42,8 +41,6 @@ from .mixins import (
     async_setup_entry_helper,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
@@ -80,7 +77,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT switch dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

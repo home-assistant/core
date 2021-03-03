@@ -107,6 +107,10 @@ class NetatmoDataHandler:
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
 
+        elif event["data"]["push_type"] == "webhook_deactivation":
+            _LOGGER.info("%s webhook unregistered", MANUFACTURER)
+            self._webhook = False
+
         elif event["data"]["push_type"] == "NACamera-connection":
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self._data_classes[CAMERA_DATA_CLASS_NAME][NEXT_SCAN] = time()
@@ -118,6 +122,7 @@ class NetatmoDataHandler:
                 partial(data_class, **kwargs),
                 self._auth,
             )
+
             for update_callback in self._data_classes[data_class_entry][
                 "subscriptions"
             ]:
