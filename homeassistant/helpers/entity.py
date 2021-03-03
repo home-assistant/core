@@ -10,7 +10,7 @@ from typing import Any, Awaitable, Dict, Iterable, List, Optional
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
-    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
@@ -183,8 +183,8 @@ class Entity(ABC):
         return None
 
     @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this device, from component DEVICE_CLASSES."""
+    def entity_class(self) -> Optional[str]:
+        """Return the class of this entity, from component DEVICE_CLASSES."""
         return None
 
     @property
@@ -347,9 +347,13 @@ class Entity(ABC):
         if supported_features is not None:
             attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
-        device_class = self.device_class
-        if device_class is not None:
-            attr[ATTR_DEVICE_CLASS] = str(device_class)
+        entity_class = self.entity_class
+        # Backwards compatibility for "device_class" deprecated in 2021.4
+        # Add warning in 2021.6, remove in 2021.10
+        if entity_class is None and hasattr(self, "device_class"):
+            entity_class = getattr(self, "device_class")
+        if entity_class is not None:
+            attr[ATTR_ENTITY_CLASS] = str(entity_class)
 
         end = timer()
 

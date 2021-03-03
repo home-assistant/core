@@ -75,7 +75,6 @@ CONF_DELAY = "delay"
 CONF_DELAY_TIME = "delay_time"
 CONF_DEVICE = "device"
 CONF_DEVICES = "devices"
-CONF_DEVICE_CLASS = "device_class"
 CONF_DEVICE_ID = "device_id"
 CONF_DISARM_AFTER_TRIGGER = "disarm_after_trigger"
 CONF_DISCOVERY = "discovery"
@@ -88,6 +87,7 @@ CONF_EFFECT = "effect"
 CONF_ELEVATION = "elevation"
 CONF_EMAIL = "email"
 CONF_ENTITIES = "entities"
+CONF_ENTITY_CLASS = CONF_DEVICE_CLASS = "device_class"
 CONF_ENTITY_ID = "entity_id"
 CONF_ENTITY_NAMESPACE = "entity_namespace"
 CONF_ENTITY_PICTURE_TEMPLATE = "entity_picture_template"
@@ -218,19 +218,19 @@ EVENT_TIMER_OUT_OF_SYNC = "timer_out_of_sync"
 EVENT_TIME_CHANGED = "time_changed"
 
 
-# #### DEVICE CLASSES ####
-DEVICE_CLASS_BATTERY = "battery"
-DEVICE_CLASS_HUMIDITY = "humidity"
-DEVICE_CLASS_ILLUMINANCE = "illuminance"
-DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"
-DEVICE_CLASS_TEMPERATURE = "temperature"
-DEVICE_CLASS_TIMESTAMP = "timestamp"
-DEVICE_CLASS_PRESSURE = "pressure"
-DEVICE_CLASS_POWER = "power"
-DEVICE_CLASS_CURRENT = "current"
-DEVICE_CLASS_ENERGY = "energy"
-DEVICE_CLASS_POWER_FACTOR = "power_factor"
-DEVICE_CLASS_VOLTAGE = "voltage"
+# #### SENSOR ENTITY CLASSES ####
+ENTITY_CLASS_BATTERY = DEVICE_CLASS_BATTERY = "battery"
+ENTITY_CLASS_HUMIDITY = DEVICE_CLASS_HUMIDITY = "humidity"
+ENTITY_CLASS_ILLUMINANCE = DEVICE_CLASS_ILLUMINANCE = "illuminance"
+ENTITY_CLASS_STRENGTH = DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"
+ENTITY_CLASS_TEMPERATURE = DEVICE_CLASS_TEMPERATURE = "temperature"
+ENTITY_CLASS_TIMESTAMP = DEVICE_CLASS_TIMESTAMP = "timestamp"
+ENTITY_CLASS_PRESSURE = DEVICE_CLASS_PRESSURE = "pressure"
+ENTITY_CLASS_POWER = DEVICE_CLASS_POWER = "power"
+ENTITY_CLASS_CURRENT = DEVICE_CLASS_CURRENT = "current"
+ENTITY_CLASS_ENERGY = DEVICE_CLASS_ENERGY = "energy"
+ENTITY_CLASS_POWER_FACTOR = DEVICE_CLASS_POWER_FACTOR = "power_factor"
+ENTITY_CLASS_VOLTAGE = DEVICE_CLASS_VOLTAGE = "voltage"
 
 # #### STATES ####
 STATE_ON = "on"
@@ -312,7 +312,7 @@ CONF_UNIT_SYSTEM_IMPERIAL: str = "imperial"
 # Electrical attributes
 ATTR_VOLTAGE = "voltage"
 
-# Location of the device/sensor
+# Location of the entity/sensor
 ATTR_LOCATION = "location"
 
 ATTR_MODE = "mode"
@@ -321,17 +321,17 @@ ATTR_BATTERY_CHARGING = "battery_charging"
 ATTR_BATTERY_LEVEL = "battery_level"
 ATTR_WAKEUP = "wake_up_interval"
 
-# For devices which support a code attribute
+# For entities which support a code attribute
 ATTR_CODE = "code"
 ATTR_CODE_FORMAT = "code_format"
 
-# For calling a device specific command
+# For calling an entity specific command
 ATTR_COMMAND = "command"
 
-# For devices which support an armed state
+# For entities which support an armed state
 ATTR_ARMED = "device_armed"
 
-# For devices which support a locked state
+# For entities which support a locked state
 ATTR_LOCKED = "locked"
 
 # For sensors that support 'tripping', eg. motion and door sensors
@@ -364,8 +364,8 @@ ATTR_RESTORED = "restored"
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = "supported_features"
 
-# Class of device within its domain
-ATTR_DEVICE_CLASS = "device_class"
+# Class of entity within its domain
+ATTR_ENTITY_CLASS = ATTR_DEVICE_CLASS = "device_class"
 
 # Temperature attribute
 ATTR_TEMPERATURE = "temperature"
