@@ -20,11 +20,9 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OPTIMISTIC,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_CLOSED,
     STATE_CLOSING,
@@ -50,7 +48,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -144,10 +142,10 @@ def validate_options(value):
 
 
 PLATFORM_SCHEMA = vol.All(
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
             vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_GET_POSITION_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -183,7 +181,6 @@ PLATFORM_SCHEMA = vol.All(
             ): cv.boolean,
             vol.Optional(CONF_TILT_STATUS_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TILT_STATUS_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
@@ -238,7 +235,6 @@ class MqttCover(MqttEntity, CoverEntity):
         return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
-        self._config = config
         self._optimistic = config[CONF_OPTIMISTIC] or (
             config.get(CONF_STATE_TOPIC) is None
             and config.get(CONF_GET_POSITION_TOPIC) is None
@@ -398,11 +394,6 @@ class MqttCover(MqttEntity, CoverEntity):
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._config[CONF_NAME]
 
     @property
     def is_closed(self):

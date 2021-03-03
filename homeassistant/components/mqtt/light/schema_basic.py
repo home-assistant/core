@@ -17,12 +17,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
@@ -36,7 +34,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -98,7 +96,8 @@ VALUE_TEMPLATE_KEYS = [
 ]
 
 PLATFORM_SCHEMA_BASIC = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
@@ -110,7 +109,6 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -132,7 +130,6 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE
@@ -194,8 +191,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         topic = {
             key: config.get(key)
             for key in (
@@ -539,11 +534,6 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             white_value = min(round(white_value), 255)
             return white_value
         return None
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._config[CONF_NAME]
 
     @property
     def is_on(self):

@@ -15,13 +15,11 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_STATE,
-    CONF_UNIQUE_ID,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -41,7 +39,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -73,9 +71,9 @@ OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 OSCILLATION = "oscillation"
 
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -101,7 +99,6 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
@@ -158,7 +155,6 @@ class MqttFan(MqttEntity, FanEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
         self._topic = {
             key: config.get(key)
             for key in (
@@ -287,11 +283,6 @@ class MqttFan(MqttEntity, FanEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @property
-    def name(self) -> str:
-        """Get entity name."""
-        return self._config[CONF_NAME]
 
     @property
     def speed_list(self) -> list:

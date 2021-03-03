@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -16,7 +16,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -26,12 +26,11 @@ CONF_TOPIC = "topic"
 DEFAULT_NAME = "MQTT Camera"
 
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
@@ -77,9 +76,6 @@ class MqttCamera(MqttEntity, Camera):
         """Return the config schema."""
         return PLATFORM_SCHEMA
 
-    def _setup_from_config(self, config):
-        self._config = config
-
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
@@ -105,8 +101,3 @@ class MqttCamera(MqttEntity, Camera):
     async def async_camera_image(self):
         """Return image response."""
         return self._last_image
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._config[CONF_NAME]

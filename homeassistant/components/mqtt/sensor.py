@@ -8,12 +8,9 @@ import voluptuous as vol
 from homeassistant.components import sensor
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_ICON,
     CONF_NAME,
-    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
@@ -30,7 +27,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttAvailability,
     MqttEntity,
@@ -42,15 +39,13 @@ CONF_EXPIRE_AFTER = "expire_after"
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-            vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         }
     )
@@ -105,7 +100,6 @@ class MqttSensor(MqttEntity, Entity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
         template = self._config.get(CONF_VALUE_TEMPLATE)
         if template is not None:
             template.hass = self.hass
@@ -164,11 +158,6 @@ class MqttSensor(MqttEntity, Entity):
         self.async_write_ha_state()
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._config[CONF_NAME]
-
-    @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -182,11 +171,6 @@ class MqttSensor(MqttEntity, Entity):
     def state(self):
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
 
     @property
     def device_class(self) -> Optional[str]:

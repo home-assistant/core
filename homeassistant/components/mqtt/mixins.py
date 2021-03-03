@@ -6,7 +6,7 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.const import CONF_DEVICE, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -63,6 +63,8 @@ CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
+
+DEFAULT_ENTITY_NAME = "MQTT Entity"
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -138,6 +140,15 @@ MQTT_JSON_ATTRS_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
+    }
+)
+
+MQTT_ENTITY_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_ICON): cv.icon,
+        vol.Optional(CONF_NAME, default=DEFAULT_ENTITY_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -527,11 +538,12 @@ class MqttEntity(
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Entity."""
         self.hass = hass
+        self._config = config
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._sub_state = None
 
         # Load config
-        self._setup_from_config(config)
+        self._setup_from_config(self._config)
 
         # Initialize mixin classes
         MqttAttributes.__init__(self, config)
@@ -547,7 +559,8 @@ class MqttEntity(
     async def discovery_update(self, discovery_payload):
         """Handle updated discovery message."""
         config = self.config_schema()(discovery_payload)
-        self._setup_from_config(config)
+        self._config = config
+        self._setup_from_config(self._config)
         await self.attributes_discovery_update(config)
         await self.availability_discovery_update(config)
         await self.device_info_discovery_update(config)
@@ -574,6 +587,16 @@ class MqttEntity(
     @abstractmethod
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+
+    @property
+    def icon(self):
+        """Return icon of the entity if any."""
+        return self._config.get(CONF_ICON)
+
+    @property
+    def name(self):
+        """Return the name of the device if any."""
+        return self._config.get(CONF_NAME)
 
     @property
     def should_poll(self):

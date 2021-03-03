@@ -11,13 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import callback
@@ -33,7 +31,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttAvailability,
     MqttEntity,
@@ -50,9 +48,9 @@ DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
             vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
@@ -60,7 +58,6 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_OFF_DELAY): cv.positive_int,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     )
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
@@ -113,7 +110,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
         return PLATFORM_SCHEMA
 
     def _setup_from_config(self, config):
-        self._config = config
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
@@ -217,11 +213,6 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
         self._expired = True
 
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._config[CONF_NAME]
 
     @property
     def is_on(self):

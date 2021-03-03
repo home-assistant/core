@@ -21,11 +21,9 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_STATE_TEMPLATE,
-    CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
 )
@@ -39,7 +37,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -66,14 +64,14 @@ CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 PLATFORM_SCHEMA_TEMPLATE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
             vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
@@ -83,7 +81,6 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_RED_TEMPLATE): cv.template,
             vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     )
@@ -127,8 +124,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         self._topics = {
             key: config.get(key) for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
         }
@@ -298,11 +293,6 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     def white_value(self):
         """Return the white property."""
         return self._white_value
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._config[CONF_NAME]
 
     @property
     def is_on(self):

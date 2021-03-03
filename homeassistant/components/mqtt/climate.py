@@ -36,12 +36,10 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_DEVICE,
     CONF_NAME,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_TEMPERATURE_UNIT,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -65,7 +63,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    MQTT_ENTITY_BASE_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -179,7 +177,8 @@ TOPIC_KEYS = (
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
 PLATFORM_SCHEMA = (
-    SCHEMA_BASE.extend(
+    SCHEMA_BASE.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
+    .extend(
         {
             vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
@@ -189,7 +188,6 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
             vol.Optional(CONF_CURRENT_TEMP_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
@@ -255,7 +253,6 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
@@ -321,7 +318,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
         self._topic = {key: config.get(key) for key in TOPIC_KEYS}
 
         # set to None in non-optimistic mode
@@ -562,11 +558,6 @@ class MqttClimate(MqttEntity, ClimateEntity):
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics
         )
-
-    @property
-    def name(self):
-        """Return the name of the climate device."""
-        return self._config[CONF_NAME]
 
     @property
     def temperature_unit(self):
