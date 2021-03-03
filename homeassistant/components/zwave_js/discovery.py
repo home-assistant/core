@@ -115,7 +115,7 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0038},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # Inovelli LZW26 light / fan controller combo using switch multilevel CC
+    # Inovelli LZW36 light / fan controller combo using switch multilevel CC
     # The fan is endpoint 2, the light is endpoint 1.
     ZWaveDiscoverySchema(
         platform="fan",
