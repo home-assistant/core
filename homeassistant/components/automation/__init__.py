@@ -272,17 +272,11 @@ class AutomationTrace:
         action_traces = {}
         condition_traces = {}
         for key, trace_list in self._action_trace.items():
-            action_trace_list = []
-            for action_trace in trace_list:
-                action_trace_list.append(action_trace.as_dict())
-            action_traces[key] = action_trace_list
+            action_traces[key] = [item.as_dict() for item in trace_list]
 
         if self._condition_trace:
             for key, trace_list in self._condition_trace.items():
-                condition_trace_list = []
-                for condition_trace in trace_list:
-                    condition_trace_list.append(condition_trace.as_dict())
-                condition_traces[key] = condition_trace_list
+                condition_traces[key] = [item.as_dict() for item in trace_list]
 
         result = {
             "action_trace": action_traces,
@@ -313,9 +307,9 @@ def trace_automation(hass, unique_id, config, trigger, context):
     )
 
     if unique_id:
-        traces = hass.data[DATA_AUTOMATION_TRACE].setdefault(
-            unique_id, deque([], STORED_TRACES)
-        )
+        if unique_id not in hass.data[DATA_AUTOMATION_TRACE]:
+            hass.data[DATA_AUTOMATION_TRACE][unique_id] = deque([], STORED_TRACES)
+        traces = hass.data[DATA_AUTOMATION_TRACE][unique_id]
         traces.append(automation_trace)
 
     try:

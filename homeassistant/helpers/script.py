@@ -669,7 +669,7 @@ class _ScriptRun:
                             if not cond(hass, variables):
                                 return False
             except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in '%s' evaluation: %s", name, ex)
+                _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
                 return None
 
             return True

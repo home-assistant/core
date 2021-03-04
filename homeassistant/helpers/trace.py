@@ -32,8 +32,8 @@ class TraceElement:
 
     def __init__(self, variables: TemplateVarsType):
         """Container for trace data."""
-        self._error = None  # type: Optional[Exception]
-        self._result = None  # type: Optional[dict]
+        self._error: Optional[Exception] = None
+        self._result: Optional[dict] = None
         self._timestamp = dt_util.utcnow()
         self._variables = variables
 
@@ -51,7 +51,7 @@ class TraceElement:
 
     def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this TraceElement."""
-        result = {"timestamp": self._timestamp}  # type: Dict[str, Any]
+        result: Dict[str, Any] = {"timestamp": self._timestamp}
         # Commented out because we get too many copies of the same data
         # result["variables"] = self._variables
         if self._error is not None:

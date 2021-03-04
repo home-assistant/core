@@ -297,3 +297,31 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert trace["trigger"]["description"] == "event 'test_event3'"
     assert trace["unique_id"] == "moon"
     assert trace["variables"]
+
+    # Trigger "moon" automation, with passing condition
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+
+    # Get trace
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace", "automation_id": "moon"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "sun" not in response["result"]
+    assert len(response["result"]["moon"]) == 3
+    trace = response["result"]["moon"][2]
+    assert len(trace["action_trace"]) == 1
+    assert len(trace["action_trace"]["action/0"]) == 1
+    assert "error" not in trace["action_trace"]["action/0"][0]
+    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert len(trace["condition_trace"]) == 1
+    assert len(trace["condition_trace"]["condition/0"]) == 1
+    assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
+    assert trace["config"] == moon_config
+    assert trace["context"]
+    assert "error" not in trace
+    assert trace["state"] == "stopped"
+    assert trace["trigger"]["description"] == "event 'test_event2'"
+    assert trace["unique_id"] == "moon"
+    assert trace["variables"]
