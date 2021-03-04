@@ -21,7 +21,6 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    LIGHT_LUX,
     PERCENTAGE,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -37,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Miio Sensor"
 DATA_KEY = "sensor.xiaomi_miio"
+UNIT_LUMEN = "lm"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -301,7 +301,7 @@ class XiaomiGatewayIlluminanceSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return LIGHT_LUX
+        return UNIT_LUMEN
 
     @property
     def device_class(self):
