@@ -17,7 +17,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
             # Only add Window Shutters
             if device.is_windowshutter():
-                devices.append(MaxCubeShutter(handler, name, device.rf_address))
+                devices.append(MaxCubeShutter(handler, name, device))
 
     if devices:
         add_entities(devices)
@@ -26,11 +26,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MaxCubeShutter(BinarySensorEntity):
     """Representation of a MAX! Cube Binary Sensor device."""
 
-    def __init__(self, handler, name, rf_address):
+    def __init__(self, handler, name, device):
         """Initialize MAX! Cube BinarySensorEntity."""
         self._name = name
         self._sensor_type = DEVICE_CLASS_WINDOW
-        self._rf_address = rf_address
+        self._serial = device.serial
+        self._rf_address = device.rf_address
         self._cubehandle = handler
         self._state = None
 
@@ -38,6 +39,11 @@ class MaxCubeShutter(BinarySensorEntity):
     def name(self):
         """Return the name of the BinarySensorEntity."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._serial
 
     @property
     def device_class(self):

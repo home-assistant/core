@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
             if device.is_thermostat() or device.is_wallthermostat():
-                devices.append(MaxCubeClimate(handler, name, device.rf_address))
+                devices.append(MaxCubeClimate(handler, name, device))
 
     if devices:
         add_entities(devices)
@@ -80,10 +80,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MaxCubeClimate(ClimateEntity):
     """MAX! Cube ClimateEntity."""
 
-    def __init__(self, handler, name, rf_address):
+    def __init__(self, handler, name, device):
         """Initialize MAX! Cube ClimateEntity."""
         self._name = name
-        self._rf_address = rf_address
+        self._serial = device.serial
+        self._rf_address = device.rf_address
         self._cubehandle = handler
 
     @property
@@ -100,6 +101,11 @@ class MaxCubeClimate(ClimateEntity):
     def name(self):
         """Return the name of the climate device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._serial
 
     @property
     def min_temp(self):
