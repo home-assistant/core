@@ -220,6 +220,7 @@ FLOWS = [
     "sonos",
     "speedtestdotnet",
     "spider",
+    "spokestack_wakeword",
     "spotify",
     "squeezebox",
     "srp_energy",

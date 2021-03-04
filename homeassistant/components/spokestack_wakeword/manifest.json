@@ -1,0 +1,14 @@
+{
+  "domain": "spokestack_wakeword",
+  "name": "Spokestack Wakeword",
+  "documentation": "https://www.home-assistant.io/integrations/spokestack_wakeword",
+  "config_flow": true,
+  "requirements": [
+    "tensorflow==2.3.0",
+    "numpy==1.19.2",
+    "cython==0.29.21",
+    "pyaudio-wheels==0.0.1",
+    "spokestack==0.0.18"
+  ],
+  "codeowners": ["@spokestack", "@will-rice"]
+}

@@ -911,6 +911,7 @@ omit =
     homeassistant/components/speedtestdotnet/*
     homeassistant/components/spider/*
     homeassistant/components/splunk/*
+    homeassistant/components/spokestack_wakeword/pipeline_builder.py
     homeassistant/components/spotcrime/sensor.py
     homeassistant/components/spotify/__init__.py
     homeassistant/components/spotify/media_player.py

@@ -451,6 +451,9 @@ construct==2.10.56
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
 
+# homeassistant.components.spokestack_wakeword
+cython==0.29.21
+
 # homeassistant.components.datadog
 datadog==0.15.0
 
@@ -1017,6 +1020,7 @@ numato-gpio==0.10.0
 
 # homeassistant.components.iqvia
 # homeassistant.components.opencv
+# homeassistant.components.spokestack_wakeword
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
 numpy==1.19.2
@@ -1281,6 +1285,9 @@ pyatome==0.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.7.7
+
+# homeassistant.components.spokestack_wakeword
+pyaudio-wheels==0.0.1
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -2113,6 +2120,9 @@ speedtest-cli==2.1.2
 # homeassistant.components.spider
 spiderpy==1.4.2
 
+# homeassistant.components.spokestack_wakeword
+spokestack==0.0.18
+
 # homeassistant.components.spotcrime
 spotcrime==1.0.4
 
@@ -2195,6 +2205,7 @@ temescal==0.3
 # homeassistant.components.temper
 temperusb==1.5.3
 
+# homeassistant.components.spokestack_wakeword
 # homeassistant.components.tensorflow
 # tensorflow==2.3.0
 
