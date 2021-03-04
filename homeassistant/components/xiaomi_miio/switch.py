@@ -135,7 +135,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
 
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY and model == "lumi.acpartner.v3"):
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (
+        config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
+        and model == "lumi.acpartner.v3"
+    ):
         if DATA_KEY not in hass.data:
             hass.data[DATA_KEY] = {}
 
