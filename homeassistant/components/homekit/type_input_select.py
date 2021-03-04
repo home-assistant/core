@@ -49,8 +49,9 @@ class InputSelectAccessory(HomeAccessory):
             if self.sources:
                 self.support_select_source = True
 
+        self.chars_tv = [CHAR_REMOTE_KEY] if has_remote else []
         serv_tv = self.serv_tv = self.add_preload_service(
-            SERV_TELEVISION, [CHAR_REMOTE_KEY] if has_remote else []
+            SERV_TELEVISION, self.chars_tv
         )
         if has_remote:
             self.char_remote_key = self.serv_tv.configure_char(
@@ -93,17 +94,18 @@ class InputSelectAccessory(HomeAccessory):
     def _async_update_input_state(self, hk_state, new_state):
         """Update input state after state changed."""
         # Set active input
-        if self.support_select_source and self.sources:
-            source_name = new_state.attributes.get(self.source_key)
-            _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
-            if source_name in self.sources:
-                index = self.sources.index(source_name)
-                if self.char_input_source.value != index:
-                    self.char_input_source.set_value(index)
-            elif hk_state:
-                _LOGGER.warning(
-                    "%s: Sources out of sync. Restart Home Assistant",
-                    self.entity_id,
-                )
-                if self.char_input_source.value != 0:
-                    self.char_input_source.set_value(0)
+        if not self.support_select_source or not self.sources:
+            return
+        source_name = new_state.attributes.get(self.source_key)
+        _LOGGER.debug("%s: Set current input to %s", self.entity_id, source_name)
+        if source_name in self.sources:
+            index = self.sources.index(source_name)
+            if self.char_input_source.value != index:
+                self.char_input_source.set_value(index)
+        elif hk_state:
+            _LOGGER.warning(
+                "%s: Sources out of sync. Restart Home Assistant",
+                self.entity_id,
+            )
+            if self.char_input_source.value != 0:
+                self.char_input_source.set_value(0)
