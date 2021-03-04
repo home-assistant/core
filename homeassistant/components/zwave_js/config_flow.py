@@ -180,11 +180,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle logic when on Supervisor host."""
-        # Only one entry with Supervisor add-on support is allowed.
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data.get(CONF_USE_ADDON):
-                return await self.async_step_manual()
-
         if user_input is None:
             return self.async_show_form(
                 step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
@@ -297,7 +292,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert self.hass
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            await addon_manager.async_start_addon()
+            await addon_manager.async_schedule_start_addon()
             # Sleep some seconds to let the add-on start properly before connecting.
             for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
                 await asyncio.sleep(ADDON_SETUP_TIMEOUT)
@@ -346,7 +341,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 version_info.home_id, raise_on_progress=False
             )
 
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_URL: self.ws_address,
+                CONF_USB_PATH: self.usb_path,
+                CONF_NETWORK_KEY: self.network_key,
+            }
+        )
         return self._async_create_entry_from_vars()
 
     async def _async_get_addon_info(self) -> dict:
@@ -389,7 +390,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Install the Z-Wave JS add-on."""
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
-            await addon_manager.async_install_addon()
+            await addon_manager.async_schedule_install_addon()
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(

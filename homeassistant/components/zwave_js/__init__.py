@@ -483,11 +483,15 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     network_key: str = entry.data[CONF_NETWORK_KEY]
 
     if not addon_is_installed:
-        addon_manager.async_schedule_install_addon(usb_path, network_key)
+        addon_manager.async_schedule_install_setup_addon(
+            usb_path, network_key, catch_error=True
+        )
         raise ConfigEntryNotReady
 
     if not addon_is_running:
-        addon_manager.async_schedule_setup_addon(usb_path, network_key)
+        addon_manager.async_schedule_setup_addon(
+            usb_path, network_key, catch_error=True
+        )
         raise ConfigEntryNotReady
 
 
@@ -497,4 +501,4 @@ def async_ensure_addon_updated(hass: HomeAssistant) -> None:
     addon_manager: AddonManager = get_addon_manager(hass)
     if addon_manager.task_in_progress():
         raise ConfigEntryNotReady
-    addon_manager.async_schedule_update_addon()
+    addon_manager.async_schedule_update_addon(catch_error=True)
