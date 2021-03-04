@@ -46,7 +46,7 @@ class InputSelectAccessory(HomeAccessory):
         self.source_key = source_key
         self.sources = []
         self.support_select_source = False
-        if features & required_feature or True:
+        if features & required_feature:
             self.sources = state.attributes.get(source_list_key, [])
             if self.sources:
                 self.support_select_source = True

@@ -54,7 +54,7 @@ class Fan(InputSelectAccessory):
     def __init__(self, *args):
         """Initialize a new Fan accessory object."""
         super().__init__(
-            SUPPORT_PRESET_MODE,
+            SUPPORT_PRESET_MODE | SUPPORT_SET_SPEED,
             ATTR_PRESET_MODE,
             ATTR_PRESET_MODES,
             *args,
