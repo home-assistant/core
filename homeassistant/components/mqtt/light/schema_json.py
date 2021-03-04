@@ -46,7 +46,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -80,8 +80,7 @@ CONF_MIN_MIREDS = "min_mireds"
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA_JSON = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
             vol.Optional(
@@ -111,6 +110,7 @@ PLATFORM_SCHEMA_JSON = (
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)

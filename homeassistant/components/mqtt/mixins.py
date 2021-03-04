@@ -141,7 +141,7 @@ MQTT_JSON_ATTRS_SCHEMA = vol.Schema(
     }
 )
 
-MQTT_ENTITY_BASE_SCHEMA = vol.Schema(
+MQTT_ENTITY_COMMON_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,

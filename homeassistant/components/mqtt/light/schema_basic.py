@@ -34,7 +34,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -96,8 +96,7 @@ VALUE_TEMPLATE_KEYS = [
 ]
 
 PLATFORM_SCHEMA_BASIC = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
@@ -141,6 +140,7 @@ PLATFORM_SCHEMA_BASIC = (
             vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)

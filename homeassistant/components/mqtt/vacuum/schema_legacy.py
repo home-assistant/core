@@ -27,7 +27,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -102,8 +102,7 @@ DEFAULT_RETAIN = False
 DEFAULT_SERVICE_STRINGS = services_to_strings(DEFAULT_SERVICES, SERVICE_TO_STRING)
 
 PLATFORM_SCHEMA_LEGACY = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
             vol.Inclusive(CONF_BATTERY_LEVEL_TEMPLATE, "battery"): cv.template,
             vol.Inclusive(
@@ -151,6 +150,7 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Optional(mqtt.CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)

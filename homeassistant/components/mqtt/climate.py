@@ -63,7 +63,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -177,8 +177,7 @@ TOPIC_KEYS = (
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
 PLATFORM_SCHEMA = (
-    SCHEMA_BASE.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    SCHEMA_BASE.extend(
         {
             vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
@@ -256,6 +255,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )

@@ -31,7 +31,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttAvailability,
     MqttEntity,
@@ -48,8 +48,7 @@ DEFAULT_FORCE_UPDATE = False
 CONF_EXPIRE_AFTER = "expire_after"
 
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
@@ -60,6 +59,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )

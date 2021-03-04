@@ -24,7 +24,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -44,8 +44,7 @@ DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
 
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -59,6 +58,7 @@ PLATFORM_SCHEMA = (
             ): cv.string,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )

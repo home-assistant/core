@@ -31,7 +31,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -106,8 +106,7 @@ DEFAULT_PAYLOAD_START = "start"
 DEFAULT_PAYLOAD_PAUSE = "pause"
 
 PLATFORM_SCHEMA_STATE = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
@@ -135,6 +134,7 @@ PLATFORM_SCHEMA_STATE = (
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
     .extend(MQTT_VACUUM_SCHEMA.schema)

@@ -48,7 +48,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -142,8 +142,7 @@ def validate_options(value):
 
 
 PLATFORM_SCHEMA = vol.All(
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -186,6 +185,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema),
     validate_options,

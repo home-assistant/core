@@ -44,7 +44,7 @@ from .. import mqtt
 from .debug_info import log_messages
 from .mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
@@ -69,8 +69,7 @@ DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
 DEFAULT_NAME = "MQTT Alarm"
 PLATFORM_SCHEMA = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_CODE): cv.string,
             vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
@@ -92,6 +91,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
 )

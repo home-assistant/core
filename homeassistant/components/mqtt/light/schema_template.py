@@ -37,7 +37,7 @@ from ... import mqtt
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_BASE_SCHEMA,
+    MQTT_ENTITY_COMMON_SCHEMA,
     MQTT_JSON_ATTRS_SCHEMA,
     MqttEntity,
 )
@@ -64,8 +64,7 @@ CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 PLATFORM_SCHEMA_TEMPLATE = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(MQTT_ENTITY_BASE_SCHEMA.schema)
-    .extend(
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
@@ -84,6 +83,7 @@ PLATFORM_SCHEMA_TEMPLATE = (
             vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     )
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_AVAILABILITY_SCHEMA.schema)
     .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
