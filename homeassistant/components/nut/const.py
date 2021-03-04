@@ -46,7 +46,7 @@ SENSOR_TYPES = {
     "ups.temperature": [
         "UPS Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
     "ups.load": ["Load", PERCENTAGE, "mdi:gauge", None],
@@ -84,13 +84,13 @@ SENSOR_TYPES = {
     "ups.realpower": [
         "Current Real Power",
         POWER_WATT,
-        "mdi:flash",
+        None,
         DEVICE_CLASS_POWER,
     ],
     "ups.realpower.nominal": [
         "Nominal Real Power",
         POWER_WATT,
-        "mdi:flash",
+        None,
         DEVICE_CLASS_POWER,
     ],
     "ups.beeper.status": ["Beeper Status", "", "mdi:information-outline", None],
@@ -103,7 +103,7 @@ SENSOR_TYPES = {
     "battery.charge": [
         "Battery Charge",
         PERCENTAGE,
-        "mdi:gauge",
+        None,
         DEVICE_CLASS_BATTERY,
     ],
     "battery.charge.low": ["Low Battery Setpoint", PERCENTAGE, "mdi:gauge", None],
@@ -140,7 +140,7 @@ SENSOR_TYPES = {
     "battery.temperature": [
         "Battery Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
     "battery.runtime": ["Battery Runtime", TIME_SECONDS, "mdi:timer-outline", None],
@@ -220,13 +220,13 @@ SENSOR_TYPES = {
     "ambient.humidity": [
         "Ambient Humidity",
         PERCENTAGE,
-        "mdi:water-percent",
+        None,
         DEVICE_CLASS_HUMIDITY,
     ],
     "ambient.temperature": [
         "Ambient Temperature",
         TEMP_CELSIUS,
-        "mdi:thermometer",
+        None,
         DEVICE_CLASS_TEMPERATURE,
     ],
 }
