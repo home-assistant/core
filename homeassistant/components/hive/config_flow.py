@@ -63,7 +63,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # Complete SMS 2FA.
                 return await self.async_step_2fa()
 
-            if "AuthenticationResult" in self.tokens:
+            if not errors:
                 # Complete the entry setup.
                 try:
                     return await self.async_setup_hive_entry()
@@ -79,21 +79,20 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_2fa(self, user_input=None):
         """Handle 2fa step."""
         errors = {}
-        result = {}
 
         if user_input and user_input["2fa"] == "0000":
             self.tokens = await self.hive_auth.login()
         elif user_input:
-
             try:
-                result = await self.hive_auth.sms_2fa(user_input["2fa"], self.tokens)
+                self.tokens = await self.hive_auth.sms_2fa(
+                    user_input["2fa"], self.tokens
+                )
             except HiveInvalid2FACode:
                 errors["base"] = "invalid_code"
             except HiveApiError:
                 errors["base"] = "no_internet_available"
 
-            if "AuthenticationResult" in result:
-                self.tokens = result
+            if not errors:
                 try:
                     return await self.async_setup_hive_entry()
                 except UnknownHiveError:
