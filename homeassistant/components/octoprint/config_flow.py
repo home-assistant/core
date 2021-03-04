@@ -1,5 +1,6 @@
 """Config flow for OctoPrint integration."""
 import logging
+from urllib.parse import urlsplit
 
 from pyoctoprintapi import ApiError, OctoprintClient
 import requests
@@ -175,6 +176,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[CONF_HOST],
             discovery_info[CONF_PORT],
             discovery_info["properties"][CONF_PATH],
+        )
+
+        return await self.async_step_user()
+
+    async def async_step_ssdp(self, discovery_info):
+        """Handle ssdp discovery flow."""
+        uuid = discovery_info["UDN"][5:]
+        await self.async_set_unique_id(uuid)
+        self._abort_if_unique_id_configured()
+
+        url = urlsplit(discovery_info["presentationURL"])
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["title_placeholders"] = {
+            CONF_HOST: url.hostname,
+        }
+
+        self.discovery_schema = _schema_with_defaults(
+            url.hostname,
+            url.port,
         )
 
         return await self.async_step_user()

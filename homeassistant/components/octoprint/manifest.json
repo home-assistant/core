@@ -8,5 +8,11 @@
   "codeowners": ["@rfleming71"],
   "zeroconf": [
     "_octoprint._tcp.local."
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "The OctoPrint Project",
+      "deviceType": "urn:schemas-upnp-org:device:Basic:1"
+    }
   ]
 }
