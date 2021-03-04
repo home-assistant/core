@@ -1,6 +1,7 @@
 """The nut component."""
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
 )
@@ -215,6 +216,18 @@ SENSOR_TYPES = {
         FREQUENCY_HERTZ,
         "mdi:flash",
         None,
+    ],
+    "ambient.humidity": [
+        "Ambient Humidity",
+        PERCENTAGE,
+        "mdi:water-percent",
+        DEVICE_CLASS_HUMIDITY,
+    ],
+    "ambient.temperature": [
+        "Ambient Temperature",
+        TEMP_CELSIUS,
+        "mdi:thermometer",
+        DEVICE_CLASS_TEMPERATURE,
     ],
 }
 
