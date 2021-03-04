@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.exceptions import NoEntitySpecifiedError
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
