@@ -41,11 +41,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import condition, extract_domain_configs, template
-from homeassistant.helpers.condition import (
-    condition_path,
-    condition_trace_clear,
-    condition_trace_get,
-)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -57,12 +52,10 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
-    action_path,
-    action_trace_clear,
-    action_trace_get,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.trace import trace_clear, trace_get, trace_path
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -235,9 +228,9 @@ async def async_setup(hass, config):
 class AutomationTrace:
     """Container for automation trace."""
 
-    def __init__(self, unique_id, config, trigger, context, action_trace):
+    def __init__(self, unique_id, config, trigger, context):
         """Container for automation trace."""
-        self._action_trace = action_trace
+        self._action_trace = None
         self._condition_trace = None
         self._config = config
         self._context = context
@@ -249,6 +242,14 @@ class AutomationTrace:
         self._unique_id = unique_id
         self._variables = None
 
+    def set_action_trace(self, condition_trace):
+        """Set action trace."""
+        self._action_trace = condition_trace
+
+    def set_condition_trace(self, condition_trace):
+        """Set condition trace."""
+        self._condition_trace = condition_trace
+
     def set_error(self, ex):
         """Set error."""
         self._error = ex
@@ -256,10 +257,6 @@ class AutomationTrace:
     def set_variables(self, variables):
         """Set variables."""
         self._variables = variables
-
-    def set_condition_trace(self, condition_trace):
-        """Set condition trace."""
-        self._condition_trace = condition_trace
 
     def finished(self):
         """Set finish time."""
@@ -271,8 +268,9 @@ class AutomationTrace:
 
         action_traces = {}
         condition_traces = {}
-        for key, trace_list in self._action_trace.items():
-            action_traces[key] = [item.as_dict() for item in trace_list]
+        if self._action_trace:
+            for key, trace_list in self._action_trace.items():
+                action_traces[key] = [item.as_dict() for item in trace_list]
 
         if self._condition_trace:
             for key, trace_list in self._condition_trace.items():
@@ -300,11 +298,7 @@ class AutomationTrace:
 @contextmanager
 def trace_automation(hass, unique_id, config, trigger, context):
     """Trace action execution of automation with automation_id."""
-    action_trace_clear()
-    action_trace = action_trace_get()
-    automation_trace = AutomationTrace(
-        unique_id, config, trigger, context, action_trace
-    )
+    automation_trace = AutomationTrace(unique_id, config, trigger, context)
 
     if unique_id:
         if unique_id not in hass.data[DATA_AUTOMATION_TRACE]:
@@ -325,7 +319,7 @@ def trace_automation(hass, unique_id, config, trigger, context):
             "Automation finished. Summary:\n\ttrigger: %s\n\tcondition: %s\n\taction: %s",
             automation_trace._trigger,  # pylint: disable=protected-access
             automation_trace._condition_trace,  # pylint: disable=protected-access
-            action_trace,
+            automation_trace._action_trace,  # pylint: disable=protected-access
         )
 
 
@@ -510,6 +504,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 variables = run_variables
             automation_trace.set_variables(variables)
 
+            # Wipe the trace, and set the new trace as the automation's condition trace
+            trace_clear()
+            automation_trace.set_condition_trace(trace_get())
+
             if (
                 not skip_condition
                 and self._cond_func is not None
@@ -517,12 +515,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",
-                    condition_trace_get(),
+                    trace_get(),
                 )
-                automation_trace.set_condition_trace(condition_trace_get())
+                automation_trace.set_condition_trace(trace_get())
                 return
-            automation_trace.set_condition_trace(condition_trace_get())
-            condition_trace_clear()
+
+            # Wipe the trace, and set the new trace as the automation's action trace
+            trace_clear()
+            automation_trace.set_action_trace(trace_get())
 
             # Create a new context referring to the old context.
             parent_id = None if context is None else context.id
@@ -543,7 +543,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 )
 
             try:
-                with action_path("action"):
+                with trace_path("action"):
                     await self.action_script.async_run(
                         variables, trigger_context, started_action
                     )
@@ -763,7 +763,7 @@ async def _async_process_if(hass, name, config, p_config):
         errors = []
         for index, check in enumerate(checks):
             try:
-                with condition_path(["condition", str(index)]):
+                with trace_path(["condition", str(index)]):
                     if not check(hass, variables):
                         return False
             except ConditionError as ex:
