@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Import Miio configuration from YAML."""
     _LOGGER.warning(
         "Loading Xiaomi Miio Air Quality via platform setup is deprecated. "
-        "Please remove it from your configuration."
+        "Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
