@@ -19,6 +19,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     SUPPORT_DIRECTION,
     SUPPORT_OSCILLATE,
+    SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
 )
 from homeassistant.const import (
@@ -31,24 +32,22 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from .accessories import TYPES, HomeAccessory
+from .accessories import TYPES
 from .const import (
     CHAR_ACTIVE,
-    CHAR_NAME,
-    CHAR_ON,
     CHAR_ROTATION_DIRECTION,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
     PROP_MIN_STEP,
     SERV_FANV2,
-    SERV_SWITCH,
 )
+from .type_input_select import InputSelectAccessory
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @TYPES.register("Fan")
-class Fan(HomeAccessory):
+class Fan(InputSelectAccessory):
     """Generate a Fan accessory for a fan entity.
 
     Currently supports: state, speed, oscillate, direction.
@@ -56,14 +55,18 @@ class Fan(HomeAccessory):
 
     def __init__(self, *args):
         """Initialize a new Fan accessory object."""
-        super().__init__(*args, category=CATEGORY_FAN)
+        super().__init__(
+            *args,
+            SUPPORT_PRESET_MODE,
+            ATTR_PRESET_MODE,
+            ATTR_PRESET_MODES,
+            category=CATEGORY_FAN,
+        )
         chars = []
         state = self.hass.states.get(self.entity_id)
 
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        preset_modes = state.attributes.get(ATTR_PRESET_MODES)
         percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
-        preset_modes = state.attributes.get(ATTR_PRESET_MODES)
 
         if features & SUPPORT_DIRECTION:
             chars.append(CHAR_ROTATION_DIRECTION)
@@ -95,22 +98,6 @@ class Fan(HomeAccessory):
                 value=100,
                 properties={PROP_MIN_STEP: percentage_step},
             )
-
-        if preset_modes:
-            for preset_mode in preset_modes:
-                preset_serv = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
-                serv_fan.add_linked_service(preset_serv)
-                preset_serv.configure_char(
-                    CHAR_NAME, value=f"{self.display_name} {preset_mode}"
-                )
-
-                self.preset_mode_chars[preset_mode] = preset_serv.configure_char(
-                    CHAR_ON,
-                    value=False,
-                    setter_callback=lambda value, preset_mode=preset_mode: self.set_preset_mode(
-                        value, preset_mode
-                    ),
-                )
 
         if CHAR_SWING_MODE in chars:
             self.char_swing = serv_fan.configure_char(CHAR_SWING_MODE, value=0)
@@ -146,17 +133,21 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in char_values:
             self.set_percentage(char_values[CHAR_ROTATION_SPEED])
 
-    def set_preset_mode(self, value, preset_mode):
+    def set_on_off(self, value):
+        """Move switch state to value if call came from HomeKit."""
+        return self.set_state(value)
+
+    def set_input_source(self, value):
         """Set preset_mode if call came from HomeKit."""
+        preset_mode = self.sources[value]
         _LOGGER.debug(
             "%s: Set preset_mode %s to %d", self.entity_id, preset_mode, value
         )
-        params = {ATTR_ENTITY_ID: self.entity_id}
-        if value:
-            params[ATTR_PRESET_MODE] = preset_mode
-            self.async_call_service(DOMAIN, SERVICE_SET_PRESET_MODE, params)
-        else:
-            self.async_call_service(DOMAIN, SERVICE_TURN_ON, params)
+        self.async_call_service(
+            DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: self.entity_id, ATTR_PRESET_MODE: preset_mode},
+        )
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
@@ -237,3 +228,5 @@ class Fan(HomeAccessory):
             hk_value = 1 if preset_mode == current_preset_mode else 0
             if char.value != hk_value:
                 char.set_value(hk_value)
+
+        self._async_update_input_state(self._state, new_state)
