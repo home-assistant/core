@@ -13,7 +13,7 @@ from miio import (
     PhilipsBulb,
     PhilipsEyecare,
     PhilipsMoonlight,
-
+)
 from miio.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -82,7 +82,6 @@ DELAYED_TURN_OFF_MAX_DEVIATION_SECONDS = 4
 DELAYED_TURN_OFF_MAX_DEVIATION_MINUTES = 1
 
 SUCCESS = ["ok"]
-ATTR_MODEL = "model"
 ATTR_SCENE = "scene"
 ATTR_DELAYED_TURN_OFF = "delayed_turn_off"
 ATTR_TIME_PERIOD = "time_period"
