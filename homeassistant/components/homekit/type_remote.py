@@ -2,8 +2,6 @@
 from abc import abstractmethod
 import logging
 
-from pyhap.const import CATEGORY_TELEVISION
-
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_ACTIVITY_LIST,
@@ -122,7 +120,6 @@ class RemoteInputSelectAccessory(InputSelectAccessory):
             source_list_key,
             *args,
             has_remote=True,
-            category=CATEGORY_TELEVISION,
         )
 
     @abstractmethod

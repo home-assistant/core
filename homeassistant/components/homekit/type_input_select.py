@@ -2,6 +2,8 @@
 from abc import abstractmethod
 import logging
 
+from pyhap.const import CATEGORY_TELEVISION
+
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import callback
 
@@ -34,6 +36,7 @@ class InputSelectAccessory(HomeAccessory):
         source_list_key,
         *args,
         has_remote=False,
+        category=CATEGORY_TELEVISION,
         **kwargs,
     ):
         """Initialize a InputSelect accessory object."""
