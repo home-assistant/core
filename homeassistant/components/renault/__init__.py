@@ -6,7 +6,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN, SUPPORTED_PLATFORMS
+from .const import CONF_LOCALE, DOMAIN, SUPPORTED_PLATFORMS
 from .renault_hub import RenaultHub
 
 
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
     if not login_success:
         return False
 
-    await renault_hub.set_account_id(config_entry.data[CONF_KAMEREON_ACCOUNT_ID])
+    await renault_hub.async_initialise(config_entry)
 
     hass.data[DOMAIN][config_entry.unique_id] = renault_hub
 

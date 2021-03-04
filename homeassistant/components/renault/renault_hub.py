@@ -1,4 +1,5 @@
 """Proxy to handle account communication with Renault servers."""
+from datetime import timedelta
 import logging
 from typing import Dict, List, Optional
 
@@ -6,9 +7,14 @@ from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .const import (
+    CONF_KAMEREON_ACCOUNT_ID,
+    DEFAULT_SCAN_INTERVAL,
+)
 from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
@@ -37,17 +43,21 @@ class RenaultHub:
             return True
         return False
 
-    async def set_account_id(self, account_id: str) -> None:
+    async def async_initialise(self, config_entry: ConfigEntry) -> None:
         """Set up proxy."""
+        account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
+        scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+
         self._account = await self._client.get_api_account(account_id)
         vehicles = await self._account.get_vehicles()
         for vehicle_link in vehicles.vehicleLinks:
             # Generate vehicle proxy
             vin = vehicle_link.vin
             vehicle = RenaultVehicleProxy(
-                self._hass,
-                await self._account.get_api_vehicle(vin),
-                vehicle_link.vehicleDetails,
+                hass=self._hass,
+                vehicle=await self._account.get_api_vehicle(vin),
+                details=vehicle_link.vehicleDetails,
+                scan_interval=scan_interval,
             )
             await vehicle.async_initialise()
             self._vehicles[vin] = vehicle
