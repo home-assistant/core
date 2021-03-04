@@ -70,8 +70,7 @@ class ActivityRemote(InputSelectAccessory):
             ATTR_ACTIVITY_LIST,
             *args,
         )
-        state = self.hass.states.get(self.entity_id)
-        self.async_update_state(state)
+        self.async_update_state(self.hass.states.get(self.entity_id))
 
     def set_on_off(self, value):
         """Move switch state to value if call came from HomeKit."""
