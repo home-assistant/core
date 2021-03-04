@@ -46,13 +46,7 @@ from . import (
 )
 from .. import mqtt
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,10 +178,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_GET_POSITION_TEMPLATE): cv.template,
             vol.Optional(CONF_TILT_COMMAND_TEMPLATE): cv.template,
         }
-    )
-    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema),
+    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
     validate_options,
 )
 

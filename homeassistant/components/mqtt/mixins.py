@@ -134,17 +134,12 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
     validate_device_has_at_least_one_identifier,
 )
 
-MQTT_JSON_ATTRS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
-        vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
-    }
-)
-
-MQTT_ENTITY_COMMON_SCHEMA = vol.Schema(
+MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
+        vol.Optional(CONF_JSON_ATTRS_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )

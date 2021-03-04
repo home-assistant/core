@@ -61,13 +61,7 @@ from . import (
 )
 from .. import mqtt
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,89 +170,84 @@ TOPIC_KEYS = (
 )
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
-PLATFORM_SCHEMA = (
-    SCHEMA_BASE.extend(
-        {
-            vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
-            vol.Optional(CONF_CURRENT_TEMP_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_FAN_MODE_LIST,
-                default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
-            ): cv.ensure_list,
-            vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_HOLD_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_HOLD_LIST, default=list): cv.ensure_list,
-            vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_MODE_LIST,
-                default=[
-                    HVAC_MODE_AUTO,
-                    HVAC_MODE_OFF,
-                    HVAC_MODE_COOL,
-                    HVAC_MODE_HEAT,
-                    HVAC_MODE_DRY,
-                    HVAC_MODE_FAN_ONLY,
-                ],
-            ): cv.ensure_list,
-            vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
-            vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_PRECISION): vol.In(
-                [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
-            ),
-            vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-            vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
-            vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
-            vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_SWING_MODE_LIST, default=[STATE_ON, HVAC_MODE_OFF]
-            ): cv.ensure_list,
-            vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
-            vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
-            vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
-            vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
-            vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        }
-    )
-    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
-)
+PLATFORM_SCHEMA = SCHEMA_BASE.extend(
+    {
+        vol.Optional(CONF_AUX_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AUX_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AUX_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_AWAY_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_AWAY_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_AWAY_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_CURRENT_TEMP_TEMPLATE): cv.template,
+        vol.Optional(CONF_CURRENT_TEMP_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_FAN_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_FAN_MODE_LIST,
+            default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+        ): cv.ensure_list,
+        vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_HOLD_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_HOLD_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_HOLD_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_HOLD_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_HOLD_LIST, default=list): cv.ensure_list,
+        vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_MODE_LIST,
+            default=[
+                HVAC_MODE_AUTO,
+                HVAC_MODE_OFF,
+                HVAC_MODE_COOL,
+                HVAC_MODE_HEAT,
+                HVAC_MODE_DRY,
+                HVAC_MODE_FAN_ONLY,
+            ],
+        ): cv.ensure_list,
+        vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+        vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_POWER_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PRECISION): vol.In(
+            [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
+        ),
+        vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+        vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
+        vol.Optional(CONF_ACTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_ACTION_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SWING_MODE_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_SWING_MODE_LIST, default=[STATE_ON, HVAC_MODE_OFF]
+        ): cv.ensure_list,
+        vol.Optional(CONF_SWING_MODE_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_INITIAL, default=21): cv.positive_int,
+        vol.Optional(CONF_TEMP_MIN, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_MAX, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_STEP, default=1.0): vol.Coerce(float),
+        vol.Optional(CONF_TEMP_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_HIGH_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_LOW_COMMAND_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
+        vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 async def async_setup_platform(
