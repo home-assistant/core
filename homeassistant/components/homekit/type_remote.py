@@ -79,11 +79,10 @@ class RemoteInputSelectAccessory(HomeAccessory):
         source_key,
         source_list_key,
         *args,
-        category=CATEGORY_TELEVISION,
         **kwargs,
     ):
         """Initialize a InputSelect accessory object."""
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, category=CATEGORY_TELEVISION, **kwargs)
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
