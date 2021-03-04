@@ -49,12 +49,8 @@ class InputSelectAccessory(HomeAccessory):
             if self.sources:
                 self.support_select_source = True
 
-        self.chars_tv = []
-        if has_remote:
-            self.chars_tv = [CHAR_REMOTE_KEY]
-
         serv_tv = self.serv_tv = self.add_preload_service(
-            SERV_TELEVISION, self.chars_tv
+            SERV_TELEVISION, [CHAR_REMOTE_KEY] if has_remote else []
         )
         if has_remote:
             self.char_remote_key = self.serv_tv.configure_char(
