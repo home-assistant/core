@@ -952,11 +952,11 @@ async def test_numeric_state_known_non_matching(hass):
     )
 
     # Unavailable state
-    not test(hass)
+    assert not test(hass)
 
     # Unknown state
     hass.states.async_set("sensor.temperature", "unknown")
-    not test(hass)
+    assert not test(hass)
 
 
 async def test_numeric_state_raises(hass):
