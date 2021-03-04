@@ -5,3 +5,5 @@ search:
     query:
       description: zapytanie
       example: 'Czesław Niemen'
+      selector:
+        text:
