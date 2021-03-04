@@ -56,9 +56,10 @@ class InputSelectAccessory(HomeAccessory):
         serv_tv = self.serv_tv = self.add_preload_service(
             SERV_TELEVISION, self.chars_tv
         )
-        self.char_remote_key = self.serv_tv.configure_char(
-            CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
-        )
+        if has_remote:
+            self.char_remote_key = self.serv_tv.configure_char(
+                CHAR_REMOTE_KEY, setter_callback=self.set_remote_key
+            )
         self.set_primary_service(serv_tv)
         serv_tv.configure_char(CHAR_CONFIGURED_NAME, value=self.display_name)
         serv_tv.configure_char(CHAR_SLEEP_DISCOVER_MODE, value=True)
