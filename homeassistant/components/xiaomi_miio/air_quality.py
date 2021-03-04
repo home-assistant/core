@@ -83,7 +83,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         elif model == MODEL_AIRQUALITYMONITOR_V1:
             entities.append(AirMonitorV1(name, device, config_entry, unique_id))
         else:
-            raise NoEntitySpecifiedError(f"Not support for entity {unique_id}")
+            _LOGGER.warning(f"AirQualityMonitor model '{model}' is not yet supported")
 
     async_add_entities(entities, update_before_add=True)
 

@@ -55,7 +55,6 @@ ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_SENSOR_STATE = "sensor_state"
-ATTR_MODEL = "model"
 
 SUCCESS = ["ok"]
 
@@ -164,7 +163,6 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity):
             ATTR_NIGHT_TIME_BEGIN: None,
             ATTR_NIGHT_TIME_END: None,
             ATTR_SENSOR_STATE: None,
-            ATTR_MODEL: self._model,
         }
 
     @property
