@@ -21,7 +21,6 @@ MODELS_SWITCH = [
     "chuangmi.plug.v2",
     "chuangmi.plug.hmi205",
     "chuangmi.plug.hmi206",
-    "lumi.acpartner.v3",
 ]
 MODELS_VACUUM = ["roborock.vacuum"]
 
