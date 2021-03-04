@@ -28,7 +28,6 @@ SERVICE_HEOS = "heos"
 SERVICE_KONNECTED = "konnected"
 SERVICE_MOBILE_APP = "hass_mobile_app"
 SERVICE_NETGEAR = "netgear_router"
-SERVICE_OCTOPRINT = "octoprint"
 SERVICE_SABNZBD = "sabnzbd"
 SERVICE_SAMSUNG_PRINTER = "samsung_printer"
 SERVICE_TELLDUSLIVE = "tellstick"
@@ -41,7 +40,6 @@ SERVICE_XIAOMI_GW = "xiaomi_gw"
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_TELLDUSLIVE: "tellduslive",
     "logitech_mediaserver": "squeezebox",
-    SERVICE_OCTOPRINT: "octoprint",
 }
 
 # These have no config flows

@@ -143,24 +143,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import."""
         return await self.async_step_user(user_input)
 
-    async def async_step_discovery(self, discovery_info):
-        """Handle discovery flow."""
-        if "udn" in discovery_info and discovery_info["udn"][0:4] == "uuid":
-            await self.async_set_unique_id(discovery_info["udn"][5:])
-            self._abort_if_unique_id_configured()
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["title_placeholders"] = {
-            CONF_HOST: discovery_info[CONF_HOST],
-        }
-
-        self.discovery_schema = _schema_with_defaults(
-            discovery_info[CONF_HOST],
-            discovery_info[CONF_PORT],
-        )
-
-        return await self.async_step_user()
-
     async def async_step_zeroconf(self, discovery_info):
         """Handle discovery flow."""
         uuid = discovery_info["properties"]["uuid"]
