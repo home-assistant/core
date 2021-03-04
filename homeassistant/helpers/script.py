@@ -126,7 +126,6 @@ _SHUTDOWN_MAX_WAIT = 60
 
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max the length of a trace node for repeated actions
 
-action_config = ContextVar("action_config", default=None)
 action_trace = ContextVar("action_trace", default=None)
 action_trace_stack = ContextVar("action_trace_stack", default=None)
 action_path_stack = ContextVar("action_path_stack", default=None)
@@ -170,11 +169,6 @@ def action_path_get():
     return "/".join(path)
 
 
-def action_config_get():
-    """Return the config of the script that was executed."""
-    return action_config.get()
-
-
 def action_trace_get():
     """Return the trace of the script that was executed."""
     return action_trace.get()
@@ -182,7 +176,6 @@ def action_trace_get():
 
 def action_trace_clear():
     """Clear the action trace."""
-    action_config.set(None)
     action_trace.set({})
     action_trace_stack.set(None)
     action_path_stack.set(None)
@@ -217,11 +210,8 @@ def action_trace_add_conditions():
 
 
 @contextmanager
-def trace_action(config, variables):
+def trace_action(variables):
     """Trace action execution."""
-    if action_config.get() is None:
-        action_config.set(config)
-
     trace_element = action_trace_append(variables, action_path_get())
     action_trace_stack_push(trace_element)
     try:
@@ -393,7 +383,7 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
-        with action_path(str(self._step)), trace_action(self._action, None):
+        with action_path(str(self._step)), trace_action(None):
             try:
                 handler = f"_async_{cv.determine_script_action(self._action)}_step"
                 await getattr(self, handler)()

@@ -80,7 +80,7 @@ async def test_firing_event_basic(hass, caplog):
     sequence = cv.SCRIPT_SCHEMA(
         {"alias": alias, "event": event, "event_data": {"hello": "world"}}
     )
-    with script.trace_action(None, None):
+    with script.trace_action(None):
         script_obj = script.Script(
             hass,
             sequence,
