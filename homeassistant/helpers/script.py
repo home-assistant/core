@@ -124,6 +124,8 @@ _TIMEOUT_MSG = "Timeout reached, abort script."
 _SHUTDOWN_MAX_WAIT = 60
 
 
+ACTION_TRACE_NODE_MAX_LEN = 20  # Max the length of a trace node for repeated actions
+
 action_config = ContextVar("action_config", default=None)
 action_trace = ContextVar("action_trace", default=None)
 action_trace_stack = ContextVar("action_trace_stack", default=None)
@@ -189,7 +191,7 @@ def action_trace_clear():
 def action_trace_append(variables, path):
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables)
-    trace_append_element(action_trace, trace_element, path)
+    trace_append_element(action_trace, trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
     return trace_element
 
 

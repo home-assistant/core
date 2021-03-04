@@ -1,4 +1,5 @@
 """Helpers for script and condition tracing."""
+from collections import deque
 from contextvars import ContextVar
 from typing import Any, Dict, Optional
 
@@ -62,12 +63,16 @@ class TraceElement:
 
 
 def trace_append_element(
-    trace_var: ContextVar, trace_element: TraceElement, path: str
+    trace_var: ContextVar,
+    trace_element: TraceElement,
+    path: str,
+    maxlen: Optional[int] = None,
 ) -> None:
     """Append a TraceElement to trace[path]."""
     trace = trace_var.get()
     if trace is None:
         trace_var.set({})
         trace = trace_var.get()
-    trace.setdefault(path, [])
+    if path not in trace:
+        trace[path] = deque(maxlen=maxlen)
     trace[path].append(trace_element)
