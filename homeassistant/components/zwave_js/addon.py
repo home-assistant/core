@@ -199,7 +199,7 @@ class AddonManager:
     def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
         """Schedule a task that starts the Z-Wave JS add-on.
 
-        Only schedule a new setup task if the there's no running task.
+        Only schedule a new start task if the there's no running task.
         """
         if not self._start_task or self._start_task.done():
             LOGGER.info("Z-Wave JS add-on is not running. Starting add-on")
