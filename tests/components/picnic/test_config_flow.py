@@ -1,6 +1,8 @@
 """Test the Picnic config flow."""
 from unittest.mock import patch
 
+import requests
+
 from homeassistant import config_entries, setup
 from homeassistant.components.picnic.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.picnic.const import DOMAIN
@@ -13,11 +15,19 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
+    auth_data = {
+        "user_id": "f29-2a6-o32n",
+        "address": {
+            "street": "Teststreet",
+            "house_number": 123,
+            "house_number_ext": "b"
+        }
+    }
     with patch(
-        "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
-        return_value=True,
+            "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
+            return_value=auth_data,
     ), patch(
         "homeassistant.components.picnic.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -29,17 +39,17 @@ async def test_form(hass):
             {
                 "username": "test-username",
                 "password": "test-password",
-                "country_code": "NL"
+                "country_code": "NL",
             },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Teststreet 123b"
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "country_code": "NL"
+        "country_code": "NL",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -52,15 +62,15 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
-        side_effect=InvalidAuth,
+            "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
+            side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "test-username",
                 "password": "test-password",
-                "country_code": "NL"
+                "country_code": "NL",
             },
         )
 
@@ -75,15 +85,15 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
-        side_effect=CannotConnect,
+            "homeassistant.components.picnic.config_flow.PicnicHub.authenticate",
+            side_effect=requests.exceptions.ConnectionError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "test-username",
                 "password": "test-password",
-                "country_code": "NL"
+                "country_code": "NL",
             },
         )
 
