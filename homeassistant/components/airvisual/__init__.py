@@ -155,12 +155,10 @@ def _standardize_geography_config_entry(hass, config_entry):
             entry_updates["data"][
                 CONF_INTEGRATION_TYPE
             ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
-        elif CONF_LATITUDE in config_entry.data:
+        else:
             entry_updates["data"][
                 CONF_INTEGRATION_TYPE
             ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
-        else:
-            entry_updates["data"][CONF_INTEGRATION_TYPE] = INTEGRATION_TYPE_NODE_PRO
 
     if not entry_updates:
         return
