@@ -48,10 +48,9 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             try:
                 self.api = await iammeter.real_time_api(host, port)
-                return True
-            except (IamMeterError, asyncio.TimeoutError) as err:
-                _LOGGER.error("Device is not ready!")
-                raise IamMeterError from err
+            except (IamMeterError, asyncio.TimeoutError):
+                return False
+		return True
         return False
 
     async def async_step_user(self, user_input=None):
