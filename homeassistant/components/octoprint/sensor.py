@@ -31,7 +31,6 @@ async def async_setup_entry(
     coordinator: DataUpdateCoordinator = hass.data[COMPONENT_DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
-    device_id: str = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["device_id"]
     entities = []
     sensor_name = config_entry.data[CONF_NAME]
     if coordinator.data["printer"]:
@@ -41,18 +40,30 @@ async def async_setup_entry(
             for temp_type in types:
                 entities.append(
                     OctoPrintTemperatureSensor(
-                        coordinator, sensor_name, tool.name, temp_type, device_id
+                        coordinator,
+                        sensor_name,
+                        tool.name,
+                        temp_type,
+                        config_entry.entry_id,
                     )
                 )
     else:
         _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
 
-    entities.append(OctoPrintStatusSensor(coordinator, sensor_name, device_id))
-    entities.append(OctoPrintJobPercentageSensor(coordinator, sensor_name, device_id))
     entities.append(
-        OctoPrintEstimatedFinishTimeSensor(coordinator, sensor_name, device_id)
+        OctoPrintStatusSensor(coordinator, sensor_name, config_entry.entry_id)
     )
-    entities.append(OctoPrintStartTimeSensor(coordinator, sensor_name, device_id))
+    entities.append(
+        OctoPrintJobPercentageSensor(coordinator, sensor_name, config_entry.entry_id)
+    )
+    entities.append(
+        OctoPrintEstimatedFinishTimeSensor(
+            coordinator, sensor_name, config_entry.entry_id
+        )
+    )
+    entities.append(
+        OctoPrintStartTimeSensor(coordinator, sensor_name, config_entry.entry_id)
+    )
 
     async_add_entities(entities, True)
     return True

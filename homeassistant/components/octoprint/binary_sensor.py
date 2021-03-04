@@ -24,14 +24,13 @@ async def async_setup_entry(
 ):
     """Set up the available OctoPrint binary sensors."""
     coordinator = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["coordinator"]
-    device_id: str = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["device_id"]
 
     entities = [
         OctoPrintPrintingBinarySensor(
-            coordinator, config_entry.data[CONF_NAME], device_id
+            coordinator, config_entry.data[CONF_NAME], config_entry.entry_id
         ),
         OctoPrintPrintingErrorBinarySensor(
-            coordinator, config_entry.data[CONF_NAME], device_id
+            coordinator, config_entry.data[CONF_NAME], config_entry.entry_id
         ),
     ]
 

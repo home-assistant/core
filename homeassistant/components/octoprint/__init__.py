@@ -155,19 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     client.set_api_key(entry.data[CONF_API_KEY])
 
-    tracking_info = await client.get_tracking_info()
-
-    coordinator = OctoprintDataUpdateCoordinator(
-        hass, client, tracking_info.unique_id, 30
-    )
+    coordinator = OctoprintDataUpdateCoordinator(hass, client, entry.entry_id, 30)
 
     await coordinator.async_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        "coordinator": coordinator,
-        "client": client,
-        "device_id": tracking_info.unique_id,
-    }
+    hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "client": client}
 
     for component in PLATFORMS:
         hass.async_create_task(
