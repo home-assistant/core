@@ -1,8 +1,6 @@
 """Class to hold all light accessories."""
 import logging
 
-from pyhap.const import CATEGORY_TELEVISION
-
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
@@ -60,7 +58,6 @@ class Fan(InputSelectAccessory):
             ATTR_PRESET_MODE,
             ATTR_PRESET_MODES,
             *args,
-            category=CATEGORY_TELEVISION,
         )
         chars = []
         state = self.hass.states.get(self.entity_id)
@@ -76,7 +73,7 @@ class Fan(InputSelectAccessory):
             chars.append(CHAR_ROTATION_SPEED)
 
         serv_fan = self.add_preload_service(SERV_FANV2, chars)
-        self.set_primary_service(serv_fan)
+        #        self.set_primary_service(serv_fan)
         self.char_active = serv_fan.configure_char(CHAR_ACTIVE, value=0)
 
         self.char_direction = None
