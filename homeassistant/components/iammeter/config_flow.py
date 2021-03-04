@@ -38,20 +38,13 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = None
         self.api = None
 
-    def _host_in_configuration_exists(self, host) -> bool:
-        """Return True if host exists in configuration."""
-        if host in iammeter_entries(self.hass):
-            return True
-        return False
-
     async def _test_connection(self, host, port):
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             try:
                 self.api = await iammeter.real_time_api(host, port)
             except (IamMeterError, asyncio.TimeoutError):
                 return False
-		return True
-        return False
+        return True
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
@@ -74,17 +67,16 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if self.api:
                     dev_sn = self.api.iammeter.serial_number
-                    if self._host_in_configuration_exists(dev_sn):
-                        errors[CONF_NAME] = "already_configured"
-                    if not errors:
-                        return self.async_create_entry(
-                            title=name,
-                            data={
-                                CONF_NAME: dev_sn,
-                                CONF_HOST: host,
-                                CONF_PORT: port,
-                            },
-                        )
+                    await self.async_set_unique_id(dev_sn)
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=name,
+                        data={
+                            CONF_NAME: dev_sn,
+                            CONF_HOST: host,
+                            CONF_PORT: port,
+                        },
+                    )
 
         else:
             user_input = {}
@@ -123,6 +115,11 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input[CONF_PORT] = port
         user_input[CONF_HOST] = host
 
-        if self._host_in_configuration_exists(name):
-            return self.async_abort(reason="already_configured")
+        connect_ok = False
+        connect_ok = await self._test_connection(host, port)
+        if connect_ok:
+            if self.api:
+                dev_sn = self.api.iammeter.serial_number
+                await self.async_set_unique_id(dev_sn)
+                self._abort_if_unique_id_configured()
         return await self.async_step_user(user_input)

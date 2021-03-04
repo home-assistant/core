@@ -137,4 +137,4 @@ async def test_abort_if_already_setup(hass):
             context={"source": SOURCE_USER},
             data={CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT},
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
