@@ -22,7 +22,6 @@ from homeassistant.const import (
     LENGTH_MILES,
     PRESSURE_HPA,
     PRESSURE_INHG,
-    TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
@@ -31,7 +30,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.distance import convert as distance_convert
 from homeassistant.util.pressure import convert as pressure_convert
-from homeassistant.util.temperature import convert as temp_convert
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
 from .const import (
@@ -102,10 +100,6 @@ def _forecast_dict(
             precipitation = (
                 distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS) * 1000
             )
-        if temp:
-            temp = temp_convert(temp, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-        if temp_low:
-            temp_low = temp_convert(temp_low, TEMP_FAHRENHEIT, TEMP_CELSIUS)
         if wind_speed:
             wind_speed = distance_convert(wind_speed, LENGTH_MILES, LENGTH_KILOMETERS)
 
