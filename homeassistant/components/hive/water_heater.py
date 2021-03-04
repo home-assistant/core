@@ -15,7 +15,13 @@ from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_ONOFF, ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HOT_WATER
+from .const import (
+    ATTR_ONOFF,
+    ATTR_TIME_PERIOD,
+    DOMAIN,
+    SERVICE_BOOST_HOT_WATER,
+    WATER_HEATER_MODES,
+)
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 HOTWATER_NAME = "Hot Water"
@@ -57,7 +63,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 cv.positive_timedelta,
                 lambda td: td.total_seconds() // 60,
             ),
-            vol.Required(ATTR_ONOFF): cv.string,
+            vol.Required(ATTR_ONOFF): vol.In(WATER_HEATER_MODES),
         },
         "async_hot_water_boost",
     )
