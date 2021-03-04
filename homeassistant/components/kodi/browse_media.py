@@ -100,7 +100,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
     return response
 
 
-async def item_payload(item, media_library, get_thumbnail_url=None):
+async def item_payload(item, get_thumbnail_url=None):
     """
     Create response payload for a single media item.
 
@@ -171,7 +171,7 @@ async def item_payload(item, media_library, get_thumbnail_url=None):
             raise UnknownMediaType from err
 
     thumbnail = item.get("thumbnail")
-    if thumbnail and get_thumbnail_url is not None:
+    if thumbnail is not None and get_thumbnail_url is not None:
         thumbnail = await get_thumbnail_url(media_content_type, media_content_id)
 
     return BrowseMedia(
@@ -185,7 +185,7 @@ async def item_payload(item, media_library, get_thumbnail_url=None):
     )
 
 
-async def library_payload(media_library):
+async def library_payload():
     """
     Create response payload to describe contents of a specific library.
 
@@ -216,7 +216,6 @@ async def library_payload(media_library):
                     "type": item["type"],
                     "uri": item["type"],
                 },
-                media_library,
             )
             for item in [
                 {"label": name, "type": type_} for type_, name in library.items()

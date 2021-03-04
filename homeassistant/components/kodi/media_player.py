@@ -3,6 +3,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 import re
+import urllib.parse
 
 import jsonrpc_base
 from pykodi import CannotConnectError
@@ -879,19 +880,21 @@ class KodiEntity(MediaPlayerEntity):
             media_content_type, media_content_id, media_image_id=None
         ):
             if is_internal:
-                item = await get_media_info(
+                image_url, _, _ = await get_media_info(
                     self._kodi,
                     media_content_id,
                     media_content_type,
                 )
-                return getattr(item, "album_art_uri", None)
+                return image_url
 
             return self.get_browse_image_url(
-                media_content_type, media_content_id, media_image_id
+                media_content_type,
+                urllib.parse.quote_plus(media_content_id),
+                media_image_id,
             )
 
         if media_content_type in [None, "library"]:
-            return await library_payload(self._kodi)
+            return await library_payload()
 
         payload = {
             "search_type": media_content_type,
@@ -914,7 +917,6 @@ class KodiEntity(MediaPlayerEntity):
         )
 
         if image_url:
-            result = await self._async_fetch_image(image_url)
-            return result
+            return await self._async_fetch_image(image_url)
 
         return (None, None)
