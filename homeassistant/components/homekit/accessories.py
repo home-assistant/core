@@ -181,7 +181,7 @@ def get_accessory(hass, driver, state, aid, config):
         a_type = "Vacuum"
 
     elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
-        a_type = "TelevisionRemote"
+        a_type = "ActivityRemote"
 
     elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
         a_type = "Switch"
