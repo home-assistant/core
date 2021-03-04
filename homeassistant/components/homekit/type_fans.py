@@ -1,7 +1,7 @@
 """Class to hold all light accessories."""
 import logging
 
-from pyhap.const import CATEGORY_FAN
+from pyhap.const import CATEGORY_TELEVISION
 
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
@@ -60,7 +60,7 @@ class Fan(InputSelectAccessory):
             ATTR_PRESET_MODE,
             ATTR_PRESET_MODES,
             *args,
-            category=CATEGORY_FAN,
+            category=CATEGORY_TELEVISION,
         )
         chars = []
         state = self.hass.states.get(self.entity_id)
