@@ -77,6 +77,7 @@ _NOT_SPEED_INTERVAL = "interval"
 _NOT_SPEED_IDLE = "idle"
 _NOT_SPEED_FAVORITE = "favorite"
 _NOT_SPEED_SLEEP = "sleep"
+_NOT_SPEED_SILENT = "silent"
 
 _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_OFF,
@@ -85,6 +86,7 @@ _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_SMART,
     _NOT_SPEED_INTERVAL,
     _NOT_SPEED_IDLE,
+    _NOT_SPEED_SILENT,
     _NOT_SPEED_SLEEP,
     _NOT_SPEED_FAVORITE,
 }
@@ -651,7 +653,7 @@ def speed_list_without_preset_modes(speed_list: List):
       output: ["1", "2", "3", "4", "5", "6", "7"]
 
       input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
-      output: ["Silent", "Medium", "High", "Strong"]
+      output: ["Medium", "High", "Strong"]
     """
 
     return [speed for speed in speed_list if speed.lower() not in _NOT_SPEEDS_FILTER]
@@ -673,7 +675,7 @@ def preset_modes_from_speed_list(speed_list: List):
       output: ["smart"]
 
       input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
-      output: ["Auto", "Favorite", "Idle"]
+      output: ["Auto", "Silent", "Favorite", "Idle"]
     """
 
     return [
