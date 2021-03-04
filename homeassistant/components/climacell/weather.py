@@ -254,6 +254,7 @@ class ClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
             if self.forecast_type == DAILY:
                 use_datetime = False
+                forecast_dt = dt_util.start_of_local_day(forecast_dt)
                 precipitation = self._get_cc_value(
                     forecast, CC_ATTR_PRECIPITATION_DAILY
                 )
