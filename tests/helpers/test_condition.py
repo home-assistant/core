@@ -1,5 +1,4 @@
 """Test the condition helper."""
-from logging import WARNING
 from unittest.mock import patch
 
 import pytest
@@ -693,27 +692,6 @@ async def test_time_using_input_datetime(hass):
         condition.time(hass, before="input_datetime.not_existing")
 
 
-async def test_if_numeric_state_raises_on_unavailable(hass, caplog):
-    """Test numeric_state raises on unavailable/unknown state."""
-    test = await condition.async_from_config(
-        hass,
-        {"condition": "numeric_state", "entity_id": "sensor.temperature", "below": 42},
-    )
-
-    caplog.clear()
-    caplog.set_level(WARNING)
-
-    hass.states.async_set("sensor.temperature", "unavailable")
-    with pytest.raises(ConditionError):
-        test(hass)
-    assert len(caplog.record_tuples) == 0
-
-    hass.states.async_set("sensor.temperature", "unknown")
-    with pytest.raises(ConditionError):
-        test(hass)
-    assert len(caplog.record_tuples) == 0
-
-
 async def test_state_raises(hass):
     """Test that state raises ConditionError on errors."""
     # No entity
@@ -961,6 +939,26 @@ async def test_state_using_input_entities(hass):
     assert test(hass)
 
 
+async def test_numeric_state_known_non_matching(hass):
+    """Test that numeric_state doesn't match on known non-matching states."""
+    hass.states.async_set("sensor.temperature", "unavailable")
+    test = await condition.async_from_config(
+        hass,
+        {
+            "condition": "numeric_state",
+            "entity_id": "sensor.temperature",
+            "above": 0,
+        },
+    )
+
+    # Unavailable state
+    assert not test(hass)
+
+    # Unknown state
+    hass.states.async_set("sensor.temperature", "unknown")
+    assert not test(hass)
+
+
 async def test_numeric_state_raises(hass):
     """Test that numeric_state raises ConditionError on errors."""
     # Unknown entities
@@ -1005,20 +1003,6 @@ async def test_numeric_state_raises(hass):
         )
 
         hass.states.async_set("sensor.temperature", 50)
-        test(hass)
-
-    # Unavailable state
-    with pytest.raises(ConditionError, match="state of .* is unavailable"):
-        test = await condition.async_from_config(
-            hass,
-            {
-                "condition": "numeric_state",
-                "entity_id": "sensor.temperature",
-                "above": 0,
-            },
-        )
-
-        hass.states.async_set("sensor.temperature", "unavailable")
         test(hass)
 
     # Bad number
@@ -1182,6 +1166,12 @@ async def test_numeric_state_using_input_number(hass):
     hass.states.async_set("sensor.temperature", 100)
     assert not test(hass)
 
+    hass.states.async_set("input_number.high", "unknown")
+    assert not test(hass)
+
+    hass.states.async_set("input_number.high", "unavailable")
+    assert not test(hass)
+
     await hass.services.async_call(
         "input_number",
         "set_value",
@@ -1192,6 +1182,12 @@ async def test_numeric_state_using_input_number(hass):
         blocking=True,
     )
     assert test(hass)
+
+    hass.states.async_set("input_number.low", "unknown")
+    assert not test(hass)
+
+    hass.states.async_set("input_number.low", "unavailable")
+    assert not test(hass)
 
     with pytest.raises(ConditionError):
         condition.async_numeric_state(

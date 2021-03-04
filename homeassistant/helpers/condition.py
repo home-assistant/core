@@ -412,10 +412,9 @@ def async_numeric_state(
                 "numeric_state", f"template error: {ex}"
             ) from ex
 
+    # Known states that never match the numeric condition
     if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        raise ConditionErrorMessage(
-            "numeric_state", f"state of {entity_id} is unavailable"
-        )
+        return False
 
     try:
         fvalue = float(value)
@@ -428,13 +427,15 @@ def async_numeric_state(
     if below is not None:
         if isinstance(below, str):
             below_entity = hass.states.get(below)
-            if not below_entity or below_entity.state in (
+            if not below_entity:
+                raise ConditionErrorMessage(
+                    "numeric_state", f"unknown 'below' entity {below}"
+                )
+            if below_entity.state in (
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                raise ConditionErrorMessage(
-                    "numeric_state", f"the 'below' entity {below} is unavailable"
-                )
+                return False
             try:
                 if fvalue >= float(below_entity.state):
                     condition_trace_set_result(
@@ -455,13 +456,15 @@ def async_numeric_state(
     if above is not None:
         if isinstance(above, str):
             above_entity = hass.states.get(above)
-            if not above_entity or above_entity.state in (
+            if not above_entity:
+                raise ConditionErrorMessage(
+                    "numeric_state", f"unknown 'above' entity {above}"
+                )
+            if above_entity.state in (
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                raise ConditionErrorMessage(
-                    "numeric_state", f"the 'above' entity {above} is unavailable"
-                )
+                return False
             try:
                 if fvalue <= float(above_entity.state):
                     condition_trace_set_result(
