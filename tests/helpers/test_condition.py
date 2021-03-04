@@ -1166,6 +1166,12 @@ async def test_numeric_state_using_input_number(hass):
     hass.states.async_set("sensor.temperature", 100)
     assert not test(hass)
 
+    hass.states.async_set("input_number.high", "unknown")
+    assert not test(hass)
+
+    hass.states.async_set("input_number.high", "unavailable")
+    assert not test(hass)
+
     await hass.services.async_call(
         "input_number",
         "set_value",
@@ -1176,6 +1182,12 @@ async def test_numeric_state_using_input_number(hass):
         blocking=True,
     )
     assert test(hass)
+
+    hass.states.async_set("input_number.low", "unknown")
+    assert not test(hass)
+
+    hass.states.async_set("input_number.low", "unavailable")
+    assert not test(hass)
 
     with pytest.raises(ConditionError):
         condition.async_numeric_state(
