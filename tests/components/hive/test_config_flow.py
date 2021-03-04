@@ -13,6 +13,7 @@ USERNAME = "username@home-assistant.com"
 UPDATED_USERNAME = "updated_username@home-assistant.com"
 PASSWORD = "test-password"
 UPDATED_PASSWORD = "updated-password"
+INCORRECT_PASSWORD = "incoreect-password"
 SCAN_INTERVAL = 120
 UPDATED_SCAN_INTERVAL = 60
 MFA_CODE = "1234"
@@ -182,22 +183,33 @@ async def test_reauth_flow(hass):
     await setup.async_setup_component(hass, "persistent_notification", {})
     mock_config = MockConfigEntry(
         domain=DOMAIN,
+        unique_id=USERNAME,
         data={
-            CONF_PASSWORD: PASSWORD,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: INCORRECT_PASSWORD,
             "tokens": {
                 "AccessToken": "mock-access-token",
                 "RefreshToken": "mock-refresh-token",
             },
-            CONF_USERNAME: USERNAME,
         },
     )
     mock_config.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH, "entry": mock_config}
-    )
+
+    with patch(
+        "homeassistant.components.hive.config_flow.Auth.login",
+        side_effect=hive_exceptions.HiveInvalidPassword(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "unique_id": mock_config.unique_id,
+            },
+            data=mock_config.data,
+        )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {}
+    assert result["errors"] == {"base": "invalid_password"}
 
     with patch(
         "homeassistant.components.hive.config_flow.Auth.login",
@@ -212,13 +224,13 @@ async def test_reauth_flow(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: UPDATED_USERNAME,
+                CONF_USERNAME: USERNAME,
                 CONF_PASSWORD: UPDATED_PASSWORD,
             },
         )
     await hass.async_block_till_done()
 
-    assert mock_config.data.get("username") == UPDATED_USERNAME
+    assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == UPDATED_PASSWORD
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "reauth_successful"
