@@ -238,10 +238,6 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
             if features & SUPPORT_VOLUME_SET:
                 self.chars_speaker.append(CHAR_VOLUME)
 
-        source_list = state.attributes.get(ATTR_INPUT_SOURCE_LIST, [])
-        if source_list and features & SUPPORT_SELECT_SOURCE:
-            self.support_select_source = True
-
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
             serv_speaker = self.add_preload_service(
                 SERV_TELEVISION_SPEAKER, self.chars_speaker
