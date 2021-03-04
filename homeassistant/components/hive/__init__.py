@@ -83,8 +83,8 @@ async def async_setup_entry(hass, entry):
                 DOMAIN,
                 context={
                     "source": config_entries.SOURCE_REAUTH,
-                    "entry": entry,
                 },
+                data=entry.data,
             )
         )
         return False
@@ -111,7 +111,7 @@ async def async_unload_entry(hass, entry):
         )
     )
     if unload_ok:
-        hass.data[DOMAIN]["entries"].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 

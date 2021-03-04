@@ -39,13 +39,12 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Login to Hive with user data.
         if user_input is not None:
             self.data.update(user_input)
-            self.entry = self.context.get("entry")
             self.hive_auth = Auth(
                 username=self.data[CONF_USERNAME], password=self.data[CONF_PASSWORD]
             )
 
             # Get user from existing entry and abort if already setup
-            await self.async_set_unique_id(self.data[CONF_USERNAME])
+            self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME])
             if self.context["source"] != config_entries.SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
@@ -119,7 +118,11 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Re Authenticate a user."""
-        return await self.async_step_user(user_input)
+        data = {
+            CONF_USERNAME: user_input[CONF_USERNAME],
+            CONF_PASSWORD: user_input[CONF_PASSWORD],
+        }
+        return await self.async_step_user(data)
 
     async def async_step_import(self, user_input=None):
         """Import user."""
