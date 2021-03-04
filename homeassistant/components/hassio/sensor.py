@@ -24,7 +24,7 @@ async def async_setup_entry(
         (ATTR_VERSION, "Version"),
         (ATTR_VERSION_LATEST, "Newest Version"),
     ):
-        for addon in coordinator.data.values():
+        for addon in coordinator.data["addons"].values():
             entities.append(
                 HassioAddonSensor(coordinator, addon, attribute_name, sensor_name)
             )
