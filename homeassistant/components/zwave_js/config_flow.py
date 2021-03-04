@@ -341,7 +341,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 version_info.home_id, raise_on_progress=False
             )
 
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_URL: self.ws_address,
+                CONF_USB_PATH: self.usb_path,
+                CONF_NETWORK_KEY: self.network_key,
+            }
+        )
         return self._async_create_entry_from_vars()
 
     async def _async_get_addon_info(self) -> dict:
