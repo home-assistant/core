@@ -24,7 +24,7 @@ from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
+GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "switch", "light"]
 SWITCH_PLATFORMS = ["switch"]
 FAN_PLATFORMS = ["fan"]
 VACUUM_PLATFORMS = ["vacuum"]
