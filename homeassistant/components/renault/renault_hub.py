@@ -11,10 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import (
-    CONF_KAMEREON_ACCOUNT_ID,
-    DEFAULT_SCAN_INTERVAL,
-)
+from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy
 
 LOGGER = logging.getLogger(__name__)
