@@ -169,7 +169,6 @@ def convert_include_exclude_filter(
             "sensor.ais_db_connection_info",
             "sensor.ais_dom_mqtt_rf_sensor",
             "sensor.ais_drives",
-            "sensor.ais_gallery_img",
             "sensor.ais_logs_settings_info",
             "sensor.ais_player_mode",
             "sensor.ais_secure_android_id_dom",

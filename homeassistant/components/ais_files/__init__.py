@@ -4,7 +4,6 @@ Support for interacting with Ais Files.
 For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com/
 """
-import asyncio
 import json
 import logging
 import os
@@ -27,47 +26,29 @@ G_LOG_SETTINGS_INFO_FILE = "/.dom/.ais_log_settings_info"
 G_DB_SETTINGS_INFO_FILE = "/.dom/.ais_db_settings_info"
 
 
-@asyncio.coroutine
 async def async_setup(hass, config):
     """Set up the Ais Files platform."""
 
     # register services
-    @asyncio.coroutine
     async def async_transfer_file(call):
         if "path" not in call.data or "name" not in call.data:
             return
         await _async_transfer_file(hass, call.data["path"], call.data["name"])
 
-    @asyncio.coroutine
     async def async_remove_file(call):
         if "path" not in call.data:
             return
         await _async_remove_file(hass, call.data["path"])
 
-    @asyncio.coroutine
-    async def async_refresh_files(call):
-        await _async_refresh_files(hass)
-
-    @asyncio.coroutine
-    async def async_pick_file(call):
-        if "idx" not in call.data:
-            return
-        await _async_pick_file(hass, call.data["idx"])
-
-    @asyncio.coroutine
     async def async_change_logger_settings(call):
         await _async_change_logger_settings(hass, call)
 
-    @asyncio.coroutine
     async def async_get_db_log_settings_info(call):
         await _async_get_db_log_settings_info(hass, call)
 
-    @asyncio.coroutine
     async def async_check_db_connection(call):
         await _async_check_db_connection(hass, call)
 
-    hass.services.async_register(DOMAIN, "pick_file", async_pick_file)
-    hass.services.async_register(DOMAIN, "refresh_files", async_refresh_files)
     hass.services.async_register(DOMAIN, "transfer_file", async_transfer_file)
     hass.services.async_register(DOMAIN, "remove_file", async_remove_file)
     hass.services.async_register(
@@ -102,8 +83,6 @@ async def _async_transfer_file(hass, path, name):
     # 2. remove
     shutil.rmtree(hass.config.config_dir + "/image/" + path)
 
-    await _async_refresh_files(hass)
-
 
 async def _async_remove_file(hass, path):
     if "api/image/serve" in path:
@@ -124,23 +103,6 @@ async def _async_remove_file(hass, path):
             "/media/galeria/", "/data/data/pl.sviete.dom/files/home/AIS/www/img/"
         ).split("?authSig")[0]
         os.remove(path)
-        await _async_refresh_files(hass)
-        await _async_pick_file(hass, 0)
-
-
-async def _async_pick_file(hass, idx):
-    state = hass.states.get("sensor.ais_gallery_img")
-    attr = state.attributes
-    hass.states.async_set("sensor.ais_gallery_img", idx, attr)
-
-
-async def _async_refresh_files(hass):
-    # refresh sensor after file was added or deleted
-    hass.async_add_job(
-        hass.services.async_call(
-            "homeassistant", "update_entity", {"entity_id": "sensor.ais_gallery_img"}
-        )
-    )
 
 
 async def _async_change_logger_settings(hass, call):
