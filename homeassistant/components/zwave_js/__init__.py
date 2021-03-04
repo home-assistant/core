@@ -48,7 +48,7 @@ from .const import (
     ZWAVE_JS_EVENT,
 )
 from .discovery import async_discover_values
-from .helpers import get_device_id, get_old_value_id, get_unique_id
+from .helpers import get_device_id, get_old_value_ids, get_unique_id
 from .services import ZWaveServices
 
 CONNECT_TIMEOUT = 10
@@ -137,24 +137,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # This migration logic was added in 2021.3 to handle a breaking change to
             # the value_id format. Some time in the future, this code block
-            # (as well as get_old_value_id helper and migrate_entity closure) can be
+            # (as well as get_old_value_ids helper and migrate_entity closure) can be
             # removed.
-            value_ids = [
-                # 2021.2.* format
-                get_old_value_id(disc_info.primary_value),
-                # 2021.3.0b0 format
-                disc_info.primary_value.value_id,
-            ]
-
             new_unique_id = get_unique_id(
                 client.driver.controller.home_id,
                 disc_info.primary_value.value_id,
             )
 
-            for value_id in value_ids:
+            # 2021.2.*, 2021.3.0b0, and 2021.3.0 formats
+            for value_id in get_old_value_ids(disc_info.primary_value):
                 old_unique_id = get_unique_id(
                     client.driver.controller.home_id,
-                    f"{disc_info.primary_value.node.node_id}.{value_id}",
+                    value_id,
                 )
                 # Most entities have the same ID format, but notification binary sensors
                 # have a state key in their ID so we need to handle them differently

@@ -14,13 +14,29 @@ from .const import DATA_CLIENT, DOMAIN
 
 
 @callback
-def get_old_value_id(value: ZwaveValue) -> str:
-    """Get old value ID so we can migrate entity unique ID."""
+def get_old_value_ids(value: ZwaveValue) -> List[str]:
+    """Get old value IDs so we can migrate entity unique ID."""
+    value_ids = []
     command_class = value.command_class
     endpoint = value.endpoint or "00"
     property_ = value.property_
     property_key_name = value.property_key_name or "00"
-    return f"{value.node.node_id}-{command_class}-{endpoint}-{property_}-{property_key_name}"
+
+    value_ids.append(
+        f"{value.node.node_id}.{value.node.node_id}-{command_class}-{endpoint}-"
+        f"{property_}-{property_key_name}"
+    )
+
+    endpoint = "00" if value.endpoint is None else value.endpoint
+    property_key = "00" if value.property_key is None else value.property_key
+    property_key_name = value.property_key_name or "00"
+    value_id = (
+        f"{value.node.node_id}-{command_class}-{endpoint}-"
+        f"{property_}-{property_key}-{property_key_name}"
+    )
+    value_ids.extend([f"{value.node.node_id}.{value_id}", value_id])
+
+    return value_ids
 
 
 @callback
