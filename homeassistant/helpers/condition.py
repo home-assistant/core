@@ -412,10 +412,9 @@ def async_numeric_state(
                 "numeric_state", f"template error: {ex}"
             ) from ex
 
+    # Known states that never match the numeric condition
     if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        raise ConditionErrorMessage(
-            "numeric_state", f"state of {entity_id} is unavailable"
-        )
+        return False
 
     try:
         fvalue = float(value)
