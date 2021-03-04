@@ -146,7 +146,6 @@ def _standardize_geography_config_entry(hass, config_entry):
     if config_entry.data.get(CONF_INTEGRATION_TYPE) not in [
         INTEGRATION_TYPE_GEOGRAPHY_COORDS,
         INTEGRATION_TYPE_GEOGRAPHY_NAME,
-        INTEGRATION_TYPE_NODE_PRO,
     ]:
         # If the config entry data doesn't contain an integration type that we know
         # about, infer it from the data we have:
