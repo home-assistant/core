@@ -1,5 +1,4 @@
 """Support for media browsing."""
-from contextlib import suppress
 import asyncio
 import logging
 
@@ -71,10 +70,9 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
     if media is None:
         return None
 
-    children = []
-    for item in media:
-        with suppress(UnknownMediaType):
-            children.append(item_payload(item, media_library))
+    children = await asyncio.gather(
+        *[item_payload(item, get_thumbnail_url) for item in media]
+    )
 
     if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
         children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
@@ -283,9 +281,18 @@ async def get_media_info(media_library, search_id, search_type):
         title = "Music Library"
 
     elif search_type == MEDIA_TYPE_MOVIE:
-        media = await media_library.get_movies(properties)
-        media = media.get("movies")
-        title = "Movies"
+        if search_id:
+            movie = await media_library.get_movie_details(
+                movie_id=int(search_id), properties=properties
+            )
+            thumbnail = media_library.thumbnail_url(
+                movie["moviedetails"].get("thumbnail")
+            )
+            title = movie["moviedetails"]["label"]
+        else:
+            media = await media_library.get_movies(properties)
+            media = media.get("movies")
+            title = "Movies"
 
     elif search_type == MEDIA_TYPE_TVSHOW:
         if search_id:
