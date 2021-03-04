@@ -1,9 +1,10 @@
 boost_heating:
+  name: Boost Heating
   description: Set the boost mode ON defining the period of time and the desired target temperature for the boost.
   fields:
     entity_id:
       name: Entity ID
-      description: Enter the entity_id for the device required to set the boost mode.
+      description: Select entity_id to boost.
       required: true
       example: climate.heating
       selector:
@@ -32,11 +33,10 @@ boost_heating:
 boost_hot_water:
   name: Boost Hotwater
   description: Set the boost mode ON or OFF defining the period of time for the boost.
-  target:
   fields:
     entity_id:
       name: Entity ID
-      description: Enter the entity_id for the device required to set the boost mode.
+      description: Select entity_id to boost.
       required: true
       example: water_heater.hot_water
       selector:
