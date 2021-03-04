@@ -22,7 +22,7 @@ MODELS_SWITCH = [
     "chuangmi.plug.hmi205",
     "chuangmi.plug.hmi206",
 ]
-MODELS_VACUUM = ["roborock.vacuum"]
+MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
 
 MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_VACUUM
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
