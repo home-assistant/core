@@ -3,6 +3,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_VISIBILITY,
+    ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN,
 )
@@ -25,6 +27,8 @@ async def test_template_state_text(hass):
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
                     "humidity_template": "{{ states('sensor.humidity') | int }}",
                     "pressure_template": "{{ states('sensor.pressure') }}",
+                    "visibility_template": "{{ states('sensor.visibility') }}",
+                    "wind_bearing_template": "{{ states('sensor.wind_direction') }}",
                     "wind_speed_template": "{{ states('sensor.windspeed') }}",
                 },
             ]
@@ -41,6 +45,10 @@ async def test_template_state_text(hass):
     await hass.async_block_till_done()
     hass.states.async_set("sensor.pressure", 1000)
     await hass.async_block_till_done()
+    hass.states.async_set("sensor.visibility", "20km")
+    await hass.async_block_till_done()
+    hass.states.async_set("sensor.wind_directon", "N")
+    await hass.async_block_till_done()
     hass.states.async_set("sensor.windspeed", 20)
     await hass.async_block_till_done()
 
@@ -53,4 +61,6 @@ async def test_template_state_text(hass):
     assert data.get(ATTR_WEATHER_TEMPERATURE) == 22.3
     assert data.get(ATTR_WEATHER_HUMIDITY) == 60
     assert data.get(ATTR_WEATHER_PRESSURE) == 1000
+    assert data.get(ATTR_WEATHER_VISIBILITY) == "20km"
+    assert data.get(ATTR_WEATHER_WIND_BEARING) == "N"
     assert data.get(ATTR_WEATHER_WIND_SPEED) == 20
