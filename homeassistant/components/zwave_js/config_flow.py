@@ -120,7 +120,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Make sure we disable any add-on handling
             # if the controller is reconfigured in a manual step.
             self._abort_if_unique_id_configured(
-                updates={**user_input, CONF_USE_ADDON: False}
+                updates={
+                    **user_input,
+                    CONF_USE_ADDON: False,
+                    CONF_INTEGRATION_CREATED_ADDON: False,
+                }
             )
             self.ws_address = user_input[CONF_URL]
             return self._async_create_entry_from_vars()

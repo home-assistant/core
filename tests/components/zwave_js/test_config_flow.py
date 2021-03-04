@@ -186,7 +186,11 @@ async def test_manual_already_configured(hass):
     """Test that only one unique instance is allowed."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"url": "ws://localhost:3000", "use_addon": True},
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
         title=TITLE,
         unique_id=1234,
     )
@@ -211,6 +215,7 @@ async def test_manual_already_configured(hass):
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://1.1.1.1:3001"
     assert entry.data["use_addon"] is False
+    assert entry.data["integration_created_addon"] is False
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
