@@ -1,23 +1,31 @@
 """Config flow for Picnic integration."""
 import logging
 
+from python_picnic_api import PicnicAPI
 import requests
 import voluptuous as vol
-from python_picnic_api import PicnicAPI
 
 from homeassistant import config_entries, core, exceptions
-from .const import DOMAIN, CONF_USERNAME, CONF_PASSWORD, CONF_COUNTRY_CODE, \
-    COUNTRY_CODES  # pylint:disable=unused-import
+
+from .const import (
+    CONF_COUNTRY_CODE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    COUNTRY_CODES,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str,
-    vol.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): vol.In(
-        COUNTRY_CODES
-    )
-})
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): vol.In(
+            COUNTRY_CODES
+        ),
+    }
+)
 
 
 class PicnicHub:
@@ -38,7 +46,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         user_data = await hass.async_add_executor_job(
-            hub.authenticate, data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY_CODE]
+            hub.authenticate,
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+            data[CONF_COUNTRY_CODE],
         )
     except requests.exceptions.ConnectionError:
         raise CannotConnect
@@ -46,11 +57,11 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth
 
     # Return the validation result
+    address = f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}' + \
+              f'{user_data["address"]["house_number_ext"]}'
     return {
-        "title": user_data["address"]["street"] + " " +
-            str(user_data["address"]["house_number"]) +
-            user_data["address"]["house_number_ext"],
-        "unique_id": user_data["user_id"]
+        "title": address,
+        "unique_id": user_data["user_id"],
     }
 
 

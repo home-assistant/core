@@ -3,13 +3,20 @@
 from typing import Any, Optional
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
-from .const import DOMAIN, SENSOR_TYPES, ATTRIBUTION, CONF_COORDINATOR, ADDRESS
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+from .const import ADDRESS, ATTRIBUTION, CONF_COORDINATOR, DOMAIN, SENSOR_TYPES
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
     """Set up Picnic sensor entries."""
 
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
@@ -25,14 +32,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry, asyn
 
 
 class PicnicSensor(CoordinatorEntity):
+    """The CoordinatorEntity subclass representing Picnic sensors."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[Any], config_entry: ConfigEntry, sensor_type, properties):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Any],
+        config_entry: ConfigEntry,
+        sensor_type,
+        properties,
+    ):
+        """Init a Picnic sensor."""
         super().__init__(coordinator)
 
         self.sensor_type = sensor_type
         self.properties = properties
         self.entity_id = f"sensor.picnic_{sensor_type}"
-        self.service_unique_id = config_entry.unique_id
+        self._service_unique_id = config_entry.unique_id
 
     @property
     def unit_of_measurement(self) -> Optional[str]:
@@ -42,7 +57,7 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return f"{self.service_unique_id}.{self.sensor_type}"
+        return f"{self._service_unique_id}.{self.sensor_type}"
 
     @property
     def name(self) -> Optional[str]:
@@ -75,16 +90,21 @@ class PicnicSensor(CoordinatorEntity):
         return ATTRIBUTION
 
     @property
+    def device_state_attributes(self):
+        """Return the sensor specific state attributes."""
+        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
     def device_info(self):
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self.service_unique_id)},
+            "identifiers": {(DOMAIN, self._service_unique_id)},
             "manufacturer": "Picnic",
-            "model": "App",
-            "default_name": self.coordinator.data[ADDRESS],
+            "model": self._service_unique_id,
+            "name": f"Picnic - {self.coordinator.data[ADDRESS]}",
             "entry_type": "service",
         }
 
     @staticmethod
     def _to_title_case(name: str) -> str:
-        return name.replace('_', ' ').title()
+        return name.replace("_", " ").capitalize()

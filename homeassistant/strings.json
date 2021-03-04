@@ -45,7 +45,8 @@
         "latitude": "Latitude",
         "location": "Location",
         "pin": "PIN Code",
-        "mode": "Mode"
+        "mode": "Mode",
+        "country_code": "Country Code"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
