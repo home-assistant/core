@@ -37,7 +37,7 @@ class InputSelectAccessory(HomeAccessory):
         **kwargs,
     ):
         """Initialize a InputSelect accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
         state = self.hass.states.get(self.entity_id)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -91,10 +91,6 @@ class InputSelectAccessory(HomeAccessory):
     @abstractmethod
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
-
-    @abstractmethod
-    def set_remote_key(self, value):
-        """Send remote key value if call came from HomeKit."""
 
     @callback
     def _async_update_input_state(self, hk_state, new_state):

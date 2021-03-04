@@ -121,6 +121,7 @@ class RemoteInputSelectAccessory(InputSelectAccessory):
             required_feature,
             source_key,
             source_list_key,
+            *args,
             has_remote=True,
             category=CATEGORY_TELEVISION,
         )
