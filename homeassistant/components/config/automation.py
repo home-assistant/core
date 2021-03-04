@@ -2,6 +2,13 @@
 from collections import OrderedDict
 import uuid
 
+import voluptuous as vol
+
+from homeassistant.components import websocket_api
+from homeassistant.components.automation import (
+    get_debug_traces,
+    get_debug_traces_for_automation,
+)
 from homeassistant.components.automation.config import (
     DOMAIN,
     PLATFORM_SCHEMA,
@@ -16,6 +23,8 @@ from . import ACTION_DELETE, EditIdBasedConfigView
 
 async def async_setup(hass):
     """Set up the Automation config API."""
+
+    websocket_api.async_register_command(hass, websocket_automation_trace)
 
     async def hook(action, config_key):
         """post_write_hook for Config View that reloads automations."""
@@ -80,3 +89,21 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         updated_value.update(cur_value)
         updated_value.update(new_value)
         data[index] = updated_value
+
+
+@websocket_api.websocket_command(
+    {vol.Required("type"): "automation/trace", vol.Optional("automation_id"): str}
+)
+@websocket_api.async_response
+async def websocket_automation_trace(hass, connection, msg):
+    """Get automation traces."""
+    automation_id = msg.get("automation_id")
+
+    if not automation_id:
+        automation_traces = get_debug_traces(hass)
+    else:
+        automation_traces = {
+            automation_id: get_debug_traces_for_automation(hass, automation_id)
+        }
+
+    connection.send_result(msg["id"], automation_traces)

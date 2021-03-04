@@ -164,3 +164,164 @@ async def test_delete_automation(hass, hass_client):
     assert written[0][0]["id"] == "moon"
 
     assert len(ent_reg.entities) == 1
+
+
+async def test_get_automation_trace(hass, hass_ws_client):
+    """Test deleting an automation."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"service": "test.automation"},
+    }
+    moon_config = {
+        "id": "moon",
+        "trigger": [
+            {"platform": "event", "event_type": "test_event2"},
+            {"platform": "event", "event_type": "test_event3"},
+        ],
+        "condition": {
+            "condition": "template",
+            "value_template": "{{ trigger.event.event_type=='test_event2' }}",
+        },
+        "action": {"event": "another_event"},
+    }
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                sun_config,
+                moon_config,
+            ]
+        },
+    )
+
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_ws_client()
+
+    await client.send_json({"id": next_id(), "type": "automation/trace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace", "automation_id": "sun"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"sun": []}
+
+    # Trigger "sun" automation
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    # Get trace
+    await client.send_json({"id": next_id(), "type": "automation/trace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert "moon" not in response["result"]
+    assert len(response["result"]["sun"]) == 1
+    trace = response["result"]["sun"][0]
+    assert len(trace["action_trace"]) == 1
+    assert len(trace["action_trace"]["action/0"]) == 1
+    assert trace["action_trace"]["action/0"][0]["error"]
+    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert trace["condition_trace"] == {}
+    assert trace["config"] == sun_config
+    assert trace["context"]
+    assert trace["error"] == "Unable to find service test.automation"
+    assert trace["state"] == "stopped"
+    assert trace["trigger"]["description"] == "event 'test_event'"
+    assert trace["unique_id"] == "sun"
+    assert trace["variables"]
+
+    # Trigger "moon" automation, with passing condition
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+
+    # Get trace
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace", "automation_id": "moon"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "sun" not in response["result"]
+    assert len(response["result"]["moon"]) == 1
+    trace = response["result"]["moon"][0]
+    assert len(trace["action_trace"]) == 1
+    assert len(trace["action_trace"]["action/0"]) == 1
+    assert "error" not in trace["action_trace"]["action/0"][0]
+    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert len(trace["condition_trace"]) == 1
+    assert len(trace["condition_trace"]["condition/0"]) == 1
+    assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
+    assert trace["config"] == moon_config
+    assert trace["context"]
+    assert "error" not in trace
+    assert trace["state"] == "stopped"
+    assert trace["trigger"]["description"] == "event 'test_event2'"
+    assert trace["unique_id"] == "moon"
+    assert trace["variables"]
+
+    # Trigger "moon" automation, with failing condition
+    hass.bus.async_fire("test_event3")
+    await hass.async_block_till_done()
+
+    # Get trace
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace", "automation_id": "moon"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "sun" not in response["result"]
+    assert len(response["result"]["moon"]) == 2
+    trace = response["result"]["moon"][1]
+    assert len(trace["action_trace"]) == 0
+    assert len(trace["condition_trace"]) == 1
+    assert len(trace["condition_trace"]["condition/0"]) == 1
+    assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": False}
+    assert trace["config"] == moon_config
+    assert trace["context"]
+    assert "error" not in trace
+    assert trace["state"] == "stopped"
+    assert trace["trigger"]["description"] == "event 'test_event3'"
+    assert trace["unique_id"] == "moon"
+    assert trace["variables"]
+
+    # Trigger "moon" automation, with passing condition
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+
+    # Get trace
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace", "automation_id": "moon"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert "sun" not in response["result"]
+    assert len(response["result"]["moon"]) == 3
+    trace = response["result"]["moon"][2]
+    assert len(trace["action_trace"]) == 1
+    assert len(trace["action_trace"]["action/0"]) == 1
+    assert "error" not in trace["action_trace"]["action/0"][0]
+    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert len(trace["condition_trace"]) == 1
+    assert len(trace["condition_trace"]["condition/0"]) == 1
+    assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
+    assert trace["config"] == moon_config
+    assert trace["context"]
+    assert "error" not in trace
+    assert trace["state"] == "stopped"
+    assert trace["trigger"]["description"] == "event 'test_event2'"
+    assert trace["unique_id"] == "moon"
+    assert trace["variables"]

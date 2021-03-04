@@ -1,5 +1,7 @@
 """Helpers to execute scripts."""
 import asyncio
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -63,6 +65,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv, service, template
+from homeassistant.helpers.condition import (
+    condition_path,
+    condition_trace_clear,
+    condition_trace_get,
+    trace_condition_function,
+)
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trigger import (
@@ -72,6 +80,14 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
+
+from .trace import (
+    TraceElement,
+    trace_append_element,
+    trace_stack_pop,
+    trace_stack_push,
+    trace_stack_top,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -106,6 +122,115 @@ _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
 
 _SHUTDOWN_MAX_WAIT = 60
+
+
+ACTION_TRACE_NODE_MAX_LEN = 20  # Max the length of a trace node for repeated actions
+
+action_trace = ContextVar("action_trace", default=None)
+action_trace_stack = ContextVar("action_trace_stack", default=None)
+action_path_stack = ContextVar("action_path_stack", default=None)
+
+
+def action_trace_stack_push(node):
+    """Push a TraceElement to the top of the trace stack."""
+    trace_stack_push(action_trace_stack, node)
+
+
+def action_trace_stack_pop():
+    """Remove the top element from the trace stack."""
+    trace_stack_pop(action_trace_stack)
+
+
+def action_trace_stack_top():
+    """Return the element at the top of the trace stack."""
+    return trace_stack_top(action_trace_stack)
+
+
+def action_path_push(suffix):
+    """Go deeper in the config tree."""
+    if isinstance(suffix, str):
+        suffix = [suffix]
+    for node in suffix:
+        trace_stack_push(action_path_stack, node)
+    return len(suffix)
+
+
+def action_path_pop(count):
+    """Go n levels up in the config tree."""
+    for _ in range(count):
+        trace_stack_pop(action_path_stack)
+
+
+def action_path_get():
+    """Return a string representing the current location in the config tree."""
+    path = action_path_stack.get()
+    if not path:
+        return ""
+    return "/".join(path)
+
+
+def action_trace_get():
+    """Return the trace of the script that was executed."""
+    return action_trace.get()
+
+
+def action_trace_clear():
+    """Clear the action trace."""
+    action_trace.set({})
+    action_trace_stack.set(None)
+    action_path_stack.set(None)
+
+
+def action_trace_append(variables, path):
+    """Append a TraceElement to trace[path]."""
+    trace_element = TraceElement(variables)
+    trace_append_element(action_trace, trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
+    return trace_element
+
+
+def action_trace_set_result(**kwargs):
+    """Set the result of TraceElement at the top of the stack."""
+    node = action_trace_stack_top()
+    node.set_result(**kwargs)
+
+
+def action_trace_add_conditions():
+    """Add the result of condition evaluation to the action trace."""
+    condition_trace = condition_trace_get()
+    condition_trace_clear()
+
+    if condition_trace is None:
+        return
+
+    _action_path = action_path_get()
+    for cond_path, conditions in condition_trace.items():
+        path = _action_path + "/" + cond_path if cond_path else _action_path
+        for cond in conditions:
+            trace_append_element(action_trace, cond, path)
+
+
+@contextmanager
+def trace_action(variables):
+    """Trace action execution."""
+    trace_element = action_trace_append(variables, action_path_get())
+    action_trace_stack_push(trace_element)
+    try:
+        yield trace_element
+    except Exception as ex:  # pylint: disable=broad-except
+        trace_element.set_error(ex)
+        raise ex
+    finally:
+        action_trace_stack_pop()
+
+
+@contextmanager
+def action_path(suffix):
+    """Go deeper in the config tree."""
+    count = action_path_push(suffix)
+    try:
+        yield
+    finally:
+        action_path_pop(count)
 
 
 def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
@@ -258,16 +383,16 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
-        try:
-            await getattr(
-                self, f"_async_{cv.determine_script_action(self._action)}_step"
-            )()
-        except Exception as ex:
-            if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
-                self._log_exceptions or log_exceptions
-            ):
-                self._log_exception(ex)
-            raise
+        with action_path(str(self._step)), trace_action(None):
+            try:
+                handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                await getattr(self, handler)()
+            except Exception as ex:
+                if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
+                    self._log_exceptions or log_exceptions
+                ):
+                    self._log_exception(ex)
+                raise
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -514,14 +639,36 @@ class _ScriptRun:
         )
         cond = await self._async_get_condition(self._action)
         try:
-            check = cond(self._hass, self._variables)
+            with condition_path("condition"):
+                check = cond(self._hass, self._variables)
         except exceptions.ConditionError as ex:
             _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
             check = False
 
         self._log("Test condition %s: %s", self._script.last_action, check)
+        action_trace_set_result(result=check)
+        action_trace_add_conditions()
         if not check:
             raise _StopScript
+
+    def _test_conditions(self, conditions, name):
+        @trace_condition_function
+        def traced_test_conditions(hass, variables):
+            try:
+                with condition_path("conditions"):
+                    for idx, cond in enumerate(conditions):
+                        with condition_path(str(idx)):
+                            if not cond(hass, variables):
+                                return False
+            except exceptions.ConditionError as ex:
+                _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
+                return None
+
+            return True
+
+        result = traced_test_conditions(self._hass, self._variables)
+        action_trace_add_conditions()
+        return result
 
     async def _async_repeat_step(self):
         """Repeat a sequence."""
@@ -541,7 +688,8 @@ class _ScriptRun:
 
         async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
-            await self._async_run_script(script)
+            with action_path(str(self._step)):
+                await self._async_run_script(script)
 
         if CONF_COUNT in repeat:
             count = repeat[CONF_COUNT]
@@ -570,9 +718,9 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 try:
-                    if self._stop.is_set() or not all(
-                        cond(self._hass, self._variables) for cond in conditions
-                    ):
+                    if self._stop.is_set():
+                        break
+                    if not self._test_conditions(conditions, "while"):
                         break
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
@@ -588,9 +736,9 @@ class _ScriptRun:
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
                 try:
-                    if self._stop.is_set() or all(
-                        cond(self._hass, self._variables) for cond in conditions
-                    ):
+                    if self._stop.is_set():
+                        break
+                    if self._test_conditions(conditions, "until") in [True, None]:
                         break
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
@@ -606,18 +754,20 @@ class _ScriptRun:
         # pylint: disable=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
-        for conditions, script in choose_data["choices"]:
-            try:
-                if all(
-                    condition(self._hass, self._variables) for condition in conditions
-                ):
-                    await self._async_run_script(script)
-                    return
-            except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+        for idx, (conditions, script) in enumerate(choose_data["choices"]):
+            with action_path(str(idx)):
+                try:
+                    if self._test_conditions(conditions, "choose"):
+                        action_trace_set_result(choice=idx)
+                        await self._async_run_script(script)
+                        return
+                except exceptions.ConditionError as ex:
+                    _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
         if choose_data["default"]:
-            await self._async_run_script(choose_data["default"])
+            action_trace_set_result(choice="default")
+            with action_path("default"):
+                await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""

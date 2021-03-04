@@ -79,8 +79,21 @@ async def async_validate_config_item(hass, config, full_config=None):
     return config
 
 
+class AutomationConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    raw_config = None
+
+
 async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
+    raw_config = None
+    try:
+        raw_config = dict(config)
+    except ValueError:
+        # Invalid config
+        pass
+
     try:
         config = await async_validate_config_item(hass, config, full_config)
     except (
@@ -92,6 +105,11 @@ async def _try_async_validate_config_item(hass, config, full_config=None):
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
+    if isinstance(config, blueprint.BlueprintInputs):
+        return config
+
+    config = AutomationConfig(config)
+    config.raw_config = raw_config
     return config
 
 

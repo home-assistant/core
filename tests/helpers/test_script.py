@@ -30,6 +30,32 @@ from tests.common import (
 ENTITY_ID = "script.test"
 
 
+def assert_element(trace_element, expected_element, path):
+    """Assert a trace element is as expected.
+
+    Note: Unused variable 'path' is passed to get helpful errors from pytest.
+    """
+    for result_key, result in expected_element.get("result", {}).items():
+        assert trace_element._result[result_key] == result
+    if "error_type" in expected_element:
+        assert isinstance(trace_element._error, expected_element["error_type"])
+    else:
+        assert trace_element._error is None
+
+
+def assert_action_trace(expected):
+    """Assert a trace condition sequence is as expected."""
+    action_trace = script.action_trace_get()
+    script.action_trace_clear()
+    expected_trace_keys = list(expected.keys())
+    assert list(action_trace.keys()) == expected_trace_keys
+    for trace_key_index, key in enumerate(expected_trace_keys):
+        assert len(action_trace[key]) == len(expected[key])
+        for index, element in enumerate(expected[key]):
+            path = f"[{trace_key_index}][{index}]"
+            assert_element(action_trace[key][index], element, path)
+
+
 def async_watch_for_action(script_obj, message):
     """Watch for message in last_action."""
     flag = asyncio.Event()
@@ -54,9 +80,14 @@ async def test_firing_event_basic(hass, caplog):
     sequence = cv.SCRIPT_SCHEMA(
         {"alias": alias, "event": event, "event_data": {"hello": "world"}}
     )
-    script_obj = script.Script(
-        hass, sequence, "Test Name", "test_domain", running_description="test script"
-    )
+    with script.trace_action(None):
+        script_obj = script.Script(
+            hass,
+            sequence,
+            "Test Name",
+            "test_domain",
+            running_description="test script",
+        )
 
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
@@ -67,6 +98,12 @@ async def test_firing_event_basic(hass, caplog):
     assert ".test_name:" in caplog.text
     assert "Test Name: Running test script" in caplog.text
     assert f"Executing step {alias}" in caplog.text
+    assert_action_trace(
+        {
+            "": [{}],
+            "0": [{}],
+        }
+    )
 
 
 async def test_firing_event_template(hass):
