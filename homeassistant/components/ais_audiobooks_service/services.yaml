@@ -5,6 +5,8 @@ get_books:
     author:
       description: Autor
       example: 'Remigiusz Mróz'
+      selector:
+        text:
 
 get_chapters:
   description: Pobranie rozdziałów wybranej książki
@@ -12,6 +14,8 @@ get_chapters:
     book:
       description: Nazwa książki
       example: 'Inwigilacja'
+      selector:
+        text:
 
 select_chapter:
   description: Wybranie rozdziału książki
@@ -19,3 +23,5 @@ select_chapter:
     book:
       description: Nazwa rozdziału
       example: 'Rozdział 1, DZIEJE POCZĄTKÓW ŚWIATA I LUDZKOŚCI.'
+      selector:
+        text:

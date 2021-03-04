@@ -10,6 +10,8 @@ add_bookmark:
                   "media_title": "Home Assistant Podcast 33 – 0.77 and the new Authentication with Paulus",
                   "source": "Podcast"
                 }'
+      selector:
+        object:
 
 add_favorite:
   description: Dodanie aktualnie odtwarzanego audio do ulubionych
@@ -20,3 +22,5 @@ add_favorite:
                   "media_title": "Home Assistant Podcast 33 – 0.77 and the new Authentication with Paulus",
                   "source": "Podcast"
                 }'
+      selector:
+        object:

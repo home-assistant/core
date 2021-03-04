@@ -1,11 +1,10 @@
 # Describes the format for available ais files services
 
-refresh_files:
-  description: Regresch filef in sensor from folder gallery location
-
 remove_file:
-  description: Remove file from gallery
+  description: Remove file from AIS gallery
   fields:
     path:
       description: Path to file.
       example: '/local/test.png'
+      selector:
+        text:

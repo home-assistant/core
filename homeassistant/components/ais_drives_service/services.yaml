@@ -5,6 +5,8 @@ browse_path:
     path:
       description: Śeieżka
       example: '/data/data/pl.sviete.dom/files/home/dom/dysk-wewnętrzny'
+      selector:
+        text:
 
 rclone_mount_drive:
   description: Montowanie dysku zdalnego lokalnie
@@ -12,6 +14,8 @@ rclone_mount_drive:
     name:
       description: Nazwa dysku
       example: 'drive'
+      selector:
+        text:
 
 rclone_remove_drive:
   description: Odmontowanie i usunięcie dysku zdalnego
@@ -19,3 +23,5 @@ rclone_remove_drive:
     name:
       description: Nazwa dysku
       example: 'drive'
+      selector:
+        text:

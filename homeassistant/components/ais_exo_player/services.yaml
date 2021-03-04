@@ -5,6 +5,10 @@ redirect_media:
     entity_id:
       description: Entitie of the selected media player to play current media
       example: 'media_player.ai_speaker_player'
+      selector:
+        entity:
+          domain: media_player
+
 
 redirect_camera_stream:
   description: Send stream url from selected camera directly to selected media player
@@ -12,9 +16,15 @@ redirect_camera_stream:
     camera_entity_id:
       description: Entitie of the camera
       example: 'camera.domek'
+      selector:
+        entity:
+          domain: camera
     player_entity_id:
       description: Entitie of the AIS media player
       example: 'media_player.ai_speaker_player'
+      selector:
+        entity:
+          domain: media_player
 
 play_text_or_url:
   description: Send the text or media url to play on main media player
@@ -22,3 +32,5 @@ play_text_or_url:
     text:
       description: Text to send
       example: 'Hey!'
+      selector:
+        text:
