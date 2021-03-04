@@ -227,7 +227,7 @@ def _include_dir_list_yaml(
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     return [
-        load_yaml(f)
+        load_yaml(f, loader.secrets)
         for f in _find_files(loc, "*.yaml")
         if os.path.basename(f) != SECRET_YAML
     ]
