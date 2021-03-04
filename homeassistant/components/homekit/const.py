@@ -235,6 +235,7 @@ DEVICE_CLASS_OPENING = "opening"
 DEVICE_CLASS_PM25 = "pm25"
 DEVICE_CLASS_SMOKE = "smoke"
 DEVICE_CLASS_WINDOW = "window"
+DEVICE_CLASS_WINDOW_CASEMENT = "window_casement"
 
 # #### Thresholds ####
 THRESHOLD_CO = 25
