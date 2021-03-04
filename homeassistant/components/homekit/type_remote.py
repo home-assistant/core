@@ -1,4 +1,5 @@
 """Class to hold remote accessories."""
+from abc import abstractmethod
 import logging
 
 from pyhap.const import CATEGORY_TELEVISION
@@ -123,3 +124,7 @@ class RemoteInputSelectAccessory(InputSelectAccessory):
             has_remote=True,
             category=CATEGORY_TELEVISION,
         )
+
+    @abstractmethod
+    def set_remote_key(self, value):
+        """Send remote key value if call came from HomeKit."""
