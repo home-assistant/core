@@ -50,6 +50,8 @@ CONF_TEMPERATURE_TEMPLATE = "temperature_template"
 CONF_HUMIDITY_TEMPLATE = "humidity_template"
 CONF_CONDITION_TEMPLATE = "condition_template"
 CONF_PRESSURE_TEMPLATE = "pressure_template"
+CONF_VISIBILITY_TEMPLATE = "visibility_template"
+CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
 CONF_FORECAST_TEMPLATE = "forecast_template"
 
@@ -60,6 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
         vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
         vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
         vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_FORECAST_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -76,6 +80,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
     humidity_template = config[CONF_HUMIDITY_TEMPLATE]
     pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
+    visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
+    wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
     wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
     forecast_template = config.get(CONF_FORECAST_TEMPLATE)
     unique_id = config.get(CONF_UNIQUE_ID)
@@ -89,6 +95,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 temperature_template,
                 humidity_template,
                 pressure_template,
+                visibility_template,
+                wind_bearing_template,
                 wind_speed_template,
                 forecast_template,
                 unique_id,
@@ -108,6 +116,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         temperature_template,
         humidity_template,
         pressure_template,
+        visibility_template,
+        wind_bearing_template,
         wind_speed_template,
         forecast_template,
         unique_id,
@@ -120,6 +130,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._temperature_template = temperature_template
         self._humidity_template = humidity_template
         self._pressure_template = pressure_template
+        self._visibility_template = visibility_template
+        self._wind_bearing_template = wind_bearing_template
         self._wind_speed_template = wind_speed_template
         self._forecast_template = forecast_template
         self._unique_id = unique_id
@@ -130,6 +142,8 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         self._temperature = None
         self._humidity = None
         self._pressure = None
+        self._visibility = None
+        self._wind_bearing = None
         self._wind_speed = None
         self._forecast = []
 
@@ -157,6 +171,16 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def humidity(self):
         """Return the humidity."""
         return self._humidity
+
+    @property
+    def visibility(self):
+        """Return the visibility."""
+        return self._visibility
+
+    @property
+    def wind_bearing(self):
+        """Return the wind direction."""
+        return self._wind_bearing
 
     @property
     def wind_speed(self):
@@ -206,6 +230,16 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
             self.add_template_attribute(
                 "_pressure",
                 self._pressure_template,
+            )
+        if self._visibility_template:
+            self.add_template_attribute(
+                "_visibility",
+                self._visibility_template,
+            )
+        if self._wind_bearing_template:
+            self.add_template_attribute(
+                "_wind_bearing",
+                self._wind_bearing_template,
             )
         if self._wind_speed_template:
             self.add_template_attribute(
