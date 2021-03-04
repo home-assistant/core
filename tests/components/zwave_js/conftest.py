@@ -240,6 +240,12 @@ def nortek_thermostat_state_fixture():
     return json.loads(load_fixture("zwave_js/nortek_thermostat_state.json"))
 
 
+@pytest.fixture(name="srt321_hrt4_zw_state", scope="session")
+def srt321_hrt4_zw_state_fixture():
+    """Load the climate HRT4-ZW / SRT321 / SRT322 thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/srt321_hrt4_zw_state.json"))
+
+
 @pytest.fixture(name="chain_actuator_zws12_state", scope="session")
 def window_cover_state_fixture():
     """Load the window cover node state fixture data."""
@@ -429,6 +435,14 @@ def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
 def nortek_thermostat_fixture(client, nortek_thermostat_state):
     """Mock a nortek thermostat node."""
     node = Node(client, copy.deepcopy(nortek_thermostat_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="srt321_hrt4_zw")
+def srt321_hrt4_zw_fixture(client, srt321_hrt4_zw_state):
+    """Mock a HRT4-ZW / SRT321 / SRT322 thermostat node."""
+    node = Node(client, copy.deepcopy(srt321_hrt4_zw_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
