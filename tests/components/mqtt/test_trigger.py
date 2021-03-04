@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_O
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_fire_mqtt_message, async_mock_service, mock_component
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -77,6 +77,31 @@ async def test_if_fires_on_topic_and_payload_match(hass, calls):
     )
 
     async_fire_mqtt_message(hass, "test-topic", "hello")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_topic_and_payload_match2(hass, calls):
+    """Test if message is fired on topic and payload match.
+
+    Make sure a payload which would render as a non string can still be matched.
+    """
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "mqtt",
+                    "topic": "test-topic",
+                    "payload": "0",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    async_fire_mqtt_message(hass, "test-topic", "0")
     await hass.async_block_till_done()
     assert len(calls) == 1
 

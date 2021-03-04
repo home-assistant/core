@@ -41,7 +41,6 @@
       "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
       "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
       "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
-      "addon_missing_discovery_info": "Missing Z-Wave JS add-on discovery info.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "progress": {

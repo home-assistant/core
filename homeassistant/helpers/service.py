@@ -62,7 +62,7 @@ from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity  # noqa
+    from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_platform import EntityPlatform
 
 

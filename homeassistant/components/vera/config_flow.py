@@ -13,11 +13,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import (  # pylint: disable=unused-import
-    CONF_CONTROLLER,
-    CONF_LEGACY_UNIQUE_ID,
-    DOMAIN,
-)
+from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
 LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)

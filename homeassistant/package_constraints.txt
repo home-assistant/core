@@ -15,12 +15,12 @@ defusedxml==0.6.0
 distro==1.5.0
 emoji==1.2.0
 hass-nabucasa==0.41.0
-home-assistant-frontend==20210226.0
+home-assistant-frontend==20210302.3
 httpx==0.16.1
 jinja2>=2.11.3
 netdisco==2.8.2
 paho-mqtt==1.5.1
-pillow==8.1.0
+pillow==8.1.1
 pip>=8.0.3,<20.3
 python-slugify==4.0.1
 pytz>=2021.1

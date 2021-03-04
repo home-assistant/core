@@ -23,7 +23,7 @@ async def async_setup_entry(
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    switches = [
+    switches: List[Entity] = [
         BondSwitch(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_generic(device.type)
@@ -41,7 +41,7 @@ class BondSwitch(BondEntity, SwitchEntity):
 
         self._power: Optional[bool] = None
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
 
     @property
