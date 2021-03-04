@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from . import HiveEntity
-from .const import ATTR_AVAILABLE, ATTR_MODE, DOMAIN
+from .const import ATTR_MODE, DOMAIN
 
 DEVICETYPE = {
     "contactsensor": DEVICE_CLASS_OPENING,
@@ -78,7 +78,6 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
     def device_state_attributes(self):
         """Show Device Attributes."""
         return {
-            ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),
             ATTR_MODE: self.attributes.get(ATTR_MODE),
         }
 

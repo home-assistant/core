@@ -83,6 +83,7 @@ async def async_setup_entry(hass, entry):
                 DOMAIN,
                 context={
                     "source": config_entries.SOURCE_REAUTH,
+                    "unique_id": entry.unique_id,
                 },
                 data=entry.data,
             )

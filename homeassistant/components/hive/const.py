@@ -1,5 +1,4 @@
 """Constants for Hive."""
-ATTR_AVAILABLE = "available"
 ATTR_MODE = "mode"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_ONOFF = "on_off"

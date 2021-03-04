@@ -13,7 +13,7 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_AVAILABLE, ATTR_MODE, DOMAIN
+from .const import ATTR_MODE, DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -65,7 +65,6 @@ class HiveDeviceLight(HiveEntity, LightEntity):
     def device_state_attributes(self):
         """Show Device Attributes."""
         return {
-            ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),
             ATTR_MODE: self.attributes.get(ATTR_MODE),
         }
 

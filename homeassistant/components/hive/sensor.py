@@ -6,7 +6,7 @@ from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
 from . import HiveEntity
-from .const import ATTR_AVAILABLE, DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -71,11 +71,6 @@ class HiveSensorEntity(HiveEntity, Entity):
     def state(self):
         """Return the state of the sensor."""
         return self.device["status"]["state"]
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE)}
 
     async def async_update(self):
         """Update all Node data from Hive."""

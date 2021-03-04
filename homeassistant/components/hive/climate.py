@@ -20,7 +20,7 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_AVAILABLE, ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HEATING
+from .const import ATTR_TIME_PERIOD, DOMAIN, SERVICE_BOOST_HEATING
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,
@@ -118,11 +118,6 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         return self.device["deviceData"]["online"]
 
     @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return {ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE)}
-
-    @property
     def hvac_modes(self):
         """Return the list of available hvac operation modes.
 
@@ -212,4 +207,3 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.heating.getHeating(self.device)
-        self.attributes.update(self.device.get("attributes", {}))
