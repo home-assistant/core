@@ -69,10 +69,7 @@ class IammeterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = netloc
 
             connect_ok = False
-            try:
-                connect_ok = await self._test_connection(host, port)
-            except (IamMeterError, asyncio.TimeoutError):
-                _LOGGER.error("IamMeterError!")
+            connect_ok = await self._test_connection(host, port)
             if not connect_ok:
                 errors[CONF_NAME] = "cannot_connect"
             else:
