@@ -71,10 +71,7 @@ MODELS_SWITCH = [
     "lumi.acpartner.v3",
 ]
 MODELS_FAN = MODELS_FAN_MIIO + MODELS_HUMIDIFIER_MIOT + MODELS_PURIFIER_MIOT
-MODELS_VACUUM = [
-    "roborock.vacuum",
-    "rockrobo.vacuum"
-]
+MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
 
 MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_FAN + MODELS_VACUUM
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
