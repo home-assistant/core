@@ -169,7 +169,7 @@ def item_payload(item: InstalledPackage, images: Dict[str, List[Image]]):
     )
 
 
-def _find_media_image(images=List[Image]) -> Optional[Image]:
+def _find_media_image(images: List[Image]) -> Optional[Image]:
     purpose_order = ["Poster", "Tile", "Logo", "BoxArt"]
     for purpose in purpose_order:
         for image in images:
