@@ -64,8 +64,6 @@ CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
 
-DEFAULT_ENTITY_NAME = "MQTT Entity"
-
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
         vol.Exclusive(CONF_AVAILABILITY_TOPIC, "availability"): valid_subscribe_topic,
@@ -147,7 +145,6 @@ MQTT_ENTITY_BASE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_NAME, default=DEFAULT_ENTITY_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
