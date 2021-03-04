@@ -1,5 +1,5 @@
 """Support for MySensors covers."""
-from enum import Enum
+from enum import Enum, unique
 import logging
 from typing import Callable
 
@@ -15,13 +15,14 @@ from homeassistant.helpers.typing import HomeAssistantType
 _LOGGER = logging.getLogger(__name__)
 
 
+@unique
 class CoverState(Enum):
     """An enumeration of the standard cover states."""
 
     OPEN = 0
     OPENING = 1
-    CLOSED = 2
-    CLOSING = 3
+    CLOSING = 2
+    CLOSED = 3
 
 
 async def async_setup_entry(
@@ -69,11 +70,11 @@ class MySensorsCover(mysensors.device.MySensorsEntity, CoverEntity):
         else:
             amount = 100 if self._values.get(set_req.V_LIGHT) == STATE_ON else 0
 
-        if v_up and (not v_down) and (not v_stop):
+        if v_up and not v_down and not v_stop:
             return CoverState.OPENING
-        if (not v_up) and v_down and (not v_stop):
+        if not v_up and v_down and not v_stop:
             return CoverState.CLOSING
-        if (not v_up) and (not v_down) and v_stop and amount == 0:
+        if not v_up and not v_down and v_stop and amount == 0:
             return CoverState.CLOSED
         return CoverState.OPEN
 
