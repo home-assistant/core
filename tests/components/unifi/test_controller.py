@@ -390,27 +390,29 @@ async def test_wireless_client_event_calls_update_wireless_devices(
         assert wireless_clients_mock.assert_called_once
 
 
-async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket, caplog):
+async def test_reconnect_mechanism(hass, aioclient_mock, mock_unifi_websocket):
     """Verify reconnect prints only on first reconnection try."""
     await setup_unifi_integration(hass, aioclient_mock)
 
-    caplog.clear()
+    aioclient_mock.clear_requests()
     aioclient_mock.post(f"https://{DEFAULT_HOST}:1234/api/login", status=502)
 
     mock_unifi_websocket(state=STATE_DISCONNECTED)
     await hass.async_block_till_done()
 
-    assert len(caplog.records) == 1
+    assert aioclient_mock.call_count == 0
 
     new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
     async_fire_time_changed(hass, new_time)
+    await hass.async_block_till_done()
 
-    assert len(caplog.records) == 2
+    assert aioclient_mock.call_count == 1
 
     new_time = dt_util.utcnow() + timedelta(seconds=RETRY_TIMER)
     async_fire_time_changed(hass, new_time)
+    await hass.async_block_till_done()
 
-    assert len(caplog.records) == 2
+    assert aioclient_mock.call_count == 2
 
 
 @pytest.mark.parametrize(
