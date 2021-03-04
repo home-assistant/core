@@ -308,7 +308,11 @@ class ScriptEntity(ToggleEntity):
         self._changed.set()
 
     async def async_turn_on(self, **kwargs):
-        """Turn the script on."""
+        """Run the script.
+
+        Depending on the script's run mode, this may do nothing, restart the script or
+        fire an additional parallel run.
+        """
         variables = kwargs.get("variables")
         context = kwargs.get("context")
         wait = kwargs.get("wait", True)
@@ -331,7 +335,10 @@ class ScriptEntity(ToggleEntity):
         await self._changed.wait()
 
     async def async_turn_off(self, **kwargs):
-        """Turn script off."""
+        """Stop running the script.
+
+        If multiple runs are in progress, all will be stopped.
+        """
         await self.script.async_stop()
 
     async def async_will_remove_from_hass(self):
