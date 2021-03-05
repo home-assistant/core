@@ -21,13 +21,7 @@ from tests.common import MockEntity, MockEntityPlatform, async_mock_service
 
 async def test_call_service(hass, websocket_client):
     """Test call service command."""
-    calls = []
-
-    @callback
-    def service_call(call):
-        calls.append(call)
-
-    hass.services.async_register("domain_test", "test_service", service_call)
+    calls = async_mock_service(hass, "domain_test", "test_service")
 
     await websocket_client.send_json(
         {
@@ -54,13 +48,7 @@ async def test_call_service(hass, websocket_client):
 
 async def test_call_service_target(hass, websocket_client):
     """Test call service command with target."""
-    calls = []
-
-    @callback
-    def service_call(call):
-        calls.append(call)
-
-    hass.services.async_register("domain_test", "test_service", service_call)
+    calls = async_mock_service(hass, "domain_test", "test_service")
 
     await websocket_client.send_json(
         {
@@ -91,6 +79,28 @@ async def test_call_service_target(hass, websocket_client):
         "entity_id": ["entity.one", "entity.two"],
         "device_id": ["deviceid"],
     }
+
+
+async def test_call_service_target_template(hass, websocket_client):
+    """Test call service command with target does not allow template."""
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "call_service",
+            "domain": "domain_test",
+            "service": "test_service",
+            "service_data": {"hello": "world"},
+            "target": {
+                "entity_id": "{{ 1 }}",
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
 
 
 async def test_call_service_not_found(hass, websocket_client):
@@ -232,7 +242,6 @@ async def test_call_service_error(hass, websocket_client):
     )
 
     msg = await websocket_client.receive_json()
-    print(msg)
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False
@@ -249,7 +258,6 @@ async def test_call_service_error(hass, websocket_client):
     )
 
     msg = await websocket_client.receive_json()
-    print(msg)
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"] is False

@@ -13,10 +13,9 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.template import Template
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
@@ -132,6 +131,11 @@ async def handle_call_service(hass, connection, msg):
     if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
         blocking = False
 
+    # We do not support templates.
+    target = msg.get("target")
+    if template.is_complex(target):
+        raise vol.Invalid("Templates are not supported here")
+
     try:
         context = connection.context(msg)
         await hass.services.async_call(
@@ -140,7 +144,7 @@ async def handle_call_service(hass, connection, msg):
             msg.get("service_data"),
             blocking,
             context,
-            target=msg.get("target"),
+            target=target,
         )
         connection.send_message(
             messages.result_message(msg["id"], {"context": context})
@@ -256,14 +260,14 @@ def handle_ping(hass, connection, msg):
 async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
     template_str = msg["template"]
-    template = Template(template_str, hass)
+    template_obj = template.Template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
 
     if timeout:
         try:
-            timed_out = await template.async_render_will_timeout(timeout)
+            timed_out = await template_obj.async_render_will_timeout(timeout)
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
             return
@@ -294,7 +298,7 @@ async def handle_render_template(hass, connection, msg):
     try:
         info = async_track_template_result(
             hass,
-            [TrackTemplate(template, variables)],
+            [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
         )
