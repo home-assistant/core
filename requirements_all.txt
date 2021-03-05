@@ -17,7 +17,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.3.2
+HAP-python==3.3.3
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -1477,7 +1477,7 @@ pykmtronic==0.0.3
 pykodi==0.2.1
 
 # homeassistant.components.kulersky
-pykulersky==0.4.0
+pykulersky==0.5.2
 
 # homeassistant.components.kwb
 pykwb==0.0.8
