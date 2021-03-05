@@ -2391,7 +2391,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.4.0
 
 # homeassistant.components.zha
-zigpy==0.32.0
+zigpy==0.33.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
