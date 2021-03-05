@@ -2,18 +2,15 @@
 from datetime import timedelta
 import logging
 
-from adguardhome import AdGuardHomeConnectionError, AdGuardHomeError
+from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 
-from homeassistant.components.adguard import AdGuardHomeDeviceEntity
-from homeassistant.components.adguard.const import (
-    DATA_ADGUARD_CLIENT,
-    DATA_ADGUARD_VERION,
-    DOMAIN,
-)
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType
+
+from . import AdGuardHomeDeviceEntity
+from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +19,7 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
     adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
@@ -49,7 +46,12 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
     """Defines a AdGuard Home switch."""
 
     def __init__(
-        self, adguard, name: str, icon: str, key: str, enabled_default: bool = True
+        self,
+        adguard: AdGuardHome,
+        name: str,
+        icon: str,
+        key: str,
+        enabled_default: bool = True,
     ):
         """Initialize AdGuard Home switch."""
         self._state = False
@@ -96,7 +98,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
 class AdGuardHomeProtectionSwitch(AdGuardHomeSwitch):
     """Defines a AdGuard Home protection switch."""
 
-    def __init__(self, adguard) -> None:
+    def __init__(self, adguard: AdGuardHome) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
             adguard, "AdGuard Protection", "mdi:shield-check", "protection"
@@ -118,7 +120,7 @@ class AdGuardHomeProtectionSwitch(AdGuardHomeSwitch):
 class AdGuardHomeParentalSwitch(AdGuardHomeSwitch):
     """Defines a AdGuard Home parental control switch."""
 
-    def __init__(self, adguard) -> None:
+    def __init__(self, adguard: AdGuardHome) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
             adguard, "AdGuard Parental Control", "mdi:shield-check", "parental"
@@ -140,7 +142,7 @@ class AdGuardHomeParentalSwitch(AdGuardHomeSwitch):
 class AdGuardHomeSafeSearchSwitch(AdGuardHomeSwitch):
     """Defines a AdGuard Home safe search switch."""
 
-    def __init__(self, adguard) -> None:
+    def __init__(self, adguard: AdGuardHome) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
             adguard, "AdGuard Safe Search", "mdi:shield-check", "safesearch"
@@ -162,7 +164,7 @@ class AdGuardHomeSafeSearchSwitch(AdGuardHomeSwitch):
 class AdGuardHomeSafeBrowsingSwitch(AdGuardHomeSwitch):
     """Defines a AdGuard Home safe search switch."""
 
-    def __init__(self, adguard) -> None:
+    def __init__(self, adguard: AdGuardHome) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
             adguard, "AdGuard Safe Browsing", "mdi:shield-check", "safebrowsing"
@@ -184,7 +186,7 @@ class AdGuardHomeSafeBrowsingSwitch(AdGuardHomeSwitch):
 class AdGuardHomeFilteringSwitch(AdGuardHomeSwitch):
     """Defines a AdGuard Home filtering switch."""
 
-    def __init__(self, adguard) -> None:
+    def __init__(self, adguard: AdGuardHome) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(adguard, "AdGuard Filtering", "mdi:shield-check", "filtering")
 
@@ -204,7 +206,7 @@ class AdGuardHomeFilteringSwitch(AdGuardHomeSwitch):
 class AdGuardHomeQueryLogSwitch(AdGuardHomeSwitch):
     """Defines a AdGuard Home query log switch."""
 
-    def __init__(self, adguard) -> None:
+    def __init__(self, adguard: AdGuardHome) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
             adguard,
