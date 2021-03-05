@@ -88,13 +88,15 @@ class PacketSequence:
             raise StopIteration
         self.packet += 1
 
-        class FakePacket:
+        class FakePacket(bytearray):
+            # Be a bytearray so that memoryview works
             time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
             dts = self.packet * PACKET_DURATION / time_base
             pts = self.packet * PACKET_DURATION / time_base
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
             is_keyframe = True
+            size = Mock()
 
         return FakePacket()
 
@@ -411,6 +413,24 @@ async def test_audio_packets_not_found(hass):
     segments = decoded_stream.segments
     assert len(segments) == int((num_packets - 1) * SEGMENTS_PER_PACKET)
     assert len(decoded_stream.video_packets) == num_packets
+    assert len(decoded_stream.audio_packets) == 0
+
+
+async def test_adts_aac_audio(hass):
+    """Set up an ADTS AAC audio stream and disable audio."""
+    py_av = MockPyAv(audio=True)
+
+    num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
+    packets = list(PacketSequence(num_packets))
+    packets[1].stream = AUDIO_STREAM
+    packets[1].dts = packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    packets[1].pts = packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
+    # The following attributes are signs of ADTS AAC
+    py_av.container.streams.audio[0].codec.name = "aac"
+    packets[1].size = 3
+    packets[1].extend((255, 241))
+
+    decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     assert len(decoded_stream.audio_packets) == 0
 
 
