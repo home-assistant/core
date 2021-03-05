@@ -80,7 +80,6 @@ MODELS_SWITCH = [
     "chuangmi.plug.v2",
     "chuangmi.plug.hmi205",
     "chuangmi.plug.hmi206",
-    "lumi.acpartner.v3",
 ]
 MODELS_FAN = MODELS_FAN_MIIO + MODELS_HUMIDIFIER_MIOT + MODELS_PURIFIER_MIOT
 MODELS_LIGHT = (
@@ -90,7 +89,7 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_BULB
     + MODELS_LIGHT_MONO
 )
-MODELS_VACUUM = ["roborock.vacuum"]
+MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
 
 MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_FAN + MODELS_VACUUM + MODELS_LIGHT
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
