@@ -261,14 +261,14 @@ def handle_ping(hass, connection, msg):
 async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
     template_str = msg["template"]
-    template = Template(template_str, hass)
+    template_obj = Template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
 
     if timeout:
         try:
-            timed_out = await template.async_render_will_timeout(timeout)
+            timed_out = await template_obj.async_render_will_timeout(timeout)
         except TemplateError as ex:
             connection.send_error(msg["id"], const.ERR_TEMPLATE_ERROR, str(ex))
             return
