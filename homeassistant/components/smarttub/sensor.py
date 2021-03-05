@@ -138,9 +138,9 @@ class SmartTubReminder(SmartTubEntity):
 
     @property
     def state(self) -> str:
-        """Return the datetime at which the reminder will activate."""
+        """Return the date at which the reminder will activate."""
         when = datetime.now() + timedelta(days=self.reminder.remaining_days)
-        return when.isoformat()
+        return when.date().isoformat()
 
     @property
     def device_state_attributes(self):

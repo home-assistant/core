@@ -1,5 +1,5 @@
 """Test the SmartTub sensor platform."""
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 
 import pytest
 
@@ -54,5 +54,5 @@ async def test_reminders(spa, setup_entry, hass):
     entity_id = f"sensor.{spa.brand}_{spa.model}_myfilter_reminder"
     state = hass.states.get(entity_id)
     assert state is not None
-    assert datetime.fromisoformat(state.state) <= datetime.now() + timedelta(days=2)
+    assert date.fromisoformat(state.state) <= date.today() + timedelta(days=2)
     assert state.attributes["snoozed"] is False
