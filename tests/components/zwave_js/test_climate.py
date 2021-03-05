@@ -31,6 +31,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
     CLIMATE_FLOOR_THERMOSTAT_ENTITY,
+    CLIMATE_MAIN_HEAT_ACTIONNER,
     CLIMATE_RADIO_THERMOSTAT_ENTITY,
 )
 
@@ -404,7 +405,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
 
     assert state
     assert state.state == HVAC_MODE_HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 25
+    assert state.attributes[ATTR_TEMPERATURE] == 14
     assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
@@ -431,6 +432,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         "commandClassName": "Thermostat Setpoint",
         "property": "setpoint",
         "propertyName": "setpoint",
+        "propertyKey": 1,
         "propertyKeyName": "Heating",
         "ccVersion": 2,
         "metadata": {
@@ -440,7 +442,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
             "unit": "\u00b0C",
             "ccSpecific": {"setpointType": 1},
         },
-        "value": 25,
+        "value": 14,
     }
     assert args["value"] == 21.5
 
@@ -458,6 +460,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
                 "commandClass": 67,
                 "endpoint": 0,
                 "property": "setpoint",
+                "propertyKey": 1,
                 "propertyKeyName": "Heating",
                 "propertyName": "setpoint",
                 "newValue": 23,
@@ -488,3 +491,19 @@ async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integratio
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+
+
+async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):
+    """Test a climate entity from a HRT4-ZW / SRT321 thermostat device.
+
+    This device currently has no setpoint values.
+    """
+    state = hass.states.get(CLIMATE_MAIN_HEAT_ACTIONNER)
+
+    assert state
+    assert state.state == HVAC_MODE_OFF
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT,
+    ]
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None

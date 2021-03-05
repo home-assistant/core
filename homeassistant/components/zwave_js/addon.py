@@ -67,8 +67,8 @@ class AddonManager:
         """Set up the add-on manager."""
         self._hass = hass
         self._install_task: Optional[asyncio.Task] = None
+        self._start_task: Optional[asyncio.Task] = None
         self._update_task: Optional[asyncio.Task] = None
-        self._setup_task: Optional[asyncio.Task] = None
 
     def task_in_progress(self) -> bool:
         """Return True if any of the add-on tasks are in progress."""
@@ -76,7 +76,7 @@ class AddonManager:
             task and not task.done()
             for task in (
                 self._install_task,
-                self._setup_task,
+                self._start_task,
                 self._update_task,
             )
         )
@@ -125,8 +125,21 @@ class AddonManager:
         await async_install_addon(self._hass, ADDON_SLUG)
 
     @callback
-    def async_schedule_install_addon(
-        self, usb_path: str, network_key: str
+    def async_schedule_install_addon(self, catch_error: bool = False) -> asyncio.Task:
+        """Schedule a task that installs the Z-Wave JS add-on.
+
+        Only schedule a new install task if the there's no running task.
+        """
+        if not self._install_task or self._install_task.done():
+            LOGGER.info("Z-Wave JS add-on is not installed. Installing add-on")
+            self._install_task = self._async_schedule_addon_operation(
+                self.async_install_addon, catch_error=catch_error
+            )
+        return self._install_task
+
+    @callback
+    def async_schedule_install_setup_addon(
+        self, usb_path: str, network_key: str, catch_error: bool = False
     ) -> asyncio.Task:
         """Schedule a task that installs and sets up the Z-Wave JS add-on.
 
@@ -136,7 +149,9 @@ class AddonManager:
             LOGGER.info("Z-Wave JS add-on is not installed. Installing add-on")
             self._install_task = self._async_schedule_addon_operation(
                 self.async_install_addon,
-                partial(self.async_setup_addon, usb_path, network_key),
+                partial(self.async_configure_addon, usb_path, network_key),
+                self.async_start_addon,
+                catch_error=catch_error,
             )
         return self._install_task
 
@@ -158,10 +173,11 @@ class AddonManager:
         if not update_available:
             return
 
+        await self.async_create_snapshot()
         await async_update_addon(self._hass, ADDON_SLUG)
 
     @callback
-    def async_schedule_update_addon(self) -> asyncio.Task:
+    def async_schedule_update_addon(self, catch_error: bool = False) -> asyncio.Task:
         """Schedule a task that updates and sets up the Z-Wave JS add-on.
 
         Only schedule a new update task if the there's no running task.
@@ -169,7 +185,8 @@ class AddonManager:
         if not self._update_task or self._update_task.done():
             LOGGER.info("Trying to update the Z-Wave JS add-on")
             self._update_task = self._async_schedule_addon_operation(
-                self.async_create_snapshot, self.async_update_addon
+                self.async_update_addon,
+                catch_error=catch_error,
             )
         return self._update_task
 
@@ -178,12 +195,25 @@ class AddonManager:
         """Start the Z-Wave JS add-on."""
         await async_start_addon(self._hass, ADDON_SLUG)
 
+    @callback
+    def async_schedule_start_addon(self, catch_error: bool = False) -> asyncio.Task:
+        """Schedule a task that starts the Z-Wave JS add-on.
+
+        Only schedule a new start task if the there's no running task.
+        """
+        if not self._start_task or self._start_task.done():
+            LOGGER.info("Z-Wave JS add-on is not running. Starting add-on")
+            self._start_task = self._async_schedule_addon_operation(
+                self.async_start_addon, catch_error=catch_error
+            )
+        return self._start_task
+
     @api_error("Failed to stop the Z-Wave JS add-on")
     async def async_stop_addon(self) -> None:
         """Stop the Z-Wave JS add-on."""
         await async_stop_addon(self._hass, ADDON_SLUG)
 
-    async def async_setup_addon(self, usb_path: str, network_key: str) -> None:
+    async def async_configure_addon(self, usb_path: str, network_key: str) -> None:
         """Configure and start Z-Wave JS add-on."""
         addon_options = await self.async_get_addon_options()
 
@@ -195,22 +225,22 @@ class AddonManager:
         if new_addon_options != addon_options:
             await self.async_set_addon_options(new_addon_options)
 
-        await self.async_start_addon()
-
     @callback
     def async_schedule_setup_addon(
-        self, usb_path: str, network_key: str
+        self, usb_path: str, network_key: str, catch_error: bool = False
     ) -> asyncio.Task:
         """Schedule a task that configures and starts the Z-Wave JS add-on.
 
         Only schedule a new setup task if the there's no running task.
         """
-        if not self._setup_task or self._setup_task.done():
+        if not self._start_task or self._start_task.done():
             LOGGER.info("Z-Wave JS add-on is not running. Starting add-on")
-            self._setup_task = self._async_schedule_addon_operation(
-                partial(self.async_setup_addon, usb_path, network_key)
+            self._start_task = self._async_schedule_addon_operation(
+                partial(self.async_configure_addon, usb_path, network_key),
+                self.async_start_addon,
+                catch_error=catch_error,
             )
-        return self._setup_task
+        return self._start_task
 
     @api_error("Failed to create a snapshot of the Z-Wave JS add-on.")
     async def async_create_snapshot(self) -> None:
@@ -227,7 +257,9 @@ class AddonManager:
         )
 
     @callback
-    def _async_schedule_addon_operation(self, *funcs: Callable) -> asyncio.Task:
+    def _async_schedule_addon_operation(
+        self, *funcs: Callable, catch_error: bool = False
+    ) -> asyncio.Task:
         """Schedule an add-on task."""
 
         async def addon_operation() -> None:
@@ -236,6 +268,8 @@ class AddonManager:
                 try:
                     await func()
                 except AddonError as err:
+                    if not catch_error:
+                        raise
                     LOGGER.error(err)
                     break
 
