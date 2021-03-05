@@ -4,6 +4,7 @@ import logging
 from python_picnic_api import PicnicAPI
 import requests
 import voluptuous as vol
+from python_picnic_api.session import PicnicAuthError
 
 from homeassistant import config_entries, core, exceptions
 
@@ -53,12 +54,14 @@ async def validate_input(hass: core.HomeAssistant, data):
         )
     except requests.exceptions.ConnectionError:
         raise CannotConnect
-    except Exception:  # pylint: disable=broad-except
+    except PicnicAuthError:
         raise InvalidAuth
 
     # Return the validation result
-    address = f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}' + \
-              f'{user_data["address"]["house_number_ext"]}'
+    address = (
+        f'{user_data["address"]["street"]} {user_data["address"]["house_number"]}'
+        + f'{user_data["address"]["house_number_ext"]}'
+    )
     return {
         "title": address,
         "unique_id": user_data["user_id"],

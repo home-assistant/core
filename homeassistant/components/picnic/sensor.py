@@ -5,17 +5,17 @@ from typing import Any, Optional
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-
 from .const import ADDRESS, ATTRIBUTION, CONF_COORDINATOR, DOMAIN, SENSOR_TYPES
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+        hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up Picnic sensor entries."""
 
@@ -23,6 +23,8 @@ async def async_setup_entry(
 
     # Fetch initial data so we have data when entities subscribe
     await picnic_coordinator.async_refresh()
+    if not picnic_coordinator.last_update_success:
+        raise PlatformNotReady()
 
     # Add an entity for each sensor type
     async_add_entities(
@@ -35,11 +37,11 @@ class PicnicSensor(CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
     def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[Any],
-        config_entry: ConfigEntry,
-        sensor_type,
-        properties,
+            self,
+            coordinator: DataUpdateCoordinator[Any],
+            config_entry: ConfigEntry,
+            sensor_type,
+            properties,
     ):
         """Init a Picnic sensor."""
         super().__init__(coordinator)
@@ -101,7 +103,7 @@ class PicnicSensor(CoordinatorEntity):
             "identifiers": {(DOMAIN, self._service_unique_id)},
             "manufacturer": "Picnic",
             "model": self._service_unique_id,
-            "name": f"Picnic - {self.coordinator.data[ADDRESS]}",
+            "name": f"Picnic: {self.coordinator.data[ADDRESS]}",
             "entry_type": "service",
         }
 

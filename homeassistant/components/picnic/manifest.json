@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/picnic",
   "requirements": [
-    "python-picnic-api==0.2.2"
+    "python-picnic-api==1.0.0"
   ],
   "ssdp": [],
   "zeroconf": [],

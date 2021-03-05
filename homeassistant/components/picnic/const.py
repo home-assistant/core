@@ -53,12 +53,12 @@ SENSOR_TYPES = {
     SENSOR_SELECTED_SLOT_START: {
         "class": DEVICE_CLASS_TIMESTAMP,
         "unit": None,
-        "icon": "mdi:clock-start",
+        "icon": "mdi:calendar-start",
     },
     SENSOR_SELECTED_SLOT_END: {
         "class": DEVICE_CLASS_TIMESTAMP,
         "unit": None,
-        "icon": "mdi:clock-end",
+        "icon": "mdi:calendar-end",
     },
     SENSOR_SELECTED_SLOT_MAX_ODER_TIME: {
         "class": DEVICE_CLASS_TIMESTAMP,
@@ -73,12 +73,12 @@ SENSOR_TYPES = {
     SENSOR_LAST_ORDER_SLOT_START: {
         "class": DEVICE_CLASS_TIMESTAMP,
         "unit": None,
-        "icon": "mdi:clock-start",
+        "icon": "mdi:calendar-start",
     },
     SENSOR_LAST_ORDER_SLOT_END: {
         "class": DEVICE_CLASS_TIMESTAMP,
         "unit": None,
-        "icon": "mdi:clock-end",
+        "icon": "mdi:calendar-end",
     },
     SENSOR_LAST_ORDER_STATUS: {"class": None, "unit": None, "icon": "mdi:list-status"},
     SENSOR_LAST_ORDER_ETA_START: {

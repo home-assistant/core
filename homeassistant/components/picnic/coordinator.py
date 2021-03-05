@@ -1,19 +1,22 @@
 """Coordinator to fetch data from the Picnic API."""
-
-import logging
+import copy
 from datetime import timedelta
+import logging
 
 import async_timeout
 from python_picnic_api import PicnicAPI
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
 from .const import (
     ADDRESS,
     SENSOR_CART_ITEMS_COUNT,
     SENSOR_CART_TOTAL_PRICE,
     SENSOR_COMPLETED_DELIVERIES,
     SENSOR_LAST_ORDER_DELIVERY_TIME,
+    SENSOR_LAST_ORDER_ETA_END,
+    SENSOR_LAST_ORDER_ETA_START,
     SENSOR_LAST_ORDER_SLOT_END,
     SENSOR_LAST_ORDER_SLOT_START,
     SENSOR_LAST_ORDER_STATUS,
@@ -22,7 +25,7 @@ from .const import (
     SENSOR_SELECTED_SLOT_MAX_ODER_TIME,
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
-    SENSOR_TOTAL_DELIVERIES, SENSOR_LAST_ORDER_ETA_START, SENSOR_LAST_ORDER_ETA_END,
+    SENSOR_TOTAL_DELIVERIES,
 )
 
 
@@ -54,14 +57,15 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
-        # Fetch from the API
+        # Fetch from the API and pre-process the data
         user = self.picnic_api_client.get_user()
         cart = self.picnic_api_client.get_cart()
-        deliveries = self.picnic_api_client.get_deliveries(summary=True)
+        last_order = self._get_last_order()
 
-        # Pre-process the data
+        if not user or not cart or not last_order:
+            raise UpdateFailed("API response doesn't contain expected data.")
+
         slot_data = self._get_slot_data(cart)
-        last_order = self._get_last_order(deliveries)
         address = f'{user["address"]["street"]} {user["address"]["house_number"]}{user["address"]["house_number_ext"]}'
         minimum_order_value = (
             slot_data["minimum_order_value"] / 100
@@ -82,8 +86,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             SENSOR_LAST_ORDER_SLOT_START: last_order["slot"].get("window_start"),
             SENSOR_LAST_ORDER_SLOT_END: last_order["slot"].get("window_end"),
             SENSOR_LAST_ORDER_STATUS: last_order.get("status"),
-            SENSOR_LAST_ORDER_ETA_START: last_order["eta2"].get("start"),
-            SENSOR_LAST_ORDER_ETA_END: last_order["eta2"].get("end"),
+            SENSOR_LAST_ORDER_ETA_START: last_order["eta"].get("start"),
+            SENSOR_LAST_ORDER_ETA_END: last_order["eta"].get("end"),
             SENSOR_LAST_ORDER_DELIVERY_TIME: last_order["delivery_time"].get("start"),
             SENSOR_LAST_ORDER_TOTAL_PRICE: last_order.get("total_price", 0) / 100,
         }
@@ -104,17 +108,31 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         return {}
 
-    @staticmethod
-    def _get_last_order(deliveries: list) -> dict:
+    def _get_last_order(self) -> dict:
         """Get data of the last order from the list of deliveries."""
+        # Get the deliveries
+        deliveries = self.picnic_api_client.get_deliveries(summary=True)
+        if not len(deliveries):
+            return {}
+
+        # Determine the last order and get the position details
         last_order = deliveries[0]
+        delivery_position = self.picnic_api_client.get_delivery_position(last_order["delivery_id"])
+
+        # Determine the ETA, if available, the one from the delivery position API is more precise
+        # but it's only available shortly before the actual delivery.
+        last_order["eta"] = delivery_position.get("eta_window", last_order.get("eta2", {}))
 
         # Determine the total price by adding up the total price of all sub-orders
         total_price = 0
         for order in last_order.get("orders", []):
             total_price += order.get("total_price", 0)
 
+        # Sanitise the object
         last_order["total_price"] = total_price
         last_order.setdefault("delivery_time", {})
-        last_order.setdefault("eta2", {})
-        return last_order
+        if "eta2" in last_order:
+            del last_order["eta2"]
+
+        # Make a copy because some references are local
+        return copy.deepcopy(last_order)
