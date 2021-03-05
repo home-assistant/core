@@ -6,7 +6,6 @@ from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_NAME,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
@@ -32,7 +31,6 @@ async def async_setup_entry(
         config_entry.entry_id
     ]["coordinator"]
     entities = []
-    sensor_name = config_entry.data[CONF_NAME]
     if coordinator.data["printer"]:
         printer_info = coordinator.data["printer"]
         types = ["actual", "target"]
@@ -41,7 +39,6 @@ async def async_setup_entry(
                 entities.append(
                     OctoPrintTemperatureSensor(
                         coordinator,
-                        sensor_name,
                         tool.name,
                         temp_type,
                         config_entry.entry_id,
@@ -50,20 +47,12 @@ async def async_setup_entry(
     else:
         _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
 
+    entities.append(OctoPrintStatusSensor(coordinator, config_entry.entry_id))
+    entities.append(OctoPrintJobPercentageSensor(coordinator, config_entry.entry_id))
     entities.append(
-        OctoPrintStatusSensor(coordinator, sensor_name, config_entry.entry_id)
+        OctoPrintEstimatedFinishTimeSensor(coordinator, config_entry.entry_id)
     )
-    entities.append(
-        OctoPrintJobPercentageSensor(coordinator, sensor_name, config_entry.entry_id)
-    )
-    entities.append(
-        OctoPrintEstimatedFinishTimeSensor(
-            coordinator, sensor_name, config_entry.entry_id
-        )
-    )
-    entities.append(
-        OctoPrintStartTimeSensor(coordinator, sensor_name, config_entry.entry_id)
-    )
+    entities.append(OctoPrintStartTimeSensor(coordinator, config_entry.entry_id))
 
     async_add_entities(entities, True)
     return True
@@ -75,16 +64,14 @@ class OctoPrintSensorBase(CoordinatorEntity, Entity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        sensor_name: str,
         sensor_type: str,
         device_id: str,
     ):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
         self._state = None
-        self._sensor_name = sensor_name
         self._sensor_type = sensor_type
-        self._name = f"{sensor_name} {sensor_type}"
+        self._name = f"Octoprint {sensor_type}"
         self._device_id = device_id
 
     @property
@@ -92,7 +79,8 @@ class OctoPrintSensorBase(CoordinatorEntity, Entity):
         """Device info."""
         return {
             "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
-            "name": self._sensor_name,
+            "manufacturer": "Octoprint",
+            "name": "Octoprint",
         }
 
     @property
@@ -109,11 +97,9 @@ class OctoPrintSensorBase(CoordinatorEntity, Entity):
 class OctoPrintStatusSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, sensor_name: str, device_id: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Current State", device_id)
+        super().__init__(coordinator, "Current State", device_id)
 
     @property
     def state(self):
@@ -133,11 +119,9 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
 class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, sensor_name: str, device_id: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Job Percentage", device_id)
+        super().__init__(coordinator, "Job Percentage", device_id)
 
     @property
     def state(self):
@@ -166,11 +150,9 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
 class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, sensor_name: str, device_id: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Estimated Finish Time", device_id)
+        super().__init__(coordinator, "Estimated Finish Time", device_id)
 
     @property
     def state(self):
@@ -192,11 +174,9 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, sensor_name: str, device_id: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Start Time", device_id)
+        super().__init__(coordinator, "Start Time", device_id)
 
     @property
     def state(self):
@@ -222,15 +202,12 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        sensor_name: str,
         tool: str,
         temp_type: str,
         device_id: str,
     ):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(
-            coordinator, sensor_name, f"{temp_type} {tool} temp", device_id
-        )
+        super().__init__(coordinator, f"{temp_type} {tool} temp", device_id)
         self._temp_type = temp_type
         self._api_tool = tool
         self._state = 0

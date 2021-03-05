@@ -10,7 +10,6 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
-    CONF_NAME,
     CONF_PATH,
     CONF_PORT,
     CONF_SSL,
@@ -23,7 +22,6 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "OctoPrint"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -32,19 +30,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_PATH, default="/"): cv.string,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-STEP_IMPORT_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_PATH, default="/"): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -58,7 +43,6 @@ def _schema_with_defaults(host=None, port=80, path="/"):
             vol.Optional(CONF_PORT, default=port): cv.port,
             vol.Optional(CONF_PATH, default=path): cv.string,
             vol.Optional(CONF_SSL, default=False): cv.boolean,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         },
         extra=vol.ALLOW_EXTRA,
     )

@@ -6,10 +6,7 @@ import logging
 from pyoctoprintapi import OctoprintClient, PrinterOffline
 import voluptuous as vol
 
-<<<<<<< HEAD
-=======
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
->>>>>>> 80d7f71a87... Add config flow for octoprint
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -28,7 +25,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_BED, CONF_NUMBER_OF_TOOLS, DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +124,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 data={
                     CONF_API_KEY: conf[CONF_API_KEY],
                     CONF_HOST: conf[CONF_HOST],
-                    CONF_NAME: conf[CONF_NAME],
                     CONF_PATH: conf[CONF_PATH],
                     CONF_PORT: conf[CONF_PORT],
                     CONF_SSL: conf[CONF_SSL],

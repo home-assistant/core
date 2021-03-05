@@ -7,7 +7,6 @@ from pyoctoprintapi import OctoprintPrinterInfo
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -26,12 +25,8 @@ async def async_setup_entry(
     coordinator = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["coordinator"]
 
     entities = [
-        OctoPrintPrintingBinarySensor(
-            coordinator, config_entry.data[CONF_NAME], config_entry.entry_id
-        ),
-        OctoPrintPrintingErrorBinarySensor(
-            coordinator, config_entry.data[CONF_NAME], config_entry.entry_id
-        ),
+        OctoPrintPrintingBinarySensor(coordinator, config_entry.entry_id),
+        OctoPrintPrintingErrorBinarySensor(coordinator, config_entry.entry_id),
     ]
 
     async_add_entities(entities)
@@ -43,14 +38,12 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        sensor_name: str,
         sensor_type: str,
         device_id: str,
     ):
         """Initialize a new OctoPrint sensor."""
         super().__init__(coordinator)
-        self.sensor_name = sensor_name
-        self._name = f"{sensor_name} {sensor_type}"
+        self._name = f"Octoprint {sensor_type}"
         self.sensor_type = sensor_type
         self._device_id = device_id
 
@@ -59,7 +52,8 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         """Device info."""
         return {
             "identifiers": {(COMPONENT_DOMAIN, self._device_id)},
-            "name": self.sensor_name,
+            "manufacturer": "Octoprint",
+            "name": "Octoprint",
         }
 
     @property
@@ -89,11 +83,9 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
 class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, sensor_name: str, device_id: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Printing", device_id)
+        super().__init__(coordinator, "Printing", device_id)
 
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return bool(printer_info.state.flags.printing)
@@ -102,11 +94,9 @@ class OctoPrintPrintingBinarySensor(OctoPrintBinarySensorBase):
 class OctoPrintPrintingErrorBinarySensor(OctoPrintBinarySensorBase):
     """Representation an OctoPrint binary sensor."""
 
-    def __init__(
-        self, coordinator: DataUpdateCoordinator, sensor_name: str, device_id: str
-    ):
+    def __init__(self, coordinator: DataUpdateCoordinator, device_id: str):
         """Initialize a new OctoPrint sensor."""
-        super().__init__(coordinator, sensor_name, "Printing Error", device_id)
+        super().__init__(coordinator, "Printing Error", device_id)
 
     def _get_flag_state(self, printer_info: OctoprintPrinterInfo) -> Optional[bool]:
         return bool(printer_info.state.flags.error)
