@@ -415,9 +415,8 @@ class UniFiController:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
+        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         controller.load_config_entry_options()
         async_dispatcher_send(hass, controller.signal_options_update)
 
