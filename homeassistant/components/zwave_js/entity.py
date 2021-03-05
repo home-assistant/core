@@ -169,7 +169,6 @@ class ZWaveBaseEntity(Entity):
         command_class: Optional[int] = None,
         endpoint: Optional[int] = None,
         value_property_key: Optional[int] = None,
-        value_property_key_name: Optional[str] = None,
         add_to_watched_value_ids: bool = True,
         check_all_endpoints: bool = False,
     ) -> Optional[ZwaveValue]:
@@ -188,7 +187,6 @@ class ZWaveBaseEntity(Entity):
             value_property,
             endpoint=endpoint,
             property_key=value_property_key,
-            property_key_name=value_property_key_name,
         )
         return_value = self.info.node.values.get(value_id)
 
@@ -203,7 +201,6 @@ class ZWaveBaseEntity(Entity):
                         value_property,
                         endpoint=endpoint_.index,
                         property_key=value_property_key,
-                        property_key_name=value_property_key_name,
                     )
                     return_value = self.info.node.values.get(value_id)
                     if return_value:

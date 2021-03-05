@@ -228,7 +228,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             "targetColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=None,
-            value_property_key_name=None,
         )
         if combined_color_val and isinstance(combined_color_val.value, dict):
             colors_dict = {}
@@ -252,7 +251,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             "targetColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=property_key.key,
-            value_property_key_name=property_key.name,
         )
         if target_zwave_value is None:
             # guard for unsupported color
@@ -318,31 +316,26 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             "currentColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.RED.value.key,
-            value_property_key_name=ColorComponent.RED.value.name,
         )
         green_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.GREEN.value.key,
-            value_property_key_name=ColorComponent.GREEN.value.name,
         )
         blue_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.BLUE.value.key,
-            value_property_key_name=ColorComponent.BLUE.value.name,
         )
         ww_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.WARM_WHITE.value.key,
-            value_property_key_name=ColorComponent.WARM_WHITE.value.name,
         )
         cw_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=ColorComponent.COLD_WHITE.value.key,
-            value_property_key_name=ColorComponent.COLD_WHITE.value.name,
         )
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
@@ -350,7 +343,6 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
             "currentColor",
             CommandClass.SWITCH_COLOR,
             value_property_key=None,
-            value_property_key_name=None,
         )
         if combined_color_val and isinstance(combined_color_val.value, dict):
             multi_color = combined_color_val.value
