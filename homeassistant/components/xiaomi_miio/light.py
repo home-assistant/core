@@ -87,8 +87,8 @@ ATTR_EYECARE_MODE = "eyecare_mode"
 ATTR_SLEEP_ASSISTANT = "sleep_assistant"
 ATTR_SLEEP_OFF_TIME = "sleep_off_time"
 ATTR_TOTAL_ASSISTANT_SLEEP_TIME = "total_assistant_sleep_time"
-ATTR_BRAND_SLEEP = "brand_sleep"
-ATTR_BRAND = "brand"
+ATTR_BAND_SLEEP = "band_sleep"
+ATTR_BAND = "band"
 
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
@@ -782,8 +782,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 ATTR_SLEEP_ASSISTANT: None,
                 ATTR_SLEEP_OFF_TIME: None,
                 ATTR_TOTAL_ASSISTANT_SLEEP_TIME: None,
-                ATTR_BRAND_SLEEP: None,
-                ATTR_BRAND: None,
+                ATTR_BAND_SLEEP: None,
+                ATTR_BAND: None,
             }
         )
 
@@ -933,8 +933,8 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
                 ATTR_SLEEP_ASSISTANT: state.sleep_assistant,
                 ATTR_SLEEP_OFF_TIME: state.sleep_off_time,
                 ATTR_TOTAL_ASSISTANT_SLEEP_TIME: state.total_assistant_sleep_time,
-                ATTR_BRAND_SLEEP: state.brand_sleep,
-                ATTR_BRAND: state.brand,
+                ATTR_BAND_SLEEP: state.brand_sleep,
+                ATTR_BAND: state.brand,
             }
         )
 
