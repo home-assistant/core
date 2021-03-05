@@ -26,7 +26,6 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
-    MYSENSORS_GATEWAY_READY,
     MYSENSORS_GATEWAY_START_TASK,
     MYSENSORS_GATEWAYS,
     GatewayId,
@@ -77,6 +76,9 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
             _LOGGER.debug("Received gateway ready")
             gateway_ready.set_result(True)
 
+        def on_conn_made(_: BaseAsyncGateway) -> None:
+            gateway_ready.set_result(True)
+
         gateway: Optional[BaseAsyncGateway] = await _get_gateway(
             hass,
             device=user_input[CONF_DEVICE],
@@ -92,6 +94,7 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         )
         if gateway is None:
             return False
+        gateway.on_conn_made = on_conn_made
 
         connect_task = None
         try:
@@ -280,6 +283,12 @@ async def _gw_start(
     hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Start the gateway."""
+    gateway_ready = asyncio.Future()
+
+    def gateway_connected(_: BaseAsyncGateway):
+        gateway_ready.set_result(True)
+
+    gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
     hass.data[DOMAIN][
         MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
@@ -294,10 +303,6 @@ async def _gw_start(
     if entry.data[CONF_DEVICE] == MQTT_COMPONENT:
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
-    gateway_ready = asyncio.Future()
-    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(entry.entry_id)
-    hass.data[DOMAIN][gateway_ready_key] = gateway_ready
-
     try:
         with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready
@@ -307,8 +312,6 @@ async def _gw_start(
             entry.data[CONF_DEVICE],
             GATEWAY_READY_TIMEOUT,
         )
-    finally:
-        hass.data[DOMAIN].pop(gateway_ready_key, None)
 
 
 def _gw_callback_factory(
