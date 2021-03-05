@@ -70,7 +70,6 @@ set_config_parameter:
 refresh_value:
   name: Refresh value(s) of a Z-Wave entity
   description: Force update value(s) for a Z-Wave entity
-  target:
   fields:
     entity_id:
       name: Entity
