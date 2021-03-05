@@ -2,12 +2,13 @@
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
+from .base_class import FreeboxHomeBaseClass
 
 from .const import (
     CALL_SENSORS,
@@ -22,13 +23,22 @@ from .const import (
 from .router import FreeboxRouter
 
 
-async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
-) -> None:
+
+async def async_setup_entry(hass, entry: ConfigEntry, async_add_entities) -> None:
     """Set up the sensors."""
     router = hass.data[DOMAIN][entry.unique_id]
     entities = []
+    tracked = set()
 
+    # Home device detection: sensor's battery
+    @callback
+    def update_callback():
+        add_entities(hass, router, async_add_entities, tracked)
+
+    router.listeners.append(async_dispatcher_connect(hass, router.signal_home_device_new, update_callback))
+    update_callback()
+
+    # Standard Freebox sensors management
     for sensor_name in router.sensors_temperature:
         entities.append(
             FreeboxSensor(
@@ -49,9 +59,30 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
+@callback
+def add_entities(hass, router, async_add_entities, tracked):
+    """Add new home devices with battery from the router."""
+    new_tracked = []
+
+    for nodeId, node in router.home_devices.items():
+        if(nodeId in tracked):
+            continue
+
+        battery_node = next(filter(lambda x: (x["name"]=="battery" and x["ep_type"]=="signal"), node["show_endpoints"]), None)
+        if( battery_node != None and battery_node.get("value", None) != None):
+            new_tracked.append(FreeboxBatterySensor(hass, router, node, battery_node))
+
+        tracked.add(nodeId)
+
+    if new_tracked:
+        async_add_entities(new_tracked, True)
+
+
+
+
+
 class FreeboxSensor(Entity):
     """Representation of a Freebox sensor."""
-
     def __init__(
         self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]
     ) -> None:
@@ -162,3 +193,24 @@ class FreeboxCallSensor(FreeboxSensor):
             dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
             for call in self._call_list_for_type
         }
+
+
+class FreeboxBatterySensor(FreeboxHomeBaseClass):
+    def __init__(self, hass, router, node, sub_node) -> None:
+        """Initialize a Pir"""
+        super().__init__(hass, router, node, sub_node)
+
+    @property
+    def device_class(self):
+        """Return the devices' state attributes."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
+    def state(self):
+        """Return the current state of the device."""
+        return self.get_node_value(self._router.home_devices[self._id]["show_endpoints"],"signal","battery")
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit_of_measurement of the device."""
+        return PERCENTAGE

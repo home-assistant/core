@@ -17,7 +17,7 @@ APP_DESC = {
 }
 API_VERSION = "v6"
 
-PLATFORMS = ["device_tracker", "sensor", "switch"]
+PLATFORMS = ["device_tracker", "sensor", "switch", "cover" , "alarm_control_panel", "camera", "binary_sensor"]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
@@ -82,3 +82,9 @@ DEVICE_ICONS = {
     "vg_console": "mdi:gamepad-variant",
     "workstation": "mdi:desktop-tower-monitor",
 }
+
+# Home config
+VALUE_NOT_SET = -1
+CONF_WITH_HOME = "with_home_api"
+PERMISSION_DEFAULT  = 1
+PERMISSION_HOME     = 2

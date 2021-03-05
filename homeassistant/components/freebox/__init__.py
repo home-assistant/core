@@ -1,4 +1,4 @@
-"""Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+"""Support for Freebox devices (Freebox v6,Delta and Freebox mini 4K)."""
 import asyncio
 import logging
 
@@ -9,20 +9,23 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, CONF_WITH_HOME
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
 FREEBOX_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT): cv.port,
+        vol.Optional(CONF_WITH_HOME, default=False): cv.boolean
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [FREEBOX_SCHEMA]))},
     extra=vol.ALLOW_EXTRA,
 )
-
 
 async def async_setup(hass, config):
     """Set up the Freebox integration."""
@@ -44,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = router
+    router._option_listener = entry.add_update_listener(options_update_listener)
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -62,8 +66,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         await router.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
-
     return True
+
+
+async def options_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+    """Handle options update."""
+    router = hass.data[DOMAIN][entry.unique_id]
+    await router.remove_home_devices(entry)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):

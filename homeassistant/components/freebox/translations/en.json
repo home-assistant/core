@@ -4,6 +4,7 @@
             "already_configured": "Device is already configured"
         },
         "error": {
+            "insufficient_permission": "Permission not granted",
             "cannot_connect": "Failed to connect",
             "register_failed": "Failed to register, please try again",
             "unknown": "Unexpected error"
@@ -19,7 +20,31 @@
                     "port": "Port"
                 },
                 "title": "Freebox"
+            },
+            "option_home": {
+                "title": "Freebox Home option",
+                "description": "This option needs a specific permission in http://mafreebox.freebox.fr/\nOpen: \n\"Paramètres de la freebox\" >> \"Gestion des acccés\" >> \"Applications\"\nand grant the permission: \"Gestion de l'alarme et maison connectée\"",
+                "data": {
+                    "with_home_api": "Control Freebox Home devices (shutter, light, alarm...)"
+                }
             }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Freebox Home option",
+                "description": "This option needs a specific permission in http://mafreebox.freebox.fr/\nOpen: \n\"Paramètres de la freebox\" >> \"Gestion des acccés\" >> \"Applications\"\nand grant the permission: \"Gestion de l'alarme et maison connectée\"",
+                "data": {
+                    "with_home_api": "Control Freebox Home devices (shutter, light, alarm...)"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "register_failed": "Failed to register, please try again",
+            "insufficient_permission": "Permission not granted",
+            "unknown": "Unexpected error"
         }
     }
 }
