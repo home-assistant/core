@@ -52,11 +52,6 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Zerproc light devices."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if "addresses" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["addresses"] = set()
-
     warned = False
 
     async def discover(*args):
@@ -76,11 +71,6 @@ async def async_setup_entry(
 
     # Perform recurring discovery of new devices
     async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Cleanup the Zerproc integration."""
-    hass.data.pop(DOMAIN, None)
 
 
 class ZerprocLight(LightEntity):

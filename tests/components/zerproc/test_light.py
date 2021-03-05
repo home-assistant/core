@@ -118,6 +118,8 @@ async def test_init(hass, mock_entry):
     assert mock_light_1.disconnect.called
     assert mock_light_2.disconnect.called
 
+    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"}
+
 
 async def test_discovery_exception(hass, mock_entry):
     """Test platform setup."""
@@ -138,10 +140,13 @@ async def test_discovery_exception(hass, mock_entry):
 
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
+    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF"}
+
     with patch.object(mock_light, "disconnect") as mock_disconnect:
         await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_disconnect.called
+    assert DOMAIN not in hass.data
 
 
 async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
