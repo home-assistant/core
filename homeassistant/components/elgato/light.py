@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 from elgato import Elgato, ElgatoError, Info, State
 
@@ -38,7 +38,7 @@ SCAN_INTERVAL = timedelta(seconds=10)
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Elgato Key Light based on a config entry."""
     elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
@@ -116,7 +116,7 @@ class ElgatoLight(LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        data: Dict[str, bool | int] = {ATTR_ON: True}
+        data: dict[str, bool | int] = {ATTR_ON: True}
 
         if ATTR_ON in kwargs:
             data[ATTR_ON] = kwargs[ATTR_ON]
@@ -149,7 +149,7 @@ class ElgatoLight(LightEntity):
         self._temperature = state.temperature
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Elgato Key Light."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._info.serial_number)},
