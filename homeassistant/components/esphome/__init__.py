@@ -35,6 +35,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -304,17 +305,67 @@ async def _register_service(
 ):
     service_name = f"{entry_data.device_info.name}_{service.name}"
     schema = {}
+    fields = {}
+
     for arg in service.args:
-        schema[vol.Required(arg.name)] = {
-            UserServiceArgType.BOOL: cv.boolean,
-            UserServiceArgType.INT: vol.Coerce(int),
-            UserServiceArgType.FLOAT: vol.Coerce(float),
-            UserServiceArgType.STRING: cv.string,
-            UserServiceArgType.BOOL_ARRAY: [cv.boolean],
-            UserServiceArgType.INT_ARRAY: [vol.Coerce(int)],
-            UserServiceArgType.FLOAT_ARRAY: [vol.Coerce(float)],
-            UserServiceArgType.STRING_ARRAY: [cv.string],
+        metadata = {
+            UserServiceArgType.BOOL: {
+                "validator": cv.boolean,
+                "description": "A boolean.",
+                "example": "False",
+                "selector": {"boolean": {}},
+            },
+            UserServiceArgType.INT: {
+                "validator": vol.Coerce(int),
+                "description": "An integer number.",
+                "example": "42",
+                "selector": {"number": {}},
+            },
+            UserServiceArgType.FLOAT: {
+                "validator": vol.Coerce(float),
+                "description": "A floating point value.",
+                "example": "12.3",
+                "selector": {"number": {"step": 1e-3}},
+            },
+            UserServiceArgType.STRING: {
+                "validator": cv.string,
+                "description": "A string of text.",
+                "example": "Example text",
+                "selector": {"text": {}},
+            },
+            UserServiceArgType.BOOL_ARRAY: {
+                "validator": [cv.boolean],
+                "description": "An array of boolean values.",
+                "example": "[True, False]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.INT_ARRAY: {
+                "validator": [vol.Coerce(int)],
+                "description": "An array of integer values.",
+                "example": "[42, 34]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.FLOAT_ARRAY: {
+                "validator": [vol.Coerce(float)],
+                "description": "An array of floating point numbers.",
+                "example": "[ 12.3, 34.5 ]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.STRING_ARRAY: {
+                "validator": [cv.string],
+                "description": "An array of string.",
+                "example": "['Example text', 'Another example']",
+                "selector": {"object": {}},
+            },
         }[arg.type_]
+        schema[vol.Required(arg.name)] = metadata["validator"]
+        fields[arg.name] = {
+            "name": arg.name,
+            "required": True,
+            "description": metadata["description"],
+            "example": metadata["example"],
+            "selector": metadata["selector"],
+        }
 
     async def execute_service(call):
         await entry_data.client.execute_service(service, call.data)
@@ -322,6 +373,13 @@ async def _register_service(
     hass.services.async_register(
         DOMAIN, service_name, execute_service, vol.Schema(schema)
     )
+
+    service_desc = {
+        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "fields": fields,
+    }
+
+    async_set_service_schema(hass, DOMAIN, service_name, service_desc)
 
 
 async def _setup_services(
