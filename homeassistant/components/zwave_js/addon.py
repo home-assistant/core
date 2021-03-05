@@ -173,6 +173,7 @@ class AddonManager:
         if not update_available:
             return
 
+        await self.async_create_snapshot()
         await async_update_addon(self._hass, ADDON_SLUG)
 
     @callback
@@ -184,7 +185,6 @@ class AddonManager:
         if not self._update_task or self._update_task.done():
             LOGGER.info("Trying to update the Z-Wave JS add-on")
             self._update_task = self._async_schedule_addon_operation(
-                self.async_create_snapshot,
                 self.async_update_addon,
                 catch_error=catch_error,
             )
