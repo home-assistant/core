@@ -35,7 +35,7 @@ from .helpers import discover_mysensors_platform, validate_child, validate_node
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_READY_TIMEOUT = 15.0
+GATEWAY_READY_TIMEOUT = 20.0
 MQTT_COMPONENT = "mqtt"
 
 
@@ -63,27 +63,16 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
     try:
-        gateway_ready = asyncio.Future()
-
-        def gateway_ready_callback(msg):
-            msg_type = msg.gateway.const.MessageType(msg.type)
-            _LOGGER.debug("Received MySensors msg type %s: %s", msg_type.name, msg)
-            if msg_type.name != "internal":
-                return
-            internal = msg.gateway.const.Internal(msg.sub_type)
-            if internal.name != "I_GATEWAY_READY":
-                return
-            _LOGGER.debug("Received gateway ready")
-            gateway_ready.set_result(True)
+        gateway_ready = asyncio.Event()
 
         def on_conn_made(_: BaseAsyncGateway) -> None:
-            gateway_ready.set_result(True)
+            gateway_ready.set()
 
         gateway: Optional[BaseAsyncGateway] = await _get_gateway(
             hass,
             device=user_input[CONF_DEVICE],
             version=user_input[CONF_VERSION],
-            event_callback=gateway_ready_callback,
+            event_callback=lambda _: None,
             persistence_file=None,
             baud_rate=user_input.get(CONF_BAUD_RATE),
             tcp_port=user_input.get(CONF_TCP_PORT),
@@ -99,8 +88,8 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            with async_timeout.timeout(20):
-                await gateway_ready
+            with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+                await gateway_ready.wait()
                 return True
         except asyncio.TimeoutError:
             _LOGGER.info("Try gateway connect failed with timeout")
@@ -283,10 +272,10 @@ async def _gw_start(
     hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Start the gateway."""
-    gateway_ready = asyncio.Future()
+    gateway_ready = asyncio.Event()
 
     def gateway_connected(_: BaseAsyncGateway):
-        gateway_ready.set_result(True)
+        gateway_ready.set()
 
     gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
@@ -305,10 +294,10 @@ async def _gw_start(
         return
     try:
         with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
-            await gateway_ready
+            await gateway_ready.wait()
     except asyncio.TimeoutError:
         _LOGGER.warning(
-            "Gateway %s not ready after %s secs so continuing with setup",
+            "Gateway %s not connected after %s secs so continuing with setup",
             entry.data[CONF_DEVICE],
             GATEWAY_READY_TIMEOUT,
         )
