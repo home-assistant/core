@@ -5,7 +5,6 @@ DEBOUNCE_TIMEOUT = 0.5
 DEVICE_PRECISION_LEEWAY = 6
 DOMAIN = "homekit"
 HOMEKIT_FILE = ".homekit.state"
-AID_STORAGE = "homekit-aid-allocations"
 HOMEKIT_PAIRING_QR = "homekit-pairing-qr"
 HOMEKIT_PAIRING_QR_SECRET = "homekit-pairing-qr-secret"
 HOMEKIT = "homekit"
