@@ -99,6 +99,37 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         elif action == 0x15:
             self.which = 10
             self.onoff = 1
+        elif action == 0x35:
+            self.which = 11
+            self.onoff = 0
+        elif action == 0x17:
+            self.which = 11
+            self.onoff = 1
+
+        if packet.data[0] == 0xd2:
+            pushed = 'soft'
+            presstype = packet.data[2]
+            if presstype == 0x1:
+                self.which = 1
+                self.onoff = 1
+            elif presstype == 0x2:
+                self.which = 2
+                self.onoff = 1
+            elif presstype == 0x3:
+                self.which = 3
+                self.onoff = 1
+            elif presstype == 0x4:
+                self.which = 4
+                self.onoff = 1
+
+        if packet.data[0] == 0xd5:
+            pushed = 'doorwindow'
+            if action == 0x8:
+                self.which = 0
+                self.onoff = 0
+            elif action == 0x9:
+                self.which = 0
+                self.onoff = 1
         self.hass.bus.fire(
             EVENT_BUTTON_PRESSED,
             {
