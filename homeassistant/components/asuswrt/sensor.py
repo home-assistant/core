@@ -4,11 +4,7 @@ from numbers import Number
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_RATE_MEGABITS_PER_SECOND,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -132,7 +128,7 @@ class AsusWrtSensor(CoordinatorEntity):
         """Return current state."""
         state = self.coordinator.data.get(self._sensor_type)
         if state is None:
-            return STATE_UNKNOWN
+            return None
         if self._factor and isinstance(state, Number):
             return round(state / self._factor, 2)
         return state

@@ -114,7 +114,7 @@ class AsusWrtSensorDataHandler:
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
         else:
-            return None
+            raise RuntimeError("Invalid sensor type: %s", sensor_type)
 
         coordinator = DataUpdateCoordinator(
             self._hass,
@@ -331,7 +331,7 @@ class AsusWrtRouter:
             }
 
     async def _update_unpolled_sensors(self) -> None:
-        """Request refrsh for AsusWrt unpolled sensors."""
+        """Request refresh for AsusWrt unpolled sensors."""
         if not self._sensors_data_handler:
             return
 
