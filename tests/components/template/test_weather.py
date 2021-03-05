@@ -47,7 +47,7 @@ async def test_template_state_text(hass):
     await hass.async_block_till_done()
     hass.states.async_set("sensor.visibility", "20km")
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.wind_directon", "N")
+    hass.states.async_set("sensor.wind_direction", "N")
     await hass.async_block_till_done()
     hass.states.async_set("sensor.windspeed", 20)
     await hass.async_block_till_done()
