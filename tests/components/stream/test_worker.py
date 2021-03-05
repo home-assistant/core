@@ -17,7 +17,7 @@ import fractions
 import io
 import math
 import threading
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import av
 
@@ -56,6 +56,7 @@ class FakePyAvStream:
         self.name = name
         self.time_base = fractions.Fraction(1, rate)
         self.profile = "ignored-profile"
+        self.codec = Mock()
 
 
 VIDEO_STREAM = FakePyAvStream(VIDEO_STREAM_FORMAT, VIDEO_FRAME_RATE)
@@ -107,8 +108,8 @@ class FakePyAvContainer:
         self.packets = PacketSequence(0)
 
         class FakePyAvStreams:
-            video = video_stream
-            audio = audio_stream
+            video = [video_stream] if video_stream else []
+            audio = [audio_stream] if audio_stream else []
 
         self.streams = FakePyAvStreams()
 
@@ -171,8 +172,8 @@ class MockPyAv:
 
     def __init__(self, video=True, audio=False):
         """Initialize the MockPyAv."""
-        video_stream = [VIDEO_STREAM] if video else []
-        audio_stream = [AUDIO_STREAM] if audio else []
+        video_stream = VIDEO_STREAM if video else None
+        audio_stream = AUDIO_STREAM if audio else None
         self.container = FakePyAvContainer(
             video_stream=video_stream, audio_stream=audio_stream
         )
