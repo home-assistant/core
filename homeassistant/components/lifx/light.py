@@ -4,7 +4,6 @@ from datetime import timedelta
 from functools import partial
 import logging
 import math
-import sys
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
@@ -166,12 +165,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up LIFX from a config entry."""
-    if sys.platform == "win32":
-        _LOGGER.warning(
-            "The lifx platform is known to not work on Windows. "
-            "Consider using the lifx_legacy platform instead"
-        )
-
     # Priority 1: manual config
     interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
     if not interfaces:

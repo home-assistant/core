@@ -173,7 +173,6 @@ class GeniusBroker:
     @property
     def hub_uid(self) -> int:
         """Return the Hub UID (MAC address)."""
-        # pylint: disable=no-member
         return self._hub_uid if self._hub_uid is not None else self.client.uid
 
     async def async_update(self, now, **kwargs) -> None:

@@ -27,7 +27,7 @@
     "nodeType": 0,
     "roleType": 5,
     "name": "AllLoadDimmer",
-    "location": "",
+    "location": "LivingRoom",
     "deviceConfig": {
         "manufacturerId": 26,
         "manufacturer": "Eaton",

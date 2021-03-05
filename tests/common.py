@@ -18,7 +18,7 @@ from typing import Any, Awaitable, Collection, Optional
 from unittest.mock import AsyncMock, Mock, patch
 import uuid
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (

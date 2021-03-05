@@ -6,10 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, 
 
 import attr
 
-from homeassistant.const import (
-    EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
-    EVENT_HOMEASSISTANT_STARTED,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, callback
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
@@ -20,6 +17,8 @@ from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 # mypy: disallow_any_generics
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
     from . import entity_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -143,10 +142,6 @@ class DeviceRegistry:
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._clear_index()
-        self.hass.bus.async_listen(
-            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
-            self.async_config_entry_disabled_by_changed,
-        )
 
     @callback
     def async_get(self, device_id: str) -> Optional[DeviceEntry]:
@@ -618,38 +613,6 @@ class DeviceRegistry:
             if area_id == device.area_id:
                 self._async_update_device(dev_id, area_id=None)
 
-    @callback
-    def async_config_entry_disabled_by_changed(self, event: Event) -> None:
-        """Handle a config entry being disabled or enabled.
-
-        Disable devices in the registry that are associated to a config entry when
-        the config entry is disabled.
-        """
-        config_entry = self.hass.config_entries.async_get_entry(
-            event.data["config_entry_id"]
-        )
-
-        # The config entry may be deleted already if the event handling is late
-        if not config_entry:
-            return
-
-        if not config_entry.disabled_by:
-            devices = async_entries_for_config_entry(
-                self, event.data["config_entry_id"]
-            )
-            for device in devices:
-                if device.disabled_by != DISABLED_CONFIG_ENTRY:
-                    continue
-                self.async_update_device(device.id, disabled_by=None)
-            return
-
-        devices = async_entries_for_config_entry(self, event.data["config_entry_id"])
-        for device in devices:
-            if device.disabled:
-                # Entity already disabled, do not overwrite
-                continue
-            self.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
-
 
 @callback
 def async_get(hass: HomeAssistantType) -> DeviceRegistry:
@@ -689,6 +652,34 @@ def async_entries_for_config_entry(
         for device in registry.devices.values()
         if config_entry_id in device.config_entries
     ]
+
+
+@callback
+def async_config_entry_disabled_by_changed(
+    registry: DeviceRegistry, config_entry: "ConfigEntry"
+) -> None:
+    """Handle a config entry being disabled or enabled.
+
+    Disable devices in the registry that are associated with a config entry when
+    the config entry is disabled, enable devices in the registry that are associated
+    with a config entry when the config entry is enabled and the devices are marked
+    DISABLED_CONFIG_ENTRY.
+    """
+
+    devices = async_entries_for_config_entry(registry, config_entry.entry_id)
+
+    if not config_entry.disabled_by:
+        for device in devices:
+            if device.disabled_by != DISABLED_CONFIG_ENTRY:
+                continue
+            registry.async_update_device(device.id, disabled_by=None)
+        return
+
+    for device in devices:
+        if device.disabled:
+            # Device already disabled, do not overwrite
+            continue
+        registry.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
 
 
 @callback

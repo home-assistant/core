@@ -38,12 +38,12 @@ from .const import (
     KEY_ACTIONS,
     KEY_STATUS,
     NODE_FILTERS,
+    PLATFORMS,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_EZIO2X4_SENSORS,
     SUBNODE_FANLINC_LIGHT,
     SUBNODE_IOLINC_RELAY,
-    SUPPORTED_PLATFORMS,
     SUPPORTED_PROGRAM_PLATFORMS,
     TYPE_CATEGORY_SENSOR_ACTUATORS,
     TYPE_EZIO2X4,
@@ -69,7 +69,7 @@ def _check_for_node_def(
 
     node_def_id = node.node_def_id
 
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if node_def_id in NODE_FILTERS[platform][FILTER_NODE_DEF_ID]:
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -94,13 +94,11 @@ def _check_for_insteon_type(
         return False
 
     device_type = node.type
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
-            ]
+            device_type.startswith(t)
+            for t in set(NODE_FILTERS[platform][FILTER_INSTEON_TYPE])
         ):
 
             # Hacky special-cases for certain devices with different platforms
@@ -161,13 +159,11 @@ def _check_for_zwave_cat(
         return False
 
     device_type = node.zwave_props.category
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
-            ]
+            device_type.startswith(t)
+            for t in set(NODE_FILTERS[platform][FILTER_ZWAVE_CAT])
         ):
 
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -202,7 +198,7 @@ def _check_for_uom_id(
             return True
         return False
 
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if node_uom in NODE_FILTERS[platform][FILTER_UOM]:
             hass_isy_data[ISY994_NODES][platform].append(node)
@@ -239,7 +235,7 @@ def _check_for_states_in_uom(
             return True
         return False
 
-    platforms = SUPPORTED_PLATFORMS if not single_platform else [single_platform]
+    platforms = PLATFORMS if not single_platform else [single_platform]
     for platform in platforms:
         if node_uom == set(NODE_FILTERS[platform][FILTER_STATES]):
             hass_isy_data[ISY994_NODES][platform].append(node)

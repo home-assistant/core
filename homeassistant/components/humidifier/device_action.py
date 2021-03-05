@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -30,7 +31,7 @@ SET_MODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): "set_mode",
         vol.Required(CONF_ENTITY_ID): cv.entity_domain(DOMAIN),
-        vol.Required(const.ATTR_MODE): cv.string,
+        vol.Required(ATTR_MODE): cv.string,
     }
 )
 
@@ -90,7 +91,7 @@ async def async_call_action_from_config(
         service_data[const.ATTR_HUMIDITY] = config[const.ATTR_HUMIDITY]
     elif config[CONF_TYPE] == "set_mode":
         service = const.SERVICE_SET_MODE
-        service_data[const.ATTR_MODE] = config[const.ATTR_MODE]
+        service_data[ATTR_MODE] = config[ATTR_MODE]
     else:
         return await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN
@@ -115,7 +116,7 @@ async def async_get_action_capabilities(hass, config):
             available_modes = state.attributes.get(const.ATTR_AVAILABLE_MODES, [])
         else:
             available_modes = []
-        fields[vol.Required(const.ATTR_MODE)] = vol.In(available_modes)
+        fields[vol.Required(ATTR_MODE)] = vol.In(available_modes)
     else:
         return {}
 

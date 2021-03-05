@@ -117,9 +117,9 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -132,8 +132,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -256,7 +256,8 @@ class ClimaCellEntity(CoordinatorEntity):
         """Return device registry information."""
         return {
             "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            "name": self.name,
+            "name": "ClimaCell",
             "manufacturer": "ClimaCell",
+            "sw_version": "v3",
             "entry_type": "service",
         }

@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,6 +13,7 @@ import homeassistant.util.dt as dt_util
 from .const import (
     CALL_SENSORS,
     CONNECTION_SENSORS,
+    DISK_PARTITION_SENSORS,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
     SENSOR_ICON,
@@ -21,6 +23,8 @@ from .const import (
 )
 from .router import FreeboxRouter
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -29,6 +33,12 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.unique_id]
     entities = []
 
+    _LOGGER.debug(
+        "%s - %s - %s temperature sensors",
+        router.name,
+        router.mac,
+        len(router.sensors_temperature),
+    )
     for sensor_name in router.sensors_temperature:
         entities.append(
             FreeboxSensor(
@@ -45,6 +55,20 @@ async def async_setup_entry(
 
     for sensor_key in CALL_SENSORS:
         entities.append(FreeboxCallSensor(router, sensor_key, CALL_SENSORS[sensor_key]))
+
+    _LOGGER.debug("%s - %s - %s disk(s)", router.name, router.mac, len(router.disks))
+    for disk in router.disks.values():
+        for partition in disk["partitions"]:
+            for sensor_key in DISK_PARTITION_SENSORS:
+                entities.append(
+                    FreeboxDiskSensor(
+                        router,
+                        disk,
+                        partition,
+                        sensor_key,
+                        DISK_PARTITION_SENSORS[sensor_key],
+                    )
+                )
 
     async_add_entities(entities, True)
 
@@ -139,8 +163,8 @@ class FreeboxCallSensor(FreeboxSensor):
         self, router: FreeboxRouter, sensor_type: str, sensor: Dict[str, any]
     ) -> None:
         """Initialize a Freebox call sensor."""
-        self._call_list_for_type = []
         super().__init__(router, sensor_type, sensor)
+        self._call_list_for_type = []
 
     @callback
     def async_update_state(self) -> None:
@@ -162,3 +186,43 @@ class FreeboxCallSensor(FreeboxSensor):
             dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
             for call in self._call_list_for_type
         }
+
+
+class FreeboxDiskSensor(FreeboxSensor):
+    """Representation of a Freebox disk sensor."""
+
+    def __init__(
+        self,
+        router: FreeboxRouter,
+        disk: Dict[str, any],
+        partition: Dict[str, any],
+        sensor_type: str,
+        sensor: Dict[str, any],
+    ) -> None:
+        """Initialize a Freebox disk sensor."""
+        super().__init__(router, sensor_type, sensor)
+        self._disk = disk
+        self._partition = partition
+        self._name = f"{partition['label']} {sensor[SENSOR_NAME]}"
+        self._unique_id = f"{self._router.mac} {sensor_type} {self._disk['id']} {self._partition['id']}"
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._disk["id"])},
+            "name": f"Disk {self._disk['id']}",
+            "model": self._disk["model"],
+            "sw_version": self._disk["firmware"],
+            "via_device": (
+                DOMAIN,
+                self._router.mac,
+            ),
+        }
+
+    @callback
+    def async_update_state(self) -> None:
+        """Update the Freebox disk sensor."""
+        self._state = round(
+            self._partition["free_bytes"] * 100 / self._partition["total_bytes"], 2
+        )

@@ -48,11 +48,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     template.attach(hass, wanted_payload)
     if wanted_payload:
-        wanted_payload = wanted_payload.async_render(variables, limited=True)
+        wanted_payload = wanted_payload.async_render(
+            variables, limited=True, parse_result=False
+        )
 
     template.attach(hass, topic)
     if isinstance(topic, template.Template):
-        topic = topic.async_render(variables, limited=True)
+        topic = topic.async_render(variables, limited=True, parse_result=False)
         topic = mqtt.util.valid_subscribe_topic(topic)
 
     template.attach(hass, value_template)

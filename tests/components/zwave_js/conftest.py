@@ -10,17 +10,133 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 
 from tests.common import MockConfigEntry, load_fixture
+
+# Add-on fixtures
+
+
+@pytest.fixture(name="addon_info_side_effect")
+def addon_info_side_effect_fixture():
+    """Return the add-on info side effect."""
+    return None
+
+
+@pytest.fixture(name="addon_info")
+def mock_addon_info(addon_info_side_effect):
+    """Mock Supervisor add-on info."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_get_addon_info",
+        side_effect=addon_info_side_effect,
+    ) as addon_info:
+        addon_info.return_value = {}
+        yield addon_info
+
+
+@pytest.fixture(name="addon_running")
+def mock_addon_running(addon_info):
+    """Mock add-on already running."""
+    addon_info.return_value["state"] = "started"
+    return addon_info
+
+
+@pytest.fixture(name="addon_installed")
+def mock_addon_installed(addon_info):
+    """Mock add-on already installed but not running."""
+    addon_info.return_value["state"] = "stopped"
+    addon_info.return_value["version"] = "1.0"
+    return addon_info
+
+
+@pytest.fixture(name="addon_options")
+def mock_addon_options(addon_info):
+    """Mock add-on options."""
+    addon_info.return_value["options"] = {}
+    return addon_info.return_value["options"]
+
+
+@pytest.fixture(name="set_addon_options_side_effect")
+def set_addon_options_side_effect_fixture():
+    """Return the set add-on options side effect."""
+    return None
+
+
+@pytest.fixture(name="set_addon_options")
+def mock_set_addon_options(set_addon_options_side_effect):
+    """Mock set add-on options."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_set_addon_options",
+        side_effect=set_addon_options_side_effect,
+    ) as set_options:
+        yield set_options
+
+
+@pytest.fixture(name="install_addon")
+def mock_install_addon():
+    """Mock install add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_install_addon"
+    ) as install_addon:
+        yield install_addon
+
+
+@pytest.fixture(name="update_addon")
+def mock_update_addon():
+    """Mock update add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_update_addon"
+    ) as update_addon:
+        yield update_addon
+
+
+@pytest.fixture(name="start_addon_side_effect")
+def start_addon_side_effect_fixture():
+    """Return the set add-on options side effect."""
+    return None
+
+
+@pytest.fixture(name="start_addon")
+def mock_start_addon(start_addon_side_effect):
+    """Mock start add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_start_addon",
+        side_effect=start_addon_side_effect,
+    ) as start_addon:
+        yield start_addon
+
+
+@pytest.fixture(name="stop_addon")
+def stop_addon_fixture():
+    """Mock stop add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_stop_addon"
+    ) as stop_addon:
+        yield stop_addon
+
+
+@pytest.fixture(name="uninstall_addon")
+def uninstall_addon_fixture():
+    """Mock uninstall add-on."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_uninstall_addon"
+    ) as uninstall_addon:
+        yield uninstall_addon
+
+
+@pytest.fixture(name="create_shapshot")
+def create_snapshot_fixture():
+    """Mock create snapshot."""
+    with patch(
+        "homeassistant.components.zwave_js.addon.async_create_snapshot"
+    ) as create_shapshot:
+        yield create_shapshot
 
 
 @pytest.fixture(name="device_registry")
 async def device_registry_fixture(hass):
     """Return the device registry."""
-    return await async_get_device_registry(hass)
+    return async_get_device_registry(hass)
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -124,6 +240,12 @@ def nortek_thermostat_state_fixture():
     return json.loads(load_fixture("zwave_js/nortek_thermostat_state.json"))
 
 
+@pytest.fixture(name="srt321_hrt4_zw_state", scope="session")
+def srt321_hrt4_zw_state_fixture():
+    """Load the climate HRT4-ZW / SRT321 / SRT322 thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/srt321_hrt4_zw_state.json"))
+
+
 @pytest.fixture(name="chain_actuator_zws12_state", scope="session")
 def window_cover_state_fixture():
     """Load the window cover node state fixture data."""
@@ -164,6 +286,12 @@ def ge_12730_state_fixture():
 def aeotec_radiator_thermostat_state_fixture():
     """Load the Aeotec Radiator Thermostat node state fixture data."""
     return json.loads(load_fixture("zwave_js/aeotec_radiator_thermostat_state.json"))
+
+
+@pytest.fixture(name="inovelli_lzw36_state", scope="session")
+def inovelli_lzw36_state_fixture():
+    """Load the Inovelli LZW36 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/inovelli_lzw36_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -301,6 +429,14 @@ def nortek_thermostat_fixture(client, nortek_thermostat_state):
     return node
 
 
+@pytest.fixture(name="srt321_hrt4_zw")
+def srt321_hrt4_zw_fixture(client, srt321_hrt4_zw_state):
+    """Mock a HRT4-ZW / SRT321 / SRT322 thermostat node."""
+    node = Node(client, copy.deepcopy(srt321_hrt4_zw_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeotec_radiator_thermostat")
 def aeotec_radiator_thermostat_fixture(client, aeotec_radiator_thermostat_state):
     """Mock a Aeotec thermostat node."""
@@ -394,5 +530,13 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
 def ge_12730_fixture(client, ge_12730_state):
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="inovelli_lzw36")
+def inovelli_lzw36_fixture(client, inovelli_lzw36_state):
+    """Mock a Inovelli LZW36 fan controller node."""
+    node = Node(client, copy.deepcopy(inovelli_lzw36_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

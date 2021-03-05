@@ -73,10 +73,9 @@ MODELS_SWITCH = [
     "chuangmi.plug.v2",
     "chuangmi.plug.hmi205",
     "chuangmi.plug.hmi206",
-    "lumi.acpartner.v3",
 ]
 MODELS_FAN = MODELS_FAN_MIIO + MODELS_HUMIDIFIER_MIOT + MODELS_PURIFIER_MIOT
-MODELS_VACUUM = ["roborock.vacuum"]
+MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
 MODELS_AIR_MONITOR = [
     MODEL_AIRQUALITYMONITOR_V1,
     MODEL_AIRQUALITYMONITOR_B1,

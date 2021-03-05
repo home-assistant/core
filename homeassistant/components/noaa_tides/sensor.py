@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
-import noaa_coops as coops  # pylint: disable=import-error
+import noaa_coops as coops
 import requests
 import voluptuous as vol
 

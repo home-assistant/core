@@ -115,6 +115,20 @@ DISCOVERY_SCHEMAS = [
         product_type={0x0038},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
+    # Inovelli LZW36 light / fan controller combo using switch multilevel CC
+    # The fan is endpoint 2, the light is endpoint 1.
+    ZWaveDiscoverySchema(
+        platform="fan",
+        manufacturer_id={0x031E},
+        product_id={0x0001},
+        product_type={0x000E},
+        primary_value=ZWaveValueDiscoverySchema(
+            command_class={CommandClass.SWITCH_MULTILEVEL},
+            endpoint={2},
+            property={"currentValue"},
+            type={"number"},
+        ),
+    ),
     # Fibaro Shutter Fibaro FGS222
     ZWaveDiscoverySchema(
         platform="cover",
@@ -380,7 +394,6 @@ DISCOVERY_SCHEMAS = [
 @callback
 def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None, None]:
     """Run discovery on ZWave node and return matching (primary) values."""
-    # pylint: disable=too-many-nested-blocks
     for value in node.values.values():
         for schema in DISCOVERY_SCHEMAS:
             # check manufacturer_id
