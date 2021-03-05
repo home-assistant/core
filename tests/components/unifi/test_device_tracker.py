@@ -8,9 +8,8 @@ from aiounifi.controller import (
     MESSAGE_CLIENT_REMOVED,
     MESSAGE_DEVICE,
     MESSAGE_EVENT,
-    SIGNAL_CONNECTION_STATE,
 )
-from aiounifi.websocket import SIGNAL_DATA, STATE_DISCONNECTED, STATE_RUNNING
+from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -157,7 +156,7 @@ async def test_no_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
 
 
-async def test_tracked_wireless_clients(hass, aioclient_mock):
+async def test_tracked_wireless_clients(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[CLIENT_1]
@@ -171,11 +170,12 @@ async def test_tracked_wireless_clients(hass, aioclient_mock):
 
     # State change signalling works without events
     client_1_copy = copy(CLIENT_1)
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_CLIENT},
-        "data": [client_1_copy],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -186,11 +186,13 @@ async def test_tracked_wireless_clients(hass, aioclient_mock):
     assert client_1.attributes["host_name"] == "client_1"
 
     # State change signalling works with events
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_CLIENT_1_WIRELESS_DISCONNECTED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_CLIENT_1_WIRELESS_DISCONNECTED],
+        }
+    )
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -204,30 +206,30 @@ async def test_tracked_wireless_clients(hass, aioclient_mock):
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "not_home"
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_CLIENT_1_WIRELESS_CONNECTED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_CLIENT_1_WIRELESS_CONNECTED],
+        }
+    )
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
 
 
-async def test_tracked_clients(hass, aioclient_mock):
+async def test_tracked_clients(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
     client_4_copy = copy(CLIENT_4)
     client_4_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
 
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         options={CONF_SSID_FILTER: ["ssid"]},
         clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, CLIENT_5, client_4_copy],
         known_wireless_clients=(CLIENT_4["mac"],),
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -254,22 +256,26 @@ async def test_tracked_clients(hass, aioclient_mock):
 
     # State change signalling works
     client_1_copy = copy(CLIENT_1)
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "home"
 
 
-async def test_tracked_devices(hass, aioclient_mock):
+async def test_tracked_devices(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some devices."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         devices_response=[DEVICE_1, DEVICE_2],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     device_1 = hass.states.get("device_tracker.device_1")
@@ -283,12 +289,20 @@ async def test_tracked_devices(hass, aioclient_mock):
     # State change signalling work
     device_1_copy = copy(DEVICE_1)
     device_1_copy["next_interval"] = 20
-    event = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_1_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_DEVICE},
+            "data": [device_1_copy],
+        }
+    )
     device_2_copy = copy(DEVICE_2)
     device_2_copy["next_interval"] = 50
-    event = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_2_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_DEVICE},
+            "data": [device_2_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
@@ -309,8 +323,12 @@ async def test_tracked_devices(hass, aioclient_mock):
     # Disabled device is unavailable
     device_1_copy = copy(DEVICE_1)
     device_1_copy["disabled"] = True
-    event = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_1_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_DEVICE},
+            "data": [device_1_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
@@ -319,10 +337,18 @@ async def test_tracked_devices(hass, aioclient_mock):
     # Update device registry when device is upgraded
     device_2_copy = copy(DEVICE_2)
     device_2_copy["version"] = EVENT_DEVICE_2_UPGRADED["version_to"]
-    message = {"meta": {"message": MESSAGE_DEVICE}, "data": [device_2_copy]}
-    controller.api.message_handler(message)
-    event = {"meta": {"message": MESSAGE_EVENT}, "data": [EVENT_DEVICE_2_UPGRADED]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_DEVICE},
+            "data": [device_2_copy],
+        }
+    )
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_DEVICE_2_UPGRADED],
+        }
+    )
     await hass.async_block_till_done()
 
     # Verify device registry has been updated
@@ -333,12 +359,12 @@ async def test_tracked_devices(hass, aioclient_mock):
     assert device.sw_version == EVENT_DEVICE_2_UPGRADED["version_to"]
 
 
-async def test_remove_clients(hass, aioclient_mock):
+async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
     """Test the remove_items function with some clients."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[CLIENT_1, CLIENT_2]
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -347,11 +373,12 @@ async def test_remove_clients(hass, aioclient_mock):
     wired_client = hass.states.get("device_tracker.wired_client")
     assert wired_client is not None
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_CLIENT_REMOVED},
-        "data": [CLIENT_1],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT_REMOVED},
+            "data": [CLIENT_1],
+        }
+    )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -364,15 +391,15 @@ async def test_remove_clients(hass, aioclient_mock):
     assert wired_client is not None
 
 
-async def test_controller_state_change(hass, aioclient_mock):
+async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocket):
     """Verify entities state reflect on controller becoming unavailable."""
-    config_entry = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
         aioclient_mock,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -382,9 +409,7 @@ async def test_controller_state_change(hass, aioclient_mock):
     assert device_1.state == "home"
 
     # Controller unavailable
-    controller.async_unifi_signalling_callback(
-        SIGNAL_CONNECTION_STATE, STATE_DISCONNECTED
-    )
+    mock_unifi_websocket(state=STATE_DISCONNECTED)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -394,7 +419,7 @@ async def test_controller_state_change(hass, aioclient_mock):
     assert device_1.state == STATE_UNAVAILABLE
 
     # Controller available
-    controller.async_unifi_signalling_callback(SIGNAL_CONNECTION_STATE, STATE_RUNNING)
+    mock_unifi_websocket(state=STATE_RUNNING)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -554,7 +579,7 @@ async def test_option_track_devices(hass, aioclient_mock):
     assert device_1 is not None
 
 
-async def test_option_ssid_filter(hass, aioclient_mock):
+async def test_option_ssid_filter(hass, aioclient_mock, mock_unifi_websocket):
     """Test the SSID filter works.
 
     Client 1 will travel from a supported SSID to an unsupported ssid.
@@ -593,13 +618,21 @@ async def test_option_ssid_filter(hass, aioclient_mock):
     # Roams to SSID outside of filter
     client_1_copy = copy(CLIENT_1)
     client_1_copy["essid"] = "other_ssid"
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_copy],
+        }
+    )
     # Data update while SSID filter is in effect shouldn't create the client
     client_3_copy = copy(CLIENT_3)
     client_3_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_3_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     # SSID filter marks client as away
@@ -616,10 +649,19 @@ async def test_option_ssid_filter(hass, aioclient_mock):
         options={CONF_SSID_FILTER: []},
     )
     await hass.async_block_till_done()
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_copy]}
-    controller.api.message_handler(event)
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
-    controller.api.message_handler(event)
+
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_copy],
+        }
+    )
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_3_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -636,16 +678,24 @@ async def test_option_ssid_filter(hass, aioclient_mock):
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1.state == "not_home"
 
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_3_copy]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_3_copy],
+        }
+    )
     await hass.async_block_till_done()
     # Client won't go away until after next update
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3.state == "home"
 
     # Trigger update to get client marked as away
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [CLIENT_3]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_3_copy],
+        }
+    )
     await hass.async_block_till_done()
 
     new_time = (
@@ -659,7 +709,9 @@ async def test_option_ssid_filter(hass, aioclient_mock):
     assert client_3.state == "not_home"
 
 
-async def test_wireless_client_go_wired_issue(hass, aioclient_mock):
+async def test_wireless_client_go_wired_issue(
+    hass, aioclient_mock, mock_unifi_websocket
+):
     """Test the solution to catch wireless device go wired UniFi issue.
 
     UniFi has a known issue that when a wireless device goes away it sometimes gets marked as wired.
@@ -681,8 +733,12 @@ async def test_wireless_client_go_wired_issue(hass, aioclient_mock):
 
     # Trigger wired bug
     client_1_client["is_wired"] = True
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_client],
+        }
+    )
     await hass.async_block_till_done()
 
     # Wired bug fix keeps client marked as wireless
@@ -702,8 +758,12 @@ async def test_wireless_client_go_wired_issue(hass, aioclient_mock):
     assert client_1.attributes["is_wired"] is False
 
     # Try to mark client as connected
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_client],
+        }
+    )
     await hass.async_block_till_done()
 
     # Make sure it don't go online again until wired bug disappears
@@ -713,8 +773,12 @@ async def test_wireless_client_go_wired_issue(hass, aioclient_mock):
 
     # Make client wireless
     client_1_client["is_wired"] = False
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_client],
+        }
+    )
     await hass.async_block_till_done()
 
     # Client is no longer affected by wired bug and can be marked online
@@ -723,7 +787,7 @@ async def test_wireless_client_go_wired_issue(hass, aioclient_mock):
     assert client_1.attributes["is_wired"] is False
 
 
-async def test_option_ignore_wired_bug(hass, aioclient_mock):
+async def test_option_ignore_wired_bug(hass, aioclient_mock, mock_unifi_websocket):
     """Test option to ignore wired bug."""
     client_1_client = copy(CLIENT_1)
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
@@ -745,8 +809,12 @@ async def test_option_ignore_wired_bug(hass, aioclient_mock):
 
     # Trigger wired bug
     client_1_client["is_wired"] = True
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_client],
+        }
+    )
     await hass.async_block_till_done()
 
     # Wired bug in effect
@@ -766,8 +834,12 @@ async def test_option_ignore_wired_bug(hass, aioclient_mock):
     assert client_1.attributes["is_wired"] is True
 
     # Mark client as connected again
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_client],
+        }
+    )
     await hass.async_block_till_done()
 
     # Ignoring wired bug allows client to go home again even while affected
@@ -777,8 +849,12 @@ async def test_option_ignore_wired_bug(hass, aioclient_mock):
 
     # Make client wireless
     client_1_client["is_wired"] = False
-    event = {"meta": {"message": MESSAGE_CLIENT}, "data": [client_1_client]}
-    controller.api.message_handler(event)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client_1_client],
+        }
+    )
     await hass.async_block_till_done()
 
     # Client is wireless and still connected
