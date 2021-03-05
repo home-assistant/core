@@ -31,7 +31,6 @@ from .const import (
     MODE_ROUTER,
     PROTOCOL_SSH,
     PROTOCOL_TELNET,
-    SENSOR_TYPES,
 )
 from .router import AsusWrtRouter
 
@@ -39,6 +38,7 @@ PLATFORMS = ["device_tracker", "sensor"]
 
 CONF_PUB_KEY = "pub_key"
 SECRET_GROUP = "Password or SSH Key"
+SENSOR_TYPES = ["devices", "upload_speed", "download_speed", "download", "upload"]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
