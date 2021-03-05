@@ -29,14 +29,14 @@ from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import DOMAIN
 from .const import (
-    CONF_FLOOR_TEMP, 
-    CONF_READ_PRECISION, 
+    CONF_FLOOR_TEMP,
+    CONF_OVRD_MODE_CONSTANT,
+    CONF_OVRD_MODE_TEMPORARY,
+    CONF_READ_PRECISION,
     CONF_SET_PRECISION,
     CONF_SETPOINT_OVRD_MODE,
-    CONF_OVRD_MODE_TEMPORARY,
-    CONF_OVRD_MODE_CONSTANT,
-    DATA_GATEWAYS, 
-    DATA_OPENTHERM_GW
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -276,12 +276,12 @@ class OpenThermClimate(ClimateEntity):
             if temp == self.target_temperature:
                 return
             if self.setpoint_ovrd_mode == CONF_OVRD_MODE_TEMPORARY:
-                self._new_target_temperature = await self._gateway.gateway.set_target_temp(
-                    temp, True
+                self._new_target_temperature = (
+                    await self._gateway.gateway.set_target_temp(temp, True)
                 )
             if self.setpoint_ovrd_mode == CONF_OVRD_MODE_CONSTANT:
-                self._new_target_temperature = await self._gateway.gateway.set_target_temp(
-                    temp, False
+                self._new_target_temperature = (
+                    await self._gateway.gateway.set_target_temp(temp, False)
                 )
             self.async_write_ha_state()
 

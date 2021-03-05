@@ -20,12 +20,12 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 from .const import (
-	CONF_FLOOR_TEMP, 
-	CONF_READ_PRECISION,
-	CONF_SET_PRECISION,
-	CONF_SETPOINT_OVRD_MODE,
-	CONF_OVRD_MODE_TEMPORARY,
-	CONF_OVRD_MODE_CONSTANT,
+    CONF_FLOOR_TEMP,
+    CONF_OVRD_MODE_CONSTANT,
+    CONF_OVRD_MODE_TEMPORARY,
+    CONF_READ_PRECISION,
+    CONF_SET_PRECISION,
+    CONF_SETPOINT_OVRD_MODE,
 )
 
 
@@ -146,11 +146,11 @@ class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
                         ),
                     ),
                     vol.Optional(
-                        CONF_SETPOINT_OVRD_MODE, 
-                        default=self.config_entry.options.get(CONF_SETPOINT_OVRD_MODE, CONF_OVRD_MODE_TEMPORARY),
-                    ): vol.In(
-                        [CONF_OVRD_MODE_TEMPORARY, CONF_OVRD_MODE_CONSTANT]
-                    ),
+                        CONF_SETPOINT_OVRD_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_SETPOINT_OVRD_MODE, CONF_OVRD_MODE_TEMPORARY
+                        ),
+                    ): vol.In([CONF_OVRD_MODE_TEMPORARY, CONF_OVRD_MODE_CONSTANT]),
                     vol.Optional(
                         CONF_FLOOR_TEMP,
                         default=self.config_entry.options.get(CONF_FLOOR_TEMP, False),
