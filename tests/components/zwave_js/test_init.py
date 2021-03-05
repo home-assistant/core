@@ -585,11 +585,11 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, update_addon_side_effect",
+    "addon_version, update_available, update_calls, snapshot_calls, update_addon_side_effect",
     [
-        ("1.0", True, 1, None),
-        ("1.0", False, 0, None),
-        ("1.0", True, 1, HassioAPIError("Boom")),
+        ("1.0", True, 1, 1, None),
+        ("1.0", False, 0, 0, None),
+        ("1.0", True, 1, 1, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -604,6 +604,7 @@ async def test_update_addon(
     addon_version,
     update_available,
     update_calls,
+    snapshot_calls,
     update_addon_side_effect,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
@@ -630,12 +631,7 @@ async def test_update_addon(
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
-        hass,
-        {"name": f"addon_core_zwave_js_{addon_version}", "addons": ["core_zwave_js"]},
-        partial=True,
-    )
+    assert create_shapshot.call_count == snapshot_calls
     assert update_addon.call_count == update_calls
 
 
