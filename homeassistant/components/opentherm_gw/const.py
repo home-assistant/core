@@ -18,11 +18,11 @@ ATTR_CH_OVRD = "ch_override"
 
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
+CONF_OVRD_MODE_CONSTANT = "constant"
+CONF_OVRD_MODE_TEMPORARY = "temporary"
 CONF_READ_PRECISION = "read_precision"
 CONF_SET_PRECISION = "set_precision"
 CONF_SETPOINT_OVRD_MODE = "setpoint_ovrd_mode"
-CONF_OVRD_MODE_TEMPORARY = "temporary"
-CONF_OVRD_MODE_CONSTANT = "constant"
 
 DATA_GATEWAYS = "gateways"
 DATA_OPENTHERM_GW = "opentherm_gw"
