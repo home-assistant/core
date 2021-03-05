@@ -4,8 +4,9 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Dict
-
+import re
 from mcstatus.server import MinecraftServer as MCStatus
+from mcstatus.server import MinecraftBedrockServer as MCStatusBedrock
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -19,7 +20,9 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import helpers
-from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
+from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX, CONF_SERVER_TYPE, CONF_SERVER_TYPE_BEDROCK
+
+
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -95,12 +98,16 @@ class MinecraftServer:
         self.name = config_data[CONF_NAME]
         self.host = config_data[CONF_HOST]
         self.port = config_data[CONF_PORT]
+        self.servertype = config_data[CONF_SERVER_TYPE]
         self.online = False
         self._last_status_request_failed = False
         self.srv_record_checked = False
 
         # 3rd party library instance
-        self._mc_status = MCStatus(self.host, self.port)
+        if self.servertype == CONF_SERVER_TYPE_BEDROCK:
+            self._mc_status = MCStatusBedrock(self.host, self.port)
+        else:
+            self._mc_status = MCStatus(self.host, self.port)
 
         # Data provided by 3rd party library
         self.version = None
@@ -109,7 +116,7 @@ class MinecraftServer:
         self.players_online = None
         self.players_max = None
         self.players_list = None
-
+        self.motd = None
         # Dispatcher signal name
         self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
 
@@ -188,16 +195,28 @@ class MinecraftServer:
             )
 
             # Got answer to request, update properties.
-            self.version = status_response.version.name
+            if self.servertype == CONF_SERVER_TYPE_BEDROCK:
+                self.version = status_response.version.brand
+                self.players_max = status_response.players_max
+                self.players_online = status_response.players_online
+                self.latency_time = round(status_response.latency * 10000.0,3)
+                self.motd = status_response.motd
+            else:
+                self.version = status_response.version.name
+                self.players_online = status_response.players.online
+                self.players_max = status_response.players.max
+                self.latency_time = status_response.latency
+                self.motd = status_response.description
+                                    
+                self.players_list = []
+                if status_response.players.sample is not None:
+                    for player in status_response.players.sample:
+                        self.players_list.append(player.name)
+                    self.players_list.sort()           
+                
+                
             self.protocol_version = status_response.version.protocol
-            self.players_online = status_response.players.online
-            self.players_max = status_response.players.max
-            self.latency_time = status_response.latency
-            self.players_list = []
-            if status_response.players.sample is not None:
-                for player in status_response.players.sample:
-                    self.players_list.append(player.name)
-                self.players_list.sort()
+            
 
             # Inform user once about successful update if necessary.
             if self._last_status_request_failed:

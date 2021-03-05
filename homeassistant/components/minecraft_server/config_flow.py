@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 
 from . import MinecraftServer, helpers
 from .const import (  # pylint: disable=unused-import
@@ -15,6 +15,11 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
+    CONF_SERVER_TYPE,
+    CONF_SERVER_TYPE_ALL,
+    CONF_SERVER_TYPE_JAVA,
+    CONF_SERVER_TYPE_BEDROCK,
+    ConfServerType,
 )
 
 
@@ -31,6 +36,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = None
             port = DEFAULT_PORT
+            servertype = user_input[CONF_SERVER_TYPE]
             # Split address at last occurrence of ':'.
             address_left, separator, address_right = user_input[CONF_HOST].rpartition(
                 ":"
@@ -82,6 +88,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_NAME: user_input[CONF_NAME],
                     CONF_HOST: host,
                     CONF_PORT: port,
+                    CONF_SERVER_TYPE: servertype,
                 }
                 server = MinecraftServer(self.hass, "dummy_unique_id", config_data)
                 await server.async_check_connection()
@@ -139,6 +146,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
                     ): vol.All(str, vol.Lower),
+                    vol.Required(CONF_SERVER_TYPE): vol.In(CONF_SERVER_TYPE_ALL)
                 }
             ),
             errors=errors,
