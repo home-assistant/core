@@ -3,7 +3,6 @@ from typing import List, Tuple, cast
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -11,16 +10,6 @@ from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
 from homeassistant.helpers.entity_registry import async_get as async_get_ent_reg
 
 from .const import DATA_CLIENT, DOMAIN
-
-
-@callback
-def get_old_value_id(value: ZwaveValue) -> str:
-    """Get old value ID so we can migrate entity unique ID."""
-    command_class = value.command_class
-    endpoint = value.endpoint or "00"
-    property_ = value.property_
-    property_key_name = value.property_key_name or "00"
-    return f"{value.node.node_id}-{command_class}-{endpoint}-{property_}-{property_key_name}"
 
 
 @callback
