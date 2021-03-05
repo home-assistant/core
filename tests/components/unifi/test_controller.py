@@ -46,6 +46,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+DEFAULT_CONFIG_ENTRY_ID = 1
 DEFAULT_HOST = "1.2.3.4"
 DEFAULT_SITE = "site_id"
 
@@ -174,7 +175,7 @@ async def setup_unifi_integration(
         data=deepcopy(config),
         options=deepcopy(options),
         unique_id=unique_id,
-        entry_id=1,
+        entry_id=DEFAULT_CONFIG_ENTRY_ID,
         version=1,
     )
     config_entry.add_to_hass(hass)

@@ -3,14 +3,19 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi import (
-    UnifiWirelessClients,
+    UNIFI_WIRELESS_CLIENTS,
     async_flatten_entry_data,
 )
 from homeassistant.components.unifi.const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.setup import async_setup_component
 
-from .test_controller import CONTROLLER_DATA, ENTRY_CONFIG, setup_unifi_integration
+from .test_controller import (
+    CONTROLLER_DATA,
+    DEFAULT_CONFIG_ENTRY_ID,
+    ENTRY_CONFIG,
+    setup_unifi_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -80,28 +85,26 @@ async def test_unload_entry(hass, aioclient_mock):
     assert not hass.data[UNIFI_DOMAIN]
 
 
-async def test_wireless_clients(hass, hass_storage):
+async def test_wireless_clients(hass, hass_storage, aioclient_mock):
     """Verify wireless clients class."""
-    entry = MockConfigEntry(domain=UNIFI_DOMAIN, data=ENTRY_CONFIG, entry_id=1)
     hass_storage[unifi.STORAGE_KEY] = {
         "version": unifi.STORAGE_VERSION,
-        "data": {entry.entry_id: {"wireless_devices": ["mac1", "mac2", "mac3"]}},
+        "data": {
+            DEFAULT_CONFIG_ENTRY_ID: {"wireless_devices": ["mac1", "mac2", "mac3"]}
+        },
     }
+    config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
-    wireless_clients = UnifiWirelessClients(hass)
+    wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
+    assert wireless_clients.get_data(config_entry) == {"mac1", "mac2", "mac3"}
 
-    await wireless_clients.async_load()
-
-    assert wireless_clients.get_data(entry) == {"mac1", "mac2", "mac3"}
-
-    wireless_clients.update_data({"mac4"}, entry)
+    wireless_clients.update_data({"mac4"}, config_entry)
+    await hass.async_block_till_done()
 
     assert wireless_clients._data_to_save() == {
-        entry.entry_id: {"wireless_devices": ["mac4"]}
+        config_entry.entry_id: {"wireless_devices": ["mac4"]}
     }
-
-    await hass.async_block_till_done()
     assert hass_storage[unifi.STORAGE_KEY] == {
         "version": unifi.STORAGE_VERSION,
-        "data": {entry.entry_id: {"wireless_devices": ["mac4"]}},
+        "data": {config_entry.entry_id: {"wireless_devices": ["mac4"]}},
     }
