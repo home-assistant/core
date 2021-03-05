@@ -31,10 +31,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    # await data_handler.register_data_class(
-    #     CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-    # )
-
     if CAMERA_DATA_CLASS_NAME not in data_handler.data:
         raise PlatformNotReady
 
@@ -67,8 +63,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
-
-    # await data_handler.unregister_data_class(CAMERA_DATA_CLASS_NAME, None)
 
 
 class NetatmoLight(NetatmoBase, LightEntity):
