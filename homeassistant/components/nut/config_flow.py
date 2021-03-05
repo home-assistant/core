@@ -243,7 +243,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         errors = {}
-        info = {}
         try:
             info = await validate_input(self.hass, self.config_entry.data)
         except CannotConnect:
@@ -253,7 +252,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             errors[CONF_BASE] = "unknown"
 
         if errors:
-            return self.async_show_form(step_id="init", errors=errors)
+            return self.async_show_form(step_id="abort", errors=errors)
 
         base_schema = _resource_schema_base(info["available_resources"], resources)
         base_schema[
@@ -263,6 +262,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init", data_schema=vol.Schema(base_schema), errors=errors
         )
+
+    async def async_step_abort(self, user_input=None):
+        """Abort options flow."""
+        return self.async_create_entry(title="", data=self.config_entry.options)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
