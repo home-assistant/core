@@ -114,7 +114,7 @@ class AsusWrtSensorDataHandler:
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
         else:
-            raise RuntimeError("Invalid sensor type: %s", sensor_type)
+            raise RuntimeError(f"Invalid sensor type: {sensor_type}")
 
         coordinator = DataUpdateCoordinator(
             self._hass,
@@ -306,29 +306,26 @@ class AsusWrtRouter:
         conn_dev_coordinator = await self._sensors_data_handler.get_coordinator(
             SENSORS_TYPE_COUNT, False
         )
-        if conn_dev_coordinator:
-            self._sensors_coordinator[SENSORS_TYPE_COUNT] = {
-                KEY_COORDINATOR: conn_dev_coordinator,
-                KEY_SENSORS: [SENSOR_CONNECTED_DEVICE],
-            }
+        self._sensors_coordinator[SENSORS_TYPE_COUNT] = {
+            KEY_COORDINATOR: conn_dev_coordinator,
+            KEY_SENSORS: [SENSOR_CONNECTED_DEVICE],
+        }
 
         bytes_coordinator = await self._sensors_data_handler.get_coordinator(
             SENSORS_TYPE_BYTES
         )
-        if bytes_coordinator:
-            self._sensors_coordinator[SENSORS_TYPE_BYTES] = {
-                KEY_COORDINATOR: bytes_coordinator,
-                KEY_SENSORS: [SENSOR_RX_BYTES, SENSOR_TX_BYTES],
-            }
+        self._sensors_coordinator[SENSORS_TYPE_BYTES] = {
+            KEY_COORDINATOR: bytes_coordinator,
+            KEY_SENSORS: [SENSOR_RX_BYTES, SENSOR_TX_BYTES],
+        }
 
         rates_coordinator = await self._sensors_data_handler.get_coordinator(
             SENSORS_TYPE_RATES
         )
-        if rates_coordinator:
-            self._sensors_coordinator[SENSORS_TYPE_RATES] = {
-                KEY_COORDINATOR: rates_coordinator,
-                KEY_SENSORS: [SENSOR_RX_RATES, SENSOR_TX_RATES],
-            }
+        self._sensors_coordinator[SENSORS_TYPE_RATES] = {
+            KEY_COORDINATOR: rates_coordinator,
+            KEY_SENSORS: [SENSOR_RX_RATES, SENSOR_TX_RATES],
+        }
 
     async def _update_unpolled_sensors(self) -> None:
         """Request refresh for AsusWrt unpolled sensors."""
