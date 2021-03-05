@@ -22,6 +22,7 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -311,49 +312,45 @@ async def _register_service(
         metadata = {
             UserServiceArgType.BOOL: {
                 "validator": cv.boolean,
-                "description": "A boolean.",
                 "example": "False",
-                "selector": {"boolean": {}},
+                "selector": {"boolean": None},
             },
             UserServiceArgType.INT: {
                 "validator": vol.Coerce(int),
-                "description": "An integer number.",
                 "example": "42",
-                "selector": {"number": {}},
+                "selector": {"number": {CONF_MODE: "box"}},
             },
             UserServiceArgType.FLOAT: {
                 "validator": vol.Coerce(float),
-                "description": "A floating point value.",
                 "example": "12.3",
-                "selector": {"number": {"step": 1e-3}},
+                "selector": {"number": {CONF_MODE: "box", "step": 1e-3}},
             },
             UserServiceArgType.STRING: {
                 "validator": cv.string,
-                "description": "A string of text.",
                 "example": "Example text",
-                "selector": {"text": {}},
+                "selector": {"text": None},
             },
             UserServiceArgType.BOOL_ARRAY: {
                 "validator": [cv.boolean],
-                "description": "An array of boolean values.",
+                "description": "A list of boolean values.",
                 "example": "[True, False]",
                 "selector": {"object": {}},
             },
             UserServiceArgType.INT_ARRAY: {
                 "validator": [vol.Coerce(int)],
-                "description": "An array of integer values.",
+                "description": "A list of integer values.",
                 "example": "[42, 34]",
                 "selector": {"object": {}},
             },
             UserServiceArgType.FLOAT_ARRAY: {
                 "validator": [vol.Coerce(float)],
-                "description": "An array of floating point numbers.",
+                "description": "A list of floating point numbers.",
                 "example": "[ 12.3, 34.5 ]",
                 "selector": {"object": {}},
             },
             UserServiceArgType.STRING_ARRAY: {
                 "validator": [cv.string],
-                "description": "An array of string.",
+                "description": "A list of strings.",
                 "example": "['Example text', 'Another example']",
                 "selector": {"object": {}},
             },
@@ -362,7 +359,7 @@ async def _register_service(
         fields[arg.name] = {
             "name": arg.name,
             "required": True,
-            "description": metadata["description"],
+            "description": metadata.get("description"),
             "example": metadata["example"],
             "selector": metadata["selector"],
         }
