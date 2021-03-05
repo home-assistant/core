@@ -70,9 +70,7 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
     if media is None:
         return None
 
-    children = await asyncio.gather(
-        *[item_payload(item, get_thumbnail_url) for item in media]
-    )
+    children = [await item_payload(item, get_thumbnail_url) for item in media]
 
     if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
         children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
