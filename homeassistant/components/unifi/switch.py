@@ -198,8 +198,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         if self.poe_mode:  # POE is enabled and client in a known state
             return
 
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         self.poe_mode = state.attributes.get("poe_mode")
