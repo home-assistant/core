@@ -4,7 +4,7 @@ import logging
 from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
