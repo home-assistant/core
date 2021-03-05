@@ -140,20 +140,13 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "testuser"}
+        )
         await hass.async_block_till_done()
 
-    assert result2["step_id"] == "user"
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
@@ -172,6 +165,12 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert not result["errors"]
 
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         return_value=True,
@@ -180,20 +179,13 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"])
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "testuser"}
+        )
         await hass.async_block_till_done()
 
-    assert result2["step_id"] == "user"
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-    assert len(mock_setup.mock_calls) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
