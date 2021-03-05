@@ -13,7 +13,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity
+from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.template import Template
@@ -132,6 +132,11 @@ async def handle_call_service(hass, connection, msg):
     if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
         blocking = False
 
+    # We do not support templates.
+    target = msg.get("target")
+    if template.is_complex(target):
+        raise vol.Invalid("Templates are not supported here")
+
     try:
         context = connection.context(msg)
         await hass.services.async_call(
@@ -140,7 +145,7 @@ async def handle_call_service(hass, connection, msg):
             msg.get("service_data"),
             blocking,
             context,
-            target=msg.get("target"),
+            target=target,
         )
         connection.send_message(
             messages.result_message(msg["id"], {"context": context})
