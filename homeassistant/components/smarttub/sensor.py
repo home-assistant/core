@@ -123,7 +123,7 @@ class SmartTubReminder(SmartTubSensorBase):
             coordinator,
             spa,
             f"{reminder.name.capitalize()} Reminder",
-            "reminder_{reminder.id.lower()}",
+            f"reminder_{reminder.id.lower()}",
         )
         self.reminder_id = reminder.id
 
