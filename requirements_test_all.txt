@@ -996,7 +996,7 @@ pywemo==0.6.3
 pywilight==0.0.68
 
 # homeassistant.components.zerproc
-pyzerproc==0.4.7
+pyzerproc==0.4.8
 
 # homeassistant.components.rachio
 rachiopy==1.0.3

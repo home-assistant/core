@@ -118,6 +118,8 @@ async def test_init(hass, mock_entry):
     assert mock_light_1.disconnect.called
     assert mock_light_2.disconnect.called
 
+    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF", "11:22:33:44:55:66"}
+
 
 async def test_discovery_exception(hass, mock_entry):
     """Test platform setup."""
@@ -136,42 +138,15 @@ async def test_discovery_exception(hass, mock_entry):
     assert len(hass.data[DOMAIN]["addresses"]) == 0
 
 
-async def test_connect_exception(hass, mock_entry):
-    """Test platform setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    mock_entry.add_to_hass(hass)
-
-    mock_light_1 = MagicMock(spec=pyzerproc.Light)
-    mock_light_1.address = "AA:BB:CC:DD:EE:FF"
-    mock_light_1.name = "LEDBlue-CCDDEEFF"
-    mock_light_1.is_connected.return_value = False
-
-    mock_light_2 = MagicMock(spec=pyzerproc.Light)
-    mock_light_2.address = "11:22:33:44:55:66"
-    mock_light_2.name = "LEDBlue-33445566"
-    mock_light_2.is_connected.return_value = False
-
-    with patch(
-        "homeassistant.components.zerproc.light.pyzerproc.discover",
-        return_value=[mock_light_1, mock_light_2],
-    ), patch.object(
-        mock_light_1, "connect", side_effect=pyzerproc.ZerprocException("TEST")
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # The exception connecting to light 1 should be captured, but light 2
-    # should still be added
-    assert len(hass.data[DOMAIN]["addresses"]) == 1
-
-
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
+    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF"}
+
     with patch.object(mock_light, "disconnect") as mock_disconnect:
         await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_disconnect.called
+    assert DOMAIN not in hass.data
 
 
 async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):

@@ -1923,7 +1923,7 @@ pyxeoma==1.4.1
 pyzbar==0.1.7
 
 # homeassistant.components.zerproc
-pyzerproc==0.4.7
+pyzerproc==0.4.8
 
 # homeassistant.components.qnap
 qnapstats==0.3.0
