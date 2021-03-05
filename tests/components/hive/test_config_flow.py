@@ -4,7 +4,6 @@ from unittest.mock import patch
 from apyhiveapi.helper import hive_exceptions
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.hive.config_flow import UnknownHiveError
 from homeassistant.components.hive.const import CONF_CODE, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 
@@ -310,6 +309,43 @@ async def test_user_flow_2fa_send_new_code(hass):
     assert result3["step_id"] == CONF_CODE
     assert result3["errors"] == {}
 
+    with patch(
+        "homeassistant.components.hive.config_flow.Auth.sms_2fa",
+        return_value={
+            "ChallengeName": "SUCCESS",
+            "AuthenticationResult": {
+                "RefreshToken": "mock-refresh-token",
+                "AccessToken": "mock-access-token",
+            },
+        },
+    ), patch(
+        "homeassistant.components.hive.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.hive.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"], {CONF_CODE: MFA_CODE}
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["title"] == USERNAME
+    assert result4["data"] == {
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+        "tokens": {
+            "AuthenticationResult": {
+                "AccessToken": "mock-access-token",
+                "RefreshToken": "mock-refresh-token",
+            },
+            "ChallengeName": "SUCCESS",
+        },
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
 
 async def test_abort_if_existing_entry(hass):
     """Check flow abort when an entry already exist."""
@@ -491,16 +527,7 @@ async def test_user_flow_unknown_error(hass):
 
     with patch(
         "homeassistant.components.hive.config_flow.Auth.login",
-        return_value={
-            "ChallengeName": "SUCCESS",
-            "AuthenticationResult": {
-                "RefreshToken": "mock-refresh-token",
-                "AccessToken": "mock-access-token",
-            },
-        },
-    ), patch(
-        "homeassistant.components.hive.config_flow.HiveFlowHandler.async_setup_hive_entry",
-        side_effect=UnknownHiveError(),
+        return_value={"ChallengeName": "FAILED", "InvalidAuthenticationResult": {}},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -537,16 +564,7 @@ async def test_user_flow_2fa_unknown_error(hass):
 
     with patch(
         "homeassistant.components.hive.config_flow.Auth.sms_2fa",
-        return_value={
-            "ChallengeName": "SUCCESS",
-            "AuthenticationResult": {
-                "RefreshToken": "mock-refresh-token",
-                "AccessToken": "mock-access-token",
-            },
-        },
-    ), patch(
-        "homeassistant.components.hive.config_flow.HiveFlowHandler.async_setup_hive_entry",
-        side_effect=UnknownHiveError(),
+        return_value={"ChallengeName": "FAILED", "InvalidAuthenticationResult": {}},
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
