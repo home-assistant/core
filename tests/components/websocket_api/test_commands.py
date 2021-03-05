@@ -100,6 +100,7 @@ async def test_call_service_target_template(hass, websocket_client):
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
 
 
 async def test_call_service_not_found(hass, websocket_client):
