@@ -1477,7 +1477,7 @@ pykmtronic==0.0.3
 pykodi==0.2.1
 
 # homeassistant.components.kulersky
-pykulersky==0.4.0
+pykulersky==0.5.2
 
 # homeassistant.components.kwb
 pykwb==0.0.8
