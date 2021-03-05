@@ -17,7 +17,7 @@ import fractions
 import io
 import math
 import threading
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import av
 
@@ -56,7 +56,11 @@ class FakePyAvStream:
         self.name = name
         self.time_base = fractions.Fraction(1, rate)
         self.profile = "ignored-profile"
-        self.codec = Mock()
+
+        class FakeCodec:
+            name = "aac"
+
+        self.codec = FakeCodec()
 
 
 VIDEO_STREAM = FakePyAvStream(VIDEO_STREAM_FORMAT, VIDEO_FRAME_RATE)
@@ -90,13 +94,16 @@ class PacketSequence:
 
         class FakePacket(bytearray):
             # Be a bytearray so that memoryview works
+            def __init__(self):
+                super().__init__(2)
+
             time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
             dts = self.packet * PACKET_DURATION / time_base
             pts = self.packet * PACKET_DURATION / time_base
             duration = PACKET_DURATION / time_base
             stream = VIDEO_STREAM
             is_keyframe = True
-            size = Mock()
+            size = 3
 
         return FakePacket()
 
@@ -425,10 +432,9 @@ async def test_adts_aac_audio(hass):
     packets[1].stream = AUDIO_STREAM
     packets[1].dts = packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
     packets[1].pts = packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE
-    # The following attributes are signs of ADTS AAC
-    py_av.container.streams.audio[0].codec.name = "aac"
-    packets[1].size = 3
-    packets[1].extend((255, 241))
+    # The following is packet data is a sign of ADTS AAC
+    packets[1][0] = 255
+    packets[1][1] = 241
 
     decoded_stream = await async_decode_stream(hass, iter(packets), py_av=py_av)
     assert len(decoded_stream.audio_packets) == 0
