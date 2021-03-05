@@ -60,6 +60,7 @@ class FreeboxRouter:
         self._option_listener = None
         self.listeners = []
         self.home_device_uids = []
+        self._warning_once = False
 
     async def setup(self) -> None:
         """Set up a Freebox router."""
@@ -162,13 +163,16 @@ class FreeboxRouter:
 
         for home_node in home_nodes:
             if( home_node["category"] not in ["pir","camera","alarm","dws","kfb","basic_shutter"] ):
-                _LOGGER.warning("Node not supported:\n" +str(home_node))
+                if( self._warning_once == False ):
+                    _LOGGER.warning("Node not supported:\n" +str(home_node))
                 continue
 
             if self.home_devices.get(home_node["id"]) is None:
                 new_device = True
             self.home_devices[home_node["id"]] = home_node
 
+        self._warning_once = True
+        
         if new_device:
             async_dispatcher_send(self.hass, self.signal_home_device_new)
 
