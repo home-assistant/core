@@ -504,7 +504,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                 variables = run_variables
             automation_trace.set_variables(variables)
 
-            # Wipe the trace, and set the new trace as the automation's condition trace
+            # Prepare tracing the evaluation of the automation's conditions
             trace_clear()
             automation_trace.set_condition_trace(trace_get())
 
@@ -517,10 +517,9 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
                     "Conditions not met, aborting automation. Condition summary: %s",
                     trace_get(),
                 )
-                automation_trace.set_condition_trace(trace_get())
                 return
 
-            # Wipe the trace, and set the new trace as the automation's action trace
+            # Prepare tracing the execution of the automation's actions
             trace_clear()
             automation_trace.set_action_trace(trace_get())
 
