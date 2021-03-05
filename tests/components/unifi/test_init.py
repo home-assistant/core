@@ -2,10 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import unifi
-from homeassistant.components.unifi import (
-    UNIFI_WIRELESS_CLIENTS,
-    async_flatten_entry_data,
-)
+from homeassistant.components.unifi import async_flatten_entry_data
 from homeassistant.components.unifi.const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.setup import async_setup_component
@@ -90,21 +87,36 @@ async def test_wireless_clients(hass, hass_storage, aioclient_mock):
     hass_storage[unifi.STORAGE_KEY] = {
         "version": unifi.STORAGE_VERSION,
         "data": {
-            DEFAULT_CONFIG_ENTRY_ID: {"wireless_devices": ["mac1", "mac2", "mac3"]}
+            DEFAULT_CONFIG_ENTRY_ID: {
+                "wireless_devices": ["00:00:00:00:00:00", "00:00:00:00:00:01"]
+            }
         },
     }
-    config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
-    wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
-    assert wireless_clients.get_data(config_entry) == {"mac1", "mac2", "mac3"}
-
-    wireless_clients.update_data({"mac4"}, config_entry)
-    await hass.async_block_till_done()
-
-    assert wireless_clients._data_to_save() == {
-        config_entry.entry_id: {"wireless_devices": ["mac4"]}
+    client_1 = {
+        "hostname": "client_1",
+        "ip": "10.0.0.1",
+        "is_wired": False,
+        "mac": "00:00:00:00:00:01",
     }
-    assert hass_storage[unifi.STORAGE_KEY] == {
-        "version": unifi.STORAGE_VERSION,
-        "data": {config_entry.entry_id: {"wireless_devices": ["mac4"]}},
+    client_2 = {
+        "hostname": "client_2",
+        "ip": "10.0.0.2",
+        "is_wired": False,
+        "mac": "00:00:00:00:00:02",
     }
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, clients_response=[client_1, client_2]
+    )
+
+    for mac in [
+        "00:00:00:00:00:00",
+        "00:00:00:00:00:01",
+        "00:00:00:00:00:02",
+    ]:
+        assert (
+            mac
+            in hass_storage[unifi.STORAGE_KEY]["data"][config_entry.entry_id][
+                "wireless_devices"
+            ]
+        )
