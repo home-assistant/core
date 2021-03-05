@@ -1,7 +1,13 @@
 """Support for Verisure alarm control panels."""
-from time import sleep
+from __future__ import annotations
 
-import homeassistant.components.alarm_control_panel as alarm
+from time import sleep
+from typing import Any, Callable
+
+from homeassistant.components.alarm_control_panel import (
+    FORMAT_NUMBER,
+    AlarmControlPanelEntity,
+)
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -11,12 +17,19 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
 from . import HUB as hub
 from .const import CONF_ALARM, CONF_CODE_DIGITS, CONF_GIID, LOGGER
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    add_entities: Callable[[list[Entity], bool], None],
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the Verisure platform."""
     alarms = []
     if int(hub.config.get(CONF_ALARM, 1)):
@@ -25,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(alarms)
 
 
-def set_arm_state(state, code=None):
+def set_arm_state(state: str, code: str | None = None) -> None:
     """Send set arm state command."""
     transaction_id = hub.session.set_arm_state(code, state)[
         "armStateChangeTransactionId"
@@ -38,7 +51,7 @@ def set_arm_state(state, code=None):
     hub.update_overview()
 
 
-class VerisureAlarm(alarm.AlarmControlPanelEntity):
+class VerisureAlarm(AlarmControlPanelEntity):
     """Representation of a Verisure alarm status."""
 
     def __init__(self):
@@ -48,7 +61,7 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
         self._changed_by = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         giid = hub.config.get(CONF_GIID)
         if giid is not None:
@@ -61,7 +74,7 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
         return "{} alarm".format(hub.session.installations[0]["alias"])
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
@@ -71,16 +84,16 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
-    def code_format(self):
+    def code_format(self) -> str:
         """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
+        return FORMAT_NUMBER
 
     @property
-    def changed_by(self):
+    def changed_by(self) -> str | None:
         """Return the last change triggered by."""
         return self._changed_by
 
-    def update(self):
+    def update(self) -> None:
         """Update alarm status."""
         hub.update_overview()
         status = hub.get_first("$.armState.statusType")
@@ -94,14 +107,14 @@ class VerisureAlarm(alarm.AlarmControlPanelEntity):
             LOGGER.error("Unknown alarm state %s", status)
         self._changed_by = hub.get_first("$.armState.name")
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         set_arm_state("DISARMED", code)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         set_arm_state("ARMED_HOME", code)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         set_arm_state("ARMED_AWAY", code)

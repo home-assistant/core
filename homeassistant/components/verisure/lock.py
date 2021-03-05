@@ -1,14 +1,24 @@
 """Support for Verisure locks."""
+from __future__ import annotations
+
 from time import monotonic, sleep
+from typing import Any, Callable
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 
 from . import HUB as hub
 from .const import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, LOGGER
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    add_entities: Callable[[list[Entity], bool], None],
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the Verisure lock platform."""
     locks = []
     if int(hub.config.get(CONF_LOCKS, 1)):
@@ -26,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VerisureDoorlock(LockEntity):
     """Representation of a Verisure doorlock."""
 
-    def __init__(self, device_label):
+    def __init__(self, device_label: str):
         """Initialize the Verisure lock."""
         self._device_label = device_label
         self._state = None
@@ -36,19 +46,19 @@ class VerisureDoorlock(LockEntity):
         self._default_lock_code = hub.config.get(CONF_DEFAULT_LOCK_CODE)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the lock."""
         return hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].area", self._device_label
         )
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the lock."""
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
             hub.get_first(
@@ -58,16 +68,16 @@ class VerisureDoorlock(LockEntity):
         )
 
     @property
-    def changed_by(self):
+    def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._changed_by
 
     @property
-    def code_format(self):
+    def code_format(self) -> str:
         """Return the required six digit code."""
         return "^\\d{%s}$" % self._digits
 
-    def update(self):
+    def update(self) -> None:
         """Update lock status."""
         if monotonic() - self._change_timestamp < 10:
             return
@@ -88,11 +98,11 @@ class VerisureDoorlock(LockEntity):
         )
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs) -> None:
         """Send unlock command."""
         if self._state is None:
             return
@@ -104,7 +114,7 @@ class VerisureDoorlock(LockEntity):
 
         self.set_lock_state(code, STATE_UNLOCKED)
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs) -> None:
         """Send lock command."""
         if self._state == STATE_LOCKED:
             return
@@ -116,7 +126,7 @@ class VerisureDoorlock(LockEntity):
 
         self.set_lock_state(code, STATE_LOCKED)
 
-    def set_lock_state(self, code, state):
+    def set_lock_state(self, code: str, state: str) -> None:
         """Send set lock state command."""
         lock_state = "lock" if state == STATE_LOCKED else "unlock"
         transaction_id = hub.session.set_lock_state(

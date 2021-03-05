@@ -1,12 +1,22 @@
 """Support for Verisure sensors."""
+from __future__ import annotations
+
+from typing import Any, Callable
+
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
 from . import HUB as hub
 from .const import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    add_entities: Callable[[list[Entity], bool], None],
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the Verisure platform."""
     sensors = []
     hub.update_overview()
@@ -47,12 +57,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class VerisureThermometer(Entity):
     """Representation of a Verisure thermometer."""
 
-    def __init__(self, device_label):
+    def __init__(self, device_label: str):
         """Initialize the sensor."""
         self._device_label = device_label
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return (
             hub.get_first(
@@ -62,14 +72,14 @@ class VerisureThermometer(Entity):
         )
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].temperature", self._device_label
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
             hub.get_first(
@@ -80,12 +90,12 @@ class VerisureThermometer(Entity):
         )
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return TEMP_CELSIUS
 
     # pylint: disable=no-self-use
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         hub.update_overview()
 
@@ -93,12 +103,12 @@ class VerisureThermometer(Entity):
 class VerisureHygrometer(Entity):
     """Representation of a Verisure hygrometer."""
 
-    def __init__(self, device_label):
+    def __init__(self, device_label: str):
         """Initialize the sensor."""
         self._device_label = device_label
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return (
             hub.get_first(
@@ -108,14 +118,14 @@ class VerisureHygrometer(Entity):
         )
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
             hub.get_first(
@@ -125,12 +135,12 @@ class VerisureHygrometer(Entity):
         )
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return PERCENTAGE
 
     # pylint: disable=no-self-use
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         hub.update_overview()
 
@@ -143,7 +153,7 @@ class VerisureMouseDetection(Entity):
         self._device_label = device_label
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return (
             hub.get_first(
@@ -153,14 +163,14 @@ class VerisureMouseDetection(Entity):
         )
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return hub.get_first(
             "$.eventCounts[?(@.deviceLabel=='%s')].detections", self._device_label
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
             hub.get_first("$.eventCounts[?(@.deviceLabel=='%s')]", self._device_label)
@@ -168,11 +178,11 @@ class VerisureMouseDetection(Entity):
         )
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity."""
         return "Mice"
 
     # pylint: disable=no-self-use
-    def update(self):
+    def update(self) -> None:
         """Update the sensor."""
         hub.update_overview()
