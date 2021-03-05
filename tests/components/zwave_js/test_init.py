@@ -585,11 +585,13 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, snapshot_calls, update_addon_side_effect",
+    "addon_version, update_available, update_calls, snapshot_calls, "
+    "update_addon_side_effect, create_shapshot_side_effect",
     [
-        ("1.0", True, 1, 1, None),
-        ("1.0", False, 0, 0, None),
-        ("1.0", True, 1, 1, HassioAPIError("Boom")),
+        ("1.0", True, 1, 1, None, None),
+        ("1.0", False, 0, 0, None, None),
+        ("1.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -606,10 +608,12 @@ async def test_update_addon(
     update_calls,
     snapshot_calls,
     update_addon_side_effect,
+    create_shapshot_side_effect,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
+    create_shapshot.side_effect = create_shapshot_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion("Invalid version")
     device = "/test"
