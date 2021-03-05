@@ -1,7 +1,8 @@
 """Support for Twente Milieu."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
-from typing import Optional
 
 from twentemilieu import TwenteMilieu
 import voluptuous as vol
@@ -15,11 +16,12 @@ from homeassistant.components.twentemilieu.const import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 SCAN_INTERVAL = timedelta(seconds=3600)
 
@@ -27,9 +29,7 @@ SERVICE_UPDATE = "update"
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_ID): cv.string})
 
 
-async def _update_twentemilieu(
-    hass: HomeAssistantType, unique_id: Optional[str]
-) -> None:
+async def _update_twentemilieu(hass: HomeAssistant, unique_id: str | None) -> None:
     """Update Twente Milieu."""
     if unique_id is not None:
         twentemilieu = hass.data[DOMAIN].get(unique_id)
@@ -37,16 +37,15 @@ async def _update_twentemilieu(
             await twentemilieu.update()
             async_dispatcher_send(hass, DATA_UPDATE, unique_id)
     else:
-        tasks = []
-        for twentemilieu in hass.data[DOMAIN].values():
-            tasks.append(twentemilieu.update())
-        await asyncio.wait(tasks)
+        await asyncio.wait(
+            [twentemilieu.update() for twentemilieu in hass.data[DOMAIN].values()]
+        )
 
         for uid in hass.data[DOMAIN]:
             async_dispatcher_send(hass, DATA_UPDATE, uid)
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Twente Milieu components."""
 
     async def update(call) -> None:
@@ -59,7 +58,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Twente Milieu from a config entry."""
     session = async_get_clientsession(hass)
     twentemilieu = TwenteMilieu(
@@ -85,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Twente Milieu config entry."""
     await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
