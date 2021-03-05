@@ -16,7 +16,6 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.template import Template
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
@@ -261,7 +260,7 @@ def handle_ping(hass, connection, msg):
 async def handle_render_template(hass, connection, msg):
     """Handle render_template command."""
     template_str = msg["template"]
-    template_obj = Template(template_str, hass)
+    template_obj = template.Template(template_str, hass)
     variables = msg.get("variables")
     timeout = msg.get("timeout")
     info = None
@@ -299,7 +298,7 @@ async def handle_render_template(hass, connection, msg):
     try:
         info = async_track_template_result(
             hass,
-            [TrackTemplate(template, variables)],
+            [TrackTemplate(template_obj, variables)],
             _template_listener,
             raise_on_template_error=True,
         )
