@@ -112,7 +112,6 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 
 ATTR_CUR = "current"
 ATTR_MAX = "max"
-ATTR_MODE = "mode"
 
 DATA_SCRIPTS = "helpers.script"
 

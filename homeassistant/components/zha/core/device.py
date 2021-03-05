@@ -14,6 +14,7 @@ import zigpy.quirks
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -28,7 +29,6 @@ from .const import (
     ATTR_ATTRIBUTE,
     ATTR_AVAILABLE,
     ATTR_CLUSTER_ID,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
@@ -40,7 +40,6 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
     ATTR_MODEL,
-    ATTR_NAME,
     ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,

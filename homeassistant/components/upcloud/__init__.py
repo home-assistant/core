@@ -40,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CORE_NUMBER = "core_number"
 ATTR_HOSTNAME = "hostname"
 ATTR_MEMORY_AMOUNT = "memory_amount"
-ATTR_STATE = "state"
 ATTR_TITLE = "title"
 ATTR_UUID = "uuid"
 ATTR_ZONE = "zone"

@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -48,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 ATTR_POWER = "power"
 ATTR_CHARGING = "charging"
-ATTR_BATTERY_LEVEL = "battery_level"
 ATTR_DISPLAY_CLOCK = "display_clock"
 ATTR_NIGHT_MODE = "night_mode"
 ATTR_NIGHT_TIME_BEGIN = "night_time_begin"

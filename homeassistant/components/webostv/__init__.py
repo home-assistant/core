@@ -6,20 +6,8 @@ from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
-from homeassistant.components.webostv.const import (
-    ATTR_BUTTON,
-    ATTR_COMMAND,
-    ATTR_PAYLOAD,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DEFAULT_NAME,
-    DOMAIN,
-    SERVICE_BUTTON,
-    SERVICE_COMMAND,
-    SERVICE_SELECT_SOUND_OUTPUT,
-    WEBOSTV_CONFIG_FILE,
-)
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_HOST,
@@ -30,7 +18,19 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ATTR_SOUND_OUTPUT
+from .const import (
+    ATTR_BUTTON,
+    ATTR_PAYLOAD,
+    ATTR_SOUND_OUTPUT,
+    CONF_ON_ACTION,
+    CONF_SOURCES,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
+    WEBOSTV_CONFIG_FILE,
+)
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}

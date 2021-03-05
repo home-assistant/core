@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -63,7 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 ATTR_POWER = "power"
-ATTR_TEMPERATURE = "temperature"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
 ATTR_POWER_MODE = "power_mode"

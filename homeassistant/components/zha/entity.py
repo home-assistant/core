@@ -5,6 +5,7 @@ import functools
 import logging
 from typing import Any, Awaitable, Dict, List, Optional
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -18,7 +19,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,

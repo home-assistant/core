@@ -1,10 +1,10 @@
 """Support for Vilfo Router sensors."""
+from homeassistant.const import ATTR_ICON
 from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_API_DATA_FIELD,
     ATTR_DEVICE_CLASS,
-    ATTR_ICON,
     ATTR_LABEL,
     ATTR_UNIT,
     DOMAIN,

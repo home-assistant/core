@@ -11,6 +11,7 @@ from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,14 +21,12 @@ from .core.const import (
     ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
-    ATTR_NAME,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
     ATTR_WARNING_DEVICE_MODE,
