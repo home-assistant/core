@@ -24,6 +24,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Only add motion sensor when motion is enabled
             if zone["motionConfig"] >= 2:
                 entities.append(AdvantageAirZoneMotion(instance, ac_key, zone_key))
+            # Only add MyZone if its avaliable
+            if zone["type"] != 0:
+                entities.append(AdvantageAirZoneMyZone(instance, ac_key, zone_key))
     async_add_entities(entities)
 
 
