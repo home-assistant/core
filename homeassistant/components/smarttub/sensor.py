@@ -6,7 +6,7 @@ import logging
 from smarttub import SpaReminder
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubSensorBase
+from .entity import SmartTubEntity, SmartTubStatusSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubSensor(SmartTubSensorBase):
+class SmartTubSensor(SmartTubStatusSensor):
     """Generic class for SmartTub status sensors."""
 
     @property
@@ -64,7 +64,7 @@ class SmartTubSensor(SmartTubSensorBase):
         return self._state.lower()
 
 
-class SmartTubPrimaryFiltrationCycle(SmartTubSensorBase):
+class SmartTubPrimaryFiltrationCycle(SmartTubStatusSensor):
     """The primary filtration cycle."""
 
     def __init__(self, coordinator, spa):
@@ -90,7 +90,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensorBase):
         }
 
 
-class SmartTubSecondaryFiltrationCycle(SmartTubSensorBase):
+class SmartTubSecondaryFiltrationCycle(SmartTubStatusSensor):
     """The secondary filtration cycle."""
 
     def __init__(self, coordinator, spa):
@@ -114,7 +114,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensorBase):
         }
 
 
-class SmartTubReminder(SmartTubSensorBase):
+class SmartTubReminder(SmartTubEntity):
     """Reminders for maintenance actions."""
 
     def __init__(self, coordinator, spa, reminder):
@@ -123,7 +123,6 @@ class SmartTubReminder(SmartTubSensorBase):
             coordinator,
             spa,
             f"{reminder.name.capitalize()} Reminder",
-            f"reminder_{reminder.id.lower()}",
         )
         self.reminder_id = reminder.id
 
