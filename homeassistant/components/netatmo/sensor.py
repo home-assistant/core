@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.device_registry import async_entries_for_config_entry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -133,6 +134,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
         """Find all entities."""
         await data_handler.register_data_class(data_class_name, data_class_name, None)
 
+        if data_class_name not in data_handler.data:
+            raise PlatformNotReady
+
         all_module_infos = {}
         data = data_handler.data
 
@@ -173,6 +177,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entities.append(
                     NetatmoSensor(data_handler, data_class_name, module, condition)
                 )
+
+        await data_handler.register_data_class(data_class_name, data_class_name, None)
 
         return entities
 
