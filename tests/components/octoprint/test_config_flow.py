@@ -1,7 +1,12 @@
 """Test the OctoPrint config flow."""
 from unittest.mock import patch
 
-from pyoctoprintapi import ApiError, DiscoverySettings
+from pyoctoprintapi import (
+    ApiError,
+    DiscoverySettings,
+    OctoprintJobInfo,
+    OctoprintPrinterInfo,
+)
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.octoprint.config_flow import CannotConnect
@@ -139,6 +144,25 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
+        "pyoctoprintapi.OctoprintClient.get_printer_info",
+        return_value=OctoprintPrinterInfo(
+            {
+                "state": {
+                    "flags": {"printing": True, "error": False},
+                    "text": "Operational",
+                },
+                "temperature": [],
+            }
+        ),
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_job_info",
+        return_value=OctoprintJobInfo(
+            {
+                "job": {},
+                "progress": {"completion": 50},
+            }
+        ),
+    ), patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -177,6 +201,25 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     ), patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_printer_info",
+        return_value=OctoprintPrinterInfo(
+            {
+                "state": {
+                    "flags": {"printing": True, "error": False},
+                    "text": "Operational",
+                },
+                "temperature": [],
+            }
+        ),
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_job_info",
+        return_value=OctoprintJobInfo(
+            {
+                "job": {},
+                "progress": {"completion": 50},
+            }
+        ),
     ), patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
     ):
