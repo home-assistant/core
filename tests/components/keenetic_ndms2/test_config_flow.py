@@ -194,8 +194,26 @@ async def test_ssdp_already_configured(hass: HomeAssistant):
     assert result["reason"] == "already_configured"
 
 
+async def test_ssdp_reject_no_udn(hass: HomeAssistant):
+    """Discovered device has no UDN."""
+
+    discovery_info = {
+        **MOCK_SSDP_DISCOVERY_INFO,
+    }
+    discovery_info.pop(ssdp.ATTR_UPNP_UDN)
+
+    result = await hass.config_entries.flow.async_init(
+        keenetic.DOMAIN,
+        context={CONF_SOURCE: config_entries.SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "no_udn"
+
+
 async def test_ssdp_reject_non_keenetic(hass: HomeAssistant):
-    """Test host already configured and discovered."""
+    """Discovered device does not look like a keenetic router."""
 
     discovery_info = {
         **MOCK_SSDP_DISCOVERY_INFO,

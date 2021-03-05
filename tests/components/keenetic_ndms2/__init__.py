@@ -31,5 +31,6 @@ MOCK_OPTIONS = {
 
 MOCK_SSDP_DISCOVERY_INFO = {
     ssdp.ATTR_SSDP_LOCATION: SSDP_LOCATION,
+    ssdp.ATTR_UPNP_UDN: "uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     ssdp.ATTR_UPNP_FRIENDLY_NAME: MOCK_NAME,
 }
