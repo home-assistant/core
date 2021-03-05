@@ -35,6 +35,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, callback
+from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -439,12 +440,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         current_state = STATE_ON
                     else:
                         current_state = HVAC_MODE_OFF
-                    long_enough = condition.state(
-                        self.hass,
-                        self.heater_entity_id,
-                        current_state,
-                        self.min_cycle_duration,
-                    )
+                    try:
+                        long_enough = condition.state(
+                            self.hass,
+                            self.heater_entity_id,
+                            current_state,
+                            self.min_cycle_duration,
+                        )
+                    except ConditionError:
+                        long_enough = False
+
                     if not long_enough:
                         return
 

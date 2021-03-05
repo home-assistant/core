@@ -184,7 +184,16 @@ async def test_manual_errors(
 
 async def test_manual_already_configured(hass):
     """Test that only one unique instance is allowed."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=1234)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id=1234,
+    )
     entry.add_to_hass(hass)
 
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -198,12 +207,15 @@ async def test_manual_already_configured(hass):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "url": "ws://localhost:3000",
+            "url": "ws://1.1.1.1:3001",
         },
     )
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["url"] == "ws://1.1.1.1:3001"
+    assert entry.data["use_addon"] is False
+    assert entry.data["integration_created_addon"] is False
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
@@ -507,49 +519,6 @@ async def test_not_addon(hass, supervisor):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_addon_already_configured(hass, supervisor):
-    """Test add-on already configured leads to manual step."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"use_addon": True}, title=TITLE, unique_id=5678
-    )
-    entry.add_to_hass(hass)
-
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "manual"
-
-    with patch(
-        "homeassistant.components.zwave_js.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.zwave_js.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "url": "ws://localhost:3000",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TITLE
-    assert result["data"] == {
-        "url": "ws://localhost:3000",
-        "usb_path": None,
-        "network_key": None,
-        "use_addon": False,
-        "integration_created_addon": False,
-    }
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 2
-
-
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
 async def test_addon_running(
     hass,
@@ -661,9 +630,18 @@ async def test_addon_running_already_configured(
     hass, supervisor, addon_running, addon_options, get_addon_discovery_info
 ):
     """Test that only one unique instance is allowed when add-on is running."""
-    addon_options["device"] = "/test"
-    addon_options["network_key"] = "abc123"
-    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=1234)
+    addon_options["device"] = "/test_new"
+    addon_options["network_key"] = "def456"
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/test",
+            "network_key": "abc123",
+        },
+        title=TITLE,
+        unique_id=1234,
+    )
     entry.add_to_hass(hass)
 
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -680,6 +658,9 @@ async def test_addon_running_already_configured(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] == "/test_new"
+    assert entry.data["network_key"] == "def456"
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
@@ -885,7 +866,16 @@ async def test_addon_installed_already_configured(
     get_addon_discovery_info,
 ):
     """Test that only one unique instance is allowed when add-on is installed."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, title=TITLE, unique_id=1234)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/test",
+            "network_key": "abc123",
+        },
+        title=TITLE,
+        unique_id=1234,
+    )
     entry.add_to_hass(hass)
 
     await setup.async_setup_component(hass, "persistent_notification", {})
@@ -904,7 +894,7 @@ async def test_addon_installed_already_configured(
     assert result["step_id"] == "configure_addon"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"usb_path": "/test", "network_key": "abc123"}
+        result["flow_id"], {"usb_path": "/test_new", "network_key": "def456"}
     )
 
     assert result["type"] == "progress"
@@ -915,6 +905,9 @@ async def test_addon_installed_already_configured(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] == "/test_new"
+    assert entry.data["network_key"] == "def456"
 
 
 @pytest.mark.parametrize("discovery_info", [{"config": ADDON_DISCOVERY_INFO}])
