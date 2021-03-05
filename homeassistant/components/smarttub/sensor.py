@@ -1,6 +1,9 @@
 """Platform for sensor integration."""
+from datetime import datetime, timedelta
 from enum import Enum
 import logging
+
+from smarttub import SpaReminder
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
@@ -13,6 +16,8 @@ ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 ATTR_MODE = "mode"
 # the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
+# whether the reminder has been snoozed (bool)
+ATTR_REMINDER_SNOOZED = "snoozed"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -40,6 +45,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 SmartTubSecondaryFiltrationCycle(controller.coordinator, spa),
             ]
         )
+        entities.extend(
+            SmartTubReminder(controller.coordinator, spa, reminder)
+            for reminder in await spa.get_reminders()
+        )
 
     async_add_entities(entities)
 
@@ -55,13 +64,13 @@ class SmartTubSensor(SmartTubSensorBase):
         return self._state.lower()
 
 
-class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
+class SmartTubPrimaryFiltrationCycle(SmartTubSensorBase):
     """The primary filtration cycle."""
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "primary filtration cycle", "primary_filtration"
+            coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
 
     @property
@@ -81,7 +90,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         }
 
 
-class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
+class SmartTubSecondaryFiltrationCycle(SmartTubSensorBase):
     """The secondary filtration cycle."""
 
     def __init__(self, coordinator, spa):
@@ -102,4 +111,41 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return {
             ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
+        }
+
+
+class SmartTubReminder(SmartTubSensorBase):
+    """Reminders for maintenance actions."""
+
+    def __init__(self, coordinator, spa, reminder):
+        """Initialize the entity."""
+        super().__init__(
+            coordinator,
+            spa,
+            f"{reminder.name.capitalize()} Reminder",
+            "reminder_{reminder.id.lower()}",
+        )
+        self.reminder_id = reminder.id
+
+    @property
+    def unique_id(self):
+        """Return a unique id for this sensor."""
+        return f"{self.spa.id}-reminder-{self.reminder_id}"
+
+    @property
+    def reminder(self) -> SpaReminder:
+        """Return the underlying SpaPump object for this entity."""
+        return self.coordinator.data[self.spa.id]["reminders"][self.reminder_id]
+
+    @property
+    def state(self) -> str:
+        """Return the datetime at which the reminder will activate."""
+        when = datetime.now() + timedelta(days=self.reminder.remaining_days)
+        return when.isoformat()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
         }

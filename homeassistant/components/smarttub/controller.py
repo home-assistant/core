@@ -86,15 +86,17 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        status, pumps, lights = await asyncio.gather(
+        status, pumps, lights, reminders = await asyncio.gather(
             spa.get_status(),
             spa.get_pumps(),
             spa.get_lights(),
+            spa.get_reminders(),
         )
         return {
             "status": status,
             "pumps": {pump.id: pump for pump in pumps},
             "lights": {light.zone: light for light in lights},
+            "reminders": {reminder.id: reminder for reminder in reminders},
         }
 
     async def async_register_devices(self, entry):
