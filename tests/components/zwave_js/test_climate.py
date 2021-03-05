@@ -405,7 +405,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
 
     assert state
     assert state.state == HVAC_MODE_HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 25
+    assert state.attributes[ATTR_TEMPERATURE] == 14
     assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
 
@@ -432,6 +432,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         "commandClassName": "Thermostat Setpoint",
         "property": "setpoint",
         "propertyName": "setpoint",
+        "propertyKey": 1,
         "propertyKeyName": "Heating",
         "ccVersion": 2,
         "metadata": {
@@ -441,7 +442,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
             "unit": "\u00b0C",
             "ccSpecific": {"setpointType": 1},
         },
-        "value": 25,
+        "value": 14,
     }
     assert args["value"] == 21.5
 
@@ -459,6 +460,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
                 "commandClass": 67,
                 "endpoint": 0,
                 "property": "setpoint",
+                "propertyKey": 1,
                 "propertyKeyName": "Heating",
                 "propertyName": "setpoint",
                 "newValue": 23,
