@@ -1,9 +1,10 @@
 """UniFi switch platform tests."""
 from copy import deepcopy
+from unittest.mock import patch
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
 
-from homeassistant import config_entries
+from homeassistant import config_entries, core
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
@@ -726,8 +727,66 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
     assert switch_2 is None
 
 
-async def test_restoring_client(hass, aioclient_mock):
-    """Test the update_items function with some clients."""
+async def test_restore_client_succeed(hass, aioclient_mock):
+    """Test that RestoreEntity works as expected."""
+    POE_DEVICE = {
+        "device_id": "12345",
+        "ip": "1.0.1.1",
+        "mac": "00:00:00:00:01:01",
+        "last_seen": 1562600145,
+        "model": "US16P150",
+        "name": "POE Switch",
+        "port_overrides": [
+            {
+                "poe_mode": "off",
+                "port_idx": 1,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+            }
+        ],
+        "port_table": [
+            {
+                "media": "GE",
+                "name": "Port 1",
+                "op_mode": "switch",
+                "poe_caps": 7,
+                "poe_class": "Unknown",
+                "poe_current": "0.00",
+                "poe_enable": False,
+                "poe_good": False,
+                "poe_mode": "off",
+                "poe_power": "0.00",
+                "poe_voltage": "0.00",
+                "port_idx": 1,
+                "port_poe": True,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+                "up": False,
+            },
+        ],
+        "state": 1,
+        "type": "usw",
+        "version": "4.0.42.10433",
+    }
+    POE_CLIENT = {
+        "hostname": "poe_client",
+        "ip": "1.0.0.1",
+        "is_wired": True,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:01",
+        "name": "POE Client",
+        "oui": "Producer",
+    }
+
+    fake_state = core.State(
+        "switch.poe_client",
+        "off",
+        {
+            "power": "0.00",
+            "switch": POE_DEVICE["mac"],
+            "port": 1,
+            "poe_mode": "auto",
+        },
+    )
+
     config_entry = config_entries.ConfigEntry(
         version=1,
         domain=UNIFI_DOMAIN,
@@ -744,15 +803,100 @@ async def test_restoring_client(hass, aioclient_mock):
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
-        f'{POE_SWITCH}-{CLIENT_1["mac"]}',
-        suggested_object_id=CLIENT_1["hostname"],
+        f'{POE_SWITCH}-{POE_CLIENT["mac"]}',
+        suggested_object_id=POE_CLIENT["hostname"],
         config_entry=config_entry,
     )
+
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        await setup_unifi_integration(
+            hass,
+            aioclient_mock,
+            options={
+                CONF_TRACK_CLIENTS: False,
+                CONF_TRACK_DEVICES: False,
+            },
+            clients_response=[],
+            devices_response=[POE_DEVICE],
+            clients_all_response=[POE_CLIENT],
+        )
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    poe_client = hass.states.get("switch.poe_client")
+    assert poe_client.state == "off"
+
+
+async def test_restore_client_no_old_state(hass, aioclient_mock):
+    """Test that RestoreEntity without old state makes entity unavailable."""
+    POE_DEVICE = {
+        "device_id": "12345",
+        "ip": "1.0.1.1",
+        "mac": "00:00:00:00:01:01",
+        "last_seen": 1562600145,
+        "model": "US16P150",
+        "name": "POE Switch",
+        "port_overrides": [
+            {
+                "poe_mode": "off",
+                "port_idx": 1,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+            }
+        ],
+        "port_table": [
+            {
+                "media": "GE",
+                "name": "Port 1",
+                "op_mode": "switch",
+                "poe_caps": 7,
+                "poe_class": "Unknown",
+                "poe_current": "0.00",
+                "poe_enable": False,
+                "poe_good": False,
+                "poe_mode": "off",
+                "poe_power": "0.00",
+                "poe_voltage": "0.00",
+                "port_idx": 1,
+                "port_poe": True,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+                "up": False,
+            },
+        ],
+        "state": 1,
+        "type": "usw",
+        "version": "4.0.42.10433",
+    }
+    POE_CLIENT = {
+        "hostname": "poe_client",
+        "ip": "1.0.0.1",
+        "is_wired": True,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:01",
+        "name": "POE Client",
+        "oui": "Producer",
+    }
+
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        domain=UNIFI_DOMAIN,
+        title="Mock Title",
+        data=ENTRY_CONFIG,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
+        options={},
+        entry_id=1,
+    )
+
+    registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
-        f'{POE_SWITCH}-{CLIENT_2["mac"]}',
-        suggested_object_id=CLIENT_2["hostname"],
+        f'{POE_SWITCH}-{POE_CLIENT["mac"]}',
+        suggested_object_id=POE_CLIENT["hostname"],
         config_entry=config_entry,
     )
 
@@ -760,16 +904,15 @@ async def test_restoring_client(hass, aioclient_mock):
         hass,
         aioclient_mock,
         options={
-            CONF_BLOCK_CLIENT: ["random mac"],
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         },
-        clients_response=[CLIENT_2],
-        devices_response=[DEVICE_1],
-        clients_all_response=[CLIENT_1],
+        clients_response=[],
+        devices_response=[POE_DEVICE],
+        clients_all_response=[POE_CLIENT],
     )
 
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    device_1 = hass.states.get("switch.client_1")
-    assert device_1 is not None
+    poe_client = hass.states.get("switch.poe_client")
+    assert poe_client.state == "unavailable"  # self.poe_mode is None
