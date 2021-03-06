@@ -26,7 +26,12 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-PLATFORMS = ["camera", "sensor", "binary_sensor", "switch"]
+PLATFORMS = [
+    "camera",
+    "sensor",
+    "binary_sensor",
+    "switch",
+]
 
 
 async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
