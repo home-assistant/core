@@ -3,7 +3,7 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import COORDINATORS, DOMAIN, ProxmoxEntity
+from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
 
 
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
@@ -15,6 +15,9 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
 
     for host_config in discovery_info["config"][DOMAIN]:
         host_name = host_config["host"]
+
+        if hass.data[PROXMOX_CLIENTS][host_name] is None:
+            continue
 
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
