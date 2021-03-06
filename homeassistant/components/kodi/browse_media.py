@@ -1,5 +1,6 @@
 """Support for media browsing."""
 import asyncio
+from itertools import islice
 import logging
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
@@ -70,7 +71,16 @@ async def build_item_response(media_library, payload, get_thumbnail_url=None):
     if media is None:
         return None
 
-    children = [await item_payload(item, get_thumbnail_url) for item in media]
+    def chunk(iterable, size):
+        iterable = iter(iterable)
+        return iter(lambda: tuple(islice(iterable, size)), ())
+
+    tasks = [item_payload(item, get_thumbnail_url) for item in media]
+
+    children = []
+    # Throttle simultaneous requests to prevent overloading of the backend
+    for subtasks in list(chunk(tasks, 9)):
+        children.extend(await asyncio.gather(*subtasks))
 
     if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
         children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
@@ -168,7 +178,9 @@ async def item_payload(item, get_thumbnail_url=None):
 
     thumbnail = item.get("thumbnail")
     if thumbnail is not None and get_thumbnail_url is not None:
-        thumbnail = await get_thumbnail_url(media_content_type, media_content_id)
+        thumbnail = await get_thumbnail_url(
+            media_content_type, media_content_id, thumbnail_url=thumbnail
+        )
 
     return BrowseMedia(
         title=title,
