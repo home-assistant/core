@@ -320,6 +320,7 @@ class AutomationTrace:
 
 class LimitedSizeDict(OrderedDict):
     """OrderedDict limited in size."""
+
     def __init__(self, *args, **kwds):
         """Initialize OrderedDict limited in size."""
         self.size_limit = kwds.pop("size_limit", None)
