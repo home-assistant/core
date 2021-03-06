@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.components.ezviz.const import (
     ATTR_CAMERAS,
+    ATTR_SERIAL,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
@@ -31,6 +32,13 @@ USER_INPUT = {
     CONF_REGION: "test-region",
 }
 
+USER_INPUT_CAMERA = {
+    ATTR_SERIAL: "test-username",
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
+}
+
+
 YAML_CONFIG = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
@@ -44,10 +52,11 @@ YAML_INVALID = {
     "C666666": {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
 }
 
-YAML_CONFIG_CAMERA = [
-    "C666666",
-    {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
-]
+YAML_CONFIG_CAMERA = {
+    ATTR_SERIAL: "C666666",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+}
 
 
 def _patch_async_setup(return_value=True):

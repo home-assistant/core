@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Set up Ezviz from a config entry."""
 
     if entry.data.get(ATTR_SERIAL):
-        hass.data[DOMAIN][entry.unique_id] = entry.data
+        hass.data[DOMAIN][entry.unique_id] = entry
         return True
 
     if not entry.options:

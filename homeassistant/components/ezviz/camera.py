@@ -24,6 +24,7 @@ from .const import (
     ATTR_ENABLE,
     ATTR_HOME,
     ATTR_LEVEL,
+    ATTR_SERIAL,
     ATTR_SPEED,
     ATTR_SWITCH,
     ATTR_TYPE,
@@ -72,7 +73,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": SOURCE_IMPORT},
-                    data=camera,
+                    data={
+                        ATTR_SERIAL: camera[0],
+                        CONF_USERNAME: camera[1][CONF_USERNAME],
+                        CONF_PASSWORD: camera[1][CONF_PASSWORD],
+                    },
                 )
             )
 
@@ -151,17 +156,18 @@ async def async_setup_entry(
 
         # There seem to be a bug related to localRtspPort in Ezviz API...
         local_rtsp_port = DEFAULT_RTSP_PORT
-        conf_cameras = hass.data.get(DOMAIN).get(camera["serial"], {})
 
         if camera["local_rtsp_port"] != 0:
             local_rtsp_port = camera["local_rtsp_port"]
 
-        if camera["serial"] == conf_cameras.get("serial"):
-            camera_username = conf_cameras[CONF_USERNAME]
-            camera_password = conf_cameras[CONF_PASSWORD]
+        if camera[ATTR_SERIAL] in hass.data.get(DOMAIN):
+            conf_cameras = hass.data[DOMAIN][camera[ATTR_SERIAL]]
+
+            camera_username = conf_cameras.data[CONF_USERNAME]
+            camera_password = conf_cameras.data[CONF_PASSWORD]
             camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{camera['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
-            _LOGGER.debug(
-                "Camera %s source stream: %s", camera["serial"], camera_rtsp_stream
+            _LOGGER.warning(
+                "Camera %s source stream: %s", camera[ATTR_SERIAL], camera_rtsp_stream
             )
 
         else:
@@ -170,7 +176,7 @@ async def async_setup_entry(
             camera_rtsp_stream = ""
             _LOGGER.info(
                 "Found camera with serial %s without configuration. Please add an integration instance to see the camera stream",
-                camera["serial"],
+                camera[ATTR_SERIAL],
             )
 
         camera_entities.append(

@@ -12,7 +12,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (  # pylint: disable=unused-import
-    ATTR_CAMERAS,
     ATTR_SERIAL,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_CAMERA_USERNAME,
@@ -66,18 +65,12 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _create_camera_rstp(self, data):
         """Create RSTP auth entry per camera in config."""
 
-        await self.async_set_unique_id(data[0])
+        await self.async_set_unique_id(data[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
-        camera_rstp_creds = {
-            ATTR_SERIAL: data[0],
-            CONF_USERNAME: data[1][CONF_USERNAME],
-            CONF_PASSWORD: data[1][CONF_PASSWORD],
-        }
+        _LOGGER.debug("Create camera with: %s", data)
 
-        _LOGGER.debug("Create camera with: %s", camera_rstp_creds)
-
-        return self.async_create_entry(title=data[0], data=camera_rstp_creds)
+        return self.async_create_entry(title=data[ATTR_SERIAL], data=data)
 
     @staticmethod
     @callback
@@ -155,24 +148,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config import from yaml."""
         _LOGGER.debug("import config: %s", import_config)
 
-        if ATTR_CAMERAS in import_config:
-            try:
-                return await self._validate_and_create_auth(import_config)
-
-            except InvalidAuth:
-                _LOGGER.error("Error importing Ezviz platform config: invalid auth")
-                return self.async_abort(reason="invalid_auth")
-
-            except AbortFlow:
-                raise
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Error importing ezviz platform config: unexpected exception"
-                )
-            return self.async_abort(reason="unknown")
-
-        if ATTR_CAMERAS not in import_config:
+        if ATTR_SERIAL in import_config:
             try:
                 return await self._create_camera_rstp(import_config)
 
@@ -184,6 +160,22 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Error importing ezviz platform config: unexpected exception"
                 )
             return self.async_abort(reason="unknown")
+
+        try:
+            return await self._validate_and_create_auth(import_config)
+
+        except InvalidAuth:
+            _LOGGER.error("Error importing Ezviz platform config: invalid auth")
+            return self.async_abort(reason="invalid_auth")
+
+        except AbortFlow:
+            raise
+
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Error importing ezviz platform config: unexpected exception"
+            )
+        return self.async_abort(reason="unknown")
 
 
 class EzvizOptionsFlowHandler(OptionsFlow):
