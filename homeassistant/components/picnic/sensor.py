@@ -11,11 +11,12 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+
 from .const import ADDRESS, ATTRIBUTION, CONF_COORDINATOR, DOMAIN, SENSOR_TYPES
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up Picnic sensor entries."""
 
@@ -37,11 +38,11 @@ class PicnicSensor(CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""
 
     def __init__(
-            self,
-            coordinator: DataUpdateCoordinator[Any],
-            config_entry: ConfigEntry,
-            sensor_type,
-            properties,
+        self,
+        coordinator: DataUpdateCoordinator[Any],
+        config_entry: ConfigEntry,
+        sensor_type,
+        properties,
     ):
         """Init a Picnic sensor."""
         super().__init__(coordinator)

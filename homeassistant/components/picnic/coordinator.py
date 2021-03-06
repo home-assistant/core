@@ -25,7 +25,7 @@ from .const import (
     SENSOR_SELECTED_SLOT_MAX_ODER_TIME,
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
-    SENSOR_TOTAL_DELIVERIES,
+    SENSOR_TOTAL_ORDERS,
 )
 
 
@@ -76,7 +76,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         return {
             ADDRESS: address,
             SENSOR_COMPLETED_DELIVERIES: user.get("completed_deliveries", 0),
-            SENSOR_TOTAL_DELIVERIES: user.get("total_deliveries"),
+            SENSOR_TOTAL_ORDERS: user.get("total_deliveries"),
             SENSOR_CART_ITEMS_COUNT: cart.get("total_count", 0),
             SENSOR_CART_TOTAL_PRICE: cart.get("total_price", 0) / 100,
             SENSOR_SELECTED_SLOT_START: slot_data.get("window_start"),
@@ -117,11 +117,15 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         # Determine the last order and get the position details
         last_order = deliveries[0]
-        delivery_position = self.picnic_api_client.get_delivery_position(last_order["delivery_id"])
+        delivery_position = self.picnic_api_client.get_delivery_position(
+            last_order["delivery_id"]
+        )
 
         # Determine the ETA, if available, the one from the delivery position API is more precise
         # but it's only available shortly before the actual delivery.
-        last_order["eta"] = delivery_position.get("eta_window", last_order.get("eta2", {}))
+        last_order["eta"] = delivery_position.get(
+            "eta_window", last_order.get("eta2", {})
+        )
 
         # Determine the total price by adding up the total price of all sub-orders
         total_price = 0

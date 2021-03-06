@@ -14,7 +14,7 @@ ATTRIBUTION = "Data provided by Picnic"
 ADDRESS = "address"
 
 SENSOR_COMPLETED_DELIVERIES = "completed_deliveries"
-SENSOR_TOTAL_DELIVERIES = "total_deliveries"
+SENSOR_TOTAL_ORDERS = "total_orders"
 SENSOR_CART_ITEMS_COUNT = "cart_items_count"
 SENSOR_CART_TOTAL_PRICE = "cart_total_price"
 SENSOR_SELECTED_SLOT_START = "selected_slot_start"
@@ -35,7 +35,7 @@ SENSOR_TYPES = {
         "unit": None,
         "icon": "mdi:truck-delivery",
     },
-    SENSOR_TOTAL_DELIVERIES: {
+    SENSOR_TOTAL_ORDERS: {
         "class": None,
         "unit": None,
         "icon": "mdi:truck-delivery",

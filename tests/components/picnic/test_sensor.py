@@ -104,7 +104,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.picnic_patcher.stop()
 
     @property
-    def coordinator(self):
+    def _coordinator(self):
         return self.hass.data[const.DOMAIN][self.config_entry.entry_id][
             const.CONF_COORDINATOR
         ]
@@ -118,27 +118,40 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             assert sensor.attributes["unit_of_measurement"] == unit
 
     async def _setup_platform(self, use_default_responses=False):
-        """Setup the Picnic sensor platform."""
+        """Set up the Picnic sensor platform."""
         if use_default_responses:
-            self.picnic_mock().get_user.return_value = copy.deepcopy(DEFAULT_USER_RESPONSE)
-            self.picnic_mock().get_cart.return_value = copy.deepcopy(DEFAULT_CART_RESPONSE)
-            self.picnic_mock().get_deliveries.return_value = [copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)]
+            self.picnic_mock().get_user.return_value = copy.deepcopy(
+                DEFAULT_USER_RESPONSE
+            )
+            self.picnic_mock().get_cart.return_value = copy.deepcopy(
+                DEFAULT_CART_RESPONSE
+            )
+            self.picnic_mock().get_deliveries.return_value = [
+                copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
+            ]
             self.picnic_mock().get_delivery_position.return_value = {}
 
         await self.hass.config_entries.async_setup(self.config_entry.entry_id)
         await self.hass.async_block_till_done()
 
     async def test_sensor_setup_platform_not_available(self):
+        """Test the set-up of the sensor platform if API is not available."""
         # Configure mock requests to yield exceptions
         self.picnic_mock().get_user.side_effect = requests.exceptions.ConnectionError
         self.picnic_mock().get_cart.side_effect = requests.exceptions.ConnectionError
-        self.picnic_mock().get_deliveries.side_effect = requests.exceptions.ConnectionError
-        self.picnic_mock().get_delivery_position.side_effect = requests.exceptions.ConnectionError
+        self.picnic_mock().get_deliveries.side_effect = (
+            requests.exceptions.ConnectionError
+        )
+        self.picnic_mock().get_delivery_position.side_effect = (
+            requests.exceptions.ConnectionError
+        )
         await self._setup_platform()
 
         # Assert that sensors are not setup
         assert self.hass.states.get("sensor.picnic_completed_deliveries") is None
-        assert self.hass.states.get("sensor.picnic_selected_slot_max_order_time") is None
+        assert (
+            self.hass.states.get("sensor.picnic_selected_slot_max_order_time") is None
+        )
         assert self.hass.states.get("sensor.picnic_last_order_status") is None
         assert self.hass.states.get("sensor.picnic_last_order_total_price") is None
 
@@ -147,7 +160,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform(use_default_responses=True)
 
         self._assert_sensor("sensor.picnic_completed_deliveries", "112")
-        self._assert_sensor("sensor.picnic_total_deliveries", "123")
+        self._assert_sensor("sensor.picnic_total_orders", "123")
         self._assert_sensor("sensor.picnic_cart_items_count", "10")
         self._assert_sensor(
             "sensor.picnic_cart_total_price", "25.35", unit=CURRENCY_EURO
@@ -207,7 +220,9 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Set mock responses
         self.picnic_mock().get_user.return_value = copy.deepcopy(DEFAULT_USER_RESPONSE)
         self.picnic_mock().get_cart.return_value = cart_response
-        self.picnic_mock().get_deliveries.return_value = [copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)]
+        self.picnic_mock().get_deliveries.return_value = [
+            copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
+        ]
         self.picnic_mock().get_delivery_position.return_value = {}
         await self._setup_platform()
 
@@ -243,6 +258,28 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             "sensor.picnic_last_order_eta_end", "2021-02-26T21:14:00.000+01:00"
         )
 
+    async def test_sensors_use_detailed_eta_if_available(self):
+        """Test sensor states when last order is not yet delivered."""
+        # Set-up platform with default mock responses
+        await self._setup_platform(use_default_responses=True)
+
+        # Provide a delivery position response with different ETA
+        self.picnic_mock().get_delivery_position.return_value = {
+            "eta_window": {
+                "start": "2021-03-05T11:19:20.452+01:00",
+                "end": "2021-03-05T11:39:20.452+01:00",
+            }
+        }
+        await self._coordinator.async_refresh()
+
+        # Assert detailed ETA is used
+        self._assert_sensor(
+            "sensor.picnic_last_order_eta_start", "2021-03-05T11:19:20.452+01:00"
+        )
+        self._assert_sensor(
+            "sensor.picnic_last_order_eta_end", "2021-03-05T11:39:20.452+01:00"
+        )
+
     async def test_sensors_no_data(self):
         """Test sensor states when the api only returns empty objects."""
         # Setup platform with default responses
@@ -252,14 +289,17 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.picnic_mock().get_user.return_value = {}
         self.picnic_mock().get_cart.return_value = {}
         self.picnic_mock().get_deliveries.return_value = [{}]
-        await self.coordinator.async_refresh()
+        await self._coordinator.async_refresh()
 
         # Assert all states are the same while the last update failed
-        assert self.coordinator.last_update_success is False
-        self._assert_sensor("sensor.picnic_completed_deliveries", '112')
-        self._assert_sensor("sensor.picnic_selected_slot_max_order_time", '2021-03-02T22:00:00.000+01:00')
-        self._assert_sensor("sensor.picnic_last_order_status", 'COMPLETED')
-        self._assert_sensor("sensor.picnic_last_order_total_price", '41.33')
+        assert self._coordinator.last_update_success is False
+        self._assert_sensor("sensor.picnic_completed_deliveries", "112")
+        self._assert_sensor(
+            "sensor.picnic_selected_slot_max_order_time",
+            "2021-03-02T22:00:00.000+01:00",
+        )
+        self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
+        self._assert_sensor("sensor.picnic_last_order_total_price", "41.33")
 
     async def test_device_registry_entry(self):
         """Test if device registry entry is populated correctly."""

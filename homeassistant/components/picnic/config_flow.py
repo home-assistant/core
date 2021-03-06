@@ -2,9 +2,9 @@
 import logging
 
 from python_picnic_api import PicnicAPI
+from python_picnic_api.session import PicnicAuthError
 import requests
 import voluptuous as vol
-from python_picnic_api.session import PicnicAuthError
 
 from homeassistant import config_entries, core, exceptions
 
