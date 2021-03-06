@@ -8,6 +8,7 @@ from mysensors import BaseAsyncGateway
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
@@ -195,24 +196,27 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id] = gateway
 
     # Connect notify discovery as that integration doesn't support entry forwarding.
+    # Allow loading device tracker platform via discovery
+    # until refactor to config entry is done.
 
-    load_notify_platform = partial(
-        async_load_platform,
-        hass,
-        NOTIFY_DOMAIN,
-        DOMAIN,
-        hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
-    )
-
-    await on_unload(
-        hass,
-        entry.entry_id,
-        async_dispatcher_connect(
+    for platform in (DEVICE_TRACKER_DOMAIN, NOTIFY_DOMAIN):
+        load_discovery_platform = partial(
+            async_load_platform,
             hass,
-            MYSENSORS_DISCOVERY.format(entry.entry_id, NOTIFY_DOMAIN),
-            load_notify_platform,
-        ),
-    )
+            platform,
+            DOMAIN,
+            hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
+        )
+
+        await on_unload(
+            hass,
+            entry.entry_id,
+            async_dispatcher_connect(
+                hass,
+                MYSENSORS_DISCOVERY.format(entry.entry_id, platform),
+                load_discovery_platform,
+            ),
+        )
 
     async def finish() -> None:
         await asyncio.gather(
