@@ -219,6 +219,8 @@ EVENT_TIME_CHANGED = "time_changed"
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = "battery"
+DEVICE_CLASS_CO = "carbon_monoxide"
+DEVICE_CLASS_CO2 = "carbon_dioxide"
 DEVICE_CLASS_HUMIDITY = "humidity"
 DEVICE_CLASS_ILLUMINANCE = "illuminance"
 DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"
