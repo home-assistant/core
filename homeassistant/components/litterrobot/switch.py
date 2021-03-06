@@ -1,11 +1,11 @@
 """Support for Litter-Robot switches."""
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
 from .hub import LitterRobotEntity
 
 
-class LitterRobotNightLightModeSwitch(LitterRobotEntity, ToggleEntity):
+class LitterRobotNightLightModeSwitch(LitterRobotEntity, SwitchEntity):
     """Litter-Robot Night Light Mode Switch."""
 
     @property
@@ -27,7 +27,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotEntity, ToggleEntity):
         await self.perform_action_and_refresh(self.robot.set_night_light, False)
 
 
-class LitterRobotPanelLockoutSwitch(LitterRobotEntity, ToggleEntity):
+class LitterRobotPanelLockoutSwitch(LitterRobotEntity, SwitchEntity):
     """Litter-Robot Panel Lockout Switch."""
 
     @property

@@ -14,7 +14,6 @@ from homeassistant.components.vacuum import (
     VacuumEntity,
 )
 from homeassistant.const import STATE_OFF
-import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .hub import LitterRobotEntity
@@ -54,27 +53,22 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
     def state(self):
         """Return the state of the cleaner."""
         switcher = {
-            Robot.UnitStatus.CCP: STATE_CLEANING,
-            Robot.UnitStatus.EC: STATE_CLEANING,
-            Robot.UnitStatus.CCC: STATE_DOCKED,
-            Robot.UnitStatus.CST: STATE_DOCKED,
-            Robot.UnitStatus.DF1: STATE_DOCKED,
-            Robot.UnitStatus.DF2: STATE_DOCKED,
-            Robot.UnitStatus.RDY: STATE_DOCKED,
+            Robot.UnitStatus.CLEAN_CYCLE: STATE_CLEANING,
+            Robot.UnitStatus.EMPTY_CYCLE: STATE_CLEANING,
+            Robot.UnitStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+            Robot.UnitStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
+            Robot.UnitStatus.DRAWER_FULL_1: STATE_DOCKED,
+            Robot.UnitStatus.DRAWER_FULL_2: STATE_DOCKED,
+            Robot.UnitStatus.READY: STATE_DOCKED,
             Robot.UnitStatus.OFF: STATE_OFF,
         }
 
         return switcher.get(self.robot.unit_status, STATE_ERROR)
 
     @property
-    def error(self):
-        """Return the error associated with the current state, if any."""
-        return self.robot.unit_status.value
-
-    @property
     def status(self):
         """Return the status of the cleaner."""
-        return f"{self.robot.unit_status.value}{' (Sleeping)' if self.robot.is_sleeping else ''}"
+        return f"{self.robot.unit_status.label}{' (Sleeping)' if self.robot.is_sleeping else ''}"
 
     async def async_turn_on(self, **kwargs):
         """Turn the cleaner on, starting a clean cycle."""
@@ -119,22 +113,11 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        [sleep_mode_start_time, sleep_mode_end_time] = [None, None]
-
-        if self.robot.sleep_mode_active:
-            sleep_mode_start_time = dt_util.as_local(
-                self.robot.sleep_mode_start_time
-            ).strftime("%H:%M:00")
-            sleep_mode_end_time = dt_util.as_local(
-                self.robot.sleep_mode_end_time
-            ).strftime("%H:%M:00")
-
         return {
             "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
-            "sleep_mode_start_time": sleep_mode_start_time,
-            "sleep_mode_end_time": sleep_mode_end_time,
+            "sleep_mode_active": self.robot.sleep_mode_active,
             "power_status": self.robot.power_status,
-            "unit_status_code": self.robot.unit_status.name,
+            "unit_status_code": self.robot.unit_status.value,
             "last_seen": self.robot.last_seen,
         }
