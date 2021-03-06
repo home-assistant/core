@@ -356,7 +356,7 @@ class Thermostat(HomeAccessory):
 
         if service:
             params[ATTR_ENTITY_ID] = self.entity_id
-            self.call_service(
+            self.async_call_service(
                 DOMAIN_CLIMATE,
                 service,
                 params,
@@ -407,7 +407,7 @@ class Thermostat(HomeAccessory):
         """Set target humidity to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
@@ -584,7 +584,7 @@ class WaterHeater(HomeAccessory):
         _LOGGER.debug("%s: Set target temperature to %.1f°C", self.entity_id, value)
         temperature = temperature_to_states(value, self._unit)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TEMPERATURE: temperature}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_WATER_HEATER,
             SERVICE_SET_TEMPERATURE_WATER_HEATER,
             params,

@@ -13,7 +13,7 @@ import attr
 from homeassistant import data_entry_flow, loader
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
@@ -92,6 +92,8 @@ CONN_CLASS_LOCAL_POLL = "local_poll"
 CONN_CLASS_ASSUMED = "assumed"
 CONN_CLASS_UNKNOWN = "unknown"
 
+DISABLED_USER = "user"
+
 RELOAD_AFTER_UPDATE_DELAY = 30
 
 
@@ -126,6 +128,7 @@ class ConfigEntry:
         "source",
         "connection_class",
         "state",
+        "disabled_by",
         "_setup_lock",
         "update_listeners",
         "_async_cancel_retry_setup",
@@ -144,6 +147,7 @@ class ConfigEntry:
         unique_id: Optional[str] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
+        disabled_by: Optional[str] = None,
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
@@ -179,6 +183,9 @@ class ConfigEntry:
         # Unique ID of this entry.
         self.unique_id = unique_id
 
+        # Config entry is disabled
+        self.disabled_by = disabled_by
+
         # Supports unload
         self.supports_unload = False
 
@@ -198,7 +205,7 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
-        if self.source == SOURCE_IGNORE:
+        if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
         if integration is None:
@@ -249,12 +256,19 @@ class ConfigEntry:
             self.state = ENTRY_STATE_SETUP_RETRY
             wait_time = 2 ** min(tries, 4) * 5
             tries += 1
-            _LOGGER.warning(
-                "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
-                self.title,
-                self.domain,
-                wait_time,
-            )
+            if tries == 1:
+                _LOGGER.warning(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in background",
+                    self.title,
+                    self.domain,
+                )
+            else:
+                _LOGGER.debug(
+                    "Config entry '%s' for %s integration not ready yet. Retrying in %d seconds",
+                    self.title,
+                    self.domain,
+                    wait_time,
+                )
 
             async def setup_again(now: Any) -> None:
                 """Run setup again."""
@@ -441,6 +455,7 @@ class ConfigEntry:
             "source": self.source,
             "connection_class": self.connection_class,
             "unique_id": self.unique_id,
+            "disabled_by": self.disabled_by,
         }
 
 
@@ -711,6 +726,8 @@ class ConfigEntries:
                 system_options=entry.get("system_options", {}),
                 # New in 0.104
                 unique_id=entry.get("unique_id"),
+                # New in 2021.3
+                disabled_by=entry.get("disabled_by"),
             )
             for entry in config["entries"]
         ]
@@ -759,12 +776,53 @@ class ConfigEntries:
 
         If an entry was not loaded, will just load.
         """
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
         unload_result = await self.async_unload(entry_id)
 
-        if not unload_result:
+        if not unload_result or entry.disabled_by:
             return unload_result
 
         return await self.async_setup(entry_id)
+
+    async def async_set_disabled_by(
+        self, entry_id: str, disabled_by: Optional[str]
+    ) -> bool:
+        """Disable an entry.
+
+        If disabled_by is changed, the config entry will be reloaded.
+        """
+        entry = self.async_get_entry(entry_id)
+
+        if entry is None:
+            raise UnknownEntry
+
+        if entry.disabled_by == disabled_by:
+            return True
+
+        entry.disabled_by = disabled_by
+        self._async_schedule_save()
+
+        dev_reg = device_registry.async_get(self.hass)
+        ent_reg = entity_registry.async_get(self.hass)
+
+        if not entry.disabled_by:
+            # The config entry will no longer be disabled, enable devices and entities
+            device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
+            entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
+
+        # Load or unload the config entry
+        reload_result = await self.async_reload(entry_id)
+
+        if entry.disabled_by:
+            # The config entry has been disabled, disable devices and entities
+            device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
+            entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
+
+        return reload_result
 
     @callback
     def async_update_entry(
@@ -884,7 +942,6 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @property
     def unique_id(self) -> Optional[str]:
         """Return unique ID if available."""
-        # pylint: disable=no-member
         if not self.context:
             return None
 
@@ -933,7 +990,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         Returns optionally existing config entry with same ID.
         """
         if unique_id is None:
-            self.context["unique_id"] = None  # pylint: disable=no-member
+            self.context["unique_id"] = None
             return None
 
         if raise_on_progress:
@@ -941,7 +998,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 if progress["context"].get("unique_id") == unique_id:
                     raise data_entry_flow.AbortFlow("already_in_progress")
 
-        self.context["unique_id"] = unique_id  # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
 
         # Abort discoveries done using the default discovery unique id
         if unique_id != DEFAULT_DISCOVERY_UNIQUE_ID:
@@ -1201,8 +1258,16 @@ class EntityRegistryDisabledHandler:
 
 @callback
 def _handle_entry_updated_filter(event: Event) -> bool:
-    """Handle entity registry entry update filter."""
-    if event.data["action"] != "update" or "disabled_by" not in event.data["changes"]:
+    """Handle entity registry entry update filter.
+
+    Only handle changes to "disabled_by".
+    If "disabled_by" was DISABLED_CONFIG_ENTRY, reload is not needed.
+    """
+    if (
+        event.data["action"] != "update"
+        or "disabled_by" not in event.data["changes"]
+        or event.data["changes"]["disabled_by"] == entity_registry.DISABLED_CONFIG_ENTRY
+    ):
         return False
     return True
 

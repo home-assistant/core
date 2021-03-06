@@ -192,6 +192,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_info = await validate_input(self.hass, self.host, {})
             except HTTP_CONNECT_ERRORS:
                 errors["base"] = "cannot_connect"
+            except aioshelly.AuthRequired:
+                return await self.async_step_credentials()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

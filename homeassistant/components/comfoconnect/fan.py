@@ -1,6 +1,7 @@
 """Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 import math
+from typing import Optional
 
 from pycomfoconnect import (
     CMD_FAN_MODE_AWAY,
@@ -13,6 +14,7 @@ from pycomfoconnect import (
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -94,12 +96,17 @@ class ComfoConnectFan(FanEntity):
         return SUPPORT_SET_SPEED
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
         speed = self._ccb.data.get(SENSOR_FAN_SPEED_MODE)
         if speed is None:
             return None
         return ranged_value_to_percentage(SPEED_RANGE, speed)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     def turn_on(
         self, speed: str = None, percentage=None, preset_mode=None, **kwargs

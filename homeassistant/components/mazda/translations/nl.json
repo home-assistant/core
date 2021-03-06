@@ -9,6 +9,22 @@
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Wachtwoord",
+                    "region": "Regio"
+                }
+            }
         }
-    }
+    },
+    "title": "Mazda Connected Services"
 }

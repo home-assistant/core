@@ -6,6 +6,13 @@
             "is_on": "{entity_name} est\u00e1 activado",
             "is_paused": "{entity_name} est\u00e1 en pausa",
             "is_playing": "{entity_name} est\u00e1 reproduciendo"
+        },
+        "trigger_type": {
+            "idle": "{entity_name} est\u00e1 inactivo",
+            "paused": "{entity_name} est\u00e1 en pausa",
+            "playing": "{entity_name} comienza a reproducirse",
+            "turned_off": "{entity_name} desactivado",
+            "turned_on": "{entity_name} activado"
         }
     },
     "state": {

@@ -16,14 +16,18 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
+    MODELS_FAN,
     MODELS_SWITCH,
+    MODELS_VACUUM,
 )
 from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "light"]
+GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "switch", "light"]
 SWITCH_PLATFORMS = ["switch"]
+FAN_PLATFORMS = ["fan"]
+VACUUM_PLATFORMS = ["vacuum"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -102,9 +106,9 @@ async def async_setup_gateway_entry(
         KEY_COORDINATOR: coordinator,
     }
 
-    for component in GATEWAY_PLATFORMS:
+    for platform in GATEWAY_PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -117,14 +121,21 @@ async def async_setup_device_entry(
     model = entry.data[CONF_MODEL]
 
     # Identify platforms to setup
+    platforms = []
     if model in MODELS_SWITCH:
         platforms = SWITCH_PLATFORMS
-    else:
+    elif model in MODELS_FAN:
+        platforms = FAN_PLATFORMS
+    for vacuum_model in MODELS_VACUUM:
+        if model.startswith(vacuum_model):
+            platforms = VACUUM_PLATFORMS
+
+    if not platforms:
         return False
 
-    for component in platforms:
+    for platform in platforms:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True

@@ -218,6 +218,12 @@ def plextv_resources_fixture(plextv_resources_base):
     return plextv_resources_base.format(second_server_enabled=0)
 
 
+@pytest.fixture(name="plextv_shared_users", scope="session")
+def plextv_shared_users_fixture(plextv_resources_base):
+    """Load payload for plex.tv shared users and return it."""
+    return load_fixture("plex/plextv_shared_users.xml")
+
+
 @pytest.fixture(name="session_base", scope="session")
 def session_base_fixture():
     """Load the base session payload and return it."""
@@ -293,6 +299,7 @@ def mock_plex_calls(
     children_200,
     children_300,
     empty_library,
+    empty_payload,
     grandchildren_300,
     library,
     library_sections,
@@ -310,12 +317,15 @@ def mock_plex_calls(
     playlist_500,
     plextv_account,
     plextv_resources,
+    plextv_shared_users,
     plex_server_accounts,
     plex_server_clients,
     plex_server_default,
     security_token,
 ):
     """Mock Plex API calls."""
+    requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
+    requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
     requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)
 

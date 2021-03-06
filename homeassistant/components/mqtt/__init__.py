@@ -668,7 +668,7 @@ class MQTT:
             will_message = None
 
         if will_message is not None:
-            self._mqttc.will_set(  # pylint: disable=no-value-for-parameter
+            self._mqttc.will_set(
                 topic=will_message.topic,
                 payload=will_message.payload,
                 qos=will_message.qos,
@@ -833,7 +833,7 @@ class MQTT:
             async def publish_birth_message(birth_message):
                 await self._ha_started.wait()  # Wait for Home Assistant to start
                 await self._discovery_cooldown()  # Wait for MQTT discovery to cool down
-                await self.async_publish(  # pylint: disable=no-value-for-parameter
+                await self.async_publish(
                     topic=birth_message.topic,
                     payload=birth_message.payload,
                     qos=birth_message.qos,

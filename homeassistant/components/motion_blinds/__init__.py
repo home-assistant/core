@@ -18,7 +18,7 @@ from .const import (
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
-    MOTION_PLATFORMS,
+    PLATFORMS,
 )
 from .gateway import ConnectMotionGateway
 
@@ -107,9 +107,9 @@ async def async_setup_entry(
         sw_version=motion_gateway.protocol,
     )
 
-    for component in MOTION_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -122,8 +122,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in MOTION_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

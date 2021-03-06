@@ -2,6 +2,7 @@
 from collections import OrderedDict
 import logging
 import os
+from pathlib import Path
 import re
 import shutil
 from types import ModuleType
@@ -59,7 +60,7 @@ from homeassistant.requirements import (
 )
 from homeassistant.util.package import is_docker_env
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.yaml import SECRET_YAML, load_yaml
+from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +76,13 @@ GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
+
+LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
+INTEGRATION_LOAD_EXCEPTIONS = (
+    IntegrationNotFound,
+    RequirementsNotFound,
+    *LOAD_EXCEPTIONS,
+)
 
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
@@ -311,23 +319,33 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     This function allow a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
+    if hass.config.config_dir is None:
+        secrets = None
+    else:
+        secrets = Secrets(Path(hass.config.config_dir))
+
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(
-        None, load_yaml_config_file, hass.config.path(YAML_CONFIG_FILE)
+        None,
+        load_yaml_config_file,
+        hass.config.path(YAML_CONFIG_FILE),
+        secrets,
     )
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
 
 
-def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
+def load_yaml_config_file(
+    config_path: str, secrets: Optional[Secrets] = None
+) -> Dict[Any, Any]:
     """Parse a YAML configuration file.
 
     Raises FileNotFoundError or HomeAssistantError.
 
     This method needs to run in an executor.
     """
-    conf_dict = load_yaml(config_path)
+    conf_dict = load_yaml(config_path, secrets)
 
     if not isinstance(conf_dict, dict):
         msg = (
@@ -689,7 +707,7 @@ async def merge_packages_config(
                     hass, domain
                 )
                 component = integration.get_component()
-            except (IntegrationNotFound, RequirementsNotFound, ImportError) as ex:
+            except INTEGRATION_LOAD_EXCEPTIONS as ex:
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
@@ -746,7 +764,7 @@ async def async_process_component_config(
     domain = integration.domain
     try:
         component = integration.get_component()
-    except ImportError as ex:
+    except LOAD_EXCEPTIONS as ex:
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
@@ -825,7 +843,7 @@ async def async_process_component_config(
 
         try:
             platform = p_integration.get_platform(domain)
-        except ImportError:
+        except LOAD_EXCEPTIONS:
             _LOGGER.exception("Platform error: %s", domain)
             continue
 

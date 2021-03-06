@@ -131,6 +131,11 @@ class EsphomeFan(EsphomeEntity, FanEntity):
 
         return int(self._state.speed_percentage * 100)
 
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
+
     @esphome_state_property
     def oscillating(self) -> None:
         """Return the oscillation state."""

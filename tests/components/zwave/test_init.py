@@ -17,7 +17,7 @@ from homeassistant.components.zwave import (
     const,
 )
 from homeassistant.components.zwave.binary_sensor import get_device
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 from homeassistant.helpers.entity_registry import async_get_registry
 
@@ -506,7 +506,7 @@ async def test_value_entities(hass, mock_openzwave):
     await hass.services.async_call(
         "zwave",
         "rename_node",
-        {const.ATTR_NODE_ID: node.node_id, const.ATTR_NAME: "Demo Node"},
+        {const.ATTR_NODE_ID: node.node_id, ATTR_NAME: "Demo Node"},
     )
     await hass.async_block_till_done()
 
@@ -537,7 +537,7 @@ async def test_value_entities(hass, mock_openzwave):
         {
             const.ATTR_NODE_ID: node.node_id,
             const.ATTR_UPDATE_IDS: True,
-            const.ATTR_NAME: "New Node",
+            ATTR_NAME: "New Node",
         },
     )
     await hass.async_block_till_done()
@@ -568,7 +568,7 @@ async def test_value_entities(hass, mock_openzwave):
             const.ATTR_NODE_ID: node.node_id,
             const.ATTR_VALUE_ID: value.object_id,
             const.ATTR_UPDATE_IDS: True,
-            const.ATTR_NAME: "New Label",
+            ATTR_NAME: "New Label",
         },
     )
     await hass.async_block_till_done()
@@ -1360,7 +1360,7 @@ async def test_rename_node(hass, mock_openzwave, zwave_setup_ready):
     await hass.services.async_call(
         "zwave",
         "rename_node",
-        {const.ATTR_NODE_ID: 11, const.ATTR_NAME: "test_name"},
+        {const.ATTR_NODE_ID: 11, ATTR_NAME: "test_name"},
     )
     await hass.async_block_till_done()
 
@@ -1383,7 +1383,7 @@ async def test_rename_value(hass, mock_openzwave, zwave_setup_ready):
         {
             const.ATTR_NODE_ID: 11,
             const.ATTR_VALUE_ID: 123456,
-            const.ATTR_NAME: "New Label",
+            ATTR_NAME: "New Label",
         },
     )
     await hass.async_block_till_done()

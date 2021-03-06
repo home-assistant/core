@@ -5,7 +5,8 @@
             "authorize_url_fail": "Onbekende fout bij het genereren van een autoriseer-URL.",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "external_setup": "Punt succesvol geconfigureerd vanuit een andere stroom.",
-            "no_flows": "U moet Point configureren voordat u zich ermee kunt verifi\u00ebren. [Gelieve de instructies te lezen](https://www.home-assistant.io/components/nest/)."
+            "no_flows": "U moet Point configureren voordat u zich ermee kunt verifi\u00ebren. [Gelieve de instructies te lezen](https://www.home-assistant.io/components/nest/).",
+            "unknown_authorize_url_generation": "Onbekende fout bij het genereren van een autorisatie-URL."
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Minut voor uw Point appara(a)t(en)"

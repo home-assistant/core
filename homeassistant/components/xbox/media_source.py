@@ -2,8 +2,7 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
-# pylint: disable=no-name-in-module
-from pydantic.error_wrappers import ValidationError
+from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.models import FieldsTemplate, Image
 from xbox.webapi.api.provider.gameclips.models import GameclipsResponse

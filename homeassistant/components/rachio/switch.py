@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -67,7 +67,6 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
-ATTR_ID = "id"
 ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
