@@ -26,7 +26,7 @@ def assert_element(trace_element, expected_element, path):
 
 def assert_condition_trace(expected):
     """Assert a trace condition sequence is as expected."""
-    condition_trace = trace.trace_get()
+    condition_trace = trace.trace_get(clear=False)
     trace.trace_clear()
     expected_trace_keys = list(expected.keys())
     assert list(condition_trace.keys()) == expected_trace_keys
