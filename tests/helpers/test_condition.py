@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.exceptions import ConditionError, HomeAssistantError
-from homeassistant.helpers import condition
+from homeassistant.helpers import condition, trace
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -25,8 +25,8 @@ def assert_element(trace_element, expected_element, path):
 
 def assert_condition_trace(expected):
     """Assert a trace condition sequence is as expected."""
-    condition_trace = condition.condition_trace_get()
-    condition.condition_trace_clear()
+    condition_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
     expected_trace_keys = list(expected.keys())
     assert list(condition_trace.keys()) == expected_trace_keys
     for trace_key_index, key in enumerate(expected_trace_keys):

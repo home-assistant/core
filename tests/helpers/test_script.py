@@ -17,7 +17,7 @@ from homeassistant import exceptions
 import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import Context, CoreState, callback
-from homeassistant.helpers import config_validation as cv, script
+from homeassistant.helpers import config_validation as cv, script, trace
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -45,8 +45,8 @@ def assert_element(trace_element, expected_element, path):
 
 def assert_action_trace(expected):
     """Assert a trace condition sequence is as expected."""
-    action_trace = script.action_trace_get()
-    script.action_trace_clear()
+    action_trace = trace.trace_get(clear=False)
+    trace.trace_clear()
     expected_trace_keys = list(expected.keys())
     assert list(action_trace.keys()) == expected_trace_keys
     for trace_key_index, key in enumerate(expected_trace_keys):
