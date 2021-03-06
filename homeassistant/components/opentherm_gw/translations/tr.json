@@ -12,18 +12,5 @@
                 "title": "OpenTherm A\u011f Ge\u00e7idi"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "floor_temperature": "Zemin s\u0131cakl\u0131\u011F\u0131",
-                    "read_precision": "Mevcut s\u0131cakl\u0131k i\u00E7in hassasiyet",
-                    "set_precision": "Ayar noktas\u0131n\u0131 ayarlamak i\u00E7in hassasiyet",
-                    "setpoint_ovrd_mode": "Ayar Noktas\u0131 Ge\u00E7ersiz K\u0131lma Modu"
-                },
-                "description": "OpenTherm A\u011F Ge\u00E7idi Se\u00E7enekleri"
-            }
-        }
     }
 }

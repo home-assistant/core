@@ -21,9 +21,7 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura de la planta",
-                    "read_precision": "Precisi\u00F3 de la temperatura actual",
-                    "set_precision": "Precisi\u00F3 per establir el punt de refer\u00E8ncia",
-                    "setpoint_ovrd_mode": "Mode d'anul\u00B7laci\u00F3 de la consigna"
+                    "precision": "Precisi\u00f3"
                 },
                 "description": "Opcions del la passarel\u00b7la d'enlla\u00e7 d'OpenTherm"
             }

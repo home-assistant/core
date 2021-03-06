@@ -3,10 +3,8 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "gr\u012Bdas temperat\u016Bra",
-                    "read_precision": "Precizit\u0101te pa\u0161reiz\u0113jai temperat\u016Brai",
-                    "set_precision": "Precizit\u0101te iestat\u012Bt\u0101s v\u0113rt\u012Bbas iestat\u012B\u0161anai",
-                    "setpoint_ovrd_mode": "Iestat\u012B\u0161anas punkta ignor\u0113\u0161anas re\u017E\u012Bms"
+                    "floor_temperature": "Gr\u012bdas temperat\u016bra",
+                    "precision": "Precizit\u0101te"
                 }
             }
         }

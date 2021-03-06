@@ -20,10 +20,8 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Floor temperature",
-                    "read_precision": "Precision for current temperature",
-                    "set_precision": "Precision for setting setpoint",
-                    "setpoint_ovrd_mode": "Setpoint Override Mode"
+                    "floor_temperature": "Floor Temperature",
+                    "precision": "Precision"
                 },
                 "description": "Options for the OpenTherm Gateway"
             }

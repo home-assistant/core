@@ -1,3 +1,4 @@
+
 {
     "config": {
         "error": {
@@ -20,10 +21,8 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperatuur": "p\u00F5randa temperatuur",
-                    "read_precision": "T\u00E4psus praeguse temperatuuri jaoks",
-                    "set_precision": "T\u00E4psus seadepunkti seadistamiseks",
-                    "setpoint_ovrd_mode": "S\u00E4ttepunkti alistusre\u017Eiim"
+                    "floor_temperature": "P\u00f5randa temperatuur",
+                    "precision": "T\u00e4psus"
                 },
                 "description": "OpenTherm Gateway suvandid"
             }

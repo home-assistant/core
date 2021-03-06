@@ -20,9 +20,7 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura del piso",
-                    "read_precision": "Precisi\u00F3n para la temperatura actual",
-                    "set_precision": "Precisi\u00F3n para configurar el punto de ajuste",
-                    "setpoint_ovrd_mode": "Modo de anulaci\u00F3n del punto de ajuste"
+                    "precision": "Precisi\u00f3n"
                 },
                 "description": "Opciones para OpenTherm Gateway"
             }

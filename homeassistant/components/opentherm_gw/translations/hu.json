@@ -19,10 +19,8 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Padl\u00F3 h\u0151m\u00E9rs\u00E9klet",
-                    "read_precision": "Pontoss\u00E1g az aktu\u00E1lis h\u0151m\u00E9rs\u00E9kletre",
-                    "set_precision": "Pontoss\u00E1g az alapjel be\u00E1ll\u00EDt\u00E1s\u00E1hoz",
-                    "setpoint_ovrd_mode": "Alapjel fel\u00FClb\u00EDr\u00E1l\u00E1si m\u00F3d"
+                    "floor_temperature": "Padl\u00f3 h\u0151m\u00e9rs\u00e9klete",
+                    "precision": "Pontoss\u00e1g"
                 }
             }
         }

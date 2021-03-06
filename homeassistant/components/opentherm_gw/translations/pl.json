@@ -21,9 +21,7 @@
             "init": {
                 "data": {
                     "floor_temperature": "Zaokr\u0105glanie warto\u015bci w d\u00f3\u0142",
-                    "read_precision": "Dok\u0142adno\u015B\u0107 dla aktualnej temperatury",
-                    "set_precision": "Precyzja ustawiania warto\u015Bci zadanej",
-                    "setpoint_ovrd_mode": "Tryb obej\u015Bcia warto\u015Bci zadanej"
+                    "precision": "Precyzja"
                 },
                 "description": "Opcje dla bramki OpenTherm"
             }
