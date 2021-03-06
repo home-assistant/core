@@ -18,8 +18,7 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from .const import CONF_RECEIVER_ID
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_RECEIVER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

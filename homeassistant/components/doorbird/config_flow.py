@@ -17,8 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
-from .const import CONF_EVENTS, DOORBIRD_OUI
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
 
 _LOGGER = logging.getLogger(__name__)
