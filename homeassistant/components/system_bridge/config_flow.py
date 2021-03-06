@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN  # pylint:disable=unused-import
@@ -20,12 +20,12 @@ from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN  # pylint:disable=unused-imp
 _LOGGER = logging.getLogger(__name__)
 
 # TODO adjust the data schema to the data that you need
-STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=9170): int,
-        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT, default=9170): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
     }
 )
 
