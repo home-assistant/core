@@ -635,14 +635,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if self._trigger_variables:
             try:
                 variables = self._trigger_variables.async_render(
-                    cast(HomeAssistant, self.hass), None, limited=True
+                    self.hass, None, limited=True
                 )
             except template.TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 
         return await async_initialize_triggers(
-            cast(HomeAssistant, self.hass),
+            self.hass,
             self._trigger_config,
             self.async_trigger,
             DOMAIN,

@@ -181,8 +181,6 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        assert self.hass
-
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
@@ -238,8 +236,6 @@ class BaseNotificationService:
 
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
-        assert self.hass
-
         if self.registered_targets:
             remove_targets = set(self.registered_targets)
             for remove_target_name in remove_targets:

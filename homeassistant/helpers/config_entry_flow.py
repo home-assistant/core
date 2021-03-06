@@ -58,7 +58,6 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
                 return self.async_abort(reason="no_devices_found")
 
             # Cancel the discovered one.
-            assert self.hass is not None
             for flow in in_progress:
                 self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
@@ -90,7 +89,6 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             return self.async_abort(reason="single_instance_allowed")
 
         # Cancel other flows.
-        assert self.hass is not None
         in_progress = self._async_in_progress()
         for flow in in_progress:
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
@@ -143,7 +141,6 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        assert self.hass is not None
         webhook_id = self.hass.components.webhook.async_generate_id()
 
         if (

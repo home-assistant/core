@@ -380,7 +380,6 @@ class Entity(ABC):
             )
 
         # Overwrite properties that have been set in the config file.
-        assert self.hass is not None
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
@@ -421,7 +420,6 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        assert self.hass is not None
         self.hass.add_job(self.async_update_ha_state(force_refresh))  # type: ignore
 
     @callback
@@ -437,7 +435,6 @@ class Entity(ABC):
         been executed, the intermediate state transitions will be missed.
         """
         if force_refresh:
-            assert self.hass is not None
             self.hass.async_create_task(self.async_update_ha_state(force_refresh))
         else:
             self.async_write_ha_state()
@@ -542,8 +539,6 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
-        assert self.hass is not None
-
         if self.platform and not self._added:
             raise HomeAssistantError(
                 f"Entity {self.entity_id} async_remove called twice"
@@ -586,8 +581,6 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        assert self.hass is not None
-
         if self.platform:
             info = {"domain": self.platform.platform_name}
 
@@ -617,7 +610,6 @@ class Entity(ABC):
         Not to be extended by integrations.
         """
         if self.platform:
-            assert self.hass is not None
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
@@ -631,7 +623,6 @@ class Entity(ABC):
         if data["action"] != "update":
             return
 
-        assert self.hass is not None
         ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
@@ -706,7 +697,6 @@ class ToggleEntity(Entity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -715,7 +705,6 @@ class ToggleEntity(Entity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:

@@ -364,7 +364,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        assert self.hass
         hvac_mode: Optional[str] = kwargs.get(ATTR_HVAC_MODE)
 
         if hvac_mode is not None:
