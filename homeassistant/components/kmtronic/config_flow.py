@@ -10,11 +10,14 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
+from .const import CONF_REVERSE
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({CONF_HOST: str, CONF_USERNAME: str, CONF_PASSWORD: str})
+DATA_SCHEMA = vol.Schema(
+    {CONF_HOST: str, CONF_USERNAME: str, CONF_PASSWORD: str, CONF_REVERSE: bool}
+)
 
 
 async def validate_input(hass: core.HomeAssistant, data):

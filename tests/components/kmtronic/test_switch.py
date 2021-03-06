@@ -20,7 +20,13 @@ async def test_relay_on_off(hass, aioclient_mock):
     )
 
     MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "foo",
+            "password": "bar",
+            "reverse": False,
+        },
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -68,7 +74,13 @@ async def test_update(hass, aioclient_mock):
     )
 
     MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "foo",
+            "password": "bar",
+            "reverse": False,
+        },
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -97,7 +109,13 @@ async def test_config_entry_not_ready(hass, aioclient_mock):
     )
 
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "foo",
+            "password": "bar",
+            "reverse": False,
+        },
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -117,7 +135,13 @@ async def test_failed_update(hass, aioclient_mock):
     )
 
     MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "foo",
+            "password": "bar",
+            "reverse": False,
+        },
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -148,3 +172,50 @@ async def test_failed_update(hass, aioclient_mock):
     await hass.async_block_till_done()
     state = hass.states.get("switch.relay1")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_relay_on_off_reversed(hass, aioclient_mock):
+    """Tests the relay turns on correctly when configured as reverse."""
+
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        text="<response><relay0>0</relay0><relay1>0</relay1></response>",
+    )
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.1.1.1", "username": "foo", "password": "bar", "reverse": True},
+    ).add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Mocks the response for turning a relay1 off
+    aioclient_mock.get(
+        "http://1.1.1.1/FF0101",
+        text="",
+    )
+
+    state = hass.states.get("switch.relay1")
+    assert state.state == "on"
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": "switch.relay1"}, blocking=True
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == "off"
+
+    # Mocks the response for turning a relay1 off
+    aioclient_mock.get(
+        "http://1.1.1.1/FF0100",
+        text="",
+    )
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.relay1"}, blocking=True
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.relay1")
+    assert state.state == "on"

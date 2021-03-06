@@ -34,6 +34,7 @@ async def test_form(hass):
                 "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "reverse": False,
             },
         )
 
@@ -43,6 +44,7 @@ async def test_form(hass):
         "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
+        "reverse": False,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -65,6 +67,7 @@ async def test_form_invalid_auth(hass):
                 "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "reverse": False,
             },
         )
 
@@ -88,6 +91,7 @@ async def test_form_cannot_connect(hass):
                 "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "reverse": False,
             },
         )
 
@@ -111,6 +115,7 @@ async def test_form_unknown_error(hass):
                 "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                "reverse": False,
             },
         )
 
@@ -123,7 +128,12 @@ async def test_unload_config_entry(hass, aioclient_mock):
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"host": "1.1.1.1", "username": "admin", "password": "admin"},
+        data={
+            "host": "1.1.1.1",
+            "username": "admin",
+            "password": "admin",
+            "reverse": False,
+        },
     )
     config_entry.add_to_hass(hass)
 
