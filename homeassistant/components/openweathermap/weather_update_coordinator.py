@@ -10,6 +10,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
@@ -142,6 +143,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_TIME: dt.utc_from_timestamp(entry.reference_time("unix")),
             ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(
                 entry.rain, entry.snow
+            ),
+            ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                entry.precipitation_probability * 100
             ),
             ATTR_FORECAST_PRESSURE: entry.pressure.get("press"),
             ATTR_FORECAST_WIND_SPEED: entry.wind().get("speed"),
