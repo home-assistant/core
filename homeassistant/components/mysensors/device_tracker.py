@@ -12,6 +12,9 @@ async def async_setup_scanner(
     hass: HomeAssistantType, config, async_see, discovery_info=None
 ):
     """Set up the MySensors device scanner."""
+    if not discovery_info:
+        return False
+
     new_devices = mysensors.setup_mysensors_platform(
         hass,
         DOMAIN,
