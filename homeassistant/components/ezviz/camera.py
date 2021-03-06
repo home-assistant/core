@@ -54,7 +54,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     if ATTR_CAMERAS in config:
         cameras_conf = config.get(ATTR_CAMERAS, CAMERA_SCHEMA)
-
         for camera in cameras_conf.items():
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
@@ -105,7 +104,7 @@ async def async_setup_entry(
             camera_username = conf_cameras.data[CONF_USERNAME]
             camera_password = conf_cameras.data[CONF_PASSWORD]
             camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{camera['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Camera %s source stream: %s", camera[ATTR_SERIAL], camera_rtsp_stream
             )
 
