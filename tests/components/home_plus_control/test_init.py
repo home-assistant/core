@@ -9,8 +9,8 @@ from homepluscontrol.homeplusplant import (
 )
 
 from homeassistant import config_entries, setup
-from homeassistant.components.homepluscontrol import api
-from homeassistant.components.homepluscontrol.const import (
+from homeassistant.components.home_plus_control import api
+from homeassistant.components.home_plus_control.const import (
     API,
     DOMAIN,
     ENTITY_UIDS,
@@ -35,7 +35,7 @@ async def entity_assertions(
         num_exp_devices = num_exp_entities
 
     assert (
-        len(hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].keys())
+        len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].keys())
         == num_exp_entities
     )
     assert len(entity_reg.entities.keys()) == num_exp_entities
@@ -69,7 +69,8 @@ async def test_loading(hass, mock_config_entry, current_request_with_host):
 
     await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -82,7 +83,8 @@ async def test_unloading(hass, mock_config_entry, current_request_with_host):
 
     await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -204,7 +206,7 @@ async def test_plant_topology_reduction_change(
 
     # Need to patch the API to ignore the refresh interval settings
     with patch(
-        "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
         async_fire_time_changed(
@@ -290,7 +292,7 @@ async def test_plant_topology_increase_change(
     )
 
     with patch(
-        "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
         async_fire_time_changed(
@@ -357,7 +359,7 @@ async def test_module_status_reduction_change(
     )
 
     # Confirm the availability of this particular entity
-    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
         "0000000987654321fedcba"
     )
     await one_entity_assertion(hass, test_entity_id, True)
@@ -379,7 +381,7 @@ async def test_module_status_reduction_change(
     )
 
     with patch(
-        "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
         async_fire_time_changed(
@@ -398,7 +400,7 @@ async def test_module_status_reduction_change(
     )
 
     # This entity is present, but not available
-    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
         "0000000987654321fedcba"
     )
     await one_entity_assertion(hass, test_entity_id, False)
@@ -452,7 +454,7 @@ async def test_module_status_increase_change(
     )
 
     # This particular entity is not available
-    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
         "0000000987654321fedcba"
     )
     await one_entity_assertion(hass, test_entity_id, False)
@@ -474,7 +476,7 @@ async def test_module_status_increase_change(
     )
 
     with patch(
-        "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
         async_fire_time_changed(
@@ -493,7 +495,7 @@ async def test_module_status_increase_change(
     )
 
     # Now the entity is available
-    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
         "0000000987654321fedcba"
     )
     await one_entity_assertion(hass, test_entity_id, True)
@@ -530,7 +532,8 @@ async def test_plant_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -573,7 +576,8 @@ async def test_plant_topology_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -620,7 +624,8 @@ async def test_plant_status_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -633,7 +638,7 @@ async def test_plant_status_api_timeout(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+    for test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
         ENTITY_UIDS
     ].values():
         await one_entity_assertion(hass, test_entity_id, False)
@@ -682,7 +687,8 @@ async def test_update_with_plant_topology_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
@@ -695,7 +701,7 @@ async def test_update_with_plant_topology_api_timeout(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+    for test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
         ENTITY_UIDS
     ].values():
         await one_entity_assertion(hass, test_entity_id, True)
@@ -720,7 +726,7 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     with patch(
-        "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
         async_fire_time_changed(
@@ -740,7 +746,7 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     # This entity has not returned a status, so appears as unavailable
-    test_entity_id = hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].get(
+    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
         "0000000987654321fedcba"
     )
     await one_entity_assertion(hass, test_entity_id, False)
@@ -789,15 +795,16 @@ async def test_update_with_plant_module_status_api_timeout(
 
     # The component has been loaded
     assert isinstance(
-        hass.data[DOMAIN]["homepluscontrol_entry_id"][API], api.HomePlusControlAsyncApi
+        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
+        api.HomePlusControlAsyncApi,
     )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - all entities should be there
     entity_reg = hass.helpers.entity_registry.async_get(hass)
     device_reg = hass.helpers.device_registry.async_get(hass)
-    assert len(hass.data[DOMAIN]["homepluscontrol_entry_id"][ENTITY_UIDS].keys()) == 4
-    for test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+    assert len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].keys()) == 4
+    for test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
         ENTITY_UIDS
     ].values():
         await one_entity_assertion(hass, test_entity_id, True)
@@ -824,7 +831,7 @@ async def test_update_with_plant_module_status_api_timeout(
     )
 
     with patch(
-        "homeassistant.components.homepluscontrol.api.HomePlusControlAsyncApi._should_check",
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
         return_value=True,
     ) as mock_check:
         async_fire_time_changed(
@@ -845,7 +852,7 @@ async def test_update_with_plant_module_status_api_timeout(
 
     # One entity has no status data, so appears as unavailable
     # The rest of the entities remain available
-    for test_uid, test_entity_id in hass.data[DOMAIN]["homepluscontrol_entry_id"][
+    for test_uid, test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
         ENTITY_UIDS
     ].items():
         if test_uid == "0000000987654321fedcba":

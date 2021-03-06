@@ -6,7 +6,7 @@ CONF_PLANT_TOPOLOGY_UPDATE_INTERVAL = "plant_topology_update_interval"
 CONF_MODULE_STATUS_UPDATE_INTERVAL = "module_status_update_interval"
 
 DATA_COORDINATOR = "coordinator"
-DOMAIN = "homepluscontrol"
+DOMAIN = "home_plus_control"
 ENTITY_UIDS = "entity_unique_ids"
 OPTS_LISTENER_REMOVERS = "options_listener_removers"
 DISPATCHER_REMOVERS = "dispatcher_removers"

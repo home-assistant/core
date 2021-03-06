@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.homepluscontrol.const import DOMAIN
+from homeassistant.components.home_plus_control.const import DOMAIN
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -21,7 +21,7 @@ def mock_config_entry():
         DOMAIN,
         "Home+ Control",
         {
-            "auth_implementation": "homepluscontrol",
+            "auth_implementation": "home_plus_control",
             "token": {
                 "refresh_token": "mock-refresh-token",
                 "access_token": "mock-access-token",
@@ -39,7 +39,7 @@ def mock_config_entry():
         options={},
         system_options={"disable_new_entities": False},
         unique_id=DOMAIN,
-        entry_id="homepluscontrol_entry_id",
+        entry_id="home_plus_control_entry_id",
     )
 
 

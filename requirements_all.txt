@@ -774,7 +774,7 @@ homeconnect==0.6.3
 # homeassistant.components.homematicip_cloud
 homematicip==0.13.1
 
-# homeassistant.components.homepluscontrol
+# homeassistant.components.home_plus_control
 homepluscontrol==0.0.3
 
 # homeassistant.components.horizon
