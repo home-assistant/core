@@ -95,7 +95,7 @@ class PacketSequence:
         class FakePacket(bytearray):
             # Be a bytearray so that memoryview works
             def __init__(self):
-                super().__init__(2)
+                super().__init__(3)
 
             time_base = fractions.Fraction(1, VIDEO_FRAME_RATE)
             dts = self.packet * PACKET_DURATION / time_base
