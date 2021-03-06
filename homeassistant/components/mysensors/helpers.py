@@ -10,7 +10,6 @@ from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -35,18 +34,13 @@ _LOGGER = logging.getLogger(__name__)
 SCHEMAS = Registry()
 
 
-async def on_unload(
-    hass: HomeAssistant, entry: ConfigEntry | GatewayId, fnct: Callable
-) -> None:
+@callback
+def on_unload(hass: HomeAssistant, gateway_id: GatewayId, fnct: Callable) -> None:
     """Register a callback to be called when entry is unloaded.
 
-    This function is used by platforms to cleanup after themselves.
+    This function is used by platforms to cleanup after themselves
     """
-    if isinstance(entry, GatewayId):
-        uniqueid = entry
-    else:
-        uniqueid = entry.entry_id
-    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
+    key = MYSENSORS_ON_UNLOAD.format(gateway_id)
     if key not in hass.data[DOMAIN]:
         hass.data[DOMAIN][key] = []
     hass.data[DOMAIN][key].append(fnct)

@@ -1,11 +1,13 @@
 """Support for tracking MySensors devices."""
 from homeassistant.components import mysensors
 from homeassistant.components.device_tracker import DOMAIN
-from homeassistant.components.mysensors import DevId, on_unload
+from homeassistant.components.mysensors import DevId
 from homeassistant.components.mysensors.const import ATTR_GATEWAY_ID, GatewayId
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import slugify
+
+from .helpers import on_unload
 
 
 async def async_setup_scanner(
@@ -28,7 +30,7 @@ async def async_setup_scanner(
     for device in new_devices:
         gateway_id: GatewayId = discovery_info[ATTR_GATEWAY_ID]
         dev_id: DevId = (gateway_id, device.node_id, device.child_id, device.value_type)
-        await on_unload(
+        on_unload(
             hass,
             gateway_id,
             async_dispatcher_connect(
@@ -37,7 +39,7 @@ async def async_setup_scanner(
                 device.async_update_callback,
             ),
         )
-        await on_unload(
+        on_unload(
             hass,
             gateway_id,
             async_dispatcher_connect(

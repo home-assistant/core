@@ -8,10 +8,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import on_unload
 from ...config_entries import ConfigEntry
 from ...helpers.dispatcher import async_dispatcher_connect
 from .const import DOMAIN as MYSENSORS_DOMAIN, MYSENSORS_DISCOVERY, SERVICE_SEND_IR_CODE
+from .helpers import on_unload
 
 ATTR_IR_CODE = "V_IR_SEND"
 
@@ -83,9 +83,9 @@ async def async_setup_entry(
         schema=SEND_IR_CODE_SERVICE_SCHEMA,
     )
 
-    await on_unload(
+    on_unload(
         hass,
-        config_entry,
+        config_entry.entry_id,
         async_dispatcher_connect(
             hass,
             MYSENSORS_DISCOVERY.format(config_entry.entry_id, DOMAIN),
