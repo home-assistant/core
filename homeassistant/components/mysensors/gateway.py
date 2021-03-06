@@ -260,8 +260,8 @@ async def _discover_persistent_devices(
 
 async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     """Stop the gateway."""
-    connect_task = hass.data[DOMAIN].get(
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
+    connect_task = hass.data[DOMAIN].pop(
+        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()

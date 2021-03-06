@@ -253,6 +253,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         for fnct in hass.data[DOMAIN][key]:
             fnct()
 
+        hass.data[DOMAIN].pop(key)
+
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     await gw_stop(hass, entry, gateway)
