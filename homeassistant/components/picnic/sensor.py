@@ -33,6 +33,8 @@ async def async_setup_entry(
         for sensor_type, props in SENSOR_TYPES.items()
     )
 
+    return True
+
 
 class PicnicSensor(CoordinatorEntity):
     """The CoordinatorEntity subclass representing Picnic sensors."""

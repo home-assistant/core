@@ -29,7 +29,7 @@ def create_picnic_client(entry: ConfigEntry):
     return PicnicAPI(
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
-        country_code=entry.data.get(CONF_COUNTRY_CODE)
+        country_code=entry.data.get(CONF_COUNTRY_CODE),
     )
 
 
