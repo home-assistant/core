@@ -2,24 +2,12 @@
 import asyncio
 from collections import deque
 from contextlib import contextmanager
-from contextvars import ContextVar
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import (
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Set,
-    Union,
-    cast,
-)
+from typing import Any, Callable, Container, Generator, List, Optional, Set, Union, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -67,6 +55,9 @@ import homeassistant.util.dt as dt_util
 from .trace import (
     TraceElement,
     trace_append_element,
+    trace_path,
+    trace_path_get,
+    trace_stack_cv,
     trace_stack_pop,
     trace_stack_push,
     trace_stack_top,
@@ -84,79 +75,16 @@ INPUT_ENTITY_ID = re.compile(
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 
-# Context variables for tracing
-# Trace of condition being evaluated
-condition_trace = ContextVar("condition_trace", default=None)
-# Stack of TraceElements
-condition_trace_stack: ContextVar[Optional[List[TraceElement]]] = ContextVar(
-    "condition_trace_stack", default=None
-)
-# Current location in config tree
-condition_path_stack: ContextVar[Optional[List[str]]] = ContextVar(
-    "condition_path_stack", default=None
-)
-
-
-def condition_trace_stack_push(node: TraceElement) -> None:
-    """Push a TraceElement to the top of the trace stack."""
-    trace_stack_push(condition_trace_stack, node)
-
-
-def condition_trace_stack_pop() -> None:
-    """Remove the top element from the trace stack."""
-    trace_stack_pop(condition_trace_stack)
-
-
-def condition_trace_stack_top() -> Optional[TraceElement]:
-    """Return the element at the top of the trace stack."""
-    return cast(Optional[TraceElement], trace_stack_top(condition_trace_stack))
-
-
-def condition_path_push(suffix: Union[str, List[str]]) -> int:
-    """Go deeper in the config tree."""
-    if isinstance(suffix, str):
-        suffix = [suffix]
-    for node in suffix:
-        trace_stack_push(condition_path_stack, node)
-    return len(suffix)
-
-
-def condition_path_pop(count: int) -> None:
-    """Go n levels up in the config tree."""
-    for _ in range(count):
-        trace_stack_pop(condition_path_stack)
-
-
-def condition_path_get() -> str:
-    """Return a string representing the current location in the config tree."""
-    path = condition_path_stack.get()
-    if not path:
-        return ""
-    return "/".join(path)
-
-
-def condition_trace_get() -> Optional[Dict[str, TraceElement]]:
-    """Return the trace of the condition that was evaluated."""
-    return condition_trace.get()
-
-
-def condition_trace_clear() -> None:
-    """Clear the condition trace."""
-    condition_trace.set(None)
-    condition_trace_stack.set(None)
-    condition_path_stack.set(None)
-
-
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
     """Append a TraceElement to trace[path]."""
     trace_element = TraceElement(variables)
-    trace_append_element(condition_trace, trace_element, path)
+    trace_append_element(trace_element, path)
     return trace_element
 
 
 def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
     """Set the result of TraceElement at the top of the stack."""
-    node = condition_trace_stack_top()
+    node = trace_stack_top(trace_stack_cv)
 
     # The condition function may be called directly, in which case tracing
     # is not setup
@@ -169,25 +97,15 @@ def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
 @contextmanager
 def trace_condition(variables: TemplateVarsType) -> Generator:
     """Trace condition evaluation."""
-    trace_element = condition_trace_append(variables, condition_path_get())
-    condition_trace_stack_push(trace_element)
+    trace_element = condition_trace_append(variables, trace_path_get())
+    trace_stack_push(trace_stack_cv, trace_element)
     try:
         yield trace_element
     except Exception as ex:  # pylint: disable=broad-except
         trace_element.set_error(ex)
         raise ex
     finally:
-        condition_trace_stack_pop()
-
-
-@contextmanager
-def condition_path(suffix: Union[str, List[str]]) -> Generator:
-    """Go deeper in the config tree."""
-    count = condition_path_push(suffix)
-    try:
-        yield
-    finally:
-        condition_path_pop(count)
+        trace_stack_pop(trace_stack_cv)
 
 
 def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
@@ -260,7 +178,7 @@ async def async_and_from_config(
         errors = []
         for index, check in enumerate(checks):
             try:
-                with condition_path(["conditions", str(index)]):
+                with trace_path(["conditions", str(index)]):
                     if not check(hass, variables):
                         return False
             except ConditionError as ex:
@@ -295,7 +213,7 @@ async def async_or_from_config(
         errors = []
         for index, check in enumerate(checks):
             try:
-                with condition_path(["conditions", str(index)]):
+                with trace_path(["conditions", str(index)]):
                     if check(hass, variables):
                         return True
             except ConditionError as ex:
@@ -330,7 +248,7 @@ async def async_not_from_config(
         errors = []
         for index, check in enumerate(checks):
             try:
-                with condition_path(["conditions", str(index)]):
+                with trace_path(["conditions", str(index)]):
                     if check(hass, variables):
                         return False
             except ConditionError as ex:
@@ -509,9 +427,7 @@ def async_numeric_state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                with condition_path(["entity_id", str(index)]), trace_condition(
-                    variables
-                ):
+                with trace_path(["entity_id", str(index)]), trace_condition(variables):
                     if not async_numeric_state(
                         hass,
                         entity_id,
@@ -623,9 +539,7 @@ def state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                with condition_path(["entity_id", str(index)]), trace_condition(
-                    variables
-                ):
+                with trace_path(["entity_id", str(index)]), trace_condition(variables):
                     if not state(hass, entity_id, req_states, for_period, attribute):
                         return False
             except ConditionError as ex:
