@@ -1157,7 +1157,7 @@ twinkly-client==0.0.2
 upb_lib==0.4.12
 
 # homeassistant.components.upcloud
-upcloud-api==0.4.5
+upcloud-api==1.0.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
