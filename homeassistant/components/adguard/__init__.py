@@ -1,6 +1,8 @@
 """Support for AdGuard Home."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 import voluptuous as vol
@@ -117,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload AdGuard Home config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
@@ -191,7 +193,7 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     """Defines a AdGuard Home device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this AdGuard Home instance."""
         return {
             "identifiers": {
