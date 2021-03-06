@@ -58,6 +58,7 @@ FLOWS = [
     "eafm",
     "ecobee",
     "econet",
+    "eight_sleep",
     "elgato",
     "elkm1",
     "emulated_roku",

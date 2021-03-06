@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Eight Sleep is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "partner": "Fetch partner data",
+                    "password": "Password",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "title": "Eight Sleep"
+}

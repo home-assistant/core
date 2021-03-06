@@ -3,13 +3,8 @@ import logging
 
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from . import (
-    CONF_SENSORS,
-    DATA_EIGHT,
-    NAME_MAP,
-    EightSleepHeatEntity,
-    EightSleepUserEntity,
-)
+from . import EightSleepHeatEntity, EightSleepUserEntity
+from .const import DATA_EIGHT, NAME_MAP, SENSORS
 
 ATTR_ROOM_TEMP = "Room Temperature"
 ATTR_AVG_ROOM_TEMP = "Average Room Temperature"
@@ -39,13 +34,9 @@ ATTR_FIT_WAKEUP_SCORE = "Fitness Wakeup Score"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the eight sleep sensors."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Discover and configure Eight Sleep sensors."""
 
-    name = "Eight"
-    sensors = discovery_info[CONF_SENSORS]
     eight = hass.data[DATA_EIGHT]
 
     if hass.config.units.is_metric:
@@ -54,14 +45,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         units = "us"
 
     all_sensors = []
-
-    for sensor in sensors:
-        if "bed_state" in sensor:
-            all_sensors.append(EightHeatSensor(name, eight, sensor))
-        elif "room_temp" in sensor:
-            all_sensors.append(EightRoomSensor(name, eight, sensor, units))
-        else:
-            all_sensors.append(EightUserSensor(name, eight, sensor, units))
+    if eight.users:
+        for user in eight.users:
+            obj = eight.users[user]
+            for sensor_type in SENSORS:
+                if sensor_type == "bed_state":
+                    all_sensors.append(EightHeatSensor(eight, sensor_type, obj.side))
+                elif sensor_type == "room_temp":
+                    all_sensors.append(EightRoomSensor(eight, sensor_type, units))
+                else:
+                    all_sensors.append(
+                        EightUserSensor(eight, sensor_type, units, obj.side)
+                    )
 
     async_add_entities(all_sensors, True)
 
@@ -69,22 +64,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EightHeatSensor(EightSleepHeatEntity):
     """Representation of an eight sleep heat-based sensor."""
 
-    def __init__(self, name, eight, sensor):
+    def __init__(self, eight, sensor_type, side):
         """Initialize the sensor."""
         super().__init__(eight)
 
-        self._sensor = sensor
-        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._name = f"{name} {self._mapped_name}"
+        self._sensor_type = sensor_type
+        self._mapped_name = NAME_MAP.get(f"{side}_{self._sensor_type}")
+        self._name = f"Eight Sleep - {self._mapped_name}"
         self._state = None
 
-        self._side = self._sensor.split("_")[0]
+        self._side = side
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
         _LOGGER.debug(
             "Heat Sensor: %s, Side: %s, User: %s",
-            self._sensor,
+            self._sensor_type,
             self._side,
             self._userid,
         )
@@ -106,7 +101,7 @@ class EightHeatSensor(EightSleepHeatEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("Updating Heat sensor: %s", self._sensor)
+        _LOGGER.debug("Updating Heat sensor: %s", self._sensor_type)
         self._state = self._usrobj.heating_level
 
     @property
@@ -118,29 +113,33 @@ class EightHeatSensor(EightSleepHeatEntity):
             ATTR_DURATION_HEAT: self._usrobj.heating_remaining,
         }
 
+    @property
+    def unique_id(self):
+        """Return a unique ID for the sensor."""
+        return f"{self._userid}_{self._sensor_type}"
+
 
 class EightUserSensor(EightSleepUserEntity):
     """Representation of an eight sleep user-based sensor."""
 
-    def __init__(self, name, eight, sensor, units):
+    def __init__(self, eight, sensor_type, units, side):
         """Initialize the sensor."""
         super().__init__(eight)
 
-        self._sensor = sensor
-        self._sensor_root = self._sensor.split("_", 1)[1]
-        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._name = f"{name} {self._mapped_name}"
+        self._sensor_type = sensor_type
+        self._mapped_name = NAME_MAP.get(f"{side}_{self._sensor_type}")
+        self._name = f"Eight Sleep - {self._mapped_name}"
         self._state = None
         self._attr = None
         self._units = units
 
-        self._side = self._sensor.split("_", 1)[0]
+        self._side = side
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
         _LOGGER.debug(
             "User Sensor: %s, Side: %s, User: %s",
-            self._sensor,
+            self._sensor_type,
             self._side,
             self._userid,
         )
@@ -159,12 +158,12 @@ class EightUserSensor(EightSleepUserEntity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if (
-            "current_sleep" in self._sensor
-            or "last_sleep" in self._sensor
-            or "current_sleep_fitness" in self._sensor
+            "current_sleep" in self._sensor_type
+            or "last_sleep" in self._sensor_type
+            or "current_sleep_fitness" in self._sensor_type
         ):
             return "Score"
-        if "bed_temp" in self._sensor:
+        if "bed_temp" in self._sensor_type:
             if self._units == "si":
                 return TEMP_CELSIUS
             return TEMP_FAHRENHEIT
@@ -173,23 +172,23 @@ class EightUserSensor(EightSleepUserEntity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if "bed_temp" in self._sensor:
+        if "bed_temp" in self._sensor_type:
             return "mdi:thermometer"
 
     async def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("Updating User sensor: %s", self._sensor)
-        if "current" in self._sensor:
-            if "fitness" in self._sensor:
+        _LOGGER.debug("Updating User sensor: %s", self._sensor_type)
+        if "current" in self._sensor_type:
+            if "fitness" in self._sensor_type:
                 self._state = self._usrobj.current_sleep_fitness_score
                 self._attr = self._usrobj.current_fitness_values
             else:
                 self._state = self._usrobj.current_sleep_score
                 self._attr = self._usrobj.current_values
-        elif "last" in self._sensor:
+        elif "last" in self._sensor_type:
             self._state = self._usrobj.last_sleep_score
             self._attr = self._usrobj.last_values
-        elif "bed_temp" in self._sensor:
+        elif "bed_temp" in self._sensor_type:
             temp = self._usrobj.current_values["bed_temp"]
             try:
                 if self._units == "si":
@@ -198,7 +197,7 @@ class EightUserSensor(EightSleepUserEntity):
                     self._state = round((temp * 1.8) + 32, 2)
             except TypeError:
                 self._state = None
-        elif "sleep_stage" in self._sensor:
+        elif "sleep_stage" in self._sensor_type:
             self._state = self._usrobj.current_values["stage"]
 
     @property
@@ -208,7 +207,7 @@ class EightUserSensor(EightSleepUserEntity):
             # Skip attributes if sensor type doesn't support
             return None
 
-        if "fitness" in self._sensor_root:
+        if "fitness" in self._sensor_type:
             state_attr = {
                 ATTR_FIT_DATE: self._attr["date"],
                 ATTR_FIT_DURATION_SCORE: self._attr["duration"],
@@ -262,7 +261,7 @@ class EightUserSensor(EightSleepUserEntity):
         except TypeError:
             bed_temp = None
 
-        if "current" in self._sensor_root:
+        if "current" in self._sensor_type:
             try:
                 state_attr[ATTR_RESP_RATE] = round(self._attr["resp_rate"], 2)
             except TypeError:
@@ -274,7 +273,7 @@ class EightUserSensor(EightSleepUserEntity):
             state_attr[ATTR_SLEEP_STAGE] = self._attr["stage"]
             state_attr[ATTR_ROOM_TEMP] = room_temp
             state_attr[ATTR_BED_TEMP] = bed_temp
-        elif "last" in self._sensor_root:
+        elif "last" in self._sensor_type:
             try:
                 state_attr[ATTR_AVG_RESP_RATE] = round(self._attr["resp_rate"], 2)
             except TypeError:
@@ -288,17 +287,22 @@ class EightUserSensor(EightSleepUserEntity):
 
         return state_attr
 
+    @property
+    def unique_id(self):
+        """Return a unique ID for the sensor."""
+        return f"{self._userid}_{self._sensor_type}"
+
 
 class EightRoomSensor(EightSleepUserEntity):
     """Representation of an eight sleep room sensor."""
 
-    def __init__(self, name, eight, sensor, units):
+    def __init__(self, eight, sensor_type, units):
         """Initialize the sensor."""
         super().__init__(eight)
 
-        self._sensor = sensor
-        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
-        self._name = f"{name} {self._mapped_name}"
+        self._sensor_type = sensor_type
+        self._mapped_name = NAME_MAP.get(self._sensor_type)
+        self._name = f"Eight Sleep - {self._mapped_name}"
         self._state = None
         self._attr = None
         self._units = units
@@ -315,7 +319,7 @@ class EightRoomSensor(EightSleepUserEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("Updating Room sensor: %s", self._sensor)
+        _LOGGER.debug("Updating Room sensor: %s", self._sensor_type)
         temp = self._eight.room_temperature()
         try:
             if self._units == "si":
@@ -336,3 +340,8 @@ class EightRoomSensor(EightSleepUserEntity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return "mdi:thermometer"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for the sensor."""
+        return self._sensor_type

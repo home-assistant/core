@@ -229,7 +229,6 @@ omit =
     homeassistant/components/eddystone_temperature/sensor.py
     homeassistant/components/edimax/switch.py
     homeassistant/components/egardia/*
-    homeassistant/components/eight_sleep/*
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/*
     homeassistant/components/elv/*

@@ -5,16 +5,14 @@ import logging
 from pyeight.eight import EightSleep
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_BINARY_SENSORS,
     CONF_PASSWORD,
-    CONF_SENSORS,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
-from homeassistant.helpers import discovery
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -24,13 +22,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from .const import CONF_PARTNER, DATA_EIGHT, DEFAULT_PARTNER, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_PARTNER = "partner"
-
-DATA_EIGHT = "eight_sleep"
-DEFAULT_PARTNER = False
-DOMAIN = "eight_sleep"
 
 HEAT_ENTITY = "heat"
 USER_ENTITY = "user"
@@ -40,33 +34,6 @@ USER_SCAN_INTERVAL = timedelta(seconds=300)
 
 SIGNAL_UPDATE_HEAT = "eight_heat_update"
 SIGNAL_UPDATE_USER = "eight_user_update"
-
-NAME_MAP = {
-    "left_current_sleep": "Left Sleep Session",
-    "left_current_sleep_fitness": "Left Sleep Fitness",
-    "left_last_sleep": "Left Previous Sleep Session",
-    "left_bed_state": "Left Bed State",
-    "left_presence": "Left Bed Presence",
-    "left_bed_temp": "Left Bed Temperature",
-    "left_sleep_stage": "Left Sleep Stage",
-    "right_current_sleep": "Right Sleep Session",
-    "right_current_sleep_fitness": "Right Sleep Fitness",
-    "right_last_sleep": "Right Previous Sleep Session",
-    "right_bed_state": "Right Bed State",
-    "right_presence": "Right Bed Presence",
-    "right_bed_temp": "Right Bed Temperature",
-    "right_sleep_stage": "Right Sleep Stage",
-    "room_temp": "Room Temperature",
-}
-
-SENSORS = [
-    "current_sleep",
-    "current_sleep_fitness",
-    "last_sleep",
-    "bed_state",
-    "bed_temp",
-    "sleep_stage",
-]
 
 SERVICE_HEAT_SET = "heat_set"
 
@@ -97,14 +64,33 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = ["binary_sensor", "sensor"]
+
 
 async def async_setup(hass, config):
     """Set up the Eight Sleep component."""
-
     conf = config.get(DOMAIN)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    partner = conf.get(CONF_PARTNER)
+    hass.data.setdefault(DOMAIN, {})
+
+    if not conf:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Set up Eight Sleep from a config entry."""
+
+    config = entry.data
+
+    user = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    partner = config.get(CONF_PARTNER)
 
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant")
@@ -143,31 +129,10 @@ async def async_setup(hass, config):
     await async_update_heat_data(None)
     await async_update_user_data(None)
 
-    # Load sub components
-    sensors = []
-    binary_sensors = []
-    if eight.users:
-        for user in eight.users:
-            obj = eight.users[user]
-            for sensor in SENSORS:
-                sensors.append(f"{obj.side}_{sensor}")
-            binary_sensors.append(f"{obj.side}_presence")
-        sensors.append("room_temp")
-    else:
-        # No users, cannot continue
-        return False
-
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass, "sensor", DOMAIN, {CONF_SENSORS: sensors}, config
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-    )
-
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass, "binary_sensor", DOMAIN, {CONF_BINARY_SENSORS: binary_sensors}, config
-        )
-    )
 
     async def async_service_handler(service):
         """Handle eight sleep service calls."""
