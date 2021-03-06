@@ -67,7 +67,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.trace import TraceElement, trace_clear, trace_get, trace_path
+from homeassistant.helpers.trace import TraceElement, trace_get, trace_path
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -523,7 +523,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             automation_trace.set_variables(variables)
 
             # Prepare tracing the evaluation of the automation's conditions
-            trace_clear()
             automation_trace.set_condition_trace(trace_get())
 
             if (
@@ -533,12 +532,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             ):
                 self._logger.debug(
                     "Conditions not met, aborting automation. Condition summary: %s",
-                    trace_get(),
+                    trace_get(clear=False),
                 )
                 return
 
             # Prepare tracing the execution of the automation's actions
-            trace_clear()
             automation_trace.set_action_trace(trace_get())
 
             # Create a new context referring to the old context.

@@ -114,8 +114,10 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
-def trace_get() -> Optional[Dict[str, TraceElement]]:
-    """Return the trace of the actions and conditions that were evaluated."""
+def trace_get(clear: bool = True) -> Optional[Dict[str, TraceElement]]:
+    """Return the current trace."""
+    if clear:
+        trace_clear()
     return trace_cv.get()
 
 
