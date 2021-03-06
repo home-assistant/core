@@ -9,7 +9,7 @@ from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
@@ -33,7 +33,7 @@ SCHEMAS = Registry()
 
 @callback
 def discover_mysensors_platform(
-    hass, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
+    hass: HomeAssistant, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
 ) -> None:
     """Discover a MySensors platform."""
     _LOGGER.debug("Discovering platform %s with devIds: %s", platform, new_devices)
