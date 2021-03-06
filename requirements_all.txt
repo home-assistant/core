@@ -2193,7 +2193,7 @@ synology-srm==0.2.0
 synologydsm-api==1.0.2
 
 # homeassistant.components.system_bridge
-systembridge==0.1.0
+systembridge==0.1.2
 
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
