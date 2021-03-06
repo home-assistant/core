@@ -53,7 +53,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             async with async_timeout.timeout(10):
                 return await self.hass.async_add_executor_job(self.fetch_data)
         except Exception as err:  # pylint: disable=broad-except
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
@@ -112,7 +112,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         """Get data of the last order from the list of deliveries."""
         # Get the deliveries
         deliveries = self.picnic_api_client.get_deliveries(summary=True)
-        if not len(deliveries):
+        if not deliveries:
             return {}
 
         # Determine the last order and get the position details

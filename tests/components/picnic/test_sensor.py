@@ -100,7 +100,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         """Tear down the test setup, stop hass/patchers."""
-        await self.hass.async_stop()
+        await self.hass.async_stop(force=True)
         self.picnic_patcher.stop()
 
     @property

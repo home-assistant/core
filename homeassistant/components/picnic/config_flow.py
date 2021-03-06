@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_COUNTRY_CODE,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -32,7 +32,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class PicnicHub:
     """Hub class to test user authentication."""
 
-    def authenticate(self, username, password, country_code) -> None:
+    @staticmethod
+    def authenticate(username, password, country_code) -> None:
         """Test if we can authenticate with the Picnic API."""
         picnic = PicnicAPI(username, password, country_code)
         return picnic.get_user()
@@ -52,10 +53,10 @@ async def validate_input(hass: core.HomeAssistant, data):
             data[CONF_PASSWORD],
             data[CONF_COUNTRY_CODE],
         )
-    except requests.exceptions.ConnectionError:
-        raise CannotConnect
-    except PicnicAuthError:
-        raise InvalidAuth
+    except requests.exceptions.ConnectionError as error:
+        raise CannotConnect from error
+    except PicnicAuthError as error:
+        raise InvalidAuth from error
 
     # Return the validation result
     address = (
