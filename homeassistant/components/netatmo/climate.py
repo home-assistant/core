@@ -25,6 +25,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -81,6 +82,7 @@ NETATMO_MAP_PRESET = {
     STATE_NETATMO_AWAY: PRESET_AWAY,
     STATE_NETATMO_OFF: STATE_NETATMO_OFF,
     STATE_NETATMO_MANUAL: STATE_NETATMO_MANUAL,
+    STATE_NETATMO_HOME: PRESET_SCHEDULE,
 }
 
 HVAC_MAP_NETATMO = {
@@ -111,8 +113,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
-    if not home_data:
-        return
+    if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
+        raise PlatformNotReady
 
     async def get_entities():
         """Retrieve Netatmo entities."""
@@ -150,6 +152,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
+
+    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
 
     platform = entity_platform.current_platform.get()
 
