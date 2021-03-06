@@ -1,6 +1,4 @@
 """Tests for the Hyperion config flow."""
-
-import logging
 from typing import Any, Dict, Optional
 from unittest.mock import AsyncMock, patch
 
@@ -40,8 +38,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 TEST_IP_ADDRESS = "192.168.0.1"
 TEST_HOST_PORT: Dict[str, Any] = {

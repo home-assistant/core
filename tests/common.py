@@ -12,10 +12,13 @@ import os
 import pathlib
 import threading
 import time
+from time import monotonic
+import types
+from typing import Any, Awaitable, Collection, Optional
 from unittest.mock import AsyncMock, Mock, patch
 import uuid
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -33,17 +36,14 @@ from homeassistant.components.device_automation import (  # noqa: F401
 from homeassistant.components.mqtt.models import Message
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
-    ATTR_DISCOVERED,
-    ATTR_SERVICE,
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, State
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -143,7 +143,7 @@ def get_test_home_assistant():
 
 
 # pylint: disable=protected-access
-async def async_test_home_assistant(loop):
+async def async_test_home_assistant(loop, load_registries=True):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant()
     store = auth_store.AuthStore(hass)
@@ -190,9 +190,76 @@ async def async_test_home_assistant(loop):
 
         return orig_async_create_task(coroutine)
 
+    async def async_wait_for_task_count(self, max_remaining_tasks: int = 0) -> None:
+        """Block until at most max_remaining_tasks remain.
+
+        Based on HomeAssistant.async_block_till_done
+        """
+        # To flush out any call_soon_threadsafe
+        await asyncio.sleep(0)
+        start_time: Optional[float] = None
+
+        while len(self._pending_tasks) > max_remaining_tasks:
+            pending = [
+                task for task in self._pending_tasks if not task.done()
+            ]  # type: Collection[Awaitable[Any]]
+            self._pending_tasks.clear()
+            if len(pending) > max_remaining_tasks:
+                remaining_pending = await self._await_count_and_log_pending(
+                    pending, max_remaining_tasks=max_remaining_tasks
+                )
+                self._pending_tasks.extend(remaining_pending)
+
+                if start_time is None:
+                    # Avoid calling monotonic() until we know
+                    # we may need to start logging blocked tasks.
+                    start_time = 0
+                elif start_time == 0:
+                    # If we have waited twice then we set the start
+                    # time
+                    start_time = monotonic()
+                elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                    # We have waited at least three loops and new tasks
+                    # continue to block. At this point we start
+                    # logging all waiting tasks.
+                    for task in pending:
+                        _LOGGER.debug("Waiting for task: %s", task)
+            else:
+                self._pending_tasks.extend(pending)
+                await asyncio.sleep(0)
+
+    async def _await_count_and_log_pending(
+        self, pending: Collection[Awaitable[Any]], max_remaining_tasks: int = 0
+    ) -> Collection[Awaitable[Any]]:
+        """Block at most max_remaining_tasks remain and log tasks that take a long time.
+
+        Based on HomeAssistant._await_and_log_pending
+        """
+        wait_time = 0
+
+        return_when = asyncio.ALL_COMPLETED
+        if max_remaining_tasks:
+            return_when = asyncio.FIRST_COMPLETED
+
+        while len(pending) > max_remaining_tasks:
+            _, pending = await asyncio.wait(
+                pending, timeout=BLOCK_LOG_TIMEOUT, return_when=return_when
+            )
+            if not pending or max_remaining_tasks:
+                return pending
+            wait_time += BLOCK_LOG_TIMEOUT
+            for task in pending:
+                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
+
+        return []
+
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
     hass.async_create_task = async_create_task
+    hass.async_wait_for_task_count = types.MethodType(async_wait_for_task_count, hass)
+    hass._await_count_and_log_pending = types.MethodType(
+        _await_count_and_log_pending, hass
+    )
 
     hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
 
@@ -209,6 +276,15 @@ async def async_test_home_assistant(loop):
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
     hass.config_entries._store._async_ensure_stop_listener = lambda: None
+
+    # Load the registries
+    if load_registries:
+        await asyncio.gather(
+            device_registry.async_load(hass),
+            entity_registry.async_load(hass),
+            area_registry.async_load(hass),
+        )
+        await hass.async_block_till_done()
 
     hass.state = ha.CoreState.running
 
@@ -306,21 +382,6 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
-
-
-def fire_service_discovered(hass, service, info):
-    """Fire the MQTT message."""
-    hass.bus.fire(
-        EVENT_PLATFORM_DISCOVERED, {ATTR_SERVICE: service, ATTR_DISCOVERED: info}
-    )
-
-
-@ha.callback
-def async_fire_service_discovered(hass, service, info):
-    """Fire the MQTT message."""
-    hass.bus.async_fire(
-        EVENT_PLATFORM_DISCOVERED, {ATTR_SERVICE: service, ATTR_DISCOVERED: info}
-    )
 
 
 def load_fixture(filename):
@@ -670,6 +731,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
         unique_id=None,
+        disabled_by=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
@@ -682,6 +744,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "title": title,
             "connection_class": connection_class,
             "unique_id": unique_id,
+            "disabled_by": disabled_by,
         }
         if source is not None:
             kwargs["source"] = source

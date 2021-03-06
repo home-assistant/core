@@ -14,7 +14,7 @@ from sharkiqpy import (
 from homeassistant import exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import _LOGGER, API_TIMEOUT, COMPONENTS, DOMAIN
+from .const import _LOGGER, API_TIMEOUT, DOMAIN, PLATFORMS
 from .update_coordinator import SharkIqUpdateCoordinator
 
 
@@ -70,9 +70,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
 
-    for component in COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -98,8 +98,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in COMPONENTS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

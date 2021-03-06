@@ -1,5 +1,6 @@
 """The tests for the automation component."""
 import asyncio
+import logging
 from unittest.mock import Mock, patch
 
 import pytest
@@ -29,7 +30,12 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_mock_service, mock_restore_cache
+from tests.common import (
+    assert_setup_component,
+    async_capture_events,
+    async_mock_service,
+    mock_restore_cache,
+)
 from tests.components.logbook.test_init import MockLazyEventPartialState
 
 
@@ -152,7 +158,7 @@ async def test_two_triggers(hass, calls):
     assert len(calls) == 2
 
 
-async def test_trigger_service_ignoring_condition(hass, calls):
+async def test_trigger_service_ignoring_condition(hass, caplog, calls):
     """Test triggers."""
     assert await async_setup_component(
         hass,
@@ -171,11 +177,15 @@ async def test_trigger_service_ignoring_condition(hass, calls):
         },
     )
 
-    with patch("homeassistant.components.automation.LOGGER.warning") as logwarn:
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-        assert len(calls) == 0
-        assert len(logwarn.mock_calls) == 1
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
         "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
@@ -491,10 +501,7 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
-    test_reload_event = []
-    hass.bus.async_listen(
-        EVENT_AUTOMATION_RELOADED, lambda event: test_reload_event.append(event)
-    )
+    test_reload_event = async_capture_events(hass, EVENT_AUTOMATION_RELOADED)
 
     with patch(
         "homeassistant.config.load_yaml_config_file",

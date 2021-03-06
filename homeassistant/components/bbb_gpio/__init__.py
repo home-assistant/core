@@ -8,7 +8,6 @@ DOMAIN = "bbb_gpio"
 
 def setup(hass, config):
     """Set up the BeagleBone Black GPIO component."""
-    # pylint: disable=import-error
 
     def cleanup_gpio(event):
         """Stuff to do before stopping."""

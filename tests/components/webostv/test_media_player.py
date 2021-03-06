@@ -12,13 +12,13 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
-    ATTR_COMMAND,
     ATTR_PAYLOAD,
     DOMAIN,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
 )
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,

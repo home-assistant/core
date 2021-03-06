@@ -4,7 +4,7 @@ from functools import partial
 import logging
 
 from i2csense.htu21d import HTU21D  # pylint: disable=import-error
-import smbus  # pylint: disable=import-error
+import smbus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

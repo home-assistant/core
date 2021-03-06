@@ -54,11 +54,13 @@ SENSORS = {
 }
 
 
-async def test_deconz_events(hass):
+async def test_deconz_events(hass, aioclient_mock):
     """Test successful creation of deconz events."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    config_entry = await setup_deconz_integration(hass, get_state_response=data)
+    config_entry = await setup_deconz_integration(
+        hass, aioclient_mock, get_state_response=data
+    )
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
     assert len(hass.states.async_all()) == 3

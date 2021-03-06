@@ -356,7 +356,12 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Return True if state conditions are met."""
         entity = entity_observation["entity_id"]
 
-        return condition.state(self.hass, entity, entity_observation.get("to_state"))
+        try:
+            return condition.state(
+                self.hass, entity, entity_observation.get("to_state")
+            )
+        except ConditionError:
+            return False
 
     @property
     def name(self):

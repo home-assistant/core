@@ -39,6 +39,7 @@ from .const import (
     DATA_COORDINATOR,
     DOMAIN,
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+    INTEGRATION_TYPE_GEOGRAPHY_NAME,
     INTEGRATION_TYPE_NODE_PRO,
     LOGGER,
 )
@@ -142,12 +143,21 @@ def _standardize_geography_config_entry(hass, config_entry):
     if not config_entry.options:
         # If the config entry doesn't already have any options set, set defaults:
         entry_updates["options"] = {CONF_SHOW_ON_MAP: True}
-    if CONF_INTEGRATION_TYPE not in config_entry.data:
-        # If the config entry data doesn't contain the integration type, add it:
-        entry_updates["data"] = {
-            **config_entry.data,
-            CONF_INTEGRATION_TYPE: INTEGRATION_TYPE_GEOGRAPHY_COORDS,
-        }
+    if config_entry.data.get(CONF_INTEGRATION_TYPE) not in [
+        INTEGRATION_TYPE_GEOGRAPHY_COORDS,
+        INTEGRATION_TYPE_GEOGRAPHY_NAME,
+    ]:
+        # If the config entry data doesn't contain an integration type that we know
+        # about, infer it from the data we have:
+        entry_updates["data"] = {**config_entry.data}
+        if CONF_CITY in config_entry.data:
+            entry_updates["data"][
+                CONF_INTEGRATION_TYPE
+            ] = INTEGRATION_TYPE_GEOGRAPHY_NAME
+        else:
+            entry_updates["data"][
+                CONF_INTEGRATION_TYPE
+            ] = INTEGRATION_TYPE_GEOGRAPHY_COORDS
 
     if not entry_updates:
         return
@@ -268,9 +278,9 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_COORDINATOR][config_entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -323,8 +333,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

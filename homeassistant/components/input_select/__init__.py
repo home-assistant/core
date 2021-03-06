@@ -1,4 +1,6 @@
 """Support to select an option from a list."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -6,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_OPTION,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -27,7 +30,6 @@ DOMAIN = "input_select"
 CONF_INITIAL = "initial"
 CONF_OPTIONS = "options"
 
-ATTR_OPTION = "option"
 ATTR_OPTIONS = "options"
 ATTR_CYCLE = "cycle"
 
@@ -207,7 +209,7 @@ class InputSelect(RestoreEntity):
         self._current_option = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputSelect":
+    def from_yaml(cls, config: typing.Dict) -> InputSelect:
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

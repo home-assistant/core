@@ -19,7 +19,7 @@ def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
 
     """
     if item not in ordered_list:
-        raise ValueError
+        raise ValueError(f'The item "{item}"" is not in "{ordered_list}"')
 
     list_len = len(ordered_list)
     list_position = ordered_list.index(item) + 1
@@ -42,7 +42,7 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
     """
     list_len = len(ordered_list)
     if not list_len:
-        raise ValueError
+        raise ValueError("The ordered list is empty")
 
     for offset, speed in enumerate(ordered_list):
         list_position = offset + 1
@@ -67,7 +67,7 @@ def ranged_value_to_percentage(
     (1,255), 127: 50
     (1,255), 10: 4
     """
-    return int((value * 100) // (low_high_range[1] - low_high_range[0] + 1))
+    return int((value * 100) // states_in_range(low_high_range))
 
 
 def percentage_to_ranged_value(
@@ -84,4 +84,14 @@ def percentage_to_ranged_value(
     (1,255), 50: 127.5
     (1,255), 4: 10.2
     """
-    return (low_high_range[1] - low_high_range[0] + 1) * percentage / 100
+    return states_in_range(low_high_range) * percentage / 100
+
+
+def states_in_range(low_high_range: Tuple[float, float]) -> float:
+    """Given a range of low and high values return how many states exist."""
+    return low_high_range[1] - low_high_range[0] + 1
+
+
+def int_states_in_range(low_high_range: Tuple[float, float]) -> int:
+    """Given a range of low and high values return how many integer states exist."""
+    return int(states_in_range(low_high_range))

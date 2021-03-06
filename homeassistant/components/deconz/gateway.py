@@ -26,7 +26,7 @@ from .const import (
     NEW_LIGHT,
     NEW_SCENE,
     NEW_SENSOR,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
 )
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
@@ -184,10 +184,10 @@ class DeconzGateway:
             )
             return False
 
-        for component in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, component
+                    self.config_entry, platform
                 )
             )
 
@@ -259,9 +259,9 @@ class DeconzGateway:
         self.api.async_connection_status_callback = None
         self.api.close()
 
-        for component in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, component
+                self.config_entry, platform
             )
 
         for unsub_dispatcher in self.listeners:

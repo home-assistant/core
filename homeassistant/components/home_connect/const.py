@@ -26,5 +26,17 @@ BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR = (
 BSH_AMBIENT_LIGHT_CUSTOM_COLOR = "BSH.Common.Setting.AmbientLightCustomColor"
 
 BSH_DOOR_STATE = "BSH.Common.Status.DoorState"
+BSH_DOOR_STATE_CLOSED = "BSH.Common.EnumType.DoorState.Closed"
+BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
+BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 SIGNAL_UPDATE_ENTITIES = "home_connect.update_entities"
+
+ATTR_AMBIENT = "ambient"
+ATTR_DESC = "desc"
+ATTR_DEVICE = "device"
+ATTR_KEY = "key"
+ATTR_SENSOR_TYPE = "sensor_type"
+ATTR_SIGN = "sign"
+ATTR_UNIT = "unit"
+ATTR_VALUE = "value"

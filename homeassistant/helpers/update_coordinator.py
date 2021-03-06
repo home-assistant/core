@@ -264,7 +264,6 @@ class CoordinatorEntity(entity.Entity):
 
         Only used by the generic entity update service.
         """
-
         # Ignore manual update requests if the entity is disabled
         if not self.enabled:
             return

@@ -1,4 +1,6 @@
 """Support for the definition of zones."""
+from __future__ import annotations
+
 import logging
 from typing import Any, Dict, Optional, cast
 
@@ -285,7 +287,7 @@ class Zone(entity.Entity):
         self._generate_attrs()
 
     @classmethod
-    def from_yaml(cls, config: Dict) -> "Zone":
+    def from_yaml(cls, config: Dict) -> Zone:
         """Return entity instance initialized from yaml storage."""
         zone = cls(config)
         zone.editable = False

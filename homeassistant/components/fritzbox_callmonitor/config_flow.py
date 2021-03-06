@@ -165,9 +165,7 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if result != RESULT_SUCCESS:
             return self.async_abort(reason=result)
 
-        if (  # pylint: disable=no-member
-            self.context["source"] == config_entries.SOURCE_IMPORT
-        ):
+        if self.context["source"] == config_entries.SOURCE_IMPORT:
             self._phonebook_id = user_input[CONF_PHONEBOOK]
             self._phonebook_name = user_input[CONF_NAME]
 

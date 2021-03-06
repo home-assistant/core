@@ -18,11 +18,13 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
+    CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
     CONF_PIN,
     CONF_PORT,
+    CONF_REPEAT,
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TYPE,
@@ -48,12 +50,10 @@ from .const import (
     CONF_ACTIVATION,
     CONF_API_HOST,
     CONF_BLINK,
-    CONF_DISCOVERY,
     CONF_INVERSE,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
-    CONF_REPEAT,
     DOMAIN,
     PIN_TO_ZONE,
     STATE_HIGH,
@@ -261,9 +261,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # async_connect will handle retries until it establishes a connection
     await client.async_connect()
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     # config entry specific data to enable unload
@@ -278,8 +278,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

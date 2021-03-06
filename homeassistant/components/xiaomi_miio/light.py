@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from math import ceil
 
-from miio import (  # pylint: disable=import-error
+from miio import (
     Ceil,
     Device,
     DeviceException,
@@ -37,8 +37,9 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
 
-from .config_flow import CONF_FLOW_TYPE, CONF_GATEWAY
 from .const import (
+    CONF_FLOW_TYPE,
+    CONF_GATEWAY,
     DOMAIN,
     SERVICE_EYECARE_MODE_OFF,
     SERVICE_EYECARE_MODE_ON,
@@ -135,7 +136,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
-        gateway = hass.data[DOMAIN][config_entry.entry_id]
+        gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,

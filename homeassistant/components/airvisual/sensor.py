@@ -1,6 +1,4 @@
 """Support for AirVisual air quality sensors."""
-from logging import getLogger
-
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -30,8 +28,6 @@ from .const import (
     INTEGRATION_TYPE_GEOGRAPHY_COORDS,
     INTEGRATION_TYPE_GEOGRAPHY_NAME,
 )
-
-_LOGGER = getLogger(__name__)
 
 ATTR_CITY = "city"
 ATTR_COUNTRY = "country"

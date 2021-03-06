@@ -1,4 +1,6 @@
 """Support to keep track of user controlled booleans for within automation."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -150,7 +152,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         self._state = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputBoolean":
+    def from_yaml(cls, config: typing.Dict) -> InputBoolean:
         """Return entity instance initialized from yaml storage."""
         input_bool = cls(config)
         input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

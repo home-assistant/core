@@ -23,7 +23,7 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
     MYLINK_STATUS,
-    SOMFY_MYLINK_COMPONENTS,
+    PLATFORMS,
 )
 
 CONFIG_OPTIONS = (CONF_DEFAULT_REVERSE, CONF_ENTITY_CONFIG)
@@ -108,6 +108,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
         return False
 
+    if "result" not in mylink_status:
+        raise ConfigEntryNotReady("The Somfy MyLink device returned an empty result")
+
     _async_migrate_entity_config(hass, entry, mylink_status)
 
     undo_listener = entry.add_update_listener(_async_update_listener)
@@ -118,9 +121,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in SOMFY_MYLINK_COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -179,8 +182,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SOMFY_MYLINK_COMPONENTS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
