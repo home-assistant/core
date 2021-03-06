@@ -1,6 +1,7 @@
 """Support for AdGuard Home switches."""
 from datetime import timedelta
 import logging
+from typing import Callable
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 
@@ -8,6 +9,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity import Entity
 
 from . import AdGuardHomeDeviceEntity
 from .const import DATA_ADGUARD_CLIENT, DATA_ADGUARD_VERION, DOMAIN
@@ -19,7 +21,9 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up AdGuard Home switch based on a config entry."""
     adguard = hass.data[DOMAIN][DATA_ADGUARD_CLIENT]
@@ -52,7 +56,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         icon: str,
         key: str,
         enabled_default: bool = True,
-    ):
+    ) -> None:
         """Initialize AdGuard Home switch."""
         self._state = False
         self._key = key
