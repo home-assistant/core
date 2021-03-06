@@ -8,14 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import decorator
 
-from .const import (
-    CHILD_CALLBACK,
-    DOMAIN,
-    MYSENSORS_GATEWAY_READY,
-    NODE_CALLBACK,
-    DevId,
-    GatewayId,
-)
+from .const import CHILD_CALLBACK, NODE_CALLBACK, DevId, GatewayId
 from .device import get_mysensors_devices
 from .helpers import discover_mysensors_platform, validate_set_msg
 
@@ -73,20 +66,6 @@ async def handle_sketch_version(
 ) -> None:
     """Handle an internal sketch version message."""
     _handle_node_update(hass, gateway_id, msg)
-
-
-@HANDLERS.register("I_GATEWAY_READY")
-async def handle_gateway_ready(
-    hass: HomeAssistantType, gateway_id: GatewayId, msg: Message
-) -> None:
-    """Handle an internal gateway ready message.
-
-    Set asyncio future result if gateway is ready.
-    """
-    gateway_ready = hass.data[DOMAIN].get(MYSENSORS_GATEWAY_READY.format(gateway_id))
-    if gateway_ready is None or gateway_ready.cancelled():
-        return
-    gateway_ready.set_result(True)
 
 
 @callback
