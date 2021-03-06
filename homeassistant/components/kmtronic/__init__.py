@@ -10,20 +10,12 @@ from pykmtronic.hub import KMTronicHubAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_HOSTNAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DATA_COORDINATOR,
-    DATA_HOST,
-    DATA_HUB,
-    DOMAIN,
-    MANUFACTURER,
-)
+from .const import DATA_COORDINATOR, DATA_HOST, DATA_HUB, DOMAIN, MANUFACTURER
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -41,11 +33,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up kmtronic from a config entry."""
-
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(
         session,
-        f"http://{entry.data[CONF_HOSTNAME]}",
+        f"http://{entry.data[CONF_HOST]}",
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
     )
