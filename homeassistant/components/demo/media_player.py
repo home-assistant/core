@@ -414,7 +414,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         ] + group_members
         self.schedule_update_ha_state()
 
-    def unjoin(self):
+    def unjoin_player(self):
         """Remove this player from any group."""
         self._group_members = []
         self.schedule_update_ha_state()

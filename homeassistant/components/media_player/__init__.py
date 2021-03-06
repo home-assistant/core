@@ -342,7 +342,7 @@ async def async_setup(hass, config):
         [SUPPORT_SHUFFLE_SET],
     )
     component.async_register_entity_service(
-        SERVICE_UNJOIN, {}, "async_unjoin", [SUPPORT_GROUPING]
+        SERVICE_UNJOIN, {}, "async_unjoin_player", [SUPPORT_GROUPING]
     )
 
     component.async_register_entity_service(
@@ -893,15 +893,15 @@ class MediaPlayerEntity(Entity):
 
     async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
-        await self.hass.async_add_executor_job(self.join_players)
+        await self.hass.async_add_executor_job(self.join_players, group_members)
 
-    def unjoin(self):
+    def unjoin_player(self):
         """Remove this player from any group."""
         raise NotImplementedError()
 
-    async def async_unjoin(self):
+    async def async_unjoin_player(self):
         """Remove this player from any group."""
-        await self.hass.async_add_executor_job(self.unjoin)
+        await self.hass.async_add_executor_job(self.unjoin_player)
 
     async def _async_fetch_image_from_cache(self, url):
         """Fetch image.
