@@ -35,7 +35,7 @@ async def test_no_clients(hass, aioclient_mock):
 
 
 async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
-    """Test the update_items function with some clients."""
+    """Verify that bandwidth sensors are working as expected."""
     wired_client = {
         "hostname": "Wired client",
         "is_wired": True,
@@ -135,7 +135,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
 
 async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
-    """Test the update_items function with some clients."""
+    """Verify that uptime sensors are working as expected."""
     client1 = {
         "mac": "00:00:00:00:00:01",
         "name": "client1",
@@ -225,7 +225,7 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
 
 async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
-    """Test the remove_items function with some clients."""
+    """Verify removing of clients work as expected."""
     wired_client = {
         "hostname": "Wired client",
         "is_wired": True,
