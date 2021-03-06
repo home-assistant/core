@@ -199,22 +199,24 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
         "oui": "Producer",
         "uptime": 60,
     }
+    options = {
+        CONF_ALLOW_BANDWIDTH_SENSORS: False,
+        CONF_ALLOW_UPTIME_SENSORS: True,
+        CONF_TRACK_CLIENTS: False,
+        CONF_TRACK_DEVICES: False,
+    }
 
     now = datetime(2021, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
         config_entry = await setup_unifi_integration(
             hass,
             aioclient_mock,
-            options={
-                CONF_ALLOW_BANDWIDTH_SENSORS: False,
-                CONF_ALLOW_UPTIME_SENSORS: True,
-                CONF_TRACK_CLIENTS: False,
-                CONF_TRACK_DEVICES: False,
-            },
+            options=options,
             clients_response=[client1, client2],
         )
         controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
+        assert len(hass.states.async_all()) == 3
         assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
         assert (
             hass.states.get("sensor.client1_uptime").state
@@ -240,12 +242,8 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
     # Disable option
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_ALLOW_UPTIME_SENSORS: False,
-        },
-    )
+    options[CONF_ALLOW_UPTIME_SENSORS] = False
+    hass.config_entries.async_update_entry(config_entry, options=options.copy())
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.client1_uptime") is None
@@ -253,13 +251,9 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
     # Enable option
 
+    options[CONF_ALLOW_UPTIME_SENSORS] = True
     with patch("homeassistant.util.dt.now", return_value=now):
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={
-                CONF_ALLOW_UPTIME_SENSORS: True,
-            },
-        )
+        hass.config_entries.async_update_entry(config_entry, options=options.copy())
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T13:01:02+00:00"
@@ -277,6 +271,7 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
     )
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 3
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
 
 
