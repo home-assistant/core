@@ -6,6 +6,7 @@ import re
 import urllib.parse
 
 import jsonrpc_base
+from jsonrpc_base.jsonrpc import ProtocolError, TransportError
 from pykodi import CannotConnectError
 import voluptuous as vol
 
@@ -877,15 +878,13 @@ class KodiEntity(MediaPlayerEntity):
         is_internal = is_internal_request(self.hass)
 
         async def _get_thumbnail_url(
-            media_content_type, media_content_id, media_image_id=None
+            media_content_type,
+            media_content_id,
+            media_image_id=None,
+            thumbnail_url=None,
         ):
             if is_internal:
-                image_url, _, _ = await get_media_info(
-                    self._kodi,
-                    media_content_id,
-                    media_content_type,
-                )
-                return image_url
+                return self._kodi.thumbnail_url(thumbnail_url)
 
             return self.get_browse_image_url(
                 media_content_type,
@@ -912,9 +911,12 @@ class KodiEntity(MediaPlayerEntity):
         self, media_content_type, media_content_id, media_image_id=None
     ):
         """Get media image from kodi server."""
-        image_url, _, _ = await get_media_info(
-            self._kodi, media_content_id, media_content_type
-        )
+        try:
+            image_url, _, _ = await get_media_info(
+                self._kodi, media_content_id, media_content_type
+            )
+        except (ProtocolError, TransportError):
+            return (None, None)
 
         if image_url:
             return await self._async_fetch_image(image_url)
