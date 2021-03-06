@@ -1,6 +1,5 @@
 """UniFi sensor platform tests."""
 
-from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
@@ -20,37 +19,6 @@ import homeassistant.util.dt as dt_util
 
 from .test_controller import setup_unifi_integration
 
-CLIENTS = [
-    {
-        "hostname": "Wired client hostname",
-        "ip": "10.0.0.1",
-        "is_wired": True,
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:00:01",
-        "name": "Wired client name",
-        "oui": "Producer",
-        "sw_mac": "00:00:00:00:01:01",
-        "sw_port": 1,
-        "wired-rx_bytes": 1234000000,
-        "wired-tx_bytes": 5678000000,
-        "uptime": 1600094505,
-    },
-    {
-        "hostname": "Wireless client hostname",
-        "ip": "10.0.0.2",
-        "is_wired": False,
-        "last_seen": 1562600145,
-        "mac": "00:00:00:00:00:02",
-        "name": "Wireless client name",
-        "oui": "Producer",
-        "sw_mac": "00:00:00:00:01:01",
-        "sw_port": 2,
-        "rx_bytes": 1234000000,
-        "tx_bytes": 5678000000,
-        "uptime": 1600094505,
-    },
-]
-
 
 async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
@@ -66,112 +34,93 @@ async def test_no_clients(hass, aioclient_mock):
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
 
 
-async def test_sensors(hass, aioclient_mock, mock_unifi_websocket):
+async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
+    wired_client = {
+        "hostname": "Wired client",
+        "is_wired": True,
+        "mac": "00:00:00:00:00:01",
+        "oui": "Producer",
+        "wired-rx_bytes": 1234000000,
+        "wired-tx_bytes": 5678000000,
+    }
+    wireless_client = {
+        "is_wired": False,
+        "mac": "00:00:00:00:00:02",
+        "name": "Wireless client",
+        "oui": "Producer",
+        "rx_bytes": 2345000000,
+        "tx_bytes": 6789000000,
+    }
+    options = {
+        CONF_ALLOW_BANDWIDTH_SENSORS: True,
+        CONF_ALLOW_UPTIME_SENSORS: False,
+        CONF_TRACK_CLIENTS: False,
+        CONF_TRACK_DEVICES: False,
+    }
+
     config_entry = await setup_unifi_integration(
         hass,
         aioclient_mock,
-        options={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_DEVICES: False,
-        },
-        clients_response=CLIENTS,
+        options=options,
+        clients_response=[wired_client, wireless_client],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert hass.states.get("sensor.wired_client_rx").state == "1234.0"
+    assert hass.states.get("sensor.wired_client_tx").state == "5678.0"
+    assert hass.states.get("sensor.wireless_client_rx").state == "2345.0"
+    assert hass.states.get("sensor.wireless_client_tx").state == "6789.0"
 
-    wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
-    assert wired_client_rx.state == "1234.0"
+    # Verify state update
 
-    wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
-    assert wired_client_tx.state == "5678.0"
-
-    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired_client_uptime.state == "2020-09-14T14:41:45+00:00"
-
-    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
-    assert wireless_client_rx.state == "1234.0"
-
-    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
-    assert wireless_client_tx.state == "5678.0"
-
-    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime.state == "2020-09-14T14:41:45+00:00"
-
-    clients = deepcopy(CLIENTS)
-    clients[0]["is_wired"] = False
-    clients[1]["rx_bytes"] = 2345000000
-    clients[1]["tx_bytes"] = 6789000000
-    clients[1]["uptime"] = 1600180860
+    wireless_client["rx_bytes"] = 3456000000
+    wireless_client["tx_bytes"] = 7891000000
 
     mock_unifi_websocket(
         data={
             "meta": {"message": MESSAGE_CLIENT},
-            "data": clients,
+            "data": [wireless_client],
         }
     )
     await hass.async_block_till_done()
 
-    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
-    assert wireless_client_rx.state == "2345.0"
+    assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
+    assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
 
-    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
-    assert wireless_client_tx.state == "6789.0"
+    # Disable option
 
-    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime.state == "2020-09-15T14:41:00+00:00"
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_ALLOW_BANDWIDTH_SENSORS: False,
-            CONF_ALLOW_UPTIME_SENSORS: False,
-        },
-    )
+    options[CONF_ALLOW_BANDWIDTH_SENSORS] = False
+    hass.config_entries.async_update_entry(config_entry, options=options.copy())
     await hass.async_block_till_done()
 
-    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
-    assert wireless_client_rx is None
+    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+    assert hass.states.get("sensor.wireless_client_rx") is None
+    assert hass.states.get("sensor.wireless_client_tx") is None
+    assert hass.states.get("sensor.wired_client_rx") is None
+    assert hass.states.get("sensor.wired_client_tx") is None
 
-    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
-    assert wireless_client_tx is None
+    # Enable option
 
-    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired_client_uptime is None
-
-    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime is None
-
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
-        },
-    )
+    options[CONF_ALLOW_BANDWIDTH_SENSORS] = True
+    hass.config_entries.async_update_entry(config_entry, options=options.copy())
     await hass.async_block_till_done()
 
-    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
-    assert wireless_client_rx.state == "2345.0"
-
-    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
-    assert wireless_client_tx.state == "6789.0"
-
-    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime.state == "2020-09-15T14:41:00+00:00"
-
-    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired_client_uptime.state == "2020-09-14T14:41:45+00:00"
+    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert hass.states.get("sensor.wireless_client_rx")
+    assert hass.states.get("sensor.wireless_client_tx")
+    assert hass.states.get("sensor.wired_client_rx")
+    assert hass.states.get("sensor.wired_client_tx")
 
     # Try to add the sensors again, using a signal
-    clients_connected = set()
+
+    clients_connected = {wired_client["mac"], wireless_client["mac"]}
     devices_connected = set()
 
-    clients_connected.add(clients[0]["mac"])
-    clients_connected.add(clients[1]["mac"])
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     async_dispatcher_send(
         hass,
@@ -179,10 +128,10 @@ async def test_sensors(hass, aioclient_mock, mock_unifi_websocket):
         clients_connected,
         devices_connected,
     )
-
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
 
 
 async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
@@ -214,18 +163,11 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
             options=options,
             clients_response=[client1, client2],
         )
-        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-        assert len(hass.states.async_all()) == 3
-        assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
-        assert (
-            hass.states.get("sensor.client1_uptime").state
-            == "2021-01-01T13:01:01+00:00"
-        )
-        assert (
-            hass.states.get("sensor.client2_uptime").state
-            == "2021-01-01T00:59:00+00:00"
-        )
+    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T13:01:01+00:00"
+    assert hass.states.get("sensor.client2_uptime").state == "2021-01-01T00:59:00+00:00"
 
     # Verify state update
 
@@ -246,6 +188,8 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
     hass.config_entries.async_update_entry(config_entry, options=options.copy())
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
     assert hass.states.get("sensor.client1_uptime") is None
     assert hass.states.get("sensor.client2_uptime") is None
 
@@ -256,12 +200,17 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
         hass.config_entries.async_update_entry(config_entry, options=options.copy())
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T13:01:02+00:00"
-    assert hass.states.get("sensor.client2_uptime").state == "2021-01-01T00:59:00+00:00"
+    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+    assert hass.states.get("sensor.client1_uptime")
+    assert hass.states.get("sensor.client2_uptime")
 
     # Try to add the sensors again, using a signal
+
     clients_connected = {client1["mac"], client2["mac"]}
     devices_connected = set()
+
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     async_dispatcher_send(
         hass,
@@ -277,6 +226,25 @@ async def test_uptime_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
 async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
     """Test the remove_items function with some clients."""
+    wired_client = {
+        "hostname": "Wired client",
+        "is_wired": True,
+        "mac": "00:00:00:00:00:01",
+        "oui": "Producer",
+        "wired-rx_bytes": 1234000000,
+        "wired-tx_bytes": 5678000000,
+        "uptime": 1600094505,
+    }
+    wireless_client = {
+        "is_wired": False,
+        "mac": "00:00:00:00:00:02",
+        "name": "Wireless client",
+        "oui": "Producer",
+        "rx_bytes": 2345000000,
+        "tx_bytes": 6789000000,
+        "uptime": 60,
+    }
+
     await setup_unifi_integration(
         hass,
         aioclient_mock,
@@ -284,51 +252,35 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
             CONF_ALLOW_BANDWIDTH_SENSORS: True,
             CONF_ALLOW_UPTIME_SENSORS: True,
         },
-        clients_response=CLIENTS,
+        clients_response=[wired_client, wireless_client],
     )
 
+    assert len(hass.states.async_all()) == 9
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert hass.states.get("sensor.wired_client_rx")
+    assert hass.states.get("sensor.wired_client_tx")
+    assert hass.states.get("sensor.wired_client_uptime")
+    assert hass.states.get("sensor.wireless_client_rx")
+    assert hass.states.get("sensor.wireless_client_tx")
+    assert hass.states.get("sensor.wireless_client_uptime")
 
-    wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
-    assert wired_client_rx is not None
-    wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
-    assert wired_client_tx is not None
-
-    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired_client_uptime is not None
-
-    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
-    assert wireless_client_rx is not None
-    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
-    assert wireless_client_tx is not None
-
-    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime is not None
+    # Remove wired client
 
     mock_unifi_websocket(
         data={
             "meta": {"message": MESSAGE_CLIENT_REMOVED},
-            "data": [CLIENTS[0]],
+            "data": [wired_client],
         }
     )
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
-
-    wired_client_rx = hass.states.get("sensor.wired_client_name_rx")
-    assert wired_client_rx is None
-    wired_client_tx = hass.states.get("sensor.wired_client_name_tx")
-    assert wired_client_tx is None
-
-    wired_client_uptime = hass.states.get("sensor.wired_client_name_uptime")
-    assert wired_client_uptime is None
-
-    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
-    assert wireless_client_rx is not None
-    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
-    assert wireless_client_tx is not None
-
-    wireless_client_uptime = hass.states.get("sensor.wireless_client_name_uptime")
-    assert wireless_client_uptime is not None
+    assert hass.states.get("sensor.wired_client_rx") is None
+    assert hass.states.get("sensor.wired_client_tx") is None
+    assert hass.states.get("sensor.wired_client_uptime") is None
+    assert hass.states.get("sensor.wireless_client_rx")
+    assert hass.states.get("sensor.wireless_client_tx")
+    assert hass.states.get("sensor.wireless_client_uptime")
