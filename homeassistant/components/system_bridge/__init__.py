@@ -8,12 +8,17 @@ import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_API_KEY, CONF_COMMAND, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -25,13 +30,40 @@ from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["sensor"]
+
+CONF_ARGUMENTS = "arguments"
+CONF_BRIDGE = "bridge"
+
+SERVICE_SEND_COMMAND = "send_command"
+SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BRIDGE): cv.string,
+        vol.Required(CONF_COMMAND): cv.string,
+        vol.Optional(CONF_ARGUMENTS, []): cv.string,
+    }
+)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up the OVO Energy components."""
+    """Set up the System Bridge integration."""
+
+    async def handle_send_command(call):
+        """Handle the service call."""
+        bridge_name = call.data.get(CONF_BRIDGE)
+        _LOGGER.warning(bridge_name)
+
+        _LOGGER.warning(f"{DOMAIN} entries")
+        for entry in hass.data[DOMAIN].items():
+            _LOGGER.warning(entry)
+
+        command = call.data.get(CONF_COMMAND)
+        _LOGGER.warning(command)
+        arguments = call.data.get(CONF_ARGUMENTS)
+        _LOGGER.warning(arguments)
+
+    hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, handle_send_command)
+
     return True
 
 

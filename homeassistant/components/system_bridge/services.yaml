@@ -1,0 +1,13 @@
+send_command:
+  description: Sends a command to the server.
+  fields:
+    bridge:
+      description: Hostname of the server to send the command to.
+      example: "homeassistant.local"
+    command:
+      description: Command to send to the server.
+      example: "python"
+    arguments:
+      description: Arguments to send to the server.
+      example:
+        - "-V"
