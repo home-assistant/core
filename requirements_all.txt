@@ -245,7 +245,7 @@ alpha_vantage==2.3.1
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.7.0
+amcrest==1.7.1
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.57
@@ -2388,7 +2388,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.4.0
 
 # homeassistant.components.zha
-zigpy==0.32.0
+zigpy==0.33.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2
