@@ -62,7 +62,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         arguments = call.data.get(CONF_ARGUMENTS)
         _LOGGER.warning(arguments)
 
-    hass.services.register(DOMAIN, SERVICE_SEND_COMMAND, handle_send_command)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SEND_COMMAND,
+        handle_send_command,
+        schema=SERVICE_SEND_COMMAND_SCHEMA,
+    )
 
     return True
 
