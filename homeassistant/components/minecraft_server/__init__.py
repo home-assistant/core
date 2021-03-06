@@ -20,8 +20,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import helpers
-from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX, CONF_SERVER_TYPE, CONF_SERVER_TYPE_BEDROCK
-
+from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX, CONF_SERVER_TYPE, CONF_SERVER_TYPE_BEDROCK, CONF_SERVER_TYPE_JAVA
 
 
 PLATFORMS = ["binary_sensor", "sensor"]
@@ -316,3 +315,22 @@ class MinecraftServerEntity(Entity):
     def _update_callback(self) -> None:
         """Triggers update of properties after receiving signal from server."""
         self.async_schedule_update_ha_state(force_refresh=True)
+
+async def async_migrate_entry(hass, config_entry: ConfigEntry):
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1:
+        new = {
+            CONF_NAME: config_entry.data[CONF_NAME],
+            CONF_HOST: config_entry.data[CONF_HOST],
+            CONF_PORT: config_entry.data[CONF_PORT],
+            CONF_SERVER_TYPE: CONF_SERVER_TYPE_JAVA,
+            }
+                
+        config_entry.data = {**new}
+        config_entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
+
+    return True
