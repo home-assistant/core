@@ -2,7 +2,7 @@
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, Dict, Generator, List, Optional, Union, cast
+from typing import Any, Deque, Dict, Generator, List, Optional, Union, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -44,7 +44,9 @@ class TraceElement:
 
 # Context variables for tracing
 # Current trace
-trace_cv: ContextVar[Optional[Dict[str, Any]]] = ContextVar("trace_cv", default=None)
+trace_cv: ContextVar[Optional[Dict[str, Deque[TraceElement]]]] = ContextVar(
+    "trace_cv", default=None
+)
 # Stack of TraceElements
 trace_stack_cv: ContextVar[Optional[List[TraceElement]]] = ContextVar(
     "trace_stack_cv", default=None
@@ -114,7 +116,7 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
-def trace_get(clear: bool = True) -> Optional[Dict[str, TraceElement]]:
+def trace_get(clear: bool = True) -> Optional[Dict[str, Deque[TraceElement]]]:
     """Return the current trace."""
     if clear:
         trace_clear()
