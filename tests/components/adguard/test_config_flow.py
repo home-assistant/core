@@ -16,8 +16,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
@@ -29,7 +31,7 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def test_show_authenticate_form(hass):
+async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     flow = config_flow.AdGuardHomeFlowHandler()
     flow.hass = hass
@@ -39,7 +41,9 @@ async def test_show_authenticate_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass, aioclient_mock):
+async def test_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on AdGuard Home connection error."""
     aioclient_mock.get(
         f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
@@ -57,7 +61,9 @@ async def test_connection_error(hass, aioclient_mock):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_full_flow_implementation(hass, aioclient_mock):
+async def test_full_flow_implementation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.get(
         f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
@@ -84,7 +90,7 @@ async def test_full_flow_implementation(hass, aioclient_mock):
     assert result["data"][CONF_VERIFY_SSL] == FIXTURE_USER_INPUT[CONF_VERIFY_SSL]
 
 
-async def test_integration_already_exists(hass):
+async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -95,7 +101,7 @@ async def test_integration_already_exists(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_hassio_single_instance(hass):
+async def test_hassio_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
         domain="adguard", data={"host": "mock-adguard", "port": "3000"}
@@ -110,7 +116,7 @@ async def test_hassio_single_instance(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_hassio_update_instance_not_running(hass):
+async def test_hassio_update_instance_not_running(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     entry = MockConfigEntry(
         domain="adguard", data={"host": "mock-adguard", "port": "3000"}
@@ -131,7 +137,9 @@ async def test_hassio_update_instance_not_running(hass):
     assert result["reason"] == "existing_instance_updated"
 
 
-async def test_hassio_update_instance_running(hass, aioclient_mock):
+async def test_hassio_update_instance_running(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we only allow a single config flow."""
     aioclient_mock.get(
         "http://mock-adguard-updated:3000/control/status",
@@ -192,7 +200,9 @@ async def test_hassio_update_instance_running(hass, aioclient_mock):
     assert entry.data["host"] == "mock-adguard-updated"
 
 
-async def test_hassio_confirm(hass, aioclient_mock):
+async def test_hassio_confirm(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we can finish a config flow."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
@@ -220,7 +230,9 @@ async def test_hassio_confirm(hass, aioclient_mock):
     assert result["data"][CONF_VERIFY_SSL]
 
 
-async def test_hassio_connection_error(hass, aioclient_mock):
+async def test_hassio_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show Hass.io confirm form on AdGuard Home connection error."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status", exc=aiohttp.ClientError
