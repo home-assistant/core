@@ -168,7 +168,7 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
-    "_system-bridge._tcp.local.": [
+    "_system-bridge._udp.local.": [
         {
             "domain": "system_bridge"
         }
