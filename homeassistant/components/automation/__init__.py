@@ -1,8 +1,20 @@
 """Allow to set up simple automation rules via the config file."""
 from collections import deque
 from contextlib import contextmanager
+import datetime as dt
 import logging
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Deque,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Union,
+    cast,
+)
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -55,7 +67,7 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.trace import trace_clear, trace_get, trace_path
+from homeassistant.helpers.trace import TraceElement, trace_clear, trace_get, trace_path
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -228,42 +240,48 @@ async def async_setup(hass, config):
 class AutomationTrace:
     """Container for automation trace."""
 
-    def __init__(self, unique_id, config, trigger, context):
+    def __init__(
+        self,
+        unique_id: Optional[str],
+        config: Dict[str, Any],
+        trigger: Dict[str, Any],
+        context: Context,
+    ):
         """Container for automation trace."""
-        self._action_trace = None
-        self._condition_trace = None
-        self._config = config
-        self._context = context
-        self._error = None
-        self._state = "running"
-        self._timestamp_finish = None
-        self._timestamp_start = dt_util.utcnow()
-        self._trigger = trigger
-        self._unique_id = unique_id
-        self._variables = None
+        self._action_trace: Optional[Dict[str, Deque[TraceElement]]] = None
+        self._condition_trace: Optional[Dict[str, Deque[TraceElement]]] = None
+        self._config: Dict[str, Any] = config
+        self._context: Context = context
+        self._error: Optional[Exception] = None
+        self._state: str = "running"
+        self._timestamp_finish: Optional[dt.datetime] = None
+        self._timestamp_start: dt.datetime = dt_util.utcnow()
+        self._trigger: Dict[str, Any] = trigger
+        self._unique_id: Optional[str] = unique_id
+        self._variables: Optional[Dict[str, Any]] = None
 
-    def set_action_trace(self, condition_trace):
+    def set_action_trace(self, trace: Dict[str, Deque[TraceElement]]) -> None:
         """Set action trace."""
-        self._action_trace = condition_trace
+        self._action_trace = trace
 
-    def set_condition_trace(self, condition_trace):
+    def set_condition_trace(self, trace: Dict[str, Deque[TraceElement]]) -> None:
         """Set condition trace."""
-        self._condition_trace = condition_trace
+        self._condition_trace = trace
 
-    def set_error(self, ex):
+    def set_error(self, ex: Exception) -> None:
         """Set error."""
         self._error = ex
 
-    def set_variables(self, variables):
+    def set_variables(self, variables: Dict[str, Any]) -> None:
         """Set variables."""
         self._variables = variables
 
-    def finished(self):
+    def finished(self) -> None:
         """Set finish time."""
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
 
-    def as_dict(self):
+    def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this AutomationTrace."""
 
         action_traces = {}
