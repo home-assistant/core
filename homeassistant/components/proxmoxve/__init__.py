@@ -194,7 +194,9 @@ def create_coordinator_container_vm(
         vm_status = await hass.async_add_executor_job(poll_api)
 
         if vm_status is None:
-            _LOGGER.warning("Vm/Container %s unable to be found", vm_id)
+            _LOGGER.warning(
+                "Vm/Container %s unable to be found in node %s.", vm_id, node_name
+            )
             return None
 
         return parse_api_container_vm(vm_status)
