@@ -3,6 +3,7 @@ import copy
 import unittest
 from unittest.mock import patch
 
+import pytest
 import requests
 
 from homeassistant.components.picnic import const
@@ -73,6 +74,7 @@ DEFAULT_DELIVERY_RESPONSE = {
 }
 
 
+@pytest.mark.usefixtures("hass_storage")
 class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     """Test the Picnic sensor."""
 
@@ -80,7 +82,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         """Set up things to be run when tests are started."""
         self.hass = await async_test_home_assistant(None)
 
-        # Patch the api client and set default responses
+        # Patch the api client
         self.picnic_patcher = patch("homeassistant.components.picnic.PicnicAPI")
         self.picnic_mock = self.picnic_patcher.start()
 
@@ -99,8 +101,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.config_entry.add_to_hass(self.hass)
 
     async def asyncTearDown(self):
-        """Tear down the test setup, stop hass/patchers and remove all config entries."""
-        await self.hass.config_entries.async_remove(self.config_entry.entry_id)
+        """Tear down the test setup, stop hass/patchers."""
         await self.hass.async_stop(force=True)
         self.picnic_patcher.stop()
 
