@@ -21,7 +21,8 @@ from .const import (
     ATTR_API_CAQI_LEVEL,
     CONF_USE_NEAREST,
     DOMAIN,
-    MINIMUM_UPDATE_INTERVAL,
+    MAX_UPDATE_INTERVAL,
+    MIN_UPDATE_INTERVAL,
     NO_AIRLY_SENSORS,
 )
 
@@ -44,9 +45,12 @@ def set_update_interval(instances, requests_remaining):
     )
     minutes_to_midnight = (midnight - now).seconds / 60
     interval = timedelta(
-        minutes=max(
-            ceil(minutes_to_midnight / requests_remaining * instances),
-            MINIMUM_UPDATE_INTERVAL,
+        minutes=min(
+            max(
+                ceil(minutes_to_midnight / requests_remaining * instances),
+                MIN_UPDATE_INTERVAL,
+            ),
+            MAX_UPDATE_INTERVAL,
         )
     )
 
@@ -70,7 +74,7 @@ async def async_setup_entry(hass, config_entry):
 
     websession = async_get_clientsession(hass)
 
-    update_interval = timedelta(minutes=MINIMUM_UPDATE_INTERVAL)
+    update_interval = timedelta(minutes=MIN_UPDATE_INTERVAL)
 
     coordinator = AirlyDataUpdateCoordinator(
         hass, websession, api_key, latitude, longitude, update_interval, use_nearest

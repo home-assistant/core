@@ -24,5 +24,6 @@ DEFAULT_NAME = "Airly"
 DOMAIN = "airly"
 LABEL_ADVICE = "advice"
 MANUFACTURER = "Airly sp. z o.o."
-MINIMUM_UPDATE_INTERVAL = 10
+MAX_UPDATE_INTERVAL = 90
+MIN_UPDATE_INTERVAL = 5
 NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."
