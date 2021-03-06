@@ -115,7 +115,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             if info["uuid"]:
-                await self.async_set_unique_id(info["uuid"])
+                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
                 self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
