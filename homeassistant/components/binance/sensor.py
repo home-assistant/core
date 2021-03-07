@@ -230,14 +230,14 @@ class TotalAssetValue(CoordinatorEntity):
             )
 
         if self._currency == "USDT":
-            return total_usdt_value
+            total_asset_value = total_usdt_value
         else:
             usdt_pair_name = (self._currency + "USDT").upper()
             total_asset_value = total_usdt_value / float(
                 self.coordinator.data[CONF_ASSET_TICKERS][usdt_pair_name]["lastPrice"]
             )
 
-            return total_asset_value
+        return total_asset_value
 
     @property
     def unique_id(self):

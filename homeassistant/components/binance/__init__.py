@@ -127,26 +127,28 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
                             for item in all_tickers
                             if item["symbol"] == usdt_symbol
                         )
-
-                        if usdt_ticker_details:
-                            # If we can find a USDT pair, include it in the dict
-                            balances_dict[balance["asset"]]["USDT"] = {}
-                            balances_dict[balance["asset"]]["USDT"].update(
-                                usdt_ticker_details
-                            )
-                            balances_dict[balance["asset"]]["asset_value_in_usdt"] = (
-                                float(balance["free"]) + float(balance["locked"])
-                            ) * float(usdt_ticker_details["lastPrice"])
                     else:
                         balances_dict[balance["asset"]]["asset_value_in_usdt"] = float(
                             balance["free"]
                         ) + float(balance["locked"])
+
+                    if usdt_ticker_details:
+                        # If we can find a USDT pair, include it in the dict
+                        balances_dict[balance["asset"]]["USDT"] = {}
+                        balances_dict[balance["asset"]]["USDT"].update(
+                            usdt_ticker_details
+                        )
+                        balances_dict[balance["asset"]]["asset_value_in_usdt"] = (
+                            float(balance["free"]) + float(balance["locked"])
+                        ) * float(usdt_ticker_details["lastPrice"])
 
             result_dict["balances"] = balances_dict
 
             open_orders = await binance.get_open_orders()
             if open_orders:
                 result_dict["open_orders"] = open_orders
+            else:
+                result_dict["open_orders"] = []
 
             return result_dict
         except BinanceAPIException as error:
