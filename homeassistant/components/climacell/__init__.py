@@ -6,17 +6,7 @@ from math import ceil
 from typing import Any, Dict, Optional, Union
 
 from pyclimacell import ClimaCellV3, ClimaCellV4
-from pyclimacell.const import (
-    CURRENT,
-    DAILY,
-    FORECAST_DAILY,
-    FORECAST_HOURLY,
-    FORECAST_NOWCAST,
-    FORECASTS,
-    HOURLY,
-    NOWCAST,
-    REALTIME,
-)
+from pyclimacell.const import CURRENT, DAILY, FORECASTS, HOURLY, NOWCAST
 from pyclimacell.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
@@ -56,6 +46,17 @@ from .const import (
     CC_ATTR_VISIBILITY,
     CC_ATTR_WIND_DIRECTION,
     CC_ATTR_WIND_SPEED,
+    CC_V3_ATTR_CONDITION,
+    CC_V3_ATTR_HUMIDITY,
+    CC_V3_ATTR_OZONE,
+    CC_V3_ATTR_PRECIPITATION,
+    CC_V3_ATTR_PRECIPITATION_DAILY,
+    CC_V3_ATTR_PRECIPITATION_PROBABILITY,
+    CC_V3_ATTR_PRESSURE,
+    CC_V3_ATTR_TEMPERATURE,
+    CC_V3_ATTR_VISIBILITY,
+    CC_V3_ATTR_WIND_DIRECTION,
+    CC_V3_ATTR_WIND_SPEED,
     CONF_TIMESTEP,
     DEFAULT_FORECAST_TYPE,
     DEFAULT_TIMESTEP,
@@ -240,20 +241,51 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             if self._api_version == 3:
                 data[CURRENT] = await self._api.realtime(
-                    self._api.available_fields(REALTIME)
+                    [
+                        CC_V3_ATTR_TEMPERATURE,
+                        CC_V3_ATTR_HUMIDITY,
+                        CC_V3_ATTR_PRESSURE,
+                        CC_V3_ATTR_WIND_SPEED,
+                        CC_V3_ATTR_WIND_DIRECTION,
+                        CC_V3_ATTR_CONDITION,
+                        CC_V3_ATTR_VISIBILITY,
+                        CC_V3_ATTR_OZONE,
+                    ]
                 )
                 data[FORECASTS][HOURLY] = await self._api.forecast_hourly(
-                    self._api.available_fields(FORECAST_HOURLY),
+                    [
+                        CC_V3_ATTR_TEMPERATURE,
+                        CC_V3_ATTR_WIND_SPEED,
+                        CC_V3_ATTR_WIND_DIRECTION,
+                        CC_V3_ATTR_CONDITION,
+                        CC_V3_ATTR_PRECIPITATION,
+                        CC_V3_ATTR_PRECIPITATION_PROBABILITY,
+                    ],
                     None,
                     timedelta(hours=24),
                 )
 
                 data[FORECASTS][DAILY] = await self._api.forecast_daily(
-                    self._api.available_fields(FORECAST_DAILY), None, timedelta(days=14)
+                    [
+                        CC_V3_ATTR_TEMPERATURE,
+                        CC_V3_ATTR_WIND_SPEED,
+                        CC_V3_ATTR_WIND_DIRECTION,
+                        CC_V3_ATTR_CONDITION,
+                        CC_V3_ATTR_PRECIPITATION_DAILY,
+                        CC_V3_ATTR_PRECIPITATION_PROBABILITY,
+                    ],
+                    None,
+                    timedelta(days=14),
                 )
 
                 data[FORECASTS][NOWCAST] = await self._api.forecast_nowcast(
-                    self._api.available_fields(FORECAST_NOWCAST),
+                    [
+                        CC_V3_ATTR_TEMPERATURE,
+                        CC_V3_ATTR_WIND_SPEED,
+                        CC_V3_ATTR_WIND_DIRECTION,
+                        CC_V3_ATTR_CONDITION,
+                        CC_V3_ATTR_PRECIPITATION,
+                    ],
                     None,
                     timedelta(
                         minutes=min(300, self._config_entry.options[CONF_TIMESTEP] * 30)

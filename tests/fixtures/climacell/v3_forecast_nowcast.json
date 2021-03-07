@@ -3,138 +3,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.2,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.2,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 7.07,
+      "value": 44.14,
       "units": "F"
     },
     "wind_speed": {
-      "value": 8.84,
+      "value": 9.58,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.32,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3389,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.92,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 320.22,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:48:06.409Z"
+      "value": "2021-03-07T18:54:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -144,138 +29,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.23,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.23,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 7.05,
+      "value": 44.17,
       "units": "F"
     },
     "wind_speed": {
-      "value": 8.87,
+      "value": 9.59,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.32,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3387,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.86,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 320.22,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:49:06.409Z"
+      "value": "2021-03-07T18:55:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -285,138 +55,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.27,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.27,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 7.03,
+      "value": 44.19,
       "units": "F"
     },
     "wind_speed": {
-      "value": 8.91,
+      "value": 9.6,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.32,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3386,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.8,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 320.22,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:50:06.409Z"
+      "value": "2021-03-07T18:56:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -426,138 +81,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.3,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.3,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 7,
+      "value": 44.22,
       "units": "F"
     },
     "wind_speed": {
-      "value": 8.95,
+      "value": 9.61,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.32,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3384,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.74,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 320.22,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:51:06.409Z"
+      "value": "2021-03-07T18:57:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -567,138 +107,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.34,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.34,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.98,
+      "value": 44.24,
       "units": "F"
     },
     "wind_speed": {
-      "value": 8.99,
+      "value": 9.62,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.31,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3383,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.68,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 320.22,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:52:06.409Z"
+      "value": "2021-03-07T18:58:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -708,138 +133,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.37,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.37,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.96,
+      "value": 44.27,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.03,
+      "value": 9.64,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.31,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3381,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.62,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 320.22,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:53:06.409Z"
+      "value": "2021-03-07T18:59:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -849,138 +159,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.4,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.4,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.93,
+      "value": 44.29,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.07,
+      "value": 9.65,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.31,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.338,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.56,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:54:06.409Z"
+      "value": "2021-03-07T19:00:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -990,138 +185,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.44,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.44,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.91,
+      "value": 44.31,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.11,
+      "value": 9.64,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.31,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3378,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.5,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:55:06.409Z"
+      "value": "2021-03-07T19:01:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1131,138 +211,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.47,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.47,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.88,
+      "value": 44.33,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.14,
+      "value": 9.63,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.31,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3377,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.44,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:56:06.409Z"
+      "value": "2021-03-07T19:02:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1272,138 +237,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.5,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.5,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.86,
+      "value": 44.34,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.18,
+      "value": 9.63,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.3,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3375,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.38,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:57:06.409Z"
+      "value": "2021-03-07T19:03:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1413,138 +263,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.54,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.54,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.84,
+      "value": 44.36,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.22,
+      "value": 9.62,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.3,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3374,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.32,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:58:06.409Z"
+      "value": "2021-03-07T19:04:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1554,138 +289,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.57,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.57,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.81,
+      "value": 44.38,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.26,
+      "value": 9.61,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.3,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3372,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 800.5986,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.26,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.38,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T17:59:06.409Z"
+      "value": "2021-03-07T19:05:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1695,138 +315,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.6,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.6,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.79,
+      "value": 44.4,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.29,
+      "value": 9.61,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.3,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3371,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.2,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:00:06.409Z"
+      "value": "2021-03-07T19:06:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1836,138 +341,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.63,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.63,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.74,
+      "value": 44.41,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.28,
+      "value": 9.6,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.3,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3371,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.14,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:01:06.409Z"
+      "value": "2021-03-07T19:07:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -1977,138 +367,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.65,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.65,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.7,
+      "value": 44.43,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.27,
+      "value": 9.6,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3371,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.07,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:02:06.409Z"
+      "value": "2021-03-07T19:08:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2118,138 +393,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.68,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.68,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.66,
+      "value": 44.45,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.27,
+      "value": 9.59,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3371,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 23.01,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:03:06.409Z"
+      "value": "2021-03-07T19:09:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2259,138 +419,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.71,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.71,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.61,
+      "value": 44.46,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.26,
+      "value": 9.58,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.94,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:04:06.409Z"
+      "value": "2021-03-07T19:10:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2400,138 +445,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.73,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.73,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.57,
+      "value": 44.48,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.25,
+      "value": 9.58,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.88,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:05:06.409Z"
+      "value": "2021-03-07T19:11:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2541,138 +471,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.76,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.76,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.53,
+      "value": 44.5,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.24,
+      "value": 9.57,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.81,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:06:06.409Z"
+      "value": "2021-03-07T19:12:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2682,138 +497,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.78,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.78,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.49,
+      "value": 44.51,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.23,
+      "value": 9.57,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.75,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:07:06.409Z"
+      "value": "2021-03-07T19:13:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2823,138 +523,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.81,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.81,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.44,
+      "value": 44.53,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.22,
+      "value": 9.56,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.29,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.68,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:08:06.409Z"
+      "value": "2021-03-07T19:14:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -2964,138 +549,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.83,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.83,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.4,
+      "value": 44.55,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.21,
+      "value": 9.55,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.28,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.62,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:09:06.409Z"
+      "value": "2021-03-07T19:15:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3105,138 +575,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.86,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.86,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.36,
+      "value": 44.56,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.2,
+      "value": 9.55,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.28,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.55,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:10:06.409Z"
+      "value": "2021-03-07T19:16:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3246,138 +601,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.88,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.88,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.31,
+      "value": 44.58,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.19,
+      "value": 9.54,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.28,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.49,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:11:06.409Z"
+      "value": "2021-03-07T19:17:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3387,138 +627,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.91,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.91,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.27,
+      "value": 44.6,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.18,
+      "value": 9.54,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.28,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.43,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:12:06.409Z"
+      "value": "2021-03-07T19:18:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3528,138 +653,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.93,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.93,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.23,
+      "value": 44.61,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.17,
+      "value": 9.53,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.28,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.337,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.36,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:13:06.409Z"
+      "value": "2021-03-07T19:19:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3669,138 +679,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.96,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.96,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.18,
+      "value": 44.63,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.16,
+      "value": 9.52,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.28,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3369,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.3,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:14:06.409Z"
+      "value": "2021-03-07T19:20:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3810,138 +705,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 43.99,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 43.99,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.14,
+      "value": 44.65,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.15,
+      "value": 9.52,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.27,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3369,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.23,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:15:06.409Z"
+      "value": "2021-03-07T19:21:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -3951,138 +731,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 44.01,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 44.01,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.1,
+      "value": 44.66,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.15,
+      "value": 9.51,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.27,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3369,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.17,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:16:06.409Z"
+      "value": "2021-03-07T19:22:06.493Z"
     },
     "weather_code": {
       "value": "clear"
@@ -4092,138 +757,23 @@
     "lat": 38.90694,
     "lon": -77.03012,
     "temp": {
-      "value": 44.04,
-      "units": "F"
-    },
-    "feels_like": {
-      "value": 44.04,
-      "units": "F"
-    },
-    "dewpoint": {
-      "value": 6.05,
+      "value": 44.68,
       "units": "F"
     },
     "wind_speed": {
-      "value": 9.14,
+      "value": 9.51,
       "units": "mph"
-    },
-    "wind_gust": {
-      "value": 13.27,
-      "units": "mph"
-    },
-    "baro_pressure": {
-      "value": 30.3369,
-      "units": "inHg"
-    },
-    "visibility": {
-      "value": 6.21371,
-      "units": "mi"
     },
     "precipitation": {
       "value": 0,
       "units": "in/hr"
     },
-    "cloud_cover": {
-      "value": 0,
-      "units": "%"
-    },
-    "cloud_ceiling": {
-      "value": null,
-      "units": "ft"
-    },
-    "cloud_base": {
-      "value": null,
-      "units": "ft"
-    },
-    "surface_shortwave_radiation": {
-      "value": 787.18353,
-      "units": "w/sqm"
-    },
-    "humidity": {
-      "value": 22.1,
-      "units": "%"
-    },
     "wind_direction": {
-      "value": 315.14,
+      "value": 326.14,
       "units": "degrees"
     },
-    "precipitation_type": {
-      "value": "none"
-    },
-    "sunrise": {
-      "value": "2021-03-07T11:30:42.625Z"
-    },
-    "sunset": {
-      "value": "2021-03-07T23:06:57.532Z"
-    },
-    "epa_aqi": {
-      "value": 38.39714
-    },
-    "epa_primary_pollutant": {
-      "value": "o3"
-    },
-    "china_aqi": {
-      "value": 22.407887
-    },
-    "china_primary_pollutant": {
-      "value": "o3"
-    },
-    "pm25": {
-      "value": 4.4674377,
-      "units": "\u00b5g/m3"
-    },
-    "pm10": {
-      "value": 6.5192575,
-      "units": "\u00b5g/m3"
-    },
-    "o3": {
-      "value": 43.26963,
-      "units": "ppb"
-    },
-    "no2": {
-      "value": 2.0680292,
-      "units": "ppb"
-    },
-    "co": {
-      "value": 0.15218769,
-      "units": "ppm"
-    },
-    "so2": {
-      "value": 0.9747729,
-      "units": "ppb"
-    },
-    "epa_health_concern": {
-      "value": "Good"
-    },
-    "china_health_concern": {
-      "value": "Good"
-    },
-    "road_risk_score": {
-      "value": "Low risk",
-      "units": "ClimaCell Road Risk Score"
-    },
-    "road_risk_confidence": {
-      "value": 100,
-      "units": "%"
-    },
-    "road_risk_conditions": {
-      "value": "Clear",
-      "units": "ClimaCell Road Risk Conditions"
-    },
-    "pollen_tree": {
-      "value": 1,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_weed": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
-    "pollen_grass": {
-      "value": 0,
-      "units": "Climacell Pollen Index"
-    },
     "observation_time": {
-      "value": "2021-03-07T18:17:06.409Z"
+      "value": "2021-03-07T19:23:06.493Z"
     },
     "weather_code": {
       "value": "clear"
