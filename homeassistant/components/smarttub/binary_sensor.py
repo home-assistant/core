@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 
-from .const import DOMAIN, SMARTTUB_CONTROLLER
+from .const import ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(SmartTubOnline(controller.coordinator, spa))
         entities.extend(
             SmartTubReminder(controller.coordinator, spa, reminder)
-            for reminder in controller.coordinator.data[spa.id]["reminders"].values()
+            for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
 
     async_add_entities(entities)

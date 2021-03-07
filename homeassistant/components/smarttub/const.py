@@ -20,3 +20,5 @@ DEFAULT_MAX_TEMP = 40
 DEFAULT_LIGHT_EFFECT = "purple"
 # default to 50% brightness
 DEFAULT_LIGHT_BRIGHTNESS = 128
+
+ATTR_REMINDERS = "reminders"
