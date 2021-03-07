@@ -5,9 +5,6 @@ from aiohttp import ClientConnectorError, ClientResponseError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.kmtronic.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
-
-from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -121,35 +118,3 @@ async def test_form_unknown_error(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_unload_config_entry(hass, aioclient_mock):
-    """Test entry unloading."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.1.1.1",
-            "username": "admin",
-            "password": "admin",
-            "reverse": False,
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    aioclient_mock.get(
-        "http://1.1.1.1/status.xml",
-        text="<response><relay0>0</relay0><relay1>0</relay1></response>",
-    )
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    config_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(config_entries) == 1
-    assert config_entries[0] is config_entry
-    assert config_entry.state == ENTRY_STATE_LOADED
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state == ENTRY_STATE_NOT_LOADED
