@@ -1,5 +1,4 @@
 """Zerproc light platform."""
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Callable, List, Optional
@@ -30,16 +29,6 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
-async def connect_light(light: pyzerproc.Light) -> Optional[pyzerproc.Light]:
-    """Return the given light if it connects successfully."""
-    try:
-        await light.connect()
-    except pyzerproc.ZerprocException:
-        _LOGGER.debug("Unable to connect to '%s'", light.address, exc_info=True)
-        return None
-    return light
-
-
 async def discover_entities(hass: HomeAssistant) -> List[Entity]:
     """Attempt to discover new lights."""
     lights = await pyzerproc.discover()
@@ -50,14 +39,9 @@ async def discover_entities(hass: HomeAssistant) -> List[Entity]:
     ]
 
     entities = []
-    connected_lights = filter(
-        None, await asyncio.gather(*(connect_light(light) for light in new_lights))
-    )
-    for light in connected_lights:
-        # Double-check the light hasn't been added in the meantime
-        if light.address not in hass.data[DOMAIN]["addresses"]:
-            hass.data[DOMAIN]["addresses"].add(light.address)
-            entities.append(ZerprocLight(light))
+    for light in new_lights:
+        hass.data[DOMAIN]["addresses"].add(light.address)
+        entities.append(ZerprocLight(light))
 
     return entities
 
@@ -68,11 +52,6 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Zerproc light devices."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if "addresses" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["addresses"] = set()
-
     warned = False
 
     async def discover(*args):
@@ -120,7 +99,7 @@ class ZerprocLight(LightEntity):
             await self._light.disconnect()
         except pyzerproc.ZerprocException:
             _LOGGER.debug(
-                "Exception disconnected from %s", self.entity_id, exc_info=True
+                "Exception disconnecting from %s", self._light.address, exc_info=True
             )
 
     @property
@@ -198,11 +177,11 @@ class ZerprocLight(LightEntity):
             state = await self._light.get_state()
         except pyzerproc.ZerprocException:
             if self._available:
-                _LOGGER.warning("Unable to connect to %s", self.entity_id)
+                _LOGGER.warning("Unable to connect to %s", self._light.address)
             self._available = False
             return
         if self._available is False:
-            _LOGGER.info("Reconnected to %s", self.entity_id)
+            _LOGGER.info("Reconnected to %s", self._light.address)
             self._available = True
         self._is_on = state.is_on
         hsv = color_util.color_RGB_to_hsv(*state.color)

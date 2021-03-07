@@ -31,7 +31,6 @@ from homeassistant.const import (
     ATTR_RESTORED,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
-    EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
@@ -157,10 +156,6 @@ class EntityRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self.hass.bus.async_listen(
             EVENT_DEVICE_REGISTRY_UPDATED, self.async_device_modified
-        )
-        self.hass.bus.async_listen(
-            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED,
-            self.async_config_entry_disabled_by_changed,
         )
 
     @callback
@@ -364,40 +359,6 @@ class EntityRegistry:
             self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
 
     @callback
-    def async_config_entry_disabled_by_changed(self, event: Event) -> None:
-        """Handle a config entry being disabled or enabled.
-
-        Disable entities in the registry that are associated to a config entry when
-        the config entry is disabled.
-        """
-        config_entry = self.hass.config_entries.async_get_entry(
-            event.data["config_entry_id"]
-        )
-
-        # The config entry may be deleted already if the event handling is late
-        if not config_entry:
-            return
-
-        if not config_entry.disabled_by:
-            entities = async_entries_for_config_entry(
-                self, event.data["config_entry_id"]
-            )
-            for entity in entities:
-                if entity.disabled_by != DISABLED_CONFIG_ENTRY:
-                    continue
-                self.async_update_entity(entity.entity_id, disabled_by=None)
-            return
-
-        entities = async_entries_for_config_entry(self, event.data["config_entry_id"])
-        for entity in entities:
-            if entity.disabled:
-                # Entity already disabled, do not overwrite
-                continue
-            self.async_update_entity(
-                entity.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
-            )
-
-    @callback
     def async_update_entity(
         self,
         entity_id: str,
@@ -443,7 +404,8 @@ class EntityRegistry:
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
-        changes = {}
+        new_values = {}  # Dict with new key/value pairs
+        old_values = {}  # Dict with old key/value pairs
 
         for attr_name, value in (
             ("name", name),
@@ -460,7 +422,8 @@ class EntityRegistry:
             ("original_icon", original_icon),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
-                changes[attr_name] = value
+                new_values[attr_name] = value
+                old_values[attr_name] = getattr(old, attr_name)
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
@@ -473,7 +436,8 @@ class EntityRegistry:
                 raise ValueError("New entity ID should be same domain")
 
             self.entities.pop(entity_id)
-            entity_id = changes["entity_id"] = new_entity_id
+            entity_id = new_values["entity_id"] = new_entity_id
+            old_values["entity_id"] = old.entity_id
 
         if new_unique_id is not UNDEFINED:
             conflict_entity_id = self.async_get_entity_id(
@@ -484,18 +448,19 @@ class EntityRegistry:
                     f"Unique id '{new_unique_id}' is already in use by "
                     f"'{conflict_entity_id}'"
                 )
-            changes["unique_id"] = new_unique_id
+            new_values["unique_id"] = new_unique_id
+            old_values["unique_id"] = old.unique_id
 
-        if not changes:
+        if not new_values:
             return old
 
         self._remove_index(old)
-        new = attr.evolve(old, **changes)
+        new = attr.evolve(old, **new_values)
         self._register_entry(new)
 
         self.async_schedule_save()
 
-        data = {"action": "update", "entity_id": entity_id, "changes": list(changes)}
+        data = {"action": "update", "entity_id": entity_id, "changes": old_values}
 
         if old.entity_id != entity_id:
             data["old_entity_id"] = old.entity_id
@@ -668,6 +633,36 @@ def async_entries_for_config_entry(
         for entry in registry.entities.values()
         if entry.config_entry_id == config_entry_id
     ]
+
+
+@callback
+def async_config_entry_disabled_by_changed(
+    registry: EntityRegistry, config_entry: "ConfigEntry"
+) -> None:
+    """Handle a config entry being disabled or enabled.
+
+    Disable entities in the registry that are associated with a config entry when
+    the config entry is disabled, enable entities in the registry that are associated
+    with a config entry when the config entry is enabled and the entities are marked
+    DISABLED_CONFIG_ENTRY.
+    """
+
+    entities = async_entries_for_config_entry(registry, config_entry.entry_id)
+
+    if not config_entry.disabled_by:
+        for entity in entities:
+            if entity.disabled_by != DISABLED_CONFIG_ENTRY:
+                continue
+            registry.async_update_entity(entity.entity_id, disabled_by=None)
+        return
+
+    for entity in entities:
+        if entity.disabled:
+            # Entity already disabled, do not overwrite
+            continue
+        registry.async_update_entity(
+            entity.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
+        )
 
 
 async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:

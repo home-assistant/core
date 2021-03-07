@@ -1,5 +1,6 @@
 """Helpers to execute scripts."""
 import asyncio
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from functools import partial
 import itertools
@@ -63,6 +64,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv, service, template
+from homeassistant.helpers.condition import trace_condition_function
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trigger import (
@@ -72,6 +74,17 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
+
+from .trace import (
+    TraceElement,
+    trace_append_element,
+    trace_path,
+    trace_path_get,
+    trace_set_result,
+    trace_stack_cv,
+    trace_stack_pop,
+    trace_stack_push,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -96,7 +109,6 @@ DEFAULT_MAX_EXCEEDED = "WARNING"
 
 ATTR_CUR = "current"
 ATTR_MAX = "max"
-ATTR_MODE = "mode"
 
 DATA_SCRIPTS = "helpers.script"
 
@@ -106,6 +118,30 @@ _LOG_EXCEPTION = logging.ERROR + 1
 _TIMEOUT_MSG = "Timeout reached, abort script."
 
 _SHUTDOWN_MAX_WAIT = 60
+
+
+ACTION_TRACE_NODE_MAX_LEN = 20  # Max the length of a trace node for repeated actions
+
+
+def action_trace_append(variables, path):
+    """Append a TraceElement to trace[path]."""
+    trace_element = TraceElement(variables)
+    trace_append_element(trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
+    return trace_element
+
+
+@contextmanager
+def trace_action(variables):
+    """Trace action execution."""
+    trace_element = action_trace_append(variables, trace_path_get())
+    trace_stack_push(trace_stack_cv, trace_element)
+    try:
+        yield trace_element
+    except Exception as ex:  # pylint: disable=broad-except
+        trace_element.set_error(ex)
+        raise ex
+    finally:
+        trace_stack_pop(trace_stack_cv)
 
 
 def make_script_schema(schema, default_script_mode, extra=vol.PREVENT_EXTRA):
@@ -258,16 +294,16 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
-        try:
-            await getattr(
-                self, f"_async_{cv.determine_script_action(self._action)}_step"
-            )()
-        except Exception as ex:
-            if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
-                self._log_exceptions or log_exceptions
-            ):
-                self._log_exception(ex)
-            raise
+        with trace_path(str(self._step)), trace_action(None):
+            try:
+                handler = f"_async_{cv.determine_script_action(self._action)}_step"
+                await getattr(self, handler)()
+            except Exception as ex:
+                if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
+                    self._log_exceptions or log_exceptions
+                ):
+                    self._log_exception(ex)
+                raise
 
     def _finish(self) -> None:
         self._script._runs.remove(self)  # pylint: disable=protected-access
@@ -514,14 +550,34 @@ class _ScriptRun:
         )
         cond = await self._async_get_condition(self._action)
         try:
-            check = cond(self._hass, self._variables)
+            with trace_path("condition"):
+                check = cond(self._hass, self._variables)
         except exceptions.ConditionError as ex:
             _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
             check = False
 
         self._log("Test condition %s: %s", self._script.last_action, check)
+        trace_set_result(result=check)
         if not check:
             raise _StopScript
+
+    def _test_conditions(self, conditions, name):
+        @trace_condition_function
+        def traced_test_conditions(hass, variables):
+            try:
+                with trace_path("conditions"):
+                    for idx, cond in enumerate(conditions):
+                        with trace_path(str(idx)):
+                            if not cond(hass, variables):
+                                return False
+            except exceptions.ConditionError as ex:
+                _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
+                return None
+
+            return True
+
+        result = traced_test_conditions(self._hass, self._variables)
+        return result
 
     async def _async_repeat_step(self):
         """Repeat a sequence."""
@@ -541,7 +597,8 @@ class _ScriptRun:
 
         async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
-            await self._async_run_script(script)
+            with trace_path(str(self._step)):
+                await self._async_run_script(script)
 
         if CONF_COUNT in repeat:
             count = repeat[CONF_COUNT]
@@ -570,9 +627,9 @@ class _ScriptRun:
             for iteration in itertools.count(1):
                 set_repeat_var(iteration)
                 try:
-                    if self._stop.is_set() or not all(
-                        cond(self._hass, self._variables) for cond in conditions
-                    ):
+                    if self._stop.is_set():
+                        break
+                    if not self._test_conditions(conditions, "while"):
                         break
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
@@ -588,9 +645,9 @@ class _ScriptRun:
                 set_repeat_var(iteration)
                 await async_run_sequence(iteration)
                 try:
-                    if self._stop.is_set() or all(
-                        cond(self._hass, self._variables) for cond in conditions
-                    ):
+                    if self._stop.is_set():
+                        break
+                    if self._test_conditions(conditions, "until") in [True, None]:
                         break
                 except exceptions.ConditionError as ex:
                     _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
@@ -606,18 +663,20 @@ class _ScriptRun:
         # pylint: disable=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
-        for conditions, script in choose_data["choices"]:
-            try:
-                if all(
-                    condition(self._hass, self._variables) for condition in conditions
-                ):
-                    await self._async_run_script(script)
-                    return
-            except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+        for idx, (conditions, script) in enumerate(choose_data["choices"]):
+            with trace_path(str(idx)):
+                try:
+                    if self._test_conditions(conditions, "choose"):
+                        trace_set_result(choice=idx)
+                        await self._async_run_script(script)
+                        return
+                except exceptions.ConditionError as ex:
+                    _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
         if choose_data["default"]:
-            await self._async_run_script(choose_data["default"])
+            trace_set_result(choice="default")
+            with trace_path("default"):
+                await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):
         """Wait for a trigger event."""

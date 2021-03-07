@@ -202,7 +202,6 @@ CONF_ZONE = "zone"
 # #### EVENTS ####
 EVENT_CALL_SERVICE = "call_service"
 EVENT_COMPONENT_LOADED = "component_loaded"
-EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED = "config_entry_disabled_by_updated"
 EVENT_CORE_CONFIG_UPDATE = "core_config_updated"
 EVENT_HOMEASSISTANT_CLOSE = "homeassistant_close"
 EVENT_HOMEASSISTANT_START = "homeassistant_start"
@@ -220,6 +219,8 @@ EVENT_TIME_CHANGED = "time_changed"
 
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = "battery"
+DEVICE_CLASS_CO = "carbon_monoxide"
+DEVICE_CLASS_CO2 = "carbon_dioxide"
 DEVICE_CLASS_HUMIDITY = "humidity"
 DEVICE_CLASS_ILLUMINANCE = "illuminance"
 DEVICE_CLASS_SIGNAL_STRENGTH = "signal_strength"

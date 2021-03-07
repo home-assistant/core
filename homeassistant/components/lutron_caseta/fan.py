@@ -25,7 +25,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Adds fan controllers from the Caseta bridge associated with the config_entry
     as fan entities.
     """
-
     entities = []
     data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data[BRIDGE_LEAP]
