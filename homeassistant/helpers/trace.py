@@ -25,7 +25,7 @@ class TraceElement:
         for key, value in variables.items():
             if key not in last_variables or last_variables[key] != value:
                 changed_variables[key] = value
-        self._variables = TraceElement(changed_variables)
+        self._variables = changed_variables
 
     def __repr__(self) -> str:
         """Container for trace data."""
