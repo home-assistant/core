@@ -30,11 +30,8 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from . import DOMAIN
 from .const import (
     CONF_FLOOR_TEMP,
-    CONF_OVRD_MODE_CONSTANT,
-    CONF_OVRD_MODE_TEMPORARY,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
-    CONF_SETPOINT_OVRD_MODE,
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
 )
@@ -72,7 +69,6 @@ class OpenThermClimate(ClimateEntity):
         self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
         self.temp_read_precision = options.get(CONF_READ_PRECISION)
         self.temp_set_precision = options.get(CONF_SET_PRECISION)
-        self.setpoint_ovrd_mode = options.get(CONF_SETPOINT_OVRD_MODE)
         self._available = False
         self._current_operation = None
         self._current_temperature = None
@@ -92,7 +88,6 @@ class OpenThermClimate(ClimateEntity):
         self.floor_temp = entry.options[CONF_FLOOR_TEMP]
         self.temp_read_precision = entry.options[CONF_READ_PRECISION]
         self.temp_set_precision = entry.options[CONF_SET_PRECISION]
-        self.setpoint_ovrd_mode = entry.options[CONF_SETPOINT_OVRD_MODE]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self):
@@ -275,14 +270,9 @@ class OpenThermClimate(ClimateEntity):
             temp = float(kwargs[ATTR_TEMPERATURE])
             if temp == self.target_temperature:
                 return
-            if self.setpoint_ovrd_mode == CONF_OVRD_MODE_TEMPORARY:
-                self._new_target_temperature = (
-                    await self._gateway.gateway.set_target_temp(temp, True)
-                )
-            if self.setpoint_ovrd_mode == CONF_OVRD_MODE_CONSTANT:
-                self._new_target_temperature = (
-                    await self._gateway.gateway.set_target_temp(temp, False)
-                )
+            self._new_target_temperature = await self._gateway.gateway.set_target_temp(
+                temp
+            )
             self.async_write_ha_state()
 
     @property

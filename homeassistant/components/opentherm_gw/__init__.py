@@ -69,9 +69,6 @@ CLIMATE_SCHEMA = vol.Schema(
         vol.Optional(CONF_SET_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
-        vol.Optional(CONF_SETPOINT_OVRD_MODE, default=CONF_OVRD_MODE_TEMPORARY): vol.In(
-            [CONF_OVRD_MODE_TEMPORARY, CONF_OVRD_MODE_CONSTANT]
-        ),
         vol.Optional(CONF_FLOOR_TEMP, default=False): cv.boolean,
     }
 )
