@@ -10,7 +10,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
-    reverse = entry.data[DATA_REVERSE]
+    reverse = entry.data.get(DATA_REVERSE, False)
     await hub.async_get_relays()
 
     async_add_entities(

@@ -20,7 +20,6 @@ async def test_unload_config_entry(hass, aioclient_mock):
             "host": "1.1.1.1",
             "username": "admin",
             "password": "admin",
-            "reverse": False,
         },
     )
     config_entry.add_to_hass(hass)
