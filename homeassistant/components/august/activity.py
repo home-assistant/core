@@ -82,7 +82,7 @@ class ActivityStream(AugustSubscriberMixin):
             limit = ACTIVITY_CATCH_UP_FETCH_LIMIT
 
         for house_id in self._house_ids:
-            await self._async_update_device_activities_for_house_id(house_id, limit)
+            await self._async_update_house_id(house_id, limit)
 
         self._last_update_time = time
 
