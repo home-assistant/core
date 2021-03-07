@@ -24,9 +24,8 @@ class PhoneModemFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name = user_input[CONF_NAME]
             device = user_input[CONF_DEVICE]
 
-            for entry in self._async_current_entries():
-                if device == entry.data.get(CONF_DEVICE):
-                    return self.async_abort(reason="already_configured")
+            await self.async_set_unique_id(device)
+            self._abort_if_unique_id_configured()
             try:
                 api = PhoneModem(device)  # noqa pylint:disable=unused-variable
 
