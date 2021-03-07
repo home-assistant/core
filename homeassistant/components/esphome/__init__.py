@@ -264,8 +264,9 @@ async def _setup_auto_reconnect_logic(
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            logger = _LOGGER.info if tries == 0 else _LOGGER.debug
-            logger(
+            level = logging.WARNING if tries == 0 else logging.DEBUG
+            _LOGGER.log(
+                level,
                 "Can't connect to ESPHome API for %s (%s): %s",
                 entry.unique_id,
                 host,
