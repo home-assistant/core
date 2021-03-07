@@ -392,6 +392,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
                 forecast, CC_V3_ATTR_PRECIPITATION_PROBABILITY
             )
             temp = self._get_cc_value(forecast, CC_V3_ATTR_TEMPERATURE)
+            temp_low = None
             wind_direction = self._get_cc_value(forecast, CC_V3_ATTR_WIND_DIRECTION)
             wind_speed = self._get_cc_value(forecast, CC_V3_ATTR_WIND_SPEED)
 
@@ -415,7 +416,7 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
                         for item in forecast[CC_V3_ATTR_TEMPERATURE]
                         if "min" in item
                     ),
-                    temp,
+                    temp_low,
                 )
             elif self.forecast_type == NOWCAST:
                 # Precipitation is forecasted in CONF_TIMESTEP increments but in a

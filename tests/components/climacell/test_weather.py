@@ -34,6 +34,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import State
+from homeassistant.helpers.entity_registry import async_get
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
@@ -41,6 +42,17 @@ from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def _enable_entity(hass: HomeAssistantType, entity_name: str) -> None:
+    """Enable disabled entity."""
+    ent_reg = async_get(hass)
+    entry = ent_reg.async_get(entity_name)
+    updated_entry = ent_reg.async_update_entity(
+        entry.entity_id, **{"disabled_by": None}
+    )
+    assert updated_entry != entry
+    assert updated_entry.disabled is False
 
 
 async def _setup(hass: HomeAssistantType, config: Dict[str, Any]) -> State:
@@ -55,7 +67,11 @@ async def _setup(hass: HomeAssistantType, config: Dict[str, Any]) -> State:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 1
+    await _enable_entity(hass, "weather.climacell_hourly")
+    await _enable_entity(hass, "weather.climacell_nowcast")
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(WEATHER_DOMAIN)) == 3
 
     return hass.states.get("weather.climacell_daily")
 
