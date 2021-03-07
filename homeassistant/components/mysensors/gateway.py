@@ -31,7 +31,12 @@ from .const import (
     GatewayId,
 )
 from .handler import HANDLERS
-from .helpers import discover_mysensors_platform, validate_child, validate_node
+from .helpers import (
+    discover_mysensors_platform,
+    on_unload,
+    validate_child,
+    validate_node,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -260,8 +265,8 @@ async def _discover_persistent_devices(
 
 async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     """Stop the gateway."""
-    connect_task = hass.data[DOMAIN].get(
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
+    connect_task = hass.data[DOMAIN].pop(
+        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()
@@ -288,7 +293,12 @@ async def _gw_start(
     async def stop_this_gw(_: Event):
         await gw_stop(hass, entry, gateway)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw)
+    await on_unload(
+        hass,
+        entry.entry_id,
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
+    )
+
     if entry.data[CONF_DEVICE] == MQTT_COMPONENT:
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
