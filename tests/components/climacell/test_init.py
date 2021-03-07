@@ -12,7 +12,7 @@ from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import CONF_API_VERSION
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import MIN_CONFIG, V1_ENTRY_DATA
+from .const import API_V3_ENTRY_DATA, MIN_CONFIG, V1_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +46,7 @@ async def test_v3_load_and_unload(
     climacell_config_entry_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading v3 entry."""
-    data = _get_config_schema(hass)({**MIN_CONFIG, CONF_API_VERSION: 3})
+    data = _get_config_schema(hass)(API_V3_ENTRY_DATA)
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data=data,

@@ -239,7 +239,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
             forecast_dt = dt_util.parse_datetime(forecast[CC_ATTR_TIMESTAMP])
 
             # Throw out past data
-            if forecast_dt < dt_util.utcnow():
+            if forecast_dt.date() < dt_util.utcnow().date():
                 continue
 
             values = forecast["values"]
@@ -382,13 +382,11 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
         for forecast in self.coordinator.data[FORECASTS][self.forecast_type]:
-            _LOGGER.error(forecast)
             forecast_dt = dt_util.parse_datetime(
                 self._get_cc_value(forecast, CC_V3_ATTR_TIMESTAMP)
             )
             use_datetime = True
             condition = self._get_cc_value(forecast, CC_V3_ATTR_CONDITION)
-            _LOGGER.error(condition)
             precipitation = self._get_cc_value(forecast, CC_V3_ATTR_PRECIPITATION)
             precipitation_probability = self._get_cc_value(
                 forecast, CC_V3_ATTR_PRECIPITATION_PROBABILITY
