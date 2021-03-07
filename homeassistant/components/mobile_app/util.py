@@ -5,6 +5,7 @@ from homeassistant.core import callback
 
 from .const import (
     ATTR_APP_DATA,
+    ATTR_PUSH_CONFIG,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
@@ -31,11 +32,19 @@ def webhook_id_from_device_id(hass, device_id: str) -> Optional[str]:
 
 
 @callback
-def supports_push(hass, webhook_id: str) -> bool:
-    """Return if push notifications is supported."""
+def supports_legacy_push(hass, webhook_id: str) -> bool:
+    """Return if push notifications is supported by searching app_data."""
     config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
     app_data = config_entry.data[ATTR_APP_DATA]
     return ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data
+
+
+@callback
+def supports_push(hass, webhook_id: str) -> bool:
+    """Return if push notifications is supported by push_config."""
+    config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id]
+    push_config = config_entry.data[ATTR_PUSH_CONFIG]
+    return len(push_config) > 0
 
 
 @callback

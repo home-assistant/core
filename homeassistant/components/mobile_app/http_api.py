@@ -23,12 +23,14 @@ from .const import (
     ATTR_MODEL,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,
+    ATTR_PUSH_CONFIG,
     ATTR_SUPPORTS_ENCRYPTION,
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
     CONF_USER_ID,
     DOMAIN,
+    PUSH_CONFIG_SCHEMA,
 )
 from .helpers import supports_encryption
 
@@ -50,6 +52,9 @@ class RegistrationsView(HomeAssistantView):
                 vol.Required(ATTR_MANUFACTURER): cv.string,
                 vol.Required(ATTR_MODEL): cv.string,
                 vol.Optional(ATTR_DEVICE_ID): cv.string,  # Added in 0.104
+                vol.Optional(ATTR_PUSH_CONFIG): vol.All(
+                    cv.ensure_list, [PUSH_CONFIG_SCHEMA]
+                ),  # Added in 2021.3
                 vol.Required(ATTR_OS_NAME): cv.string,
                 vol.Optional(ATTR_OS_VERSION): cv.string,
                 vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,

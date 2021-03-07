@@ -1,4 +1,8 @@
 """Constants for mobile_app."""
+import voluptuous as vol
+
+from homeassistant.helpers import config_validation as cv
+
 DOMAIN = "mobile_app"
 
 STORAGE_KEY = DOMAIN
@@ -25,6 +29,9 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
+ATTR_PLATFORM = "platform"
+ATTR_PUSH_CONFIG = "push_config"
+ATTR_PUSH_CLEARTEXT_COMMANDS = "cleartext_commands"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
 ATTR_PUSH_RATE_LIMITS = "rateLimits"
@@ -72,3 +79,15 @@ SIGNAL_SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 SIGNAL_LOCATION_UPDATE = DOMAIN + "_location_update_{}"
 
 ATTR_CAMERA_ENTITY_ID = "camera_entity_id"
+
+PUSH_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_PLATFORM): cv.string,
+        vol.Required(ATTR_PUSH_TOKEN): cv.string,
+        vol.Required(ATTR_PUSH_URL): cv.string,
+        vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
+        vol.Optional(ATTR_PUSH_CLEARTEXT_COMMANDS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+    }
+)

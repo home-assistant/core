@@ -28,6 +28,9 @@ from .const import (
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
     ATTR_OS_VERSION,
+    ATTR_PLATFORM,
+    ATTR_PUSH_CLEARTEXT_COMMANDS,
+    ATTR_PUSH_CONFIG,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
@@ -35,11 +38,14 @@ from .const import (
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
+    ATTR_SUPPORTS_ENCRYPTION,
+    CONF_SECRET,
     DATA_CONFIG_ENTRIES,
     DATA_NOTIFY,
     DOMAIN,
 )
-from .util import supports_push
+from .helpers import _encrypt_payload
+from .util import supports_legacy_push, supports_push
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +56,9 @@ def push_registrations(hass):
 
     for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
         if not supports_push(hass, webhook_id):
+            continue
+
+        if not supports_legacy_push(hass, webhook_id):
             continue
 
         targets[entry.data[ATTR_DEVICE_NAME]] = webhook_id
@@ -122,9 +131,29 @@ class MobileAppNotificationService(BaseNotificationService):
             entry = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target]
             entry_data = entry.data
 
-            app_data = entry_data[ATTR_APP_DATA]
-            push_token = app_data[ATTR_PUSH_TOKEN]
-            push_url = app_data[ATTR_PUSH_URL]
+            push_token = None
+            push_url = None
+            platform = None
+            should_encrypt = False
+            cleartext_commands = []
+
+            if entry_data.get(ATTR_PUSH_CONFIG):
+                push_target = entry_data[ATTR_PUSH_CONFIG][0]
+                push_token = push_target[ATTR_PUSH_TOKEN]
+                push_url = push_target[ATTR_PUSH_URL]
+                platform = push_target[ATTR_PLATFORM]
+                should_encrypt = push_target[ATTR_SUPPORTS_ENCRYPTION]
+                cleartext_commands = push_target[ATTR_PUSH_CLEARTEXT_COMMANDS]
+            else:
+                app_data = entry_data[ATTR_APP_DATA]
+                push_token = app_data[ATTR_PUSH_TOKEN]
+                push_url = app_data[ATTR_PUSH_URL]
+
+            if data[ATTR_MESSAGE] in cleartext_commands:
+                data = {"command": data[ATTR_MESSAGE]}
+            elif should_encrypt:
+                enc_data = _encrypt_payload(entry_data[CONF_SECRET], data)
+                data = {"encrypted": True, "encrypted_data": enc_data}
 
             data[ATTR_PUSH_TOKEN] = push_token
 
@@ -134,6 +163,9 @@ class MobileAppNotificationService(BaseNotificationService):
             }
             if ATTR_OS_VERSION in entry_data:
                 reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
+
+            if platform:
+                reg_info[ATTR_PLATFORM] = platform
 
             data["registration_info"] = reg_info
 
