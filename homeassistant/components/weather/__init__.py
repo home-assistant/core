@@ -179,6 +179,10 @@ class WeatherEntity(Entity):
             forecast = []
             for forecast_entry in self.forecast:
                 forecast_entry = dict(forecast_entry)
+                if not isinstance(forecast_entry[ATTR_FORECAST_TIME], str):
+                    forecast_entry[ATTR_FORECAST_TIME] = str(
+                        forecast_entry[ATTR_FORECAST_TIME]
+                    )
                 forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
                     self.hass,
                     forecast_entry[ATTR_FORECAST_TEMP],
