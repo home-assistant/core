@@ -27,15 +27,15 @@ async def test_form(hass):
             {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "test-email"
-    assert result2["data"] == {
-        CONF_EMAIL: "test-email",
-        CONF_PASSWORD: "test-password",
-    }
-    await hass.async_block_till_done()
-    mock_setup.assert_called_once()
-    mock_setup_entry.assert_called_once()
+        assert result2["type"] == "create_entry"
+        assert result2["title"] == "test-email"
+        assert result2["data"] == {
+            CONF_EMAIL: "test-email",
+            CONF_PASSWORD: "test-password",
+        }
+        await hass.async_block_till_done()
+        mock_setup.assert_called_once()
+        mock_setup_entry.assert_called_once()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
