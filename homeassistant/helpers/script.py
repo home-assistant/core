@@ -84,6 +84,7 @@ from .trace import (
     trace_stack_cv,
     trace_stack_pop,
     trace_stack_push,
+    variables_cv,
 )
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -120,12 +121,20 @@ _TIMEOUT_MSG = "Timeout reached, abort script."
 _SHUTDOWN_MAX_WAIT = 60
 
 
-ACTION_TRACE_NODE_MAX_LEN = 20  # Max the length of a trace node for repeated actions
+ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
 
 def action_trace_append(variables, path):
     """Append a TraceElement to trace[path]."""
-    trace_element = TraceElement(variables)
+    if variables is None:
+        variables = {}
+    last_variables = variables_cv.get() or {}
+    changed_variables = {}
+    for key, value in variables.items():
+        if key not in last_variables or last_variables[key] != value:
+            changed_variables[key] = value
+    trace_element = TraceElement(changed_variables)
+    variables_cv.set(dict(variables))
     trace_append_element(trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
     return trace_element
 
@@ -294,7 +303,7 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
-        with trace_path(str(self._step)), trace_action(None):
+        with trace_path(str(self._step)), trace_action(self._variables):
             try:
                 handler = f"_async_{cv.determine_script_action(self._action)}_step"
                 await getattr(self, handler)()

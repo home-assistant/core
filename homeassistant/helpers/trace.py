@@ -33,8 +33,8 @@ class TraceElement:
     def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this TraceElement."""
         result: Dict[str, Any] = {"timestamp": self._timestamp}
-        # Commented out because we get too many copies of the same data
-        # result["variables"] = self._variables
+        if self._variables:
+            result["changed_variables"] = self._variables
         if self._error is not None:
             result["error"] = str(self._error)
         if self._result is not None:
@@ -55,6 +55,8 @@ trace_stack_cv: ContextVar[Optional[List[TraceElement]]] = ContextVar(
 trace_path_stack_cv: ContextVar[Optional[List[str]]] = ContextVar(
     "trace_path_stack_cv", default=None
 )
+# Copy of last variables
+variables_cv: ContextVar[Optional[Any]] = ContextVar("variables_cv", default=None)
 
 
 def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
@@ -128,6 +130,7 @@ def trace_clear() -> None:
     trace_cv.set({})
     trace_stack_cv.set(None)
     trace_path_stack_cv.set(None)
+    variables_cv.set(None)
 
 
 def trace_set_result(**kwargs: Any) -> None:
