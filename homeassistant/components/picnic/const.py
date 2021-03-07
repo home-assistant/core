@@ -5,8 +5,6 @@ DOMAIN = "picnic"
 
 CONF_API = "api"
 CONF_COORDINATOR = "coordinator"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
 CONF_COUNTRY_CODE = "country_code"
 
 COUNTRY_CODES = ["NL", "DE", "BE"]

@@ -7,11 +7,10 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import (  # pylint: disable=unused-import
     CONF_COUNTRY_CODE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     COUNTRY_CODES,
     DOMAIN,
 )

@@ -19,7 +19,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ):
     """Set up Picnic sensor entries."""
-
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
 
     # Fetch initial data so we have data when entities subscribe

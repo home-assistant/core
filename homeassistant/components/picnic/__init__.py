@@ -4,16 +4,10 @@ import asyncio
 from python_picnic_api import PicnicAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_API,
-    CONF_COORDINATOR,
-    CONF_COUNTRY_CODE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
 
 PLATFORMS = ["sensor"]
