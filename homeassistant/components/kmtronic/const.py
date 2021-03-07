@@ -11,3 +11,5 @@ DATA_REVERSE = "reverse"
 MANUFACTURER = "KMtronic"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_IDENTIFIERS = "identifiers"
+
+UPDATE_LISTENER = "update_listener"

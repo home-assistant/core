@@ -15,7 +15,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER
+from .const import (
+    CONF_REVERSE,
+    DATA_COORDINATOR,
+    DATA_HUB,
+    DATA_REVERSE,
+    DOMAIN,
+    MANUFACTURER,
+    UPDATE_LISTENER,
+)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -26,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the kmtronic component."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     return True
 
@@ -68,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_HUB: hub,
         DATA_COORDINATOR: coordinator,
+        DATA_REVERSE: _get_config_value(entry, CONF_REVERSE, False),
     }
 
     for platform in PLATFORMS:
@@ -75,7 +84,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
+    update_listener = entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER] = update_listener
+
     return True
+
+
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Update options."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -89,6 +106,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
     if unload_ok:
+        update_listener = hass.data[DOMAIN][entry.entry_id][UPDATE_LISTENER]
+        update_listener()
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def _get_config_value(config_entry, key, default):
+    if config_entry.options and key in config_entry.options:
+        return config_entry.options[key]
+    return config_entry.data.get(key, default)

@@ -3,8 +3,11 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
 
-from homeassistant import config_entries, setup
-from homeassistant.components.kmtronic.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
+from homeassistant.config_entries import ENTRY_STATE_LOADED
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -46,6 +49,43 @@ async def test_form(hass):
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_options(hass, aioclient_mock):
+    """Test that the options form."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.1.1.1",
+            "username": "admin",
+            "password": "admin",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    aioclient_mock.get(
+        "http://1.1.1.1/status.xml",
+        text="<response><relay0>0</relay0><relay1>0</relay1></response>",
+    )
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ENTRY_STATE_LOADED
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_REVERSE: True}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {CONF_REVERSE: True}
+
+    await hass.async_block_till_done()
+
+    assert config_entry.state == "loaded"
 
 
 async def test_form_invalid_auth(hass):
