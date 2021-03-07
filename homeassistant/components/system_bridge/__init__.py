@@ -2,12 +2,14 @@
 import asyncio
 from datetime import timedelta
 import logging
+import shlex
 from typing import Any, Dict, Optional
 
 import async_timeout
 from systembridge import Bridge
 from systembridge.client import BridgeClient
 from systembridge.exceptions import BridgeAuthenticationException
+from systembridge.objects.command.response import CommandResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +36,7 @@ PLATFORMS = ["sensor"]
 
 CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"
+CONF_WAIT = "wait"
 
 SERVICE_SEND_COMMAND = "send_command"
 SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
@@ -50,17 +53,35 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     async def handle_send_command(call):
         """Handle the service call."""
-        bridge_name = call.data.get(CONF_BRIDGE)
-        _LOGGER.warning(bridge_name)
-
-        _LOGGER.warning(f"{DOMAIN} entries")
-        for entry in hass.data[DOMAIN].items():
-            _LOGGER.warning(entry)
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
 
         command = call.data.get(CONF_COMMAND)
-        _LOGGER.warning(command)
-        arguments = call.data.get(CONF_ARGUMENTS)
-        _LOGGER.warning(arguments)
+        arguments = shlex.split(call.data.get(CONF_ARGUMENTS, ""))
+
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
+            next(iter(device_entry.config_entries))
+        ]
+        bridge: Bridge = coordinator.data
+
+        _LOGGER.debug(
+            "Command payload: %s",
+            {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False},
+        )
+        try:
+            response: CommandResponse = await bridge.async_send_command(
+                {CONF_COMMAND: command, CONF_ARGUMENTS: arguments, CONF_WAIT: False}
+            )
+            if response.success:
+                _LOGGER.debug(
+                    "Sent command. Response message was: %s", response.message
+                )
+            else:
+                _LOGGER.warning(
+                    "Error sending command. Response message was: %s", response.message
+                )
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+            _LOGGER.error("Error sending command. Error was: %s", exception)
 
     hass.services.async_register(
         DOMAIN,

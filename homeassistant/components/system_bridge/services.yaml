@@ -2,12 +2,25 @@ send_command:
   description: Sends a command to the server.
   fields:
     bridge:
-      description: Hostname of the server to send the command to.
-      example: "homeassistant.local"
+      name: Bridge
+      description: Server to send the command to.
+      example: ""
+      required: true
+      selector:
+        device:
+          integration: system_bridge
     command:
+      name: Command
       description: Command to send to the server.
-      example: "python"
+      required: true
+      example: "echo"
+      selector:
+        text:
     arguments:
+      name: Arguments
       description: Arguments to send to the server.
-      example:
-        - "-V"
+      required: false
+      default: ""
+      example: "hello"
+      selector:
+        text:
