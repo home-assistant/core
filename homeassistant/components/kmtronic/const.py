@@ -2,9 +2,6 @@
 
 DOMAIN = "kmtronic"
 
-CONF_HOSTNAME = "host"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
 CONF_REVERSE = "reverse"
 
 DATA_HUB = "hub"
