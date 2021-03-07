@@ -279,15 +279,6 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
 
-@STRICT_MATCH(channel_names="Carbon_monoxide_concentration")
-class CarbonMonoxideConcentration(Sensor):
-    """Carbon Monoxide Concentration sensor."""
-
-    SENSOR_ATTR = "measured_value"
-    _decimals = 0
-    _multiplier = 1e6
-    _unit = CONCENTRATION_PARTS_PER_MILLION
-	
 @STRICT_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
@@ -295,8 +286,8 @@ class CarbonDioxideConcentration(Sensor):
     SENSOR_ATTR = "measured_value"
     _decimals = 0
     _multiplier = 1e6
-    _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+    _unit = "ppm"
+
 @STRICT_MATCH(channel_names="ethylene_concentration")
 class EthyleneConcentration(Sensor):
     """Ethylene Concentration sensor."""
@@ -305,7 +296,7 @@ class EthyleneConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="ethylene_oxide_concentration")
 class EthyleneOxideConcentration(Sensor):
     """Ethylene Oxide Concentration sensor."""
@@ -314,7 +305,7 @@ class EthyleneOxideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="hydrogen_concentration")
 class HydrogenConcentration(Sensor):
     """Hydrogen Concentration sensor."""
@@ -323,7 +314,7 @@ class HydrogenConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="hydrogen_sulfide_concentration")
 class HydrogenSulfideConcentration(Sensor):
     """Hydrogen Sulfide Concentration sensor."""
@@ -332,7 +323,7 @@ class HydrogenSulfideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="nitric_oxide_concentration")
 class NitricOxideConcentration(Sensor):
     """Nitric Oxide Concentration sensor."""
@@ -341,7 +332,7 @@ class NitricOxideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="nitrogen_dioxide_concentration")
 class NitrogenDioxideConcentration(Sensor):
     """Nitrogen Dioxide Concentration sensor."""
@@ -350,7 +341,7 @@ class NitrogenDioxideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="oxygen_concentration")
 class OxygenConcentration(Sensor):
     """Oxygen Concentration sensor."""
@@ -359,7 +350,7 @@ class OxygenConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="ozone_concentration")
 class OzoneConcentration(Sensor):
     """Ozone Concentration sensor."""
@@ -368,7 +359,7 @@ class OzoneConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="sulfur_dioxide_concentration")
 class SulfurDioxideConcentration(Sensor):
     """Sulfur Dioxide Concentration sensor."""
@@ -377,7 +368,7 @@ class SulfurDioxideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="dissolved_oxygen_concentration")
 class DissolvedOxygenConcentration(Sensor):
     """Dissolved Oxygen Concentration sensor."""
@@ -386,7 +377,7 @@ class DissolvedOxygenConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="bromate_concentration")
 class BromateConcentration(Sensor):
     """Bromate Concentration sensor."""
@@ -395,7 +386,7 @@ class BromateConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="chloramines_concentration")
 class ChloraminesConcentration(Sensor):
     """Chloramines Concentration sensor."""
@@ -404,7 +395,7 @@ class ChloraminesConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="chlorine_concentration")
 class ChlorineConcentration(Sensor):
     """Chlorine Concentration sensor."""
@@ -413,7 +404,7 @@ class ChlorineConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="fecal_coliform_and_ecoli_fraction")
 class FecalColiformAndEColiFraction(Sensor):
     """Fecal Coliform And EColi Fraction sensor."""
@@ -422,7 +413,7 @@ class FecalColiformAndEColiFraction(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="fluoride_concentration")
 class FluorideConcentration(Sensor):
     """Fluoride Concentration sensor."""
@@ -431,7 +422,7 @@ class FluorideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="haloacetic_acids_concentration")
 class HaloaceticAcidsConcentration(Sensor):
     """Haloacetic Acids Concentration sensor."""
@@ -440,7 +431,7 @@ class HaloaceticAcidsConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="total_trihalomethanes_concentration")
 class TotalTrihalomethanesConcentration(Sensor):
     """Total Trihalomethanes Concentration sensor."""
@@ -449,7 +440,7 @@ class TotalTrihalomethanesConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="total_coliform_bacteria_fraction")
 class TotalColiformBacteriaFraction(Sensor):
     """TotalColiform Bacteria Fraction sensor."""
@@ -458,7 +449,7 @@ class TotalColiformBacteriaFraction(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="Turbidity")
 class Turbidity(Sensor):
     """Turbidity sensor."""
@@ -467,7 +458,7 @@ class Turbidity(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="copper_concentration")
 class CopperConcentration(Sensor):
     """CopperConcentration sensor."""
@@ -476,7 +467,7 @@ class CopperConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="lead_concentration")
 class LeadConcentration(Sensor):
     """Lead Concentration sensor."""
@@ -485,7 +476,7 @@ class LeadConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="manganese_concentration")
 class ManganeseConcentration(Sensor):
     """Manganese Concentration sensor."""
@@ -494,7 +485,7 @@ class ManganeseConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="sulfate_concentration")
 class SulfateConcentration(Sensor):
     """SulfateConcentration sensor."""
@@ -503,7 +494,7 @@ class SulfateConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="bromodichloromethane_concentration")
 class BromodichloromethaneConcentration(Sensor):
     """Bromodichloromethane Concentration sensor."""
@@ -512,7 +503,7 @@ class BromodichloromethaneConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="bromoform_concentration")
 class BromoformConcentration(Sensor):
     """Bromoform Concentration sensor."""
@@ -521,7 +512,7 @@ class BromoformConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="chlorodibromomethane_concentration")
 class ChlorodibromomethaneConcentration(Sensor):
     """ChlorodibromomethaneConcentration sensor."""
@@ -530,7 +521,7 @@ class ChlorodibromomethaneConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="chloroform_concentration")
 class ChloroformConcentration(Sensor):
     """Chloroform Concentration sensor."""
@@ -539,7 +530,7 @@ class ChloroformConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="sodium_concentration")
 class SodiumConcentration(Sensor):
     """Sodium Concentration sensor."""
@@ -548,7 +539,7 @@ class SodiumConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="pm25")
 class PM25(Sensor):
     """PM25 sensor."""
@@ -557,7 +548,7 @@ class PM25(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-	
+
 @STRICT_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
