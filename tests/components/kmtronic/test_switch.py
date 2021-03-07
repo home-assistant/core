@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 
 from homeassistant.components.kmtronic.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -98,30 +97,6 @@ async def test_update(hass, aioclient_mock):
     await hass.async_block_till_done()
     state = hass.states.get("switch.relay1")
     assert state.state == "on"
-
-
-async def test_config_entry_not_ready(hass, aioclient_mock):
-    """Tests configuration entry not ready."""
-
-    aioclient_mock.get(
-        "http://1.1.1.1/status.xml",
-        exc=asyncio.TimeoutError(),
-    )
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.1.1.1",
-            "username": "foo",
-            "password": "bar",
-            "reverse": False,
-        },
-    )
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state == ENTRY_STATE_SETUP_RETRY
 
 
 async def test_failed_update(hass, aioclient_mock):
