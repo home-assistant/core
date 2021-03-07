@@ -6,8 +6,9 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from august.authenticator import ValidationResult
 from august.exceptions import AugustApiAIOHTTPError
-from august.lock import LockDetail, determine_door_state, determine_lock_status
+from august.lock import LockDetail
 from august.pubnub_async import AugustPubNub, async_create_pubnub
+from august.util import update_lock_details_from_pubnub_message
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -280,7 +281,7 @@ class AugustData(AugustSubscriberMixin):
         """Process a pubnub message."""
         device = self.get_device_detail(device_id)
         if isinstance(device, LockDetail):
-            if _async_process_lock_pubnub_message(device, date_time, message):
+            if update_lock_details_from_pubnub_message(device, date_time, message):
                 self.async_signal_device_id_update(device.device_id)
         self.activity_stream.async_schedule_house_id_refresh(device.house_id)
 
@@ -288,6 +289,7 @@ class AugustData(AugustSubscriberMixin):
     def async_stop(self):
         """Stop the subscriptions."""
         self._pubnub_unsub()
+        self.activity_stream.async_stop()
 
     @property
     def doorbells(self):
@@ -442,20 +444,3 @@ class AugustData(AugustSubscriberMixin):
             if not lock_is_operative:
                 del self._locks_by_id[device_id]
                 del self._device_detail_by_id[device_id]
-
-
-@callback
-def _async_process_lock_pubnub_message(lock_detail, date_time, message):
-    """Update lock details from pubnub."""
-    if "doorState" in message:
-        if lock_detail.lock_status_datetime >= date_time:
-            return False
-        lock_detail.door_state = determine_door_state(message["doorState"])
-        lock_detail.door_state_datetime = date_time
-    if "status" in message:
-        if lock_detail.door_state_datetime >= date_time:
-            return False
-        lock_detail.lock_status = determine_lock_status(message["status"])
-        lock_detail.lock_status_datetime = date_time
-
-    return True

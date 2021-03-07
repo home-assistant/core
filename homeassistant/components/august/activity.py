@@ -27,21 +27,30 @@ class ActivityStream(AugustSubscriberMixin):
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
-        self._latest_activities_by_id_type = {}
+        self._latest_activities = {}
         self._last_update_time = None
         self._abort_async_track_time_interval = None
         self._pubnub = pubnub
+        self._update_locks = {}
+        self._update_debounce = {}
 
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
         await self._async_refresh(utcnow())
 
+    @callback
+    def async_stop(self):
+        """Cleanup any debounces."""
+        for handle in self._update_debounce.values():
+            if handle is not None:
+                handle.cancel()
+
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
-        if device_id not in self._latest_activities_by_id_type:
+        if device_id not in self._latest_activities:
             return None
 
-        latest_device_activities = self._latest_activities_by_id_type[device_id]
+        latest_device_activities = self._latest_activities[device_id]
         latest_activity = None
 
         for activity_type in activity_types:
@@ -61,6 +70,7 @@ class ActivityStream(AugustSubscriberMixin):
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
         if self._pubnub.connected:
+            _LOGGER.debug("Skipping update because pubnub is connected.")
             return
         await self._async_update_device_activities(time)
 
@@ -73,7 +83,7 @@ class ActivityStream(AugustSubscriberMixin):
             limit = ACTIVITY_CATCH_UP_FETCH_LIMIT
 
         for house_id in self._house_ids:
-            await self._async_update_device_activities_for_house_id(house_id, limit)
+            await self._async_update_house_id(house_id, limit)
 
         self._last_update_time = time
 
@@ -81,52 +91,69 @@ class ActivityStream(AugustSubscriberMixin):
     def async_schedule_house_id_refresh(self, house_id):
         """Schedule an update for a house activities."""
         asyncio.create_task(
-            self._async_update_device_activities_for_house_id,
-            house_id,
-            ACTIVITY_STREAM_TRIGGERED_FETCH_LIMIT,
-        )
-
-    async def _async_update_device_activities_for_house_id(self, house_id, limit):
-        """Update device activities for a house."""
-        _LOGGER.debug("Updating device activity for house id %s", house_id)
-        try:
-            activities = await self._api.async_get_house_activities(
-                self._august_gateway.access_token, house_id, limit=limit
-            )
-        except ClientError as ex:
-            _LOGGER.error(
-                "Request error trying to retrieve activity for house id %s: %s",
+            self._async_update_house_id(
                 house_id,
-                ex,
+                ACTIVITY_STREAM_TRIGGERED_FETCH_LIMIT,
             )
-            # Make sure we process the next house if one of them fails
-            return
-
-        _LOGGER.debug(
-            "Completed retrieving device activities for house id %s", house_id
         )
+
+    async def _async_update_house_id(self, house_id, limit):
+        """Update device activities for a house."""
+        if house_id not in self._update_locks:
+            self._update_locks[house_id] = asyncio.Lock()
+            self._update_debounce[house_id] = None
+
+        if self._update_locks[house_id].locked():
+            if self._update_debounce[house_id] is not None:
+                return
+
+            self._update_debounce[house_id] = self._hass.loop.call_later(
+                ACTIVITY_UPDATE_INTERVAL.seconds,
+                self.async_schedule_house_id_refresh,
+                house_id,
+            )
+            return
+        elif self._update_debounce[house_id] is not None:
+            self._update_debounce[house_id].cancel()
+
+        async with self._update_locks[house_id]:
+            _LOGGER.debug("Updating device activity for house id %s", house_id)
+            try:
+                activities = await self._api.async_get_house_activities(
+                    self._august_gateway.access_token, house_id, limit=limit
+                )
+            except ClientError as ex:
+                _LOGGER.error(
+                    "Request error trying to retrieve activity for house id %s: %s",
+                    house_id,
+                    ex,
+                )
+                # Make sure we process the next house if one of them fails
+                return
+
+            _LOGGER.debug(
+                "Completed retrieving device activities for house id %s", house_id
+            )
 
         updated_device_ids = self._process_newer_device_activities(activities)
 
-        if updated_device_ids:
-            for device_id in updated_device_ids:
-                _LOGGER.debug(
-                    "async_signal_device_id_update (from activity stream): %s",
-                    device_id,
-                )
-                self.async_signal_device_id_update(device_id)
+        if not updated_device_ids:
+            return
+
+        for device_id in updated_device_ids:
+            _LOGGER.debug(
+                "async_signal_device_id_update (from activity stream): %s",
+                device_id,
+            )
+            self.async_signal_device_id_update(device_id)
 
     def _process_newer_device_activities(self, activities):
         updated_device_ids = set()
         for activity in activities:
             device_id = activity.device_id
             activity_type = activity.activity_type
-
-            self._latest_activities_by_id_type.setdefault(device_id, {})
-
-            lastest_activity = self._latest_activities_by_id_type[device_id].get(
-                activity_type
-            )
+            device_activities = self._latest_activities.setdefault(device_id, {})
+            lastest_activity = device_activities.get(activity_type)
 
             # Ignore activities that are older than the latest one
             if (
@@ -135,7 +162,7 @@ class ActivityStream(AugustSubscriberMixin):
             ):
                 continue
 
-            self._latest_activities_by_id_type[device_id][activity_type] = activity
+            device_activities[activity_type] = activity
 
             updated_device_ids.add(device_id)
 
