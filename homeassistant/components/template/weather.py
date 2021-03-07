@@ -1,6 +1,4 @@
 """Template platform that aggregates meteorological data."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -67,8 +65,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -175,13 +171,6 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast."""
-        if (
-            not isinstance(self._forecast, list)
-            or len(self._forecast)
-            and not isinstance(self._forecast[0], dict)
-        ):
-            _LOGGER.warning("forecast_template must be a list of dict")
-            return None
         return self._forecast
 
     @property
