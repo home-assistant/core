@@ -1,30 +1,19 @@
 """Support for Ezviz Switch sensors."""
 import logging
-from typing import Callable, List
 
 from pyezviz.constants import DeviceSwitchType
 
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
-from .coordinator import EzvizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(
-    hass: HomeAssistantType,
-    entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
-) -> None:
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Ezviz switch based on a config entry."""
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     switch_entities = []
     supported_switches = []
 

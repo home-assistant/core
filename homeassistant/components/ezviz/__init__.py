@@ -6,10 +6,8 @@ import logging
 from pyezviz.client import EzvizClient
 from requests import ConnectTimeout, HTTPError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     ATTR_SERIAL,
@@ -27,21 +25,21 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 PLATFORMS = [
+    "binary_sensor",
     "camera",
     "sensor",
-    "binary_sensor",
     "switch",
 ]
 
 
-async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
+async def async_setup(hass, config):
     """Set up the Ezviz integration."""
     hass.data.setdefault(DOMAIN, {})
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass, entry):
     """Set up Ezviz from a config entry."""
 
     if entry.data.get(ATTR_SERIAL):
@@ -85,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass, entry):
     """Unload a config entry."""
 
     if entry.data.get(ATTR_SERIAL):
@@ -108,12 +106,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass, entry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def _get_ezviz_client_instance(entry: ConfigEntry) -> EzvizClient:
+def _get_ezviz_client_instance(entry):
     """Initialize a new instance of EzvizClientApi."""
     ezviz_client = EzvizClient(
         entry.data[CONF_USERNAME],

@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Callable, List
 
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
@@ -12,7 +11,6 @@ from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,7 +25,6 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .coordinator import EzvizDataUpdateCoordinator
 
 CAMERA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
@@ -76,14 +73,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(
-    hass, entry, async_add_entities: Callable[[List[Entity], bool], None]
-) -> None:
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Ezviz cameras based on a config entry."""
 
-    coordinator: EzvizDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     ffmpeg_arguments = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
@@ -161,18 +154,6 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         self._serial = self.coordinator.data[self._idx]["serial"]
         self._name = self.coordinator.data[self._idx]["name"]
         self._local_ip = self.coordinator.data[self._idx]["local_ip"]
-
-    @property
-    def extra_state_attributes(self):
-        """Return the Ezviz-specific camera state attributes."""
-        return {
-            # Camera firmware version update available?
-            "upgrade_available": self.coordinator.data[self._idx]["upgrade_available"],
-            # camera's local ip on local network
-            "local_ip": self.coordinator.data[self._idx]["local_ip"],
-            # RTSP Stream
-            "RTSP stream": self._rtsp_stream,
-        }
 
     @property
     def available(self):
