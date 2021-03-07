@@ -393,7 +393,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ),
             ATTR_FORECAST_TEMP: self._get_temperature_day(day),
             ATTR_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
-            ATTR_FORECAST_TIME: dt_util.as_utc(date),
+            ATTR_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
             ATTR_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
             ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
         }
@@ -412,7 +412,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 day, hour
             ),
             ATTR_FORECAST_TEMP: self._get_temperature(day, hour),
-            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt),
+            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
             ATTR_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
             ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }
