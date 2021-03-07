@@ -226,7 +226,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
     def forecast(self):
         """Return the forecast."""
         # Check if forecasts are available
-        if not self.coordinator.data[FORECASTS].get(self.forecast_type):
+        if not self.coordinator.data.get(FORECASTS, {}).get(self.forecast_type):
             return None
 
         forecasts = []

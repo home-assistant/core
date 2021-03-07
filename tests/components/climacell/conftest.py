@@ -17,7 +17,10 @@ def skip_notifications_fixture():
 def climacell_config_flow_connect():
     """Mock valid climacell config flow setup."""
     with patch(
-        "homeassistant.components.climacell.config_flow.ClimaCell.realtime",
+        "homeassistant.components.climacell.config_flow.ClimaCellV3.realtime",
+        return_value={},
+    ), patch(
+        "homeassistant.components.climacell.config_flow.ClimaCellV4.realtime",
         return_value={},
     ):
         yield
@@ -27,16 +30,19 @@ def climacell_config_flow_connect():
 def climacell_config_entry_update_fixture():
     """Mock valid climacell config entry setup."""
     with patch(
-        "homeassistant.components.climacell.ClimaCell.realtime",
+        "homeassistant.components.climacell.ClimaCellV3.realtime",
         return_value={},
     ), patch(
-        "homeassistant.components.climacell.ClimaCell.forecast_hourly",
+        "homeassistant.components.climacell.ClimaCellV3.forecast_hourly",
         return_value=[],
     ), patch(
-        "homeassistant.components.climacell.ClimaCell.forecast_daily",
+        "homeassistant.components.climacell.ClimaCellV3.forecast_daily",
         return_value=[],
     ), patch(
-        "homeassistant.components.climacell.ClimaCell.forecast_nowcast",
+        "homeassistant.components.climacell.ClimaCellV3.forecast_nowcast",
         return_value=[],
+    ), patch(
+        "homeassistant.components.climacell.ClimaCellV4.realtime_and_all_forecasts",
+        return_value={},
     ):
         yield
