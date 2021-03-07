@@ -51,8 +51,9 @@ async def test_aemet_weather(hass):
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 30
     assert forecast.get(ATTR_FORECAST_TEMP) == 4
     assert forecast.get(ATTR_FORECAST_TEMP_LOW) == -4
-    assert forecast.get(ATTR_FORECAST_TIME) == dt_util.parse_datetime(
-        "2021-01-10 00:00:00+00:00"
+    assert (
+        forecast.get(ATTR_FORECAST_TIME)
+        == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
     )
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 45.0
     assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 20
