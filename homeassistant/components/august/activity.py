@@ -81,9 +81,10 @@ class ActivityStream(AugustSubscriberMixin):
     def async_schedule_house_id_refresh(self, house_id):
         """Schedule an update for a house activities."""
         asyncio.create_task(
-            self._async_update_device_activities_for_house_id,
-            house_id,
-            ACTIVITY_STREAM_TRIGGERED_FETCH_LIMIT,
+            self._async_update_device_activities_for_house_id(
+                house_id,
+                ACTIVITY_STREAM_TRIGGERED_FETCH_LIMIT,
+            )
         )
 
     async def _async_update_device_activities_for_house_id(self, house_id, limit):
