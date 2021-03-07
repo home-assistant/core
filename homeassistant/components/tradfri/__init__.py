@@ -9,13 +9,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVICE_RELOAD
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.json import load_json
 
+from ...core import HomeAssistant, callback
 from .const import (
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
@@ -148,6 +149,8 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         sw_version=gateway_info.firmware_version,
     )
 
+    _async_register_services(hass)
+
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
@@ -188,3 +191,25 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
             listener()
 
     return unload_ok
+
+
+@callback
+def _async_register_services(hass: HomeAssistant):
+    """Register events and services for Tradfri."""
+
+    async def _handle_tradfri_reload(service):
+        """Handle reload tradfri service call."""
+        _LOGGER.info("Reloading integration")
+
+        current_entries = hass.config_entries.async_entries(DOMAIN)
+
+        reload_tasks = [
+            hass.config_entries.async_reload(entry.entry_id)
+            for entry in current_entries
+        ]
+
+        await asyncio.gather(*reload_tasks)
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN, SERVICE_RELOAD, _handle_tradfri_reload
+    )
