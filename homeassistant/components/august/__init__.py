@@ -1,11 +1,14 @@
 """Support for August devices."""
 import asyncio
-import itertools
+from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
 from august.authenticator import ValidationResult
 from august.exceptions import AugustApiAIOHTTPError
+from august.lock import LockDetail
+from august.pubnub_async import AugustPubNub, async_create_pubnub
+from august.util import update_lock_details_from_pubnub_message
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -15,7 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_UNAUTHORIZED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -206,6 +209,9 @@ def _async_start_reauth(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    hass.data[DOMAIN][entry.entry_id][DATA_AUGUST].async_stop()
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -235,25 +241,21 @@ class AugustData(AugustSubscriberMixin):
         self._doorbells_by_id = {}
         self._locks_by_id = {}
         self._house_ids = set()
+        self._pubnub_unsub = None
 
     async def async_setup(self):
         """Async setup of august device data and activities."""
-        locks = (
-            await self._api.async_get_operable_locks(self._august_gateway.access_token)
-            or []
-        )
-        doorbells = (
-            await self._api.async_get_doorbells(self._august_gateway.access_token) or []
-        )
+        token = self._august_gateway.access_token
+        user_data = await self._api.async_get_user(token)
+        locks = await self._api.async_get_operable_locks(token) or []
+        doorbells = await self._api.async_get_doorbells(token) or []
 
         self._doorbells_by_id = {device.device_id: device for device in doorbells}
         self._locks_by_id = {device.device_id: device for device in locks}
-        self._house_ids = {
-            device.house_id for device in itertools.chain(locks, doorbells)
-        }
+        self._house_ids = {device.house_id for device in chain(locks, doorbells)}
 
         await self._async_refresh_device_detail_by_ids(
-            [device.device_id for device in itertools.chain(locks, doorbells)]
+            [device.device_id for device in chain(locks, doorbells)]
         )
 
         # We remove all devices that we are missing
@@ -263,10 +265,31 @@ class AugustData(AugustSubscriberMixin):
         self._remove_inoperative_locks()
         self._remove_inoperative_doorbells()
 
+        pubnub = AugustPubNub()
+        for device in self._device_detail_by_id.values():
+            pubnub.register_device(device)
+
         self.activity_stream = ActivityStream(
-            self._hass, self._api, self._august_gateway, self._house_ids
+            self._hass, self._api, self._august_gateway, self._house_ids, pubnub
         )
         await self.activity_stream.async_setup()
+        pubnub.subscribe(self.async_pubnub_message)
+        self._pubnub_unsub = async_create_pubnub(user_data["UserID"], pubnub)
+
+    @callback
+    def async_pubnub_message(self, device_id, date_time, message):
+        """Process a pubnub message."""
+        device = self.get_device_detail(device_id)
+        if isinstance(device, LockDetail):
+            if update_lock_details_from_pubnub_message(device, date_time, message):
+                self.async_signal_device_id_update(device.device_id)
+        self.activity_stream.async_schedule_house_id_refresh(device.house_id)
+
+    @callback
+    def async_stop(self):
+        """Stop the subscriptions."""
+        self._pubnub_unsub()
+        self.activity_stream.async_stop()
 
     @property
     def doorbells(self):
@@ -334,9 +357,9 @@ class AugustData(AugustSubscriberMixin):
 
     def _get_device_name(self, device_id):
         """Return doorbell or lock name as August has it stored."""
-        if self._locks_by_id.get(device_id):
+        if device_id in self._locks_by_id:
             return self._locks_by_id[device_id].device_name
-        if self._doorbells_by_id.get(device_id):
+        if device_id in self._doorbells_by_id:
             return self._doorbells_by_id[device_id].device_name
 
     async def async_lock(self, device_id):

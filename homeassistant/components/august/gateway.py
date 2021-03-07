@@ -128,14 +128,15 @@ class AugustGateway:
 
     async def async_refresh_access_token_if_needed(self):
         """Refresh the august access token if needed."""
-        if self.authenticator.should_refresh():
-            async with self._token_refresh_lock:
-                refreshed_authentication = (
-                    await self.authenticator.async_refresh_access_token(force=False)
-                )
-                _LOGGER.info(
-                    "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
-                    self.authentication.access_token_expires,
-                    refreshed_authentication.access_token_expires,
-                )
-                self.authentication = refreshed_authentication
+        if not self.authenticator.should_refresh():
+            return
+        async with self._token_refresh_lock:
+            refreshed_authentication = (
+                await self.authenticator.async_refresh_access_token(force=False)
+            )
+            _LOGGER.info(
+                "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
+                self.authentication.access_token_expires,
+                refreshed_authentication.access_token_expires,
+            )
+            self.authentication = refreshed_authentication
