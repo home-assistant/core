@@ -4,6 +4,8 @@ import logging
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ASSET_VALUE_CURRENCIES,
+    CONF_ASSET_TICKERS,
     CONF_BALANCES,
     CONF_OPEN_ORDERS,
     CONF_TICKERS,
@@ -27,7 +29,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for balance in coordinator.data[CONF_BALANCES]:
             entities.append(Balance(coordinator, balance))
 
-        entities.append(TotalAssetValue(coordinator))
+        for currency in ASSET_VALUE_CURRENCIES:
+            entities.append(TotalAssetValue(coordinator, currency))
 
     if CONF_OPEN_ORDERS in coordinator.data:
         entities.append(OpenOrder(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
@@ -203,14 +206,13 @@ class OpenOrder(Order):
 class TotalAssetValue(CoordinatorEntity):
     """Implementation of the total asset value sensor."""
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator, currency):
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self._currency = currency
 
-        self._name = "BIN Total Asset Value - USDT"
-        self._unique_id = "bin_total_asset_value_usdt"
-        self._icon = "mdi:cash"
-        self._unit_of_measurement = "USDT"
+        self._name = f"BIN Total Asset Value - {self._currency.upper()}"
+        self._unique_id = f"bin_total_asset_value_{self._currency.lower()}"
 
     @property
     def name(self):
@@ -227,7 +229,15 @@ class TotalAssetValue(CoordinatorEntity):
                 self.coordinator.data[CONF_BALANCES][i]["asset_value_in_usdt"]
             )
 
-        return total_usdt_value
+        if self._currency == "USDT":
+            return total_usdt_value
+        else:
+            usdt_pair_name = (self._currency + "USDT").upper()
+            total_asset_value = total_usdt_value / float(
+                self.coordinator.data[CONF_ASSET_TICKERS][usdt_pair_name]["lastPrice"]
+            )
+
+            return total_asset_value
 
     @property
     def unique_id(self):
@@ -237,17 +247,17 @@ class TotalAssetValue(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return self._currency
 
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return self._icon
+        return CURRENCY_ICONS.get(self.unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "note": "Value is based on the last USDT price of every coin in balance",
+            "note": f"Value is based on the last {self._currency.upper()} price of every coin in balance",
             "source": "Binance",
         }

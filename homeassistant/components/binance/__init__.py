@@ -11,7 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_API_SECRET, CONF_MARKETS, DOMAIN, SCAN_INTERVAL
+from .const import (
+    ASSET_VALUE_CURRENCIES,
+    CONF_API_SECRET,
+    CONF_MARKETS,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +60,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
         self._api_secret = api_secret
 
         self.symbols = symbols
+        self.asset_currencies = ASSET_VALUE_CURRENCIES
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
@@ -68,6 +75,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
             all_markets = await binance.get_exchange_info()
             all_balances = await binance.get_account()
 
+            result_dict = {}
             tickers_dict = {}
 
             for sym in self.symbols:
@@ -82,7 +90,25 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
                     combined_details_dict = {**ticker_details, **market_details}
                     tickers_dict[sym].update(combined_details_dict)
 
-            result_dict = {"tickers": tickers_dict}
+            result_dict["tickers"] = tickers_dict
+
+            asset_tickers_dict = {}
+
+            for sym in self.asset_currencies:
+                if sym == "USDT":
+                    # Skip the loop as we calculate USDT differently
+                    break
+
+                currency = sym.upper() + "USDT"
+
+                if currency not in asset_tickers_dict:
+                    asset_tickers_dict[currency] = {}
+                    ticker_details = next(
+                        item for item in all_tickers if item["symbol"] == currency
+                    )
+                    asset_tickers_dict[currency].update(ticker_details)
+
+            result_dict["asset_tickers"] = asset_tickers_dict
 
             balances_dict = {}
 

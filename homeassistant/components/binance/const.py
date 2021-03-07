@@ -10,6 +10,7 @@ CONF_BALANCES = "balances"
 CONF_MARKETS = "markets"
 CONF_OPEN_ORDERS = "open_orders"
 CONF_TICKERS = "tickers"
+CONF_ASSET_TICKERS = "asset_tickers"
 
 # Currency
 CURRENCY_ICONS = {
@@ -21,6 +22,8 @@ CURRENCY_ICONS = {
 }
 
 DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
+
+ASSET_VALUE_CURRENCIES = {"USDT", "EUR", "BTC"}
 
 # Integration setup
 # "In general, making a maximum of 60 API calls per minute should be safe..."
