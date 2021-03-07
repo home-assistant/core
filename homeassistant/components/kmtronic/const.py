@@ -5,7 +5,6 @@ DOMAIN = "kmtronic"
 CONF_REVERSE = "reverse"
 
 DATA_HUB = "hub"
-DATA_HOST = "host"
 DATA_COORDINATOR = "coordinator"
 DATA_REVERSE = "reverse"
 

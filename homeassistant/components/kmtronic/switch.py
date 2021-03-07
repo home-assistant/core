@@ -3,20 +3,19 @@
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DATA_HOST, DATA_HUB, DATA_REVERSE, DOMAIN
+from .const import DATA_COORDINATOR, DATA_HUB, DATA_REVERSE, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
-    host = hass.data[DOMAIN][entry.entry_id][DATA_HOST]
-    reverse = hass.data[DOMAIN][entry.entry_id][DATA_REVERSE]
+    reverse = entry.data[DATA_REVERSE]
     await hub.async_get_relays()
 
     async_add_entities(
         [
-            KMtronicSwitch(coordinator, host, relay, reverse, entry.unique_id)
+            KMtronicSwitch(coordinator, relay, reverse, entry.entry_id)
             for relay in hub.relays
         ]
     )
@@ -25,18 +24,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
 
-    def __init__(self, coordinator, host, relay, reverse, config_entry_id):
+    def __init__(self, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
-        self._host = host
         self._relay = relay
         self._config_entry_id = config_entry_id
         self._reverse = reverse
-
-    @property
-    def available(self) -> bool:
-        """Return whether the entity is available."""
-        return self.coordinator.last_update_success
 
     @property
     def name(self) -> str:
@@ -47,11 +40,6 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     def unique_id(self) -> str:
         """Return the unique ID of the entity."""
         return f"{self._config_entry_id}_relay{self._relay.id}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return True
 
     @property
     def is_on(self):
