@@ -13,7 +13,13 @@ from systembridge.objects.command.response import CommandResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_COMMAND, CONF_HOST, CONF_PORT
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_COMMAND,
+    CONF_HOST,
+    CONF_PATH,
+    CONF_PORT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -46,13 +52,17 @@ SERVICE_SEND_COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARGUMENTS, []): cv.string,
     }
 )
+SERVICE_OPEN = "open"
+SERVICE_OPEN_SCHEMA = vol.Schema(
+    {vol.Required(CONF_BRIDGE): cv.string, vol.Required(CONF_PATH): cv.string}
+)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the System Bridge integration."""
 
     async def handle_send_command(call):
-        """Handle the service call."""
+        """Handle the send_command service call."""
         device_registry = await hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
 
@@ -83,11 +93,37 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
             _LOGGER.error("Error sending command. Error was: %s", exception)
 
+    async def handle_open(call):
+        """Handle the open service call."""
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_entry = device_registry.async_get(call.data.get(CONF_BRIDGE))
+
+        path = call.data.get(CONF_PATH)
+
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][
+            next(iter(device_entry.config_entries))
+        ]
+        bridge: Bridge = coordinator.data
+
+        _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
+        try:
+            await bridge.async_open({CONF_PATH: path})
+            _LOGGER.debug("Sent.")
+        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+            _LOGGER.error("Error sending. Error was: %s", exception)
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_SEND_COMMAND,
         handle_send_command,
         schema=SERVICE_SEND_COMMAND_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_OPEN,
+        handle_open,
+        schema=SERVICE_OPEN_SCHEMA,
     )
 
     return True
@@ -155,6 +191,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+
+    hass.services.async_remove(DOMAIN, SERVICE_SEND_COMMAND)
+    hass.services.async_remove(DOMAIN, SERVICE_OPEN)
 
     return unload_ok
 

@@ -1,9 +1,10 @@
 send_command:
-  description: Sends a command to the server.
+  name: Send Command
+  description: Sends a command to the server to run.
   fields:
     bridge:
       name: Bridge
-      description: Server to send the command to.
+      description: The server to send the command to.
       example: ""
       required: true
       selector:
@@ -22,5 +23,24 @@ send_command:
       required: false
       default: ""
       example: "hello"
+      selector:
+        text:
+open:
+  name: Open Path/URL
+  description: Open a URL or file on the server using the default application.
+  fields:
+    bridge:
+      name: Bridge
+      description: The server to talk to.
+      example: ""
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    path:
+      name: Path/URL
+      description: Path/URL to open.
+      required: true
+      example: "https://www.home-assistant.io"
       selector:
         text:
