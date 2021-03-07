@@ -21,7 +21,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
         SmartTubPump(controller.coordinator, pump)
         for spa in controller.spas
-        for pump in await spa.get_pumps()
+        for pump in controller.coordinator.data[spa.id]["pumps"].values()
     ]
 
     async_add_entities(entities)
