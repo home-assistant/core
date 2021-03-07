@@ -8,6 +8,10 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The SmartTub integration needs to re-authenticate your account"
       }
     },
     "error": {

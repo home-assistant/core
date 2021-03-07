@@ -9,6 +9,7 @@ import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -46,7 +47,11 @@ class SmartTubController:
             )
         except LoginFailed:
             # credentials were changed or invalidated, we need new ones
-
+            self._hass.async_create_task(
+                self._hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
+                )
+            )
             return False
         except (
             asyncio.TimeoutError,
