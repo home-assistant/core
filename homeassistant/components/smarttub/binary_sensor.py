@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
 )
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubStatusSensor
+from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubOnline(SmartTubStatusSensor, BinarySensorEntity):
+class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
     def __init__(self, coordinator, spa):
