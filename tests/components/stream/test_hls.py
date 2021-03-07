@@ -4,6 +4,7 @@ import io
 from unittest.mock import patch
 from urllib.parse import urlparse
 
+import async_timeout
 import av
 import pytest
 
@@ -20,6 +21,8 @@ from tests.components.stream.common import generate_h264_video
 STREAM_SOURCE = "some-stream-source"
 SEQUENCE_BYTES = io.BytesIO(b"some-bytes")
 DURATION = 10
+TEST_TIMEOUT = 8.0  # Lower than 9s home assistant timeout
+MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
 class HlsClient:
@@ -204,16 +207,18 @@ async def test_stream_ended(hass, stream_worker_sync):
     stream.endpoint_url("hls")
 
     # Run it dead
-    while True:
-        segment = await track.recv()
-        if segment is None:
+    segments = []
+    while len(segments) < MAX_ABORT_SEGMENTS:
+        with async_timeout.timeout(TEST_TIMEOUT):
+            segment = await track.recv()
+        if not segment:
             break
-        segments = segment.sequence
-        # Allow worker to finalize once enough of the stream is been consumed
-        if segments > 1:
+        segments.append(segment.sequence)
+        if len(segments) > 1:
             stream_worker_sync.resume()
 
-    assert segments > 1
+    assert len(segments) < MAX_ABORT_SEGMENTS
+    assert len(segments) > 1
     assert not track.get_segment()
 
     # Stop stream, if it hasn't quit already

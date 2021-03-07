@@ -5,6 +5,7 @@ import os
 import threading
 from unittest.mock import patch
 
+import async_timeout
 import av
 import pytest
 
@@ -18,7 +19,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
-TEST_TIMEOUT = 10
+TEST_TIMEOUT = 8.0  # Lower than 9s home assistant timeout
+MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
 class SaveRecordWorkerSync:
@@ -82,16 +84,19 @@ async def test_record_stream(hass, hass_client, stream_worker_sync, record_worke
         await stream.async_record("/example/path")
 
     recorder = stream.add_provider("recorder")
-    while True:
-        segment = await recorder.recv()
+    segments = []
+    while len(segments) < MAX_ABORT_SEGMENTS:
+        with async_timeout.timeout(TEST_TIMEOUT):
+            segment = await recorder.recv()
         if not segment:
             break
-        segments = segment.sequence
-        if segments > 1:
+        segments.append(segment.sequence)
+        if len(segments) > 1:
             stream_worker_sync.resume()
 
+    assert len(segments) < MAX_ABORT_SEGMENTS
     stream.stop()
-    assert segments > 1
+    assert len(segments) > 1
 
     # Verify that the save worker was invoked, then block until its
     # thread completes and is shutdown completely to avoid thread leaks.
