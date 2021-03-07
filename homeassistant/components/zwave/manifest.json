@@ -4,5 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave",
   "requirements": ["homeassistant-pyozw==0.1.10", "pydispatcher==2.0.5"],
+  "after_dependencies": ["ozw"],
   "codeowners": ["@home-assistant/z-wave"]
 }
