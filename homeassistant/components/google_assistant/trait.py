@@ -694,7 +694,7 @@ class TemperatureControlTrait(_Trait):
     name = TRAIT_TEMPERATURE_CONTROL
 
     @staticmethod
-    def supported(domain, features, device_class):
+    def supported(domain, _, device_class, _):
         """Test if state is supported."""
         return (
             domain == sensor.DOMAIN and device_class == sensor.DEVICE_CLASS_TEMPERATURE

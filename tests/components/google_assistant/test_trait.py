@@ -954,6 +954,26 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
     assert calls[0].data == {ATTR_ENTITY_ID: "climate.bla", ATTR_TEMPERATURE: 19}
 
 
+async def test_temperature_control(hass):
+    """Test TemperatureControl trait support for climate domain."""
+    hass.config.units.temperature_unit = TEMP_CELSIUS
+
+    trt = trait.TemperatureControlTrait(
+        hass,
+        State("sensor.temp", 18),
+        BASIC_CONFIG,
+    )
+    assert trt.sync_attributes() == {
+        "queryOnlyTemperatureSetting": True,
+        "temperatureUnitForUX": "C",
+        "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
+    }
+    assert trt.query_attributes() == {
+        "temperatureSetpointCelsius": 18,
+        "temperatureAmbientCelsius": 18,
+    }
+
+
 async def test_humidity_setting_humidifier_setpoint(hass):
     """Test HumiditySetting trait support for humidifier domain - setpoint."""
     assert helpers.get_google_type(humidifier.DOMAIN, None) is not None
@@ -2381,15 +2401,15 @@ async def test_media_player_mute(hass):
 
 
 async def test_temperature_setting_sensor(hass):
-    """Test TemperatureSetting trait support for temperature sensor."""
+    """Test TemperatureControl trait support for temperature sensor."""
     assert (
         helpers.get_google_type(sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE)
         is not None
     )
-    assert not trait.TemperatureSettingTrait.supported(
+    assert not trait.TemperatureControlTrait.supported(
         sensor.DOMAIN, 0, sensor.DEVICE_CLASS_HUMIDITY, None
     )
-    assert trait.TemperatureSettingTrait.supported(
+    assert trait.TemperatureControlTrait.supported(
         sensor.DOMAIN, 0, sensor.DEVICE_CLASS_TEMPERATURE, None
     )
 
@@ -2407,7 +2427,7 @@ async def test_temperature_setting_sensor_data(hass, unit_in, unit_out, state, a
     """Test TemperatureSetting trait support for temperature sensor."""
     hass.config.units.temperature_unit = unit_in
 
-    trt = trait.TemperatureSettingTrait(
+    trt = trait.TemperatureControlTrait(
         hass,
         State(
             "sensor.test", state, {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TEMPERATURE}
@@ -2417,11 +2437,15 @@ async def test_temperature_setting_sensor_data(hass, unit_in, unit_out, state, a
 
     assert trt.sync_attributes() == {
         "queryOnlyTemperatureSetting": True,
-        "thermostatTemperatureUnit": unit_out,
+        "temperatureUnitForUX": unit_out,
+        "temperatureRange": {"maxThresholdCelsius": 100, "minThresholdCelsius": -100},
     }
 
     if ambient:
-        assert trt.query_attributes() == {"thermostatTemperatureAmbient": ambient}
+        assert trt.query_attributes() == {
+            "temperatureAmbientCelsius": ambient,
+            "temperatureSetpointCelsius": ambient,
+        }
     else:
         assert trt.query_attributes() == {}
     hass.config.units.temperature_unit = TEMP_CELSIUS
