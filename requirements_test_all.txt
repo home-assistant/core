@@ -1174,7 +1174,7 @@ surepy==0.6.0
 synologydsm-api==1.0.2
 
 # homeassistant.components.system_bridge
-systembridge==0.1.3
+systembridge==1.0.0
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
