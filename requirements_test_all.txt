@@ -794,7 +794,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.2.5
+pylitterbot==2021.2.8
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.9.0
@@ -827,7 +827,7 @@ pymonoprice==0.3
 pymyq==3.0.4
 
 # homeassistant.components.mysensors
-pymysensors==0.20.1
+pymysensors==0.21.0
 
 # homeassistant.components.nuki
 pynuki==1.3.8
@@ -1157,7 +1157,7 @@ twinkly-client==0.0.2
 upb_lib==0.4.12
 
 # homeassistant.components.upcloud
-upcloud-api==0.4.5
+upcloud-api==1.0.1
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
