@@ -177,7 +177,7 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
         """Return the forecast."""
         if (
             not isinstance(self._forecast, list)
-            or len(self._forecast) == 0
+            or len(self._forecast)
             and not isinstance(self._forecast[0], dict)
         ):
             _LOGGER.warning("forecast_template must be a list of dict")
