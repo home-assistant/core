@@ -103,6 +103,7 @@ class BondEntity(Entity):
     async def _async_update_if_bpup_not_alive(self, *_: Any) -> None:
         """Fetch via the API if BPUP is not alive."""
         if self._bpup_subs.alive and self._initialized:
+            self._async_declare_available()
             return
 
         assert self._update_lock is not None
@@ -116,7 +117,8 @@ class BondEntity(Entity):
 
         async with self._update_lock:
             await self._async_update_from_api()
-            self.async_write_ha_state()
+
+        self.async_write_ha_state()
 
     async def _async_update_from_api(self) -> None:
         """Fetch via the API."""
@@ -136,12 +138,17 @@ class BondEntity(Entity):
         raise NotImplementedError
 
     @callback
+    def _async_declare_available(self) -> None:
+        if self._available:
+            return
+        _LOGGER.info("Entity %s has come back", self.entity_id)
+        self._available = True
+
+    @callback
     def _async_state_callback(self, state: dict) -> None:
         """Process a state change."""
         self._initialized = True
-        if not self._available:
-            _LOGGER.info("Entity %s has come back", self.entity_id)
-        self._available = True
+        self._async_declare_available()
         _LOGGER.debug(
             "Device state for %s (%s) is:\n%s", self.name, self.entity_id, state
         )
