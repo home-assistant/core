@@ -102,7 +102,7 @@ class ActivityStream(AugustSubscriberMixin):
             self._update_locks[house_id] = asyncio.Lock()
             self._update_debounce[house_id] = None
 
-        if self._update_locks[house_id].is_locked():
+        if self._update_locks[house_id].locked():
             if self._update_debounce[house_id] is not None:
                 return
 
