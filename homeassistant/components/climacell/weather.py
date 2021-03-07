@@ -96,6 +96,13 @@ async def async_setup_entry(
 class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
     """Base ClimaCell weather entity."""
 
+    @staticmethod
+    def _translate_condition(
+        condition: Optional[int], sun_is_up: bool = True
+    ) -> Optional[str]:
+        """Translate ClimaCell condition into an HA condition."""
+        raise NotImplementedError()
+
     def _forecast_dict(
         self,
         forecast_dt: datetime,
