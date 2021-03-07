@@ -388,7 +388,7 @@ class PollControl(ZigbeeChannel):
 
     CHECKIN_INTERVAL = 55 * 60 * 4  # 55min
     CHECKIN_FAST_POLL_TIMEOUT = 2 * 4  # 2s
-    LONG_POLL = 6 * 4  # 6s
+    LONG_POLL = 8 * 60 * 4  # 8min
 
     async def async_configure_channel_specific(self) -> None:
         """Configure channel: set check-in interval."""
