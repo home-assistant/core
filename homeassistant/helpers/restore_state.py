@@ -251,6 +251,10 @@ class RestoreEntity(Entity):
 
     async def async_get_last_state(self) -> Optional[State]:
         """Get the entity state from the previous run."""
+        if self.hass is None or self.entity_id is None:
+            # Return None if this entity isn't added to hass yet
+            _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
+            return None
         data = await RestoreStateData.async_get_instance(self.hass)
         if self.entity_id not in data.last_states:
             return None
