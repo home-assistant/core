@@ -1,6 +1,4 @@
 """Test the SmartTub sensor platform."""
-from datetime import date, timedelta
-
 import pytest
 
 
@@ -46,13 +44,3 @@ async def test_secondary_filtration(spa, setup_entry, hass):
     assert state.state == "inactive"
     assert state.attributes["cycle_last_updated"] is not None
     assert state.attributes["mode"] == "away"
-
-
-async def test_reminders(spa, setup_entry, hass):
-    """Test the reminder sensor."""
-
-    entity_id = f"sensor.{spa.brand}_{spa.model}_myfilter_reminder"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert date.fromisoformat(state.state) <= date.today() + timedelta(days=2)
-    assert state.attributes["snoozed"] is False

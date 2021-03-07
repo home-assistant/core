@@ -1,12 +1,9 @@
 """Platform for sensor integration."""
-from datetime import datetime, timedelta
 from enum import Enum
 import logging
 
-from smarttub import SpaReminder
-
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity, SmartTubSensorBase
+from .entity import SmartTubSensorBase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,8 +13,6 @@ ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
 ATTR_MODE = "mode"
 # the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
-# whether the reminder has been snoozed (bool)
-ATTR_REMINDER_SNOOZED = "snoozed"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -44,10 +39,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 SmartTubPrimaryFiltrationCycle(controller.coordinator, spa),
                 SmartTubSecondaryFiltrationCycle(controller.coordinator, spa),
             ]
-        )
-        entities.extend(
-            SmartTubReminder(controller.coordinator, spa, reminder)
-            for reminder in await spa.get_reminders()
         )
 
     async_add_entities(entities)
@@ -111,40 +102,4 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return {
             ATTR_CYCLE_LAST_UPDATED: state.last_updated.isoformat(),
             ATTR_MODE: state.mode.name.lower(),
-        }
-
-
-class SmartTubReminder(SmartTubEntity):
-    """Reminders for maintenance actions."""
-
-    def __init__(self, coordinator, spa, reminder):
-        """Initialize the entity."""
-        super().__init__(
-            coordinator,
-            spa,
-            f"{reminder.name.capitalize()} Reminder",
-        )
-        self.reminder_id = reminder.id
-
-    @property
-    def unique_id(self):
-        """Return a unique id for this sensor."""
-        return f"{self.spa.id}-reminder-{self.reminder_id}"
-
-    @property
-    def reminder(self) -> SpaReminder:
-        """Return the underlying SpaPump object for this entity."""
-        return self.coordinator.data[self.spa.id]["reminders"][self.reminder_id]
-
-    @property
-    def state(self) -> str:
-        """Return the date at which the reminder will activate."""
-        when = datetime.now() + timedelta(days=self.reminder.remaining_days)
-        return when.date().isoformat()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
         }
