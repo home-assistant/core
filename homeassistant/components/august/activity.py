@@ -27,7 +27,7 @@ class ActivityStream(AugustSubscriberMixin):
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
-        self._latest_activities_by_id_type = {}
+        self._latest_activities = {}
         self._last_update_time = None
         self._abort_async_track_time_interval = None
         self._pubnub = pubnub
@@ -47,10 +47,10 @@ class ActivityStream(AugustSubscriberMixin):
 
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
-        if device_id not in self._latest_activities_by_id_type:
+        if device_id not in self._latest_activities:
             return None
 
-        latest_device_activities = self._latest_activities_by_id_type[device_id]
+        latest_device_activities = self._latest_activities[device_id]
         latest_activity = None
 
         for activity_type in activity_types:
@@ -115,7 +115,7 @@ class ActivityStream(AugustSubscriberMixin):
         elif self._update_debounce[house_id] is not None:
             self._update_debounce[house_id].cancel()
 
-        async with self._house_update_locks[house_id]:
+        async with self._update_locks[house_id]:
             _LOGGER.debug("Updating device activity for house id %s", house_id)
             try:
                 activities = await self._api.async_get_house_activities(
@@ -151,12 +151,8 @@ class ActivityStream(AugustSubscriberMixin):
         for activity in activities:
             device_id = activity.device_id
             activity_type = activity.activity_type
-
-            self._latest_activities_by_id_type.setdefault(device_id, {})
-
-            lastest_activity = self._latest_activities_by_id_type[device_id].get(
-                activity_type
-            )
+            device_activities = self._latest_activities.setdefault(device_id, {})
+            lastest_activity = device_activities.get(activity_type)
 
             # Ignore activities that are older than the latest one
             if (
@@ -165,7 +161,7 @@ class ActivityStream(AugustSubscriberMixin):
             ):
                 continue
 
-            self._latest_activities_by_id_type[device_id][activity_type] = activity
+            device_activities[activity_type] = activity
 
             updated_device_ids.add(device_id)
 
