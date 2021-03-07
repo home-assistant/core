@@ -288,6 +288,7 @@ class AugustData(AugustSubscriberMixin):
     def async_stop(self):
         """Stop the subscriptions."""
         self._pubnub_unsub()
+        self.activity_stream.async_stop()
 
     @property
     def doorbells(self):

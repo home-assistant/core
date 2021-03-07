@@ -31,10 +31,19 @@ class ActivityStream(AugustSubscriberMixin):
         self._last_update_time = None
         self._abort_async_track_time_interval = None
         self._pubnub = pubnub
+        self._update_locks = {}
+        self._update_debounce = {}
 
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
         await self._async_refresh(utcnow())
+
+    @callback
+    def async_stop(self):
+        """Cleanup any debounces."""
+        for handle in self._update_debounce.values():
+            if handle is not None:
+                handle.cancel()
 
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
@@ -89,33 +98,51 @@ class ActivityStream(AugustSubscriberMixin):
 
     async def _async_update_device_activities_for_house_id(self, house_id, limit):
         """Update device activities for a house."""
-        _LOGGER.debug("Updating device activity for house id %s", house_id)
-        try:
-            activities = await self._api.async_get_house_activities(
-                self._august_gateway.access_token, house_id, limit=limit
-            )
-        except ClientError as ex:
-            _LOGGER.error(
-                "Request error trying to retrieve activity for house id %s: %s",
+        if house_id not in self._update_locks:
+            self._update_locks[house_id] = asyncio.Lock()
+            self._update_debounce[house_id] = None
+
+        if self._update_locks[house_id].is_locked():
+            if self._update_debounce[house_id] is not None:
+                return
+
+            self._update_debounce[house_id] = self._hass.loop.call_later(
+                ACTIVITY_UPDATE_INTERVAL.seconds,
+                self.async_schedule_house_id_refresh,
                 house_id,
-                ex,
             )
-            # Make sure we process the next house if one of them fails
             return
 
-        _LOGGER.debug(
-            "Completed retrieving device activities for house id %s", house_id
-        )
+        async with self._house_update_locks[house_id]:
+            _LOGGER.debug("Updating device activity for house id %s", house_id)
+            try:
+                activities = await self._api.async_get_house_activities(
+                    self._august_gateway.access_token, house_id, limit=limit
+                )
+            except ClientError as ex:
+                _LOGGER.error(
+                    "Request error trying to retrieve activity for house id %s: %s",
+                    house_id,
+                    ex,
+                )
+                # Make sure we process the next house if one of them fails
+                return
+
+            _LOGGER.debug(
+                "Completed retrieving device activities for house id %s", house_id
+            )
 
         updated_device_ids = self._process_newer_device_activities(activities)
 
-        if updated_device_ids:
-            for device_id in updated_device_ids:
-                _LOGGER.debug(
-                    "async_signal_device_id_update (from activity stream): %s",
-                    device_id,
-                )
-                self.async_signal_device_id_update(device_id)
+        if not updated_device_ids:
+            return
+
+        for device_id in updated_device_ids:
+            _LOGGER.debug(
+                "async_signal_device_id_update (from activity stream): %s",
+                device_id,
+            )
+            self.async_signal_device_id_update(device_id)
 
     def _process_newer_device_activities(self, activities):
         updated_device_ids = set()
