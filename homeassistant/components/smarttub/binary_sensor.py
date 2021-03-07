@@ -31,7 +31,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities.append(SmartTubOnline(controller.coordinator, spa))
         entities.extend(
             SmartTubReminder(controller.coordinator, spa, reminder)
-            for reminder in await spa.get_reminders()
+            for reminder in controller.coordinator.data[spa.id]["reminders"].values()
         )
 
     async_add_entities(entities)
