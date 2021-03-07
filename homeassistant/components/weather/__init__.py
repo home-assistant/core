@@ -1,5 +1,5 @@
 """Weather component that handles meteorological data for your location."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
@@ -179,10 +179,10 @@ class WeatherEntity(Entity):
             forecast = []
             for forecast_entry in self.forecast:
                 forecast_entry = dict(forecast_entry)
-                if not isinstance(forecast_entry[ATTR_FORECAST_TIME], str):
-                    forecast_entry[ATTR_FORECAST_TIME] = str(
-                        forecast_entry[ATTR_FORECAST_TIME]
-                    )
+                if isinstance(forecast_entry[ATTR_FORECAST_TIME], datetime):
+                    forecast_entry[ATTR_FORECAST_TIME] = forecast_entry[
+                        ATTR_FORECAST_TIME
+                    ].isoformat()
                 forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
                     self.hass,
                     forecast_entry[ATTR_FORECAST_TEMP],
