@@ -260,7 +260,7 @@ anthemav==1.1.10
 apcaccess==0.0.13
 
 # homeassistant.components.apns
-apns2==0.3.0
+apns2==0.7.2
 
 # homeassistant.components.apprise
 apprise==0.8.9
