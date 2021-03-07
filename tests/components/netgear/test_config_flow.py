@@ -245,7 +245,7 @@ async def test_ssdp(hass, service):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == SERIAL
     assert result["title"] == TITLE
-    assert result["data"].get(CONF_URL) == HOST
+    assert result["data"].get(CONF_URL) == f"http://{HOST}/"
     assert result["data"].get(CONF_HOST) is None
     assert result["data"].get(CONF_PORT) is None
     assert result["data"].get(CONF_SSL) is None
