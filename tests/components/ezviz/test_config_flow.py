@@ -22,6 +22,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     USER_INPUT,
     USER_INPUT_CAMERA,
+    USER_INPUT_VALIDATE,
     YAML_CONFIG,
     YAML_CONFIG_CAMERA,
     YAML_INVALID,
@@ -44,7 +45,7 @@ async def test_user_form(hass, ezviz_config_flow):
     with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            USER_INPUT,
+            USER_INPUT_VALIDATE,
         )
         await hass.async_block_till_done()
 
@@ -66,7 +67,7 @@ async def test_user_form_unexpected_exception(hass, ezviz_config_flow):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        USER_INPUT,
+        USER_INPUT_VALIDATE,
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -91,11 +92,7 @@ async def test_async_step_import_camera(hass, ezviz_config_flow):
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG_CAMERA
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {
-        "password": "test-password",
-        "serial": "C666666",
-        "username": "test-username",
-    }
+    assert result["data"] == USER_INPUT_CAMERA
 
 
 async def test_async_step_import_abort(hass, ezviz_config_flow):
@@ -106,32 +103,6 @@ async def test_async_step_import_abort(hass, ezviz_config_flow):
         DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_INVALID
     )
     assert result["type"] == RESULT_TYPE_ABORT
-
-
-async def test_user_form_2nd_instance_returns_form(hass, ezviz_config_flow):
-    """Test that configuring 2nd instance returns form."""
-    await init_integration(hass, skip_entry_setup=True)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=USER_INPUT_CAMERA,
-    )
-    assert result["type"] == RESULT_TYPE_FORM
-
-    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            USER_INPUT_CAMERA,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test-username"
-    assert result["data"] == {**USER_INPUT_CAMERA}
-
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 2
 
 
 async def test_options_flow(hass, ezviz):

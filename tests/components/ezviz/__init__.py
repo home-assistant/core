@@ -4,12 +4,20 @@ from unittest.mock import patch
 from homeassistant.components.ezviz.const import (
     ATTR_CAMERAS,
     ATTR_SERIAL,
+    ATTR_TYPE_CAMERA,
+    ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
@@ -26,18 +34,25 @@ ENTRY_OPTIONS = {
     CONF_TIMEOUT: DEFAULT_TIMEOUT,
 }
 
-USER_INPUT = {
+USER_INPUT_VALIDATE = {
     CONF_USERNAME: "test-username",
     CONF_PASSWORD: "test-password",
     CONF_REGION: "test-region",
 }
 
-USER_INPUT_CAMERA = {
-    ATTR_SERIAL: "test-username",
-    CONF_PASSWORD: "test-password",
+USER_INPUT = {
     CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+    CONF_REGION: "test-region",
+    CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
+USER_INPUT_CAMERA = {
+    ATTR_SERIAL: "C666666",
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
+    CONF_TYPE: ATTR_TYPE_CAMERA,
+}
 
 YAML_CONFIG = {
     CONF_USERNAME: "test-username",
