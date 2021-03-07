@@ -2,17 +2,23 @@
 import logging
 from typing import Any, Dict
 
-from pyclimacell import ClimaCell
-from pyclimacell.const import REALTIME
+from pyclimacell import ClimaCellV3
 from pyclimacell.exceptions import (
     CantConnectException,
     InvalidAPIKeyException,
     RateLimitedException,
 )
+from pyclimacell.pyclimacell import ClimaCellV4
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_VERSION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -42,6 +48,7 @@ def _get_config_schema(
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
             vol.Required(CONF_API_KEY, default=input_dict.get(CONF_API_KEY)): str,
+            vol.Required(CONF_API_VERSION, default=4): vol.In([3, 4]),
             vol.Inclusive(
                 CONF_LATITUDE,
                 "location",
@@ -84,7 +91,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
             vol.Required(
                 CONF_TIMESTEP,
                 default=self._config_entry.options.get(CONF_TIMESTEP, DEFAULT_TIMESTEP),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=60)),
+            ): vol.In([1, 5, 15, 30]),
         }
 
         return self.async_show_form(
@@ -95,7 +102,7 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
 class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ClimaCell Weather API."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
@@ -119,12 +126,18 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             try:
-                await ClimaCell(
+                if user_input[CONF_API_VERSION] == 3:
+                    api_class = ClimaCellV3
+                    field = "temp"
+                else:
+                    api_class = ClimaCellV4
+                    field = "temperature"
+                await api_class(
                     user_input[CONF_API_KEY],
                     str(user_input.get(CONF_LATITUDE, self.hass.config.latitude)),
                     str(user_input.get(CONF_LONGITUDE, self.hass.config.longitude)),
                     session=async_get_clientsession(self.hass),
-                ).realtime(ClimaCell.first_field(REALTIME))
+                ).realtime([field])
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
