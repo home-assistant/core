@@ -71,7 +71,7 @@ class Ticker(CoordinatorEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._get_data_property("quoteAsset")
+        return self._get_data_property("baseAsset")
 
     @property
     def icon(self):
