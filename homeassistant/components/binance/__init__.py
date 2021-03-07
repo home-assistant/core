@@ -75,7 +75,6 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
             all_markets = await binance.get_exchange_info()
             all_balances = await binance.get_account()
 
-            result_dict = {}
             tickers_dict = {}
 
             for sym in self.symbols:
@@ -90,7 +89,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
                     combined_details_dict = {**ticker_details, **market_details}
                     tickers_dict[sym].update(combined_details_dict)
 
-            result_dict["tickers"] = tickers_dict
+            result_dict = {"tickers": tickers_dict}
 
             asset_tickers_dict = {}
 
