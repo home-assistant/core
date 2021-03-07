@@ -16,7 +16,12 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
-    {CONF_HOST: str, CONF_USERNAME: str, CONF_PASSWORD: str, CONF_REVERSE: bool}
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_REVERSE, default=False): bool,
+    }
 )
 
 
