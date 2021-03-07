@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER
@@ -34,6 +33,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up kmtronic from a config entry."""
+    # light migration of config entry in https://github.com/home-assistant/core/pull/47532
+    if CONF_REVERSE not in entry.data:
+        entry.data[CONF_REVERSE] = False
+
     session = aiohttp_client.async_get_clientsession(hass)
     auth = Auth(
         session,
@@ -76,19 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    return True
-
-
-async def async_migrate_entry(
-    hass: HomeAssistantType, config_entry: ConfigEntry
-) -> bool:
-    """Migrate config entry to new version."""
-    if config_entry.version == 1:
-        options = dict(config_entry.options)
-        options[CONF_REVERSE] = False
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=options)
-        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     return True
 
 
