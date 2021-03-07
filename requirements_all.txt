@@ -245,7 +245,7 @@ alpha_vantage==2.3.1
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.7.0
+amcrest==1.7.1
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.57
@@ -721,7 +721,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.3.0
+ha-philipsjs==2.3.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -1606,7 +1606,7 @@ pyoppleio==1.0.5
 pyota==2.0.5
 
 # homeassistant.components.opentherm_gw
-pyotgw==1.0b1
+pyotgw==1.1b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
@@ -2400,4 +2400,4 @@ zigpy==0.32.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.21.0
+zwave-js-server-python==0.21.1

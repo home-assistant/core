@@ -29,7 +29,6 @@ CONF_GATEWAY_TYPE_ALL: List[str] = [
 
 
 DOMAIN: str = "mysensors"
-MYSENSORS_GATEWAY_READY: str = "mysensors_gateway_ready_{}"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: str = "mysensors_gateways"
 PLATFORM: str = "platform"
