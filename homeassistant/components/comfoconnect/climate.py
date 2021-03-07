@@ -20,8 +20,6 @@ from . import DOMAIN, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, ComfoConnectBridge
 
 _LOGGER = logging.getLogger(__name__)
 HVAC_MODES = [HVAC_MODE_HEAT, HVAC_MODE_COOL]
-SENSOR_BYPASS_STATE_LOCAL = 0
-SENSOR_TEMPERATURE_SUPPLY_LOCAL = 0
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -38,6 +36,8 @@ class ComfoConnectBypass(ClimateEntity):
         """Initialize the ComfoConnect bypass."""
         self._name = name
         self._ccb = ccb
+        self.SENSOR_TEMPERATURE_SUPPLY_LOCAL = 0
+        self.SENSOR_BYPASS_STATE_LOCAL = 0
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
@@ -68,9 +68,9 @@ class ComfoConnectBypass(ClimateEntity):
         _LOGGER.debug(
             "Handle update for climate - bypass (%d): %s", SENSOR_BYPASS_STATE, value
         )
-        SENSOR_BYPASS_STATE_LOCAL = value
+        self.SENSOR_BYPASS_STATE_LOCAL = value
 
-        self._ccb.data[SENSOR_BYPASS_STATE] = SENSOR_BYPASS_STATE_LOCAL
+        self._ccb.data[SENSOR_BYPASS_STATE] = self.SENSOR_BYPASS_STATE_LOCAL
         self.schedule_update_ha_state()
 
     def _handle_update_temp(self, value):
@@ -80,9 +80,9 @@ class ComfoConnectBypass(ClimateEntity):
             SENSOR_TEMPERATURE_SUPPLY,
             value,
         )
-        SENSOR_TEMPERATURE_SUPPLY_LOCAL = value
+        self.SENSOR_TEMPERATURE_SUPPLY_LOCAL = value
 
-        self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = SENSOR_TEMPERATURE_SUPPLY_LOCAL
+        self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = self.SENSOR_TEMPERATURE_SUPPLY_LOCAL
         self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
@@ -96,7 +96,7 @@ class ComfoConnectBypass(ClimateEntity):
             _LOGGER.debug("Send command: CMD_BYPASS_ON")
             self._ccb.comfoconnect.cmd_rmi_request(CMD_BYPASS_ON)
         else:
-            _LOGGER.error("Unsupported hvac_mode: %s", hvac_mode)
+            raise ValueError("Unsupported hvac_mode: %s", hvac_mode)
 
         # Update current mode
         self.schedule_update_ha_state()
@@ -109,14 +109,10 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current bypass mode. If the bypass state > 0 ComfoConenct started enabling bypass. 100% of bypass state = minimal heat recovery."""
-        bypass = SENSOR_BYPASS_STATE_LOCAL
+        bypass = self.SENSOR_BYPASS_STATE_LOCAL
         if bypass:
-            _LOGGER.debug(
-                "Current bypass state: %s, return: %s", bypass, HVAC_MODE_COOL
-            )
             return HVAC_MODE_COOL
 
-        _LOGGER.debug("Current bypass state: %s, return: %s", bypass, HVAC_MODE_HEAT)
         return HVAC_MODE_HEAT
 
     @property
@@ -132,4 +128,4 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def current_temperature(self):
         """Return current supply temperature."""
-        return SENSOR_TEMPERATURE_SUPPLY_LOCAL * 0.1
+        return self.SENSOR_TEMPERATURE_SUPPLY_LOCAL * 0.1
