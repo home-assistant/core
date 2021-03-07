@@ -57,7 +57,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
 
         balances = await binance.get_account()
         for balance in balances["balances"]:
-            if balance["free"] != "0.00000000":
+            if balance["free"] > "0.00000000":
                 balances_list.append(balance["asset"])
         balances_list.sort()
     except BinanceAPIException as error:

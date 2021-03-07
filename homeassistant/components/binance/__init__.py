@@ -66,6 +66,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
 
             all_tickers = await binance.get_ticker()
             all_markets = await binance.get_exchange_info()
+            all_balances = await binance.get_account()
 
             tickers_dict = {}
 
@@ -83,13 +84,38 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
 
             result_dict = {"tickers": tickers_dict}
 
-            all_balances = await binance.get_account()
             balances_dict = {}
 
             for balance in all_balances["balances"]:
-                if balance["free"] != "0.00000000":
+                if (
+                    balance["free"] > "0.00000000"
+                    and balance["asset"] not in balances_dict
+                ):
                     balances_dict[balance["asset"]] = {}
                     balances_dict[balance["asset"]].update(balance)
+
+                    if "USDT" not in balance["asset"]:
+                        # Prevent that we try to search USDTUSDT
+                        usdt_symbol = str(balance["asset"] + "USDT")
+                        usdt_ticker_details = next(
+                            item
+                            for item in all_tickers
+                            if item["symbol"] == usdt_symbol
+                        )
+
+                        if usdt_ticker_details:
+                            # If we can find a USDT pair, include it in the dict
+                            balances_dict[balance["asset"]]["USDT"] = {}
+                            balances_dict[balance["asset"]]["USDT"].update(
+                                usdt_ticker_details
+                            )
+                            balances_dict[balance["asset"]]["asset_value_in_usdt"] = (
+                                float(balance["free"]) + float(balance["locked"])
+                            ) * float(usdt_ticker_details["lastPrice"])
+                    else:
+                        balances_dict[balance["asset"]]["asset_value_in_usdt"] = float(
+                            balance["free"]
+                        ) + float(balance["locked"])
 
             result_dict["balances"] = balances_dict
 

@@ -27,6 +27,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for balance in coordinator.data[CONF_BALANCES]:
             entities.append(Balance(coordinator, balance))
 
+        entities.append(TotalAssetValue(coordinator))
+
     if CONF_OPEN_ORDERS in coordinator.data:
         entities.append(OpenOrder(coordinator, coordinator.data[CONF_OPEN_ORDERS]))
 
@@ -114,34 +116,34 @@ class Balance(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._get_data_property("free")
+        return self._get_data_property("free") + self._get_data_property("locked")
 
     @property
     def unique_id(self):
         """Return a unique id for the sensor."""
         return self._unique_id
 
-    # @property
-    # def unit_of_measurement(self):
-    #     """Return the unit the value is expressed in."""
-    #     return self._get_data_property("currencySymbol")
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._get_data_property("asset")
 
-    # @property
-    # def icon(self):
-    #     """Icon to use in the frontend."""
-    #     return CURRENCY_ICONS.get(
-    #         self._get_data_property("currencySymbol"),
-    #         DEFAULT_COIN_ICON,
-    #     )
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return CURRENCY_ICONS.get(
+            self.unit_of_measurement,
+            DEFAULT_COIN_ICON,
+        )
 
     @property
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            # "currency_symbol": self._get_data_property("currencySymbol"),
             "free": self._get_data_property("free"),
             "locked": self._get_data_property("locked"),
-            # "unit_of_measurement": self._get_data_property("currencySymbol"),
+            "usdt_value": self._get_data_property("asset_value_in_usdt"),
+            "unit_of_measurement": self.unit_of_measurement,
             "source": "Binance",
         }
 
@@ -196,3 +198,56 @@ class OpenOrder(Order):
     def unique_id(self):
         """Return a unique id for the sensor."""
         return self._unique_id
+
+
+class TotalAssetValue(CoordinatorEntity):
+    """Implementation of the total asset value sensor."""
+
+    def __init__(self, coordinator):
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._name = "BIN Total Asset Value - USDT"
+        self._unique_id = "bin_total_asset_value_usdt"
+        self._icon = "mdi:cash"
+        self._unit_of_measurement = "USDT"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        total_usdt_value = 0.0
+
+        for i in self.coordinator.data[CONF_BALANCES].keys():
+            total_usdt_value += float(
+                self.coordinator.data[CONF_BALANCES][i]["asset_value_in_usdt"]
+            )
+
+        return total_usdt_value
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor."""
+        return self._unique_id
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return self._icon
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        return {
+            "note": "Value is based on the last USDT price of every coin in balance",
+            "source": "Binance",
+        }
