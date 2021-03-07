@@ -198,7 +198,7 @@ class TotpSetupFlow(SetupFlow):
         errors: Dict[str, str] = {}
 
         if user_input:
-            verified = await self.hass.async_add_executor_job(  # type: ignore
+            verified = await self.hass.async_add_executor_job(
                 pyotp.TOTP(self._ota_secret).verify, user_input["code"]
             )
             if verified:

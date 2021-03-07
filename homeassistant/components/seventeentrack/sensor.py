@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -22,7 +23,6 @@ from homeassistant.util import Throttle, slugify
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
-ATTR_FRIENDLY_NAME = "friendly_name"
 ATTR_INFO_TEXT = "info_text"
 ATTR_ORIGIN_COUNTRY = "origin_country"
 ATTR_PACKAGES = "packages"
@@ -244,7 +244,7 @@ class SeventeenTrackPackageSensor(Entity):
 
     async def _remove(self, *_):
         """Remove entity itself."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         reg = await self.hass.helpers.entity_registry.async_get_registry()
         entity_id = reg.async_get_entity_id(

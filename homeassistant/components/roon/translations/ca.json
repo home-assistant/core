@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
-                "description": "Introdueix el nom d'amfitri\u00f3 o la IP del servidor Roon"
+                "description": "No s'ha pogut descobrir el servidor Roon, introdueix el nom d'amfitri\u00f3 o la IP."
             }
         }
     }

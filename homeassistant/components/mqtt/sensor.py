@@ -1,7 +1,6 @@
 """Support for MQTT sensors."""
 from datetime import timedelta
 import functools
-import logging
 from typing import Optional
 
 import voluptuous as vol
@@ -38,8 +37,6 @@ from .mixins import (
     async_setup_entry_helper,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_EXPIRE_AFTER = "expire_after"
 
 DEFAULT_NAME = "MQTT Sensor"
@@ -72,7 +69,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT sensors dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -201,7 +197,6 @@ class MqttSensor(MqttEntity, Entity):
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         expire_after = self._config.get(CONF_EXPIRE_AFTER)
-        # pylint: disable=no-member
         return MqttAvailability.available.fget(self) and (
             expire_after is None or not self._expired
         )

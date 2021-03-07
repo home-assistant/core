@@ -18,5 +18,10 @@
                 "title": "GIO\u015a (Polnesch Chefinspektorat vum \u00cbmweltschutz)"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "GIO\u015a Server ereechbar"
+        }
     }
 }

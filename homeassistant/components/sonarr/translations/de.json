@@ -1,19 +1,27 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "unknown": "Unerwateter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
         "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "title": "Integration erneut authentifizieren"
+            },
             "user": {
                 "data": {
                     "api_key": "API Schl\u00fcssel",
                     "base_path": "Pfad zur API",
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "ssl": "Verwendet ein SSL-Zertifikat",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 }
             }
         }

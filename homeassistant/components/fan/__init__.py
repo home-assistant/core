@@ -2,6 +2,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
+import math
 from typing import List, Optional
 
 import voluptuous as vol
@@ -23,6 +24,8 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +42,8 @@ SUPPORT_DIRECTION = 4
 SUPPORT_PRESET_MODE = 8
 
 SERVICE_SET_SPEED = "set_speed"
+SERVICE_INCREASE_SPEED = "increase_speed"
+SERVICE_DECREASE_SPEED = "decrease_speed"
 SERVICE_OSCILLATE = "oscillate"
 SERVICE_SET_DIRECTION = "set_direction"
 SERVICE_SET_PERCENTAGE = "set_percentage"
@@ -54,6 +59,7 @@ DIRECTION_REVERSE = "reverse"
 
 ATTR_SPEED = "speed"
 ATTR_PERCENTAGE = "percentage"
+ATTR_PERCENTAGE_STEP = "percentage_step"
 ATTR_SPEED_LIST = "speed_list"
 ATTR_OSCILLATING = "oscillating"
 ATTR_DIRECTION = "direction"
@@ -64,24 +70,32 @@ ATTR_PRESET_MODES = "preset_modes"
 # into core integrations at some point so we are temporarily
 # accommodating them in the transition to percentages.
 _NOT_SPEED_OFF = "off"
+_NOT_SPEED_ON = "on"
 _NOT_SPEED_AUTO = "auto"
 _NOT_SPEED_SMART = "smart"
 _NOT_SPEED_INTERVAL = "interval"
 _NOT_SPEED_IDLE = "idle"
 _NOT_SPEED_FAVORITE = "favorite"
+_NOT_SPEED_SLEEP = "sleep"
+_NOT_SPEED_SILENT = "silent"
 
 _NOT_SPEEDS_FILTER = {
     _NOT_SPEED_OFF,
+    _NOT_SPEED_ON,
     _NOT_SPEED_AUTO,
     _NOT_SPEED_SMART,
     _NOT_SPEED_INTERVAL,
     _NOT_SPEED_IDLE,
+    _NOT_SPEED_SILENT,
+    _NOT_SPEED_SLEEP,
     _NOT_SPEED_FAVORITE,
 }
 
 _FAN_NATIVE = "_fan_native"
 
 OFF_SPEED_VALUES = [SPEED_OFF, None]
+
+LEGACY_SPEED_LIST = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 class NoValidSpeedsError(ValueError):
@@ -134,6 +148,26 @@ async def async_setup(hass, config: dict):
         SERVICE_SET_SPEED,
         {vol.Required(ATTR_SPEED): cv.string},
         "async_set_speed_deprecated",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_INCREASE_SPEED,
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_increase_speed",
+        [SUPPORT_SET_SPEED],
+    )
+    component.async_register_entity_service(
+        SERVICE_DECREASE_SPEED,
+        {
+            vol.Optional(ATTR_PERCENTAGE_STEP): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=100)
+            )
+        },
+        "async_decrease_speed",
         [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
@@ -240,6 +274,35 @@ class FanEntity(ToggleEntity):
         else:
             await self.async_set_speed(self.percentage_to_speed(percentage))
 
+    async def async_increase_speed(self, percentage_step: Optional[int] = None) -> None:
+        """Increase the speed of the fan."""
+        await self._async_adjust_speed(1, percentage_step)
+
+    async def async_decrease_speed(self, percentage_step: Optional[int] = None) -> None:
+        """Decrease the speed of the fan."""
+        await self._async_adjust_speed(-1, percentage_step)
+
+    async def _async_adjust_speed(
+        self, modifier: int, percentage_step: Optional[int]
+    ) -> None:
+        """Increase or decrease the speed of the fan."""
+        current_percentage = self.percentage or 0
+
+        if percentage_step is not None:
+            new_percentage = current_percentage + (percentage_step * modifier)
+        else:
+            speed_range = (1, self.speed_count)
+            speed_index = math.ceil(
+                percentage_to_ranged_value(speed_range, current_percentage)
+            )
+            new_percentage = ranged_value_to_percentage(
+                speed_range, speed_index + modifier
+            )
+
+        new_percentage = max(0, min(100, new_percentage))
+
+        await self.async_set_percentage(new_percentage)
+
     @_fan_native
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -283,7 +346,6 @@ class FanEntity(ToggleEntity):
         """Turn on the fan."""
         raise NotImplementedError()
 
-    # pylint: disable=arguments-differ
     async def async_turn_on_compat(
         self,
         speed: Optional[str] = None,
@@ -386,7 +448,10 @@ class FanEntity(ToggleEntity):
             if preset_mode:
                 return preset_mode
         if self._implemented_percentage:
-            return self.percentage_to_speed(self.percentage)
+            percentage = self.percentage
+            if percentage is None:
+                return None
+            return self.percentage_to_speed(percentage)
         return None
 
     @property
@@ -400,11 +465,24 @@ class FanEntity(ToggleEntity):
         return 0
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        speed_list = speed_list_without_preset_modes(self.speed_list)
+        if speed_list:
+            return len(speed_list)
+        return 100
+
+    @property
+    def percentage_step(self) -> float:
+        """Return the step size for percentage."""
+        return 100 / self.speed_count
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         speeds = []
         if self._implemented_percentage:
-            speeds += [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            speeds += [SPEED_OFF, *LEGACY_SPEED_LIST]
         if self._implemented_preset_mode:
             speeds += self.preset_modes
         return speeds
@@ -434,6 +512,17 @@ class FanEntity(ToggleEntity):
 
         return attrs
 
+    @property
+    def _speed_list_without_preset_modes(self) -> list:
+        """Return the speed list without preset modes.
+
+        This property provides forward and backwards
+        compatibility for conversion to percentage speeds.
+        """
+        if not self._implemented_speed:
+            return LEGACY_SPEED_LIST
+        return speed_list_without_preset_modes(self.speed_list)
+
     def speed_to_percentage(self, speed: str) -> int:
         """
         Map a speed to a percentage.
@@ -453,7 +542,7 @@ class FanEntity(ToggleEntity):
         if speed in OFF_SPEED_VALUES:
             return 0
 
-        speed_list = speed_list_without_preset_modes(self.speed_list)
+        speed_list = self._speed_list_without_preset_modes
 
         if speed_list and speed not in speed_list:
             raise NotValidSpeedError(f"The speed {speed} is not a valid speed.")
@@ -487,7 +576,7 @@ class FanEntity(ToggleEntity):
         if percentage == 0:
             return SPEED_OFF
 
-        speed_list = speed_list_without_preset_modes(self.speed_list)
+        speed_list = self._speed_list_without_preset_modes
 
         try:
             return percentage_to_ordered_list_item(speed_list, percentage)
@@ -511,6 +600,7 @@ class FanEntity(ToggleEntity):
         if supported_features & SUPPORT_SET_SPEED:
             data[ATTR_SPEED] = self.speed
             data[ATTR_PERCENTAGE] = self.percentage
+            data[ATTR_PERCENTAGE_STEP] = self.percentage_step
 
         if (
             supported_features & SUPPORT_PRESET_MODE
@@ -563,7 +653,7 @@ def speed_list_without_preset_modes(speed_list: List):
       output: ["1", "2", "3", "4", "5", "6", "7"]
 
       input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
-      output: ["Silent", "Medium", "High", "Strong"]
+      output: ["Medium", "High", "Strong"]
     """
 
     return [speed for speed in speed_list if speed.lower() not in _NOT_SPEEDS_FILTER]
@@ -585,7 +675,7 @@ def preset_modes_from_speed_list(speed_list: List):
       output: ["smart"]
 
       input: ["Auto", "Silent", "Favorite", "Idle", "Medium", "High", "Strong"]
-      output: ["Auto", "Favorite", "Idle"]
+      output: ["Auto", "Silent", "Favorite", "Idle"]
     """
 
     return [

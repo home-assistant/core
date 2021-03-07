@@ -4,13 +4,17 @@
             "already_configured": "Bu Samsung TV zaten ayarlanm\u0131\u015f.",
             "already_in_progress": "Samsung TV ayar\u0131 zaten s\u00fcr\u00fcyor.",
             "auth_missing": "Home Assistant'\u0131n bu Samsung TV'ye ba\u011flanma izni yok. Home Assistant'\u0131 yetkilendirmek i\u00e7in l\u00fctfen TV'nin ayarlar\u0131n\u0131 kontrol et.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
             "not_supported": "Bu Samsung TV cihaz\u0131 \u015fu anda desteklenmiyor."
         },
         "flow_title": "Samsung TV: {model}",
         "step": {
+            "confirm": {
+                "title": "Samsung TV"
+            },
             "user": {
                 "data": {
-                    "host": "Host veya IP adresi",
+                    "host": "Ana Bilgisayar",
                     "name": "Ad"
                 },
                 "description": "Samsung TV bilgilerini gir. Daha \u00f6nce hi\u00e7 Home Assistant'a ba\u011flamad\u0131ysan, TV'nde izin isteyen bir pencere g\u00f6receksindir."

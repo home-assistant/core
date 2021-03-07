@@ -356,7 +356,7 @@ class Thermostat(HomeAccessory):
 
         if service:
             params[ATTR_ENTITY_ID] = self.entity_id
-            self.call_service(
+            self.async_call_service(
                 DOMAIN_CLIMATE,
                 service,
                 params,
@@ -407,7 +407,7 @@ class Thermostat(HomeAccessory):
         """Set target humidity to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set target humidity to %d", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_HUMIDITY: value}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_CLIMATE, SERVICE_SET_HUMIDITY, params, f"{value}{PERCENTAGE}"
         )
 
@@ -584,7 +584,7 @@ class WaterHeater(HomeAccessory):
         _LOGGER.debug("%s: Set target temperature to %.1f°C", self.entity_id, value)
         temperature = temperature_to_states(value, self._unit)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_TEMPERATURE: temperature}
-        self.call_service(
+        self.async_call_service(
             DOMAIN_WATER_HEATER,
             SERVICE_SET_TEMPERATURE_WATER_HEATER,
             params,
@@ -595,10 +595,15 @@ class WaterHeater(HomeAccessory):
     def async_update_state(self, new_state):
         """Update water_heater state after state change."""
         # Update current and target temperature
-        temperature = _get_target_temperature(new_state, self._unit)
-        if temperature is not None:
-            if temperature != self.char_current_temp.value:
-                self.char_target_temp.set_value(temperature)
+        target_temperature = _get_target_temperature(new_state, self._unit)
+        if target_temperature is not None:
+            if target_temperature != self.char_target_temp.value:
+                self.char_target_temp.set_value(target_temperature)
+
+        current_temperature = _get_current_temperature(new_state, self._unit)
+        if current_temperature is not None:
+            if current_temperature != self.char_current_temp.value:
+                self.char_current_temp.set_value(current_temperature)
 
         # Update display units
         if self._unit and self._unit in UNIT_HASS_TO_HOMEKIT:

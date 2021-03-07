@@ -44,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
+PLATFORMS = ["climate", "sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = ConfigEntryLyricClient(session, oauth_session)
 
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
-    lyric: Lyric = Lyric(client, client_id)
+    lyric = Lyric(client, client_id)
 
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()
             return lyric
-        except (*LYRIC_EXCEPTIONS, TimeoutError) as exception:
+        except LYRIC_EXCEPTIONS as exception:
             raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
@@ -113,9 +113,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -126,8 +126,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -2,12 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "cannot_connect": "Kon niet verbinden",
+            "invalid_host": "Ongeldige hostnaam of IP-adres",
             "not_supported": "Apparaat wordt niet ondersteund",
             "unknown": "Onverwachte fout"
         },
         "error": {
             "cannot_connect": "Kon niet verbinden",
+            "invalid_host": "Ongeldige hostnaam of IP-adres",
             "unknown": "Onverwachte fout"
         },
         "flow_title": "{name} ({model} bij {host})",
@@ -15,6 +18,15 @@
             "finish": {
                 "data": {
                     "name": "Naam"
+                },
+                "title": "Kies een naam voor het apparaat"
+            },
+            "reset": {
+                "title": "Ontgrendel het apparaat"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ja, doe het."
                 }
             },
             "user": {

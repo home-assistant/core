@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta",
+                    "token": "Token di accesso"
+                }
+            }
+        }
+    }
+}

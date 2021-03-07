@@ -30,13 +30,6 @@ class HideSensitiveDataFilter(logging.Filter):
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 
-    def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record."""
-        try:
-            self.enqueue(record)
-        except Exception:  # pylint: disable=broad-except
-            self.handleError(record)
-
     def handle(self, record: logging.LogRecord) -> Any:
         """
         Conditionally emit the specified logging record.

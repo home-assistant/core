@@ -82,7 +82,11 @@ async def async_setup_entry(
 
     for location in coordinator.data.locations:
         for device in location.devices:
-            entities.append(LyricClimate(hass, coordinator, location, device))
+            entities.append(
+                LyricClimate(
+                    coordinator, location, device, hass.config.units.temperature_unit
+                )
+            )
 
     async_add_entities(entities, True)
 
@@ -100,13 +104,13 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         coordinator: DataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
+        temperature_unit: str,
     ) -> None:
         """Initialize Honeywell Lyric climate entity."""
-        self._temperature_unit = hass.config.units.temperature_unit
+        self._temperature_unit = temperature_unit
 
         # Setup supported hvac modes
         self._hvac_modes = [HVAC_MODE_OFF]
@@ -161,23 +165,26 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        device: LyricDevice = self.device
+        device = self.device
         if not device.hasDualSetpointStatus:
             return device.changeableValues.heatSetpoint
+        return None
 
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the upper bound temperature we try to reach."""
-        device: LyricDevice = self.device
+        device = self.device
         if device.hasDualSetpointStatus:
             return device.changeableValues.coolSetpoint
+        return None
 
     @property
     def target_temperature_high(self) -> Optional[float]:
         """Return the upper bound temperature we try to reach."""
-        device: LyricDevice = self.device
+        device = self.device
         if device.hasDualSetpointStatus:
             return device.changeableValues.heatSetpoint
+        return None
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -198,7 +205,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def min_temp(self) -> float:
         """Identify min_temp in Lyric API or defaults if not available."""
-        device: LyricDevice = self.device
+        device = self.device
         if LYRIC_HVAC_MODE_COOL in device.allowedModes:
             return device.minCoolSetpoint
         return device.minHeatSetpoint
@@ -206,7 +213,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def max_temp(self) -> float:
         """Identify max_temp in Lyric API or defaults if not available."""
-        device: LyricDevice = self.device
+        device = self.device
         if LYRIC_HVAC_MODE_HEAT in device.allowedModes:
             return device.maxHeatSetpoint
         return device.maxCoolSetpoint
@@ -216,7 +223,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
 
-        device: LyricDevice = self.device
+        device = self.device
         if device.hasDualSetpointStatus:
             if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
@@ -250,16 +257,6 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         try:
             await self._update_thermostat(
                 self.location, self.device, thermostatSetpointStatus=preset_mode
-            )
-        except LYRIC_EXCEPTIONS as exception:
-            _LOGGER.error(exception)
-        await self.coordinator.async_refresh()
-
-    async def async_set_preset_period(self, period: str) -> None:
-        """Set preset period (time)."""
-        try:
-            await self._update_thermostat(
-                self.location, self.device, nextPeriodTime=period
             )
         except LYRIC_EXCEPTIONS as exception:
             _LOGGER.error(exception)

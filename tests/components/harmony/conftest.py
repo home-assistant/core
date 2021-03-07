@@ -1,5 +1,4 @@
 """Fixtures for harmony tests."""
-import logging
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aioharmony.const import ClientCallbackType
@@ -7,21 +6,20 @@ import pytest
 
 from homeassistant.components.harmony.const import ACTIVITY_POWER_OFF
 
-_LOGGER = logging.getLogger(__name__)
-
-WATCH_TV_ACTIVITY_ID = 123
-PLAY_MUSIC_ACTIVITY_ID = 456
+from .const import NILE_TV_ACTIVITY_ID, PLAY_MUSIC_ACTIVITY_ID, WATCH_TV_ACTIVITY_ID
 
 ACTIVITIES_TO_IDS = {
     ACTIVITY_POWER_OFF: -1,
     "Watch TV": WATCH_TV_ACTIVITY_ID,
     "Play Music": PLAY_MUSIC_ACTIVITY_ID,
+    "Nile-TV": NILE_TV_ACTIVITY_ID,
 }
 
 IDS_TO_ACTIVITIES = {
     -1: ACTIVITY_POWER_OFF,
     WATCH_TV_ACTIVITY_ID: "Watch TV",
     PLAY_MUSIC_ACTIVITY_ID: "Play Music",
+    NILE_TV_ACTIVITY_ID: "Nile-TV",
 }
 
 TV_DEVICE_ID = 1234
@@ -49,6 +47,7 @@ class FakeHarmonyClient:
         self.change_channel = AsyncMock()
         self.sync = AsyncMock()
         self._callbacks = callbacks
+        self.fw_version = "123.456"
 
     async def connect(self):
         """Connect and call the appropriate callbacks."""
@@ -110,6 +109,7 @@ class FakeHarmonyClient:
             return_value=[
                 {"name": "Watch TV", "id": WATCH_TV_ACTIVITY_ID},
                 {"name": "Play Music", "id": PLAY_MUSIC_ACTIVITY_ID},
+                {"name": "Nile-TV", "id": NILE_TV_ACTIVITY_ID},
             ]
         )
         type(config).devices = PropertyMock(
@@ -120,8 +120,11 @@ class FakeHarmonyClient:
         type(config).config = PropertyMock(
             return_value={
                 "activity": [
+                    {"id": 10000, "label": None},
+                    {"id": -1, "label": "PowerOff"},
                     {"id": WATCH_TV_ACTIVITY_ID, "label": "Watch TV"},
                     {"id": PLAY_MUSIC_ACTIVITY_ID, "label": "Play Music"},
+                    {"id": NILE_TV_ACTIVITY_ID, "label": "Nile-TV"},
                 ]
             }
         )

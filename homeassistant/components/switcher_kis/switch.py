@@ -62,7 +62,6 @@ async def async_setup_platform(
 
     async def async_set_auto_off_service(entity, service_call: ServiceCallType) -> None:
         """Use for handling setting device auto-off service calls."""
-
         async with SwitcherV2Api(
             hass.loop,
             device_data.ip_addr,
@@ -76,7 +75,6 @@ async def async_setup_platform(
         entity, service_call: ServiceCallType
     ) -> None:
         """Use for handling turning device on with a timer service calls."""
-
         async with SwitcherV2Api(
             hass.loop,
             device_data.ip_addr,
@@ -133,7 +131,6 @@ class SwitcherControl(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-
         return self._state == SWITCHER_STATE_ON
 
     @property
@@ -144,7 +141,6 @@ class SwitcherControl(SwitchEntity):
     @property
     def device_state_attributes(self) -> Dict:
         """Return the optional state attributes."""
-
         attribs = {}
 
         for prop, attr in DEVICE_PROPERTIES_TO_HA_ATTRIBUTES.items():
@@ -157,7 +153,6 @@ class SwitcherControl(SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-
         return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
 
     async def async_added_to_hass(self) -> None:
@@ -188,7 +183,6 @@ class SwitcherControl(SwitchEntity):
 
     async def _control_device(self, send_on: bool) -> None:
         """Turn the entity on or off."""
-
         response: SwitcherV2ControlResponseMSG = None
         async with SwitcherV2Api(
             self.hass.loop,

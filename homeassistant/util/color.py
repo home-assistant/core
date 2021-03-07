@@ -160,6 +160,8 @@ COLORS = {
     "whitesmoke": (245, 245, 245),
     "yellow": (255, 255, 0),
     "yellowgreen": (154, 205, 50),
+    # And...
+    "homeassistant": (3, 169, 244),
 }
 
 
@@ -193,6 +195,8 @@ def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-name
+
+
 def color_RGB_to_xy(
     iR: int, iG: int, iB: int, Gamut: Optional[GamutType] = None
 ) -> Tuple[float, float]:
@@ -203,7 +207,6 @@ def color_RGB_to_xy(
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
-# pylint: disable=invalid-name
 def color_RGB_to_xy_brightness(
     iR: int, iG: int, iB: int, Gamut: Optional[GamutType] = None
 ) -> Tuple[float, float, int]:

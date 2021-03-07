@@ -6,6 +6,11 @@
             "invalid_auth": "Ong\u00eblteg Authentifikatioun"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Passwuert"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Passwuert",

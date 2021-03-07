@@ -209,14 +209,14 @@ async def test_set_temperature(ecobee_fixture, thermostat, data):
     data.reset_mock()
     thermostat.set_temperature(target_temp_low=20, target_temp_high=30)
     data.ecobee.set_hold_temp.assert_has_calls(
-        [mock.call(1, 30, 20, "nextTransition", 0)]
+        [mock.call(1, 30, 20, "nextTransition", None)]
     )
 
     # Auto -> Hold
     data.reset_mock()
     thermostat.set_temperature(temperature=20)
     data.ecobee.set_hold_temp.assert_has_calls(
-        [mock.call(1, 25, 15, "nextTransition", 0)]
+        [mock.call(1, 25, 15, "nextTransition", None)]
     )
 
     # Cool -> Hold
@@ -224,7 +224,7 @@ async def test_set_temperature(ecobee_fixture, thermostat, data):
     ecobee_fixture["settings"]["hvacMode"] = "cool"
     thermostat.set_temperature(temperature=20.5)
     data.ecobee.set_hold_temp.assert_has_calls(
-        [mock.call(1, 20.5, 20.5, "nextTransition", 0)]
+        [mock.call(1, 20.5, 20.5, "nextTransition", None)]
     )
 
     # Heat -> Hold
@@ -232,7 +232,7 @@ async def test_set_temperature(ecobee_fixture, thermostat, data):
     ecobee_fixture["settings"]["hvacMode"] = "heat"
     thermostat.set_temperature(temperature=20)
     data.ecobee.set_hold_temp.assert_has_calls(
-        [mock.call(1, 20, 20, "nextTransition", 0)]
+        [mock.call(1, 20, 20, "nextTransition", None)]
     )
 
     # Heat -> Auto
@@ -311,7 +311,7 @@ def test_hold_hours(ecobee_fixture, thermostat):
         "askMe",
     ]:
         ecobee_fixture["settings"]["holdAction"] = action
-        assert thermostat.hold_hours() == 0
+        assert thermostat.hold_hours() is None
 
 
 async def test_set_fan_mode_on(thermostat, data):

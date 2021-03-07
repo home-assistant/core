@@ -3,6 +3,7 @@ import asyncio
 import binascii
 from collections import OrderedDict
 import copy
+import functools
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -150,7 +151,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-DOMAINS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
 
 
 async def async_setup(hass, config):
@@ -201,9 +202,9 @@ async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
         )
         return False
 
-    for domain in DOMAINS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, domain)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -214,8 +215,8 @@ async def async_unload_entry(hass, entry: config_entries.ConfigEntry):
     if not all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in DOMAINS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     ):
@@ -488,7 +489,8 @@ class RfxtrxEntity(RestoreEntity):
 
         self.async_on_remove(
             self.hass.helpers.dispatcher.async_dispatcher_connect(
-                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}", self.async_remove
+                f"{DOMAIN}_{CONF_REMOVE_DEVICE}_{self._device_id}",
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 

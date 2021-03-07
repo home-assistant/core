@@ -14,7 +14,7 @@ from yarl import URL
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
@@ -113,7 +113,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-CONF_MODE = "mode"
 
 
 class Panel:

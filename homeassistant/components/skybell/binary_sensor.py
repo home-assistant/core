@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {

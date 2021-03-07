@@ -5,7 +5,6 @@ from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import State
 from homeassistant.helpers import significant_change
-from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(name="checker")
@@ -26,8 +25,6 @@ async def checker_fixture(hass):
 
 async def test_signicant_change(hass, checker):
     """Test initialize helper works."""
-    assert await async_setup_component(hass, "sensor", {})
-
     ent_id = "test_domain.test_entity"
     attrs = {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
 
@@ -48,3 +45,30 @@ async def test_signicant_change(hass, checker):
     # State turned unavailable
     assert checker.async_is_significant_change(State(ent_id, "100", attrs))
     assert checker.async_is_significant_change(State(ent_id, STATE_UNAVAILABLE, attrs))
+
+
+async def test_significant_change_extra(hass, checker):
+    """Test extra significant checker works."""
+    ent_id = "test_domain.test_entity"
+    attrs = {ATTR_DEVICE_CLASS: DEVICE_CLASS_BATTERY}
+
+    assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
+    assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=1)
+
+    # Reset the last significiant change to 100 to repeat test but with
+    # extra checker installed.
+    assert checker.async_is_significant_change(State(ent_id, "100", attrs), extra_arg=1)
+
+    def extra_significant_check(
+        hass, old_state, old_attrs, old_extra_arg, new_state, new_attrs, new_extra_arg
+    ):
+        return old_extra_arg != new_extra_arg
+
+    checker.extra_significant_check = extra_significant_check
+
+    # This is normally a significant change (100 -> 200), but the extra arg check marks it
+    # as insignificant.
+    assert not checker.async_is_significant_change(
+        State(ent_id, "200", attrs), extra_arg=1
+    )
+    assert checker.async_is_significant_change(State(ent_id, "200", attrs), extra_arg=2)

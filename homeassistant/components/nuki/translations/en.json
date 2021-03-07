@@ -2,15 +2,15 @@
     "config": {
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Could not login with provided token",
-            "unknown": "Unknown error"
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "token": "Access Token",
                     "host": "Host",
-                    "port": "Port"
+                    "port": "Port",
+                    "token": "Access Token"
                 }
             }
         }

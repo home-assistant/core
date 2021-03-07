@@ -41,7 +41,7 @@ class FritzBoxPhonebook:
     @Throttle(MIN_TIME_PHONEBOOK_UPDATE)
     def update_phonebook(self):
         """Update the phone book dictionary."""
-        if not self.phonebook_id:
+        if self.phonebook_id is None:
             return
 
         self.phonebook_dict = self.fph.get_all_names(self.phonebook_id)

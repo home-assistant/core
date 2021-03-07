@@ -1,4 +1,6 @@
 """Support for Timers."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 from typing import Dict, Optional
@@ -107,8 +109,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, Timer.from_yaml
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Timer.from_yaml
     )
 
     storage_collection = TimerStorageCollection(
@@ -116,7 +118,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(component, storage_collection, Timer)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, Timer
+    )
 
     await yaml_collection.async_load(
         [{CONF_ID: id_, **cfg} for id_, cfg in config.get(DOMAIN, {}).items()]
@@ -126,9 +130,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -199,7 +200,7 @@ class Timer(RestoreEntity):
         self._listener = None
 
     @classmethod
-    def from_yaml(cls, config: Dict) -> "Timer":
+    def from_yaml(cls, config: Dict) -> Timer:
         """Return entity instance initialized from yaml storage."""
         timer = cls(config)
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])

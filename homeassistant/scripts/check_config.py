@@ -9,15 +9,16 @@ import os
 from typing import Any, Callable, Dict, List, Tuple
 from unittest.mock import patch
 
-from homeassistant import bootstrap, core
+from homeassistant import core
 from homeassistant.config import get_default_config_dir
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.check_config import async_check_ha_config_file
+from homeassistant.util.yaml import Secrets
 import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.6.2",)
+REQUIREMENTS = ("colorlog==4.7.2",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -26,7 +27,6 @@ MOCKS: Dict[str, Tuple[str, Callable]] = {
     "load*": ("homeassistant.config.load_yaml", yaml_loader.load_yaml),
     "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
-SILENCE = ("homeassistant.scripts.check_config.yaml_loader.clear_secret_cache",)
 
 PATCHES: Dict[str, Any] = {}
 
@@ -141,12 +141,7 @@ def run(script_args: List) -> int:
             if sval is None:
                 print(" -", skey + ":", color("red", "not found"))
                 continue
-            print(
-                " -",
-                skey + ":",
-                sval,
-                color("cyan", "[from:", flatsecret.get(skey, "keyring") + "]"),
-            )
+            print(" -", skey + ":", sval)
 
     return len(res["except"])
 
@@ -159,14 +154,14 @@ def check(config_dir, secrets=False):
         "secrets": OrderedDict(),  # secret cache and secrets loaded
         "except": OrderedDict(),  # exceptions raised (with config)
         #'components' is a HomeAssistantConfig  # noqa: E265
-        "secret_cache": None,
+        "secret_cache": {},
     }
 
     # pylint: disable=possibly-unused-variable
-    def mock_load(filename):
+    def mock_load(filename, secrets=None):
         """Mock hass.util.load_yaml to save config file names."""
         res["yaml_files"][filename] = True
-        return MOCKS["load"][1](filename)
+        return MOCKS["load"][1](filename, secrets)
 
     # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
@@ -177,10 +172,6 @@ def check(config_dir, secrets=False):
             val = None
         res["secrets"][node.value] = val
         return val
-
-    # Patches to skip functions
-    for sil in SILENCE:
-        PATCHES[sil] = patch(sil)
 
     # Patches with local mock functions
     for key, val in MOCKS.items():
@@ -197,11 +188,19 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml_loader.yaml.SafeLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+        yaml_loader.SafeLineLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+
+    def secrets_proxy(*args):
+        secrets = Secrets(*args)
+        res["secret_cache"] = secrets._cache
+        return secrets
 
     try:
-        res["components"] = asyncio.run(async_check_config(config_dir))
-        res["secret_cache"] = OrderedDict(yaml_loader.__SECRET_CACHE)
+        with patch.object(yaml_loader, "Secrets", secrets_proxy):
+            res["components"] = asyncio.run(async_check_config(config_dir))
+        res["secret_cache"] = {
+            str(key): val for key, val in res["secret_cache"].items()
+        }
         for err in res["components"].errors:
             domain = err.domain or ERROR_STR
             res["except"].setdefault(domain, []).append(err.message)
@@ -217,10 +216,9 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml_loader.yaml.SafeLoader.add_constructor(
+            yaml_loader.SafeLineLoader.add_constructor(
                 "!secret", yaml_loader.secret_yaml
             )
-        bootstrap.clear_secret_cache()
 
     return res
 

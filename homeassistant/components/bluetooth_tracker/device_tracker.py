@@ -3,8 +3,7 @@ import asyncio
 import logging
 from typing import List, Optional, Set, Tuple
 
-# pylint: disable=import-error
-import bluetooth
+import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
@@ -20,6 +19,7 @@ from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
     async_load_config,
 )
+from homeassistant.const import CONF_DEVICE_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -31,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 BT_PREFIX = "BT_"
 
 CONF_REQUEST_RSSI = "request_rssi"
-
-CONF_DEVICE_ID = "device_id"
 
 DEFAULT_DEVICE_ID = -1
 
@@ -131,7 +129,6 @@ async def async_setup_scanner(
 
     async def perform_bluetooth_update():
         """Discover Bluetooth devices and update status."""
-
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
         tasks = []
 
@@ -164,7 +161,6 @@ async def async_setup_scanner(
 
     async def update_bluetooth(now=None):
         """Lookup Bluetooth devices and update status."""
-
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
             _LOGGER.debug(
@@ -178,7 +174,6 @@ async def async_setup_scanner(
 
     async def handle_manual_update_bluetooth(call):
         """Update bluetooth devices on demand."""
-
         await update_bluetooth()
 
     hass.async_create_task(update_bluetooth())

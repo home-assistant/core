@@ -62,8 +62,8 @@ async def async_setup_entry(hass, entry):
         """Set up platforms and initiate connection."""
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
         await manager.init()
@@ -180,20 +180,23 @@ class AppleTVManager:
 
         This is a callback function from pyatv.interface.DeviceListener.
         """
-        _LOGGER.warning('Connection lost to Apple TV "%s"', self.atv.name)
-        if self.atv:
-            self.atv.close()
-            self.atv = None
+        _LOGGER.warning(
+            'Connection lost to Apple TV "%s"', self.config_entry.data.get(CONF_NAME)
+        )
         self._connection_was_lost = True
-        self._dispatch_send(SIGNAL_DISCONNECTED)
-        self._start_connect_loop()
+        self._handle_disconnect()
 
     def connection_closed(self):
         """Device connection was (intentionally) closed.
 
         This is a callback function from pyatv.interface.DeviceListener.
         """
+        self._handle_disconnect()
+
+    def _handle_disconnect(self):
+        """Handle that the device disconnected and restart connect loop."""
         if self.atv:
+            self.atv.listener = None
             self.atv.close()
             self.atv = None
         self._dispatch_send(SIGNAL_DISCONNECTED)
