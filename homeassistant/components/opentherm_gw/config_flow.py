@@ -19,11 +19,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
-from .const import (
-    CONF_FLOOR_TEMP,
-    CONF_READ_PRECISION,
-    CONF_SET_PRECISION,
-)
+from .const import CONF_FLOOR_TEMP, CONF_READ_PRECISION, CONF_SET_PRECISION
 
 
 class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
