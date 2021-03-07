@@ -44,12 +44,16 @@ CONF_MANUAL_PATH = "Enter Manually"
 CONNECTION_SCHEMA = vol.Schema(
     {
         vol.Required(FLOW_TYPE, default=FLOW_NET): vol.In(
-            {FLOW_NET: f"Network: {SMILE} / {STRETCH}", FLOW_USB: "USB: To be added later"}
+            {
+                FLOW_NET: f"Network: {SMILE} / {STRETCH}",
+                FLOW_USB: "USB: To be added later",
+            }
         ),
     },
 )
 
 # PLACEHOLDER USB connection validation
+
 
 def _base_gw_schema(discovery_info):
     """Generate base schema for gateways."""
@@ -130,7 +134,7 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_user_gateway()
 
-# PLACEHOLDER USB step_user
+    # PLACEHOLDER USB step_user
 
     async def async_step_user_gateway(self, user_input=None):
         """Handle the initial step when using network/gateway setups."""
@@ -183,7 +187,9 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # PLACEHOLDER for USB_FLOW
 
         return self.async_show_form(
-            step_id="user", data_schema=CONNECTION_SCHEMA, errors=errors,
+            step_id="user",
+            data_schema=CONNECTION_SCHEMA,
+            errors=errors,
         )
 
     @staticmethod
