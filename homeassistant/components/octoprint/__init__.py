@@ -96,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_PORT, default=80): cv.port,
                         vol.Optional(CONF_PATH, default="/"): ensure_valid_path,
                         # Following values are not longer used in the configuration of the integration
-                        # and are here for historical purposeds
+                        # and are here for historical purposes
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
                         vol.Optional(CONF_BED, default=False): cv.boolean,

@@ -169,7 +169,6 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     assert not result["errors"]
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
 
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -261,6 +260,7 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         assert len(request_app_key.mock_calls) == 0
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_failed_auth(hass: HomeAssistant) -> None:
