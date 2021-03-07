@@ -344,11 +344,11 @@ class MCP23017(threading.Thread):
                 # Read pin values for bank A and B from device only if there are associated callbacks (minimize # of I2C  transactions)
                 input_state = self._cache["GPIO"]
                 if any(
-                    [hasattr(entity, "push_update") for entity in self._entities[0:8]]
+                    hasattr(entity, "push_update") for entity in self._entities[0:8]
                 ):
                     input_state = input_state & 0xFF00 | self[GPIOA]
                 if any(
-                    [hasattr(entity, "push_update") for entity in self._entities[8:16]]
+                    hasattr(entity, "push_update") for entity in self._entities[8:16]
                 ):
                     input_state = input_state & 0x00FF | (self[GPIOB] << 8)
 
