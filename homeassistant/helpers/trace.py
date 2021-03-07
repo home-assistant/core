@@ -16,7 +16,16 @@ class TraceElement:
         self._error: Optional[Exception] = None
         self._result: Optional[dict] = None
         self._timestamp = dt_util.utcnow()
-        self._variables = variables
+
+        if variables is None:
+            variables = {}
+        last_variables = variables_cv.get() or {}
+        variables_cv.set(dict(variables))
+        changed_variables = {}
+        for key, value in variables.items():
+            if key not in last_variables or last_variables[key] != value:
+                changed_variables[key] = value
+        self._variables = TraceElement(changed_variables)
 
     def __repr__(self) -> str:
         """Container for trace data."""

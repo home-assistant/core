@@ -84,7 +84,6 @@ from .trace import (
     trace_stack_cv,
     trace_stack_pop,
     trace_stack_push,
-    variables_cv,
 )
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
@@ -126,15 +125,7 @@ ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated action
 
 def action_trace_append(variables, path):
     """Append a TraceElement to trace[path]."""
-    if variables is None:
-        variables = {}
-    last_variables = variables_cv.get() or {}
-    changed_variables = {}
-    for key, value in variables.items():
-        if key not in last_variables or last_variables[key] != value:
-            changed_variables[key] = value
-    trace_element = TraceElement(changed_variables)
-    variables_cv.set(dict(variables))
+    trace_element = TraceElement(variables)
     trace_append_element(trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
     return trace_element
 
