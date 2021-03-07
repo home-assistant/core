@@ -1,8 +1,10 @@
 """Consume the august activity stream."""
+import asyncio
 import logging
 
 from aiohttp import ClientError
 
+from homeassistant.core import callback
 from homeassistant.util.dt import utcnow
 
 from .const import ACTIVITY_UPDATE_INTERVAL
@@ -10,6 +12,7 @@ from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
+ACTIVITY_STREAM_TRIGGERED_FETCH_LIMIT = 3
 ACTIVITY_STREAM_FETCH_LIMIT = 10
 ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 
@@ -17,7 +20,7 @@ ACTIVITY_CATCH_UP_FETCH_LIMIT = 2500
 class ActivityStream(AugustSubscriberMixin):
     """August activity stream handler."""
 
-    def __init__(self, hass, api, august_gateway, house_ids):
+    def __init__(self, hass, api, august_gateway, house_ids, pubnub):
         """Init August activity stream object."""
         super().__init__(hass, ACTIVITY_UPDATE_INTERVAL)
         self._hass = hass
@@ -27,10 +30,11 @@ class ActivityStream(AugustSubscriberMixin):
         self._latest_activities_by_id_type = {}
         self._last_update_time = None
         self._abort_async_track_time_interval = None
+        self._pubnub = pubnub
 
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
-        await self._async_refresh(utcnow)
+        await self._async_refresh(utcnow())
 
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
@@ -54,50 +58,63 @@ class ActivityStream(AugustSubscriberMixin):
 
     async def _async_refresh(self, time):
         """Update the activity stream from August."""
-
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
+        if self._pubnub.connected:
+            return
         await self._async_update_device_activities(time)
 
     async def _async_update_device_activities(self, time):
         _LOGGER.debug("Start retrieving device activities")
 
-        limit = (
-            ACTIVITY_STREAM_FETCH_LIMIT
-            if self._last_update_time
-            else ACTIVITY_CATCH_UP_FETCH_LIMIT
-        )
+        if self._last_update_time:
+            limit = ACTIVITY_STREAM_FETCH_LIMIT
+        else:
+            limit = ACTIVITY_CATCH_UP_FETCH_LIMIT
 
         for house_id in self._house_ids:
-            _LOGGER.debug("Updating device activity for house id %s", house_id)
-            try:
-                activities = await self._api.async_get_house_activities(
-                    self._august_gateway.access_token, house_id, limit=limit
-                )
-            except ClientError as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve activity for house id %s: %s",
-                    house_id,
-                    ex,
-                )
-                # Make sure we process the next house if one of them fails
-                continue
-
-            _LOGGER.debug(
-                "Completed retrieving device activities for house id %s", house_id
-            )
-
-            updated_device_ids = self._process_newer_device_activities(activities)
-
-            if updated_device_ids:
-                for device_id in updated_device_ids:
-                    _LOGGER.debug(
-                        "async_signal_device_id_update (from activity stream): %s",
-                        device_id,
-                    )
-                    self.async_signal_device_id_update(device_id)
+            await self._async_update_device_activities_for_house_id(house_id, limit)
 
         self._last_update_time = time
+
+    @callback
+    def async_schedule_house_id_refresh(self, house_id):
+        """Schedule an update for a house activities."""
+        asyncio.create_task(
+            self._async_update_device_activities_for_house_id,
+            house_id,
+            ACTIVITY_STREAM_TRIGGERED_FETCH_LIMIT,
+        )
+
+    async def _async_update_device_activities_for_house_id(self, house_id, limit):
+        """Update device activities for a house."""
+        _LOGGER.debug("Updating device activity for house id %s", house_id)
+        try:
+            activities = await self._api.async_get_house_activities(
+                self._august_gateway.access_token, house_id, limit=limit
+            )
+        except ClientError as ex:
+            _LOGGER.error(
+                "Request error trying to retrieve activity for house id %s: %s",
+                house_id,
+                ex,
+            )
+            # Make sure we process the next house if one of them fails
+            return
+
+        _LOGGER.debug(
+            "Completed retrieving device activities for house id %s", house_id
+        )
+
+        updated_device_ids = self._process_newer_device_activities(activities)
+
+        if updated_device_ids:
+            for device_id in updated_device_ids:
+                _LOGGER.debug(
+                    "async_signal_device_id_update (from activity stream): %s",
+                    device_id,
+                )
+                self.async_signal_device_id_update(device_id)
 
     def _process_newer_device_activities(self, activities):
         updated_device_ids = set()
