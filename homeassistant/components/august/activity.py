@@ -70,6 +70,7 @@ class ActivityStream(AugustSubscriberMixin):
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
         if self._pubnub.connected:
+            _LOGGER.debug("Skipping update because pubnub is connected.")
             return
         await self._async_update_device_activities(time)
 
