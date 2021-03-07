@@ -226,7 +226,8 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
     def forecast(self):
         """Return the forecast."""
         # Check if forecasts are available
-        if not self.coordinator.data.get(FORECASTS, {}).get(self.forecast_type):
+        raw_forecasts = self.coordinator.data.get(FORECASTS, {}).get(self.forecast_type)
+        if not raw_forecasts:
             return None
 
         forecasts = []
@@ -235,7 +236,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
 
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
-        for forecast in self.coordinator.data[FORECASTS][self.forecast_type]:
+        for forecast in raw_forecasts:
             forecast_dt = dt_util.parse_datetime(forecast[CC_ATTR_TIMESTAMP])
 
             # Throw out past data
@@ -374,14 +375,15 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
     def forecast(self):
         """Return the forecast."""
         # Check if forecasts are available
-        if not self.coordinator.data[FORECASTS].get(self.forecast_type):
+        raw_forecasts = self.coordinator.data.get(FORECASTS, {}).get(self.forecast_type)
+        if not raw_forecasts:
             return None
 
         forecasts = []
 
         # Set default values (in cases where keys don't exist), None will be
         # returned. Override properties per forecast type as needed
-        for forecast in self.coordinator.data[FORECASTS][self.forecast_type]:
+        for forecast in raw_forecasts:
             forecast_dt = dt_util.parse_datetime(
                 self._get_cc_value(forecast, CC_V3_ATTR_TIMESTAMP)
             )
