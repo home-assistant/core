@@ -1,4 +1,4 @@
-"""Constants for Plugwise beta component."""
+"""Constants for Plugwise component."""
 
 API = "api"
 ATTR_ILLUMINANCE = "illuminance"
