@@ -36,8 +36,8 @@ class ComfoConnectBypass(ClimateEntity):
         """Initialize the ComfoConnect bypass."""
         self._name = name
         self._ccb = ccb
-        self.SENSOR_TEMPERATURE_SUPPLY_LOCAL = 0
-        self.SENSOR_BYPASS_STATE_LOCAL = 0
+        self.sensor_temperature_supply_local = 0
+        self.sensor_bypass_state_local = 0
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
@@ -68,9 +68,9 @@ class ComfoConnectBypass(ClimateEntity):
         _LOGGER.debug(
             "Handle update for climate - bypass (%d): %s", SENSOR_BYPASS_STATE, value
         )
-        self.SENSOR_BYPASS_STATE_LOCAL = value
+        self.sensor_bypass_state_local = value
 
-        self._ccb.data[SENSOR_BYPASS_STATE] = self.SENSOR_BYPASS_STATE_LOCAL
+        self._ccb.data[SENSOR_BYPASS_STATE] = self.sensor_bypass_state_local
         self.schedule_update_ha_state()
 
     def _handle_update_temp(self, value):
@@ -80,9 +80,9 @@ class ComfoConnectBypass(ClimateEntity):
             SENSOR_TEMPERATURE_SUPPLY,
             value,
         )
-        self.SENSOR_TEMPERATURE_SUPPLY_LOCAL = value
+        self.sensor_temperature_supply_local = value
 
-        self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = self.SENSOR_TEMPERATURE_SUPPLY_LOCAL
+        self._ccb.data[SENSOR_TEMPERATURE_SUPPLY] = self.sensor_temperature_supply_local
         self.schedule_update_ha_state()
 
     def set_hvac_mode(self, hvac_mode):
@@ -109,7 +109,7 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def hvac_mode(self):
         """Return the current bypass mode. If the bypass state > 0 ComfoConenct started enabling bypass. 100% of bypass state = minimal heat recovery."""
-        bypass = self.SENSOR_BYPASS_STATE_LOCAL
+        bypass = self.sensor_bypass_state_local
         if bypass:
             return HVAC_MODE_COOL
 
@@ -128,4 +128,4 @@ class ComfoConnectBypass(ClimateEntity):
     @property
     def current_temperature(self):
         """Return current supply temperature."""
-        return self.SENSOR_TEMPERATURE_SUPPLY_LOCAL * 0.1
+        return self.sensor_temperature_supply_local * 0.1
