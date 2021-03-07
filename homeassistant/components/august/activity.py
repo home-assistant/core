@@ -112,6 +112,8 @@ class ActivityStream(AugustSubscriberMixin):
                 house_id,
             )
             return
+        elif self._update_debounce[house_id] is not None:
+            self._update_debounce[house_id].cancel()
 
         async with self._house_update_locks[house_id]:
             _LOGGER.debug("Updating device activity for house id %s", house_id)
