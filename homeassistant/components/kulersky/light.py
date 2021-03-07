@@ -16,7 +16,6 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
@@ -37,10 +36,6 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Kuler sky light devices."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    if "addresses" not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]["addresses"] = set()
 
     async def discover(*args):
         """Attempt to discover new lights."""
@@ -65,11 +60,6 @@ async def async_setup_entry(
 
     # Perform recurring discovery of new devices
     async_track_time_interval(hass, discover, DISCOVERY_INTERVAL)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Cleanup the Kuler sky integration."""
-    hass.data.pop(DOMAIN, None)
 
 
 class KulerskyLight(LightEntity):

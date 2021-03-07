@@ -79,9 +79,12 @@ async def test_init(hass, mock_light):
 
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
+    assert hass.data[DOMAIN] == {"addresses": {"AA:BB:CC:11:22:33"}}
+
     await hass.config_entries.async_remove(mock_entry.entry_id)
 
     assert mock_light.disconnect.called
+    assert DOMAIN not in hass.data
 
 
 async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
