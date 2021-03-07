@@ -38,11 +38,11 @@ from .const import (
     MYSENSORS_ON_UNLOAD,
     PLATFORMS_WITH_ENTRY_SUPPORT,
     DevId,
-    GatewayId,
     SensorType,
 )
 from .device import MySensorsDevice, MySensorsEntity, get_mysensors_devices
 from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
+from .helpers import on_unload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -253,27 +253,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
         for fnct in hass.data[DOMAIN][key]:
             fnct()
 
+        hass.data[DOMAIN].pop(key)
+
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     await gw_stop(hass, entry, gateway)
     return True
-
-
-async def on_unload(
-    hass: HomeAssistantType, entry: Union[ConfigEntry, GatewayId], fnct: Callable
-) -> None:
-    """Register a callback to be called when entry is unloaded.
-
-    This function is used by platforms to cleanup after themselves
-    """
-    if isinstance(entry, GatewayId):
-        uniqueid = entry
-    else:
-        uniqueid = entry.entry_id
-    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
-    if key not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][key] = []
-    hass.data[DOMAIN][key].append(fnct)
 
 
 @callback
