@@ -12,6 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_NAME,
     CONF_TOKEN,
@@ -21,6 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
+    CONF_GATEWAY,
     CONF_MODEL,
     DOMAIN,
     SERVICE_SET_POWER_MODE,
@@ -62,7 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 ATTR_POWER = "power"
-ATTR_TEMPERATURE = "temperature"
 ATTR_LOAD_POWER = "load_power"
 ATTR_MODEL = "model"
 ATTR_POWER_MODE = "power_mode"
@@ -128,15 +129,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the switch from a config entry."""
     entities = []
 
-    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data[CONF_TOKEN]
+    name = config_entry.title
+    model = config_entry.data[CONF_MODEL]
+    unique_id = config_entry.unique_id
+
+    if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE or (
+        config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY
+        and model == "lumi.acpartner.v3"
+    ):
         if DATA_KEY not in hass.data:
             hass.data[DATA_KEY] = {}
-
-        host = config_entry.data[CONF_HOST]
-        token = config_entry.data[CONF_TOKEN]
-        name = config_entry.title
-        model = config_entry.data[CONF_MODEL]
-        unique_id = config_entry.unique_id
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 

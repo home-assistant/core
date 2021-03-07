@@ -2,16 +2,18 @@
 from collections import defaultdict
 from enum import IntEnum
 import logging
-from typing import DefaultDict, Dict, List, Optional, Set
+from typing import Callable, DefaultDict, Dict, List, Optional, Set, Union
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -20,6 +22,7 @@ from .const import (
     DOMAIN,
     FLAT_PLATFORM_TYPES,
     MYSENSORS_DISCOVERY,
+    MYSENSORS_ON_UNLOAD,
     TYPE_TO_PLATFORMS,
     DevId,
     GatewayId,
@@ -31,9 +34,26 @@ _LOGGER = logging.getLogger(__name__)
 SCHEMAS = Registry()
 
 
+async def on_unload(
+    hass: HomeAssistantType, entry: Union[ConfigEntry, GatewayId], fnct: Callable
+) -> None:
+    """Register a callback to be called when entry is unloaded.
+
+    This function is used by platforms to cleanup after themselves.
+    """
+    if isinstance(entry, GatewayId):
+        uniqueid = entry
+    else:
+        uniqueid = entry.entry_id
+    key = MYSENSORS_ON_UNLOAD.format(uniqueid)
+    if key not in hass.data[DOMAIN]:
+        hass.data[DOMAIN][key] = []
+    hass.data[DOMAIN][key].append(fnct)
+
+
 @callback
 def discover_mysensors_platform(
-    hass, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
+    hass: HomeAssistant, gateway_id: GatewayId, platform: str, new_devices: List[DevId]
 ) -> None:
     """Discover a MySensors platform."""
     _LOGGER.debug("Discovering platform %s with devIds: %s", platform, new_devices)

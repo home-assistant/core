@@ -70,10 +70,15 @@ set_config_parameter:
 refresh_value:
   name: Refresh value(s) of a Z-Wave entity
   description: Force update value(s) for a Z-Wave entity
-  target:
-    entity:
-      integration: zwave_js
   fields:
+    entity_id:
+      name: Entity
+      description: Entity whose value(s) should be refreshed
+      required: true
+      example: sensor.family_room_motion
+      selector:
+        entity:
+          integration: zwave_js
     refresh_all_values:
       name: Refresh all values?
       description: Whether to refresh all values (true) or just the primary value (false)

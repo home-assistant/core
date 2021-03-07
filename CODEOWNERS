@@ -186,7 +186,6 @@ homeassistant/components/guardian/* @bachya
 homeassistant/components/habitica/* @ASMfreaK @leikoilja
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
 homeassistant/components/hassio/* @home-assistant/supervisor
-homeassistant/components/hdmi_cec/* @newAM
 homeassistant/components/heatmiser/* @andylockran
 homeassistant/components/heos/* @andrewsayre
 homeassistant/components/here_travel_time/* @eifinger
@@ -453,7 +452,7 @@ homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg
-homeassistant/components/stream/* @hunterjm @uvjustin
+homeassistant/components/stream/* @hunterjm @uvjustin @allenporter
 homeassistant/components/stt/* @pvizeli
 homeassistant/components/subaru/* @G-Two
 homeassistant/components/suez_water/* @ooii
