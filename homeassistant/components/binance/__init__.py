@@ -94,18 +94,16 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
             asset_tickers_dict = {}
 
             for sym in self.asset_currencies:
-                if sym == "USDT":
-                    # Skip the loop as we calculate USDT differently
-                    break
+                # Skip USDT as we calculate USDT differently
+                if sym != "USDT":
+                    currency = sym.upper() + "USDT"
 
-                currency = sym.upper() + "USDT"
-
-                if currency not in asset_tickers_dict:
-                    asset_tickers_dict[currency] = {}
-                    ticker_details = next(
-                        item for item in all_tickers if item["symbol"] == currency
-                    )
-                    asset_tickers_dict[currency].update(ticker_details)
+                    if currency not in asset_tickers_dict:
+                        asset_tickers_dict[currency] = {}
+                        ticker_details = next(
+                            item for item in all_tickers if item["symbol"] == currency
+                        )
+                        asset_tickers_dict[currency].update(ticker_details)
 
             result_dict["asset_tickers"] = asset_tickers_dict
 
