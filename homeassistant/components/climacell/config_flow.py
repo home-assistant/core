@@ -24,7 +24,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_TIMESTEP, DEFAULT_NAME, DEFAULT_TIMESTEP
+from .const import (
+    CC_ATTR_TEMPERATURE,
+    CC_V3_ATTR_TEMPERATURE,
+    CONF_TIMESTEP,
+    DEFAULT_NAME,
+    DEFAULT_TIMESTEP,
+)
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -128,10 +134,10 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 if user_input[CONF_API_VERSION] == 3:
                     api_class = ClimaCellV3
-                    field = "temp"
+                    field = CC_V3_ATTR_TEMPERATURE
                 else:
                     api_class = ClimaCellV4
-                    field = "temperature"
+                    field = CC_ATTR_TEMPERATURE
                 await api_class(
                     user_input[CONF_API_KEY],
                     str(user_input.get(CONF_LATITUDE, self.hass.config.latitude)),
