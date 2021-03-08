@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def repack_database(instance: "Recorder"):
+def repack_database(instance: "Recorder") -> None:
     """Repack based on engine type."""
 
     # Execute sqlite command to free up space on disk
