@@ -21,10 +21,10 @@ class TraceElement:
             variables = {}
         last_variables = variables_cv.get() or {}
         variables_cv.set(dict(variables))
-        changed_variables = {}
-        for key, value in variables.items():
-            if key not in last_variables or last_variables[key] != value:
-                changed_variables[key] = value
+        changed_variables = {
+            key: value for key, value in variables.items()
+            if key not in last_variables or last_variables[key] != value
+        }
         self._variables = changed_variables
 
     def __repr__(self) -> str:
