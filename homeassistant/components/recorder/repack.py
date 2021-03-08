@@ -1,13 +1,15 @@
 """Purge repack helper."""
 
 import logging
+from typing import TYPE_CHECKING
 
-from . import Recorder
+if TYPE_CHECKING:
+    from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def repack_database(instance: Recorder):
+def repack_database(instance: "Recorder"):
     """Repack based on engine type."""
 
     # Execute sqlite command to free up space on disk

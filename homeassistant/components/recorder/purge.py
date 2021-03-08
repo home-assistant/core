@@ -2,23 +2,26 @@
 from datetime import datetime, timedelta
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
 
-from . import Recorder
 from .models import Events, RecorderRuns, States
 from .repack import repack_database
 from .util import session_scope
+
+if TYPE_CHECKING:
+    from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
 
 MAX_ROWS_TO_PURGE = 1000
 
 
-def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
+def purge_old_data(instance: "Recorder", purge_days: int, repack: bool) -> bool:
     """Purge events and states older than purge_days ago.
 
     Cleans up an timeframe of an hour, based on the oldest record.
@@ -117,7 +120,7 @@ def _purge_event_ids(session: Session, event_ids: list) -> None:
 
 
 def _purge_old_recorder_runs(
-    instance: Recorder, session: Session, purge_before: datetime
+    instance: "Recorder", session: Session, purge_before: datetime
 ) -> None:
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
