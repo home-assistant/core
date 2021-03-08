@@ -303,8 +303,8 @@ class AutomationTrace:
             "condition_trace": condition_traces,
             "config": self._config,
             "context": self._context,
-            "state": self._state,
             "run_id": self.runid,
+            "state": self._state,
             "timestamp": {
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,
@@ -315,6 +315,37 @@ class AutomationTrace:
         }
         if self._error is not None:
             result["error"] = str(self._error)
+        return result
+
+    def as_short_dict(self) -> Dict[str, Any]:
+        """Return a brief dictionary version of this AutomationTrace."""
+
+        last_action = None
+        last_condition = None
+
+        if self._action_trace:
+            last_action = list(self._action_trace.keys())[-1]
+        if self._condition_trace:
+            last_condition = list(self._condition_trace.keys())[-1]
+
+        result = {
+            "last_action": last_action,
+            "last_condition": last_condition,
+            "run_id": self.runid,
+            "state": self._state,
+            "timestamp": {
+                "start": self._timestamp_start,
+                "finish": self._timestamp_finish,
+            },
+            "trigger": self._trigger.get("description"),
+            "unique_id": self._unique_id,
+        }
+        if self._error is not None:
+            result["error"] = str(self._error)
+        if last_action is not None:
+            result["last_action"] = last_action
+            result["last_condition"] = last_condition
+
         return result
 
 
@@ -857,22 +888,27 @@ def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
 
 
 @callback
-def get_debug_traces_for_automation(hass, automation_id):
+def get_debug_traces_for_automation(hass, automation_id, summary=False):
     """Return a serializable list of debug traces for an automation."""
     traces = []
 
     for trace in hass.data[DATA_AUTOMATION_TRACE].get(automation_id, {}).values():
-        traces.append(trace.as_dict())
+        if summary:
+            traces.append(trace.as_short_dict())
+        else:
+            traces.append(trace.as_dict())
 
     return traces
 
 
 @callback
-def get_debug_traces(hass):
+def get_debug_traces(hass, summary=False):
     """Return a serializable list of debug traces."""
     traces = {}
 
     for automation_id in hass.data[DATA_AUTOMATION_TRACE]:
-        traces[automation_id] = get_debug_traces_for_automation(hass, automation_id)
+        traces[automation_id] = get_debug_traces_for_automation(
+            hass, automation_id, summary
+        )
 
     return traces
