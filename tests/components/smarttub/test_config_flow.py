@@ -22,14 +22,14 @@ async def test_form(hass):
         "homeassistant.components.smarttub.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
         )
 
-        assert result2["type"] == "create_entry"
-        assert result2["title"] == "test-email"
-        assert result2["data"] == {
+        assert result["type"] == "create_entry"
+        assert result["title"] == "test-email"
+        assert result["data"] == {
             CONF_EMAIL: "test-email",
             CONF_PASSWORD: "test-password",
         }
@@ -41,11 +41,11 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_EMAIL: "test-email2", CONF_PASSWORD: "test-password2"}
     )
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_form_invalid_auth(hass, smarttub_api):
@@ -56,13 +56,13 @@ async def test_form_invalid_auth(hass, smarttub_api):
 
     smarttub_api.login.side_effect = LoginFailed
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"},
     )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_reauth(hass, smarttub_api):
@@ -71,12 +71,12 @@ async def test_reauth(hass, smarttub_api):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
     )
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "test-email"
-    config_entry = result2["result"]
+    assert result["type"] == "create_entry"
+    assert result["title"] == "test-email"
+    config_entry = result["result"]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
