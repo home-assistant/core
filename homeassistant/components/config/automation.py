@@ -20,11 +20,13 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.script import (
     EVENT_SCRIPT_BREAKPOINT_HIT,
+    breakpoint_clear,
     breakpoint_clear_all,
     breakpoint_list,
     breakpoint_set,
     debug_continue,
     debug_step,
+    debug_stop,
 )
 
 from . import ACTION_DELETE, EditIdBasedConfigView
@@ -40,6 +42,7 @@ async def async_setup(hass):
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_set)
     websocket_api.async_register_command(hass, websocket_automation_debug_continue)
     websocket_api.async_register_command(hass, websocket_automation_debug_step)
+    websocket_api.async_register_command(hass, websocket_automation_debug_stop)
     websocket_api.async_register_command(hass, websocket_subscribe_breakpoint_events)
 
     async def hook(action, config_key):
@@ -107,11 +110,11 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         data[index] = updated_value
 
 
+@callback
 @websocket_api.websocket_command(
     {vol.Required("type"): "automation/trace/get", vol.Optional("automation_id"): str}
 )
-@websocket_api.async_response
-async def websocket_automation_trace_get(hass, connection, msg):
+def websocket_automation_trace_get(hass, connection, msg):
     """Get automation traces."""
     automation_id = msg.get("automation_id")
 
@@ -126,14 +129,15 @@ async def websocket_automation_trace_get(hass, connection, msg):
 
 
 @websocket_api.websocket_command({vol.Required("type"): "automation/trace/list"})
-@websocket_api.async_response
-async def websocket_automation_trace_list(hass, connection, msg):
+def websocket_automation_trace_list(hass, connection, msg):
     """Summarize automation traces."""
     automation_traces = get_debug_traces(hass, summary=True)
 
     connection.send_result(msg["id"], automation_traces)
 
 
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "automation/debug/breakpoint/set",
@@ -142,11 +146,10 @@ async def websocket_automation_trace_list(hass, connection, msg):
         vol.Optional("run_id"): str,
     }
 )
-@websocket_api.async_response
-async def websocket_automation_breakpoint_set(hass, connection, msg):
+def websocket_automation_breakpoint_set(hass, connection, msg):
     """Set breakpoint."""
-    automation_id = msg.get("automation_id")
-    node = msg.get("node")
+    automation_id = msg["automation_id"]
+    node = msg["node"]
     run_id = msg.get("run_id")
 
     result = breakpoint_set(hass, automation_id, run_id, node)
@@ -154,46 +157,49 @@ async def websocket_automation_breakpoint_set(hass, connection, msg):
     connection.send_result(msg["id"], result)
 
 
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "automation/debug/breakpoint/clear",
         vol.Required("automation_id"): str,
         vol.Required("node"): str,
-        vol.Optional("run_id"): str,
+        vol.Required("run_id"): str,
     }
 )
-@websocket_api.async_response
-async def websocket_automation_breakpoint_clear(hass, connection, msg):
-    """Set breakpoint."""
-    automation_id = msg.get("automation_id")
-    node = msg.get("node")
-    run_id = msg.get("run_id")
+def websocket_automation_breakpoint_clear(hass, connection, msg):
+    """Clear breakpoint."""
+    automation_id = msg["automation_id"]
+    node = msg["node"]
+    run_id = msg["run_id"]
 
-    result = breakpoint_set(hass, automation_id, run_id, node)
+    result = breakpoint_clear(hass, automation_id, run_id, node)
 
     connection.send_result(msg["id"], result)
 
 
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "automation/debug/breakpoint/list",
     }
 )
-@websocket_api.async_response
-async def websocket_automation_breakpoint_list(hass, connection, msg):
-    """Set breakpoint."""
+def websocket_automation_breakpoint_list(hass, connection, msg):
+    """List breakpoints."""
     result = breakpoint_list(hass)
 
     connection.send_result(msg["id"], result)
 
 
-@websocket_api.async_response
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "automation/debug/breakpoint/subscribe",
     }
 )
-async def websocket_subscribe_breakpoint_events(hass, connection, msg):
+def websocket_subscribe_breakpoint_events(hass, connection, msg):
     """Subscribe to breakpoint events."""
 
     @callback
@@ -224,6 +230,8 @@ async def websocket_subscribe_breakpoint_events(hass, connection, msg):
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "automation/debug/continue",
@@ -231,17 +239,18 @@ async def websocket_subscribe_breakpoint_events(hass, connection, msg):
         vol.Required("run_id"): str,
     }
 )
-@websocket_api.async_response
-async def websocket_automation_debug_continue(hass, connection, msg):
+def websocket_automation_debug_continue(hass, connection, msg):
     """Resume execution of halted automation."""
-    automation_id = msg.get("automation_id")
-    run_id = msg.get("run_id")
+    automation_id = msg["automation_id"]
+    run_id = msg["run_id"]
 
     result = debug_continue(hass, automation_id, run_id)
 
     connection.send_result(msg["id"], result)
 
 
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "automation/debug/step",
@@ -249,12 +258,30 @@ async def websocket_automation_debug_continue(hass, connection, msg):
         vol.Required("run_id"): str,
     }
 )
-@websocket_api.async_response
-async def websocket_automation_debug_step(hass, connection, msg):
+def websocket_automation_debug_step(hass, connection, msg):
     """Single step a halted automation."""
-    automation_id = msg.get("automation_id")
-    run_id = msg.get("run_id")
+    automation_id = msg["automation_id"]
+    run_id = msg["run_id"]
 
     result = debug_step(hass, automation_id, run_id)
+
+    connection.send_result(msg["id"], result)
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/stop",
+        vol.Required("automation_id"): str,
+        vol.Required("run_id"): str,
+    }
+)
+def websocket_automation_debug_stop(hass, connection, msg):
+    """Stop a halted automation."""
+    automation_id = msg["automation_id"]
+    run_id = msg["run_id"]
+
+    result = debug_stop(hass, automation_id, run_id)
 
     connection.send_result(msg["id"], result)

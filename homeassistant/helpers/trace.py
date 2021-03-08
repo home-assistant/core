@@ -73,9 +73,9 @@ trace_id_cv: ContextVar[Optional[Tuple[str, str]]] = ContextVar(
 )
 
 
-def trace_id_set(id: Tuple[str, str]) -> None:
-    """Set id if the current trace."""
-    trace_id_cv.set(id)
+def trace_id_set(trace_id: Tuple[str, str]) -> None:
+    """Set id of the current trace."""
+    trace_id_cv.set(trace_id)
 
 
 def trace_id_get() -> Optional[Tuple[str, str]]:
