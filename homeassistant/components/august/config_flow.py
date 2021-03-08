@@ -148,14 +148,14 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_auth_or_validate(self, user_input, errors):
-        combined_inputs = {**self._user_auth_details, **user_input}
-        await self._august_gateway.async_setup(combined_inputs)
+        self._user_auth_details.update(user_input)
+        await self._august_gateway.async_setup(self._user_auth_details)
         if self._needs_reset:
             self._needs_reset = False
             await self._august_gateway.async_reset_authentication()
         try:
             info = await async_validate_input(
-                combined_inputs,
+                self._user_auth_details,
                 self._august_gateway,
             )
         except CannotConnect:
@@ -163,7 +163,6 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except RequireValidation:
-            self._user_auth_details.update(user_input)
             return await self.async_step_validation()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -172,9 +171,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if errors:
             return None
 
-        self._user_auth_details.update(user_input)
-
-        existing_entry = await self.async_set_unique_id(combined_inputs[CONF_USERNAME])
+        existing_entry = await self.async_set_unique_id(
+            self._user_auth_details[CONF_USERNAME]
+        )
         if not existing_entry:
             return self.async_create_entry(title=info["title"], data=info["data"])
 
