@@ -246,6 +246,10 @@ async def test_templates_with_entities(hass, calls):
     await hass.async_block_till_done()
     _verify(hass, STATE_ON, None, 0, True, DIRECTION_FORWARD, None)
 
+    hass.states.async_set(_STATE_INPUT_BOOLEAN, False)
+    await hass.async_block_till_done()
+    _verify(hass, STATE_OFF, None, 0, True, DIRECTION_FORWARD, None)
+
 
 async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     """Test templates with values from other entities."""
@@ -274,7 +278,7 @@ async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+    _verify(hass, STATE_ON, SPEED_OFF, 0, None, None, None)
 
     hass.states.async_set("sensor.percentage", "33")
     await hass.async_block_till_done()
@@ -299,7 +303,7 @@ async def test_templates_with_entities_and_invalid_percentage(hass, calls):
     hass.states.async_set("sensor.percentage", "0")
     await hass.async_block_till_done()
 
-    _verify(hass, STATE_OFF, SPEED_OFF, 0, None, None, None)
+    _verify(hass, STATE_ON, SPEED_OFF, 0, None, None, None)
 
 
 async def test_templates_with_entities_and_preset_modes(hass, calls):
