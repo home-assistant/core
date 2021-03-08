@@ -8,7 +8,12 @@ from aiohttp import ClientError, ClientResponseError
 from august.api_async import ApiAsync
 from august.authenticator_async import AuthenticationState, AuthenticatorAsync
 
-from homeassistant.const import CONF_TIMEOUT, CONF_USERNAME, HTTP_UNAUTHORIZED
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -71,7 +76,7 @@ class AugustGateway:
             self.api,
             self._config[CONF_LOGIN_METHOD],
             self._config[CONF_USERNAME],
-            "",
+            self._config.get(CONF_PASSWORD, ""),
             install_id=self._config.get(CONF_INSTALL_ID),
             access_token_cache_file=self._hass.config.path(
                 self._access_token_cache_file
