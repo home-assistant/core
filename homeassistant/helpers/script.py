@@ -65,6 +65,10 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import condition, config_validation as cv, service, template
 from homeassistant.helpers.condition import trace_condition_function
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import async_call_later, async_track_template
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trigger import (
@@ -126,8 +130,8 @@ _SHUTDOWN_MAX_WAIT = 60
 
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
-EVENT_SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
-EVENT_SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
+SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
+SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 
 
 def action_trace_append(variables, path):
@@ -165,27 +169,24 @@ async def trace_action(hass, script_run, stop, variables):
                 )
             )
         ):
-            hass.bus.async_fire(
-                EVENT_SCRIPT_BREAKPOINT_HIT,
-                {"unique_id": unique_id, "run_id": run_id, "node": path},
-            )
+            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, unique_id, run_id, path)
 
             done = asyncio.Event()
 
             @callback
-            def async_continue_stop(event):
-                if event.data == "stop":
+            def async_continue_stop(command):
+                if command == "stop":
                     stop.set()
                 done.set()
 
-            event_type = EVENT_SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
-            remove_event = hass.bus.async_listen(event_type, async_continue_stop)
+            signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+            remove_signal = async_dispatcher_connect(hass, signal, async_continue_stop)
 
             tasks = [hass.async_create_task(flag.wait()) for flag in (stop, done)]
             await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in tasks:
                 task.cancel()
-            remove_event()
+            remove_signal()
 
     try:
         yield trace_element
@@ -1319,9 +1320,8 @@ def debug_continue(hass, unique_id, run_id):
     # Clear any wildcard breakpoint
     breakpoint_clear(hass, unique_id, run_id, NODE_ANY)
 
-    hass.bus.async_fire(
-        EVENT_SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id), "continue"
-    )
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    async_dispatcher_send(hass, signal, "continue")
 
 
 @callback
@@ -1330,14 +1330,12 @@ def debug_step(hass, unique_id, run_id):
     # Set a wildcard breakpoint
     breakpoint_set(hass, unique_id, run_id, NODE_ANY)
 
-    hass.bus.async_fire(
-        EVENT_SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id), "continue"
-    )
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    async_dispatcher_send(hass, signal, "continue")
 
 
 @callback
 def debug_stop(hass, unique_id, run_id):
     """Stop execution of a running or halted script."""
-    hass.bus.async_fire(
-        EVENT_SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id), "stop"
-    )
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    async_dispatcher_send(hass, signal, "stop")

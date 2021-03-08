@@ -18,6 +18,7 @@ import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import config_validation as cv, script, trace
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -2387,10 +2388,10 @@ async def test_breakpoints_1(hass):
     breakpoint_hit_event = asyncio.Event()
 
     @callback
-    def breakpoint_hit(_):
+    def breakpoint_hit(*_):
         breakpoint_hit_event.set()
 
-    hass.bus.async_listen(script.EVENT_SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+    async_dispatcher_connect(hass, script.SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
 
     watch_messages = []
 
@@ -2482,10 +2483,10 @@ async def test_breakpoints_2(hass):
     breakpoint_hit_event = asyncio.Event()
 
     @callback
-    def breakpoint_hit(_):
+    def breakpoint_hit(*_):
         breakpoint_hit_event.set()
 
-    hass.bus.async_listen(script.EVENT_SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+    async_dispatcher_connect(hass, script.SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
 
     watch_messages = []
 

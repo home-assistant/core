@@ -18,8 +18,9 @@ from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.dispatcher import DATA_DISPATCHER, async_dispatcher_connect
 from homeassistant.helpers.script import (
-    EVENT_SCRIPT_BREAKPOINT_HIT,
+    SCRIPT_BREAKPOINT_HIT,
     breakpoint_clear,
     breakpoint_clear_all,
     breakpoint_list,
@@ -216,13 +217,15 @@ def websocket_subscribe_breakpoint_events(hass, connection, msg):
             )
         )
 
-    unsub_event = hass.bus.async_listen(EVENT_SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+    remove_signal = async_dispatcher_connect(
+        hass, SCRIPT_BREAKPOINT_HIT, breakpoint_hit
+    )
 
     @callback
     def unsub():
         """Unsubscribe from breakpoint events."""
-        unsub_event()
-        if EVENT_SCRIPT_BREAKPOINT_HIT not in hass.bus.async_listeners:
+        remove_signal()
+        if SCRIPT_BREAKPOINT_HIT not in hass.data.get(DATA_DISPATCHER, {}):
             breakpoint_clear_all(hass)
 
     connection.subscriptions[msg["id"]] = unsub
