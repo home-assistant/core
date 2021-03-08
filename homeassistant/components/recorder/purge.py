@@ -75,6 +75,8 @@ def _select_event_ids_to_purge(session, purge_before):
 
 def _select_state_ids_to_purge(session, event_ids):
     """Return a list of state ids to purge."""
+    if not event_ids:
+        return []
     states = session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     _LOGGER.debug("Selected %s state ids to remove", len(states))
     return [state.state_id for state in states]
