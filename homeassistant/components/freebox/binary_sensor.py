@@ -58,9 +58,9 @@ class FreeboxPir(FreeboxHomeBaseClass, BinarySensorEntity):
         super().__init__(hass, router, node)
         self._command_trigger = self.get_command_id(node['type']['endpoints'], "signal", "trigger")
         self._detection = False
-        self._unsub_watcher = async_track_time_interval(self._hass, self.async_update_pir, timedelta(seconds=1))
+        self.start_watcher(timedelta(seconds=2))
 
-    async def async_update_pir(self, now: Optional[datetime] = None) -> None:
+    async def async_watcher(self, now: Optional[datetime] = None) -> None:
         detection = await self.get_home_endpoint_value(self._command_trigger)
         if( self._detection == detection ):
             self._detection = not detection
@@ -80,11 +80,6 @@ class FreeboxPir(FreeboxHomeBaseClass, BinarySensorEntity):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_MOTION
-    
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_watcher()
-        await super().async_will_remove_from_hass()
 
 
 ''' Freebox door opener sensor '''
@@ -106,29 +101,18 @@ class FreeboxSensorCover(FreeboxHomeBaseClass, BinarySensorEntity):
         cover_node = next(filter(lambda x: (x["name"]=="cover" and x["ep_type"]=="signal"), node['type']['endpoints']), None)
         super().__init__(hass, router, node, cover_node)
         self._command_cover = self.get_command_id(node['show_endpoints'], "signal", "cover")
-        self._open = False
-        self._unsub_watcher = async_track_time_interval(self._hass, self.async_update_pir, timedelta(seconds=3))
-
-    async def async_update_pir(self, now: Optional[datetime] = None) -> None:
-        self._open = await self.get_home_endpoint_value(self._command_cover)
-        self.async_write_ha_state()
+        self._open          = self.get_node_value(node['show_endpoints'], "signal", "cover")
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._open
 
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
+    async def async_update(self):
+        """Update name & state."""
+        self._open = self.get_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "cover")
 
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_SAFETY
-    
-    async def async_will_remove_from_hass(self):
-        """When entity will be removed from hass."""
-        self._unsub_watcher()
-        await super().async_will_remove_from_hass()

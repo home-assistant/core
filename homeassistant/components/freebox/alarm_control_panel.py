@@ -88,7 +88,6 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
         self._command_state     = self.get_command_id(node['type']['endpoints'], "signal", "state" )
 
         self.set_state("idle")
-        self._unsub_watcher = None
         self._supported_features = SUPPORT_ALARM_ARM_AWAY
         self.update_parameters(node)
 
@@ -111,7 +110,7 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
         """Send arm away command."""
         if( await self.set_home_endpoint_value(self._command_alarm1, {"value": None})):
             time.sleep(1)
-            self._unsub_watcher = async_track_time_interval(self.hass, self.sync_update_during_arming, timedelta(seconds=1))
+            self.start_watcher()
 
     async def async_alarm_arm_home(self, code=None) -> None:
         await self.async_alarm_arm_night(code)
@@ -120,18 +119,21 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
         """Send arm night command."""
         if( await self.set_home_endpoint_value(self._command_alarm2, {"value": None})):
             time.sleep(1)
-            self._unsub_watcher = async_track_time_interval(self.hass, self.sync_update_during_arming, timedelta(seconds=1))
+            self.start_watcher()
 
 
-    async def sync_update_during_arming(self, now: Optional[datetime] = None) -> None:
-        self.set_state(await self.get_home_endpoint_value( self._command_state))
+    async def async_watcher(self, now: Optional[datetime] = None) -> None:
+        self.set_state(await self.get_home_endpoint_value(self._command_state))
         self.async_write_ha_state()
+
 
     async def async_update(self):
         """Get the state & name and update it."""
-        state = await self.get_home_endpoint_value( self._command_state)
-        if( state == "idle" and self._unsub_watcher != None):
-            self._unsub_watcher()
+        state = await self.get_home_endpoint_value(self._command_state)
+        #if( state == "idle" and self._unsub_watcher != None):
+        #    self._unsub_watcher()
+        if( state == "idle" ):
+            self.stop_watcher()
         self.update_parameters(self._router.home_devices[self._id])
 
 
