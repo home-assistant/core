@@ -1,7 +1,5 @@
 """Config flow for ScreenLogic."""
-import socket
-
-from screenlogicpy import discover, ScreenLogicGateway, ScreenLogicError
+from screenlogicpy import discover, ScreenLogicError
 from screenlogicpy.requests import login
 from screenlogicpy.const import (
     SL_GATEWAY_IP,
@@ -26,8 +24,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_NAME,
     CONF_HOST,
-    CONF_DISCOVERY,
-    CONF_MAC,
 )
 
 from .const import (
@@ -39,7 +35,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_SELECT_KEY = "selected_gateway"
-MANUAL_ENTRY = "Manually Enter"
+GATEWAY_MANUAL_ENTRY = "manual"
 
 
 def discover_gateways():
@@ -79,7 +75,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize ScreenLogic ConfigFlow."""
-        self.gateways = {}
+        self.discovered_gateways = {}
 
     @staticmethod
     @callback
@@ -101,42 +97,41 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("No input: Discover")
             hosts = []
             hosts = await self.hass.async_add_executor_job(discover_gateways)
-            hosts.append(
-                {
-                    SL_GATEWAY_IP: "192.168.1.43",
-                    SL_GATEWAY_PORT: 80,
-                    SL_GATEWAY_TYPE: 2,
-                    SL_GATEWAY_SUBTYPE: 12,
-                    SL_GATEWAY_NAME: "Test Gateway",
-                }
-            )
             if len(hosts) > 0:
                 for host in hosts:
-                    self.gateways[host[SL_GATEWAY_NAME]] = host
+                    self.discovered_gateways[host[SL_GATEWAY_IP]] = host
                 return await self.async_step_gateway_select()
             else:
                 return await self.async_step_gateway_entry()
 
     async def async_step_gateway_select(self, user_input=None):
         """Handle the selection of a discovered ScreenLogic gateway."""
-
         _LOGGER.debug("Gateway Select")
-
-        OPTIONS = [key for key in self.gateways.keys()]
-        OPTIONS.append(MANUAL_ENTRY)
-        _LOGGER.debug(OPTIONS)
+        _LOGGER.debug(
+            *[gateway[SL_GATEWAY_NAME] for gateway in self.discovered_gateways.values()]
+        )
 
         GATEWAY_SELECT_SCHEMA = vol.Schema(
-            {vol.Required(GATEWAY_SELECT_KEY, default=OPTIONS[0]): vol.In(OPTIONS)}
+            {
+                vol.Required(GATEWAY_SELECT_KEY): vol.In(
+                    {
+                        **{
+                            gateway_ip: gateway[SL_GATEWAY_NAME]
+                            for gateway_ip, gateway in self.discovered_gateways.items()
+                        },
+                        GATEWAY_MANUAL_ENTRY: "Manually configure a ScreenLogic gateway",
+                    }
+                )
+            }
         )
 
         entry_errors = {}
         if user_input is not None:
             # TODO: create user_input
-            if user_input[GATEWAY_SELECT_KEY] == MANUAL_ENTRY:
+            if user_input[GATEWAY_SELECT_KEY] == GATEWAY_MANUAL_ENTRY:
                 return await self.async_step_gateway_entry()
 
-            selected_gateway = self.gateways[user_input[GATEWAY_SELECT_KEY]]
+            selected_gateway = self.discovered_gateways[user_input[GATEWAY_SELECT_KEY]]
             entry_data = {
                 CONF_HOST: {
                     CONF_IP_ADDRESS: selected_gateway[SL_GATEWAY_IP],
@@ -161,7 +156,6 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_entry(self, user_input=None):
         """Handle the manual entry of a ScreenLogic gateway."""
-
         _LOGGER.debug("Gateway Entry")
 
         GATEWAY_ENTRY_SCHEMA = vol.Schema(

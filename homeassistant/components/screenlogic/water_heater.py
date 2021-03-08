@@ -1,28 +1,21 @@
-"""Represents a ScreenLogic Water Heater"""
+"""Support for a ScreenLogic Water Heater."""
+from screenlogicpy.const import HEAT_MODE
+
+import logging
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE,
     ATTR_OPERATION_MODE,
 )
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
-from .const import DOMAIN
-
 from . import ScreenlogicEntity
-
-import logging
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
-
-from screenlogicpy.const import HEAT_MODE
 
 MODE_NAME_TO_MODE_NUM = {
     HEAT_MODE._names[num]: num for num in range(len(HEAT_MODE._names))
@@ -43,13 +36,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
-    """Represents the heating functions for a body of water"""
+    """Represents the heating functions for a body of water."""
 
     def __init__(self, coordinator, body):
         super().__init__(coordinator, body)
 
     @property
     def name(self) -> str:
+        """Name of the water heater."""
         ent_name = self.coordinator.data["bodies"][self._entity_id]["heat_status"][
             "name"
         ]
@@ -58,36 +52,42 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
 
     @property
     def state(self) -> str:
+        """Current state of the water heater."""
         return HEAT_MODE.GetFriendlyName(
             self.coordinator.data["bodies"][self._entity_id]["heat_status"]["value"]
         )
 
     @property
     def min_temp(self) -> float:
+        """Returns the minimum allowed temperature."""
         return self.coordinator.data["bodies"][self._entity_id]["min_set_point"][
             "value"
         ]
 
     @property
     def max_temp(self) -> float:
+        """Returns the maximum allowed temperature."""
         return self.coordinator.data["bodies"][self._entity_id]["max_set_point"][
             "value"
         ]
 
     @property
     def current_temperature(self) -> float:
+        """Gets the current water temperature."""
         return self.coordinator.data["bodies"][self._entity_id]["last_temperature"][
             "value"
         ]
 
     @property
     def target_temperature(self) -> float:
+        """Target temperature."""
         return self.coordinator.data["bodies"][self._entity_id]["heat_set_point"][
             "value"
         ]
 
     @property
     def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
         return (
             TEMP_CELSIUS
             if self.coordinator.data["config"]["is_celcius"]["value"] == 1
