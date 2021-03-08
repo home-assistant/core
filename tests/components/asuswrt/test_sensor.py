@@ -1,6 +1,6 @@
 """Tests for the AsusWrt sensor."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioasuswrt.asuswrt import Device
 import pytest
@@ -49,7 +49,7 @@ def mock_controller_connect():
     with patch("homeassistant.components.asuswrt.router.AsusWrt") as service_mock:
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
-        service_mock.return_value.connection.disconnect = AsyncMock()
+        service_mock.return_value.connection.disconnect = Mock()
         service_mock.return_value.async_get_connected_devices = AsyncMock(
             return_value=MOCK_DEVICES
         )
