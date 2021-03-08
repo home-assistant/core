@@ -54,8 +54,7 @@ async def async_setup_entry(
     )
     entities.append(OctoPrintStartTimeSensor(coordinator, config_entry.entry_id))
 
-    async_add_entities(entities, True)
-    return True
+    async_add_entities(entities)
 
 
 class OctoPrintSensorBase(CoordinatorEntity, Entity):
