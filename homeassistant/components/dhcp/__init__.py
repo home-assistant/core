@@ -207,8 +207,11 @@ class DHCPWatcher(WatcherBase):
 
     async def async_start(self):
         """Start watching for dhcp packets."""
+        # disable scapy promiscuous mode as we do not need it
+        conf.sniff_promisc = 0
+
         try:
-            _verify_l2socket_creation_permission()
+            await self.hass.async_add_executor_job(_verify_l2socket_setup, FILTER)
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -219,7 +222,7 @@ class DHCPWatcher(WatcherBase):
             return
 
         try:
-            await _async_verify_working_pcap(self.hass, FILTER)
+            await self.hass.async_add_executor_job(_verify_working_pcap, FILTER)
         except (Scapy_Exception, ImportError) as ex:
             _LOGGER.error(
                 "Cannot watch for dhcp packets without a functional packet filter: %s",
@@ -233,6 +236,7 @@ class DHCPWatcher(WatcherBase):
             prn=self.handle_dhcp_packet,
             store=0,
         )
+
         self._sniffer.start()
 
     def handle_dhcp_packet(self, packet):
@@ -283,7 +287,7 @@ def _format_mac(mac_address):
     return format_mac(mac_address).replace(":", "")
 
 
-def _verify_l2socket_creation_permission():
+def _verify_l2socket_setup(cap_filter):
     """Create a socket using the scapy configured l2socket.
 
     Try to create the socket
@@ -292,15 +296,13 @@ def _verify_l2socket_creation_permission():
     thread so we will not be able to capture
     any permission or bind errors.
     """
-    # disable scapy promiscuous mode as we do not need it
-    conf.sniff_promisc = 0
-    conf.L2socket()
+    conf.L2socket(filter=cap_filter)
 
 
-async def _async_verify_working_pcap(hass, cap_filter):
+def _verify_working_pcap(cap_filter):
     """Verify we can create a packet filter.
 
     If we cannot create a filter we will be listening for
     all traffic which is too intensive.
     """
-    await hass.async_add_executor_job(compile_filter, cap_filter)
+    compile_filter(cap_filter)
