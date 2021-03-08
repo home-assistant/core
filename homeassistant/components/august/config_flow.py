@@ -14,20 +14,6 @@ from .gateway import AugustGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_LOGIN_METHOD, default="phone"): vol.In(LOGIN_METHODS),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
-REAUTH_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
 
 async def async_validate_input(
     data,
@@ -96,7 +82,21 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return result
 
         return self.async_show_form(
-            step_id="user_validate", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user_validate",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_LOGIN_METHOD,
+                        default=self._user_auth_details.get(CONF_LOGIN_METHOD, "phone"),
+                    ): vol.In(LOGIN_METHODS),
+                    vol.Required(
+                        CONF_USERNAME,
+                        default=self._user_auth_details.get(CONF_USERNAME),
+                    ): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_validation(self, user_input=None):
@@ -136,7 +136,11 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_validate",
-            data_schema=REAUTH_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
             errors=errors,
             description_placeholders={
                 CONF_USERNAME: self._user_auth_details[CONF_USERNAME],
