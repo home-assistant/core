@@ -28,9 +28,8 @@ from homeassistant.components.august import (
     CONF_USERNAME,
     DOMAIN,
 )
-from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 def _mock_get_config():
@@ -61,7 +60,13 @@ async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
         )
     )
     api_mock.return_value = api_instance
-    assert await async_setup_component(hass, DOMAIN, _mock_get_config())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_mock_get_config()[DOMAIN],
+        options={},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     return True
 
