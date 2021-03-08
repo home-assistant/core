@@ -151,7 +151,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         return self._max_mireds
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
 
