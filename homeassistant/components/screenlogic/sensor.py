@@ -1,21 +1,9 @@
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-from homeassistant.const import PERCENTAGE
-
+"""Support for a ScreenLogic Sensor."""
 import logging
-
-from screenlogicpy.const import ON_OFF
 
 from . import ScreenlogicEntity
 
-from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class ScreenLogicSensor(ScreenlogicEntity):
-    """Representation of a ScreenLogic sensor entity"""
+    """Representation of a ScreenLogic sensor entity."""
 
     def __init__(self, coordinator, sensor):
         """Initialize of the sensor."""
@@ -66,14 +54,14 @@ class ScreenLogicSensor(ScreenlogicEntity):
 
     @property
     def name(self):
-        """Return the sensor name"""
+        """Return the sensor name."""
         ent_name = self.coordinator.data["sensors"][self._entity_id]["name"]
         gateway_name = self.coordinator.gateway.name
         return gateway_name + " " + ent_name
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement"""
+        """Return the unit of measurement."""
         if "unit" in self.coordinator.data["sensors"][self._entity_id]:
             return self.coordinator.data["sensors"][self._entity_id]["unit"]
         # elif "supply" in self._entity_id:
@@ -91,13 +79,13 @@ class ScreenLogicSensor(ScreenlogicEntity):
 
     @property
     def state(self):
-        """ Retruns the state of the sensor """
+        """Retruns the state of the sensor."""
         value = self.coordinator.data["sensors"][self._entity_id]["value"]
         return (value - 1) if "supply" in self._entity_id else value
 
 
 class ScreenLogicPumpSensor(ScreenlogicEntity):
-    """Representation of a ScreenLogic pump sensor entity"""
+    """Representation of a ScreenLogic pump sensor entity."""
 
     def __init__(self, coordinator, pump, key):
         """Initialize of the pump sensor."""
@@ -108,14 +96,14 @@ class ScreenLogicPumpSensor(ScreenlogicEntity):
 
     @property
     def name(self):
-        """Return the pump sensor name"""
+        """Return the pump sensor name."""
         ent_name = self.coordinator.data["pumps"][self._pump_id][self._key]["name"]
         gateway_name = self.coordinator.gateway.name
         return gateway_name + " " + ent_name
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement"""
+        """Return the unit of measurement."""
         if "unit" in self.coordinator.data["pumps"][self._pump_id][self._key]:
             return self.coordinator.data["pumps"][self._pump_id][self._key]["unit"]
         else:
@@ -131,5 +119,5 @@ class ScreenLogicPumpSensor(ScreenlogicEntity):
 
     @property
     def state(self):
-        """ Retruns the state of the pump sensor """
+        """.Retruns the state of the pump sensor."""
         return self.coordinator.data["pumps"][self._pump_id][self._key]["value"]

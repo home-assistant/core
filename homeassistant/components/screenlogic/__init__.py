@@ -1,28 +1,21 @@
 """The Screenlogic integration."""
 import asyncio
-import socket
 from slugify import slugify
 from collections import defaultdict
 from datetime import timedelta
-
+import voluptuous as vol
 import logging
 
 from screenlogicpy import (
     ScreenLogicGateway,
     ScreenLogicError,
-    discovery,
 )
-
 from screenlogicpy.const import (
     CONTROLLER_HARDWARE,
     SL_GATEWAY_IP,
     SL_GATEWAY_PORT,
-    SL_GATEWAY_TYPE,
-    SL_GATEWAY_SUBTYPE,
     SL_GATEWAY_NAME,
 )
-
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -35,14 +28,12 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_NAME,
     CONF_HOST,
-    CONF_DISCOVERY,
 )
 
 from .const import (
@@ -108,7 +99,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Screenlogic from a config entry."""
-
     _LOGGER.debug("Async Setup Entry")
     _LOGGER.debug(entry.data)
 
@@ -210,7 +200,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
-    """Handle options update"""
+    """Handle options update."""
     coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id][
         "coordinator"
     ]
@@ -224,7 +214,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage the data update for the Screenlogic component."""
 
     def __init__(self, hass, *, config_entry, gateway):
-        """Initialize the Screenlogic Data Update Coordinator"""
+        """Initialize the Screenlogic Data Update Coordinator."""
         self.config_entry = config_entry
         self.gateway = gateway
         self.screenlogic_data = {}
@@ -250,7 +240,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
 
 
 class ScreenlogicEntity(CoordinatorEntity):
-    """Base class for all ScreenLogic entities"""
+    """Base class for all ScreenLogic entities."""
 
     def __init__(self, coordinator, datakey):
         """Initialize of the sensor."""

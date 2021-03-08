@@ -3,9 +3,7 @@
   "name": "Screenlogic",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/screenlogic",
-  "requirements": [
-    "git+https://github.com/dieselrabbit/screenlogicpy.git@dev#screenlogicpy==0.0.3"
-  ],
+  "requirements": ["screenlogicpy==0.1.0"],
   "dependencies": [],
   "codeowners": [
     "@dieselrabbit"

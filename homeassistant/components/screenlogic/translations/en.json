@@ -24,7 +24,7 @@
                 "data": {
                     "selected_gateway": "Gateway"
                 },
-                "description": "The following ScreenLogic gateways were discovered. Please select one to set up, or select Manual Entry.",
+                "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
                 "title": "ScreenLogic"
             }
         }

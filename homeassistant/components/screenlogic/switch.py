@@ -1,21 +1,11 @@
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-
-import logging
-
+"""Support for a ScreenLogic 'circuit' switch."""
 from screenlogicpy.const import ON_OFF
 
-from . import ScreenlogicEntity
+import logging
+from homeassistant.components.switch import SwitchEntity
 
-from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
+from . import ScreenlogicEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +31,7 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
 
     @property
     def name(self) -> str:
-        """Get the name of the switch"""
+        """Get the name of the switch."""
         ent_name = self.coordinator.data["circuits"][self._entity_id]["name"]
         gateway_name = self.coordinator.gateway.name
         return gateway_name + " " + ent_name
@@ -53,7 +43,7 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send the ON command."""
-        if self.coordinator.gateway.set_circuit(self._entity_id, 1):
+        if self.coordinator.gateway.set_circuit(self._entity_id, ON_OFF.ON):
             _LOGGER.info("screenlogic turn on " + str(self._entity_id))
             await self.coordinator.async_request_refresh()
         else:
@@ -61,7 +51,7 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send the OFF command."""
-        if self.coordinator.gateway.set_circuit(self._entity_id, 0):
+        if self.coordinator.gateway.set_circuit(self._entity_id, ON_OFF.OFF):
             _LOGGER.info("screenlogic turn of " + str(self._entity_id))
             await self.coordinator.async_request_refresh()
         else:

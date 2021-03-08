@@ -1,19 +1,10 @@
 """Support for a ScreenLogic Binary Sensor."""
-from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_MOTION,
-)
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-
-from . import ScreenlogicEntity
+from screenlogicpy.const import ON_OFF
 
 import logging
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
+from . import ScreenlogicEntity
 from .const import (
     DOMAIN,
 )
@@ -37,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
-    """Representation of a ScreenLogic sensor entity"""
+    """Representation of a ScreenLogic binary sensor entity."""
 
     def __init__(self, coordinator, binary_sensor):
         """Initialize of the sensor."""
@@ -45,7 +36,7 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
 
     @property
     def name(self):
-        """Return the sensor name"""
+        """Return the sensor name."""
         gateway_name = self.coordinator.gateway.name
         ent_name = self.coordinator.data["sensors"][self._entity_id]["name"]
         return gateway_name + " " + ent_name
@@ -61,5 +52,5 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """ Retruns if the sensor is on"""
-        return self.coordinator.data["sensors"][self._entity_id]["value"] == 1
+        """Retruns if the sensor is on."""
+        return self.coordinator.data["sensors"][self._entity_id]["value"] == ON_OFF.ON
