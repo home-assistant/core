@@ -1217,8 +1217,11 @@ async def test_repeat_count(hass, caplog, count):
             },
         }
     )
-    with script.trace_action(None):
-        script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    # Prepare tracing
+    trace.trace_get()
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
@@ -1231,7 +1234,6 @@ async def test_repeat_count(hass, caplog, count):
     assert caplog.text.count(f"Repeating {alias}") == count
     assert_action_trace(
         {
-            "": [{}],
             "0": [{}],
             "0/0/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
         }
