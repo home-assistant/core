@@ -16,7 +16,16 @@ from homeassistant.components.automation.config import (
 )
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers.script import (
+    EVENT_SCRIPT_BREAKPOINT_HIT,
+    breakpoint_clear_all,
+    breakpoint_list,
+    breakpoint_set,
+    debug_continue,
+    debug_step,
+)
 
 from . import ACTION_DELETE, EditIdBasedConfigView
 
@@ -26,6 +35,12 @@ async def async_setup(hass):
 
     websocket_api.async_register_command(hass, websocket_automation_trace_get)
     websocket_api.async_register_command(hass, websocket_automation_trace_list)
+    websocket_api.async_register_command(hass, websocket_automation_breakpoint_clear)
+    websocket_api.async_register_command(hass, websocket_automation_breakpoint_list)
+    websocket_api.async_register_command(hass, websocket_automation_breakpoint_set)
+    websocket_api.async_register_command(hass, websocket_automation_debug_continue)
+    websocket_api.async_register_command(hass, websocket_automation_debug_step)
+    websocket_api.async_register_command(hass, websocket_subscribe_breakpoint_events)
 
     async def hook(action, config_key):
         """post_write_hook for Config View that reloads automations."""
@@ -117,3 +132,129 @@ async def websocket_automation_trace_list(hass, connection, msg):
     automation_traces = get_debug_traces(hass, summary=True)
 
     connection.send_result(msg["id"], automation_traces)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/breakpoint/set",
+        vol.Required("automation_id"): str,
+        vol.Required("node"): str,
+        vol.Optional("run_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_automation_breakpoint_set(hass, connection, msg):
+    """Set breakpoint."""
+    automation_id = msg.get("automation_id")
+    node = msg.get("node")
+    run_id = msg.get("run_id")
+
+    result = breakpoint_set(hass, automation_id, run_id, node)
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/breakpoint/clear",
+        vol.Required("automation_id"): str,
+        vol.Required("node"): str,
+        vol.Optional("run_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_automation_breakpoint_clear(hass, connection, msg):
+    """Set breakpoint."""
+    automation_id = msg.get("automation_id")
+    node = msg.get("node")
+    run_id = msg.get("run_id")
+
+    result = breakpoint_set(hass, automation_id, run_id, node)
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/breakpoint/list",
+    }
+)
+@websocket_api.async_response
+async def websocket_automation_breakpoint_list(hass, connection, msg):
+    """Set breakpoint."""
+    result = breakpoint_list(hass)
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/breakpoint/subscribe",
+    }
+)
+async def websocket_subscribe_breakpoint_events(hass, connection, msg):
+    """Subscribe to breakpoint events."""
+
+    @callback
+    def breakpoint_hit(event):
+        """Forward events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                {
+                    "automation_id": event.data["automation_id"],
+                    "run_id": event.data["run_id"],
+                    "node": event.data["node"],
+                },
+            )
+        )
+
+    unsub_event = hass.bus.async_listen(EVENT_SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+
+    @callback
+    def unsub():
+        """Unsubscribe from breakpoint events."""
+        unsub_event()
+        if EVENT_SCRIPT_BREAKPOINT_HIT not in hass.bus.async_listeners:
+            breakpoint_clear_all(hass)
+
+    connection.subscriptions[msg["id"]] = unsub
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/continue",
+        vol.Required("automation_id"): str,
+        vol.Required("run_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_automation_debug_continue(hass, connection, msg):
+    """Resume execution of halted automation."""
+    automation_id = msg.get("automation_id")
+    run_id = msg.get("run_id")
+
+    result = debug_continue(hass, automation_id, run_id)
+
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/debug/step",
+        vol.Required("automation_id"): str,
+        vol.Required("run_id"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_automation_debug_step(hass, connection, msg):
+    """Single step a halted automation."""
+    automation_id = msg.get("automation_id")
+    run_id = msg.get("run_id")
+
+    result = debug_step(hass, automation_id, run_id)
+
+    connection.send_result(msg["id"], result)
