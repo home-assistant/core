@@ -107,7 +107,9 @@ class MaxCubeClimate(ClimateEntity):
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         if device.min_temperature is None:
             return MIN_TEMPERATURE
-        return device.min_temperature
+        # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
+        # We use HVAC_MODE_OFF instead to represent a turned off thermostat.
+        return max(device.min_temperature, MIN_TEMPERATURE)
 
     @property
     def max_temp(self):
@@ -155,7 +157,9 @@ class MaxCubeClimate(ClimateEntity):
 
         if hvac_mode == HVAC_MODE_OFF:
             temp = OFF_TEMPERATURE
-        elif hvac_mode != HVAC_MODE_HEAT:
+        elif hvac_mode == HVAC_MODE_HEAT:
+            temp = max(temp, self.min_temp)
+        else:
             # Reset the temperature to a sane value.
             # Ideally, we should send 0 and the device will set its
             # temperature according to the schedule. However, current
