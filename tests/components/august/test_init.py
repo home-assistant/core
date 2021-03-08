@@ -162,7 +162,7 @@ async def test_auth_fails(hass):
 
     flows = hass.config_entries.flow.async_progress()
 
-    assert flows[0]["step_id"] == "user"
+    assert flows[0]["step_id"] == "reauth_validate"
 
 
 async def test_bad_password(hass):
@@ -190,7 +190,7 @@ async def test_bad_password(hass):
 
     flows = hass.config_entries.flow.async_progress()
 
-    assert flows[0]["step_id"] == "user"
+    assert flows[0]["step_id"] == "reauth_validate"
 
 
 async def test_http_failure(hass):
@@ -240,7 +240,7 @@ async def test_unknown_auth_state(hass):
 
     flows = hass.config_entries.flow.async_progress()
 
-    assert flows[0]["step_id"] == "user"
+    assert flows[0]["step_id"] == "reauth_validate"
 
 
 async def test_requires_validation_state(hass):
