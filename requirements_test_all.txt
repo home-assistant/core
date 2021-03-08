@@ -1011,7 +1011,7 @@ rflink==0.0.58
 ring_doorbell==0.6.2
 
 # homeassistant.components.roku
-rokuecp==0.8.0
+rokuecp==0.8.1
 
 # homeassistant.components.roomba
 roombapy==1.6.2
