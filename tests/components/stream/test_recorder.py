@@ -19,7 +19,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.stream.common import generate_h264_video
 
-TEST_TIMEOUT = 8.0  # Lower than 9s home assistant timeout
+TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
@@ -45,7 +45,8 @@ class SaveRecordWorkerSync:
     def join(self):
         """Verify save worker was invoked and block on shutdown."""
         assert self._save_event.wait(timeout=TEST_TIMEOUT)
-        self._save_thread.join()
+        self._save_thread.join(timeout=TEST_TIMEOUT)
+        assert not self._save_thread.is_alive()
 
     def reset(self):
         """Reset callback state for reuse in tests."""
@@ -95,8 +96,9 @@ async def test_record_stream(hass, hass_client, stream_worker_sync, record_worke
             stream_worker_sync.resume()
 
     assert len(segments) < MAX_ABORT_SEGMENTS
-    stream.stop()
     assert len(segments) > 1
+    stream_worker_sync.resume()
+    stream.stop()
 
     # Verify that the save worker was invoked, then block until its
     # thread completes and is shutdown completely to avoid thread leaks.
