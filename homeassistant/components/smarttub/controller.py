@@ -15,7 +15,15 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_REMINDERS, DOMAIN, POLLING_TIMEOUT, SCAN_INTERVAL
+from .const import (
+    ATTR_LIGHTS,
+    ATTR_PUMPS,
+    ATTR_REMINDERS,
+    ATTR_STATUS,
+    DOMAIN,
+    POLLING_TIMEOUT,
+    SCAN_INTERVAL,
+)
 from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,9 +101,9 @@ class SmartTubController:
             spa.get_reminders(),
         )
         return {
-            "status": status,
-            "pumps": {pump.id: pump for pump in pumps},
-            "lights": {light.zone: light for light in lights},
+            ATTR_STATUS: status,
+            ATTR_PUMPS: {pump.id: pump for pump in pumps},
+            ATTR_LIGHTS: {light.zone: light for light in lights},
             ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
         }
 
