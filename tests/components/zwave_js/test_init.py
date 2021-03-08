@@ -459,6 +459,12 @@ async def test_existing_node_ready(
     )
 
 
+async def test_null_name(hass, client, null_name_check, integration):
+    """Test that node without a name gets a generic node name."""
+    node = null_name_check
+    assert hass.states.get(f"switch.node_{node.node_id}")
+
+
 async def test_existing_node_not_ready(hass, client, multisensor_6, device_registry):
     """Test we handle a non ready node that exists during integration setup."""
     node = multisensor_6
