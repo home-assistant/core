@@ -68,6 +68,20 @@ def create_fanv2_service_with_min_step(accessory):
     swing_mode.value = 0
 
 
+def create_fanv2_service_without_rotation_speed(accessory):
+    """Define fan v2 characteristics as per HAP spec."""
+    service = accessory.add_service(ServicesTypes.FAN_V2)
+
+    cur_state = service.add_char(CharacteristicsTypes.ACTIVE)
+    cur_state.value = 0
+
+    direction = service.add_char(CharacteristicsTypes.ROTATION_DIRECTION)
+    direction.value = 0
+
+    swing_mode = service.add_char(CharacteristicsTypes.SWING_MODE)
+    swing_mode.value = 0
+
+
 async def test_fan_read_state(hass, utcnow):
     """Test that we can read the state of a HomeKit fan accessory."""
     helper = await setup_test_component(hass, create_fan_service)
@@ -111,6 +125,29 @@ async def test_turn_on(hass, utcnow):
     )
     assert helper.characteristics[V1_ON].value == 1
     assert helper.characteristics[V1_ROTATION_SPEED].value == 33.0
+
+
+async def test_turn_on_off_without_rotation_speed(hass, utcnow):
+    """Test that we can turn a fan on."""
+    helper = await setup_test_component(
+        hass, create_fanv2_service_without_rotation_speed
+    )
+
+    await hass.services.async_call(
+        "fan",
+        "turn_on",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
+    )
+    assert helper.characteristics[V2_ACTIVE].value == 1
+
+    await hass.services.async_call(
+        "fan",
+        "turn_off",
+        {"entity_id": "fan.testdevice"},
+        blocking=True,
+    )
+    assert helper.characteristics[V2_ACTIVE].value == 0
 
 
 async def test_turn_off(hass, utcnow):
