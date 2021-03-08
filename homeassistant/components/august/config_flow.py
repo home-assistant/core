@@ -102,10 +102,9 @@ class AugustConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_validation(self, user_input=None):
         """Handle validation (2fa) step."""
         if user_input:
-            combined_inputs = {**self._user_auth_details, **user_input}
             if self._mode == "reauth":
-                return await self.async_step_reauth_validate(combined_inputs)
-            return await self.async_step_user_validate(combined_inputs)
+                return await self.async_step_reauth_validate(user_input)
+            return await self.async_step_user_validate(user_input)
 
         return self.async_show_form(
             step_id="validation",
