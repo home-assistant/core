@@ -279,6 +279,7 @@ class Temperature(Sensor):
     _divisor = 100
     _unit = TEMP_CELSIUS
 
+
 @STRICT_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
@@ -287,7 +288,8 @@ class CarbonDioxideConcentration(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
-    
+
+
 @STRICT_MATCH(channel_names="carbon_monoxide_concentration")
 class CarbonMonoxideConcentration(Sensor):
     """Carbon Monoxide Concentration sensor."""
@@ -295,4 +297,4 @@ class CarbonMonoxideConcentration(Sensor):
     SENSOR_ATTR = "measured_value"
     _decimals = 0
     _multiplier = 1e6
-    _unit = CONCENTRATION_PARTS_PER_MILLION    
+    _unit = CONCENTRATION_PARTS_PER_MILLION
