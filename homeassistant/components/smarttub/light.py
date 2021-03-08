@@ -13,6 +13,7 @@ from homeassistant.components.light import (
 )
 
 from .const import (
+    ATTR_LIGHTS,
     DEFAULT_LIGHT_BRIGHTNESS,
     DEFAULT_LIGHT_EFFECT,
     DOMAIN,
@@ -32,7 +33,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = [
         SmartTubLight(controller.coordinator, light)
         for spa in controller.spas
-        for light in await spa.get_lights()
+        for light in controller.coordinator.data[spa.id][ATTR_LIGHTS].values()
     ]
 
     async_add_entities(entities)

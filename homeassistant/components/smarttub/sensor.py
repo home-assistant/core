@@ -61,7 +61,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "primary filtration cycle", "primary_filtration"
+            coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
 
     @property
