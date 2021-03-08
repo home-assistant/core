@@ -162,6 +162,15 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
         )
         self._set_modes_and_presets()
+        self._supported_features = SUPPORT_PRESET_MODE
+        # If any setpoint value exists, we can assume temperature
+        # can be set
+        if any(self._setpoint_values.values()):
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+        if HVAC_MODE_HEAT_COOL in self.hvac_modes:
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        if self._fan_mode:
+            self._supported_features |= SUPPORT_FAN_MODE
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
@@ -259,7 +268,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
-        except ValueError:
+        except (IndexError, ValueError):
             return None
         return temp.value if temp else None
 
@@ -271,7 +280,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
-        except ValueError:
+        except (IndexError, ValueError):
             return None
         return temp.value if temp else None
 
@@ -335,14 +344,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        support = SUPPORT_PRESET_MODE
-        if len(self._current_mode_setpoint_enums) == 1:
-            support |= SUPPORT_TARGET_TEMPERATURE
-        if len(self._current_mode_setpoint_enums) > 1:
-            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
-        if self._fan_mode:
-            support |= SUPPORT_FAN_MODE
-        return support
+        return self._supported_features
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
