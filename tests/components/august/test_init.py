@@ -266,4 +266,5 @@ async def test_requires_validation_state(hass):
 
     assert config_entry.state == ENTRY_STATE_SETUP_ERROR
 
-    assert hass.config_entries.flow.async_progress() == []
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "reauth"

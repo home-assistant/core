@@ -54,7 +54,6 @@ async def test_form(hass):
     assert result2["data"] == {
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
-        CONF_PASSWORD: "test-password",
         CONF_INSTALL_ID: None,
         CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
@@ -215,7 +214,6 @@ async def test_form_needs_validate(hass):
     assert result4["data"] == {
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
-        CONF_PASSWORD: "test-password",
         CONF_INSTALL_ID: None,
         CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
@@ -232,7 +230,6 @@ async def test_form_reauth(hass):
         data={
             CONF_LOGIN_METHOD: "email",
             CONF_USERNAME: "my@email.tld",
-            CONF_PASSWORD: "test-password",
             CONF_INSTALL_ID: None,
             CONF_TIMEOUT: 10,
             CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
