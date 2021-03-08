@@ -21,6 +21,7 @@ from .const import (
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
     DEFAULT_AUGUST_CONFIG_FILE,
+    DEFAULT_TIMEOUT,
     VERIFICATION_CODE_KEY,
 )
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
@@ -53,7 +54,6 @@ class AugustGateway:
             CONF_LOGIN_METHOD: self._config[CONF_LOGIN_METHOD],
             CONF_USERNAME: self._config[CONF_USERNAME],
             CONF_INSTALL_ID: self._config.get(CONF_INSTALL_ID),
-            CONF_TIMEOUT: self._config.get(CONF_TIMEOUT),
             CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
         }
 
@@ -69,7 +69,8 @@ class AugustGateway:
         self._config = conf
 
         self.api = ApiAsync(
-            self._aiohttp_session, timeout=self._config.get(CONF_TIMEOUT)
+            self._aiohttp_session,
+            timeout=self._config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
         self.authenticator = AuthenticatorAsync(

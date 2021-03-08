@@ -55,7 +55,6 @@ async def test_form(hass):
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
         CONF_INSTALL_ID: None,
-        CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -215,7 +214,6 @@ async def test_form_needs_validate(hass):
         CONF_LOGIN_METHOD: "email",
         CONF_USERNAME: "my@email.tld",
         CONF_INSTALL_ID: None,
-        CONF_TIMEOUT: 10,
         CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
     }
     assert len(mock_setup.mock_calls) == 1
@@ -230,6 +228,7 @@ async def test_form_reauth(hass):
         data={
             CONF_LOGIN_METHOD: "email",
             CONF_USERNAME: "my@email.tld",
+            CONF_PASSWORD: "test-password",
             CONF_INSTALL_ID: None,
             CONF_TIMEOUT: 10,
             CONF_ACCESS_TOKEN_CACHE_FILE: ".my@email.tld.august.conf",
