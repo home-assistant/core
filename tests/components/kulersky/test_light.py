@@ -5,7 +5,11 @@ import pykulersky
 import pytest
 
 from homeassistant import setup
-from homeassistant.components.kulersky.light import DOMAIN
+from homeassistant.components.kulersky.const import (
+    DATA_ADDRESSES,
+    DATA_DISCOVERY_SUBSCRIPTION,
+    DOMAIN,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
@@ -79,7 +83,8 @@ async def test_init(hass, mock_light):
 
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
-    assert hass.data[DOMAIN] == {"addresses": {"AA:BB:CC:11:22:33"}}
+    assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:11:22:33"}
+    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
 
     await hass.config_entries.async_remove(mock_entry.entry_id)
 
