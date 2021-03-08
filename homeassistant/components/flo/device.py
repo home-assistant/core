@@ -58,7 +58,9 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     @property
     def device_name(self) -> str:
         """Return device name."""
-        return f"{self.manufacturer} {self.model}"
+        return self._device_information.get(
+            "nickname", f"{self.manufacturer} {self.model}"
+        )
 
     @property
     def manufacturer(self) -> str:
@@ -121,6 +123,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         return self._device_information["telemetry"]["current"]["tempF"]
 
     @property
+    def humidity(self) -> float:
+        """Return the current humidity in percent (0-100)."""
+        return self._device_information["telemetry"]["current"]["humidity"]
+
+    @property
     def consumption_today(self) -> float:
         """Return the current consumption for today in gallons."""
         return self._water_usage["aggregations"]["sumTotalGallonsConsumed"]
@@ -160,6 +167,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @property
+    def water_detected(self) -> bool:
+        """Return whether water is detected, for leak detectors."""
+        return self._device_information["fwProperties"]["telemetry_water"]
+
+    @property
     def last_known_valve_state(self) -> str:
         """Return the last known valve state for the device."""
         return self._device_information["valve"]["lastKnown"]
@@ -168,6 +180,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     def target_valve_state(self) -> str:
         """Return the target valve state for the device."""
         return self._device_information["valve"]["target"]
+
+    @property
+    def battery_level(self) -> float:
+        """Return the battery level for battery-powered device, e.g. leak detectors."""
+        return self._device_information["battery"]["level"]
 
     async def async_set_mode_home(self):
         """Set the Flo location to home mode."""
