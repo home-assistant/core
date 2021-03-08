@@ -259,7 +259,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
-        except ValueError:
+        except (IndexError, ValueError):
             return None
         return temp.value if temp else None
 
@@ -271,7 +271,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
-        except ValueError:
+        except (IndexError, ValueError):
             return None
         return temp.value if temp else None
 
@@ -336,9 +336,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         support = SUPPORT_PRESET_MODE
-        if len(self._current_mode_setpoint_enums) == 1:
+        # If any setpoint value exists, we can assume temperature
+        # can be set
+        if any(self._setpoint_values.values()):
             support |= SUPPORT_TARGET_TEMPERATURE
-        if len(self._current_mode_setpoint_enums) > 1:
+        if HVAC_MODE_HEAT_COOL in self.hvac_modes:
             support |= SUPPORT_TARGET_TEMPERATURE_RANGE
         if self._fan_mode:
             support |= SUPPORT_FAN_MODE
