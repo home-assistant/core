@@ -1,6 +1,6 @@
 """Provide functionality to interact with vlc devices on the network."""
-import logging
 from functools import wraps
+import logging
 
 import vlc
 import voluptuous as vol
@@ -12,17 +12,17 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_STOP,
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
 )
 from homeassistant.const import (
     CONF_NAME,
     STATE_IDLE,
+    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_OFF,
 )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def cmd(func):
-    """Catch command exceptions."""
+    """Catch command exceptions when vlc is turned off."""
 
     @wraps(func)
     def wrapper(obj, *args, **kwargs):
@@ -105,6 +105,7 @@ class VlcDevice(MediaPlayerEntity):
 
     @property
     def _vlc_is_off(self):
+        """Indicate whether or not the vlc instance is turned off."""
         return self._vlc is None
 
     def turn_on(self):
