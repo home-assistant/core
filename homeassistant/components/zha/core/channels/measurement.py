@@ -80,7 +80,8 @@ class TemperatureMeasurement(ZigbeeChannel):
     measurement.CarbonMonoxideConcentration.cluster_id
 )
 class CarbonMonoxideConcentration(ZigbeeChannel):
-    """Carbon Monoxide measurement channel.""" 
+    """Carbon Monoxide measurement channel."""
+
     REPORT_CONFIG = [
         {
             "attr": "measured_value",
@@ -93,7 +94,8 @@ class CarbonMonoxideConcentration(ZigbeeChannel):
     measurement.CarbonDioxideConcentration.cluster_id
 )
 class CarbonDioxideConcentration(ZigbeeChannel):
-    """Carbon Dioxide measurement channel.""" 
+    """Carbon Dioxide measurement channel."""
+
     REPORT_CONFIG = [
         {
             "attr": "measured_value",
