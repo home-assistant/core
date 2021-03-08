@@ -105,7 +105,11 @@ class ZWaveBaseEntity(Entity):
         """Generate entity name."""
         if additional_info is None:
             additional_info = []
-        name: str = self.info.node.name or self.info.node.device_config.description
+        name: str = (
+            self.info.node.name
+            or self.info.node.device_config.description
+            or f"Node {self.info.node.node_id}"
+        )
         if include_value_name:
             value_name = (
                 alternate_value_name
