@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components import config
+from homeassistant.components import automation, config
 
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
@@ -325,3 +325,81 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert trace["trigger"]["description"] == "event 'test_event2'"
     assert trace["unique_id"] == "moon"
     assert trace["variables"]
+
+
+async def test_automation_trace_overflow(hass, hass_ws_client):
+    """Test the number of stored traces per automation is limited."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"event": "some_event"},
+    }
+    moon_config = {
+        "id": "moon",
+        "trigger": {"platform": "event", "event_type": "test_event2"},
+        "action": {"event": "another_event"},
+    }
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                sun_config,
+                moon_config,
+            ]
+        },
+    )
+
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_ws_client()
+
+    await client.send_json({"id": next_id(), "type": "automation/trace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace", "automation_id": "sun"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"sun": []}
+
+    # Trigger "sun" and "moon" automation once
+    hass.bus.async_fire("test_event")
+    hass.bus.async_fire("test_event2")
+    await hass.async_block_till_done()
+
+    # Get traces
+    await client.send_json({"id": next_id(), "type": "automation/trace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]["moon"]) == 1
+    moon_run_id = response["result"]["moon"][0]["run_id"]
+    assert len(response["result"]["sun"]) == 1
+
+    # Trigger "moon" automation enough times to overflow the number of stored traces
+    for _ in range(automation.STORED_TRACES):
+        hass.bus.async_fire("test_event2")
+        await hass.async_block_till_done()
+
+    await client.send_json({"id": next_id(), "type": "automation/trace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]["moon"]) == automation.STORED_TRACES
+    assert len(response["result"]["sun"]) == 1
+    assert int(response["result"]["moon"][0]["run_id"]) == int(moon_run_id) + 1
+    assert (
+        int(response["result"]["moon"][-1]["run_id"])
+        == int(moon_run_id) + automation.STORED_TRACES
+    )

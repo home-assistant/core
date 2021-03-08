@@ -1,7 +1,8 @@
 """Allow to set up simple automation rules via the config file."""
-from collections import deque
+from collections import OrderedDict
 from contextlib import contextmanager
 import datetime as dt
+from itertools import count
 import logging
 from typing import (
     Any,
@@ -240,6 +241,8 @@ async def async_setup(hass, config):
 class AutomationTrace:
     """Container for automation trace."""
 
+    _runids = count(0)
+
     def __init__(
         self,
         unique_id: Optional[str],
@@ -254,6 +257,7 @@ class AutomationTrace:
         self._context: Context = context
         self._error: Optional[Exception] = None
         self._state: str = "running"
+        self.runid: str = str(next(self._runids))
         self._timestamp_finish: Optional[dt.datetime] = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
         self._trigger: Dict[str, Any] = trigger
@@ -300,6 +304,7 @@ class AutomationTrace:
             "config": self._config,
             "context": self._context,
             "state": self._state,
+            "run_id": self.runid,
             "timestamp": {
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,
@@ -313,16 +318,37 @@ class AutomationTrace:
         return result
 
 
+class LimitedSizeDict(OrderedDict):
+    """OrderedDict limited in size."""
+
+    def __init__(self, *args, **kwds):
+        """Initialize OrderedDict limited in size."""
+        self.size_limit = kwds.pop("size_limit", None)
+        OrderedDict.__init__(self, *args, **kwds)
+        self._check_size_limit()
+
+    def __setitem__(self, key, value):
+        """Set item and check dict size."""
+        OrderedDict.__setitem__(self, key, value)
+        self._check_size_limit()
+
+    def _check_size_limit(self):
+        """Check dict size and evict items in FIFO order if needed."""
+        if self.size_limit is not None:
+            while len(self) > self.size_limit:
+                self.popitem(last=False)
+
+
 @contextmanager
 def trace_automation(hass, unique_id, config, trigger, context):
     """Trace action execution of automation with automation_id."""
     automation_trace = AutomationTrace(unique_id, config, trigger, context)
 
     if unique_id:
-        if unique_id not in hass.data[DATA_AUTOMATION_TRACE]:
-            hass.data[DATA_AUTOMATION_TRACE][unique_id] = deque([], STORED_TRACES)
-        traces = hass.data[DATA_AUTOMATION_TRACE][unique_id]
-        traces.append(automation_trace)
+        automation_traces = hass.data[DATA_AUTOMATION_TRACE]
+        if unique_id not in automation_traces:
+            automation_traces[unique_id] = LimitedSizeDict(size_limit=STORED_TRACES)
+        automation_traces[unique_id][automation_trace.runid] = automation_trace
 
     try:
         yield automation_trace
@@ -835,7 +861,7 @@ def get_debug_traces_for_automation(hass, automation_id):
     """Return a serializable list of debug traces for an automation."""
     traces = []
 
-    for trace in hass.data[DATA_AUTOMATION_TRACE].get(automation_id, []):
+    for trace in hass.data[DATA_AUTOMATION_TRACE].get(automation_id, {}).values():
         traces.append(trace.as_dict())
 
     return traces

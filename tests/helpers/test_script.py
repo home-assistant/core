@@ -1192,11 +1192,11 @@ async def test_condition_all_cached(hass):
     assert len(script_obj._config_cache) == 2
 
 
-async def test_repeat_count(hass, caplog):
+@pytest.mark.parametrize("count", [3, script.ACTION_TRACE_NODE_MAX_LEN * 2])
+async def test_repeat_count(hass, caplog, count):
     """Test repeat action w/ count option."""
     event = "test_event"
     events = async_capture_events(hass, event)
-    count = 3
 
     alias = "condition step"
     sequence = cv.SCRIPT_SCHEMA(
@@ -1215,7 +1215,8 @@ async def test_repeat_count(hass, caplog):
             },
         }
     )
-    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+    with script.trace_action(None):
+        script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
@@ -1226,6 +1227,13 @@ async def test_repeat_count(hass, caplog):
         assert event.data.get("index") == index + 1
         assert event.data.get("last") == (index == count - 1)
     assert caplog.text.count(f"Repeating {alias}") == count
+    assert_action_trace(
+        {
+            "": [{}],
+            "0": [{}],
+            "0/0/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
+        }
+    )
 
 
 @pytest.mark.parametrize("condition", ["while", "until"])
