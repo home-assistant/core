@@ -24,7 +24,8 @@ from . import ACTION_DELETE, EditIdBasedConfigView
 async def async_setup(hass):
     """Set up the Automation config API."""
 
-    websocket_api.async_register_command(hass, websocket_automation_trace)
+    websocket_api.async_register_command(hass, websocket_automation_trace_get)
+    websocket_api.async_register_command(hass, websocket_automation_trace_list)
 
     async def hook(action, config_key):
         """post_write_hook for Config View that reloads automations."""
@@ -92,10 +93,10 @@ class EditAutomationConfigView(EditIdBasedConfigView):
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "automation/trace", vol.Optional("automation_id"): str}
+    {vol.Required("type"): "automation/trace/get", vol.Optional("automation_id"): str}
 )
 @websocket_api.async_response
-async def websocket_automation_trace(hass, connection, msg):
+async def websocket_automation_trace_get(hass, connection, msg):
     """Get automation traces."""
     automation_id = msg.get("automation_id")
 
@@ -105,5 +106,14 @@ async def websocket_automation_trace(hass, connection, msg):
         automation_traces = {
             automation_id: get_debug_traces_for_automation(hass, automation_id)
         }
+
+    connection.send_result(msg["id"], automation_traces)
+
+
+@websocket_api.websocket_command({vol.Required("type"): "automation/trace/list"})
+@websocket_api.async_response
+async def websocket_automation_trace_list(hass, connection, msg):
+    """Summarize automation traces."""
+    automation_traces = get_debug_traces(hass, summary=True)
 
     connection.send_result(msg["id"], automation_traces)
