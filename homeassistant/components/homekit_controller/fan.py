@@ -83,8 +83,6 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @property
     def speed_count(self):
         """Speed count for the fan."""
-        if not self.service.has(CharacteristicsTypes.ROTATION_SPEED):
-            return super().speed_count
         return round(
             100 / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
         )
