@@ -53,7 +53,6 @@ async def test_config_entry_not_ready(hass, aioclient_mock):
             "host": "1.1.1.1",
             "username": "foo",
             "password": "bar",
-            "reverse": False,
         },
     )
     config_entry.add_to_hass(hass)
