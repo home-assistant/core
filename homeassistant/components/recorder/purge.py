@@ -1,4 +1,6 @@
 """Purge old data helper."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 import time
@@ -21,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 MAX_ROWS_TO_PURGE = 1000
 
 
-def purge_old_data(instance: "Recorder", purge_days: int, repack: bool) -> bool:
+def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
     """Purge events and states older than purge_days ago.
 
     Cleans up an timeframe of an hour, based on the oldest record.
@@ -120,7 +122,7 @@ def _purge_event_ids(session: Session, event_ids: list) -> None:
 
 
 def _purge_old_recorder_runs(
-    instance: "Recorder", session: Session, purge_before: datetime
+    instance: Recorder, session: Session, purge_before: datetime
 ) -> None:
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
