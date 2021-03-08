@@ -303,8 +303,8 @@ class AutomationTrace:
             "condition_trace": condition_traces,
             "config": self._config,
             "context": self._context,
-            "state": self._state,
             "run_id": self.runid,
+            "state": self._state,
             "timestamp": {
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,
@@ -331,6 +331,7 @@ class AutomationTrace:
         result = {
             "last_action": last_action,
             "last_condition": last_condition,
+            "run_id": self.runid,
             "state": self._state,
             "timestamp": {
                 "start": self._timestamp_start,
