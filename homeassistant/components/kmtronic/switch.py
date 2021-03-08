@@ -3,14 +3,14 @@
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DATA_HUB, DATA_REVERSE, DOMAIN
+from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
-    reverse = hass.data[DOMAIN][entry.entry_id][DATA_REVERSE]
+    reverse = entry.options.get(CONF_REVERSE, False)
     await hub.async_get_relays()
 
     async_add_entities(

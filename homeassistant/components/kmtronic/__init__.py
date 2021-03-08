@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the kmtronic component."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = {}
 
     return True
 
@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_HUB: hub,
         DATA_COORDINATOR: coordinator,
-        DATA_REVERSE: _get_config_value(entry, CONF_REVERSE, False),
+        DATA_REVERSE: entry.options.get(CONF_REVERSE, False),
     }
 
     for platform in PLATFORMS:
@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
     """Update options."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -111,9 +111,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-def _get_config_value(config_entry, key, default):
-    if config_entry.options and key in config_entry.options:
-        return config_entry.options[key]
-    return config_entry.data.get(key, default)

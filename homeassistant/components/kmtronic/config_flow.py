@@ -101,14 +101,12 @@ class KMTronicOptionsFlow(config_entries.OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=self._get_options_schema(),
-        )
-
-    def _get_options_schema(self):
-        return vol.Schema(
-            {
-                vol.Optional(
-                    CONF_REVERSE, default=self.config_entry.options.get(CONF_REVERSE)
-                ): bool,
-            }
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_REVERSE,
+                        default=self.config_entry.options.get(CONF_REVERSE),
+                    ): bool,
+                }
+            ),
         )

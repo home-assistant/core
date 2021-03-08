@@ -19,13 +19,7 @@ async def test_relay_on_off(hass, aioclient_mock):
     )
 
     MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.1.1.1",
-            "username": "foo",
-            "password": "bar",
-            "reverse": False,
-        },
+        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
@@ -73,13 +67,7 @@ async def test_update(hass, aioclient_mock):
     )
 
     MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.1.1.1",
-            "username": "foo",
-            "password": "bar",
-            "reverse": False,
-        },
+        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -110,13 +98,7 @@ async def test_failed_update(hass, aioclient_mock):
     )
 
     MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.1.1.1",
-            "username": "foo",
-            "password": "bar",
-            "reverse": False,
-        },
+        domain=DOMAIN, data={"host": "1.1.1.1", "username": "foo", "password": "bar"}
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -159,7 +141,8 @@ async def test_relay_on_off_reversed(hass, aioclient_mock):
 
     MockConfigEntry(
         domain=DOMAIN,
-        data={"host": "1.1.1.1", "username": "foo", "password": "bar", "reverse": True},
+        data={"host": "1.1.1.1", "username": "foo", "password": "bar"},
+        options={"reverse": True},
     ).add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
