@@ -66,6 +66,7 @@ from .const import (
     MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_PROH,
     MODEL_AIRPURIFIER_V3,
     MODELS_FAN,
     MODELS_HUMIDIFIER_MIOT,
@@ -786,7 +787,11 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
             self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
-        elif self._model == MODEL_AIRPURIFIER_3 or self._model == MODEL_AIRPURIFIER_3H:
+        elif (
+            self._model == MODEL_AIRPURIFIER_3
+            or self._model == MODEL_AIRPURIFIER_3H
+            or self._model == MODEL_AIRPURIFIER_PROH
+        ):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
             self._speed_list = OPERATION_MODES_AIRPURIFIER_3
