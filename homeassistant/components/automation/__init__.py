@@ -333,7 +333,7 @@ class LimitedSizeDict(OrderedDict):
         self._check_size_limit()
 
     def _check_size_limit(self):
-        """Check dict size and evict the oldest item if needed."""
+        """Check dict size and evict items in FIFO order if needed."""
         if self.size_limit is not None:
             while len(self) > self.size_limit:
                 self.popitem(last=False)
