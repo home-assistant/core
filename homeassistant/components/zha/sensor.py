@@ -5,6 +5,8 @@ from typing import Any, Callable, Dict, List, Optional, Union
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -285,6 +287,7 @@ class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
 
     SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_CO2
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
@@ -295,6 +298,7 @@ class CarbonMonoxideConcentration(Sensor):
     """Carbon Monoxide Concentration sensor."""
 
     SENSOR_ATTR = "measured_value"
+    _device_class = DEVICE_CLASS_CO
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_PARTS_PER_MILLION
