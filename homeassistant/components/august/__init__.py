@@ -4,118 +4,23 @@ from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
-from august.authenticator import ValidationResult
 from august.exceptions import AugustApiAIOHTTPError
 from august.lock import LockDetail
 from august.pubnub_async import AugustPubNub, async_create_pubnub
 from august.util import update_lock_details_from_pubnub_message
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_UNAUTHORIZED
+from homeassistant.const import CONF_PASSWORD, HTTP_UNAUTHORIZED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from .activity import ActivityStream
-from .const import (
-    CONF_LOGIN_METHOD,
-    DATA_AUGUST,
-    DEFAULT_NAME,
-    DOMAIN,
-    MIN_TIME_BETWEEN_DETAIL_UPDATES,
-    PLATFORMS,
-    VERIFICATION_CODE_KEY,
-)
+from .const import DATA_AUGUST, DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
 from .gateway import AugustGateway
 from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
-
-TWO_FA_REVALIDATE = "verify_configurator"
-
-
-async def async_request_validation(hass, config_entry, august_gateway):
-    """Request a new verification code from the user."""
-
-    #
-    # In the future this should start a new config flow
-    # instead of using the legacy configurator
-    #
-    _LOGGER.error("Access token is no longer valid")
-    configurator = hass.components.configurator
-    entry_id = config_entry.entry_id
-
-    async def async_august_configuration_validation_callback(data):
-        code = data.get(VERIFICATION_CODE_KEY)
-        result = await august_gateway.authenticator.async_validate_verification_code(
-            code
-        )
-
-        if result == ValidationResult.INVALID_VERIFICATION_CODE:
-            configurator.async_notify_errors(
-                hass.data[DOMAIN][entry_id][TWO_FA_REVALIDATE],
-                "Invalid verification code, please make sure you are using the latest code and try again.",
-            )
-        elif result == ValidationResult.VALIDATED:
-            return await async_setup_august(hass, config_entry, august_gateway)
-
-        return False
-
-    if TWO_FA_REVALIDATE not in hass.data[DOMAIN][entry_id]:
-        await august_gateway.authenticator.async_send_verification_code()
-
-    entry_data = config_entry.data
-    login_method = entry_data.get(CONF_LOGIN_METHOD)
-    username = entry_data.get(CONF_USERNAME)
-
-    hass.data[DOMAIN][entry_id][TWO_FA_REVALIDATE] = configurator.async_request_config(
-        f"{DEFAULT_NAME} ({username})",
-        async_august_configuration_validation_callback,
-        description=(
-            "August must be re-verified. "
-            f"Please check your {login_method} ({username}) "
-            "and enter the verification code below"
-        ),
-        submit_caption="Verify",
-        fields=[
-            {"id": VERIFICATION_CODE_KEY, "name": "Verification code", "type": "string"}
-        ],
-    )
-    return
-
-
-async def async_setup_august(hass, config_entry, august_gateway):
-    """Set up the August component."""
-
-    data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-
-    try:
-        await august_gateway.async_authenticate()
-    except RequireValidation:
-        await async_request_validation(hass, config_entry, august_gateway)
-        raise
-
-    # We still use the configurator to get a new 2fa code
-    # when needed since config_flow doesn't have a way
-    # to re-request if it expires
-    if TWO_FA_REVALIDATE in data:
-        hass.components.configurator.async_request_done(data.pop(TWO_FA_REVALIDATE))
-
-    data[DATA_AUGUST] = AugustData(hass, august_gateway)
-    await data[DATA_AUGUST].async_setup()
-
-    if len(config_entry.data[CONF_PASSWORD]):
-        # Once we have the 2fa code we no longer need the password.
-        config_data = config_entry.data.copy()
-        config_data[CONF_PASSWORD] = ""
-        hass.config_entries.async_update_entry(config_entry, data=config_data)
-
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
-
-    return True
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -138,10 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             return False
 
         raise ConfigEntryNotReady from err
-    except InvalidAuth:
+    except (RequireValidation, InvalidAuth):
         _async_start_reauth(hass, entry)
-        return False
-    except RequireValidation:
         return False
     except (CannotConnect, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
@@ -176,6 +79,31 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_setup_august(hass, config_entry, august_gateway):
+    """Set up the August component."""
+
+    if CONF_PASSWORD in config_entry.data:
+        # We no longer need to store passwords since we do not
+        # support YAML anymore
+        config_data = config_entry.data.copy()
+        del config_data[CONF_PASSWORD]
+        hass.config_entries.async_update_entry(config_entry, data=config_data)
+
+    await august_gateway.async_authenticate()
+
+    data = hass.data[DOMAIN][config_entry.entry_id] = {
+        DATA_AUGUST: AugustData(hass, august_gateway)
+    }
+    await data[DATA_AUGUST].async_setup()
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
+
+    return True
 
 
 class AugustData(AugustSubscriberMixin):
