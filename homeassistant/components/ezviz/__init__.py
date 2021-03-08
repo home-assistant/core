@@ -6,11 +6,17 @@ import logging
 from pyezviz.client import EzvizClient
 from requests import ConnectTimeout, HTTPError
 
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_TIMEOUT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_REGION,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    CONF_USERNAME,
+)
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
-    ATTR_SERIAL,
+    ATTR_TYPE_CAMERA,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
@@ -42,8 +48,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up Ezviz from a config entry."""
 
-    if entry.data.get(ATTR_SERIAL):
-        hass.data[DOMAIN][entry.unique_id] = entry
+    if entry.data.get(CONF_TYPE) == ATTR_TYPE_CAMERA:
         return True
 
     if not entry.options:
@@ -86,8 +91,7 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
 
-    if entry.data.get(ATTR_SERIAL):
-        hass.data[DOMAIN].pop(entry.unique_id)
+    if entry.data.get(CONF_TYPE) == ATTR_TYPE_CAMERA:
         return True
 
     unload_ok = all(

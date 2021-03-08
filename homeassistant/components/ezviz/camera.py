@@ -77,6 +77,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Ezviz cameras based on a config entry."""
 
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    camera_config_entries = hass.config_entries.async_entries(DOMAIN)
 
     ffmpeg_arguments = entry.options.get(
         CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
@@ -87,12 +88,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         # There seem to be a bug related to localRtspPort in Ezviz API...
         local_rtsp_port = DEFAULT_RTSP_PORT
+        camera_rtsp_entry = [
+            item
+            for item in camera_config_entries
+            if item.unique_id == camera[ATTR_SERIAL]
+        ]
 
         if camera["local_rtsp_port"] != 0:
             local_rtsp_port = camera["local_rtsp_port"]
 
-        if camera[ATTR_SERIAL] in hass.data.get(DOMAIN):
-            conf_cameras = hass.data[DOMAIN][camera[ATTR_SERIAL]]
+        if camera_rtsp_entry:
+            conf_cameras = camera_rtsp_entry[0]
 
             camera_username = conf_cameras.data[CONF_USERNAME]
             camera_password = conf_cameras.data[CONF_PASSWORD]

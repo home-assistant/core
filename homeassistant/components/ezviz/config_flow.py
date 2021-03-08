@@ -79,9 +79,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Create camera with: %s", data)
 
+        cam_serial = data.pop(ATTR_SERIAL)
         data[CONF_TYPE] = ATTR_TYPE_CAMERA
 
-        return self.async_create_entry(title=data[ATTR_SERIAL], data=data)
+        return self.async_create_entry(title=cam_serial, data=data)
 
     @staticmethod
     @callback
@@ -93,13 +94,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by the user."""
 
         # Check if ezviz cloud account is present
-        if self._async_current_entries():
-            current_entries = self._async_current_entries()
-            for item in current_entries:
-                if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
-                    return await self.async_step_user_camera()
-
-        self._abort_if_unique_id_configured()
+        for item in self._async_current_entries():
+            if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                return await self.async_step_user_camera()
 
         errors = {}
 
@@ -144,7 +141,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=user_input[ATTR_SERIAL],
                 data={
-                    ATTR_SERIAL: user_input[ATTR_SERIAL],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                     CONF_TYPE: ATTR_TYPE_CAMERA,
