@@ -17,10 +17,16 @@ from homeassistant.components.automation.config import (
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.dispatcher import DATA_DISPATCHER, async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    DATA_DISPATCHER,
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.script import (
     SCRIPT_BREAKPOINT_HIT,
+    SCRIPT_DEBUG_CONTINUE_ALL,
     breakpoint_clear,
     breakpoint_clear_all,
     breakpoint_list,
@@ -153,8 +159,13 @@ def websocket_automation_breakpoint_set(hass, connection, msg):
     node = msg["node"]
     run_id = msg.get("run_id")
 
-    result = breakpoint_set(hass, automation_id, run_id, node)
+    if (
+        SCRIPT_BREAKPOINT_HIT not in hass.data.get(DATA_DISPATCHER, {})
+        or not hass.data[DATA_DISPATCHER][SCRIPT_BREAKPOINT_HIT]
+    ):
+        raise HomeAssistantError("No breakpoint subscription")
 
+    result = breakpoint_set(hass, automation_id, run_id, node)
     connection.send_result(msg["id"], result)
 
 
@@ -165,14 +176,14 @@ def websocket_automation_breakpoint_set(hass, connection, msg):
         vol.Required("type"): "automation/debug/breakpoint/clear",
         vol.Required("automation_id"): str,
         vol.Required("node"): str,
-        vol.Required("run_id"): str,
+        vol.Optional("run_id"): str,
     }
 )
 def websocket_automation_breakpoint_clear(hass, connection, msg):
     """Clear breakpoint."""
     automation_id = msg["automation_id"]
     node = msg["node"]
-    run_id = msg["run_id"]
+    run_id = msg.get("run_id")
 
     result = breakpoint_clear(hass, automation_id, run_id, node)
 
@@ -188,9 +199,11 @@ def websocket_automation_breakpoint_clear(hass, connection, msg):
 )
 def websocket_automation_breakpoint_list(hass, connection, msg):
     """List breakpoints."""
-    result = breakpoint_list(hass)
+    breakpoints = breakpoint_list(hass)
+    for breakpoint in breakpoints:
+        breakpoint["automation_id"] = breakpoint.pop("unique_id")
 
-    connection.send_result(msg["id"], result)
+    connection.send_result(msg["id"], breakpoints)
 
 
 @callback
@@ -204,15 +217,15 @@ def websocket_subscribe_breakpoint_events(hass, connection, msg):
     """Subscribe to breakpoint events."""
 
     @callback
-    def breakpoint_hit(event):
+    def breakpoint_hit(automation_id, run_id, node):
         """Forward events to websocket."""
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
                 {
-                    "automation_id": event.data["automation_id"],
-                    "run_id": event.data["run_id"],
-                    "node": event.data["node"],
+                    "automation_id": automation_id,
+                    "run_id": run_id,
+                    "node": node,
                 },
             )
         )
@@ -225,8 +238,12 @@ def websocket_subscribe_breakpoint_events(hass, connection, msg):
     def unsub():
         """Unsubscribe from breakpoint events."""
         remove_signal()
-        if SCRIPT_BREAKPOINT_HIT not in hass.data.get(DATA_DISPATCHER, {}):
+        if (
+            SCRIPT_BREAKPOINT_HIT not in hass.data.get(DATA_DISPATCHER, {})
+            or not hass.data[DATA_DISPATCHER][SCRIPT_BREAKPOINT_HIT]
+        ):
             breakpoint_clear_all(hass)
+            async_dispatcher_send(hass, SCRIPT_DEBUG_CONTINUE_ALL)
 
     connection.subscriptions[msg["id"]] = unsub
 

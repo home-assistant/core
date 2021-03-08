@@ -132,6 +132,7 @@ ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated action
 
 SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
+SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 
 def action_trace_append(variables, path):
@@ -174,19 +175,23 @@ async def trace_action(hass, script_run, stop, variables):
             done = asyncio.Event()
 
             @callback
-            def async_continue_stop(command):
+            def async_continue_stop(command=None):
                 if command == "stop":
                     stop.set()
                 done.set()
 
             signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
-            remove_signal = async_dispatcher_connect(hass, signal, async_continue_stop)
+            remove_signal1 = async_dispatcher_connect(hass, signal, async_continue_stop)
+            remove_signal2 = async_dispatcher_connect(
+                hass, SCRIPT_DEBUG_CONTINUE_ALL, async_continue_stop
+            )
 
             tasks = [hass.async_create_task(flag.wait()) for flag in (stop, done)]
             await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in tasks:
                 task.cancel()
-            remove_signal()
+            remove_signal1()
+            remove_signal2()
 
     try:
         yield trace_element
