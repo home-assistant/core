@@ -9,7 +9,7 @@ coverage==5.5
 jsonpickle==1.4.1
 mock-open==1.4.0
 mypy==0.812
-pre-commit==2.10.1
+pre-commit==2.11.0
 pylint==2.7.2
 astroid==2.5.1
 pipdeptree==1.0.0
