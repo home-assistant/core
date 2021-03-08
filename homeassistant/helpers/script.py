@@ -120,7 +120,7 @@ _TIMEOUT_MSG = "Timeout reached, abort script."
 _SHUTDOWN_MAX_WAIT = 60
 
 
-ACTION_TRACE_NODE_MAX_LEN = 20  # Max the length of a trace node for repeated actions
+ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
 
 def action_trace_append(variables, path):
@@ -294,7 +294,7 @@ class _ScriptRun:
             self._finish()
 
     async def _async_step(self, log_exceptions):
-        with trace_path(str(self._step)), trace_action(None):
+        with trace_path(str(self._step)), trace_action(self._variables):
             try:
                 handler = f"_async_{cv.determine_script_action(self._action)}_step"
                 await getattr(self, handler)()
