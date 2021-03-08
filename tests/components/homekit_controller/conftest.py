@@ -18,6 +18,13 @@ def mock_zeroconf():
         yield mock_zc.return_value
 
 
+@pytest.fixture(autouse=True)
+def mock_zeroconf():
+    """Mock zeroconf."""
+    with mock.patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc:
+        yield mock_zc.return_value
+
+
 @pytest.fixture
 def utcnow(request):
     """Freeze time at a known point."""
