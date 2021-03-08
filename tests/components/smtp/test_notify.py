@@ -16,7 +16,7 @@ from homeassistant.setup import async_setup_component
 class MockSMTP(MailNotificationService):
     """Test SMTP object that doesn't need a working server."""
 
-    def _send_email(self, msg):
+    def _send_email(self, msg, recipients):
         """Just return string for testing."""
         return msg.as_string()
 
