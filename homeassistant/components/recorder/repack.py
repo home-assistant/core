@@ -2,10 +2,12 @@
 
 import logging
 
+from . import Recorder
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def repack_database(instance):
+def repack_database(instance: Recorder):
     """Repack based on engine type."""
 
     # Execute sqlite command to free up space on disk
