@@ -1,9 +1,13 @@
 """Purge old data helper."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
 import time
+from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
 
@@ -11,21 +15,23 @@ from .models import Events, RecorderRuns, States
 from .repack import repack_database
 from .util import session_scope
 
+if TYPE_CHECKING:
+    from . import Recorder
+
 _LOGGER = logging.getLogger(__name__)
 
 MAX_ROWS_TO_PURGE = 1000
 
 
-def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
+def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
     """Purge events and states older than purge_days ago.
 
     Cleans up an timeframe of an hour, based on the oldest record.
     """
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug("Purging states and events before target %s", purge_before)
-
     try:
-        with session_scope(session=instance.get_session()) as session:
+        with session_scope(session=instance.get_session()) as session:  # type: ignore
             # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
             event_ids = _select_event_ids_to_purge(session, purge_before)
             state_ids = _select_state_ids_to_purge(session, event_ids)
@@ -61,7 +67,7 @@ def purge_old_data(instance, purge_days: int, repack: bool) -> bool:
     return True
 
 
-def _select_event_ids_to_purge(session, purge_before):
+def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list:
     """Return a list of event ids to purge."""
     events = (
         session.query(Events.event_id)
@@ -73,14 +79,16 @@ def _select_event_ids_to_purge(session, purge_before):
     return [event.event_id for event in events]
 
 
-def _select_state_ids_to_purge(session, event_ids):
+def _select_state_ids_to_purge(session: Session, event_ids: list) -> list:
     """Return a list of state ids to purge."""
+    if not event_ids:
+        return []
     states = session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
     _LOGGER.debug("Selected %s state ids to remove", len(states))
     return [state.state_id for state in states]
 
 
-def _disconnect_states_about_to_be_purged(session, state_ids):
+def _disconnect_states_about_to_be_purged(session: Session, state_ids: list) -> None:
     # Update old_state_id to NULL before deleting to ensure
     # the delete does not fail due to a foreign key constraint
     # since some databases (MSSQL) cannot do the ON DELETE SET NULL
@@ -93,7 +101,7 @@ def _disconnect_states_about_to_be_purged(session, state_ids):
     _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
 
 
-def _purge_state_ids(session, state_ids):
+def _purge_state_ids(session: Session, state_ids: list) -> None:
     """Delete by state id."""
     deleted_rows = (
         session.query(States)
@@ -103,7 +111,7 @@ def _purge_state_ids(session, state_ids):
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
 
-def _purge_event_ids(session, event_ids):
+def _purge_event_ids(session: Session, event_ids: list) -> None:
     """Delete by event id."""
     deleted_rows = (
         session.query(Events)
@@ -113,7 +121,9 @@ def _purge_event_ids(session, event_ids):
     _LOGGER.debug("Deleted %s events", deleted_rows)
 
 
-def _purge_old_recorder_runs(instance, session, purge_before):
+def _purge_old_recorder_runs(
+    instance: Recorder, session: Session, purge_before: datetime
+) -> None:
     """Purge all old recorder runs."""
     # Recorder runs is small, no need to batch run it
     deleted_rows = (
