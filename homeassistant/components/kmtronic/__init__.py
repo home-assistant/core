@@ -15,15 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_REVERSE,
-    DATA_COORDINATOR,
-    DATA_HUB,
-    DATA_REVERSE,
-    DOMAIN,
-    MANUFACTURER,
-    UPDATE_LISTENER,
-)
+from .const import DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER, UPDATE_LISTENER
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -76,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_HUB: hub,
         DATA_COORDINATOR: coordinator,
-        DATA_REVERSE: entry.options.get(CONF_REVERSE, False),
     }
 
     for platform in PLATFORMS:
