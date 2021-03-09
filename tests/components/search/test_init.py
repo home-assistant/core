@@ -1,5 +1,10 @@
 """Tests for Search integration."""
 from homeassistant.components import search
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -8,9 +13,9 @@ from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa:
 
 async def test_search(hass):
     """Test that search works."""
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    area_reg = ar.async_get(hass)
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
 
     living_room_area = area_reg.async_create("Living Room")
 
@@ -275,8 +280,8 @@ async def test_ws_api(hass, hass_ws_client):
     """Test WS API."""
     assert await async_setup_component(hass, "search", {})
 
-    area_reg = await hass.helpers.area_registry.async_get_registry()
-    device_reg = await hass.helpers.device_registry.async_get_registry()
+    area_reg = ar.async_get(hass)
+    device_reg = dr.async_get(hass)
 
     kitchen_area = area_reg.async_create("Kitchen")
 

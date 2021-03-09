@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components.sonos import DOMAIN, media_player
 from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 
@@ -48,7 +49,7 @@ async def test_device_registry(hass, config_entry, config, soco):
     """Test sonos device registered in the device registry."""
     await setup_platform(hass, config_entry, config)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={("sonos", "RINCON_test")}
     )

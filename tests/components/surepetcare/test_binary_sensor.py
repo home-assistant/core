@@ -2,6 +2,7 @@
 from surepy import MESTART_RESOURCE
 
 from homeassistant.components.surepetcare.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_API_DATA, MOCK_CONFIG, _patch_sensor_setup
@@ -24,7 +25,7 @@ async def test_binary_sensors(hass, surepetcare) -> None:
         assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
         await hass.async_block_till_done()
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     state_entity_ids = hass.states.async_entity_ids()
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():

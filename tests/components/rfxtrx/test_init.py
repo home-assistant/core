@@ -5,10 +5,7 @@ from unittest.mock import call
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import (
-    DeviceRegistry,
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -79,7 +76,7 @@ async def test_fire_event(hass, rfxtrx):
     await hass.async_block_till_done()
     await hass.async_start()
 
-    device_registry: DeviceRegistry = await async_get_device_registry(hass)
+    device_registry: dr.DeviceRegistry = dr.async_get(hass)
 
     calls = []
 

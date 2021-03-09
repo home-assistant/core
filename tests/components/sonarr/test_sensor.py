@@ -12,6 +12,7 @@ from homeassistant.const import (
     DATA_GIGABYTES,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -27,7 +28,7 @@ async def test_sensors(
 ) -> None:
     """Test the creation and values of the sensors."""
     entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     sensors = {
@@ -107,7 +108,7 @@ async def test_disabled_by_default_sensors(
 ) -> None:
     """Test the disabled by default sensors."""
     await setup_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     print(registry.entities)
 
     state = hass.states.get(entity_id)

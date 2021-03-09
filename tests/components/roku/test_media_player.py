@@ -61,6 +61,7 @@ from homeassistant.const import (
     STATE_STANDBY,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
@@ -85,7 +86,7 @@ async def test_setup(
     """Test setup with basic config."""
     await setup_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     main = entity_registry.async_get(MAIN_ENTITY_ID)
 
     assert hass.states.get(MAIN_ENTITY_ID)
@@ -117,7 +118,7 @@ async def test_tv_setup(
         unique_id=TV_SERIAL,
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     tv = entity_registry.async_get(TV_ENTITY_ID)
 
     assert hass.states.get(TV_ENTITY_ID)
@@ -321,7 +322,7 @@ async def test_tv_device_registry(
         unique_id=TV_SERIAL,
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TV_SERIAL)})
 
     assert reg_device.model == TV_MODEL
