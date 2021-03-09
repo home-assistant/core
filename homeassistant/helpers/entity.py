@@ -160,8 +160,8 @@ class Entity(ABC):
     def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
-        Implemented by component base class. Convention for attribute names
-        is lowercase snake_case.
+        Implemented by component base class, should not be extended by integrations.
+        Convention for attribute names is lowercase snake_case.
         """
         return None
 
@@ -170,12 +170,12 @@ class Entity(ABC):
         """Return entity specific state attributes.
 
         This method is deprecated, platform classes should implement
-        entity_state_attributes instead.
+        extra_state_attributes instead.
         """
         return None
 
     @property
-    def entity_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return entity specific state attributes.
 
         Implemented by platform classes. Convention for attribute names
@@ -328,12 +328,12 @@ class Entity(ABC):
             sstate = self.state
             state = STATE_UNKNOWN if sstate is None else str(sstate)
             attr.update(self.state_attributes or {})
-            entity_state_attributes = self.entity_state_attributes
+            extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Add warning in 2021.6, remove in 2021.10
-            if entity_state_attributes is None:
-                entity_state_attributes = self.device_state_attributes
-            attr.update(entity_state_attributes or {})
+            if extra_state_attributes is None:
+                extra_state_attributes = self.device_state_attributes
+            attr.update(extra_state_attributes or {})
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is not None:
