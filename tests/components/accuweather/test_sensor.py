@@ -22,6 +22,7 @@ from homeassistant.const import (
     TIME_HOURS,
     UV_INDEX,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -32,7 +33,7 @@ from tests.components.accuweather import init_integration
 async def test_sensor_without_forecast(hass):
     """Test states of the sensor without forecast."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_cloud_ceiling")
     assert state
@@ -94,7 +95,7 @@ async def test_sensor_without_forecast(hass):
 async def test_sensor_with_forecast(hass):
     """Test states of the sensor with forecast."""
     await init_integration(hass, forecast=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("sensor.home_hours_of_sun_0d")
     assert state
@@ -166,7 +167,7 @@ async def test_sensor_with_forecast(hass):
 async def test_sensor_disabled(hass):
     """Test sensor disabled by default."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get("sensor.home_apparent_temperature")
     assert entry
@@ -185,7 +186,7 @@ async def test_sensor_disabled(hass):
 
 async def test_sensor_enabled_without_forecast(hass):
     """Test enabling an advanced sensor."""
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         SENSOR_DOMAIN,
