@@ -2,6 +2,7 @@
 from homeassistant.components import scene, switch
 from homeassistant.components.litejet import DOMAIN
 from homeassistant.const import CONF_PORT
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -11,7 +12,7 @@ async def async_init_integration(
 ) -> MockConfigEntry:
     """Set up the LiteJet integration in Home Assistant."""
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry_data = {CONF_PORT: "/dev/mock"}
 
