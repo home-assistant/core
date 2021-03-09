@@ -200,8 +200,8 @@ def websocket_automation_breakpoint_clear(hass, connection, msg):
 def websocket_automation_breakpoint_list(hass, connection, msg):
     """List breakpoints."""
     breakpoints = breakpoint_list(hass)
-    for breakpoint in breakpoints:
-        breakpoint["automation_id"] = breakpoint.pop("unique_id")
+    for _breakpoint in breakpoints:
+        _breakpoint["automation_id"] = _breakpoint.pop("unique_id")
 
     connection.send_result(msg["id"], breakpoints)
 
