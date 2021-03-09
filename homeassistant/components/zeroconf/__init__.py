@@ -242,7 +242,7 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
         nonlocal zeroconf_types
         nonlocal homekit_models
 
-        if state_change != ServiceStateChange.Added:
+        if state_change == ServiceStateChange.Removed:
             return
 
         try:
