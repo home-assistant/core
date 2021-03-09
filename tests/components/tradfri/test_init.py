@@ -2,10 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components import tradfri
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry,
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -99,8 +96,8 @@ async def test_entry_setup_unload(hass, api_factory, gateway_id):
         await hass.async_block_till_done()
         assert setup.call_count == len(tradfri.PLATFORMS)
 
-    dev_reg = await async_get_device_registry(hass)
-    dev_entries = async_entries_for_config_entry(dev_reg, entry.entry_id)
+    dev_reg = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     assert dev_entries
     dev_entry = dev_entries[0]

@@ -9,7 +9,11 @@ import pytest
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import entity_platform, entity_registry
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
@@ -467,7 +471,7 @@ async def test_overriding_name_from_registry(hass):
     mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -499,12 +503,12 @@ async def test_registry_respect_entity_disabled(hass):
     mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
-                disabled_by=entity_registry.DISABLED_USER,
+                disabled_by=er.DISABLED_USER,
             )
         },
     )
@@ -520,7 +524,7 @@ async def test_entity_registry_updates_name(hass):
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -624,7 +628,7 @@ async def test_entity_registry_updates_entity_id(hass):
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -656,14 +660,14 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": entity_registry.RegistryEntry(
+            "test_domain.world": er.RegistryEntry(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
                 name="Some name",
             ),
-            "test_domain.existing": entity_registry.RegistryEntry(
+            "test_domain.existing": er.RegistryEntry(
                 entity_id="test_domain.existing",
                 unique_id="5678",
                 platform="test_platform",
@@ -703,7 +707,7 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
 
 async def test_device_info_called(hass):
     """Test device info is forwarded correctly."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     via = registry.async_get_or_create(
         config_entry_id="123",
         connections=set(),
@@ -763,7 +767,7 @@ async def test_device_info_called(hass):
 
 async def test_device_info_not_overrides(hass):
     """Test device info is forwarded correctly."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     device = registry.async_get_or_create(
         config_entry_id="bla",
         connections={("mac", "abcd")},
@@ -823,7 +827,7 @@ async def test_entity_disabled_by_integration(hass):
     assert entity_disabled.hass is None
     assert entity_disabled.platform is None
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default.disabled_by is None
@@ -845,7 +849,7 @@ async def test_entity_info_added_to_entity_registry(hass):
 
     await component.async_add_entities([entity_default])
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     print(entry_default)

@@ -7,10 +7,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity_registry import (
-    DISABLED_INTEGRATION,
-    async_get_registry,
-)
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
@@ -49,12 +46,12 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
 
 async def test_disabled_notification_sensor(hass, multisensor_6, integration):
     """Test sensor is created from Notification CC and is disabled."""
-    ent_reg = await async_get_registry(hass)
+    ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_SENSOR)
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == DISABLED_INTEGRATION
+    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
 
     # Test enabling entity
     updated_entry = ent_reg.async_update_entity(

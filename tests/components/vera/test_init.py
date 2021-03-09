@@ -13,6 +13,7 @@ from homeassistant.components.vera import (
 )
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import ComponentFactory, ConfigSource, new_simple_controller_config
 
@@ -40,7 +41,7 @@ async def test_init(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -67,7 +68,7 @@ async def test_init_from_file(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -117,7 +118,7 @@ async def test_multiple_controllers_with_legacy_one(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1

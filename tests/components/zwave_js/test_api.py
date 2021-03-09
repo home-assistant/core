@@ -23,7 +23,7 @@ from homeassistant.components.zwave_js.api import (
     VALUE,
 )
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 
 
 async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
@@ -197,7 +197,7 @@ async def test_remove_node(
     # Add mock node to controller
     client.driver.controller.nodes[67] = nortek_thermostat
 
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
 
     # Create device registry entry for mock node
     device = dev_reg.async_get_or_create(

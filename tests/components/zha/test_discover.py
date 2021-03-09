@@ -67,7 +67,7 @@ async def test_devices(
     zha_device_joined_restored,
 ):
     """Test device discovery."""
-    entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
+    entity_registry = homeassistant.helpers.entity_registry.async_get(
         hass_disable_services
     )
 

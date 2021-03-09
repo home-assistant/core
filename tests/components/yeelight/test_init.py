@@ -13,7 +13,7 @@ from homeassistant.components.yeelight import (
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -106,11 +106,14 @@ async def test_unique_ids_device(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_BINARY_SENSOR).unique_id == f"{ID}-nightlight_sensor"
-    assert er.async_get(ENTITY_LIGHT).unique_id == ID
-    assert er.async_get(ENTITY_NIGHTLIGHT).unique_id == f"{ID}-nightlight"
-    assert er.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get(ENTITY_BINARY_SENSOR).unique_id
+        == f"{ID}-nightlight_sensor"
+    )
+    assert entity_registry.async_get(ENTITY_LIGHT).unique_id == ID
+    assert entity_registry.async_get(ENTITY_NIGHTLIGHT).unique_id == f"{ID}-nightlight"
+    assert entity_registry.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
 
 
 async def test_unique_ids_entry(hass: HomeAssistant):
@@ -131,18 +134,19 @@ async def test_unique_ids_entry(hass: HomeAssistant):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    er = await entity_registry.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     assert (
-        er.async_get(ENTITY_BINARY_SENSOR).unique_id
+        entity_registry.async_get(ENTITY_BINARY_SENSOR).unique_id
         == f"{config_entry.entry_id}-nightlight_sensor"
     )
-    assert er.async_get(ENTITY_LIGHT).unique_id == config_entry.entry_id
+    assert entity_registry.async_get(ENTITY_LIGHT).unique_id == config_entry.entry_id
     assert (
-        er.async_get(ENTITY_NIGHTLIGHT).unique_id
+        entity_registry.async_get(ENTITY_NIGHTLIGHT).unique_id
         == f"{config_entry.entry_id}-nightlight"
     )
     assert (
-        er.async_get(ENTITY_AMBILIGHT).unique_id == f"{config_entry.entry_id}-ambilight"
+        entity_registry.async_get(ENTITY_AMBILIGHT).unique_id
+        == f"{config_entry.entry_id}-ambilight"
     )
 
 
@@ -170,8 +174,8 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     binary_sensor_entity_id = ENTITY_BINARY_SENSOR_TEMPLATE.format(
         IP_ADDRESS.replace(".", "_")
     )
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(binary_sensor_entity_id) is None
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is None
 
     type(mocked_bulb).get_capabilities = MagicMock(CAPABILITIES)
     type(mocked_bulb).get_properties = MagicMock(None)
@@ -179,5 +183,5 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE].update()
     await hass.async_block_till_done()
 
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(binary_sensor_entity_id) is not None
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(binary_sensor_entity_id) is not None

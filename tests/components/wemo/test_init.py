@@ -6,6 +6,7 @@ import pywemo
 
 from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC, WemoDiscovery
 from homeassistant.components.wemo.const import DOMAIN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -41,7 +42,7 @@ async def test_static_duplicate_static_entry(hass, pywemo_device):
         },
     )
     await hass.async_block_till_done()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
     assert len(entity_entries) == 1
 
@@ -59,7 +60,7 @@ async def test_static_config_with_port(hass, pywemo_device):
         },
     )
     await hass.async_block_till_done()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
     assert len(entity_entries) == 1
 
@@ -77,7 +78,7 @@ async def test_static_config_without_port(hass, pywemo_device):
         },
     )
     await hass.async_block_till_done()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
     assert len(entity_entries) == 1
 
@@ -132,7 +133,7 @@ async def test_discovery(hass, pywemo_registry):
         await hass.async_block_till_done()
 
     # Verify that the expected number of devices were setup.
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
     entity_entries = list(entity_reg.entities.values())
     assert len(entity_entries) == 3
 

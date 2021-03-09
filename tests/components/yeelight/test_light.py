@@ -85,7 +85,7 @@ from homeassistant.components.yeelight.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.color import (
     color_hs_to_RGB,
@@ -376,7 +376,7 @@ async def test_device_types(hass: HomeAssistant):
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await config_entry.async_remove(hass)
-        registry = await entity_registry.async_get_registry(hass)
+        registry = er.async_get(hass)
         registry.async_clear_config_entry(config_entry.entry_id)
 
         # nightlight

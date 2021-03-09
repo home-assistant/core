@@ -17,6 +17,7 @@ from homeassistant import config_entries
 from homeassistant.components import sensor
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from .test_common import (
@@ -226,7 +227,7 @@ async def test_indexed_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -285,7 +286,7 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -369,7 +370,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
     hass, mqtt_mock, setup_tasmota
 ):
     """Test state update via MQTT."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
@@ -524,7 +525,7 @@ async def test_indexed_sensor_attributes(hass, mqtt_mock, setup_tasmota):
 @pytest.mark.parametrize("status_sensor_disabled", [False])
 async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     """Test enabling status sensor."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(DEFAULT_CONFIG)
     mac = config["mac"]
