@@ -208,7 +208,7 @@ class FreeboxBatterySensor(FreeboxHomeBaseClass):
     @property
     def state(self):
         """Return the current state of the device."""
-        return self.get_node_value(self._router.home_devices[self._id]["show_endpoints"],"signal","battery")
+        return self.get_value("signal","battery")
 
     @property
     def unit_of_measurement(self):

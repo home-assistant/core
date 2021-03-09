@@ -59,7 +59,7 @@ class FreeboxBasicShutter(FreeboxHomeBaseClass,CoverEntity):
         self._command_stop  = self.get_command_id(node['show_endpoints'], "slot", "stop")
         self._command_down  = self.get_command_id(node['show_endpoints'], "slot", "down")
         self._command_state = self.get_command_id(node['show_endpoints'], "signal", "state")
-        self._state = self.convert_state(self.get_node_value(node['show_endpoints'], "signal", "state"))
+        self._state = self.convert_state(self.get_value("signal", "state"))
 
     @property
     def device_class(self) -> str:
@@ -77,22 +77,21 @@ class FreeboxBasicShutter(FreeboxHomeBaseClass,CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Open cover."""
         await self.set_home_endpoint_value(self._command_up, {"value": None})
-        self.set_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "state", False)
+        await self.async_set_value("signal", "state", False)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self.set_home_endpoint_value(self._command_down, {"value": None})
-        self.set_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "state", True)
+        await self.async_set_value("signal", "state", True)
 
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
         await self.set_home_endpoint_value(self._command_stop, {"value": None})
-        self.set_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "state", None)
+        await self.async_set_value("signal", "state", None)
 
-    async def async_update(self):
-        """Update name & state."""
-        self._name  = self._router.home_devices[self._id]["label"].strip()
-        self._state = self.convert_state(self.get_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "state"))
+    async def async_update_node(self):
+        """Update state"""
+        self._state = self.convert_state(self.get_value("signal", "state"))
 
     def convert_state(self, state):
         if( state ): 
@@ -113,7 +112,7 @@ class FreeboxOpener(FreeboxHomeBaseClass,CoverEntity):
         self._command_stop          = self.get_command_id(node['show_endpoints'], "slot", "stop")
         self._device_class          = DEVICE_CLASS_AWNING
         #self._command_state         = self.get_command_id(node['show_endpoints'], "signal", "state")
-        #self._current_position      = self.get_node_value(node['show_endpoints'], "signal", "state")
+        #self._current_position      = self.get_value("signal", "state")
         self._current_position      = None
 
         if("Porte_Garage" in node["type"]["icon"]):
@@ -130,7 +129,7 @@ class FreeboxOpener(FreeboxHomeBaseClass,CoverEntity):
         """
         if( self._current_position == None ):
             return 50
-        return 100 - self._current_position
+        return self._current_position
 
     @property
     def is_closed(self):
@@ -141,26 +140,27 @@ class FreeboxOpener(FreeboxHomeBaseClass,CoverEntity):
         """Move the cover to a specific position."""
         await self.set_home_endpoint_value(self._command_set_position, {"value": 100 - kwargs[ATTR_POSITION]})
         self._current_position = 100 - kwargs[ATTR_POSITION]
+        self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs):
         """Open cover."""
         await self.set_home_endpoint_value(self._command_set_position, {"value": 0})
         self._current_position = 100
+        self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self.set_home_endpoint_value(self._command_set_position, {"value": 100})
         self._current_position = 0
+        self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs):
         """Stop cover."""
         await self.set_home_endpoint_value(self._command_stop, {"value": None})
         self._current_position = None
+        self.async_write_ha_state()
 
-    async def async_update(self):
-        """Update name & state."""
-        self._name = self._router.home_devices[self._id]["label"].strip()
-
-        slot = self.get_node_value(self._router.home_devices[self._id]['show_endpoints'], "slot", "position_set")
-        signal = self.get_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "position_set")
+    async def async_update_node(self):
+        slot    = self.get_value("slot", "position_set")
+        signal  = self.get_value("signal", "position_set")
         _LOGGER.warning("Position Garage [" + str(slot) + "/" + str(signal) + "]")

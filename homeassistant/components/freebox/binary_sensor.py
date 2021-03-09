@@ -72,11 +72,6 @@ class FreeboxPir(FreeboxHomeBaseClass, BinarySensorEntity):
         return self._detection
 
     @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_MOTION
@@ -101,16 +96,16 @@ class FreeboxSensorCover(FreeboxHomeBaseClass, BinarySensorEntity):
         cover_node = next(filter(lambda x: (x["name"]=="cover" and x["ep_type"]=="signal"), node['type']['endpoints']), None)
         super().__init__(hass, router, node, cover_node)
         self._command_cover = self.get_command_id(node['show_endpoints'], "signal", "cover")
-        self._open          = self.get_node_value(node['show_endpoints'], "signal", "cover")
+        self._open          = self.get_value("signal", "cover")
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._open
 
-    async def async_update(self):
+    async def async_update_node(self):
         """Update name & state."""
-        self._open = self.get_node_value(self._router.home_devices[self._id]['show_endpoints'], "signal", "cover")
+        self._open = self.get_value("signal", "cover")
 
     @property
     def device_class(self):

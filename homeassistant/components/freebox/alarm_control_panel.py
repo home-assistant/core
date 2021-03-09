@@ -73,6 +73,7 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
     def __init__(self, hass, router: FreeboxRouter, node: Dict[str, any]) -> None:
         """Initialize an Alarm"""
         super().__init__(hass, router, node)
+        #_LOGGER.warning(node)
 
         self._command_trigger   = self.get_command_id(node['type']['endpoints'], "slot", "trigger") # Trigger
         self._command_alarm1    = self.get_command_id(node['type']['endpoints'], "slot", "alarm1") # Alarme principale
@@ -88,8 +89,9 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
         self._command_state     = self.get_command_id(node['type']['endpoints'], "signal", "state" )
 
         self.set_state("idle")
+        self._timeout1 = 15
         self._supported_features = SUPPORT_ALARM_ARM_AWAY
-        self.update_parameters(node)
+        self.update_parameters()
 
     @property
     def state(self) -> str:
@@ -100,33 +102,43 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
         """Return the list of supported features."""
         return self._supported_features
 
+
     async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
-        if( await self.set_home_endpoint_value(self._command_off, {"value": None})):
-            time.sleep(1)
-            self.schedule_update_ha_state(True)
+        if( await self.set_home_endpoint_value(self._command_off)):
+            self._state = STATE_ALARM_DISARMED
+            self.start_watcher(timedelta(seconds=1))
+            self.async_write_ha_state()
+
 
     async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
-        if( await self.set_home_endpoint_value(self._command_alarm1, {"value": None})):
-            time.sleep(1)
-            self.start_watcher()
+        if( await self.set_home_endpoint_value(self._command_alarm1)):
+            self._state = STATE_ALARM_ARMING
+            self.start_watcher(timedelta(seconds=self._timeout1+1))
+            self.async_write_ha_state()
 
-    async def async_alarm_arm_home(self, code=None) -> None:
-        await self.async_alarm_arm_night(code)
 
     async def async_alarm_arm_night(self, code=None) -> None:
         """Send arm night command."""
-        if( await self.set_home_endpoint_value(self._command_alarm2, {"value": None})):
-            time.sleep(1)
-            self.start_watcher()
+        if( await self.set_home_endpoint_value(self._command_alarm2)):
+            self._state = STATE_ALARM_ARMING
+            self.start_watcher(timedelta(seconds=self._timeout1+1))
+            self.async_write_ha_state()
 
 
     async def async_watcher(self, now: Optional[datetime] = None) -> None:
         self.set_state(await self.get_home_endpoint_value(self._command_state))
         self.async_write_ha_state()
+        self.stop_watcher()
 
 
+    async def async_update_node(self):
+        """Get the state & name and update it."""
+        self.set_state(await self.get_home_endpoint_value(self._command_state))
+        self.update_parameters()
+
+    '''
     async def async_update(self):
         """Get the state & name and update it."""
         state = await self.get_home_endpoint_value(self._command_state)
@@ -135,11 +147,10 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
         if( state == "idle" ):
             self.stop_watcher()
         self.update_parameters(self._router.home_devices[self._id])
+    '''
 
 
-    def update_parameters(self, node):
-        #Update name
-        self._name = node["label"].strip()
+    def update_parameters(self):
 
         #Search if Alarm2
         has_alarm2 = False
@@ -156,7 +167,7 @@ class FreeboxAlarm(FreeboxHomeBaseClass, AlarmControlPanelEntity):
 
 
         # Parse all endpoints values
-        for endpoint in filter(lambda x:(x["ep_type"] == "signal"), node['show_endpoints']):
+        for endpoint in filter(lambda x:(x["ep_type"] == "signal"), self._node['show_endpoints']):
             if( endpoint["name"] == "pin" ):
                 self._pin = endpoint["value"]
             elif( endpoint["name"] == "sound" ):

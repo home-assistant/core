@@ -1,9 +1,12 @@
 """Support for detectors covers."""
 import logging
+import asyncio
 
 from typing import Dict, Optional
 from datetime import datetime, timedelta
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, VALUE_NOT_SET
@@ -21,6 +24,7 @@ class FreeboxHomeBaseClass(Entity):
         self._hass = hass
         self._router = router
         self._node  = node
+        self._sub_node  = sub_node
         self._id    = node["id"]
         self._name  = node["label"].strip()
         self._device_name = node["label"].strip()
@@ -51,6 +55,8 @@ class FreeboxHomeBaseClass(Entity):
             self._manufacturer  = "Somfy"
             self._model         = "RTS"
 
+        async_dispatcher_connect(self._hass, "home_xx", self.async_update_signal)
+
     @property
     def unique_id(self) -> str:
         return self._unique_id
@@ -58,6 +64,22 @@ class FreeboxHomeBaseClass(Entity):
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
+
+    async def async_update_node(self):
+        pass
+
+    async def async_update_signal(self):
+        self._node = self._router.home_devices[self._id]
+        if(self._sub_node is None):
+            self._name  = self._node["label"].strip()
+        await self.async_update_node()
+        self.async_write_ha_state()
+        pass
 
     @property
     def available(self):
@@ -88,7 +110,7 @@ class FreeboxHomeBaseClass(Entity):
     async def async_watcher(self, now: Optional[datetime] = None) -> None:
         raise NotImplementedError()
 
-    async def set_home_endpoint_value(self, command_id, value):
+    async def set_home_endpoint_value(self, command_id, value={"value": None}):
         if( command_id == VALUE_NOT_SET ):
             _LOGGER.error("Unable to SET a value through the API. Command is VALUE_NOT_SET")
             return False
@@ -105,7 +127,7 @@ class FreeboxHomeBaseClass(Entity):
             return VALUE_NOT_SET
         #mutex.acquire()
         try:
-            node = await self._router._api.home.get_home_endpoint_value(self._id, command_id)        
+            node = await self._router._api.home.get_home_endpoint_value(self._id, command_id)
         except TimeoutError as error:
             _LOGGER.warning("The Freebox API Timeout during a value retrieval")
             return VALUE_NOT_SET
@@ -120,20 +142,21 @@ class FreeboxHomeBaseClass(Entity):
             return VALUE_NOT_SET
         return node["id"]
 
-    def get_node_value(self, nodes, ep_type, name ):
-        node = next(filter(lambda x: (x["name"]==name and x["ep_type"]==ep_type), nodes), None)
+    def get_value(self, ep_type, name ):        
+        node = next(filter(lambda x: (x["name"]==name and x["ep_type"]==ep_type), self._node["show_endpoints"]), None)
         if( node == None):
             _LOGGER.warning("The Freebox Home device has no node for: " + ep_type + "/" + name)
             return VALUE_NOT_SET
         return node.get("value", VALUE_NOT_SET)
 
-    def set_node_value(self, nodes, ep_type, name, value ):
-        node = next(filter(lambda x: (x["name"]==name and x["ep_type"]==ep_type), nodes), None)
+    async def async_set_value(self, ep_type, name, value ):
+        node = next(filter(lambda x: (x["name"]==name and x["ep_type"]==ep_type),  self._node["show_endpoints"]), None)
         if( node == None):
             _LOGGER.warning("The Freebox Home device has no node for: " + ep_type + "/" + name)
             return
         node["value"] = value
-
+        await self.async_update_node()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self):
         #_LOGGER.warning("Home node added to hass: " + str(self.entity_id))

@@ -90,11 +90,11 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         device_info = {CONF_NAME: node["label"].strip(),CONF_INPUT: node["props"]["Stream"],CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS }
         FFmpegCamera.__init__(self, hass, device_info)
         
-        self._supported_features = SUPPORT_STREAM
-        self.update_parameters(node)
-        
+        self._supported_features        = SUPPORT_STREAM
         self._command_flip              = self.get_command_id(node['show_endpoints'], "slot", "flip")
         self._command_motion_detection  = self.get_command_id(node['type']['endpoints'], "slot", "detection")
+
+        self.update_node()
 
     async def async_flip(entity):
         entity._flip = not entity._flip
@@ -138,20 +138,14 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         """Flag supported features."""
         return self._supported_features
 
-    async def async_update(self):
-        """Get the state & name and update it."""
-        self.update_parameters(self._router.home_devices[self._id]);
+    async def async_update_node(self):
+        self.update_node()
 
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return True
 
-    def update_parameters(self, node):
-        self._name = node["label"].strip()
+    def update_node(self):
 
         # Get status
-        if( node["status"] == "active"):
+        if( self._node["status"] == "active"):
             self.is_streaming = True
         else:
             self.is_streaming = False
@@ -159,7 +153,7 @@ class FreeboxCamera(FreeboxHomeBaseClass, FFmpegCamera):
         #self.is_recording?
 
         # Parse all endpoints values & needed commands
-        for endpoint in filter(lambda x:(x["ep_type"] == "signal"), node['show_endpoints']):
+        for endpoint in filter(lambda x:(x["ep_type"] == "signal"), self._node['show_endpoints']):
             if( endpoint["name"] == "detection" ):
                 self._motion_detection_enabled = endpoint["value"]
             elif( endpoint["name"] == "activation" ):
