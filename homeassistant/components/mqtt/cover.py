@@ -296,6 +296,8 @@ class MqttCover(MqttEntity, CoverEntity):
                 level = self.find_percentage_in_range(float(payload))
                 self._tilt_value = level
                 self.async_write_ha_state()
+            else:
+                _LOGGER.warning("Payload '%s' is not numeric", payload)
 
         @callback
         @log_messages(self.hass, self.entity_id)
