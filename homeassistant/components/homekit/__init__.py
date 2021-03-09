@@ -241,9 +241,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     port = conf[CONF_PORT]
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
-    aid_storage = AccessoryAidStorage(hass, entry.entry_id)
-
-    await aid_storage.async_initialize()
     # ip_address and advertise_ip are yaml only
     ip_address = conf.get(CONF_IP_ADDRESS)
     advertise_ip = conf.get(CONF_ADVERTISE_IP)
