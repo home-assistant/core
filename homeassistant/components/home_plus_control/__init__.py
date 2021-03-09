@@ -57,9 +57,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     # If there is a configuration section in configuration.yaml, then we add the data into
     # the hass.data object
-    _LOGGER.debug(
-        "Configuring Legrand Home+ Control component from configuration.yaml"
-    )
+    _LOGGER.debug("Configuring Legrand Home+ Control component from configuration.yaml")
     hass.data[DOMAIN]["config"] = config[DOMAIN]
 
     # Register the implementation from the config information
@@ -112,9 +110,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ]
 
     # Register the options listener
-        hass_entry_data[
-            OPTS_LISTENER_REMOVERS
-        ] = config_entry.add_update_listener(api.update_api_refresh_intervals)
+    hass_entry_data[OPTS_LISTENER_REMOVERS] = config_entry.add_update_listener(
+        api.update_api_refresh_intervals
+    )
 
     # Continue setting up the platform
     for component in PLATFORMS:
@@ -137,9 +135,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
     if unload_ok:
         # Unsubscribe the config_entry update listener
-        remover = hass.data[DOMAIN][config_entry.entry_id].pop(
-            OPTS_LISTENER_REMOVERS
-        )
+        remover = hass.data[DOMAIN][config_entry.entry_id].pop(OPTS_LISTENER_REMOVERS)
         remover()
 
         # Unsubscribe the config_entry signal dispatcher connections

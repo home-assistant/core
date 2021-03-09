@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CONF_SUBSCRIPTION_KEY, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
