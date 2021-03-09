@@ -152,7 +152,3 @@ async def test_options_flow(hass, ezviz):
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
     assert result["data"][CONF_TIMEOUT] == 25
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
