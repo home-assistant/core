@@ -25,6 +25,7 @@ DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
 
 ASSET_VALUE_CURRENCIES = {"USDT", "EUR", "BTC"}
 
+ASSET_VALUE_BASE = "USDT"
+
 # Integration setup
-# "In general, making a maximum of 60 API calls per minute should be safe..."
 SCAN_INTERVAL = timedelta(seconds=20)

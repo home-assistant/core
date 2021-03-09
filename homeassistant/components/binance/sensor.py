@@ -4,6 +4,7 @@ import logging
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ASSET_VALUE_BASE,
     ASSET_VALUE_CURRENCIES,
     CONF_ASSET_TICKERS,
     CONF_BALANCES,
@@ -149,7 +150,9 @@ class Balance(CoordinatorEntity):
         return {
             "free": float(self._get_data_property("free")),
             "locked": float(self._get_data_property("locked")),
-            "usdt_value": float(self._get_data_property("asset_value_in_usdt")),
+            f"{ASSET_VALUE_BASE}_value".lower(): float(
+                self._get_data_property("asset_value_in_base_asset")
+            ),
             "unit_of_measurement": self.unit_of_measurement,
             "source": "Binance",
         }
@@ -226,22 +229,24 @@ class TotalAssetValue(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        total_usdt_value = 0.0
+        total_base_asset_value = 0.0
 
         for i in self.coordinator.data[CONF_BALANCES].keys():
-            total_usdt_value += float(
-                self.coordinator.data[CONF_BALANCES][i]["asset_value_in_usdt"]
+            total_base_asset_value += float(
+                self.coordinator.data[CONF_BALANCES][i]["asset_value_in_base_asset"]
             )
 
-        if self._currency == "USDT":
-            total_asset_value = total_usdt_value
+        if self._currency == ASSET_VALUE_BASE:
+            total_asset_value = total_base_asset_value
         else:
-            usdt_pair_name = (self._currency + "USDT").upper()
+            asset_value_pair_name = (self._currency + ASSET_VALUE_BASE).upper()
             last_price = float(
-                self.coordinator.data[CONF_ASSET_TICKERS][usdt_pair_name]["lastPrice"]
+                self.coordinator.data[CONF_ASSET_TICKERS][asset_value_pair_name][
+                    "lastPrice"
+                ]
             )
 
-            total_asset_value = total_usdt_value / last_price
+            total_asset_value = total_base_asset_value / last_price
 
         return round(total_asset_value, 4)
 
@@ -264,6 +269,6 @@ class TotalAssetValue(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "note": f"Value is based on the last {self._currency.upper()}USDT price of every coin in balance",
+            "note": f"Value is based on the last {self._currency.upper() + ASSET_VALUE_BASE} price of every coin in balance",
             "source": "Binance",
         }

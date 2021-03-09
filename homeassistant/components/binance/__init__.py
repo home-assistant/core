@@ -12,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    ASSET_VALUE_BASE,
     ASSET_VALUE_CURRENCIES,
     CONF_API_SECRET,
     CONF_MARKETS,
@@ -94,9 +95,9 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
             asset_tickers_dict = {}
 
             for sym in self.asset_currencies:
-                # Skip USDT as we calculate USDT differently
-                if sym != "USDT":
-                    currency = sym.upper() + "USDT"
+                # Skip the ASSET_VALUE_BASE as we calculate it differently
+                if sym != ASSET_VALUE_BASE:
+                    currency = sym.upper() + ASSET_VALUE_BASE
 
                     if currency not in asset_tickers_dict:
                         asset_tickers_dict[currency] = {}
@@ -117,28 +118,28 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
                     balances_dict[balance["asset"]] = {}
                     balances_dict[balance["asset"]].update(balance)
 
-                    if "USDT" not in balance["asset"]:
-                        # Prevent that we try to search USDTUSDT
-                        usdt_symbol = str(balance["asset"] + "USDT")
-                        usdt_ticker_details = next(
+                    if ASSET_VALUE_BASE not in balance["asset"]:
+                        # Prevent that we try to search ASSET_VALUE_BASE+ASSET_VALUE_BASE (e.g. BTCBTC)
+                        base_asset_symbol = str(balance["asset"] + ASSET_VALUE_BASE)
+                        base_asset_ticker_details = next(
                             item
                             for item in all_tickers
-                            if item["symbol"] == usdt_symbol
+                            if item["symbol"] == base_asset_symbol
                         )
                     else:
-                        balances_dict[balance["asset"]]["asset_value_in_usdt"] = float(
-                            balance["free"]
-                        ) + float(balance["locked"])
+                        balances_dict[balance["asset"]][
+                            "asset_value_in_base_asset"
+                        ] = float(balance["free"]) + float(balance["locked"])
 
-                    if usdt_ticker_details:
-                        # If we can find a USDT pair, include it in the dict
-                        balances_dict[balance["asset"]]["USDT"] = {}
-                        balances_dict[balance["asset"]]["USDT"].update(
-                            usdt_ticker_details
+                    if base_asset_ticker_details:
+                        # If we can find a pair with ASSET_VALUE_BASE, include it in the dict
+                        balances_dict[balance["asset"]][ASSET_VALUE_BASE] = {}
+                        balances_dict[balance["asset"]][ASSET_VALUE_BASE].update(
+                            base_asset_ticker_details
                         )
-                        balances_dict[balance["asset"]]["asset_value_in_usdt"] = (
+                        balances_dict[balance["asset"]]["asset_value_in_base_asset"] = (
                             float(balance["free"]) + float(balance["locked"])
-                        ) * float(usdt_ticker_details["lastPrice"])
+                        ) * float(base_asset_ticker_details["lastPrice"])
 
             result_dict["balances"] = balances_dict
 
