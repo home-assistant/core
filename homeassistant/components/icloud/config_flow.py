@@ -71,6 +71,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_WITH_FAMILY,
                     default=user_input.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY),
                 ): bool,
+                vol.Optional(
+                    CONF_GPS_ACCURACY_THRESHOLD,
+                    default=user_input.get(CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD),
+                ): int,
             }
         else:
             schema = {

@@ -28,7 +28,8 @@
                 "data": {
                     "password": "Passwort",
                     "username": "Email",
-                    "with_family": "Mit Familie"
+                    "with_family": "Mit Familie",
+                    "gps_accuracy_threshold": "Ungenauere Ortungsdaten verwerfen (Radius in Meter)"
                 },
                 "description": "Gib deine Zugangsdaten ein",
                 "title": "iCloud-Anmeldeinformationen"
