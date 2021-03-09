@@ -188,8 +188,11 @@ async def test_options_form(hass):
     )
     entry.add_to_hass(hass)
 
-    hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.opentherm_qw.async_setup"), patch(
+            "homeassistant.components.opentherm_qw.async_setup_entry"
+        ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
