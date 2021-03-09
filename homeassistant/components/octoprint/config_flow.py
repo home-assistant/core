@@ -23,26 +23,14 @@ from .const import DOMAIN  # pylint:disable=unused-import
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=80): cv.port,
-        vol.Optional(CONF_PATH, default="/"): cv.string,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-def _schema_with_defaults(host=None, port=80, path="/"):
+def _schema_with_defaults(username="", host=None, port=80, path="/", ssl=False):
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME): cv.string,
+            vol.Required(CONF_USERNAME, default=username): cv.string,
             vol.Required(CONF_HOST, default=host): cv.string,
             vol.Optional(CONF_PORT, default=port): cv.port,
             vol.Optional(CONF_PATH, default=path): cv.string,
-            vol.Optional(CONF_SSL, default=False): cv.boolean,
+            vol.Optional(CONF_SSL, default=ssl): cv.boolean,
         },
         extra=vol.ALLOW_EXTRA,
     )
@@ -119,8 +107,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
+        data_schema = _schema_with_defaults(
+            username=user_input[CONF_USERNAME],
+            host=user_input[CONF_HOST],
+            port=user_input[CONF_PORT],
+            path=user_input[CONF_PATH],
+            ssl=user_input[CONF_SSL],
+        )
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_import(self, user_input):
@@ -138,9 +133,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self.discovery_schema = _schema_with_defaults(
-            discovery_info[CONF_HOST],
-            discovery_info[CONF_PORT],
-            discovery_info["properties"][CONF_PATH],
+            host=discovery_info[CONF_HOST],
+            port=discovery_info[CONF_PORT],
+            ssl=discovery_info["properties"][CONF_PATH],
         )
 
         return await self.async_step_user()
@@ -157,8 +152,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self.discovery_schema = _schema_with_defaults(
-            url.hostname,
-            url.port,
+            host=url.hostname,
+            port=url.port,
         )
 
         return await self.async_step_user()
