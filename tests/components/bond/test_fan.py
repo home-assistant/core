@@ -18,6 +18,7 @@ from homeassistant.components.fan import (
     SPEED_OFF,
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
@@ -71,7 +72,7 @@ async def test_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = await hass.helpers.entity_registry.async_get_registry()
+    registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 

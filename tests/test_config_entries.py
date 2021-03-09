@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -299,7 +300,7 @@ async def test_remove_entry(hass, manager):
     assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
     entity_entry = list(ent_reg.entities.values())[0]
     assert entity_entry.config_entry_id == entry.entry_id

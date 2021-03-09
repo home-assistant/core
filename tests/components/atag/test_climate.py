@@ -1,5 +1,4 @@
 """Tests for the Atag climate platform."""
-
 from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.atag import CLIMATE, DOMAIN
@@ -19,6 +18,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.components.atag import UID, init_integration
@@ -33,7 +33,7 @@ async def test_climate(
     """Test the creation and values of Atag climate device."""
     with patch("pyatag.entities.Climate.status"):
         entry = await init_integration(hass, aioclient_mock)
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
 
         assert registry.async_is_registered(CLIMATE_ID)
         entry = registry.async_get(CLIMATE_ID)

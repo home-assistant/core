@@ -79,7 +79,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
     assert config_entry.unique_id == "test-bond-id"
 
     # verify hub device is registered correctly
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     hub = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
@@ -127,7 +127,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
 
     old_identifers = (DOMAIN, "device_id")
     new_identifiers = (DOMAIN, "test-bond-id", "device_id")
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={old_identifers},
@@ -204,7 +204,7 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
     assert config_entry.state == ENTRY_STATE_LOADED
     assert config_entry.unique_id == "test-bond-id"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert device is not None
     assert device.suggested_area == "Den"
@@ -250,7 +250,7 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant):
     assert config_entry.state == ENTRY_STATE_LOADED
     assert config_entry.unique_id == "test-bond-id"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
     assert device is not None
     assert device.suggested_area == "Office"

@@ -1,6 +1,7 @@
 """Test the Advantage Air Binary Sensor Platform."""
 
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.advantage_air import (
     TEST_SET_RESPONSE,
@@ -24,7 +25,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     )
     await add_mock_config(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert len(aioclient_mock.mock_calls) == 1
 
