@@ -11,6 +11,7 @@ from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
 
+from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
 from .repack import repack_database
 from .util import session_scope
@@ -19,8 +20,6 @@ if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
-
-MAX_ROWS_TO_PURGE = 1000
 
 
 def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
