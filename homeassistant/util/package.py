@@ -33,6 +33,7 @@ def is_installed(package: str) -> bool:
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req.
     """
+    _LOGGER.debug("is_installed: %s", package)
     try:
         req = pkg_resources.Requirement.parse(package)
     except ValueError:
@@ -43,6 +44,7 @@ def is_installed(package: str) -> bool:
     _LOGGER.debug("requirement: %s", req)
 
     try:
+        _LOGGER.debug("version req.project_name: %s", req.project_name)
         return version(req.project_name) in req
     except PackageNotFoundError:
         return False
