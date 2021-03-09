@@ -144,10 +144,8 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Get additional attributes related to connection status."""
-        attributes = super().device_state_attributes
+        attributes = {}
         if self._raw_state in CONNECTION_STATE_ATTRIBUTES:
-            if attributes is None:
-                attributes = {}
             attributes["additional_state"] = CONNECTION_STATE_ATTRIBUTES[
                 self._raw_state
             ]
