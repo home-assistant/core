@@ -6,9 +6,6 @@
   "requirements": [
     "homepluscontrol==0.0.3"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [
     "http"
   ],

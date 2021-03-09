@@ -11,7 +11,8 @@ from .switch import HomeControlSwitchEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_add_entities(new_unique_ids, coordinator, add_entities):
+@callback
+def async_add_entities(new_unique_ids, coordinator, add_entities):
     """Add the entities to the platform.
 
     Args:
@@ -26,7 +27,8 @@ async def async_add_entities(new_unique_ids, coordinator, add_entities):
     add_entities(new_entities)
 
 
-async def async_remove_entities(remove_uids, entity_uid_map, device_reg):
+@callback
+def async_remove_entities(remove_uids, entity_uid_map, device_reg):
     """Remove the entities from the platform.
 
     Args:

@@ -45,20 +45,20 @@ PLATFORMS = ["switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the Legrand Home+ Control component from configuration.yaml."""
     hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
         _LOGGER.debug(
-            "No config in configuration.yaml for the Legrand Home+ Control component."
+            "No config in configuration.yaml for the Legrand Home+ Control component"
         )
         return True
 
     # If there is a configuration section in configuration.yaml, then we add the data into
     # the hass.data object
     _LOGGER.debug(
-        "Configuring Legrand Home+ Control component from configuration.yaml."
+        "Configuring Legrand Home+ Control component from configuration.yaml"
     )
     hass.data[DOMAIN]["config"] = config[DOMAIN]
 
@@ -71,12 +71,9 @@ async def async_setup(hass: HomeAssistant, config: dict):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Legrand Home+ Control from a config entry."""
-    _LOGGER.debug("Configuring Legrand Home+ Control component from ConfigEntry")
-
-    if hass.data[DOMAIN].get(config_entry.entry_id) is None:
-        hass.data[DOMAIN][config_entry.entry_id] = {}
+    hass_entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
 
     # Retrieve the registered implementation
     try:
@@ -97,15 +94,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     # Using an aiohttp-based API lib, so rely on async framework
     # Add the API object to the domain's data in HA
-    hass.data[DOMAIN][config_entry.entry_id][API] = api.HomePlusControlAsyncApi(
+    hass_entry_data[API] = api.HomePlusControlAsyncApi(
         hass, config_entry, implementation
     )
 
     # Dict of entity unique identifiers of this integration
-    hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS] = {}
+    hass_entry_data[ENTITY_UIDS] = {}
 
     # Integration dispatchers
-    hass.data[DOMAIN][config_entry.entry_id][DISPATCHER_REMOVERS] = [
+    hass_entry_data[DISPATCHER_REMOVERS] = [
         dispatcher.async_dispatcher_connect(
             hass, SIGNAL_ADD_ENTITIES, helpers.async_add_entities
         ),
@@ -115,14 +112,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     ]
 
     # Register the options listener
-    if hass.data[DOMAIN].get(OPTS_LISTENER_REMOVERS) is None:
-        hass.data[DOMAIN][config_entry.entry_id][
+        hass_entry_data[
             OPTS_LISTENER_REMOVERS
         ] = config_entry.add_update_listener(api.update_api_refresh_intervals)
 
     # Continue setting up the platform
     for component in PLATFORMS:
-        _LOGGER.debug("Configuring %s", component)
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -130,9 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload the Legrand Home+ Control config entry."""
-    _LOGGER.debug("Unloading the Legrand Home+ Control component and config entry.")
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -144,22 +138,18 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     if unload_ok:
         # Unsubscribe the config_entry update listener
         remover = hass.data[DOMAIN][config_entry.entry_id].pop(
-            OPTS_LISTENER_REMOVERS, None
+            OPTS_LISTENER_REMOVERS
         )
-        if remover is not None:
-            remover()
+        remover()
 
         # Unsubscribe the config_entry signal dispatcher connections
         dispatcher_removers = hass.data[DOMAIN][config_entry.entry_id].pop(
-            "dispatcher_removers", None
+            "dispatcher_removers"
         )
-        if dispatcher_removers is not None:
-            for remover in dispatcher_removers:
-                remover()
+        for remover in dispatcher_removers:
+            remover()
 
         # And finally unload the domain config entry data
-        hass.data[DOMAIN].pop(config_entry.entry_id, None)
-
-        _LOGGER.debug("Legrand Home+ Control config entry unloaded.")
+        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok

@@ -51,7 +51,7 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         hass: core.HomeAssistant,
         config_entry: config_entries.ConfigEntry,
         implementation: config_entry_oauth2_flow.AbstractOAuth2Implementation,
-    ):
+    ) -> None:
         """Initialize the HomePlusControlAsyncApi object.
 
         Initialize the authenticated API for the Legrand Home+ Control component.
@@ -142,25 +142,22 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
         await self.async_handle_plant_data()
         return await self.async_handle_module_status()
 
-    async def close_connection(self):
-        """Clean up the connection."""
-        await self.oauth_client.close()
-
     def update_refresh_intervals(self):
         """Update the time intervals that determine whether or not to call the API."""
-        if self.config_entry.options is not None:
-            for interval_name in DEFAULT_UPDATE_INTERVALS:
-                try:
-                    new_interval_value = int(self.config_entry.options[interval_name])
-                except KeyError:
-                    new_interval_value = DEFAULT_UPDATE_INTERVALS[interval_name]
+        if self.config_entry.options is None:
+            return
+        for interval_name in DEFAULT_UPDATE_INTERVALS:
+            try:
+                new_interval_value = int(self.config_entry.options[interval_name])
+            except KeyError:
+                new_interval_value = DEFAULT_UPDATE_INTERVALS[interval_name]
 
-                self._refresh_intervals[interval_name] = new_interval_value
-                self.logger.debug(
-                    "Updated API refresh interval: %s: %s",
-                    interval_name,
-                    self._refresh_intervals[interval_name],
-                )
+            self._refresh_intervals[interval_name] = new_interval_value
+            self.logger.debug(
+                "Updated API refresh interval: %s: %s",
+                interval_name,
+                self._refresh_intervals[interval_name],
+            )
 
     async def async_handle_plant_data(self):
         """Recover the plant data for this particular user.
@@ -324,11 +321,11 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
             # Loop through the modules in the plant and we only keep the ones that are "interactive"
             # and can be represented by a switch, i.e. power outlets, micromodules
             # and light switches. All other modules are discarded/ignored.
-            current_module_ids = []
+            current_module_ids = set()
             for module in list(plant.modules.values()):
                 if isinstance(module, HomePlusInteractiveModule):
-                    current_module_ids.append(module.id)
-                    if module.id not in self.switches.keys():
+                    current_module_ids.add(module.id)
+                    if module.id not in self.switches:
                         self.logger.debug(
                             "Registering Home+ Control module in internal map: %s.",
                             str(module),
@@ -336,17 +333,9 @@ class HomePlusControlAsyncApi(HomePlusOAuth2Async):
                         self.switches[module.id] = module
 
             # Discard modules that may have disappeared from the topology
-            switches_to_pop = []
-            for existing_id in self.switches:
-                if existing_id in current_module_ids:
-                    continue
-                self.logger.debug(
-                    "Module with id %s is no longer present, so remove from the internal map.",
-                    existing_id,
-                )
-                switches_to_pop.append(existing_id)
+            switches_to_pop = set(self.switches) - current_module_ids
 
             for switch in switches_to_pop:
-                self.switches_to_remove[switch] = self.switches.pop(switch, None)
+                self.switches_to_remove[switch] = self.switches.pop(switch)
 
         return self.switches
