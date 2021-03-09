@@ -1,5 +1,5 @@
 """Test data purging."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 
 from homeassistant.components import recorder
@@ -144,9 +144,9 @@ def test_purge_method(hass, hass_recorder, caplog):
 
 def _add_test_states(hass):
     """Add multiple states to the db for testing."""
-    now = datetime.now()
-    five_days_ago = now - timedelta(days=5)
-    eleven_days_ago = now - timedelta(days=11)
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
     hass.block_till_done()
@@ -163,7 +163,7 @@ def _add_test_states(hass):
                 timestamp = five_days_ago
                 state = "purgeme"
             else:
-                timestamp = now
+                timestamp = utcnow
                 state = "dontpurgeme"
 
             event = Events(
@@ -193,9 +193,9 @@ def _add_test_states(hass):
 
 def _add_test_events(hass):
     """Add a few events for testing."""
-    now = datetime.now()
-    five_days_ago = now - timedelta(days=5)
-    eleven_days_ago = now - timedelta(days=11)
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
 
     hass.block_till_done()
@@ -211,7 +211,7 @@ def _add_test_events(hass):
                 timestamp = five_days_ago
                 event_type = "EVENT_TEST_PURGE"
             else:
-                timestamp = now
+                timestamp = utcnow
                 event_type = "EVENT_TEST"
 
             session.add(
@@ -227,9 +227,9 @@ def _add_test_events(hass):
 
 def _add_test_recorder_runs(hass):
     """Add a few recorder_runs for testing."""
-    now = datetime.now()
-    five_days_ago = now - timedelta(days=5)
-    eleven_days_ago = now - timedelta(days=11)
+    utcnow = dt_util.utcnow()
+    five_days_ago = utcnow - timedelta(days=5)
+    eleven_days_ago = utcnow - timedelta(days=11)
 
     hass.block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
@@ -242,7 +242,7 @@ def _add_test_recorder_runs(hass):
             elif rec_id < 4:
                 timestamp = five_days_ago
             else:
-                timestamp = now
+                timestamp = utcnow
 
             session.add(
                 RecorderRuns(
