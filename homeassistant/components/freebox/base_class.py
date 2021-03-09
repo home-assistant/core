@@ -55,7 +55,7 @@ class FreeboxHomeBaseClass(Entity):
             self._manufacturer  = "Somfy"
             self._model         = "RTS"
 
-        async_dispatcher_connect(self._hass, "home_xx", self.async_update_signal)
+        async_dispatcher_connect(self._hass, f"{DOMAIN}-{self._router._host}-device-update", self.async_update_signal)
 
     @property
     def unique_id(self) -> str:
