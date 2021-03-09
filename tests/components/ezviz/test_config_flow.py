@@ -120,9 +120,6 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-####
-
-
 async def test_async_step_import_abort(hass, ezviz_config_flow):
     """Test the config import flow with invalid data."""
     await async_setup_component(hass, "persistent_notification", {})
