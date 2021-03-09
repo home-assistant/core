@@ -36,7 +36,7 @@ def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
             event_ids = _select_event_ids_to_purge(session, purge_before)
             state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
             if state_ids:
-                _disconnect_states_about_to_be_purged(session, purge_before, state_ids)
+                _disconnect_states_about_to_be_purged(session, state_ids)
                 _purge_state_ids(session, state_ids)
             if event_ids:
                 _purge_event_ids(session, event_ids)
@@ -95,16 +95,13 @@ def _select_state_ids_to_purge(
     return [state.state_id for state in states]
 
 
-def _disconnect_states_about_to_be_purged(
-    session: Session, purge_before: datetime, state_ids: list
-) -> None:
+def _disconnect_states_about_to_be_purged(session: Session, state_ids: list) -> None:
     # Update old_state_id to NULL before deleting to ensure
     # the delete does not fail due to a foreign key constraint
     # since some databases (MSSQL) cannot do the ON DELETE SET NULL
     # for us.
     disconnected_rows = (
         session.query(States)
-        .filter(States.last_updated < purge_before)
         .filter(States.old_state_id.in_(state_ids))
         .update({"old_state_id": None}, synchronize_session=False)
     )
