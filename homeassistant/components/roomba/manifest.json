@@ -11,8 +11,8 @@
       "macaddress":"501479*"
     },
     {
-      "hostname":"Roomba-*",
-      "macaddress":"80a589*"
+      "hostname":"roomba-*",
+      "macaddress":"80A589*"
     }
   ]
 }
