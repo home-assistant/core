@@ -47,8 +47,13 @@ USER_INPUT = {
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
 
-USER_INPUT_CAMERA = {
+USER_INPUT_CAMERA_VALIDATE = {
     ATTR_SERIAL: "C666666",
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
+}
+
+USER_INPUT_CAMERA = {
     CONF_PASSWORD: "test-password",
     CONF_USERNAME: "test-username",
     CONF_TYPE: ATTR_TYPE_CAMERA,

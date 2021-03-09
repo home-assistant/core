@@ -22,6 +22,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     USER_INPUT,
     USER_INPUT_CAMERA,
+    USER_INPUT_CAMERA_VALIDATE,
     USER_INPUT_VALIDATE,
     YAML_CONFIG,
     YAML_CONFIG_CAMERA,
@@ -95,6 +96,33 @@ async def test_async_step_import_camera(hass, ezviz_config_flow):
     assert result["data"] == USER_INPUT_CAMERA
 
 
+######
+
+
+async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow):
+    """Test we get the user initiated form."""
+    await async_setup_component(hass, "persistent_notification", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=YAML_CONFIG
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+
+    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_CAMERA_VALIDATE
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+####
+
+
 async def test_async_step_import_abort(hass, ezviz_config_flow):
     """Test the config import flow with invalid data."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -120,13 +148,13 @@ async def test_options_flow(hass, ezviz):
     with _patch_async_setup(), _patch_async_setup_entry():
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_FFMPEG_ARGUMENTS: "/H.264", CONF_TIMEOUT: 15},
+            user_input={CONF_FFMPEG_ARGUMENTS: "/H.264", CONF_TIMEOUT: 25},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
-    assert result["data"][CONF_TIMEOUT] == 15
+    assert result["data"][CONF_TIMEOUT] == 25
 
 
 class InvalidAuth(exceptions.HomeAssistantError):
