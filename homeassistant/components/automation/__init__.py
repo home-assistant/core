@@ -241,7 +241,7 @@ async def async_setup(hass, config):
 class AutomationTrace:
     """Container for automation trace."""
 
-    _runids = count(0)
+    _run_ids = count(0)
 
     def __init__(
         self,
@@ -257,7 +257,7 @@ class AutomationTrace:
         self._context: Context = context
         self._error: Optional[Exception] = None
         self._state: str = "running"
-        self.runid: str = str(next(self._runids))
+        self.run_id: str = str(next(self._run_ids))
         self._timestamp_finish: Optional[dt.datetime] = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
         self._trigger: Dict[str, Any] = trigger
@@ -303,7 +303,7 @@ class AutomationTrace:
             "condition_trace": condition_traces,
             "config": self._config,
             "context": self._context,
-            "run_id": self.runid,
+            "run_id": self.run_id,
             "state": self._state,
             "timestamp": {
                 "start": self._timestamp_start,
@@ -331,7 +331,7 @@ class AutomationTrace:
         result = {
             "last_action": last_action,
             "last_condition": last_condition,
-            "run_id": self.runid,
+            "run_id": self.run_id,
             "state": self._state,
             "timestamp": {
                 "start": self._timestamp_start,
@@ -379,7 +379,7 @@ def trace_automation(hass, unique_id, config, trigger, context):
         automation_traces = hass.data[DATA_AUTOMATION_TRACE]
         if unique_id not in automation_traces:
             automation_traces[unique_id] = LimitedSizeDict(size_limit=STORED_TRACES)
-        automation_traces[unique_id][automation_trace.runid] = automation_trace
+        automation_traces[unique_id][automation_trace.run_id] = automation_trace
 
     try:
         yield automation_trace
