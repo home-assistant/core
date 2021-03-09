@@ -1,6 +1,7 @@
 {
     "title": "OctoPrint",
     "config": {
+      "flow_title": "OctoPrint Printer: {host}",
       "step": {
         "user": {
           "data": {

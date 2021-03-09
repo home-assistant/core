@@ -1,5 +1,6 @@
 {
     "config": {
+        "flow_title": "OctoPrint Printer: {host}",
         "abort": {
             "already_configured": "Device is already configured"
         },
