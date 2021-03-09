@@ -17,7 +17,7 @@ Adafruit-SHT31==1.0.2
 # Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
-HAP-python==3.3.2
+HAP-python==3.4.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
@@ -763,7 +763,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210302.5
+home-assistant-frontend==20210302.6
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1504,7 +1504,7 @@ pylibrespot-java==0.1.0
 pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
-pylitterbot==2021.2.5
+pylitterbot==2021.2.8
 
 # homeassistant.components.loopenergy
 pyloopenergy==0.2.1
@@ -1555,7 +1555,7 @@ pymusiccast==0.1.6
 pymyq==3.0.4
 
 # homeassistant.components.mysensors
-pymysensors==0.20.1
+pymysensors==0.21.0
 
 # homeassistant.components.nanoleaf
 pynanoleaf==0.0.5
