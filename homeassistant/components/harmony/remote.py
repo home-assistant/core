@@ -190,13 +190,7 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
     @property
     def activity_list(self):
         """Return the available activities."""
-        return [
-            *self._data.activity_names,
-            "Домашний",
-            "ПЯТЫЙ КАНАЛ",
-            "Super +0",
-            "'360'",
-        ]
+        return self._data.activity_names
 
     @property
     def device_state_attributes(self):
