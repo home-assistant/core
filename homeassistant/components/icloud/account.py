@@ -26,6 +26,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
 
 from .const import (
+    CONF_GPS_ACCURACY_THRESHOLD,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
@@ -426,11 +427,16 @@ class IcloudDevice:
                 and self._status[DEVICE_LOCATION][DEVICE_LOCATION_LATITUDE]
             ):
                 location = self._status[DEVICE_LOCATION]
-                if self._account._gps_accuracy_threshold is not None and location[DEVICE_LOCATION_HORIZONTAL_ACCURACY] > self._account._gps_accuracy_threshold:
+                if (
+                    self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+                    is not None
+                    and location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
+                    > self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+                ):
                     _LOGGER.info(
                         "Update of iCloud device %s: Ignoring update because expected GPS accuracy (%.0f) is not met: %.0f",
                         self.name,
-                        self._account._gps_accuracy_threshold,
+                        self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD],
                         location[DEVICE_LOCATION_HORIZONTAL_ACCURACY],
                     )
                     return
