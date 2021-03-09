@@ -11,6 +11,7 @@ from sqlalchemy.orm.session import Session
 
 import homeassistant.util.dt as dt_util
 
+from .const import MAX_ROWS_TO_PURGE
 from .models import Events, RecorderRuns, States
 from .repack import repack_database
 from .util import session_scope
@@ -19,8 +20,6 @@ if TYPE_CHECKING:
     from . import Recorder
 
 _LOGGER = logging.getLogger(__name__)
-
-MAX_ROWS_TO_PURGE = 1000
 
 
 def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
@@ -34,7 +33,7 @@ def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
         with session_scope(session=instance.get_session()) as session:  # type: ignore
             # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
             event_ids = _select_event_ids_to_purge(session, purge_before)
-            state_ids = _select_state_ids_to_purge(session, event_ids)
+            state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
             if state_ids:
                 _disconnect_states_about_to_be_purged(session, state_ids)
                 _purge_state_ids(session, state_ids)
@@ -79,11 +78,18 @@ def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list
     return [event.event_id for event in events]
 
 
-def _select_state_ids_to_purge(session: Session, event_ids: list) -> list:
+def _select_state_ids_to_purge(
+    session: Session, purge_before: datetime, event_ids: list
+) -> list:
     """Return a list of state ids to purge."""
     if not event_ids:
         return []
-    states = session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
+    states = (
+        session.query(States.state_id)
+        .filter(States.last_updated < purge_before)
+        .filter(States.event_id.in_(event_ids))
+        .all()
+    )
     _LOGGER.debug("Selected %s state ids to remove", len(states))
     return [state.state_id for state in states]
 
