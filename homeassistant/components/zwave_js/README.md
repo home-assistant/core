@@ -43,4 +43,7 @@ It can also run as part of Z-Wave JS 2 MQTT, which is also a standalone Node app
 Both apps are available as Home Assistant add-ons. There are also Docker containers etc.
 
 [connection_diagram]: docs/z_wave_js_connection.png "Connection Diagram"
+[//]: # (https://docs.google.com/drawings/d/10yrczSRwV4kjQwzDnCLGoAJkePaB0BMVb1sWZeeDO7U/edit?usp=sharing)
+
 [running_zwave_js_server]: docs/running_z_wave_js_server.png "Running Z-Wave JS Server"
+[//]: # (https://docs.google.com/drawings/d/1YhSVNuss3fa1VFTKQLaACxXg7y6qo742n2oYpdLRs7E/edit?usp=sharing)
