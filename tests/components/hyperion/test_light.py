@@ -26,7 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
@@ -109,7 +109,7 @@ async def test_setup_config_entry_not_ready_load_state_fail(
 
 async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> None:
     """Test dynamic changes in the instance configuration."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     config_entry = add_test_config_entry(hass)
 

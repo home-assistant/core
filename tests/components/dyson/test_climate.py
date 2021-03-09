@@ -60,7 +60,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     ENTITY_NAME,
@@ -99,8 +99,8 @@ def async_get_device(spec: Type[DysonDevice]) -> DysonDevice:
 )
 async def test_state_common(hass: HomeAssistant, device: DysonDevice) -> None:
     """Test common state and attributes of two types of climate entities."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.name == NAME
