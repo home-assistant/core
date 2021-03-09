@@ -104,7 +104,7 @@ async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow
     await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=YAML_CONFIG
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
