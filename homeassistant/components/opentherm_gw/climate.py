@@ -186,7 +186,7 @@ class OpenThermClimate(ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        if self.temp_read_precision is not None and self.temp_read_precision != 0:
+        if self.temp_read_precision:
             return self.temp_read_precision
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES
@@ -242,7 +242,7 @@ class OpenThermClimate(ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        if self.temp_set_precision is not None and self.temp_set_precision != 0:
+        if self.temp_set_precision:
             return self.temp_set_precision
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES
