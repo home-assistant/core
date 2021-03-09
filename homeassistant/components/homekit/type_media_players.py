@@ -58,7 +58,7 @@ from .const import (
     SERV_SWITCH,
     SERV_TELEVISION_SPEAKER,
 )
-from .type_remote import REMOTE_KEYS, RemoteInputSelectAccessory
+from .type_remotes import REMOTE_KEYS, RemoteInputSelectAccessory
 from .util import get_media_player_features
 
 _LOGGER = logging.getLogger(__name__)
