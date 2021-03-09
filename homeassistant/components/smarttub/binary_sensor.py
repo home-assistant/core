@@ -63,7 +63,7 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         super().__init__(
             coordinator,
             spa,
-            f"{reminder.name.capitalize()} Reminder",
+            f"{reminder.name.title()} Reminder",
         )
         self.reminder_id = reminder.id
 
