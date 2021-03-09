@@ -55,25 +55,20 @@ class ElgatoLight(LightEntity):
         info: Info,
     ):
         """Initialize Elgato Key Light."""
-        self._brightness: int | None = None
         self._info: Info = info
-        self._state: bool | None = None
-        self._temperature: int | None = None
-        self._available = True
+        self._state: State | None = None
         self.elgato = elgato
 
     @property
     def name(self) -> str:
         """Return the name of the entity."""
         # Return the product name, if display name is not set
-        if not self._info.display_name:
-            return self._info.product_name
-        return self._info.display_name
+        return self._info.display_name or self._info.product_name
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._available
+        return self._state is not None
 
     @property
     def unique_id(self) -> str:
@@ -83,12 +78,14 @@ class ElgatoLight(LightEntity):
     @property
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
-        return self._brightness
+        assert self._state is not None
+        return round((self._state.brightness * 255) / 100)
 
     @property
     def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
-        return self._temperature
+        assert self._state is not None
+        return self._state.temperature
 
     @property
     def min_mireds(self) -> int:
@@ -108,7 +105,8 @@ class ElgatoLight(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the light."""
-        return bool(self._state)
+        assert self._state is not None
+        return self._state.on
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -131,22 +129,19 @@ class ElgatoLight(LightEntity):
             await self.elgato.light(**data)
         except ElgatoError:
             _LOGGER.error("An error occurred while updating the Elgato Key Light")
-            self._available = False
+            self._state = None
 
     async def async_update(self) -> None:
         """Update Elgato entity."""
+        restoring = self._state is None
         try:
-            state: State = await self.elgato.state()
-        except ElgatoError:
-            if self._available:
-                _LOGGER.error("An error occurred while updating the Elgato Key Light")
-            self._available = False
-            return
-
-        self._available = True
-        self._brightness = round((state.brightness * 255) / 100)
-        self._state = state.on
-        self._temperature = state.temperature
+            self._state: State = await self.elgato.state()
+            if restoring:
+                _LOGGER.info("Connection restored")
+        except ElgatoError as err:
+            meth = _LOGGER.error if self._state else _LOGGER.debug
+            meth("An error occurred while updating the Elgato Key Light: %s", err)
+            self._state = None
 
     @property
     def device_info(self) -> dict[str, Any]:
