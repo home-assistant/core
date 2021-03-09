@@ -177,9 +177,9 @@ def get_device_wrapper(hass: HomeAssistant, device_id: str):
         return None
 
     for config_entry in hass.data[DOMAIN][DATA_CONFIG_ENTRY]:
-        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry][COAP]
+        wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry].get(COAP)
 
-        if wrapper.device_id == device_id:
+        if wrapper and wrapper.device_id == device_id:
             return wrapper
 
     return None
