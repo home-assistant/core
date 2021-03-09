@@ -70,4 +70,5 @@ class TahomaEntity(CoordinatorEntity, Entity):
             "name": self.name,
             "model": model,
             "sw_version": self.device.controllable_name,
+            "suggested_area": self.coordinator.areas[self.device.placeoid],
         }
