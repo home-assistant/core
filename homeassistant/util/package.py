@@ -45,7 +45,10 @@ def is_installed(package: str) -> bool:
 
     try:
         _LOGGER.debug("version req.project_name: %s", req.project_name)
-        return version(req.project_name) in req
+        project_version = version(req.project_name)
+        if project_version is None:
+            return False  # type: ignore
+        return project_version in req
     except PackageNotFoundError:
         return False
 
