@@ -1,6 +1,6 @@
 """Test init of Coronavirus integration."""
 from homeassistant.components.coronavirus.const import DOMAIN, OPTION_WORLDWIDE
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_registry
@@ -17,13 +17,13 @@ async def test_migration(hass):
     mock_registry(
         hass,
         {
-            "sensor.netherlands_confirmed": entity_registry.RegistryEntry(
+            "sensor.netherlands_confirmed": er.RegistryEntry(
                 entity_id="sensor.netherlands_confirmed",
                 unique_id="34-confirmed",
                 platform="coronavirus",
                 config_entry_id=nl_entry.entry_id,
             ),
-            "sensor.worldwide_confirmed": entity_registry.RegistryEntry(
+            "sensor.worldwide_confirmed": er.RegistryEntry(
                 entity_id="sensor.worldwide_confirmed",
                 unique_id="__worldwide-confirmed",
                 platform="coronavirus",
@@ -34,7 +34,7 @@ async def test_migration(hass):
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     sensor_nl = ent_reg.async_get("sensor.netherlands_confirmed")
     assert sensor_nl.unique_id == "Netherlands-confirmed"

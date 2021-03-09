@@ -52,7 +52,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     ENTITY_NAME,
@@ -79,8 +79,8 @@ async def test_state_purecoollink(
     hass: HomeAssistant, device: DysonPureCoolLink
 ) -> None:
     """Test the state of a PureCoolLink fan."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -128,8 +128,8 @@ async def test_state_purecoollink(
 @pytest.mark.parametrize("device", [DysonPureCool], indirect=True)
 async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> None:
     """Test the state of a PureCool fan."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON

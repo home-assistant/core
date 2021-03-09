@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import automation, config
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
@@ -110,7 +111,7 @@ async def test_bad_formatted_automations(hass, hass_client):
 
 async def test_delete_automation(hass, hass_client):
     """Test deleting an automation."""
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,

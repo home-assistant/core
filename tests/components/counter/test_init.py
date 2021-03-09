@@ -21,7 +21,7 @@ from homeassistant.components.counter import (
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_NAME
 from homeassistant.core import Context, CoreState, State
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -569,7 +569,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -606,7 +606,7 @@ async def test_update_min_max(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -683,7 +683,7 @@ async def test_create(hass, hass_ws_client, storage_setup):
 
     counter_id = "new_counter"
     input_entity_id = f"{DOMAIN}.{counter_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None

@@ -25,7 +25,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     LENGTH_KILOMETERS,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
@@ -75,7 +75,7 @@ async def test_setup(hass):
         all_states = hass.states.async_all()
         # 3 geolocation and 1 sensor entities
         assert len(all_states) == 4
-        entity_registry = await async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         assert len(entity_registry.entities) == 4
 
         state = hass.states.get("geo_location.title_1")

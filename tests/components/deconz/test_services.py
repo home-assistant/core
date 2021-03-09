@@ -1,5 +1,4 @@
 """deCONZ service tests."""
-
 from copy import deepcopy
 from unittest.mock import Mock, patch
 
@@ -23,6 +22,7 @@ from homeassistant.components.deconz.services import (
     async_unload_services,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import (
@@ -245,7 +245,7 @@ async def test_remove_orphaned_entries_service(hass, aioclient_mock):
 
     data = {CONF_BRIDGE_ID: BRIDGEID}
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={("mac", "123")}
     )
@@ -261,7 +261,7 @@ async def test_remove_orphaned_entries_service(hass, aioclient_mock):
         == 5  # Host, gateway, light, switch and orphan
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DECONZ_DOMAIN,

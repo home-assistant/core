@@ -1,5 +1,4 @@
 """deCONZ binary sensor platform tests."""
-
 from copy import deepcopy
 
 from homeassistant.components.binary_sensor import (
@@ -15,6 +14,7 @@ from homeassistant.components.deconz.const import (
 from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.deconz.services import SERVICE_DEVICE_REFRESH
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from .test_gateway import (
@@ -191,7 +191,7 @@ async def test_add_new_binary_sensor_ignored(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("binary_sensor.presence_sensor")
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     assert (
         len(async_entries_for_config_entry(entity_registry, config_entry.entry_id)) == 0
     )
