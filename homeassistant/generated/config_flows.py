@@ -22,7 +22,6 @@ FLOWS = [
     "ais_host",
     "ais_nbp",
     "ais_spotify_service",
-    "ais_supla",
     "ais_tauron",
     "ais_wear_os",
     "ais_wifi_service",
