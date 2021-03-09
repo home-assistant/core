@@ -102,6 +102,7 @@ def _disconnect_states_about_to_be_purged(session: Session, state_ids: list) -> 
     # for us.
     disconnected_rows = (
         session.query(States)
+        .filter(States.last_updated < purge_before)
         .filter(States.old_state_id.in_(state_ids))
         .update({"old_state_id": None}, synchronize_session=False)
     )
