@@ -118,6 +118,7 @@ class EditAutomationConfigView(EditIdBasedConfigView):
 
 
 @callback
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {vol.Required("type"): "automation/trace/get", vol.Optional("automation_id"): str}
 )
@@ -135,6 +136,8 @@ def websocket_automation_trace_get(hass, connection, msg):
     connection.send_result(msg["id"], automation_traces)
 
 
+@callback
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "automation/trace/list"})
 def websocket_automation_trace_list(hass, connection, msg):
     """Summarize automation traces."""
@@ -193,9 +196,7 @@ def websocket_automation_breakpoint_clear(hass, connection, msg):
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {
-        vol.Required("type"): "automation/debug/breakpoint/list",
-    }
+    {vol.Required("type"): "automation/debug/breakpoint/list"}
 )
 def websocket_automation_breakpoint_list(hass, connection, msg):
     """List breakpoints."""
@@ -209,9 +210,7 @@ def websocket_automation_breakpoint_list(hass, connection, msg):
 @callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    {
-        vol.Required("type"): "automation/debug/breakpoint/subscribe",
-    }
+    {vol.Required("type"): "automation/debug/breakpoint/subscribe"}
 )
 def websocket_subscribe_breakpoint_events(hass, connection, msg):
     """Subscribe to breakpoint events."""
