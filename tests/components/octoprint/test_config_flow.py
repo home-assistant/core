@@ -20,21 +20,23 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert not result["errors"]
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "name": "Printer",
+            "port": 81,
+            "ssl": True,
+            "path": "/",
+        },
+    )
+    assert result["type"] == "progress"
+
     with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
-        "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
-    ), patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
-    ), patch(
-        "homeassistant.components.octoprint.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.octoprint.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+    ):
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 "username": "testuser",
@@ -44,6 +46,24 @@ async def test_form(hass):
                 "ssl": True,
                 "path": "/",
             },
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress_done"
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_server_info",
+        return_value=True,
+    ), patch(
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
+        return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+    ), patch(
+        "homeassistant.components.octoprint.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.octoprint.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
         )
         await hass.async_block_till_done()
 
@@ -68,24 +88,35 @@ async def test_form_cannot_connect(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "name": "Printer",
+            "port": 81,
+            "ssl": True,
+            "path": "/",
+        },
+    )
+    assert result["type"] == "progress"
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+
+    assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         side_effect=CannotConnect,
-    ), patch("pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "testuser",
-                "name": "Printer",
-                "port": 81,
-                "ssl": True,
-                "path": "/",
-            },
-        )
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_exception(hass):
@@ -94,24 +125,35 @@ async def test_form_unknown_exception(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "name": "Printer",
+            "port": 81,
+            "ssl": True,
+            "path": "/",
+        },
+    )
+    assert result["type"] == "progress"
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+
+    assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         side_effect=Exception,
-    ), patch("pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "testuser",
-                "name": "Printer",
-                "port": 81,
-                "ssl": True,
-                "path": "/",
-            },
-        )
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "unknown"}
 
 
 async def test_show_zerconf_form(hass: HomeAssistant) -> None:
@@ -132,6 +174,24 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert not result["errors"]
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+        },
+    )
+    assert result["type"] == "progress"
+
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "progress_done"
+
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
         return_value=True,
@@ -139,13 +199,13 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
-        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+        "homeassistant.components.octoprint.async_setup", return_value=True
     ), patch(
         "homeassistant.components.octoprint.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "testuser"}
+            result["flow_id"],
         )
         await hass.async_block_till_done()
 
@@ -168,10 +228,23 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert not result["errors"]
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+        },
+    )
+    assert result["type"] == "progress"
 
-    assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    with patch(
+        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "progress_done"
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
@@ -180,13 +253,13 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
-        "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
+        "homeassistant.components.octoprint.async_setup", return_value=True
     ), patch(
         "homeassistant.components.octoprint.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "testuser"}
+            result["flow_id"],
         )
         await hass.async_block_till_done()
 
@@ -269,21 +342,30 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "pyoctoprintapi.OctoprintClient.request_app_key",
-        side_effect=ApiError,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "name": "Printer",
+            "port": 81,
+            "ssl": True,
+            "path": "/",
+        },
+    )
+    assert result["type"] == "progress"
+
+    with patch("pyoctoprintapi.OctoprintClient.request_app_key", side_effect=ApiError):
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "testuser",
-                "name": "Printer",
-                "port": 81,
-                "ssl": True,
-                "path": "/",
-            },
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] == "progress_done"
+    with patch(
+        "pyoctoprintapi.OctoprintClient.get_server_info",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "auth_failed"}

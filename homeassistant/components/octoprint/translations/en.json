@@ -7,6 +7,7 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
+            "auth_failed": "Failed to retrieve application api key",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -23,6 +24,9 @@
                     "ssl": "Use SSL"
                 }
             }
+        },
+        "progress": {
+            "get_api_key": "Open the OctoPrint UI and click 'Allow' on the Access Request for 'Home Assistant'."
         }
     },
     "title": "OctoPrint"
