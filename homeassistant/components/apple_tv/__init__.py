@@ -62,8 +62,8 @@ async def async_setup_entry(hass, entry):
         """Set up platforms and initiate connection."""
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
         await manager.init()
@@ -348,10 +348,16 @@ class AppleTVManager:
             "name": self.config_entry.data[CONF_NAME],
         }
 
+        area = attrs["name"]
+        name_trailer = f" {DEFAULT_NAME}"
+        if area.endswith(name_trailer):
+            area = area[: -len(name_trailer)]
+        attrs["suggested_area"] = area
+
         if self.atv:
             dev_info = self.atv.device_info
 
-            attrs["model"] = "Apple TV " + dev_info.model.name.replace("Gen", "")
+            attrs["model"] = DEFAULT_NAME + " " + dev_info.model.name.replace("Gen", "")
             attrs["sw_version"] = dev_info.version
 
             if dev_info.mac:

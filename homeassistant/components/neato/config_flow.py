@@ -8,10 +8,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
-# pylint: disable=unused-import
 from .const import NEATO_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OAuth2FlowHandler(

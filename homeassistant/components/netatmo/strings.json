@@ -39,5 +39,27 @@
         "title": "Netatmo public weather sensor"
       }
     }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "away": "away",
+      "schedule": "schedule",
+      "hg": "frost guard"
+    },
+    "trigger_type": {
+      "turned_off": "{entity_name} turned off",
+      "turned_on": "{entity_name} turned on",
+      "human": "{entity_name} detected a human",
+      "movement": "{entity_name} detected movement",
+      "person": "{entity_name} detected a person",
+      "person_away": "{entity_name} detected a person has left",
+      "animal": "{entity_name} detected an animal",
+      "outdoor": "{entity_name} detected an outdoor event",
+      "vehicle": "{entity_name} detected a vehicle",
+      "alarm_started": "{entity_name} detected an alarm",
+      "set_point": "Target temperature {entity_name} set manually",
+      "cancel_set_point": "{entity_name} has resumed its schedule",
+      "therm_mode": "{entity_name} switched to \"{subtype}\""
+    }
   }
 }

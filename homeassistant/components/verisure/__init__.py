@@ -1,5 +1,8 @@
 """Support for Verisure devices."""
+from __future__ import annotations
+
 from datetime import timedelta
+from typing import Any, Literal
 
 from jsonpath import jsonpath
 import verisure
@@ -12,8 +15,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     HTTP_SERVICE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 from .const import (
@@ -37,6 +42,15 @@ from .const import (
     SERVICE_DISABLE_AUTOLOCK,
     SERVICE_ENABLE_AUTOLOCK,
 )
+
+PLATFORMS = [
+    "sensor",
+    "switch",
+    "alarm_control_panel",
+    "lock",
+    "camera",
+    "binary_sensor",
+]
 
 HUB = None
 
@@ -69,8 +83,8 @@ CONFIG_SCHEMA = vol.Schema(
 DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 
-def setup(hass, config):
-    """Set up the Verisure component."""
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Verisure integration."""
     global HUB  # pylint: disable=global-statement
     HUB = VerisureHub(config[DOMAIN])
     HUB.update_overview = Throttle(config[DOMAIN][CONF_SCAN_INTERVAL])(
@@ -81,15 +95,8 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: HUB.logout())
     HUB.update_overview()
 
-    for component in (
-        "sensor",
-        "switch",
-        "alarm_control_panel",
-        "lock",
-        "camera",
-        "binary_sensor",
-    ):
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     async def capture_smartcam(service):
         """Capture a new picture from a smartcam."""
@@ -135,7 +142,7 @@ def setup(hass, config):
 class VerisureHub:
     """A Verisure hub wrapper class."""
 
-    def __init__(self, domain_config):
+    def __init__(self, domain_config: ConfigType):
         """Initialize the Verisure hub."""
         self.overview = {}
         self.imageseries = {}
@@ -148,7 +155,7 @@ class VerisureHub:
 
         self.giid = domain_config.get(CONF_GIID)
 
-    def login(self):
+    def login(self) -> bool:
         """Login to Verisure."""
         try:
             self.session.login()
@@ -159,7 +166,7 @@ class VerisureHub:
             return self.set_giid()
         return True
 
-    def logout(self):
+    def logout(self) -> bool:
         """Logout from Verisure."""
         try:
             self.session.logout()
@@ -168,7 +175,7 @@ class VerisureHub:
             return False
         return True
 
-    def set_giid(self):
+    def set_giid(self) -> bool:
         """Set installation GIID."""
         try:
             self.session.set_giid(self.giid)
@@ -177,7 +184,7 @@ class VerisureHub:
             return False
         return True
 
-    def update_overview(self):
+    def update_overview(self) -> None:
         """Update the overview."""
         try:
             self.overview = self.session.get_overview()
@@ -190,34 +197,34 @@ class VerisureHub:
                 raise
 
     @Throttle(timedelta(seconds=60))
-    def update_smartcam_imageseries(self):
+    def update_smartcam_imageseries(self) -> None:
         """Update the image series."""
         self.imageseries = self.session.get_camera_imageseries()
 
     @Throttle(timedelta(seconds=30))
-    def smartcam_capture(self, device_id):
+    def smartcam_capture(self, device_id: str) -> None:
         """Capture a new image from a smartcam."""
         self.session.capture_image(device_id)
 
-    def disable_autolock(self, device_id):
+    def disable_autolock(self, device_id: str) -> None:
         """Disable autolock."""
         self.session.set_lock_config(device_id, auto_lock_enabled=False)
 
-    def enable_autolock(self, device_id):
+    def enable_autolock(self, device_id: str) -> None:
         """Enable autolock."""
         self.session.set_lock_config(device_id, auto_lock_enabled=True)
 
-    def get(self, jpath, *args):
+    def get(self, jpath: str, *args) -> list[Any] | Literal[False]:
         """Get values from the overview that matches the jsonpath."""
         res = jsonpath(self.overview, jpath % args)
         return res or []
 
-    def get_first(self, jpath, *args):
+    def get_first(self, jpath: str, *args) -> Any | None:
         """Get first value from the overview that matches the jsonpath."""
         res = self.get(jpath, *args)
         return res[0] if res else None
 
-    def get_image_info(self, jpath, *args):
+    def get_image_info(self, jpath: str, *args) -> list[Any] | Literal[False]:
         """Get values from the imageseries that matches the jsonpath."""
         res = jsonpath(self.imageseries, jpath % args)
         return res or []

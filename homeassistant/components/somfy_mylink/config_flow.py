@@ -19,9 +19,9 @@ from .const import (
     CONF_TARGET_ID,
     CONF_TARGET_NAME,
     DEFAULT_PORT,
+    DOMAIN,
     MYLINK_STATUS,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = dhcp_discovery[HOSTNAME]
         self.mac = formatted_mac
         self.ip_address = dhcp_discovery[IP_ADDRESS]
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 

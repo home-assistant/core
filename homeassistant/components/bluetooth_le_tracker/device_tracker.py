@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from uuid import UUID
 
-import pygatt  # pylint: disable=import-error
+import pygatt
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA

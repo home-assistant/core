@@ -6,22 +6,19 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
-    DATA_BINARY_SENSOR,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
-    DATA_SENSOR,
     DATA_STORE,
     DOMAIN,
     STORAGE_KEY,
@@ -40,18 +37,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     app_config = await store.async_load()
     if app_config is None:
         app_config = {
-            DATA_BINARY_SENSOR: {},
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
-            DATA_SENSOR: {},
         }
 
     hass.data[DOMAIN] = {
-        DATA_BINARY_SENSOR: app_config.get(DATA_BINARY_SENSOR, {}),
         DATA_CONFIG_ENTRIES: {},
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
-        DATA_SENSOR: app_config.get(DATA_SENSOR, {}),
         DATA_STORE: store,
     }
 
@@ -111,8 +104,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -48,7 +48,6 @@ class WithingsFlowHandler(
     async def async_step_profile(self, data: dict) -> dict:
         """Prompt the user to select a user profile."""
         errors = {}
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         reauth_profile = (
             self.context.get(const.PROFILE)
             if self.context.get("source") == "reauth"
@@ -81,14 +80,12 @@ class WithingsFlowHandler(
         if data is not None:
             return await self.async_step_user()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         placeholders = {const.PROFILE: self.context["profile"]}
 
         self.context.update({"title_placeholders": placeholders})
 
         return self.async_show_form(
             step_id="reauth",
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             description_placeholders=placeholders,
         )
 

@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
+    CONF_STATE_TEMPLATE,
     CONF_UNIQUE_ID,
     STATE_OFF,
     STATE_ON,
@@ -62,7 +63,6 @@ CONF_GREEN_TEMPLATE = "green_template"
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_RED_TEMPLATE = "red_template"
-CONF_STATE_TEMPLATE = "state_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 PLATFORM_SCHEMA_TEMPLATE = (
@@ -383,7 +383,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["flash"] = kwargs.get(ATTR_FLASH)
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.async_publish(
             self.hass,
@@ -408,7 +408,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             self._state = False
 
         if ATTR_TRANSITION in kwargs:
-            values["transition"] = int(kwargs[ATTR_TRANSITION])
+            values["transition"] = kwargs[ATTR_TRANSITION]
 
         mqtt.async_publish(
             self.hass,

@@ -2032,10 +2032,10 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     )
 
 
-async def test_deprecated_value_template_for_position_topic_warnning(
+async def test_deprecated_value_template_for_position_topic_warning(
     hass, caplog, mqtt_mock
 ):
-    """Test warnning when value_template is used for position_topic."""
+    """Test warning when value_template is used for position_topic."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
@@ -2054,13 +2054,13 @@ async def test_deprecated_value_template_for_position_topic_warnning(
 
     assert (
         "using 'value_template' for 'position_topic' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6"
+        "and will be removed from Home Assistant in version 2021.6, "
         "please replace it with 'position_template'"
     ) in caplog.text
 
 
-async def test_deprecated_tilt_invert_state_warnning(hass, caplog, mqtt_mock):
-    """Test warnning when tilt_invert_state is used."""
+async def test_deprecated_tilt_invert_state_warning(hass, caplog, mqtt_mock):
+    """Test warning when tilt_invert_state is used."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
@@ -2077,9 +2077,31 @@ async def test_deprecated_tilt_invert_state_warnning(hass, caplog, mqtt_mock):
 
     assert (
         "'tilt_invert_state' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6"
+        "and will be removed from Home Assistant in version 2021.6, "
         "please invert tilt using 'tilt_min' & 'tilt_max'"
     ) in caplog.text
+
+
+async def test_no_deprecated_tilt_invert_state_warning(hass, caplog, mqtt_mock):
+    """Test warning when tilt_invert_state is used."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "'tilt_invert_state' is deprecated "
+        "and will be removed from Home Assistant in version 2021.6, "
+        "please invert tilt using 'tilt_min' & 'tilt_max'"
+    ) not in caplog.text
 
 
 async def test_no_deprecated_warning_for_position_topic_using_position_template(
@@ -2104,7 +2126,7 @@ async def test_no_deprecated_warning_for_position_topic_using_position_template(
 
     assert (
         "using 'value_template' for 'position_topic' is deprecated "
-        "and will be removed from Home Assistant in version 2021.6"
+        "and will be removed from Home Assistant in version 2021.6, "
         "please replace it with 'position_template'"
     ) not in caplog.text
 
@@ -2221,8 +2243,8 @@ async def test_set_state_via_position_using_stopped_state(hass, mqtt_mock):
     assert state.state == STATE_OPEN
 
 
-async def test_set_state_via_stopped_state_optimistic(hass, mqtt_mock):
-    """Test the controlling state via stopped state in optimistic mode."""
+async def test_position_via_position_topic_template(hass, mqtt_mock):
+    """Test position by updating status via position template."""
     assert await async_setup_component(
         hass,
         cover.DOMAIN,
@@ -2231,51 +2253,28 @@ async def test_set_state_via_stopped_state_optimistic(hass, mqtt_mock):
                 "platform": "mqtt",
                 "name": "test",
                 "state_topic": "state-topic",
-                "position_topic": "get-position-topic",
-                "position_open": 100,
-                "position_closed": 0,
-                "state_open": "OPEN",
-                "state_closed": "CLOSE",
-                "state_stopped": "STOPPED",
-                "state_opening": "OPENING",
-                "state_closing": "CLOSING",
                 "command_topic": "command-topic",
-                "qos": 0,
-                "optimistic": True,
+                "set_position_topic": "set-position-topic",
+                "position_topic": "get-position-topic",
+                "position_template": "{{ (value | multiply(0.01)) | int }}",
             }
         },
     )
     await hass.async_block_till_done()
 
-    async_fire_mqtt_message(hass, "state-topic", "OPEN")
+    async_fire_mqtt_message(hass, "get-position-topic", "99")
 
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
+    current_cover_position_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_POSITION
+    ]
+    assert current_cover_position_position == 0
 
-    async_fire_mqtt_message(hass, "get-position-topic", "50")
+    async_fire_mqtt_message(hass, "get-position-topic", "5000")
 
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
-
-    async_fire_mqtt_message(hass, "state-topic", "OPENING")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_OPENING
-
-    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_OPEN
-
-    async_fire_mqtt_message(hass, "state-topic", "CLOSING")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSING
-
-    async_fire_mqtt_message(hass, "state-topic", "STOPPED")
-
-    state = hass.states.get("cover.test")
-    assert state.state == STATE_CLOSED
+    current_cover_position_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_POSITION
+    ]
+    assert current_cover_position_position == 50
 
 
 async def test_set_state_via_stopped_state_no_position_topic(hass, mqtt_mock):

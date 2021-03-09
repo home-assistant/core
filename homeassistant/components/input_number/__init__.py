@@ -1,4 +1,6 @@
 """Support to set a numeric value from a slider or text box."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -202,7 +204,7 @@ class InputNumber(RestoreEntity):
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> "InputNumber":
+    def from_yaml(cls, config: typing.Dict) -> InputNumber:
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
         input_num.entity_id = f"{DOMAIN}.{config[CONF_ID]}"

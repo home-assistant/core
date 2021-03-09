@@ -46,6 +46,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -128,7 +129,7 @@ async def setup_integration(hass):
 async def test_simple_properties(hass: HomeAssistant):
     """Test that simple properties work as intended."""
     state = hass.states.get(VAC_ENTITY_ID)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity = registry.async_get(VAC_ENTITY_ID)
 
     assert entity
@@ -199,7 +200,7 @@ async def test_device_properties(
     hass: HomeAssistant, device_property: str, target_value: str
 ):
     """Test device properties."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 

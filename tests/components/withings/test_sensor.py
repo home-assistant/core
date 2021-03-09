@@ -27,6 +27,7 @@ from homeassistant.components.withings.common import (
 )
 from homeassistant.components.withings.const import Measurement
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .common import ComponentFactory, new_profile_config
@@ -304,9 +305,7 @@ async def test_sensor_default_enabled_entities(
     hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test entities enabled by default."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry: EntityRegistry = er.async_get(hass)
 
     await component_factory.configure_component(profile_configs=(PERSON0,))
 
@@ -347,9 +346,7 @@ async def test_all_entities(
     hass: HomeAssistant, component_factory: ComponentFactory
 ) -> None:
     """Test all entities."""
-    entity_registry: EntityRegistry = (
-        await hass.helpers.entity_registry.async_get_registry()
-    )
+    entity_registry: EntityRegistry = er.async_get(hass)
 
     with patch(
         "homeassistant.components.withings.sensor.BaseWithingsSensor.entity_registry_enabled_default"

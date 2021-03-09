@@ -54,8 +54,6 @@ ICON_JSON_EXTRACT = re.compile('"icon": "([^"]+)"')
 
 ATTR_MESSAGE = "message"
 
-CONF_DOMAINS = "domains"
-CONF_ENTITIES = "entities"
 CONTINUOUS_DOMAINS = ["proximity", "sensor"]
 
 DOMAIN = "logbook"
@@ -417,7 +415,6 @@ def _get_events(
     entity_matches_only=False,
 ):
     """Get events for a period of time."""
-
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
 

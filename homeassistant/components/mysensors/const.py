@@ -29,7 +29,6 @@ CONF_GATEWAY_TYPE_ALL: List[str] = [
 
 
 DOMAIN: str = "mysensors"
-MYSENSORS_GATEWAY_READY: str = "mysensors_gateway_ready_{}"
 MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: str = "mysensors_gateways"
 PLATFORM: str = "platform"
@@ -158,7 +157,7 @@ for platform, platform_types in PLATFORM_TYPES.items():
     for s_type_name in platform_types:
         TYPE_TO_PLATFORMS[s_type_name].append(platform)
 
-SUPPORTED_PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
+PLATFORMS_WITH_ENTRY_SUPPORT = set(PLATFORM_TYPES.keys()) - {
     "notify",
     "device_tracker",
 }

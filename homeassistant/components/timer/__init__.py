@@ -1,4 +1,6 @@
 """Support for Timers."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 from typing import Dict, Optional
@@ -198,7 +200,7 @@ class Timer(RestoreEntity):
         self._listener = None
 
     @classmethod
-    def from_yaml(cls, config: Dict) -> "Timer":
+    def from_yaml(cls, config: Dict) -> Timer:
         """Return entity instance initialized from yaml storage."""
         timer = cls(config)
         timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])

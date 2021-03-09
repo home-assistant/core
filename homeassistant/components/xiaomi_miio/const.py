@@ -1,6 +1,80 @@
 """Constants for the Xiaomi Miio component."""
 DOMAIN = "xiaomi_miio"
 
+CONF_FLOW_TYPE = "config_flow_device"
+CONF_GATEWAY = "gateway"
+CONF_DEVICE = "device"
+CONF_MODEL = "model"
+CONF_MAC = "mac"
+
+KEY_COORDINATOR = "coordinator"
+
+# Fam Models
+MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
+MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
+MODEL_AIRPURIFIER_V3 = "zhimi.airpurifier.v3"
+MODEL_AIRPURIFIER_V5 = "zhimi.airpurifier.v5"
+MODEL_AIRPURIFIER_PRO = "zhimi.airpurifier.v6"
+MODEL_AIRPURIFIER_PRO_V7 = "zhimi.airpurifier.v7"
+MODEL_AIRPURIFIER_M1 = "zhimi.airpurifier.m1"
+MODEL_AIRPURIFIER_M2 = "zhimi.airpurifier.m2"
+MODEL_AIRPURIFIER_MA1 = "zhimi.airpurifier.ma1"
+MODEL_AIRPURIFIER_MA2 = "zhimi.airpurifier.ma2"
+MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
+MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
+MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
+MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
+MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
+
+MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
+MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
+MODEL_AIRHUMIDIFIER_CA4 = "zhimi.humidifier.ca4"
+MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
+
+MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
+
+MODELS_PURIFIER_MIOT = [MODEL_AIRPURIFIER_3, MODEL_AIRPURIFIER_3H]
+MODELS_HUMIDIFIER_MIOT = [MODEL_AIRHUMIDIFIER_CA4]
+MODELS_FAN_MIIO = [
+    MODEL_AIRPURIFIER_V1,
+    MODEL_AIRPURIFIER_V2,
+    MODEL_AIRPURIFIER_V3,
+    MODEL_AIRPURIFIER_V5,
+    MODEL_AIRPURIFIER_PRO,
+    MODEL_AIRPURIFIER_PRO_V7,
+    MODEL_AIRPURIFIER_M1,
+    MODEL_AIRPURIFIER_M2,
+    MODEL_AIRPURIFIER_MA1,
+    MODEL_AIRPURIFIER_MA2,
+    MODEL_AIRPURIFIER_SA1,
+    MODEL_AIRPURIFIER_SA2,
+    MODEL_AIRPURIFIER_2S,
+    MODEL_AIRHUMIDIFIER_V1,
+    MODEL_AIRHUMIDIFIER_CA1,
+    MODEL_AIRHUMIDIFIER_CB1,
+    MODEL_AIRFRESH_VA2,
+]
+
+# Model lists
+MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]
+MODELS_SWITCH = [
+    "chuangmi.plug.v1",
+    "chuangmi.plug.v3",
+    "chuangmi.plug.hmi208",
+    "qmi.powerstrip.v1",
+    "zimi.powerstrip.v2",
+    "chuangmi.plug.m1",
+    "chuangmi.plug.m3",
+    "chuangmi.plug.v2",
+    "chuangmi.plug.hmi205",
+    "chuangmi.plug.hmi206",
+]
+MODELS_FAN = MODELS_FAN_MIIO + MODELS_HUMIDIFIER_MIOT + MODELS_PURIFIER_MIOT
+MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
+
+MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_FAN + MODELS_VACUUM
+MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
+
 # Fan Services
 SERVICE_SET_BUZZER_ON = "fan_set_buzzer_on"
 SERVICE_SET_BUZZER_OFF = "fan_set_buzzer_off"

@@ -3,7 +3,7 @@ import asyncio
 
 import upb_lib
 
-from homeassistant.const import CONF_FILE_PATH, CONF_HOST
+from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -11,13 +11,12 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_ADDRESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COMMAND,
     ATTR_RATE,
     DOMAIN,
     EVENT_UPB_SCENE_CHANGED,
 )
 
-UPB_PLATFORMS = ["light", "scene"]
+PLATFORMS = ["light", "scene"]
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
@@ -36,9 +35,9 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = {"upb": upb}
 
-    for component in UPB_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     def _element_changed(element, changeset):
@@ -71,8 +70,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in UPB_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
