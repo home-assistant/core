@@ -46,6 +46,9 @@ def is_installed(package: str) -> bool:
     try:
         _LOGGER.debug("version req.project_name: %s", req.project_name)
         project_version = version(req.project_name)
+        # Its possible that a failed previous install can leave
+        # the version as None even though version is never expected
+        # to return None
         if project_version is None:
             return False  # type: ignore
         return project_version in req
