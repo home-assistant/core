@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from homeassistant.components import mikrotik
 import homeassistant.components.device_tracker as device_tracker
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -101,7 +101,7 @@ async def test_restoring_devices(hass):
     )
     config_entry.add_to_hass(hass)
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         device_tracker.DOMAIN,
         mikrotik.DOMAIN,

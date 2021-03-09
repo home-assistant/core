@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_IDLE
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -168,13 +169,13 @@ async def test_camera_device(hass):
     assert camera is not None
     assert camera.state == STATE_IDLE
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.my_camera")
     assert entry.unique_id == "some-device-id-camera"
     assert entry.original_name == "My Camera"
     assert entry.domain == "camera"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Camera"
     assert device.model == "Camera"

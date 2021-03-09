@@ -7,6 +7,7 @@ pubsub subscriber.
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from .common import async_setup_sdm_platform
@@ -91,14 +92,14 @@ async def test_doorbell_chime_event(hass):
         create_device_traits("sdm.devices.traits.DoorbellChime"),
     )
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
     assert entry is not None
     assert entry.unique_id == "some-device-id-camera"
     assert entry.original_name == "Front"
     assert entry.domain == "camera"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "Front"
     assert device.model == "Doorbell"
@@ -127,7 +128,7 @@ async def test_camera_motion_event(hass):
         "sdm.devices.types.CAMERA",
         create_device_traits("sdm.devices.traits.CameraMotion"),
     )
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
     assert entry is not None
 
@@ -154,7 +155,7 @@ async def test_camera_sound_event(hass):
         "sdm.devices.types.CAMERA",
         create_device_traits("sdm.devices.traits.CameraSound"),
     )
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
     assert entry is not None
 
@@ -181,7 +182,7 @@ async def test_camera_person_event(hass):
         "sdm.devices.types.DOORBELL",
         create_device_traits("sdm.devices.traits.CameraEventImage"),
     )
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
     assert entry is not None
 
@@ -208,7 +209,7 @@ async def test_camera_multiple_event(hass):
         "sdm.devices.types.DOORBELL",
         create_device_traits("sdm.devices.traits.CameraEventImage"),
     )
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
     assert entry is not None
 

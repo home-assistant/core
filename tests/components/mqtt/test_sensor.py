@@ -9,6 +9,7 @@ import pytest
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.core as ha
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -574,7 +575,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
 
 async def test_entity_device_info_with_hub(hass, mqtt_mock):
     """Test MQTT sensor device registry integration."""
-    registry = await hass.helpers.device_registry.async_get_registry()
+    registry = dr.async_get(hass)
     hub = registry.async_get_or_create(
         config_entry_id="123",
         connections=set(),

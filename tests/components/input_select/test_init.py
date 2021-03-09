@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, State
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
@@ -425,7 +425,7 @@ async def test_input_select_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user, hass_read_only_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -559,7 +559,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -592,7 +592,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
@@ -633,7 +633,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None
