@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from pyezviz.client import PyEzvizError
 
-from homeassistant import exceptions
 from homeassistant.components.ezviz.const import (
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
@@ -94,9 +93,6 @@ async def test_async_step_import_camera(hass, ezviz_config_flow):
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == USER_INPUT_CAMERA
-
-
-######
 
 
 async def test_async_step_import_2nd_form_returns_camera(hass, ezviz_config_flow):

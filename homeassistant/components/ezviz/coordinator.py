@@ -4,7 +4,7 @@ import logging
 
 from async_timeout import timeout
 from pyezviz.camera import EzvizCamera
-from pyezviz.client import EzvizClient
+from pyezviz.client import EzvizClient, PyEzvizError
 from requests import ConnectTimeout, HTTPError
 
 from homeassistant.helpers.typing import HomeAssistantType
@@ -38,5 +38,5 @@ class EzvizDataUpdateCoordinator(DataUpdateCoordinator):
             async with timeout(35):
                 return await self.hass.async_add_executor_job(self._update_data)
 
-        except (ConnectTimeout, HTTPError) as error:
+        except (ConnectTimeout, HTTPError, PyEzvizError) as error:
             raise UpdateFailed(f"Invalid response from API: {error}") from error
