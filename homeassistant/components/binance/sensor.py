@@ -61,7 +61,7 @@ class Ticker(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._get_data_property("lastPrice")
+        return round(float(self._get_data_property("lastPrice")), 4)
 
     @property
     def unique_id(self):
@@ -83,12 +83,12 @@ class Ticker(CoordinatorEntity):
         """Return additional sensor state attributes."""
         return {
             "symbol": self._symbol,
-            "last_price": self._get_data_property("lastPrice"),
-            "price_change": self._get_data_property("priceChange"),
-            "price_change_pct": self._get_data_property("priceChangePercent"),
-            "volume": self._get_data_property("volume"),
-            "bid_price": self._get_data_property("bidPrice"),
-            "ask_price": self._get_data_property("askPrice"),
+            "last_price": float(self._get_data_property("lastPrice")),
+            "price_change": float(self._get_data_property("priceChange")),
+            "price_change_pct": float(self._get_data_property("priceChangePercent")),
+            "volume": float(self._get_data_property("volume")),
+            "bid_price": float(self._get_data_property("bidPrice")),
+            "ask_price": float(self._get_data_property("askPrice")),
             "currency": self._get_data_property("baseAsset"),
             "quote_asset": self._get_data_property("quoteAsset"),
             "unit_of_measurement": self.unit_of_measurement,
@@ -119,7 +119,11 @@ class Balance(CoordinatorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._get_data_property("free") + self._get_data_property("locked")
+        state = float(self._get_data_property("free")) + float(
+            self._get_data_property("locked")
+        )
+
+        return round(state, 4)
 
     @property
     def unique_id(self):
@@ -143,9 +147,9 @@ class Balance(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "free": self._get_data_property("free"),
-            "locked": self._get_data_property("locked"),
-            "usdt_value": self._get_data_property("asset_value_in_usdt"),
+            "free": float(self._get_data_property("free")),
+            "locked": float(self._get_data_property("locked")),
+            "usdt_value": float(self._get_data_property("asset_value_in_usdt")),
             "unit_of_measurement": self.unit_of_measurement,
             "source": "Binance",
         }
@@ -233,11 +237,13 @@ class TotalAssetValue(CoordinatorEntity):
             total_asset_value = total_usdt_value
         else:
             usdt_pair_name = (self._currency + "USDT").upper()
-            total_asset_value = total_usdt_value / float(
+            last_price = float(
                 self.coordinator.data[CONF_ASSET_TICKERS][usdt_pair_name]["lastPrice"]
             )
 
-        return total_asset_value
+            total_asset_value = total_usdt_value / last_price
+
+        return round(total_asset_value, 4)
 
     @property
     def unique_id(self):
@@ -258,6 +264,6 @@ class TotalAssetValue(CoordinatorEntity):
     def device_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
-            "note": f"Value is based on the last {self._currency.upper()} price of every coin in balance",
+            "note": f"Value is based on the last {self._currency.upper()}USDT price of every coin in balance",
             "source": "Binance",
         }
