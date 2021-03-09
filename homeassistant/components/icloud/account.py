@@ -197,7 +197,7 @@ class IcloudAccount:
             if self._devices.get(device_id) is not None:
                 # Seen device -> updating
                 _LOGGER.debug("Updating iCloud device: %s", device_name)
-                self._devices[device_id].update(status)
+                self._devices[device_id].update(status, self._config_entry)
             else:
                 # New device, should be unique
                 _LOGGER.debug(
@@ -205,8 +205,10 @@ class IcloudAccount:
                     device_name,
                     status[DEVICE_RAW_DEVICE_MODEL],
                 )
-                self._devices[device_id] = IcloudDevice(self, device, status)
-                self._devices[device_id].update(status)
+                self._devices[device_id] = IcloudDevice(
+                    self, device, status, self._config_entry
+                )
+                self._devices[device_id].update(status, self._config_entry)
                 new_device = True
 
         if (
@@ -374,12 +376,19 @@ class IcloudAccount:
 class IcloudDevice:
     """Representation of a iCloud device."""
 
-    def __init__(self, account: IcloudAccount, device: AppleDevice, status):
+    def __init__(
+        self,
+        account: IcloudAccount,
+        device: AppleDevice,
+        status,
+        config_entry: ConfigEntry,
+    ):
         """Initialize the iCloud device."""
         self._account = account
 
         self._device = device
         self._status = status
+        self._config_entry = config_entry
 
         self._name = self._status[DEVICE_NAME]
         self._device_id = self._status[DEVICE_ID]
@@ -405,7 +414,7 @@ class IcloudDevice:
             ATTR_OWNER_NAME: owner_fullname,
         }
 
-    def update(self, status) -> None:
+    def update(self, status, config_entry) -> None:
         """Update the iCloud device."""
         self._status = status
 
@@ -428,15 +437,14 @@ class IcloudDevice:
             ):
                 location = self._status[DEVICE_LOCATION]
                 if (
-                    self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
-                    is not None
+                    self._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD] is not None
                     and location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
-                    > self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+                    > self._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
                 ):
                     _LOGGER.info(
                         "Update of iCloud device %s: Ignoring update because expected GPS accuracy (%.0f) is not met: %.0f",
                         self.name,
-                        self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD],
+                        self._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD],
                         location[DEVICE_LOCATION_HORIZONTAL_ACCURACY],
                     )
                     return
