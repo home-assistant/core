@@ -153,10 +153,10 @@ class TahomaCover(TahomaEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        position = 100 - kwargs.get(ATTR_POSITION, 0)
+        position = 100 - kwargs.get[ATTR_POSITION]
 
         if self._reversed_position_device():
-            position = kwargs.get(ATTR_POSITION, 0)
+            position = kwargs.get[ATTR_POSITION]
 
         await self.executor.async_execute_command(
             self.executor.select_command(*COMMANDS_SET_POSITION), position
@@ -166,7 +166,7 @@ class TahomaCover(TahomaEntity, CoverEntity):
         """Move the cover tilt to a specific position."""
         await self.executor.async_execute_command(
             self.executor.select_command(*COMMANDS_SET_TILT_POSITION),
-            100 - kwargs.get(ATTR_TILT_POSITION, 0),
+            100 - kwargs[ATTR_TILT_POSITION],
         )
 
     @property
