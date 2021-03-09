@@ -34,7 +34,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, Unauthorized
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import device_registry, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import BASE_FILTER_SCHEMA, FILTER_SCHEMA
@@ -275,24 +275,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.entry_id,
         entry.title,
     )
-    zeroconf_instance = await zeroconf.async_get_instance(hass)
-
-    # If the previous instance hasn't cleaned up yet
-    # we need to wait a bit
-    try:
-        await hass.async_add_executor_job(homekit.setup, zeroconf_instance)
-    except (OSError, AttributeError) as ex:
-        _LOGGER.warning(
-            "%s could not be setup because the local port %s is in use", name, port
-        )
-        raise ConfigEntryNotReady from ex
-
-    undo_listener = entry.add_update_listener(_async_update_listener)
 
     hass.data[DOMAIN][entry.entry_id] = {
         HOMEKIT: homekit,
-        UNDO_UPDATE_LISTENER: undo_listener,
+        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
     }
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
 
     if hass.state == CoreState.running:
         await homekit.async_start()
@@ -469,7 +458,6 @@ class HomeKit:
 
     def setup(self, zeroconf_instance):
         """Set up bridge and accessory driver."""
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         ip_addr = self._ip_address or get_local_ip()
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
 
@@ -607,6 +595,19 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
+        try:
+            await self.hass.async_add_executor_job(
+                self.setup, await zeroconf.async_get_instance(self.hass)
+            )
+        except (OSError, AttributeError) as ex:
+            _LOGGER.warning(
+                "%s could not be setup because the local port %s is in use",
+                self._name,
+                self._port,
+                exc_info=ex,
+            )
+            self.status = STATUS_STOPPED
+            return
         self._async_register_bridge()
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
