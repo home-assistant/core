@@ -785,6 +785,7 @@ omit =
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py
+    homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
