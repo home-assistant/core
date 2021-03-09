@@ -281,9 +281,16 @@ class MqttCover(MqttEntity, CoverEntity):
                 )
 
             if payload.isnumeric() and (
-                self._config[CONF_TILT_MIN]
-                <= int(payload)
-                <= self._config[CONF_TILT_MAX]
+                (
+                    self._config[CONF_TILT_MIN]
+                    <= int(payload)
+                    <= self._config[CONF_TILT_MAX]
+                )
+                or (
+                    self._config[CONF_TILT_MAX]
+                    <= int(payload)
+                    <= self._config[CONF_TILT_MIN]
+                )
             ):
 
                 level = self.find_percentage_in_range(float(payload))
