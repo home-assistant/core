@@ -73,7 +73,9 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ): bool,
                 vol.Optional(
                     CONF_GPS_ACCURACY_THRESHOLD,
-                    default=user_input.get(CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD),
+                    default=user_input.get(
+                        CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
+                    ),
                 ): int,
             }
         else:
