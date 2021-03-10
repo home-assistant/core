@@ -6,18 +6,13 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "auth_failed": "Failed to retrieve application api key",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OctoPrint API Key",
-                    "bed": "Printer has a heated bed",
                     "host": "Host",
-                    "name": "Server Name",
-                    "password": "Password",
                     "path": "Application Path",
                     "port": "Port Number",
                     "username": "Username",

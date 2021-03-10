@@ -110,7 +110,7 @@ async def test_form_cannot_connect(hass):
 
     assert result["type"] == "progress_done"
     with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -147,7 +147,7 @@ async def test_form_unknown_exception(hass):
 
     assert result["type"] == "progress_done"
     with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
+        "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

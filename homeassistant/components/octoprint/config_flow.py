@@ -3,7 +3,6 @@ import logging
 from urllib.parse import urlsplit
 
 from pyoctoprintapi import ApiError, OctoprintClient
-import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -45,16 +44,15 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
     octoprint.set_api_key(data[CONF_API_KEY])
 
+    uuid = None
+
     try:
-        await octoprint.get_server_info()
-    except requests.exceptions.RequestException as conn_err:
+        discovery = await octoprint.get_discovery_info()
+        if discovery:
+            uuid = discovery.upnp_uuid
+    except ApiError as conn_err:
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
         raise CannotConnect from conn_err
-
-    discovery = await octoprint.get_discovery_info()
-    uuid = None
-    if discovery:
-        uuid = discovery.upnp_uuid
 
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_HOST], "uuid": uuid}
@@ -110,8 +108,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             error = "cannot_connect"
-        except InvalidAuth:
-            error = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             error = "unknown"
@@ -205,7 +201,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""
