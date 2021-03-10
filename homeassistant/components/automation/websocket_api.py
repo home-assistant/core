@@ -21,7 +21,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from . import get_debug_trace, get_debug_traces
+from .trace import get_debug_trace, get_debug_traces
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
