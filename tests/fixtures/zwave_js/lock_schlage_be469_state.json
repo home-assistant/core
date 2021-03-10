@@ -4,17 +4,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Static Controller",
-        "generic": "Entry Control",
-        "specific": "Secure Keypad Door Lock",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Door Lock",
-            "User Code",
-            "Manufacturer Specific",
-            "Security",
-            "Version"
-        ],
+        "basic": {"key": 2, "label":"Static Controller"},
+        "generic": {"key": 64, "label":"Entry Control"},
+        "specific": {"key": 3, "label":"Secure Keypad Door Lock"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": false,
@@ -57,6 +50,7 @@
             "index": 0
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Door Lock",

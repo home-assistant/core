@@ -206,6 +206,7 @@ async def test_exclude_and_light_ids(
     vera_device3.name = "dev3"
     vera_device3.category = pv.CATEGORY_SWITCH
     vera_device3.is_switched_on = MagicMock(return_value=False)
+
     entity_id3 = "switch.dev3_3"
 
     vera_device4 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
@@ -214,6 +215,10 @@ async def test_exclude_and_light_ids(
     vera_device4.name = "dev4"
     vera_device4.category = pv.CATEGORY_SWITCH
     vera_device4.is_switched_on = MagicMock(return_value=False)
+    vera_device4.get_brightness = MagicMock(return_value=0)
+    vera_device4.get_color = MagicMock(return_value=[0, 0, 0])
+    vera_device4.is_dimmable = True
+
     entity_id4 = "light.dev4_4"
 
     component_data = await vera_component_factory.configure_component(

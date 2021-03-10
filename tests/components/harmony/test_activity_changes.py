@@ -1,7 +1,4 @@
 """Test the Logitech Harmony Hub activity switches."""
-
-import logging
-
 from homeassistant.components.harmony.const import DOMAIN
 from homeassistant.components.remote import ATTR_ACTIVITY, DOMAIN as REMOTE_DOMAIN
 from homeassistant.components.switch import (
@@ -21,8 +18,6 @@ from .conftest import ACTIVITIES_TO_IDS
 from .const import ENTITY_PLAY_MUSIC, ENTITY_REMOTE, ENTITY_WATCH_TV, HUB_NAME
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def test_switch_toggles(mock_hc, hass, mock_write_config):

@@ -158,7 +158,11 @@ async def async_setup_lip(hass, config_entry, lip_devices):
     try:
         await lip.async_connect(host)
     except asyncio.TimeoutError:
-        _LOGGER.error("Failed to connect to via LIP at %s:23", host)
+        _LOGGER.warning(
+            "Failed to connect to via LIP at %s:23, Pico and Shade remotes will not be available; "
+            "Enable Telnet Support in the Lutron app under Settings >> Advanced >> Integration",
+            host,
+        )
         return
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
@@ -225,6 +229,7 @@ async def _async_register_button_devices(
 
         dr_device = device_registry.async_get_or_create(
             name=device["leap_name"],
+            suggested_area=device["leap_name"].split("_")[0],
             manufacturer=MANUFACTURER,
             config_entry_id=config_entry_id,
             identifiers={(DOMAIN, device["serial"])},
@@ -340,6 +345,7 @@ class LutronCasetaDevice(Entity):
         return {
             "identifiers": {(DOMAIN, self.serial)},
             "name": self.name,
+            "suggested_area": self._device["name"].split("_")[0],
             "manufacturer": MANUFACTURER,
             "model": f"{self._device['model']} ({self._device['type']})",
             "via_device": (DOMAIN, self._bridge_device["serial"]),

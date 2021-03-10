@@ -1,28 +1,23 @@
 """Generic Z-Wave Entity Class."""
 
 import logging
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .discovery import ZwaveDiscoveryInfo
+from .helpers import get_device_id, get_unique_id
 
 LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
-
-
-@callback
-def get_device_id(client: ZwaveClient, node: ZwaveNode) -> Tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{client.driver.controller.home_id}-{node.node_id}")
 
 
 class ZWaveBaseEntity(Entity):
@@ -36,6 +31,9 @@ class ZWaveBaseEntity(Entity):
         self.client = client
         self.info = info
         self._name = self.generate_name()
+        self._unique_id = get_unique_id(
+            self.client.driver.controller.home_id, self.info.primary_value.value_id
+        )
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
 
@@ -46,12 +44,48 @@ class ZWaveBaseEntity(Entity):
         To be overridden by platforms needing this event.
         """
 
+    async def async_poll_value(self, refresh_all_values: bool) -> None:
+        """Poll a value."""
+        assert self.hass
+        if not refresh_all_values:
+            self.hass.async_create_task(
+                self.info.node.async_poll_value(self.info.primary_value)
+            )
+            LOGGER.info(
+                (
+                    "Refreshing primary value %s for %s, "
+                    "state update may be delayed for devices on battery"
+                ),
+                self.info.primary_value,
+                self.entity_id,
+            )
+            return
+
+        for value_id in self.watched_value_ids:
+            self.hass.async_create_task(self.info.node.async_poll_value(value_id))
+
+        LOGGER.info(
+            (
+                "Refreshing values %s for %s, state update may be delayed for "
+                "devices on battery"
+            ),
+            ", ".join(self.watched_value_ids),
+            self.entity_id,
+        )
+
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         assert self.hass  # typing
         # Add value_changed callbacks.
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_{self.unique_id}_poll_value",
+                self.async_poll_value,
+            )
         )
 
     @property
@@ -64,20 +98,26 @@ class ZWaveBaseEntity(Entity):
 
     def generate_name(
         self,
+        include_value_name: bool = False,
         alternate_value_name: Optional[str] = None,
         additional_info: Optional[List[str]] = None,
     ) -> str:
         """Generate entity name."""
         if additional_info is None:
             additional_info = []
-        node_name = self.info.node.name or self.info.node.device_config.description
-        value_name = (
-            alternate_value_name
-            or self.info.primary_value.metadata.label
-            or self.info.primary_value.property_key_name
-            or self.info.primary_value.property_name
+        name: str = (
+            self.info.node.name
+            or self.info.node.device_config.description
+            or f"Node {self.info.node.node_id}"
         )
-        name = f"{node_name}: {value_name}"
+        if include_value_name:
+            value_name = (
+                alternate_value_name
+                or self.info.primary_value.metadata.label
+                or self.info.primary_value.property_key_name
+                or self.info.primary_value.property_name
+            )
+            name = f"{name}: {value_name}"
         for item in additional_info:
             if item:
                 name += f" - {item}"
@@ -95,7 +135,7 @@ class ZWaveBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique_id of the entity."""
-        return f"{self.client.driver.controller.home_id}.{self.info.value_id}"
+        return self._unique_id
 
     @property
     def available(self) -> bool:
@@ -132,7 +172,7 @@ class ZWaveBaseEntity(Entity):
         value_property: Union[str, int],
         command_class: Optional[int] = None,
         endpoint: Optional[int] = None,
-        value_property_key_name: Optional[str] = None,
+        value_property_key: Optional[int] = None,
         add_to_watched_value_ids: bool = True,
         check_all_endpoints: bool = False,
     ) -> Optional[ZwaveValue]:
@@ -144,16 +184,13 @@ class ZWaveBaseEntity(Entity):
         if endpoint is None:
             endpoint = self.info.primary_value.endpoint
 
-        # Build partial event data dictionary so we can change the endpoint later
-        partial_evt_data = {
-            "commandClass": command_class,
-            "property": value_property,
-            "propertyKeyName": value_property_key_name,
-        }
-
         # lookup value by value_id
         value_id = get_value_id(
-            self.info.node, {**partial_evt_data, "endpoint": endpoint}
+            self.info.node,
+            command_class,
+            value_property,
+            endpoint=endpoint,
+            property_key=value_property_key,
         )
         return_value = self.info.node.values.get(value_id)
 
@@ -164,7 +201,10 @@ class ZWaveBaseEntity(Entity):
                 if endpoint_.index != self.info.primary_value.endpoint:
                     value_id = get_value_id(
                         self.info.node,
-                        {**partial_evt_data, "endpoint": endpoint_.index},
+                        command_class,
+                        value_property,
+                        endpoint=endpoint_.index,
+                        property_key=value_property_key,
                     )
                     return_value = self.info.node.values.get(value_id)
                     if return_value:

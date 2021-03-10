@@ -62,7 +62,11 @@ class AlexaConfig(alexa_config.AbstractConfig):
     @property
     def enabled(self):
         """Return if Alexa is enabled."""
-        return self._prefs.alexa_enabled
+        return (
+            self._cloud.is_logged_in
+            and not self._cloud.subscription_expired
+            and self._prefs.alexa_enabled
+        )
 
     @property
     def supports_auth(self):

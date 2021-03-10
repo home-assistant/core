@@ -2,7 +2,7 @@
 import logging
 from typing import Dict
 
-from aiofreepybox.exceptions import InsufficientPermissionsError
+from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry

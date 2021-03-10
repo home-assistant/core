@@ -166,7 +166,6 @@ class LcnRelayLight(LcnEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.ON
         if not await self.device_connection.control_relays(states):
@@ -176,7 +175,6 @@ class LcnRelayLight(LcnEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
         states[self.output.value] = pypck.lcn_defs.RelayStateModifier.OFF
         if not await self.device_connection.control_relays(states):

@@ -17,7 +17,7 @@
                     "latitude": "Laiuskraad",
                     "longitude": "Pikkuskraad"
                 },
-                "description": "Kasutage AirVisual pilve API-t geograafilise asukoha j\u00e4lgimiseks.",
+                "description": "Kasuta AirVisual pilve API-t geograafilise asukoha j\u00e4lgimiseks.",
                 "title": "Seadista Geography"
             },
             "geography_by_coords": {

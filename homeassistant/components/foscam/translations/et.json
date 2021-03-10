@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",
             "invalid_auth": "Vigane autentimine",
+            "invalid_response": "Seadme vastus on vigane",
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
@@ -14,6 +15,7 @@
                     "host": "Host",
                     "password": "Salas\u00f5na",
                     "port": "Port",
+                    "rtsp_port": "RTSP port",
                     "stream": "Voog",
                     "username": "Kasutajanimi"
                 }

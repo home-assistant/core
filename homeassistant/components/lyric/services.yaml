@@ -1,0 +1,9 @@
+set_hold_time:
+  description: "Sets the time to hold until"
+  fields:
+    entity_id:
+      description: Name(s) of entities to change
+      example: "climate.thermostat"
+    time_period:
+      description: Time to hold until
+      example: "01:00:00"

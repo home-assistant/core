@@ -31,17 +31,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
+    if CAMERA_DATA_CLASS_NAME not in data_handler.data:
+        raise PlatformNotReady
+
     async def get_entities():
         """Retrieve Netatmo entities."""
-        await data_handler.register_data_class(
-            CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-        )
 
         entities = []
         all_cameras = []
-
-        if CAMERA_DATA_CLASS_NAME not in data_handler.data:
-            raise PlatformNotReady
 
         try:
             for home in data_handler.data[CAMERA_DATA_CLASS_NAME].cameras.values():
@@ -53,9 +50,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for camera in all_cameras:
             if camera["type"] == "NOC":
-                if not data_handler.webhook:
-                    raise PlatformNotReady
-
                 _LOGGER.debug("Adding camera light %s %s", camera["id"], camera["name"])
                 entities.append(
                     NetatmoLight(
@@ -125,6 +119,11 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
             self.async_write_ha_state()
             return
+
+    @property
+    def available(self) -> bool:
+        """If the webhook is not established, mark as unavailable."""
+        return bool(self.data_handler.webhook)
 
     @property
     def is_on(self):

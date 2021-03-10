@@ -8,7 +8,7 @@
             "discover_timeout": "Hue bridges kunnen niet worden gevonden",
             "no_bridges": "Geen Philips Hue bridges ontdekt",
             "not_hue_bridge": "Dit is geen Hue bridge",
-            "unknown": "Onbekende fout opgetreden"
+            "unknown": "Onverwachte fout"
         },
         "error": {
             "linking": "Er is een onbekende verbindingsfout opgetreden.",

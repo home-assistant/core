@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "unknown": "Error inesperat",
             "wrong_version": "El teu Powerwall utilitza una versi\u00f3 de programari no compatible. L'hauries d'actualitzar o informar d'aquest problema perqu\u00e8 sigui solucionat."
         },
@@ -12,8 +14,10 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Adre\u00e7a IP"
+                    "ip_address": "Adre\u00e7a IP",
+                    "password": "Contrasenya"
                 },
+                "description": "La contrasenya normalment s\u00f3n els darrers cinc car\u00e0cters del n\u00famero de s\u00e8rie de la pasarel\u00b7la (backup gateway) i es pot trobar a l'aplicaci\u00f3 de Tesla. Tamb\u00e9 s\u00f3n els darrers 5 car\u00e0cters de la contrasenya que es troba a l'interior de la tapa de la pasarel\u00b7la vers\u00f3 2 (backup gateway 2).",
                 "title": "Connexi\u00f3 amb el Powerwall"
             }
         }

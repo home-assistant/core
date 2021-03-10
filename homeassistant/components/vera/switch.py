@@ -28,7 +28,8 @@ async def async_setup_entry(
         [
             VeraSwitch(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -69,4 +70,5 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
 
     def update(self) -> None:
         """Update device state."""
+        super().update()
         self._state = self.vera_device.is_switched_on()

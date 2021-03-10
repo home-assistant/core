@@ -14,7 +14,7 @@
         },
         "step": {
             "auth": {
-                "description": "V\u00e9s a l'[enlla\u00e7]({authorization_url}) i **Permet** l'acc\u00e9s al teu compte de Ambiclimate, despr\u00e9s torna i prem **Envia** (a sota).\n(Assegura't que l'enlla\u00e7 de retorn \u00e9s el seg\u00fcent {cb_url})",
+                "description": "V\u00e9s a l'[enlla\u00e7]({authorization_url}) i **Permet** l'acc\u00e9s al teu compte de Ambiclimate, despr\u00e9s torna i prem **Envia** a sota.\n(Assegura't que l'enlla\u00e7 de retorn \u00e9s el seg\u00fcent {cb_url})",
                 "title": "Autenticaci\u00f3 amb Ambi Climate"
             }
         }

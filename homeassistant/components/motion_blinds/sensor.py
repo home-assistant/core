@@ -1,6 +1,4 @@
 """Support for Motion Blinds sensors."""
-import logging
-
 from motionblinds import BlindType
 
 from homeassistant.const import (
@@ -13,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
 TYPE_BLIND = "blind"

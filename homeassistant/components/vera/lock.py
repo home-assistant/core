@@ -31,7 +31,8 @@ async def async_setup_entry(
         [
             VeraLock(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
