@@ -86,6 +86,10 @@ class WolSwitch(SwitchEntity):
             Script(hass, off_action, name, domain) if off_action else None
         )
         self._state = False
+        self._is_dummy = False
+
+        if self._host is None:
+            self._is_dummy = True
 
     @property
     def is_on(self):
@@ -114,31 +118,38 @@ class WolSwitch(SwitchEntity):
 
         wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)
 
+        if self._is_dummy:
+            self._state = True
+
     def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run(context=self._context)
 
+        if self._is_dummy:
+            self._state = False
+
     def update(self):
         """Check if device is on and update the state."""
-        if platform.system().lower() == "windows":
-            ping_cmd = [
-                "ping",
-                "-n",
-                "1",
-                "-w",
-                str(DEFAULT_PING_TIMEOUT * 1000),
-                str(self._host),
-            ]
-        else:
-            ping_cmd = [
-                "ping",
-                "-c",
-                "1",
-                "-W",
-                str(DEFAULT_PING_TIMEOUT),
-                str(self._host),
-            ]
+        if not self._is_dummy:
+            if platform.system().lower() == "windows":
+                ping_cmd = [
+                    "ping",
+                    "-n",
+                    "1",
+                    "-w",
+                    str(DEFAULT_PING_TIMEOUT * 1000),
+                    str(self._host),
+                ]
+            else:
+                ping_cmd = [
+                    "ping",
+                    "-c",
+                    "1",
+                    "-W",
+                    str(DEFAULT_PING_TIMEOUT),
+                    str(self._host),
+                ]
 
-        status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
-        self._state = not bool(status)
+            status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+            self._state = not bool(status)
