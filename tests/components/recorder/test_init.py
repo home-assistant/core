@@ -31,7 +31,11 @@ from homeassistant.core import Context, CoreState, callback
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recording_done, corrupt_db_file, wait_recording_done
+from .common import (
+    async_wait_recording_done_without_instance,
+    corrupt_db_file,
+    wait_recording_done,
+)
 
 from tests.common import (
     async_init_recorder_component,
@@ -690,15 +694,15 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
 
     hass.states.async_set("test.lost", "on", {})
 
-    await async_wait_recording_done(hass)
+    await async_wait_recording_done_without_instance(hass)
     await hass.async_add_executor_job(corrupt_db_file, test_db_file)
-    await async_wait_recording_done(hass)
+    await async_wait_recording_done_without_instance(hass)
 
     # This state will not be recorded because
     # the database corruption will be discovered
     # and we will have to rollback to recover
     hass.states.async_set("test.one", "off", {})
-    await async_wait_recording_done(hass)
+    await async_wait_recording_done_without_instance(hass)
 
     assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
     assert "The system will rename the corrupt database file" in caplog.text
@@ -706,7 +710,7 @@ async def test_database_corruption_while_running(hass, tmpdir, caplog):
 
     # This state should go into the new database
     hass.states.async_set("test.two", "on", {})
-    await async_wait_recording_done(hass)
+    await async_wait_recording_done_without_instance(hass)
 
     def _get_last_state():
         with session_scope(hass=hass) as session:
