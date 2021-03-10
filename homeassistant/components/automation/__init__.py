@@ -194,8 +194,13 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 async def async_setup(hass, config):
     """Set up all automations."""
+    # Local import to avoid circular import
+    from . import websocket_api
+
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
     hass.data.setdefault(DATA_AUTOMATION_TRACE, {})
+
+    websocket_api.async_setup(hass)
 
     # To register the automation blueprints
     async_get_blueprints(hass)
@@ -252,7 +257,6 @@ class AutomationTrace:
         self,
         unique_id: Optional[str],
         config: Dict[str, Any],
-        trigger: Dict[str, Any],
         context: Context,
     ):
         """Container for automation trace."""
@@ -265,7 +269,6 @@ class AutomationTrace:
         self.run_id: str = str(next(self._run_ids))
         self._timestamp_finish: Optional[dt.datetime] = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
-        self._trigger: Dict[str, Any] = trigger
         self._unique_id: Optional[str] = unique_id
         self._variables: Optional[Dict[str, Any]] = None
 
@@ -293,6 +296,8 @@ class AutomationTrace:
     def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this AutomationTrace."""
 
+        result = self.as_short_dict()
+
         action_traces = {}
         condition_traces = {}
         if self._action_trace:
@@ -303,21 +308,15 @@ class AutomationTrace:
             for key, trace_list in self._condition_trace.items():
                 condition_traces[key] = [item.as_dict() for item in trace_list]
 
-        result = {
-            "action_trace": action_traces,
-            "condition_trace": condition_traces,
-            "config": self._config,
-            "context": self._context,
-            "run_id": self.run_id,
-            "state": self._state,
-            "timestamp": {
-                "start": self._timestamp_start,
-                "finish": self._timestamp_finish,
-            },
-            "trigger": self._trigger,
-            "unique_id": self._unique_id,
-            "variables": self._variables,
-        }
+        result.update(
+            {
+                "action_trace": action_traces,
+                "condition_trace": condition_traces,
+                "config": self._config,
+                "context": self._context,
+                "variables": self._variables,
+            }
+        )
         if self._error is not None:
             result["error"] = str(self._error)
         return result
@@ -327,11 +326,14 @@ class AutomationTrace:
 
         last_action = None
         last_condition = None
+        trigger = None
 
         if self._action_trace:
-            last_action = list(self._action_trace.keys())[-1]
+            last_action = list(self._action_trace)[-1]
         if self._condition_trace:
-            last_condition = list(self._condition_trace.keys())[-1]
+            last_condition = list(self._condition_trace)[-1]
+        if self._variables:
+            trigger = self._variables.get("trigger", {}).get("description")
 
         result = {
             "last_action": last_action,
@@ -342,7 +344,7 @@ class AutomationTrace:
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,
             },
-            "trigger": self._trigger.get("description"),
+            "trigger": trigger,
             "unique_id": self._unique_id,
         }
         if self._error is not None:
@@ -376,9 +378,9 @@ class LimitedSizeDict(OrderedDict):
 
 
 @contextmanager
-def trace_automation(hass, unique_id, config, trigger, context):
+def trace_automation(hass, unique_id, config, context):
     """Trace action execution of automation with automation_id."""
-    automation_trace = AutomationTrace(unique_id, config, trigger, context)
+    automation_trace = AutomationTrace(unique_id, config, context)
     trace_id_set((unique_id, automation_trace.run_id))
 
     if unique_id:
@@ -396,12 +398,6 @@ def trace_automation(hass, unique_id, config, trigger, context):
     finally:
         if unique_id:
             automation_trace.finished()
-        _LOGGER.debug(
-            "Automation finished. Summary:\n\ttrigger: %s\n\tcondition: %s\n\taction: %s",
-            automation_trace._trigger,  # pylint: disable=protected-access
-            automation_trace._condition_trace,  # pylint: disable=protected-access
-            automation_trace._action_trace,  # pylint: disable=protected-access
-        )
 
 
 class AutomationEntity(ToggleEntity, RestoreEntity):
@@ -570,9 +566,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             reason = f' by {run_variables["trigger"]["description"]}'
         self._logger.debug("Automation triggered%s", reason)
 
-        trigger = run_variables["trigger"] if "trigger" in run_variables else None
         with trace_automation(
-            self.hass, self.unique_id, self._raw_config, trigger, context
+            self.hass, self.unique_id, self._raw_config, context
         ) as automation_trace:
             if self._variables:
                 try:
@@ -891,6 +886,12 @@ def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
         return ["sun.sun"]
 
     return []
+
+
+@callback
+def get_debug_trace(hass, automation_id, run_id):
+    """Return a serializable debug trace."""
+    return hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id]
 
 
 @callback
