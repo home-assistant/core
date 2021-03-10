@@ -10,9 +10,11 @@ from homeassistant.components.modbus.const import (
     CONF_REGISTERS,
     CONF_STATUS_BIT_NUMBER,
     CONF_VERIFY_REGISTER,
+    CONF_VERIFY_STATE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -119,24 +121,44 @@ async def test_register_switch(hass, regs, expected):
 
 
 @pytest.mark.parametrize(
-    "regs,expected,service,write_register",
+    "regs,service,write_register_call_args,verify_state,expected",
     [
-        ([0x00], STATE_OFF, SERVICE_TURN_ON, ([1234, 0x40], {"unit": 1})),
+        ([0x00], SERVICE_TURN_ON, ([1234, 0x40], {"unit": 1}), True, STATE_OFF),
+        # CONF_VERIFY_STATE False immediately update the state
+        ([0x00], SERVICE_TURN_ON, ([1234, 0x40], {"unit": 1}), False, STATE_ON),
         (
             [0x41],
-            STATE_OFF,
             SERVICE_TURN_ON,
-            # 0x40 yields OFF state due to the status bit 5
-            # however, SERVICE_TURN_ON enables bit 6 which make bit untouched
+            # 0x41 yields OFF state since CONF_STATUS_BIT_NUMBER is 5
+            # however, SERVICE_TURN_ON set bit 6 which is ON already
             ([1234, 0x41], {"unit": 1}),
+            True,
+            STATE_OFF,
         ),
-        ([0x60], STATE_ON, SERVICE_TURN_OFF, ([1234, 0x20], {"unit": 1})),
+        ([0x60], SERVICE_TURN_OFF, ([1234, 0x20], {"unit": 1}), True, STATE_ON),
+        ([0x60], SERVICE_TURN_OFF, ([1234, 0x20], {"unit": 1}), False, STATE_OFF),
     ],
 )
-async def test_register_switch_service(hass, regs, expected, service, write_register):
+async def test_register_switch_service(
+    hass, regs, service, write_register_call_args, verify_state, expected
+):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    call_service = {"domain": SWITCH_DOMAIN, "service": service}
+
+    async def _mock_hook(mock):
+        # Call an arbitrary service
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: f"{SWITCH_DOMAIN}.{switch_name}"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        # check the register write has been called
+        args, kvargs = write_register_call_args
+        mock.write_register.assert_called_once_with(*args, **kvargs)
+
     state = await base_test(
         hass,
         {
@@ -146,6 +168,7 @@ async def test_register_switch_service(hass, regs, expected, service, write_regi
             CONF_SLAVE: 1,
             CONF_COMMAND_BIT_NUMBER: 6,
             CONF_STATUS_BIT_NUMBER: 5,
+            CONF_VERIFY_STATE: verify_state,
         },
         switch_name,
         SWITCH_DOMAIN,
@@ -155,7 +178,6 @@ async def test_register_switch_service(hass, regs, expected, service, write_regi
         expected,
         method_discovery=True,
         scan_interval=5,
-        call_service=call_service,
-        write_register=write_register,
+        mock_hook=_mock_hook,
     )
     assert state == expected

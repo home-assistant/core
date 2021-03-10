@@ -310,7 +310,9 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
         self._command_bit_mask = 1 << command_bit_numer
         self._status_bit_mask = 1 << status_bit_numer
 
-        self._available = False
+        # Set available to True if CONF_VERIFY_STATE is false,
+        # since it won't have a chance to go to the update loop
+        self._available = not self._verify_state
         self._is_on = None
 
     def turn_on(self, **kwargs):
