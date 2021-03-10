@@ -2,6 +2,7 @@
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -27,7 +28,13 @@ SENSOR_TYPES = {
         "mdi:fire",
         None,
     ],
-    "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
+    "CO2": [
+        "CO2",
+        CONCENTRATION_PARTS_PER_MILLION,
+        None,
+        None,
+        DEVICE_CLASS_CO2,
+    ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,
