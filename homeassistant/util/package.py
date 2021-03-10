@@ -33,25 +33,22 @@ def is_installed(package: str) -> bool:
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req.
     """
-    _LOGGER.debug("is_installed: %s", package)
     try:
-        req = pkg_resources.Requirement.parse(package)
+        pkg_resources.get_distribution(package)
+    except (pkg_resources.VersionConflict, pkg_resources.DistributionNotFound):
+        return False
+    except (pkg_resources.ExtractionError, pkg_resources.UnknownExtra):
+        _LOGGER.exception("Unexpected error processing packages: %s")
+        return False
     except ValueError:
         # This is a zip file. We no longer use this in Home Assistant,
         # leaving it in for custom components.
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
-
-    _LOGGER.debug("requirement: %s", req)
+    else:
+        return True
 
     try:
-        _LOGGER.debug("version req.project_name: %s", req.project_name)
-        project_version = version(req.project_name)
-        # Its possible that a failed or broken previous install can leave
-        # the version as None even though typing for version is never expected
-        # to return None
-        if project_version is None:
-            return False  # type: ignore
-        return project_version in req
+        return version(req.project_name) in req
     except PackageNotFoundError:
         return False
 
