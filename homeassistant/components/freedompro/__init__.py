@@ -42,9 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
