@@ -449,3 +449,8 @@ class BrSensor(SensorEntity):
     def force_update(self):
         """Return true for continuous sensors, false for discrete sensors."""
         return self._force_update
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
