@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    CONDITIONS_MAP,
     DATA,
     DOMAIN,
     SIGNAL_TADO_UPDATE_RECEIVED,
@@ -21,7 +22,6 @@ from .const import (
     TYPE_HOT_WATER,
 )
 from .entity import TadoHomeEntity, TadoZoneEntity
-from .weather import format_condition
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,6 +46,14 @@ ZONE_SENSORS = {
     ],
     TYPE_HOT_WATER: ["tado mode"],
 }
+
+
+def format_condition(condition: str) -> str:
+    """Return condition from dict CONDITIONS_MAP."""
+    for key, value in CONDITIONS_MAP.items():
+        if condition in value:
+            return key
+    return condition
 
 
 async def async_setup_entry(
