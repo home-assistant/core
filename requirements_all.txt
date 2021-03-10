@@ -817,7 +817,7 @@ iglo==1.2.7
 ihcsdk==2.7.0
 
 # homeassistant.components.incomfort
-incomfort-client==0.4.0
+incomfort-client==0.4.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.14.0
