@@ -46,6 +46,12 @@ ATTR_VALUE = "value"
 SERVICE_WRITE_COIL = "write_coil"
 SERVICE_WRITE_REGISTER = "write_register"
 DEFAULT_SCAN_INTERVAL = 15  # seconds
+CONF_TYPE_SERIAL = "serial"
+CONF_TYPE_RTUOVERTCP = "rtuovertcp"
+CONF_TYPE_TCP = "tcp"
+CONF_TYPE_TCPSERVER = "tcpserver"
+CONF_TYPE_UDP = "udp"
+EVENT_MODBUS_INITIALIZED = "modbus_integration_initialized"
 
 # binary_sensor.py
 CONF_INPUTS = "inputs"

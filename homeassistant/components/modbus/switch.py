@@ -142,16 +142,25 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
         self._slave = config.get(CONF_SLAVE)
+        self._register = config[CONF_ADDRESS]
         self._register_type = config[CONF_INPUT_TYPE]
         self._is_on = None
         self._available = True
 
+    def register_entity(self, state):
+        """Register entity with the Modbus."""
+        self._hub.add_slave_configuration(
+            self._slave,
+            lambda builder: builder.name(self._name)
+            .address(self._register)
+            .binary_state(state),
+        )
+
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._is_on = state.state == STATE_ON
+        self._is_on = state.state == STATE_ON if state is not None else None
+        self.register_entity(self._is_on)
 
     @property
     def is_on(self):
@@ -212,24 +221,19 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
 class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus coil switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
-        """Initialize the coil switch."""
-        super().__init__(hub, config)
-        self._coil = config[CONF_ADDRESS]
-
     def turn_on(self, **kwargs):
         """Set switch on."""
-        self._write_modbus(self._coil, True)
+        self._write_modbus(self._register, True)
         self._is_on = True
 
     def turn_off(self, **kwargs):
         """Set switch off."""
-        self._write_modbus(self._coil, False)
+        self._write_modbus(self._register, False)
         self._is_on = False
 
     def update(self):
         """Update the state of the switch."""
-        self._is_on = self._read_modbus(self._coil)
+        self._is_on = self._read_modbus(self._register)
 
 
 class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
@@ -238,7 +242,6 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
     def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the register switch."""
         super().__init__(hub, config)
-        self._register = config[CONF_ADDRESS]
         self._command_on = config[CONF_COMMAND_ON]
         self._command_off = config[CONF_COMMAND_OFF]
         self._state_on = config.get(CONF_STATE_ON, self._command_on)
@@ -297,7 +300,6 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
     def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the register switch."""
         super().__init__(hub, config)
-        self._register = config[CONF_ADDRESS]
         self._verify_state = config[CONF_VERIFY_STATE]
         self._verify_register = config.get(CONF_VERIFY_REGISTER, self._register)
         self._register_type = config[CONF_INPUT_TYPE]
@@ -312,6 +314,16 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
 
         self._available = False
         self._is_on = None
+
+    def register_entity(self, state):
+        """Register entity with the Modbus."""
+        self._hub.add_slave_configuration(
+            self._slave,
+            lambda builder: builder.name(self._name)
+            .address(self._register)
+            .binary_state(state)
+            .with_bit_mask(self._command_bit_mask | self._status_bit_mask),
+        )
 
     def turn_on(self, **kwargs):
         """Set switch on."""

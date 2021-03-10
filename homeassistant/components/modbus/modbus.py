@@ -1,10 +1,14 @@
 """Support for Modbus."""
+from abc import ABC, abstractmethod
 from functools import lru_cache
 import logging
 import threading
 import time
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
+from pymodbus.datastore import ModbusServerContext, ModbusSlaveContext
+from pymodbus.exceptions import ConnectionException
+from pymodbus.server.asyncio import StartTcpServer
 from pymodbus.transaction import ModbusRtuFramer
 
 from homeassistant.const import (
@@ -41,10 +45,17 @@ from .const import (
     CONF_STOPBITS,
     CONF_SWITCH,
     CONF_SWITCHES,
+    CONF_TYPE_RTUOVERTCP,
+    CONF_TYPE_SERIAL,
+    CONF_TYPE_TCP,
+    CONF_TYPE_TCPSERVER,
+    CONF_TYPE_UDP,
+    EVENT_MODBUS_INITIALIZED,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
 )
+from .modbus_slave import ModbusSlavesHolder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,11 +75,7 @@ def modbus_setup(
     hass.data[DOMAIN] = hub_collect = {}
 
     for conf_hub in config[DOMAIN]:
-        hub_collect[conf_hub[CONF_NAME]] = ModbusHub(conf_hub)
-
-        # modbus needs to be activated before components are loaded
-        # to avoid a racing problem
-        hub_collect[conf_hub[CONF_NAME]].setup()
+        hub_collect[conf_hub[CONF_NAME]] = ModbusHub(conf_hub, hass)
 
         # load platforms
         for component, conf_key in (
@@ -83,10 +90,13 @@ def modbus_setup(
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, conf_hub)
 
+    # Asynchronously Notify Modbus servers that configuration has been initialized
+    hass.bus.fire(EVENT_MODBUS_INITIALIZED, None)
+
     def stop_modbus(event):
         """Stop Modbus service."""
-        for client in hub_collect.values():
-            client.close()
+        for hub in hub_collect.values():
+            hub.close()
 
     def write_register(service):
         """Write Modbus registers."""
@@ -126,13 +136,33 @@ def modbus_setup(
 
 
 class ModbusHub:
+    """A tiny wrapper to create proper hub instance basde on the CONF_TYPE."""
+
+    def __init__(self, client_config, hass):
+        """Pick hub implementation based on the CONF_TYPE."""
+        configuration_type = client_config[CONF_TYPE]
+        if configuration_type in ModbusClientHub.CONFIGURATION_TYPES:
+            self._hub = ModbusClientHub(client_config)
+        elif configuration_type in ModbusServerHub.CONFIGURATION_TYPES:
+            self._hub = ModbusServerHub(client_config, hass)
+        else:
+            _LOGGER.error(
+                "Unsupported Modbus configuration type: %s", configuration_type
+            )
+            assert False
+
+    def __getattr__(self, attr):
+        """Forward calls to the Hub object."""
+        return getattr(self._hub, attr)
+
+
+class BaseModbusHub(ABC):
     """Thread safe wrapper class for pymodbus."""
 
     def __init__(self, client_config):
         """Initialize the Modbus hub."""
 
         # generic configuration
-        self._client = None
         self._lock = threading.Lock()
         self._config_name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
@@ -160,6 +190,72 @@ class ModbusHub:
     def name(self):
         """Return the name of this hub."""
         return self._config_name
+
+    @abstractmethod
+    def close(self):
+        """Disconnect client."""
+        assert False
+
+    @abstractmethod
+    def read_coils(self, unit, address, count):
+        """Read coils."""
+        assert False
+
+    @abstractmethod
+    def read_discrete_inputs(self, unit, address, count):
+        """Read discrete inputs."""
+        assert False
+
+    @abstractmethod
+    def read_input_registers(self, unit, address, count):
+        """Read input registers."""
+        assert False
+
+    @abstractmethod
+    def read_holding_registers(self, unit, address, count):
+        """Read holding registers."""
+        assert False
+
+    @abstractmethod
+    def write_coil(self, unit, address, value):
+        """Write coil."""
+        assert False
+
+    @abstractmethod
+    def write_register(self, unit, address, value):
+        """Write register."""
+        assert False
+
+    @abstractmethod
+    def write_registers(self, unit, address, values):
+        """Write registers."""
+        assert False
+
+    def add_slave_configuration(self, slave, configure_lambda):
+        """Modbus Slave configuration through the Builder pattern."""
+
+
+class ModbusClientHub(BaseModbusHub):
+    """Thread safe wrapper class for pymodbus."""
+
+    CONFIGURATION_TYPES = [
+        CONF_TYPE_SERIAL,
+        CONF_TYPE_RTUOVERTCP,
+        CONF_TYPE_TCP,
+        CONF_TYPE_TCPSERVER,
+        CONF_TYPE_UDP,
+    ]
+
+    def __init__(self, client_config):
+        """Initialize the Modbus hub."""
+
+        super().__init__(client_config)
+
+        self._client = None
+
+        # modbus needs to be activated before components are loaded
+        # to avoid a racing problem
+        self.setup()
 
     def setup(self):
         """Set up pymodbus client."""
@@ -265,3 +361,138 @@ class ModbusHub:
             self._client.write_registers(address, values, **kwargs)
             # invalidate cache on write
             _read_cached.cache_clear()
+
+
+class ModbusServerHub(BaseModbusHub):
+    """ModbusServerHub acts as a modbus slave."""
+
+    CONFIGURATION_TYPES = [CONF_TYPE_TCPSERVER]
+
+    class _RegisterResult:
+        """Modbus register wrapper."""
+
+        def __init__(self, registers):
+            """Initialize with the defaults."""
+            self._registers = registers
+
+        @property
+        def registers(self):
+            """Get registers."""
+            if self._registers is None:
+                raise ConnectionException()
+            return self._registers
+
+        @property
+        def bits(self):
+            """Get bits."""
+            return self._registers
+
+    def __init__(self, client_config, hass):
+        """Initialize the Modbus server hub."""
+        super().__init__(client_config)
+
+        self._entities = []
+        # network configuration
+        self._config_host = client_config.get(CONF_HOST, "0.0.0.0")
+        self._server = None
+        self._block = None
+        self._slaves_holder = ModbusSlavesHolder()
+
+        hass.bus.async_listen_once(EVENT_MODBUS_INITIALIZED, self.start_server)
+
+    def close(self):
+        """Shutdown server."""
+        with self._lock:
+            if self._server is not None:
+                self._server.server_close()
+                self._server = None
+
+    def read_coils(self, unit, address, count):
+        """Read coils."""
+        self._ensure_connected()
+        with self._lock:
+            return ModbusServerHub._RegisterResult(
+                self._block[unit].getValues(address, count)
+            )
+
+    def read_discrete_inputs(self, unit, address, count):
+        """Read discrete inputs."""
+        self._ensure_connected()
+        with self._lock:
+            return ModbusServerHub._RegisterResult(
+                self._block[unit].getValues(address, count)
+            )
+
+    def read_input_registers(self, unit, address, count):
+        """Read input registers."""
+        self._ensure_connected()
+        with self._lock:
+            return ModbusServerHub._RegisterResult(
+                self._block[unit].getValues(address, count)
+            )
+
+    def read_holding_registers(self, unit, address, count):
+        """Read holding registers."""
+        self._ensure_connected()
+        with self._lock:
+            return ModbusServerHub._RegisterResult(
+                self._block[unit].getValues(address, count)
+            )
+
+    def write_coil(self, unit, address, value):
+        """Write coil."""
+        self._ensure_connected()
+        with self._lock:
+            self._block[unit].setValues(address, [value])
+
+    def write_register(self, unit, address, value):
+        """Write register."""
+        self._ensure_connected()
+        with self._lock:
+            self._block[unit].setValues(address, [value])
+
+    def write_registers(self, unit, address, values):
+        """Write registers."""
+        self._ensure_connected()
+        with self._lock:
+            self._block[unit].setValues(address, values)
+
+    def _ensure_connected(self):
+        if self._block is None:
+            raise ConnectionException()
+        if self._server and len(self._server.active_connections) == 0:
+            raise ConnectionException()
+
+    def add_slave_configuration(self, slave, configure_lambda):
+        """Modbus Slave configuration through the Builder pattern."""
+        self._slaves_holder.add_slave_configuration(slave, configure_lambda)
+
+    async def start_server(self, _):
+        """Start the Modbus Sever."""
+        _LOGGER.warning("**** start_server called")
+        with self._lock:
+            self._block = self._slaves_holder.build_server_blocks()
+
+        if self._block is None:
+            return
+
+        slaves = {
+            unit: ModbusSlaveContext(
+                di=self._block[unit],
+                co=self._block[unit],
+                hr=self._block[unit],
+                ir=self._block[unit],
+            )
+            for unit in self._block
+        }
+
+        context = ModbusServerContext(slaves=slaves, single=False)
+
+        self._server = await StartTcpServer(
+            context,
+            address=(self._config_host, self._config_port),
+            allow_reuse_address=True,
+            defer_start=True,
+        )
+
+        await self._server.serve_forever()

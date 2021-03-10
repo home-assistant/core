@@ -312,9 +312,13 @@ class ModbusRegisterSensor(ModbusSensorBase):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state
+        self._value = state.state if state is not None else None
+        self._hub.add_slave_configuration(
+            self._slave,
+            lambda builder: builder.name(self._name)
+            .address(self._register)
+            .state(self._value, self._data_type, self._count),
+        )
 
     def update(self):
         """Update the state of the sensor."""
@@ -402,9 +406,14 @@ class ModbusBitSensor(ModbusSensorBase):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state == STATE_ON
+        self._value = state.state == STATE_ON if state is not None else None
+        self._hub.add_slave_configuration(
+            self._slave,
+            lambda builder: builder.name(self._name)
+            .address(self._register)
+            .binary_state(self._value, self._count)
+            .with_bit_mask(1 << self._bit_number),
+        )
 
     def update(self):
         """Update the state of the sensor."""
