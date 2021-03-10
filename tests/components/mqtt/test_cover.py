@@ -1315,6 +1315,52 @@ async def test_tilt_via_topic_altered_range(hass, mqtt_mock):
     assert current_cover_tilt_position == 50
 
 
+async def test_tilt_via_topic_altered_range_inverted(hass, mqtt_mock):
+    """Test tilt status via MQTT with altered tilt range and inverted tilt position."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "tilt_command_topic": "tilt-command-topic",
+                "tilt_status_topic": "tilt-status-topic",
+                "tilt_min": 50,
+                "tilt_max": 0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "0")
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 100
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "50")
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 0
+
+    async_fire_mqtt_message(hass, "tilt-status-topic", "25")
+
+    current_cover_tilt_position = hass.states.get("cover.test").attributes[
+        ATTR_CURRENT_TILT_POSITION
+    ]
+    assert current_cover_tilt_position == 50
+
+
 async def test_tilt_via_topic_template_altered_range(hass, mqtt_mock):
     """Test tilt status via MQTT and template with altered tilt range."""
     assert await async_setup_component(
