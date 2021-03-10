@@ -18,6 +18,7 @@ async def async_init_integration(
     token_fixture = "tado/token.json"
     devices_fixture = "tado/devices.json"
     me_fixture = "tado/me.json"
+    weather_fixture = "tado/weather.json"
     zones_fixture = "tado/zones.json"
 
     # WR1 Device
@@ -54,6 +55,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/me",
             text=load_fixture(me_fixture),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/weather",
+            text=load_fixture(weather_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/devices",
