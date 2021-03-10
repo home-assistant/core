@@ -28,7 +28,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     data = {
         "sensors": {
             "1": {
-                "id": "Light sensor id",
                 "name": "Light level sensor",
                 "type": "ZHALightLevel",
                 "state": {"daylight": 6955, "lightlevel": 30000, "dark": False},
@@ -36,7 +35,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
             "2": {
-                "id": "Presence sensor id",
                 "name": "Presence sensor",
                 "type": "ZHAPresence",
                 "state": {"presence": False},
@@ -44,7 +42,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
             "3": {
-                "id": "Switch 1 id",
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -52,7 +49,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
             "4": {
-                "id": "Switch 2 id",
                 "name": "Switch 2",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -60,7 +56,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:03-00",
             },
             "5": {
-                "id": "Daylight sensor id",
                 "name": "Daylight sensor",
                 "type": "Daylight",
                 "state": {"daylight": True, "status": 130},
@@ -68,7 +63,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
             "6": {
-                "id": "Power sensor id",
                 "name": "Power sensor",
                 "type": "ZHAPower",
                 "state": {"current": 2, "power": 6, "voltage": 3},
@@ -76,7 +70,6 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:05-00",
             },
             "7": {
-                "id": "Consumption id",
                 "name": "Consumption sensor",
                 "type": "ZHAConsumption",
                 "state": {"consumption": 2, "power": 6},
@@ -172,7 +165,6 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
     data = {
         "sensors": {
             "1": {
-                "id": "Light sensor id",
                 "name": "Light level sensor",
                 "type": "ZHALightLevel",
                 "state": {"lightlevel": 30000, "dark": False},
@@ -253,7 +245,6 @@ async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):
     data = {
         "sensors": {
             "1": {
-                "id": "Switch 1 id",
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},

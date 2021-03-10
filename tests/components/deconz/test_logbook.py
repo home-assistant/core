@@ -19,7 +19,6 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
     data = {
         "sensors": {
             "1": {
-                "id": "Switch 1 id",
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -27,7 +26,6 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
             "2": {
-                "id": "Hue remote id",
                 "name": "Hue remote",
                 "type": "ZHASwitch",
                 "modelid": "RWL021",
@@ -36,7 +34,6 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
             "3": {
-                "id": "Xiaomi cube id",
                 "name": "Xiaomi cube",
                 "type": "ZHASwitch",
                 "modelid": "lumi.sensor_cube",
@@ -45,7 +42,6 @@ async def test_humanifying_deconz_event(hass, aioclient_mock):
                 "uniqueid": "00:00:00:00:00:00:00:03-00",
             },
             "4": {
-                "id": "faulty",
                 "name": "Faulty event",
                 "type": "ZHASwitch",
                 "state": {},

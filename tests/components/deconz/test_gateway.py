@@ -186,7 +186,6 @@ async def test_connection_status_signalling(
     data = {
         "sensors": {
             "1": {
-                "id": "id",
                 "name": "presence",
                 "type": "ZHAPresence",
                 "state": {"presence": False},

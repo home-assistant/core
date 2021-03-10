@@ -17,7 +17,6 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
     data = {
         "sensors": {
             "1": {
-                "id": "Switch 1 id",
                 "name": "Switch 1",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -25,7 +24,6 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
             "2": {
-                "id": "Switch 2 id",
                 "name": "Switch 2",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000},
@@ -33,7 +31,6 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
             "3": {
-                "id": "Switch 3 id",
                 "name": "Switch 3",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000, "gesture": 1},
@@ -41,7 +38,6 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:03-00",
             },
             "4": {
-                "id": "Switch 4 id",
                 "name": "Switch 4",
                 "type": "ZHASwitch",
                 "state": {"buttonevent": 1000, "gesture": 1},
@@ -49,7 +45,6 @@ async def test_deconz_events(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:04-00",
             },
             "5": {
-                "id": "ZHA remote 1 id",
                 "name": "ZHA remote 1",
                 "type": "ZHASwitch",
                 "state": {"angle": 0, "buttonevent": 1000, "xy": [0.0, 0.0]},

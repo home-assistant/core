@@ -1,7 +1,6 @@
 """Test deCONZ component setup process."""
 
 import asyncio
-from copy import deepcopy
 from unittest.mock import patch
 
 from homeassistant.components.deconz import (
@@ -71,15 +70,14 @@ async def test_setup_entry_multiple_gateways(hass, aioclient_mock):
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
 
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["config"]["bridgeid"] = "01234E56789B"
-    config_entry2 = await setup_deconz_integration(
-        hass,
-        aioclient_mock,
-        get_state_response=data,
-        entry_id="2",
-        unique_id="01234E56789B",
-    )
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
     assert hass.data[DECONZ_DOMAIN][config_entry.unique_id].master
@@ -100,15 +98,14 @@ async def test_unload_entry_multiple_gateways(hass, aioclient_mock):
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
     aioclient_mock.clear_requests()
 
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["config"]["bridgeid"] = "01234E56789B"
-    config_entry2 = await setup_deconz_integration(
-        hass,
-        aioclient_mock,
-        get_state_response=data,
-        entry_id="2",
-        unique_id="01234E56789B",
-    )
+    data = {"config": {"bridgeid": "01234E56789B"}}
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry2 = await setup_deconz_integration(
+            hass,
+            aioclient_mock,
+            entry_id="2",
+            unique_id="01234E56789B",
+        )
 
     assert len(hass.data[DECONZ_DOMAIN]) == 2
 

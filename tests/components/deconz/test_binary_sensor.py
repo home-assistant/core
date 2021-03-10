@@ -35,7 +35,6 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
     data = {
         "sensors": {
             "1": {
-                "id": "Presence sensor id",
                 "name": "Presence sensor",
                 "type": "ZHAPresence",
                 "state": {"dark": False, "presence": False},
@@ -43,7 +42,6 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
             "2": {
-                "id": "Temperature sensor id",
                 "name": "Temperature sensor",
                 "type": "ZHATemperature",
                 "state": {"temperature": False},
@@ -51,7 +49,6 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
             "3": {
-                "id": "CLIP presence sensor id",
                 "name": "CLIP presence sensor",
                 "type": "CLIPPresence",
                 "state": {"presence": False},
@@ -59,7 +56,6 @@ async def test_binary_sensors(hass, aioclient_mock, mock_deconz_websocket):
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
             "4": {
-                "id": "Vibration sensor id",
                 "name": "Vibration sensor",
                 "type": "ZHAVibration",
                 "state": {
@@ -113,7 +109,6 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
     data = {
         "sensors": {
             "1": {
-                "id": "Presence sensor id",
                 "name": "Presence sensor",
                 "type": "ZHAPresence",
                 "state": {"presence": False},
@@ -121,7 +116,6 @@ async def test_allow_clip_sensor(hass, aioclient_mock):
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
             "2": {
-                "id": "CLIP presence sensor id",
                 "name": "CLIP presence sensor",
                 "type": "CLIPPresence",
                 "state": {"presence": False},
@@ -193,7 +187,6 @@ async def test_add_new_binary_sensor_ignored(
 ):
     """Test that adding a new binary sensor is not allowed."""
     sensor = {
-        "id": "Presence sensor id",
         "name": "Presence sensor",
         "type": "ZHAPresence",
         "state": {"presence": False},

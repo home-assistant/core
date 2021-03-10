@@ -183,7 +183,6 @@ async def test_climate_device_without_cooling_support(
     data = {
         "sensors": {
             "1": {
-                "id": "Thermostat id",
                 "name": "Thermostat",
                 "type": "ZHAThermostat",
                 "state": {"on": True, "temperature": 2260, "valve": 30},
@@ -668,7 +667,6 @@ async def test_clip_climate_device(hass, aioclient_mock):
     data = {
         "sensors": {
             "1": {
-                "id": "Thermostat id",
                 "name": "Thermostat",
                 "type": "ZHAThermostat",
                 "state": {"on": True, "temperature": 2260, "valve": 30},
@@ -682,7 +680,6 @@ async def test_clip_climate_device(hass, aioclient_mock):
                 "uniqueid": "00:00:00:00:00:00:00:00-00",
             },
             "2": {
-                "id": "CLIP thermostat id",
                 "name": "CLIP thermostat",
                 "type": "CLIPThermostat",
                 "state": {"on": True, "temperature": 2260, "valve": 30},
@@ -725,7 +722,6 @@ async def test_verify_state_update(hass, aioclient_mock, mock_deconz_websocket):
     data = {
         "sensors": {
             "1": {
-                "id": "Thermostat id",
                 "name": "Thermostat",
                 "type": "ZHAThermostat",
                 "state": {"on": True, "temperature": 2260, "valve": 30},
@@ -760,7 +756,7 @@ async def test_verify_state_update(hass, aioclient_mock, mock_deconz_websocket):
 
 async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocket):
     """Test that adding a new climate device works."""
-    event_sensor_added = {
+    event_added_sensor = {
         "t": "event",
         "e": "added",
         "r": "sensors",
@@ -784,7 +780,7 @@ async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocke
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
-    await mock_deconz_websocket(data=event_sensor_added)
+    await mock_deconz_websocket(data=event_added_sensor)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
