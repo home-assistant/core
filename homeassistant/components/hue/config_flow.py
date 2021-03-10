@@ -210,6 +210,17 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
+    async def async_step_homekit(self, discovery_info):
+        """Handle a discovered Hue bridge on HomeKit.
+
+        The bridge ID communicated over HomeKit differs, so we cannot use that
+        as the unique identifier. Therefore, this method uses discovery without
+        a unique ID.
+        """
+        self.bridge = self._async_get_bridge(discovery_info[CONF_HOST])
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_link()
+
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry.
 
