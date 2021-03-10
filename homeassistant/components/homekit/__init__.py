@@ -616,7 +616,7 @@ class HomeKit:
         self._async_register_bridge(dev_reg)
         await self._async_start(bridged_states)
         _LOGGER.debug("Driver start for %s", self._name)
-        self.hass.add_job(self.driver.start_service)
+        await self.driver.async_start()
         self.status = STATUS_RUNNING
 
     @callback
