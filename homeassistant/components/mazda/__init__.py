@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_update_data():
         """Fetch data from Mazda API."""
         try:
-            vehicles = await with_timeout(mazda_client.get_vehicles(), 10)
+            vehicles = await with_timeout(mazda_client.get_vehicles())
 
             vehicle_status_tasks = [
                 with_timeout(mazda_client.get_vehicle_status(vehicle["id"]))
