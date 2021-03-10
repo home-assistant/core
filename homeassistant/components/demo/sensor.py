@@ -1,6 +1,7 @@
 """Demo platform that has a couple of fake sensors."""
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
@@ -38,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Carbon monoxide",
                 54,
                 DEVICE_CLASS_CO,
-                None,
+                CONCENTRATION_PARTS_PER_MILLION,
                 None,
             ),
             DemoSensor(
@@ -46,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Carbon dioxide",
                 54,
                 DEVICE_CLASS_CO2,
-                None,
+                CONCENTRATION_PARTS_PER_MILLION,
                 14,
             ),
         ]
