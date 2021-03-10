@@ -62,11 +62,6 @@ async def base_test(
 
     mock_sync = mock.MagicMock()
     # Setup inputs for the sensor
-    read_result = (
-        ReadResult(register_words)
-        if register_words
-        else ModbusException("Modbus error")
-    )
     with mock.patch(
         "homeassistant.components.modbus.modbus.ModbusTcpClient", return_value=mock_sync
     ), mock.patch(
@@ -74,9 +69,17 @@ async def base_test(
         return_value=mock_sync,
     ), mock.patch(
         "homeassistant.components.modbus.modbus.ModbusUdpClient", return_value=mock_sync
-    ), mock.patch(
-        "homeassistant.components.modbus.modbus._read_cached", return_value=read_result
     ):
+
+        read_result = (
+            ReadResult(register_words)
+            if register_words
+            else ModbusException("Modbus error")
+        )
+        mock_sync.read_coils.return_value = read_result
+        mock_sync.read_discrete_inputs.return_value = read_result
+        mock_sync.read_input_registers.return_value = read_result
+        mock_sync.read_holding_registers.return_value = read_result
 
         # mock timer and add old/new config
         now = dt_util.utcnow()
