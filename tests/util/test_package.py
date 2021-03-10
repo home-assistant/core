@@ -260,3 +260,17 @@ def test_check_package_version_does_not_match():
 def test_check_package_zip():
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)
+
+
+def test_check_package_previous_failed_install():
+    """Test for an installed package."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ), patch("homeassistant.util.package.version", return_value=None):
+        assert not package.is_installed(installed_package)
+        assert not package.is_installed(f"{installed_package}=={installed_version}")
