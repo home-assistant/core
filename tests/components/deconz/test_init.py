@@ -16,7 +16,7 @@ from homeassistant.components.deconz.const import (
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
@@ -133,7 +133,7 @@ async def test_update_group_unique_id(hass):
         },
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
     registry.async_get_or_create(
         LIGHT_DOMAIN,
@@ -172,7 +172,7 @@ async def test_update_group_unique_id_no_legacy_group_id(hass):
         data={},
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     # Create entity entry to migrate to new unique ID
     registry.async_get_or_create(
         LIGHT_DOMAIN,
