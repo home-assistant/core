@@ -571,7 +571,14 @@ async def test_bridge_homekit(hass, aioclient_mock):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "link"
+
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert flow["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
 
 
 async def test_bridge_import_already_configured(hass):
