@@ -356,6 +356,11 @@ class IcloudAccount:
         return self._fetch_interval
 
     @property
+    def gps_accuracy_threshold(self) -> int:
+        """Return configured GPS Accuracy Threshold."""
+        return self._gps_accuracy_threshold
+
+    @property
     def devices(self) -> Dict[str, any]:
         """Return the account devices."""
         return self._devices
@@ -428,15 +433,15 @@ class IcloudDevice:
             ):
                 location = self._status[DEVICE_LOCATION]
                 if (
-                    self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+                    self._account.gps_accuracy_threshold
                     is not None
                     and location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
-                    > self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+                    > self._account.gps_accuracy_threshold
                 ):
                     _LOGGER.info(
                         "Update of iCloud device %s: Ignoring update because expected GPS accuracy (%.0f) is not met: %.0f",
                         self.name,
-                        self._account._config_entry.data[CONF_GPS_ACCURACY_THRESHOLD],
+                        self._account.gps_accuracy_threshold,
                         location[DEVICE_LOCATION_HORIZONTAL_ACCURACY],
                     )
                     return
