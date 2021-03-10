@@ -167,7 +167,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
+        elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"
