@@ -44,7 +44,14 @@ def is_installed(package: str) -> bool:
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
     try:
-        return version(req.project_name) in req
+        installed_version = version(req.project_name)
+        # This will happen when an install failed or
+        # was aborted while in progress see
+        # https://github.com/home-assistant/core/issues/47699
+        if installed_version is None:
+            _LOGGER.error("Installed version for %s resolved to None", req.project_name)  # type: ignore
+            return False
+        return installed_version in req
     except PackageNotFoundError:
         return False
 
