@@ -253,7 +253,8 @@ async def async_setup(hass, config):
             preprocess_turn_on_alternatives(hass, params)
 
         supported_color_modes = light.supported_color_modes
-        # If an RGBWW color is specified, convert to RGB + W for legacy lights
+        # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
+        # for legacy lights
         if ATTR_RGBW_COLOR in params:
             legacy_supported_color_modes = light._light_internal_supported_color_modes
             if (
@@ -265,7 +266,8 @@ async def async_setup(hass, config):
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
         # If a color is specified, convert to the color space supported by the light
-        # Fall back to hs color if light.supported_color_modes is not implemented
+        # Backwards compatibility: Fall back to hs color if light.supported_color_modes
+        # is not implemented
         if ATTR_HS_COLOR or ATTR_RGB_COLOR or ATTR_XY_COLOR in params:
             if not supported_color_modes or COLOR_MODE_HS in supported_color_modes:
                 if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
