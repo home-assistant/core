@@ -35,6 +35,7 @@ def is_installed(package: str) -> bool:
     """
     try:
         pkg_resources.get_distribution(package)
+        return True
     except (pkg_resources.VersionConflict, pkg_resources.DistributionNotFound):
         return False
     except (pkg_resources.ExtractionError, pkg_resources.UnknownExtra):
@@ -44,8 +45,6 @@ def is_installed(package: str) -> bool:
         # This is a zip file. We no longer use this in Home Assistant,
         # leaving it in for custom components.
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
-    else:
-        return True
 
     try:
         return version(req.project_name) in req
