@@ -262,8 +262,25 @@ def test_check_package_zip():
     assert not package.is_installed(TEST_ZIP_REQ)
 
 
+def test_get_distribution_falls_back_to_version():
+    """Test for get_distribution failing and fallback to version."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ):
+        assert package.is_installed(installed_package)
+        assert package.is_installed(f"{installed_package}=={installed_version}")
+        assert package.is_installed(f"{installed_package}>={installed_version}")
+        assert package.is_installed(f"{installed_package}<={installed_version}")
+        assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
 def test_check_package_previous_failed_install():
-    """Test for an installed package."""
+    """Test for when a previously install package failed and left cruft behind."""
     first_package = list(pkg_resources.working_set)[0]
     installed_package = first_package.project_name
     installed_version = first_package.version
