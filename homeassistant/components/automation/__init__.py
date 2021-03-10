@@ -379,7 +379,7 @@ class LimitedSizeDict(OrderedDict):
 def trace_automation(hass, unique_id, config, trigger, context):
     """Trace action execution of automation with automation_id."""
     automation_trace = AutomationTrace(unique_id, config, trigger, context)
-    trace_id_set((unique_id, automation_trace.runid))
+    trace_id_set((unique_id, automation_trace.run_id))
 
     if unique_id:
         automation_traces = hass.data[DATA_AUTOMATION_TRACE]
