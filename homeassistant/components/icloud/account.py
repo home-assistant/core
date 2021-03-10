@@ -433,8 +433,7 @@ class IcloudDevice:
             ):
                 location = self._status[DEVICE_LOCATION]
                 if (
-                    self._account.gps_accuracy_threshold
-                    is not None
+                    self._account.gps_accuracy_threshold is not None
                     and location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
                     > self._account.gps_accuracy_threshold
                 ):
