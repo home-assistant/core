@@ -290,6 +290,7 @@ def _create_sensor(knx_module: XKNX, config: ConfigType) -> XknxSensor:
         sync_state=config[SensorSchema.CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
+        ha_value_template=config.get(SensorSchema.CONF_VALUE_TEMPLATE),
     )
 
 

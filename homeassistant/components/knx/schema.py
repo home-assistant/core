@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -409,6 +410,7 @@ class SensorSchema:
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
+    CONF_VALUE_TEMPLATE = CONF_VALUE_TEMPLATE
     DEFAULT_NAME = "KNX Sensor"
 
     SCHEMA = vol.Schema(
@@ -418,6 +420,7 @@ class SensorSchema:
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): ga_validator,
             vol.Required(CONF_TYPE): vol.Any(int, float, str),
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         }
     )
 
