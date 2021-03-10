@@ -297,8 +297,8 @@ class MqttCover(MqttEntity, CoverEntity):
                 _LOGGER.warning(
                     "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
                     payload,
-                    CONF_TILT_MIN,
-                    CONF_TILT_MAX,
+                    self._config[CONF_TILT_MIN],
+                    self._config[CONF_TILT_MAX],
                 )
 
         @callback
