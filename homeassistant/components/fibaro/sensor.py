@@ -31,7 +31,7 @@ SENSOR_TYPES = {
     "CO2": [
         "CO2",
         CONCENTRATION_PARTS_PER_MILLION,
-        "mdi:cloud",
+        None,
         None,
         DEVICE_CLASS_CO2,
     ],
