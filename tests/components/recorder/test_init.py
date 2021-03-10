@@ -28,14 +28,17 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.core import Context, CoreState, callback
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    async_wait_recording_done,
     async_wait_recording_done_without_instance,
     corrupt_db_file,
     wait_recording_done,
 )
+from .conftest import SetupRecorderInstanceT
 
 from tests.common import (
     async_init_recorder_component,
@@ -66,17 +69,19 @@ async def test_shutdown_before_startup_finishes(hass):
     assert run_info.end is not None
 
 
-def test_saving_state(hass, hass_recorder):
+async def test_saving_state(
+    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+):
     """Test saving and restoring a state."""
-    hass = hass_recorder()
+    instance = await async_setup_recorder_instance(hass)
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
-    hass.states.set(entity_id, state, attributes)
+    hass.states.async_set(entity_id, state, attributes)
 
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass, instance)
 
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
