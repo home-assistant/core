@@ -7,6 +7,5 @@
   "config_flow": true,
   "homekit": {
     "models": ["tado", "AC02"]
-  },
-  "dependencies": ["weather"]
+  }
 }
