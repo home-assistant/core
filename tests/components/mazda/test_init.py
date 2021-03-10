@@ -6,6 +6,7 @@ from pymazda import MazdaAuthenticationException, MazdaException
 from homeassistant.components.mazda.const import DATA_COORDINATOR, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
@@ -97,4 +98,4 @@ async def test_unload_config_entry(hass: HomeAssistant) -> None:
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert not hass.data.get(DOMAIN)
+    assert entry.state == ENTRY_STATE_NOT_LOADED
