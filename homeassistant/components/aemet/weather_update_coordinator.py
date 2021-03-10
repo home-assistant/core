@@ -98,9 +98,7 @@ def format_float(value) -> float:
     """Try converting string to float."""
     try:
         return float(value)
-    except TypeError:
-        return None
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -108,9 +106,7 @@ def format_int(value) -> int:
     """Try converting string to int."""
     try:
         return int(value)
-    except TypeError:
-        return None
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
