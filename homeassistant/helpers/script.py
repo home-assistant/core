@@ -360,7 +360,7 @@ class _ScriptRun:
                     handler = f"_async_{cv.determine_script_action(self._action)}_step"
                     await getattr(self, handler)()
                 except Exception as ex:
-                    if not isinstance(ex, (_StopScript, asyncio.CancelledError)) and (
+                    if not isinstance(ex, _StopScript) and (
                         self._log_exceptions or log_exceptions
                     ):
                         self._log_exception(ex)
