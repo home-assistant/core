@@ -2330,7 +2330,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.17.1
+xknx==0.17.2
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
