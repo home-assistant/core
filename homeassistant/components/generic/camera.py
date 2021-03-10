@@ -125,6 +125,11 @@ class GenericCamera(Camera):
         ).result()
 
     async def async_camera_image(self):
+        """Wrap _async_camera_image with an asyncio.shield."""
+        # Shield the request because of https://github.com/encode/httpx/issues/1461
+        return await asyncio.shield(self._async_camera_image())
+
+    async def _async_camera_image(self):
         """Return a still image response from the camera."""
         try:
             url = self._still_image_url.async_render(parse_result=False)
@@ -134,7 +139,7 @@ class GenericCamera(Camera):
 
         if url == self._last_url and self._limit_refetch:
             return self._last_image
-
+        response = None
         try:
             async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
             response = await async_client.get(
@@ -142,14 +147,16 @@ class GenericCamera(Camera):
             )
             response.raise_for_status()
             self._last_image = response.content
+            self._last_url = url
         except httpx.TimeoutException:
             _LOGGER.error("Timeout getting camera image from %s", self._name)
             return self._last_image
         except (httpx.RequestError, httpx.HTTPStatusError) as err:
             _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
             return self._last_image
-
-        self._last_url = url
+        finally:
+            if response:
+                response.close()
         return self._last_image
 
     @property
