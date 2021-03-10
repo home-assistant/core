@@ -27,7 +27,10 @@ class DoorLockChannel(ZigbeeChannel):
     def cluster_command(self, tsn, command_id, args):
         """Handle a cluster command received on this cluster."""
 
-        if self._cluster.client_commands is None:
+        if (
+            self._cluster.client_commands is None
+            or self._cluster.client_commands.get(command_id) is None
+        ):
             return
 
         command_name = self._cluster.client_commands.get(command_id, [command_id])[0]
