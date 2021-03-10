@@ -62,7 +62,7 @@ class DoorLockChannel(ZigbeeChannel):
         set_pin_code = self.__getattr__("set_pin_code")
         await set_pin_code(
             *(
-                code_slot - 1,  # start code slots at 1
+                code_slot - 1,  # start code slots at 1, Zigbee internals use 0
                 closures.DoorLock.UserStatus.Enabled,
                 closures.DoorLock.UserType.Unrestricted,
                 user_code,
