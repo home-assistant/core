@@ -124,10 +124,11 @@ async def base_test(
             async_fire_time_changed(hass, now)
             await hass.async_block_till_done()
 
-        # since we can't return the mock, use hook to test
-        # if the actual call to the mocked function has been made
+        # mock_hook may also call an arbitrary service
+        # Then returning state will hold the desired state
         if mock_hook is not None:
             await mock_hook(mock_sync)
+            await hass.async_block_till_done()
 
         entity_id = f"{entity_domain}.{device_name}"
         return hass.states.get(entity_id).state
