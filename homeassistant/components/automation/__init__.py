@@ -68,7 +68,12 @@ from homeassistant.helpers.script import (
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.trace import TraceElement, trace_get, trace_path
+from homeassistant.helpers.trace import (
+    TraceElement,
+    trace_get,
+    trace_id_set,
+    trace_path,
+)
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
@@ -374,6 +379,7 @@ class LimitedSizeDict(OrderedDict):
 def trace_automation(hass, unique_id, config, trigger, context):
     """Trace action execution of automation with automation_id."""
     automation_trace = AutomationTrace(unique_id, config, trigger, context)
+    trace_id_set((unique_id, automation_trace.runid))
 
     if unique_id:
         automation_traces = hass.data[DATA_AUTOMATION_TRACE]

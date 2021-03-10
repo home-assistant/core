@@ -6,6 +6,7 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import automation, config
 from homeassistant.helpers import entity_registry as er
 
+from tests.common import assert_lists_same
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
@@ -511,3 +512,426 @@ async def test_list_automation_traces(hass, hass_ws_client):
     assert trace["timestamp"]
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["unique_id"] == "moon"
+
+
+async def test_automation_breakpoints(hass, hass_ws_client):
+    """Test automation breakpoints."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_last_action(automation_id, expected_action, expected_state):
+        await client.send_json({"id": next_id(), "type": "automation/trace/list"})
+        response = await client.receive_json()
+        assert response["success"]
+        trace = response["result"][automation_id][-1]
+        assert trace["last_action"] == expected_action
+        assert trace["state"] == expected_state
+        return trace["run_id"]
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": [
+            {"event": "event0"},
+            {"event": "event1"},
+            {"event": "event2"},
+            {"event": "event3"},
+            {"event": "event4"},
+            {"event": "event5"},
+            {"event": "event6"},
+            {"event": "event7"},
+            {"event": "event8"},
+        ],
+    }
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                sun_config,
+            ]
+        },
+    )
+
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "1",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/debug/breakpoint/list"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    subscription_id = next_id()
+    await client.send_json(
+        {"id": subscription_id, "type": "automation/debug/breakpoint/subscribe"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "action/1",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "action/5",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/debug/breakpoint/list"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert_lists_same(
+        response["result"],
+        [
+            {"node": "action/1", "run_id": "*", "automation_id": "sun"},
+            {"node": "action/5", "run_id": "*", "automation_id": "sun"},
+        ],
+    )
+
+    # Trigger "sun" automation
+    hass.bus.async_fire("test_event")
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/1", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/1",
+        "run_id": run_id,
+    }
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/step",
+            "automation_id": "sun",
+            "run_id": run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/2", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/2",
+        "run_id": run_id,
+    }
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/continue",
+            "automation_id": "sun",
+            "run_id": run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/5", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/5",
+        "run_id": run_id,
+    }
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/stop",
+            "automation_id": "sun",
+            "run_id": run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+    await assert_last_action("sun", "action/5", "stopped")
+
+
+async def test_automation_breakpoints_2(hass, hass_ws_client):
+    """Test execution resumes and breakpoints are removed after subscription removed."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_last_action(automation_id, expected_action, expected_state):
+        await client.send_json({"id": next_id(), "type": "automation/trace/list"})
+        response = await client.receive_json()
+        assert response["success"]
+        trace = response["result"][automation_id][-1]
+        assert trace["last_action"] == expected_action
+        assert trace["state"] == expected_state
+        return trace["run_id"]
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": [
+            {"event": "event0"},
+            {"event": "event1"},
+            {"event": "event2"},
+            {"event": "event3"},
+            {"event": "event4"},
+            {"event": "event5"},
+            {"event": "event6"},
+            {"event": "event7"},
+            {"event": "event8"},
+        ],
+    }
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                sun_config,
+            ]
+        },
+    )
+
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_ws_client()
+
+    subscription_id = next_id()
+    await client.send_json(
+        {"id": subscription_id, "type": "automation/debug/breakpoint/subscribe"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "action/1",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Trigger "sun" automation
+    hass.bus.async_fire("test_event")
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/1", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/1",
+        "run_id": run_id,
+    }
+
+    # Unsubscribe - execution should resume
+    await client.send_json(
+        {"id": next_id(), "type": "unsubscribe_events", "subscription": subscription_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+    await assert_last_action("sun", "action/8", "stopped")
+
+    # Should not be possible to set breakpoints
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "1",
+        }
+    )
+    response = await client.receive_json()
+    assert not response["success"]
+
+    # Trigger "sun" automation, should finish without stopping on breakpoints
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    new_run_id = await assert_last_action("sun", "action/8", "stopped")
+    assert new_run_id != run_id
+
+
+async def test_automation_breakpoints_3(hass, hass_ws_client):
+    """Test breakpoints can be cleared."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_last_action(automation_id, expected_action, expected_state):
+        await client.send_json({"id": next_id(), "type": "automation/trace/list"})
+        response = await client.receive_json()
+        assert response["success"]
+        trace = response["result"][automation_id][-1]
+        assert trace["last_action"] == expected_action
+        assert trace["state"] == expected_state
+        return trace["run_id"]
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": [
+            {"event": "event0"},
+            {"event": "event1"},
+            {"event": "event2"},
+            {"event": "event3"},
+            {"event": "event4"},
+            {"event": "event5"},
+            {"event": "event6"},
+            {"event": "event7"},
+            {"event": "event8"},
+        ],
+    }
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                sun_config,
+            ]
+        },
+    )
+
+    with patch.object(config, "SECTIONS", ["automation"]):
+        await async_setup_component(hass, "config", {})
+
+    client = await hass_ws_client()
+
+    subscription_id = next_id()
+    await client.send_json(
+        {"id": subscription_id, "type": "automation/debug/breakpoint/subscribe"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "action/1",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/set",
+            "automation_id": "sun",
+            "node": "action/5",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Trigger "sun" automation
+    hass.bus.async_fire("test_event")
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/1", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/1",
+        "run_id": run_id,
+    }
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/continue",
+            "automation_id": "sun",
+            "run_id": run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/5", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/5",
+        "run_id": run_id,
+    }
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/stop",
+            "automation_id": "sun",
+            "run_id": run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    await hass.async_block_till_done()
+    await assert_last_action("sun", "action/5", "stopped")
+
+    # Clear 1st breakpoint
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "automation/debug/breakpoint/clear",
+            "automation_id": "sun",
+            "node": "action/1",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Trigger "sun" automation
+    hass.bus.async_fire("test_event")
+
+    response = await client.receive_json()
+    run_id = await assert_last_action("sun", "action/5", "running")
+    assert response["event"] == {
+        "automation_id": "sun",
+        "node": "action/5",
+        "run_id": run_id,
+    }

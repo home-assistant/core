@@ -2,7 +2,7 @@
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, Deque, Dict, Generator, List, Optional, Union, cast
+from typing import Any, Deque, Dict, Generator, List, Optional, Tuple, Union, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -67,6 +67,20 @@ trace_path_stack_cv: ContextVar[Optional[List[str]]] = ContextVar(
 )
 # Copy of last variables
 variables_cv: ContextVar[Optional[Any]] = ContextVar("variables_cv", default=None)
+# Automation ID + Run ID
+trace_id_cv: ContextVar[Optional[Tuple[str, str]]] = ContextVar(
+    "trace_id_cv", default=None
+)
+
+
+def trace_id_set(trace_id: Tuple[str, str]) -> None:
+    """Set id of the current trace."""
+    trace_id_cv.set(trace_id)
+
+
+def trace_id_get() -> Optional[Tuple[str, str]]:
+    """Get id if the current trace."""
+    return trace_id_cv.get()
 
 
 def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
