@@ -96,7 +96,13 @@ def _import_weather_configs(hass, weather_configs, sensor_configs):
             CONF_WEATHER: True,
         }
 
-        _import(hass, data)
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=data,
+            )
+        )
 
 
 def _import_camera_configs(hass, configs):
@@ -112,17 +118,13 @@ def _import_camera_configs(hass, configs):
         }
 
         data = {**data, **config}
-        _import(hass, data)
-
-
-def _import(hass, data):
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=data,
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=data,
+            )
         )
-    )
 
 
 def _filter_domain_configs(config, domain, platform):
