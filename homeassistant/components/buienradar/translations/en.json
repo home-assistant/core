@@ -12,24 +12,20 @@
                     "country_code": "Country",
                     "dimension": "Dimension",
                     "name": "Name"
-                },
-                "title": "Buienradar Camera"
+                }
             },
             "user": {
                 "data": {
                     "domain": "Select domain to setup"
-                },
-                "title": "Buienradar"
+                }
             },
             "weather": {
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Name"
-                },
-                "title": "Buienradar Weather"
+                }
             }
         }
-    },
-    "title": "Buienradar"
+    }
 }

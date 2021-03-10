@@ -2,13 +2,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Buienradar",
         "data": {
           "domain": "Select domain to setup"
         }
       },
       "camera": {
-        "title": "Buienradar Camera",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "dimension": "Dimension",
@@ -16,7 +14,6 @@
         }
       },
       "weather": {
-        "title": "Buienradar Weather",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
@@ -30,6 +27,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     }
-  },
-  "title": "Buienradar"
+  }
 }
