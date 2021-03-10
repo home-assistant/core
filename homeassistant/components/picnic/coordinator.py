@@ -5,6 +5,7 @@ import logging
 
 import async_timeout
 from python_picnic_api import PicnicAPI
+from python_picnic_api.session import PicnicAuthError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -22,7 +23,7 @@ from .const import (
     SENSOR_LAST_ORDER_STATUS,
     SENSOR_LAST_ORDER_TOTAL_PRICE,
     SENSOR_SELECTED_SLOT_END,
-    SENSOR_SELECTED_SLOT_MAX_ODER_TIME,
+    SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
     SENSOR_TOTAL_ORDERS,
@@ -42,18 +43,19 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             logger,
             name="Picnic coordinator",
             update_interval=timedelta(minutes=30),
-            update_method=self.async_update_data,
         )
 
-    async def async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
                 return await self.hass.async_add_executor_job(self.fetch_data)
-        except Exception as err:  # pylint: disable=broad-except
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+        except ValueError as error:
+            raise UpdateFailed(f"API response was malformed: {error}") from error
+        except PicnicAuthError as error:
+            raise UpdateFailed(f"API authentication expired: {error}") from error
 
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
@@ -81,7 +83,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             SENSOR_CART_TOTAL_PRICE: cart.get("total_price", 0) / 100,
             SENSOR_SELECTED_SLOT_START: slot_data.get("window_start"),
             SENSOR_SELECTED_SLOT_END: slot_data.get("window_end"),
-            SENSOR_SELECTED_SLOT_MAX_ODER_TIME: slot_data.get("cut_off_time"),
+            SENSOR_SELECTED_SLOT_MAX_ORDER_TIME: slot_data.get("cut_off_time"),
             SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE: minimum_order_value,
             SENSOR_LAST_ORDER_SLOT_START: last_order["slot"].get("window_start"),
             SENSOR_LAST_ORDER_SLOT_END: last_order["slot"].get("window_end"),
@@ -115,11 +117,19 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         if not deliveries:
             return {}
 
-        # Determine the last order and get the position details
+        # Determine the last order
         last_order = deliveries[0]
-        delivery_position = self.picnic_api_client.get_delivery_position(
-            last_order["delivery_id"]
-        )
+
+        #  Get the position details if the order is not delivered yet
+        delivery_position = {}
+        if not last_order.get("delivery_time"):
+            try:
+                delivery_position = self.picnic_api_client.get_delivery_position(
+                    last_order["delivery_id"]
+                )
+            except ValueError:
+                # No information yet can mean an empty response
+                pass
 
         # Determine the ETA, if available, the one from the delivery position API is more precise
         # but it's only available shortly before the actual delivery.

@@ -56,7 +56,7 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def unit_of_measurement(self) -> Optional[str]:
         """Return the unit this state is expressed in."""
-        return self.properties["unit"]
+        return self.properties.get("unit")
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -76,7 +76,7 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def device_class(self) -> Optional[str]:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return self.properties["class"]
+        return self.properties.get("class")
 
     @property
     def icon(self) -> Optional[str]:
@@ -86,7 +86,15 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.get(self.sensor_type) is not None
+        return (
+            self.coordinator.last_update_success and
+            self.sensor_type in self.coordinator.data
+        )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return not self.properties.get("optional", False)
 
     @property
     def attribution(self):
