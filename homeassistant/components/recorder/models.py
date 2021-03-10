@@ -13,6 +13,7 @@ from sqlalchemy import (
     Text,
     distinct,
 )
+from sqlalchemy.dialects import mysql
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import Session
@@ -25,7 +26,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 11
+SCHEMA_VERSION = 12
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class Events(Base):  # type: ignore
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, primary_key=True)
     event_type = Column(String(32))
-    event_data = Column(Text)
+    event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True), index=True)
     created = Column(DateTime(timezone=True), default=dt_util.utcnow)
@@ -109,7 +110,7 @@ class States(Base):  # type: ignore
     domain = Column(String(64))
     entity_id = Column(String(255))
     state = Column(String(255))
-    attributes = Column(Text)
+    attributes = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     event_id = Column(
         Integer, ForeignKey("events.event_id", ondelete="CASCADE"), index=True
     )
