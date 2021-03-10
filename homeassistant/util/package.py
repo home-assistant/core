@@ -36,11 +36,8 @@ def is_installed(package: str) -> bool:
     try:
         pkg_resources.get_distribution(package)
         return True
-    except (pkg_resources.VersionConflict, pkg_resources.DistributionNotFound):
-        return False
-    except (pkg_resources.ExtractionError, pkg_resources.UnknownExtra):
-        _LOGGER.exception("Unexpected error processing packages: %s")
-        return False
+    except (pkg_resources.ResolutionError, pkg_resources.ExtractionError):
+        req = pkg_resources.Requirement.parse(package)
     except ValueError:
         # This is a zip file. We no longer use this in Home Assistant,
         # leaving it in for custom components.
