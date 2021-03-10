@@ -65,7 +65,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    install_task = None
+    api_key_task = None
     user_input: dict = None
 
     def __init__(self):
@@ -82,19 +82,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if CONF_API_KEY in user_input:
             return await self.async_step_finish(user_input)
 
-        self.install_task = None
+        self.api_key_task = None
         return await self.async_step_get_api_key(user_input)
 
     async def async_step_get_api_key(self, user_input=None):
         """Get an Application Api Key."""
-        if not self.install_task:
-            self.install_task = self.hass.async_create_task(self._async_get_auth_key())
+        if not self.api_key_task:
+            self.api_key_task = self.hass.async_create_task(self._async_get_auth_key())
             return self.async_show_progress(
                 step_id="get_api_key", progress_action="get_api_key"
             )
 
         try:
-            await self.install_task
+            await self.api_key_task
         except ApiError as err:
             _LOGGER.error("Failed to get an application key : %s", err)
             return self.async_show_progress_done(next_step_id="auth_failed")
