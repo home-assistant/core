@@ -53,6 +53,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         except ElgatoError:
             return self.async_abort(reason="cannot_connect")
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"serial_number": self.serial_number},
