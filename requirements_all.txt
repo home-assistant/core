@@ -569,7 +569,7 @@ eternalegypt==0.0.12
 # evdev==1.1.2
 
 # homeassistant.components.evohome
-evohome-async==0.3.5.post1
+evohome-async==0.3.8
 
 # homeassistant.components.faa_delays
 faadelays==0.0.6
@@ -817,7 +817,7 @@ iglo==1.2.7
 ihcsdk==2.7.0
 
 # homeassistant.components.incomfort
-incomfort-client==0.4.0
+incomfort-client==0.4.4
 
 # homeassistant.components.influxdb
 influxdb-client==1.14.0
