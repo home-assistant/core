@@ -18,6 +18,7 @@ import homeassistant.components.scene as scene
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
 from homeassistant.core import Context, CoreState, callback
 from homeassistant.helpers import config_validation as cv, script, trace
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -80,14 +81,17 @@ async def test_firing_event_basic(hass, caplog):
     sequence = cv.SCRIPT_SCHEMA(
         {"alias": alias, "event": event, "event_data": {"hello": "world"}}
     )
-    with script.trace_action(None):
-        script_obj = script.Script(
-            hass,
-            sequence,
-            "Test Name",
-            "test_domain",
-            running_description="test script",
-        )
+
+    # Prepare tracing
+    trace.trace_get()
+
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        running_description="test script",
+    )
 
     await script_obj.async_run(context=context)
     await hass.async_block_till_done()
@@ -100,7 +104,6 @@ async def test_firing_event_basic(hass, caplog):
     assert f"Executing step {alias}" in caplog.text
     assert_action_trace(
         {
-            "": [{}],
             "0": [{}],
         }
     )
@@ -1215,8 +1218,11 @@ async def test_repeat_count(hass, caplog, count):
             },
         }
     )
-    with script.trace_action(None):
-        script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    # Prepare tracing
+    trace.trace_get()
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(context=Context())
     await hass.async_block_till_done()
@@ -1229,7 +1235,6 @@ async def test_repeat_count(hass, caplog, count):
     assert caplog.text.count(f"Repeating {alias}") == count
     assert_action_trace(
         {
-            "": [{}],
             "0": [{}],
             "0/0/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
         }
@@ -2348,3 +2353,165 @@ async def test_embedded_wait_for_trigger_in_automation(hass):
     await hass.async_block_till_done()
 
     assert len(mock_calls) == 1
+
+
+async def test_breakpoints_1(hass):
+    """Test setting a breakpoint halts execution, and execution can be resumed."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event, "event_data": {"value": 0}},  # Node "0"
+            {"event": event, "event_data": {"value": 1}},  # Node "1"
+            {"event": event, "event_data": {"value": 2}},  # Node "2"
+            {"event": event, "event_data": {"value": 3}},  # Node "3"
+            {"event": event, "event_data": {"value": 4}},  # Node "4"
+            {"event": event, "event_data": {"value": 5}},  # Node "5"
+            {"event": event, "event_data": {"value": 6}},  # Node "6"
+            {"event": event, "event_data": {"value": 7}},  # Node "7"
+        ]
+    )
+    logger = logging.getLogger("TEST")
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=2,
+        logger=logger,
+    )
+    trace.trace_id_set(("script_1", "1"))
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "1")
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "5")
+
+    breakpoint_hit_event = asyncio.Event()
+
+    @callback
+    def breakpoint_hit(*_):
+        breakpoint_hit_event.set()
+
+    async_dispatcher_connect(hass, script.SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+
+    watch_messages = []
+
+    @callback
+    def check_action():
+        for message, flag in watch_messages:
+            if script_obj.last_action and message in script_obj.last_action:
+                flag.set()
+
+    script_obj.change_listener = check_action
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+    # Start script, should stop on breakpoint at node "1"
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 1
+    assert events[-1].data["value"] == 0
+
+    # Single step script, should stop at node "2"
+    breakpoint_hit_event.clear()
+    script.debug_step(hass, "script_1", "1")
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 2
+    assert events[-1].data["value"] == 1
+
+    # Single step script, should stop at node "3"
+    breakpoint_hit_event.clear()
+    script.debug_step(hass, "script_1", "1")
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 3
+    assert events[-1].data["value"] == 2
+
+    # Resume script, should stop on breakpoint at node "5"
+    breakpoint_hit_event.clear()
+    script.debug_continue(hass, "script_1", "1")
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 5
+    assert events[-1].data["value"] == 4
+
+    # Resume script, should run until completion
+    script.debug_continue(hass, "script_1", "1")
+    await hass.async_block_till_done()
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+    assert len(events) == 8
+    assert events[-1].data["value"] == 7
+
+
+async def test_breakpoints_2(hass):
+    """Test setting a breakpoint halts execution, and execution can be aborted."""
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event, "event_data": {"value": 0}},  # Node "0"
+            {"event": event, "event_data": {"value": 1}},  # Node "1"
+            {"event": event, "event_data": {"value": 2}},  # Node "2"
+            {"event": event, "event_data": {"value": 3}},  # Node "3"
+            {"event": event, "event_data": {"value": 4}},  # Node "4"
+            {"event": event, "event_data": {"value": 5}},  # Node "5"
+            {"event": event, "event_data": {"value": 6}},  # Node "6"
+            {"event": event, "event_data": {"value": 7}},  # Node "7"
+        ]
+    )
+    logger = logging.getLogger("TEST")
+    script_obj = script.Script(
+        hass,
+        sequence,
+        "Test Name",
+        "test_domain",
+        script_mode="queued",
+        max_runs=2,
+        logger=logger,
+    )
+    trace.trace_id_set(("script_1", "1"))
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "1")
+    script.breakpoint_set(hass, "script_1", script.RUN_ID_ANY, "5")
+
+    breakpoint_hit_event = asyncio.Event()
+
+    @callback
+    def breakpoint_hit(*_):
+        breakpoint_hit_event.set()
+
+    async_dispatcher_connect(hass, script.SCRIPT_BREAKPOINT_HIT, breakpoint_hit)
+
+    watch_messages = []
+
+    @callback
+    def check_action():
+        for message, flag in watch_messages:
+            if script_obj.last_action and message in script_obj.last_action:
+                flag.set()
+
+    script_obj.change_listener = check_action
+
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+
+    # Start script, should stop on breakpoint at node "1"
+    hass.async_create_task(script_obj.async_run(context=Context()))
+    await breakpoint_hit_event.wait()
+    assert script_obj.is_running
+    assert script_obj.runs == 1
+    assert len(events) == 1
+    assert events[-1].data["value"] == 0
+
+    # Abort script
+    script.debug_stop(hass, "script_1", "1")
+    await hass.async_block_till_done()
+    assert not script_obj.is_running
+    assert script_obj.runs == 0
+    assert len(events) == 1
