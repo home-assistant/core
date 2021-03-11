@@ -218,7 +218,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
                 raise ValueError("{entity_id} was not found in the entity registry")
             reload_entries.add(entry.config_entry_id)
         if not reload_entries:
-            raise ValueError("There were not matching config entries to reload")
+            raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
             *[
                 hass.config_entries.async_reload(config_entry_id)
