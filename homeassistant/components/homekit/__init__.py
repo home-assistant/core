@@ -593,9 +593,8 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
-        await self.hass.async_add_executor_job(
-            self.setup, await zeroconf.async_get_instance(self.hass)
-        )
+        zc_instance = await zeroconf.async_get_instance(self.hass)
+        await self.hass.async_add_executor_job(self.setup, zc_instance)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
         await self._async_create_accessories()
