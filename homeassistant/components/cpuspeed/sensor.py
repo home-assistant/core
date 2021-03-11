@@ -54,7 +54,7 @@ class CpuSpeedSensor(Entity):
         return FREQUENCY_GIGAHERTZ
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.info is not None:
             attrs = {

@@ -87,7 +87,7 @@ class DublinPublicTransportSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"

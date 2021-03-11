@@ -133,7 +133,7 @@ class AlphaVantageSensor(Entity):
         return self.values["1. open"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.values is not None:
             return {
@@ -193,7 +193,7 @@ class AlphaVantageForeignExchange(Entity):
         return self._icon
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.values is not None:
             return {

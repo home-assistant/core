@@ -108,7 +108,7 @@ class AgentCamera(MjpegCamera):
                     self._removed = True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Agent DVR camera state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

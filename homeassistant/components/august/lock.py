@@ -105,7 +105,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         return self._changed_by
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {ATTR_BATTERY_LEVEL: self._detail.battery_level}
 

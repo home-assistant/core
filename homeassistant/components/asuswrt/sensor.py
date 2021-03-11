@@ -159,7 +159,7 @@ class AsusWrtSensor(CoordinatorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return the attributes."""
         return {"hostname": self._router.host}
 

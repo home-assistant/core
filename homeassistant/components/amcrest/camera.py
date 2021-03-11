@@ -266,7 +266,7 @@ class AmcrestCam(Camera):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Amcrest-specific camera state attributes."""
         attr = {}
         if self._audio_enabled is not None:

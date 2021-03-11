@@ -119,7 +119,7 @@ class DwdWeatherWarningsSensor(Entity):
         return self._api.api.expected_warning_level
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
         data = {
             ATTR_ATTRIBUTION: ATTRIBUTION,

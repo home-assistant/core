@@ -55,7 +55,7 @@ class EbusdSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self._type == 1 and self._state is not None:
             schedule = {

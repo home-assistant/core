@@ -166,7 +166,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
             self._entity_picture = lock_activity.operator_thumbnail_url
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {}
 

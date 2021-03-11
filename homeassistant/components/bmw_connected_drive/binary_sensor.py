@@ -109,7 +109,7 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
         result = self._attrs.copy()

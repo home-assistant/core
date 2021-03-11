@@ -200,7 +200,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
             ATTR_NIGHT_MODE: self.night_mode,
@@ -455,10 +455,10 @@ class DysonPureCoolEntity(DysonFanEntity):
         return int(self._device.state.carbon_filter_state)
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            **super().device_state_attributes,
+            **super().extra_state_attributes,
             ATTR_ANGLE_LOW: self.angle_low,
             ATTR_ANGLE_HIGH: self.angle_high,
             ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,

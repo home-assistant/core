@@ -156,7 +156,7 @@ class Measurement(CoordinatorEntity):
         return UNIT_MAPPING.get(measure["unit"], measure["unitName"])
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor specific state attributes."""
         return {ATTR_ATTRIBUTION: self.attribution}
 

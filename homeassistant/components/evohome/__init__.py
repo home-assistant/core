@@ -556,7 +556,7 @@ class EvoDevice(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the evohome-specific state attributes."""
         status = self._device_state_attrs
         if "systemModeStatus" in status:

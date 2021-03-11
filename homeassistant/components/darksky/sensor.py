@@ -620,7 +620,7 @@ class DarkSkySensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -739,7 +739,7 @@ class DarkSkyAlertSensor(Entity):
         return "mdi:alert-circle-outline"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._alerts
 

@@ -141,7 +141,7 @@ class AccuWeatherSensor(CoordinatorEntity):
         return SENSOR_TYPES[self.kind][self._unit_system]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.forecast_day is not None:
             if self.kind in ["WindDay", "WindNight", "WindGustDay", "WindGustNight"]:

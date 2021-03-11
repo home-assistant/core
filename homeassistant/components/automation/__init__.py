@@ -535,7 +535,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return automation attributes."""
         if self._id is None:
             return None

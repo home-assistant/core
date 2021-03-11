@@ -179,7 +179,7 @@ class AwairSensor(CoordinatorEntity):
         return SENSOR_TYPES[self._kind][ATTR_UNIT]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the Awair Index alongside state attributes.
 
         The Awair Index is a subjective score ranging from 0-4 (inclusive) that

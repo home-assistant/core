@@ -92,7 +92,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
         return self._state
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         return self._attributes
 
