@@ -363,8 +363,6 @@ def _apply_update(engine, new_version, old_version):
         if engine.dialect.name == "mysql":
             _modify_columns(engine, "events", ["event_data LONGTEXT"])
             _modify_columns(engine, "states", ["attributes LONGTEXT"])
-        if engine.dialect.name != "sqlite":
-            # sqlite cannot alter columns
             _modify_columns(engine, "events", ["event_type VARCHAR(64)"])
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
