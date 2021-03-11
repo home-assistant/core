@@ -47,12 +47,12 @@ async def async_setup_entry(
     else:
         _LOGGER.error("Printer appears to be offline, skipping temperature sensors")
 
-    entities.append(OctoPrintStatusSensor(coordinator, config_entry.entry_id))
-    entities.append(OctoPrintJobPercentageSensor(coordinator, config_entry.entry_id))
+    entities.append(OctoPrintStatusSensor(coordinator, config_entry.unique_id))
+    entities.append(OctoPrintJobPercentageSensor(coordinator, config_entry.unique_id))
     entities.append(
-        OctoPrintEstimatedFinishTimeSensor(coordinator, config_entry.entry_id)
+        OctoPrintEstimatedFinishTimeSensor(coordinator, config_entry.unique_id)
     )
-    entities.append(OctoPrintStartTimeSensor(coordinator, config_entry.entry_id))
+    entities.append(OctoPrintStartTimeSensor(coordinator, config_entry.unique_id))
 
     async_add_entities(entities)
 

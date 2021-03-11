@@ -44,18 +44,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     )
     octoprint.set_api_key(data[CONF_API_KEY])
 
-    uuid = None
-
     try:
         discovery = await octoprint.get_discovery_info()
-        if discovery:
-            uuid = discovery.upnp_uuid
     except ApiError as conn_err:
         _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
         raise CannotConnect from conn_err
 
     # Return info that you want to store in the config entry.
-    return {"title": data[CONF_HOST], "uuid": uuid}
+    return {"title": data[CONF_HOST], "uuid": discovery.upnp_uuid}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -112,9 +108,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             error = "unknown"
         else:
-            if info["uuid"]:
-                await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
-                self._abort_if_unique_id_configured()
+            await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
+            self._abort_if_unique_id_configured()
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self._create_setup_failure(user_input, error)

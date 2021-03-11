@@ -49,6 +49,7 @@ async def init_integration(
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             entry_id="uuid",
+            unique_id="uuid",
             data={
                 "host": "1.1.1.1",
                 "api_key": "test-key",

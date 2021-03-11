@@ -25,8 +25,8 @@ async def async_setup_entry(
     coordinator = hass.data[COMPONENT_DOMAIN][config_entry.entry_id]["coordinator"]
 
     entities = [
-        OctoPrintPrintingBinarySensor(coordinator, config_entry.entry_id),
-        OctoPrintPrintingErrorBinarySensor(coordinator, config_entry.entry_id),
+        OctoPrintPrintingBinarySensor(coordinator, config_entry.unique_id),
+        OctoPrintPrintingErrorBinarySensor(coordinator, config_entry.unique_id),
     ]
 
     async_add_entities(entities)

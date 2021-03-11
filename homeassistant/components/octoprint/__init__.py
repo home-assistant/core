@@ -193,14 +193,14 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         octoprint: OctoprintClient,
-        device_id: str,
+        config_entry_id: str,
         interval: int,
     ):
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"octoprint-{device_id}",
+            name=f"octoprint-{config_entry_id}",
             update_interval=timedelta(seconds=interval),
         )
         self._octoprint = octoprint
