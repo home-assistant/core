@@ -64,6 +64,15 @@ class Events(Base):  # type: ignore
         Index("ix_events_event_type_time_fired", "event_type", "time_fired"),
     )
 
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.Events("
+            f"id={self.event_id}, type='{self.event_type}', data='{self.event_data}', "
+            f"origin='{self.origin}', time_fired='{self.time_fired}'"
+            f")>"
+        )
+
     @staticmethod
     def from_event(event, event_data=None):
         """Create an event database object from a native event."""
@@ -129,6 +138,17 @@ class States(Base):  # type: ignore
         Index("ix_states_entity_id_last_updated", "entity_id", "last_updated"),
     )
 
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.States("
+            f"id={self.state_id}, domain='{self.domain}', entity_id='{self.entity_id}', "
+            f"state='{self.state}', event_id='{self.event_id}', "
+            f"last_updated='{self.last_updated.isoformat(sep=' ', timespec='seconds')}', "
+            f"old_state_id={self.old_state_id}"
+            f")>"
+        )
+
     @staticmethod
     def from_event(event):
         """Create object from a state_changed event."""
@@ -185,6 +205,16 @@ class RecorderRuns(Base):  # type: ignore
 
     __table_args__ = (Index("ix_recorder_runs_start_end", "start", "end"),)
 
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.RecorderRuns("
+            f"id={self.run_id}, start='{self.start.isoformat(sep='', timespec='seconds')}', "
+            f"end='{self.end.isoformat(sep='', timespec='seconds')}', closed_incorrect={self.closed_incorrect}, "
+            f"created='{self.created.isoformat(sep='', timespec='seconds')}'"
+            f")>"
+        )
+
     def entity_ids(self, point_in_time=None):
         """Return the entity ids that existed in this run.
 
@@ -218,6 +248,15 @@ class SchemaChanges(Base):  # type: ignore
     change_id = Column(Integer, primary_key=True)
     schema_version = Column(Integer)
     changed = Column(DateTime(timezone=True), default=dt_util.utcnow)
+
+    def __repr__(self) -> str:
+        """Return string representation of instance for debugging."""
+        return (
+            f"<recorder.SchemaChanges("
+            f"id={self.change_id}, schema_version={self.schema_version}, "
+            f"changed='{self.changed.isoformat(sep=' ', timespec='seconds')}'"
+            f")>"
+        )
 
 
 def process_timestamp(ts):
