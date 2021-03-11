@@ -49,7 +49,7 @@ class Events(Base):  # type: ignore
     }
     __tablename__ = TABLE_EVENTS
     event_id = Column(Integer, primary_key=True)
-    event_type = Column(String(32))
+    event_type = Column(String(64))
     event_data = Column(Text().with_variant(mysql.LONGTEXT, "mysql"))
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True), index=True)
