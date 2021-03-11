@@ -7,7 +7,8 @@
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "with_family": "With family"
+          "with_family": "With family",
+          "gps_accuracy_threshold": "Discard inaccurate location updates above threshold (meters)"
         }
       },
       "reauth": {
