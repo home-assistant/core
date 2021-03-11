@@ -5,11 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional
 from pysonos.core import SoCo
 from pysonos.exceptions import SoCoException
 
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
