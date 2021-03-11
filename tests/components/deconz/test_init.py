@@ -151,12 +151,8 @@ async def test_update_group_unique_id(hass):
     await async_update_group_unique_id(hass, entry)
 
     assert entry.data == {CONF_API_KEY: "1", CONF_HOST: "2", CONF_PORT: "3"}
-
-    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
-    assert old_entity.unique_id == f"{new_unique_id}-OLD"
-
-    new_entity = registry.async_get(f"{LIGHT_DOMAIN}.new")
-    assert new_entity.unique_id == f"{new_unique_id}-NEW"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{new_unique_id}-OLD"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.new").unique_id == f"{new_unique_id}-NEW"
 
 
 async def test_update_group_unique_id_no_legacy_group_id(hass):
@@ -181,5 +177,4 @@ async def test_update_group_unique_id_no_legacy_group_id(hass):
 
     await async_update_group_unique_id(hass, entry)
 
-    old_entity = registry.async_get(f"{LIGHT_DOMAIN}.old")
-    assert old_entity.unique_id == f"{old_unique_id}-OLD"
+    assert registry.async_get(f"{LIGHT_DOMAIN}.old").unique_id == f"{old_unique_id}-OLD"

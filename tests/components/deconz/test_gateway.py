@@ -103,7 +103,6 @@ async def setup_deconz_integration(
     *,
     config=ENTRY_CONFIG,
     options=ENTRY_OPTIONS,
-    get_state_response=DECONZ_WEB_REQUEST,
     entry_id="1",
     unique_id=BRIDGEID,
     source="user",
@@ -121,7 +120,7 @@ async def setup_deconz_integration(
     config_entry.add_to_hass(hass)
 
     if aioclient_mock:
-        mock_deconz_request(aioclient_mock, config, get_state_response)
+        mock_deconz_request(aioclient_mock, config, DECONZ_WEB_REQUEST)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
