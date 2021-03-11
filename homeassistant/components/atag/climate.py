@@ -57,8 +57,8 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     @property
     def hvac_action(self) -> Optional[str]:
         """Return the current running hvac operation."""
-        on = self.coordinator.data.climate.status
-        return CURRENT_HVAC_HEAT if on else CURRENT_HVAC_IDLE
+        is_active = self.coordinator.data.climate.status
+        return CURRENT_HVAC_HEAT if is_active else CURRENT_HVAC_IDLE
 
     @property
     def temperature_unit(self) -> Optional[str]:
