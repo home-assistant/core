@@ -171,7 +171,7 @@ class MetOfficeCurrentSensor(Entity):
         return SENSOR_TYPES[self._type][1]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

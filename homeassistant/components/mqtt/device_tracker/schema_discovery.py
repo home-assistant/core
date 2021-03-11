@@ -109,32 +109,32 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     @property
     def latitude(self):
-        """Return latitude if provided in device_state_attributes or None."""
+        """Return latitude if provided in extra_state_attributes or None."""
         if (
-            self.device_state_attributes is not None
-            and ATTR_LATITUDE in self.device_state_attributes
+            self.extra_state_attributes is not None
+            and ATTR_LATITUDE in self.extra_state_attributes
         ):
-            return self.device_state_attributes[ATTR_LATITUDE]
+            return self.extra_state_attributes[ATTR_LATITUDE]
         return None
 
     @property
     def location_accuracy(self):
-        """Return location accuracy if provided in device_state_attributes or None."""
+        """Return location accuracy if provided in extra_state_attributes or None."""
         if (
-            self.device_state_attributes is not None
-            and ATTR_GPS_ACCURACY in self.device_state_attributes
+            self.extra_state_attributes is not None
+            and ATTR_GPS_ACCURACY in self.extra_state_attributes
         ):
-            return self.device_state_attributes[ATTR_GPS_ACCURACY]
+            return self.extra_state_attributes[ATTR_GPS_ACCURACY]
         return None
 
     @property
     def longitude(self):
-        """Return longitude if provided in device_state_attributes or None."""
+        """Return longitude if provided in extra_state_attributes or None."""
         if (
-            self.device_state_attributes is not None
-            and ATTR_LONGITUDE in self.device_state_attributes
+            self.extra_state_attributes is not None
+            and ATTR_LONGITUDE in self.extra_state_attributes
         ):
-            return self.device_state_attributes[ATTR_LONGITUDE]
+            return self.extra_state_attributes[ATTR_LONGITUDE]
         return None
 
     @property

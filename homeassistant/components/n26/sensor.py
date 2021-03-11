@@ -86,7 +86,7 @@ class N26Account(Entity):
         return self._data.balance.get("currency")
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {
             ATTR_IBAN: self._data.balance.get("iban"),
@@ -147,7 +147,7 @@ class N26Card(Entity):
         return self._card["status"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {
             "apple_pay_eligible": self._card.get("applePayEligible"),
@@ -220,7 +220,7 @@ class N26Space(Entity):
         return self._space["balance"]["currency"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         goal_value = ""
         if "goal" in self._space:

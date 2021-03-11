@@ -246,7 +246,7 @@ class MinecraftServerEntity(Entity):
             "sw_version": self._server.protocol_version,
         }
         self._device_class = device_class
-        self._device_state_attributes = None
+        self._extra_state_attributes = None
         self._disconnect_dispatcher = None
 
     @property

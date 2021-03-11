@@ -294,7 +294,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         return self._blind.position[self._motor_key] == 100
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.position is not None:

@@ -217,7 +217,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         return response.content
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the Netatmo-specific camera state attributes."""
         return {
             "id": self._id,

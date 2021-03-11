@@ -392,7 +392,7 @@ class OnkyoDevice(MediaPlayerEntity):
         return self._source_list
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return self._attributes
 

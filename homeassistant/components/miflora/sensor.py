@@ -189,7 +189,7 @@ class MiFloraSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
 

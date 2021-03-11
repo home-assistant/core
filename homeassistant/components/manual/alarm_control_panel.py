@@ -394,7 +394,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         return check
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.state == STATE_ALARM_PENDING or self.state == STATE_ALARM_ARMING:
             return {

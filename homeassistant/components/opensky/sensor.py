@@ -174,7 +174,7 @@ class OpenSkySensor(Entity):
         self._previously_tracked = currently_tracked
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: OPENSKY_ATTRIBUTION}
 

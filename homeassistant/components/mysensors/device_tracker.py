@@ -72,5 +72,5 @@ class MySensorsDeviceScanner(mysensors.device.MySensorsDevice):
             host_name=self.name,
             gps=(latitude, longitude),
             battery=node.battery_level,
-            attributes=self.device_state_attributes,
+            attributes=self.extra_state_attributes,
         )

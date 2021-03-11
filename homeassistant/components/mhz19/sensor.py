@@ -107,7 +107,7 @@ class MHZ19Sensor(Entity):
         self._ppm = data.get(SENSOR_CO2)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         result = {}
         if self._sensor_type == SENSOR_TEMPERATURE and self._ppm is not None:

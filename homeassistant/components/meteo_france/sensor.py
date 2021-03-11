@@ -154,7 +154,7 @@ class MeteoFranceSensor(CoordinatorEntity):
         return SENSOR_TYPES[self._type][ENTITY_ENABLE]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -177,7 +177,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         reference_dt = self.coordinator.data.forecast[0]["dt"]
         return {
@@ -208,7 +208,7 @@ class MeteoFranceAlertSensor(MeteoFranceSensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             **readeable_phenomenoms_dict(self.coordinator.data.phenomenons_max_colors),

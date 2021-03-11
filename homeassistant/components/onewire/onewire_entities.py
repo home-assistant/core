@@ -58,7 +58,7 @@ class OneWireBaseEntity(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {"device_file": self._device_file, "raw_value": self._value_raw}
 

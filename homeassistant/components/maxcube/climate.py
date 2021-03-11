@@ -286,7 +286,7 @@ class MaxCubeClimate(ClimateEntity):
                 return
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         cube = self._cubehandle.cube
         device = cube.device_by_rf(self._rf_address)

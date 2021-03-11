@@ -99,7 +99,7 @@ class NukiDeviceEntity(LockEntity, ABC):
         """Return true if lock is locked."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
             ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,

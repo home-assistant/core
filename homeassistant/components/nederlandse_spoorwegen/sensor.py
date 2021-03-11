@@ -124,7 +124,7 @@ class NSDepartureSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._trips:
             return

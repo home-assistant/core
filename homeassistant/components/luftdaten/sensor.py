@@ -94,7 +94,7 @@ class LuftdatenSensor(Entity):
                 return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
 
