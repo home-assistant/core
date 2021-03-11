@@ -162,6 +162,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     ) -> None:
         """Initialize the Verisure hub."""
         self.imageseries = {}
+        self.firmware_status = {}
         self.config = domain_config
         self.giid = domain_config.get(CONF_GIID)
 
@@ -212,6 +213,24 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 return {}
             raise
 
+    @Throttle(timedelta(days=1))
+    async def update_firmware_status(self) -> None:
+        """Update the firmware status."""
+        try:
+            self.firmware_status = await self.hass.async_add_executor_job(
+                self.session.get_firmware_status
+            )
+        except VerisureResponseError as ex:
+            LOGGER.error("Could not read firmware status, %s", ex)
+            await self._handle_api_error(ex)
+
+    async def _handle_api_error(self, ex: VerisureResponseError):
+        if ex.status_code == HTTP_SERVICE_UNAVAILABLE:  # Service unavailable
+            LOGGER.info("Trying to log in again")
+            await self.hass.async_add_executor_job(self.login)
+            return {}
+        raise ex
+
     @Throttle(timedelta(seconds=60))
     def update_smartcam_imageseries(self) -> None:
         """Update the image series."""
@@ -244,3 +263,8 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         """Get values from the imageseries that matches the jsonpath."""
         res = jsonpath(self.imageseries, jpath % args)
         return res or []
+
+    def is_upgradeable(self):
+        """Check if firmware is upgradeable."""
+        result = jsonpath(self.firmware_status, "$.upgradeable")
+        return result[0] if result else None

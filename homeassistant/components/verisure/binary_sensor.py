@@ -5,6 +5,7 @@ from typing import Any, Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_SAFETY,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
@@ -23,7 +24,7 @@ def setup_platform(
     """Set up the Verisure binary sensors."""
     coordinator = hass.data[DOMAIN]
 
-    sensors = [VerisureEthernetStatus(coordinator)]
+    sensors = [VerisureEthernetStatus(coordinator), VerisureFirmwareUpdate(coordinator)]
 
     if int(coordinator.config.get(CONF_DOOR_WINDOW, 1)):
         sensors.extend(
@@ -105,3 +106,42 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_CONNECTIVITY
+
+
+class VerisureFirmwareUpdate(CoordinatorEntity, BinarySensorEntity):
+    """Representation of a Verisure firmware."""
+
+    coordinator: VerisureDataUpdateCoordinator
+
+    @property
+    def name(self) -> str:
+        """Return the name of the binary sensor."""
+        return "Verisure Firmware update"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.is_upgradeable()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.is_upgradeable() is not None
+
+    # pylint: disable=no-self-use
+    async def async_update(self) -> None:
+        """Update the state of the sensor."""
+        await self.coordinator.update_firmware_status()
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_SAFETY
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+        return True
