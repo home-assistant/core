@@ -81,7 +81,7 @@ class MobileAppEntity(RestoreEntity):
         return self._config.get(ATTR_SENSOR_DEVICE_CLASS)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._config[ATTR_SENSOR_ATTRIBUTES]
 
