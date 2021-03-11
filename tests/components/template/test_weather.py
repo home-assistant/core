@@ -53,7 +53,7 @@ async def test_template_state_text(hass):
     await hass.async_block_till_done()
     hass.states.async_set("sensor.windspeed", 20)
     await hass.async_block_till_done()
-    hass.states.async_set("sensor.windbearing", "SE")
+    hass.states.async_set("sensor.windbearing", 180)
     await hass.async_block_till_done()
     hass.states.async_set("sensor.ozone", 25)
     await hass.async_block_till_done()
@@ -71,6 +71,6 @@ async def test_template_state_text(hass):
     assert data.get(ATTR_WEATHER_HUMIDITY) == 60
     assert data.get(ATTR_WEATHER_PRESSURE) == 1000
     assert data.get(ATTR_WEATHER_WIND_SPEED) == 20
-    assert data.get(ATTR_WEATHER_WIND_BEARING) == "SE"
+    assert data.get(ATTR_WEATHER_WIND_BEARING) == 180
     assert data.get(ATTR_WEATHER_OZONE) == 25
     assert data.get(ATTR_WEATHER_VISIBILITY) == 4.6
