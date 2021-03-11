@@ -1138,7 +1138,9 @@ def _get_fixtures_base_path():
     return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 
-async def test_homekit_start_in_accessory_mode(hass, hk_driver, device_reg):
+async def test_homekit_start_in_accessory_mode(
+    hass, hk_driver, mock_zeroconf, device_reg
+):
     """Test HomeKit start method in accessory mode."""
     entry = await async_init_integration(hass)
 
