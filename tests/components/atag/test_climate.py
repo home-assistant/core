@@ -15,7 +15,6 @@ from homeassistant.components.climate.const import CURRENT_HVAC_IDLE, PRESET_AWA
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.components.atag import UID, init_integration
