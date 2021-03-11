@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_SAFETY,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -26,7 +27,10 @@ async def async_setup_entry(
     """Set up Verisure binary sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors: list[Entity] = [VerisureEthernetStatus(coordinator)]
+    sensors: list[Entity] = [
+        VerisureEthernetStatus(coordinator),
+        VerisureFirmwareUpdate(coordinator),
+    ]
 
     sensors.extend(
         VerisureDoorWindowSensor(coordinator, serial_number)
@@ -115,6 +119,7 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
             "manufacturer": "Verisure",
             "model": "VBox",
             "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            "sw_version": self.coordinator.data.get("firmware", {}).get("current"),
         }
 
     @property
@@ -131,3 +136,53 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     def device_class(self) -> str:
         """Return the class of this entity."""
         return DEVICE_CLASS_CONNECTIVITY
+
+
+class VerisureFirmwareUpdate(CoordinatorEntity, BinarySensorEntity):
+    """Representation of a Verisure firmware."""
+
+    coordinator: VerisureDataUpdateCoordinator
+
+    @property
+    def name(self) -> str:
+        """Return the name of the binary sensor."""
+        return "Verisure Firmware update"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the sensor."""
+        return self.coordinator.data["firmware"]["upgradeable"]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.coordinator.data["firmware"] is not None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_SAFETY
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            "name": "Verisure Alarm",
+            "manufacturer": "Verisure",
+            "model": "VBox",
+            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            "sw_version": self.coordinator.data.get("firmware", {}).get("current"),
+        }
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return {
+            "current": self.coordinator.data["firmware"]["current"],
+            "latest": self.coordinator.data["firmware"]["latest"],
+        }
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.coordinator.entry.data[CONF_GIID]}_firmware"

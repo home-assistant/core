@@ -66,6 +66,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             overview = await self.hass.async_add_executor_job(
                 self.verisure.get_overview
             )
+            firmware_status = await self._get_firmware_status()
         except VerisureResponseError as ex:
             LOGGER.error("Could not read overview, %s", ex)
             if ex.status_code == HTTP_SERVICE_UNAVAILABLE:  # Service unavailable
@@ -101,7 +102,17 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             "smart_plugs": {
                 device["deviceLabel"]: device for device in overview["smartPlugs"]
             },
+            "firmware": {
+                "latest": firmware_status["latestFirmware"],
+                "current": firmware_status["gateways"][0]["reportedRunningFirmware"],
+                "upgradeable": firmware_status["upgradeable"],
+            },
         }
+
+    @Throttle(timedelta(days=1))
+    async def _get_firmware_status(self) -> None:
+        """Get the firmware status."""
+        return await self.hass.async_add_executor_job(self.verisure.get_firmware_status)
 
     @Throttle(timedelta(seconds=60))
     def update_smartcam_imageseries(self) -> None:

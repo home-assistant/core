@@ -57,6 +57,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
             "manufacturer": "Verisure",
             "model": "VBox",
             "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            "sw_version": self.coordinator.data.get("firmware", {}).get("current"),
         }
 
     @property
