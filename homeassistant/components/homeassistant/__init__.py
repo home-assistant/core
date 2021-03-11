@@ -232,15 +232,11 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         elif ATTR_ENTITY_ID:
             referenced = await async_extract_referenced_entity_ids(hass, call)
             ent_reg = entity_registry.async_get(hass)
-            for entity_id in referenced.referenced:
+            for entity_id in referenced.referenced | referenced.indirectly_referenced:
                 entry = ent_reg.async_get(entity_id)
                 if entry is None:
                     raise ValueError("{entity_id} was not found in the entity registry")
                 reload_entries.add(entry.config_entry_id)
-            for entity_id in referenced.indirectly_referenced:
-                entry = ent_reg.async_get(entity_id)
-                if entry is not None:
-                    reload_entries.add(entry.config_entry_id)
         await asyncio.gather(
             *[
                 hass.config_entries.async_reload(config_entry_id)
