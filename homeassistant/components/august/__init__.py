@@ -433,11 +433,8 @@ class AugustData(AugustSubscriberMixin):
                     "The lock %s could not be setup because it does not have a bridge (Connect)",
                     lock.device_name,
                 )
-            elif not lock_detail.bridge.operative:
-                _LOGGER.info(
-                    "The lock %s could not be setup because the bridge (Connect) is not operative",
-                    lock.device_name,
-                )
+            # Bridge may come back online later so we still add the device since we will
+            # have a pubnub subscription to tell use when it recovers
             else:
                 lock_is_operative = True
 
