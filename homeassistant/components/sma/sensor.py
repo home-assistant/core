@@ -5,7 +5,8 @@ import logging
 import pysma
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -19,17 +20,20 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
+from .const import (
+    CONF_CUSTOM,
+    CONF_FACTOR,
+    CONF_GROUP,
+    CONF_KEY,
+    CONF_UNIT,
+    DOMAIN,
+    GROUPS,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CUSTOM = "custom"
-CONF_FACTOR = "factor"
-CONF_GROUP = "group"
-CONF_KEY = "key"
-CONF_UNIT = "unit"
-
-GROUPS = ["user", "installer"]
 
 
 def _check_sensor_schema(conf):
@@ -84,9 +88,23 @@ PLATFORM_SCHEMA = vol.All(
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Import the platform into a config entry."""
+    _LOGGER.warning(
+        "Loading SMA via platform setup is deprecated. "
+        "Please remove it from your configuration"
+    )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up SMA WebConnect sensor."""
     # Check config again during load - dependency available
-    config = _check_sensor_schema(config)
+    config = _check_sensor_schema(config_entry.data)
 
     # Init all default sensors
     sensor_def = pysma.Sensors()
@@ -168,7 +186,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_track_time_interval(hass, async_sma, interval)
 
 
-class SMAsensor(SensorEntity):
+class SMAsensor(Entity):
     """Representation of a SMA sensor."""
 
     def __init__(self, pysma_sensor, sub_sensors):
@@ -195,7 +213,7 @@ class SMAsensor(SensorEntity):
         return self._sensor.unit
 
     @property
-    def extra_state_attributes(self):  # Can be remove from 0.99
+    def device_state_attributes(self):  # Can be remove from 0.99
         """Return the state attributes of the sensor."""
         return self._attr
 

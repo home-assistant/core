@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up SMA Solar",
+        "description": "Enter your SMA device information.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "group": "Group"
+        }
+      },
+      "sensors": {
+        "title": "Set up SMA Solar",
+        "description": "Select sensors to create. If none is selected, all sensors will be created.",
+        "data": {
+          "sensors": "Select Sensors",
+          "add_custom": "Add a custom sensor"
+        }
+      },
+      "custom_sensor": {
+        "title": "Set up SMA Solar",
+        "description": "Add a custom sensor",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "key": "Key",
+          "unit": "Unit",
+          "factor": "Factor",
+          "path": "Path",
+          "add_another": "Add another"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_retrieve_serial": "Successfully connected, but unable to retrieve the device serial",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}
