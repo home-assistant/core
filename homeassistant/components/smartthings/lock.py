@@ -57,7 +57,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
         return self._device.status.lock == ST_STATE_LOCKED
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         state_attrs = {}
         status = self._device.status.attributes[Attribute.lock]

@@ -296,7 +296,7 @@ class MinutPointEntity(Entity):
         return self._id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return status of device."""
         attrs = self.device.device_status
         attrs["last_heard_from"] = as_local(self.last_update).strftime(
