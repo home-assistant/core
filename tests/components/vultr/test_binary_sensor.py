@@ -76,7 +76,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 assert "Vultr {}" == device.name
 
             device.update()
-            device_attrs = device.device_state_attributes
+            device_attrs = device.extra_state_attributes
 
             if device.subscription == "555555":
                 assert "Vultr Another Server" == device.name

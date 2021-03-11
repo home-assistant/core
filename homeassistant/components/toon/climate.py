@@ -114,7 +114,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return DEFAULT_MAX_TEMP
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the current state of the burner."""
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 

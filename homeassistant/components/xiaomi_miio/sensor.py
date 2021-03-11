@@ -185,7 +185,7 @@ class XiaomiAirQualityMonitor(XiaomiMiioEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
 
