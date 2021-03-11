@@ -23,6 +23,7 @@ PRESET_MAP = {
     PRESET_AWAY: "vacation",
     PRESET_BOOST: "fireplace",
 }
+PRESET_INVERTED = {v: k for k, v in PRESET_MAP.items()}
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 
@@ -77,9 +78,8 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     @property
     def preset_mode(self) -> Optional[str]:
         """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
-        return list(PRESET_MAP.keys())[
-            list(PRESET_MAP.values()).index(self.coordinator.data.climate.preset_mode)
-        ]
+        preset = self.coordinator.data.climate.preset_mode
+        return PRESET_INVERTED.get(preset)
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
