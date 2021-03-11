@@ -129,7 +129,11 @@ class NetatmoDataHandler:
                 if update_callback:
                     update_callback()
 
-        except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+        except pyatmo.NoDevice as err:
+            _LOGGER.debug(err)
+            self.data[data_class_entry] = None
+
+        except pyatmo.ApiError as err:
             _LOGGER.debug(err)
 
     async def register_data_class(

@@ -117,7 +117,7 @@ class IPPMarkerSensor(IPPSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {
             ATTR_MARKER_HIGH_LEVEL: self.coordinator.data.markers[
@@ -160,7 +160,7 @@ class IPPPrinterSensor(IPPSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {
             ATTR_INFO: self.coordinator.data.info.printer_info,

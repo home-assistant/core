@@ -354,9 +354,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
 
         data[ATTR_ZONE_STATUS] = self._zone.get_status()
 

@@ -16,7 +16,9 @@ from .const import (
     CONF_MODEL,
     DOMAIN,
     KEY_COORDINATOR,
+    MODELS_AIR_MONITOR,
     MODELS_FAN,
+    MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
 )
@@ -27,7 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 GATEWAY_PLATFORMS = ["alarm_control_panel", "sensor", "switch", "light"]
 SWITCH_PLATFORMS = ["switch"]
 FAN_PLATFORMS = ["fan"]
+LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
+AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
 
 
 async def async_setup(hass: core.HomeAssistant, config: dict):
@@ -126,9 +130,14 @@ async def async_setup_device_entry(
         platforms = SWITCH_PLATFORMS
     elif model in MODELS_FAN:
         platforms = FAN_PLATFORMS
+    elif model in MODELS_LIGHT:
+        platforms = LIGHT_PLATFORMS
     for vacuum_model in MODELS_VACUUM:
         if model.startswith(vacuum_model):
             platforms = VACUUM_PLATFORMS
+    for air_monitor_model in MODELS_AIR_MONITOR:
+        if model.startswith(air_monitor_model):
+            platforms = AIR_MONITOR_PLATFORMS
 
     if not platforms:
         return False

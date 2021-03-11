@@ -120,7 +120,7 @@ class GarminConnectSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for sensor."""
         if not self._data.data:
             return {}

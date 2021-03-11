@@ -1013,6 +1013,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return None
 
     @callback
+    def _set_confirm_only(
+        self,
+    ) -> None:
+        """Mark the config flow as only needing user confirmation to finish flow."""
+        self.context["confirm_only"] = True
+
+    @callback
     def _async_current_entries(self, include_ignore: bool = False) -> List[ConfigEntry]:
         """Return current entries.
 

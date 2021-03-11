@@ -3,7 +3,7 @@ import asyncio
 
 import upb_lib
 
-from homeassistant.const import CONF_FILE_PATH, CONF_HOST
+from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
@@ -11,7 +11,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_ADDRESS,
     ATTR_BRIGHTNESS_PCT,
-    ATTR_COMMAND,
     ATTR_RATE,
     DOMAIN,
     EVENT_UPB_SCENE_CHANGED,
@@ -111,7 +110,7 @@ class UpbEntity(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the default attributes of the element."""
         return self._element.as_dict()
 

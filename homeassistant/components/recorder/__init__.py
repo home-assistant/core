@@ -1,6 +1,5 @@
 """Support for recording details."""
 import asyncio
-from collections import namedtuple
 import concurrent.futures
 from datetime import datetime
 import logging
@@ -8,7 +7,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, NamedTuple, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -223,7 +222,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return await instance.async_db_ready
 
 
-PurgeTask = namedtuple("PurgeTask", ["keep_days", "repack"])
+class PurgeTask(NamedTuple):
+    """Object to store information about purge task."""
+
+    keep_days: int
+    repack: bool
 
 
 class WaitTask:

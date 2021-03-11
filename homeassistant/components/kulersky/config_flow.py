@@ -15,9 +15,7 @@ async def _async_has_devices(hass) -> bool:
     """Return if there are devices that can be discovered."""
     # Check if there are any devices that can be discovered in the network.
     try:
-        devices = await hass.async_add_executor_job(
-            pykulersky.discover_bluetooth_devices
-        )
+        devices = await pykulersky.discover()
     except pykulersky.PykulerskyException as exc:
         _LOGGER.error("Unable to discover nearby Kuler Sky devices: %s", exc)
         return False

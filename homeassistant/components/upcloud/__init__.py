@@ -40,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_CORE_NUMBER = "core_number"
 ATTR_HOSTNAME = "hostname"
 ATTR_MEMORY_AMOUNT = "memory_amount"
-ATTR_STATE = "state"
 ATTR_TITLE = "title"
 ATTR_UUID = "uuid"
 ATTR_ZONE = "zone"
@@ -297,7 +296,7 @@ class UpCloudServerEntity(CoordinatorEntity):
         return DEFAULT_COMPONENT_DEVICE_CLASS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the UpCloud server."""
         return {
             x: getattr(self._server, x, None)

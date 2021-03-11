@@ -140,7 +140,7 @@ class DemoVacuum(VacuumEntity):
         return max(0, min(100, self._battery_level))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
@@ -288,7 +288,7 @@ class StateDemoVacuum(StateVacuumEntity):
         return FAN_SPEEDS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
