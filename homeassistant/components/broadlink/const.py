@@ -6,13 +6,16 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 DOMAIN = "broadlink"
 
 DOMAINS_AND_TYPES = {
-    REMOTE_DOMAIN: {"RM2", "RM4"},
-    SENSOR_DOMAIN: {"A1", "RM2", "RM4"},
+    REMOTE_DOMAIN: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
+    SENSOR_DOMAIN: {"A1", "RM4MINI", "RM4PRO", "RMPRO"},
     SWITCH_DOMAIN: {
         "BG1",
         "MP1",
-        "RM2",
-        "RM4",
+        "RM4MINI",
+        "RM4PRO",
+        "RMMINI",
+        "RMMINIB",
+        "RMPRO",
         "SP1",
         "SP2",
         "SP2S",

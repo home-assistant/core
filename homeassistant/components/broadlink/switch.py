@@ -109,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
-    if device.api.type in {"RM2", "RM4"}:
+    if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
         platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
         switches = [
