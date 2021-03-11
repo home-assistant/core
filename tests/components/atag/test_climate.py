@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import CURRENT_HVAC_IDLE, PRESET_AWA
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.components.atag import UID, init_integration
@@ -28,10 +29,10 @@ async def test_climate(
 ) -> None:
     """Test the creation and values of Atag climate device."""
     await init_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
-    assert registry.async_is_registered(CLIMATE_ID)
-    entity = registry.async_get(CLIMATE_ID)
+    assert entity_registry.async_is_registered(CLIMATE_ID)
+    entity = entity_registry.async_get(CLIMATE_ID)
     assert entity.unique_id == f"{UID}-{CLIMATE}"
     assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
