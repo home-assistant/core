@@ -111,7 +111,7 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
             raise NotImplementedError()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
