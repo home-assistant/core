@@ -1269,7 +1269,7 @@ pyalmond==0.0.2
 pyarlo==0.2.4
 
 # homeassistant.components.atag
-pyatag==0.3.4.4
+pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
 pyatmo==4.2.2
