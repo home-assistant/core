@@ -318,7 +318,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         return supported
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if self._client.sound_output is None and self.state == STATE_OFF:
             return {}
