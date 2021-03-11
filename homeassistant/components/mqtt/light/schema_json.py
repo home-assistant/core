@@ -26,13 +26,11 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     CONF_BRIGHTNESS,
     CONF_COLOR_TEMP,
-    CONF_DEVICE,
     CONF_EFFECT,
     CONF_HS,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_RGB,
-    CONF_UNIQUE_ID,
     CONF_WHITE_VALUE,
     CONF_XY,
     STATE_ON,
@@ -46,12 +44,7 @@ import homeassistant.util.color as color_util
 from .. import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, subscription
 from ... import mqtt
 from ..debug_info import log_messages
-from ..mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-)
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import CONF_BRIGHTNESS_SCALE
 
@@ -89,7 +82,6 @@ PLATFORM_SCHEMA_JSON = (
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(
@@ -109,13 +101,11 @@ PLATFORM_SCHEMA_JSON = (
             vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
         }
     )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
+    .extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
     .extend(MQTT_LIGHT_SCHEMA_SCHEMA.schema)
 )
 
@@ -153,8 +143,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         self._topic = {
             key: config.get(key) for key in (CONF_STATE_TOPIC, CONF_COMMAND_TOPIC)
         }
@@ -337,11 +325,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     def white_value(self):
         """Return the white property."""
         return self._white_value
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._config[CONF_NAME]
 
     @property
     def is_on(self):
