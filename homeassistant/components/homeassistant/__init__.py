@@ -26,8 +26,6 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
 )
 
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
-
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
