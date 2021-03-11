@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 import homeassistant.config as conf_util
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -20,7 +21,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
@@ -33,7 +34,16 @@ SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
-SCHEMA_RELOAD_CONFIG_ENTRY = vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str})
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
+    cv.has_at_least_one_key(ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_CONFIG_ENTRY_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DOMAIN): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+            vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
+        }
+    ),
+)
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -209,7 +219,23 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_reload_config_entry(call):
         """Service handler for reloading a config entry."""
-        await hass.config_entries.async_reload(call.data[ATTR_CONFIG_ENTRY_ID])
+        data = call.data
+        reload_coro = hass.config_entries.async_reload
+        tasks = []
+        if ATTR_CONFIG_ENTRY_ID in data:
+            tasks.append(reload_coro(data[ATTR_CONFIG_ENTRY_ID]))
+        elif ATTR_DOMAIN in data:
+            tasks.extend(
+                reload_coro(entry.entry_id)
+                for entry in hass.config_entries.async_entries(data[ATTR_DOMAIN])
+            )
+        elif ATTR_ENTITY_ID:
+            ent_reg = entity_registry.async_get()
+            for entity_id in data[ATTR_ENTITY_ID]:
+                entry = ent_reg.async_get(entity_id)
+                if entry is not None:
+                    tasks.append(reload_coro(entry.config_entry_id))
+        await asyncio.gather(*tasks)
 
     hass.helpers.service.async_register_admin_service(
         ha.DOMAIN,
