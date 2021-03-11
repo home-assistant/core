@@ -21,7 +21,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .trace import get_debug_trace, get_debug_traces
+from .trace import AUTOMATION_TRACE_EVENT, get_debug_trace, get_debug_traces
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -31,6 +31,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, websocket_automation_trace_get)
     websocket_api.async_register_command(hass, websocket_automation_trace_list)
+    websocket_api.async_register_command(hass, websocket_automation_trace_subscribe)
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_clear)
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_list)
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_set)
@@ -67,6 +68,32 @@ def websocket_automation_trace_list(hass, connection, msg):
     automation_traces = get_debug_traces(hass, summary=True)
 
     connection.send_result(msg["id"], automation_traces)
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "automation/trace/subscribe"})
+def websocket_automation_trace_subscribe(hass, connection, msg):
+    """Subscribe to trace updates."""
+
+    async def trace_event(automation_id, run_id, status):
+        """Forward events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"],
+                {
+                    "automation_id": automation_id,
+                    "run_id": run_id,
+                    "status": status,
+                },
+            )
+        )
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, AUTOMATION_TRACE_EVENT, trace_event
+    )
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @callback

@@ -131,6 +131,7 @@ _SHUTDOWN_MAX_WAIT = 60
 ACTION_TRACE_NODE_MAX_LEN = 20  # Max length of a trace node for repeated actions
 
 SCRIPT_BREAKPOINT_HIT = "script_breakpoint_hit"
+SCRIPT_BREAKPOINT_HIT_RUN_ID = "script_breakpoint_hit_{}"
 SCRIPT_DEBUG_CONTINUE_STOP = "script_debug_continue_stop_{}_{}"
 SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
@@ -171,6 +172,7 @@ async def trace_action(hass, script_run, stop, variables):
             )
         ):
             async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, unique_id, run_id, path)
+            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT_RUN_ID.format(run_id))
 
             done = asyncio.Event()
 

@@ -7,9 +7,16 @@ import logging
 from typing import Any, Awaitable, Callable, Deque, Dict, Optional
 
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.script import SCRIPT_BREAKPOINT_HIT_RUN_ID
 from homeassistant.helpers.trace import TraceElement, trace_id_set
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
+
+AUTOMATION_TRACE_EVENT = "automation_trace_event"
 
 DATA_AUTOMATION_TRACE = "automation_trace"
 STORED_TRACES = 5  # Stored traces per automation
@@ -28,6 +35,7 @@ class AutomationTrace:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         unique_id: Optional[str],
         config: Dict[str, Any],
         context: Context,
@@ -38,8 +46,9 @@ class AutomationTrace:
         self._config: Dict[str, Any] = config
         self._context: Context = context
         self._error: Optional[Exception] = None
-        self._state: str = "running"
+        self._hass: HomeAssistant = hass
         self.run_id: str = str(next(self._run_ids))
+        self.state: str = "running"
         self._timestamp_finish: Optional[dt.datetime] = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
         self._unique_id: Optional[str] = unique_id
@@ -64,7 +73,17 @@ class AutomationTrace:
     def finished(self) -> None:
         """Set finish time."""
         self._timestamp_finish = dt_util.utcnow()
-        self._state = "stopped"
+        self.state = "stopped"
+
+    def fire_trace_event(self) -> None:
+        """Fire trace event."""
+        async_dispatcher_send(
+            self._hass,
+            AUTOMATION_TRACE_EVENT,
+            self._unique_id,
+            self.run_id,
+            self.state,
+        )
 
     def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this AutomationTrace."""
@@ -112,7 +131,7 @@ class AutomationTrace:
             "last_action": last_action,
             "last_condition": last_condition,
             "run_id": self.run_id,
-            "state": self._state,
+            "state": self.state,
             "timestamp": {
                 "start": self._timestamp_start,
                 "finish": self._timestamp_finish,
@@ -153,7 +172,7 @@ class LimitedSizeDict(OrderedDict):
 @contextmanager
 def trace_automation(hass, unique_id, config, context):
     """Trace action execution of automation with automation_id."""
-    automation_trace = AutomationTrace(unique_id, config, context)
+    automation_trace = AutomationTrace(hass, unique_id, config, context)
     trace_id_set((unique_id, automation_trace.run_id))
 
     if unique_id:
@@ -161,6 +180,14 @@ def trace_automation(hass, unique_id, config, context):
         if unique_id not in automation_traces:
             automation_traces[unique_id] = LimitedSizeDict(size_limit=STORED_TRACES)
         automation_traces[unique_id][automation_trace.run_id] = automation_trace
+        automation_trace.fire_trace_event()
+
+        async def breakpoint_hit():
+            automation_trace.state = "debugged"
+            automation_trace.fire_trace_event()
+
+        signal = SCRIPT_BREAKPOINT_HIT_RUN_ID.format(automation_trace.run_id)
+        remove_signal = async_dispatcher_connect(hass, signal, breakpoint_hit)
 
     try:
         yield automation_trace
@@ -171,6 +198,8 @@ def trace_automation(hass, unique_id, config, context):
     finally:
         if unique_id:
             automation_trace.finished()
+            remove_signal()
+            automation_trace.fire_trace_event()
 
 
 @callback
