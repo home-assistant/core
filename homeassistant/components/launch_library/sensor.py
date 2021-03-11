@@ -76,7 +76,7 @@ class LaunchLibrarySensor(Entity):
         return "mdi:rocket"
 
     @property
-    def device_state_attributes(self) -> Optional[dict]:
+    def extra_state_attributes(self) -> Optional[dict]:
         """Return attributes for the sensor."""
         if self.next_launch:
             return {
