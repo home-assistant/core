@@ -51,8 +51,9 @@ ATTR_COLOR_MODE = "color_mode"
 # List of color modes supported by the light
 ATTR_SUPPORTED_COLOR_MODES = "supported_color_modes"
 # Possible color modes
-COLOR_MODE_NONE = "color_mode_onoff"
-COLOR_MODE_DIMMER = "color_mode_dimmer"
+COLOR_MODE_UNKNOWN = "color_mode_unknown"  # Ambiguous color mode
+COLOR_MODE_NONE = "color_mode_onoff"  # Must be the only supported mode
+COLOR_MODE_DIMMER = "color_mode_dimmer"  # Must be the only supported mode
 COLOR_MODE_COLOR_TEMP = "color_mode_color_temp"
 COLOR_MODE_HS = "color_mode_hs"
 COLOR_MODE_XY = "color_mode_xy"
@@ -252,6 +253,9 @@ async def async_setup(hass, config):
 
             preprocess_turn_on_alternatives(hass, params)
 
+        if ATTR_PROFILE not in params:
+            profiles.apply_default(light.entity_id, params)
+
         supported_color_modes = light.supported_color_modes
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
         # for legacy lights
@@ -262,33 +266,35 @@ async def async_setup(hass, config):
                 and not supported_color_modes
             ):
                 rgbw_color = params.pop(ATTR_RGBW_COLOR)
-                params[ATTR_RGB_COLOR] = rgbw_color[0:2]
+                params[ATTR_RGB_COLOR] = rgbw_color[0:3]
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes
         # is not implemented
-        if ATTR_HS_COLOR or ATTR_RGB_COLOR or ATTR_XY_COLOR in params:
-            if not supported_color_modes or COLOR_MODE_HS in supported_color_modes:
-                if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
-                    params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-                if (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
-                    params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-
-            elif COLOR_MODE_RGB in supported_color_modes:
-                if (hs_color := params.pop(ATTR_HS_COLOR, None)) is not None:
-                    params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-                if (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
-                    params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
-
+        if not supported_color_modes:
+            if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
+                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            elif (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
+                params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
+        elif ATTR_HS_COLOR in params and COLOR_MODE_HS not in supported_color_modes:
+            hs_color = params.pop(ATTR_HS_COLOR)
+            if COLOR_MODE_RGB in supported_color_modes:
+                params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
             elif COLOR_MODE_XY in supported_color_modes:
-                if (hs_color := params.pop(ATTR_HS_COLOR, None)) is not None:
-                    params[ATTR_RGB_COLOR] = color_util.color_hs_to_xy(*hs_color)
-                if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
-                    params[ATTR_HS_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-
-        if ATTR_PROFILE not in params:
-            profiles.apply_default(light.entity_id, params)
+                params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+        elif ATTR_RGB_COLOR in params and COLOR_MODE_RGB not in supported_color_modes:
+            rgb_color = params.pop(ATTR_RGB_COLOR)
+            if COLOR_MODE_HS in supported_color_modes:
+                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+            elif COLOR_MODE_XY in supported_color_modes:
+                params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif ATTR_XY_COLOR in params and COLOR_MODE_XY not in supported_color_modes:
+            xy_color = params.pop(ATTR_XY_COLOR)
+            if COLOR_MODE_HS in supported_color_modes:
+                params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
+            elif COLOR_MODE_RGB in supported_color_modes:
+                params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
 
         # Zero brightness: Light will be turned off
         if params.get(ATTR_BRIGHTNESS) == 0:
@@ -498,9 +504,11 @@ class LightEntity(ToggleEntity):
                 return COLOR_MODE_HS
             if COLOR_MODE_COLOR_TEMP in supported and self.color_temp is not None:
                 return COLOR_MODE_COLOR_TEMP
-            if COLOR_MODES_BRIGHTNESS & supported and self.brightness is not None:
+            if COLOR_MODE_DIMMER in supported and self.brightness is not None:
                 return COLOR_MODE_DIMMER
-            return COLOR_MODE_NONE
+            if COLOR_MODE_NONE in supported:
+                return COLOR_MODE_NONE
+            return COLOR_MODE_UNKNOWN
 
         return color_mode
 
@@ -614,7 +622,7 @@ class LightEntity(ToggleEntity):
         elif color_mode == COLOR_MODE_RGB and self.rgb_color:
             rgb_color = self.rgb_color
             data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:2])
+            data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
         return data
 
