@@ -93,7 +93,7 @@ class Flexit(ClimateEntity):
         self._current_operation = self.unit.get_operation
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             "filter_hours": self._filter_hours,

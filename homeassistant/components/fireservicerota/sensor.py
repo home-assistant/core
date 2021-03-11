@@ -64,7 +64,7 @@ class IncidentsSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return available attributes for sensor."""
         attr = {}
         data = self._state_attributes

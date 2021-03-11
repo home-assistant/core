@@ -180,7 +180,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._state = len(self._call_list_for_type)
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return device specific state attributes."""
         return {
             dt_util.utc_from_timestamp(call["datetime"]).isoformat(): call["name"]
