@@ -88,7 +88,7 @@ class BrotherPrinterSensor(CoordinatorEntity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         remaining_pages = None
         drum_counter = None
