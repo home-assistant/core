@@ -63,7 +63,6 @@ reload_config_entry:
   name: Reload config entry
   description: Reload a config entry that matches an area, device, entity_id, config entry id, or integration domain.
   target:
-    entity: {}
   fields:
     config_entry_id:
       name: Config entry id
