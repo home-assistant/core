@@ -187,7 +187,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the light group."""
         return {ATTR_ENTITY_ID: self._entity_ids}
 
