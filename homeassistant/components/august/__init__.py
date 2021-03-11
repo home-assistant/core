@@ -396,8 +396,7 @@ class AugustData(AugustSubscriberMixin):
         return ret
 
     def _remove_inoperative_doorbells(self):
-        doorbells = list(self.doorbells)
-        for doorbell in doorbells:
+        for doorbell in list(self.doorbells):
             device_id = doorbell.device_id
             doorbell_is_operative = False
             doorbell_detail = self._device_detail_by_id.get(device_id)
@@ -417,9 +416,7 @@ class AugustData(AugustSubscriberMixin):
         # Remove non-operative locks as there must
         # be a bridge (August Connect) for them to
         # be usable
-        locks = list(self.locks)
-
-        for lock in locks:
+        for lock in list(self.locks):
             device_id = lock.device_id
             lock_is_operative = False
             lock_detail = self._device_detail_by_id.get(device_id)
