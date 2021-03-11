@@ -34,9 +34,11 @@ from homeassistant.helpers import entity
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_mock_service,
     get_test_home_assistant,
+    mock_registry,
     mock_service,
     patch_yaml_files,
 )
@@ -387,8 +389,8 @@ async def test_not_allowing_recursion(hass, caplog):
         ), service
 
 
-async def test_reload_config_entry(hass):
-    """Test being able to reload a config entry."""
+async def test_reload_config_entry_by_entry_id(hass):
+    """Test being able to reload a config entry by config entry id."""
     await async_setup_component(hass, "homeassistant", {})
 
     with patch(
@@ -404,3 +406,73 @@ async def test_reload_config_entry(hass):
 
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+
+
+async def test_reload_config_entry_by_domain(hass):
+    """Test being able to reload a config entry by domain."""
+    await async_setup_component(hass, "homeassistant", {})
+    entry1 = MockConfigEntry(domain="mockdomain")
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(domain="mockdomain")
+    entry2.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"domain": "mockdomain"},
+            blocking=True,
+        )
+
+    assert len(mock_reload.mock_calls) == 2
+    assert mock_reload.mock_calls[0][1][0] == entry1.entry_id
+    assert mock_reload.mock_calls[1][1][0] == entry2.entry_id
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"domain": "nonexist"},
+            blocking=True,
+        )
+
+
+async def test_reload_config_entry_by_entity_id(hass):
+    """Test being able to reload a config entry by domain."""
+    await async_setup_component(hass, "homeassistant", {})
+    entity_reg = mock_registry(hass)
+    entry1 = MockConfigEntry(domain="mockdomain")
+    entry1.add_to_hass(hass)
+    entry2 = MockConfigEntry(domain="mockdomain")
+    entry2.add_to_hass(hass)
+    reg_entity1 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_charging", config_entry=entry1
+    )
+    reg_entity2 = entity_reg.async_get_or_create(
+        "binary_sensor", "powerwall", "battery_status", config_entry=entry2
+    )
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"entity_id": f"{reg_entity1.entity_id},{reg_entity2.entity_id}"},
+            blocking=True,
+        )
+
+    assert len(mock_reload.mock_calls) == 2
+    assert mock_reload.mock_calls[0][1][0] == entry1.entry_id
+    assert mock_reload.mock_calls[1][1][0] == entry2.entry_id
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {"entity_id": "unknown.entity_id"},
+            blocking=True,
+        )
