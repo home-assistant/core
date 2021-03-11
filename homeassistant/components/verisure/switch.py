@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from time import monotonic
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_SMARTPLUGS, HUB as hub
+from . import VerisureDataUpdateCoordinator
+from .const import CONF_SMARTPLUGS, DOMAIN
 
 
 def setup_platform(
@@ -16,25 +18,31 @@ def setup_platform(
     config: dict[str, Any],
     add_entities: Callable[[list[Entity], bool], None],
     discovery_info: dict[str, Any] | None = None,
-) -> None | Literal[False]:
+) -> None:
     """Set up the Verisure switch platform."""
-    if not int(hub.config.get(CONF_SMARTPLUGS, 1)):
-        return False
+    coordinator = hass.data[DOMAIN]
 
-    hub.update_overview()
-    switches = [
-        VerisureSmartplug(device_label)
-        for device_label in hub.get("$.smartPlugs[*].deviceLabel")
-    ]
+    if not int(coordinator.config.get(CONF_SMARTPLUGS, 1)):
+        return
 
-    add_entities(switches)
+    add_entities(
+        [
+            VerisureSmartplug(coordinator, device_label)
+            for device_label in coordinator.get("$.smartPlugs[*].deviceLabel")
+        ]
+    )
 
 
-class VerisureSmartplug(SwitchEntity):
+class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
     """Representation of a Verisure smartplug."""
 
-    def __init__(self, device_id: str):
+    coordinator: VerisureDataUpdateCoordinator
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, device_id: str
+    ) -> None:
         """Initialize the Verisure device."""
+        super().__init__(coordinator)
         self._device_label = device_id
         self._change_timestamp = 0
         self._state = False
@@ -42,7 +50,7 @@ class VerisureSmartplug(SwitchEntity):
     @property
     def name(self) -> str:
         """Return the name or location of the smartplug."""
-        return hub.get_first(
+        return self.coordinator.get_first(
             "$.smartPlugs[?(@.deviceLabel == '%s')].area", self._device_label
         )
 
@@ -52,7 +60,7 @@ class VerisureSmartplug(SwitchEntity):
         if monotonic() - self._change_timestamp < 10:
             return self._state
         self._state = (
-            hub.get_first(
+            self.coordinator.get_first(
                 "$.smartPlugs[?(@.deviceLabel == '%s')].currentState",
                 self._device_label,
             )
@@ -64,23 +72,20 @@ class VerisureSmartplug(SwitchEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first("$.smartPlugs[?(@.deviceLabel == '%s')]", self._device_label)
+            self.coordinator.get_first(
+                "$.smartPlugs[?(@.deviceLabel == '%s')]", self._device_label
+            )
             is not None
         )
 
     def turn_on(self, **kwargs) -> None:
         """Set smartplug status on."""
-        hub.session.set_smartplug_state(self._device_label, True)
+        self.coordinator.session.set_smartplug_state(self._device_label, True)
         self._state = True
         self._change_timestamp = monotonic()
 
     def turn_off(self, **kwargs) -> None:
         """Set smartplug status off."""
-        hub.session.set_smartplug_state(self._device_label, False)
+        self.coordinator.session.set_smartplug_state(self._device_label, False)
         self._state = False
         self._change_timestamp = monotonic()
-
-    # pylint: disable=no-self-use
-    def update(self) -> None:
-        """Get the latest date of the smartplug."""
-        hub.update_overview()
