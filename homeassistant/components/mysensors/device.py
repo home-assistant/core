@@ -122,7 +122,7 @@ class MySensorsDevice:
         return f"{self.node_name} {self.child_id}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]

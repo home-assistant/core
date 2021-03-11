@@ -115,6 +115,6 @@ class NightscoutSensor(Entity):
         return switcher.get(self._attributes[ATTR_DIRECTION], "mdi:cloud-question")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes

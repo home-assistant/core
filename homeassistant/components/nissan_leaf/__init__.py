@@ -450,7 +450,7 @@ class LeafEntity(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return default attributes for Nissan leaf entities."""
         return {
             "next_update": self.car.next_update,
