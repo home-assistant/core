@@ -48,12 +48,12 @@ async def test_allowed_sender(hass):
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
     assert "Test" == sensor.state
-    assert "Test Message" == sensor.device_state_attributes["body"]
-    assert "sender@test.com" == sensor.device_state_attributes["from"]
-    assert "Test" == sensor.device_state_attributes["subject"]
+    assert "Test Message" == sensor.extra_state_attributes["body"]
+    assert "sender@test.com" == sensor.extra_state_attributes["from"]
+    assert "Test" == sensor.extra_state_attributes["subject"]
     assert (
         datetime.datetime(2016, 1, 1, 12, 44, 57)
-        == sensor.device_state_attributes["date"]
+        == sensor.extra_state_attributes["date"]
     )
 
 
@@ -84,7 +84,7 @@ async def test_multi_part_with_text(hass):
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
     assert "Link" == sensor.state
-    assert "Test Message" == sensor.device_state_attributes["body"]
+    assert "Test Message" == sensor.extra_state_attributes["body"]
 
 
 async def test_multi_part_only_html(hass):
@@ -113,7 +113,7 @@ async def test_multi_part_only_html(hass):
     assert "Link" == sensor.state
     assert (
         "<html><head></head><body>Test Message</body></html>"
-        == sensor.device_state_attributes["body"]
+        == sensor.extra_state_attributes["body"]
     )
 
 
@@ -141,7 +141,7 @@ async def test_multi_part_only_other_text(hass):
     sensor.async_schedule_update_ha_state(True)
     await hass.async_block_till_done()
     assert "Link" == sensor.state
-    assert "Test Message" == sensor.device_state_attributes["body"]
+    assert "Test Message" == sensor.extra_state_attributes["body"]
 
 
 async def test_multiple_emails(hass):
@@ -183,7 +183,7 @@ async def test_multiple_emails(hass):
     assert "Test" == states[0].state
     assert "Test 2" == states[1].state
 
-    assert "Test Message 2" == sensor.device_state_attributes["body"]
+    assert "Test Message 2" == sensor.extra_state_attributes["body"]
 
 
 async def test_sender_not_allowed(hass):
