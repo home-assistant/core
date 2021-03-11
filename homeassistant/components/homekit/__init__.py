@@ -605,10 +605,10 @@ class HomeKit:
             )
             self.status = STATUS_STOPPED
             return
-        self._async_register_bridge()
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
         await self._async_create_accessories()
+        self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
         self.status = STATUS_RUNNING
@@ -651,7 +651,7 @@ class HomeKit:
             identifiers={identifier},
             connections={connection},
             manufacturer=MANUFACTURER,
-            name=self._name,
+            name=accessory_friendly_name(self._entry_title, self.driver.accessory),
             model=f"Home Assistant HomeKit {hk_mode_name}",
         )
 
