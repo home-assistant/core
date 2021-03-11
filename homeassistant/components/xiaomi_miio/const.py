@@ -9,7 +9,7 @@ CONF_MAC = "mac"
 
 KEY_COORDINATOR = "coordinator"
 
-# Fam Models
+# Fan Models
 MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
 MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
 MODEL_AIRPURIFIER_V3 = "zhimi.airpurifier.v3"
@@ -60,6 +60,18 @@ MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"
 MODEL_AIRQUALITYMONITOR_B1 = "cgllc.airmonitor.b1"
 MODEL_AIRQUALITYMONITOR_S1 = "cgllc.airmonitor.s1"
 
+# Light Models
+MODELS_LIGHT_EYECARE = ["philips.light.sread1"]
+MODELS_LIGHT_CEILING = ["philips.light.ceiling", "philips.light.zyceiling"]
+MODELS_LIGHT_MOON = ["philips.light.moonlight"]
+MODELS_LIGHT_BULB = [
+    "philips.light.bulb",
+    "philips.light.candle",
+    "philips.light.candle2",
+    "philips.light.downlight",
+]
+MODELS_LIGHT_MONO = ["philips.light.mono1"]
+
 # Model lists
 MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]
 MODELS_SWITCH = [
@@ -75,6 +87,13 @@ MODELS_SWITCH = [
     "chuangmi.plug.hmi206",
 ]
 MODELS_FAN = MODELS_FAN_MIIO + MODELS_HUMIDIFIER_MIOT + MODELS_PURIFIER_MIOT
+MODELS_LIGHT = (
+    MODELS_LIGHT_EYECARE
+    + MODELS_LIGHT_CEILING
+    + MODELS_LIGHT_MOON
+    + MODELS_LIGHT_BULB
+    + MODELS_LIGHT_MONO
+)
 MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
 MODELS_AIR_MONITOR = [
     MODEL_AIRQUALITYMONITOR_V1,
@@ -82,7 +101,9 @@ MODELS_AIR_MONITOR = [
     MODEL_AIRQUALITYMONITOR_S1,
 ]
 
-MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_VACUUM + MODELS_AIR_MONITOR + MODELS_FAN
+MODELS_ALL_DEVICES = (
+    MODELS_SWITCH + MODELS_VACUUM + MODELS_AIR_MONITOR + MODELS_FAN + MODELS_LIGHT
+)
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
 # Fan Services
