@@ -735,7 +735,7 @@ async def test_light_brightness_step(hass):
     _, data = entity0.last_call("turn_on")
     assert data["brightness"] == 90  # 100 - 10
     _, data = entity1.last_call("turn_on")
-    assert data["brightness"] == 40  # 100 - 10
+    assert data["brightness"] == 40  # 50 - 10
 
     await hass.services.async_call(
         "light",
