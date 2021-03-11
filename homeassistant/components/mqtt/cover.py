@@ -267,15 +267,26 @@ class MqttCover(MqttEntity, CoverEntity):
                     payload
                 )
 
-            if payload.isnumeric() and (
+            if not payload.isnumeric():
+                _LOGGER.warning("Payload '%s' is not numeric", payload)
+            elif (
                 self._config[CONF_TILT_MIN]
                 <= int(payload)
                 <= self._config[CONF_TILT_MAX]
+                or self._config[CONF_TILT_MAX]
+                <= int(payload)
+                <= self._config[CONF_TILT_MIN]
             ):
-
                 level = self.find_percentage_in_range(float(payload))
                 self._tilt_value = level
                 self.async_write_ha_state()
+            else:
+                _LOGGER.warning(
+                    "Payload '%s' is out of range, must be between '%s' and '%s' inclusive",
+                    payload,
+                    self._config[CONF_TILT_MIN],
+                    self._config[CONF_TILT_MAX],
+                )
 
         @callback
         @log_messages(self.hass, self.entity_id)
