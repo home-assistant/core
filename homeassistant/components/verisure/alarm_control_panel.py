@@ -1,7 +1,7 @@
 """Support for Verisure alarm control panels."""
 from __future__ import annotations
 
-from time import sleep
+import asyncio
 from typing import Any, Callable
 
 from homeassistant.components.alarm_control_panel import (
@@ -16,12 +16,14 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HUB as hub
-from .const import CONF_ALARM, CONF_CODE_DIGITS, CONF_GIID, LOGGER
+from . import VerisureDataUpdateCoordinator
+from .const import CONF_ALARM, CONF_GIID, DOMAIN, LOGGER
 
 
 def setup_platform(
@@ -31,51 +33,53 @@ def setup_platform(
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the Verisure platform."""
+    coordinator = hass.data[DOMAIN]
     alarms = []
-    if int(hub.config.get(CONF_ALARM, 1)):
-        hub.update_overview()
-        alarms.append(VerisureAlarm())
+    if int(coordinator.config.get(CONF_ALARM, 1)):
+        alarms.append(VerisureAlarm(coordinator))
     add_entities(alarms)
 
 
-def set_arm_state(state: str, code: str | None = None) -> None:
-    """Send set arm state command."""
-    transaction_id = hub.session.set_arm_state(code, state)[
-        "armStateChangeTransactionId"
-    ]
-    LOGGER.info("verisure set arm state %s", state)
-    transaction = {}
-    while "result" not in transaction:
-        sleep(0.5)
-        transaction = hub.session.get_arm_state_transaction(transaction_id)
-    hub.update_overview()
-
-
-class VerisureAlarm(AlarmControlPanelEntity):
+class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     """Representation of a Verisure alarm status."""
 
-    def __init__(self):
+    coordinator: VerisureDataUpdateCoordinator
+
+    def __init__(self, coordinator: VerisureDataUpdateCoordinator) -> None:
         """Initialize the Verisure alarm panel."""
+        super().__init__(coordinator)
         self._state = None
-        self._digits = hub.config.get(CONF_CODE_DIGITS)
-        self._changed_by = None
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        giid = hub.config.get(CONF_GIID)
+        giid = self.coordinator.config.get(CONF_GIID)
         if giid is not None:
-            aliass = {i["giid"]: i["alias"] for i in hub.session.installations}
+            aliass = {
+                i["giid"]: i["alias"] for i in self.coordinator.session.installations
+            }
             if giid in aliass:
                 return "{} alarm".format(aliass[giid])
 
             LOGGER.error("Verisure installation giid not found: %s", giid)
 
-        return "{} alarm".format(hub.session.installations[0]["alias"])
+        return "{} alarm".format(self.coordinator.session.installations[0]["alias"])
 
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
+        status = self.coordinator.get_first("$.armState.statusType")
+        if status == "DISARMED":
+            self._state = STATE_ALARM_DISARMED
+        elif status == "ARMED_HOME":
+            self._state = STATE_ALARM_ARMED_HOME
+        elif status == "ARMED_AWAY":
+            self._state = STATE_ALARM_ARMED_AWAY
+        elif status == "PENDING":
+            self._state = STATE_ALARM_PENDING
+        else:
+            LOGGER.error("Unknown alarm state %s", status)
+
         return self._state
 
     @property
@@ -91,30 +95,32 @@ class VerisureAlarm(AlarmControlPanelEntity):
     @property
     def changed_by(self) -> str | None:
         """Return the last change triggered by."""
-        return self._changed_by
+        return self.coordinator.get_first("$.armState.name")
 
-    def update(self) -> None:
-        """Update alarm status."""
-        hub.update_overview()
-        status = hub.get_first("$.armState.statusType")
-        if status == "DISARMED":
-            self._state = STATE_ALARM_DISARMED
-        elif status == "ARMED_HOME":
-            self._state = STATE_ALARM_ARMED_HOME
-        elif status == "ARMED_AWAY":
-            self._state = STATE_ALARM_ARMED_AWAY
-        elif status != "PENDING":
-            LOGGER.error("Unknown alarm state %s", status)
-        self._changed_by = hub.get_first("$.armState.name")
+    async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
+        """Send set arm state command."""
+        arm_state = await self.hass.async_add_executor_job(
+            self.coordinator.session.set_arm_state, code, state
+        )
+        LOGGER.debug("Verisure set arm state %s", state)
+        transaction = {}
+        while "result" not in transaction:
+            await asyncio.sleep(0.5)
+            transaction = await self.hass.async_add_executor_job(
+                self.coordinator.session.get_arm_state_transaction,
+                arm_state["armStateChangeTransactionId"],
+            )
 
-    def alarm_disarm(self, code: str | None = None) -> None:
+        await self.coordinator.async_refresh()
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        set_arm_state("DISARMED", code)
+        await self._async_set_arm_state("DISARMED", code)
 
-    def alarm_arm_home(self, code: str | None = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        set_arm_state("ARMED_HOME", code)
+        await self._async_set_arm_state("ARMED_HOME", code)
 
-    def alarm_arm_away(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        set_arm_state("ARMED_AWAY", code)
+        await self._async_set_arm_state("ARMED_AWAY", code)

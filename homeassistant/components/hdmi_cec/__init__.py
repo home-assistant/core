@@ -450,7 +450,7 @@ class CecEntity(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attr = {}
         if self.vendor_id is not None:
