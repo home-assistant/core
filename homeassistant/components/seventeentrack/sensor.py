@@ -109,7 +109,7 @@ class SeventeenTrackSummarySensor(Entity):
         return self._state is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -190,7 +190,7 @@ class SeventeenTrackPackageSensor(Entity):
         return self._data.packages.get(self._tracking_number) is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
