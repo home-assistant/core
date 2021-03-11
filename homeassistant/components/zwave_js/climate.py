@@ -326,7 +326,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the optional state attributes."""
         if (
             self._fan_state

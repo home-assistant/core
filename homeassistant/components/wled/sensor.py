@@ -92,7 +92,7 @@ class WLEDEstimatedCurrentSensor(WLEDSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {
             ATTR_LED_COUNT: self.coordinator.data.info.leds.count,

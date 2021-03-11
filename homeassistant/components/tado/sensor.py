@@ -132,7 +132,7 @@ class TadoHomeSensor(TadoHomeEntity, Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state_attributes
 
@@ -237,7 +237,7 @@ class TadoZoneSensor(TadoZoneEntity, Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state_attributes
 

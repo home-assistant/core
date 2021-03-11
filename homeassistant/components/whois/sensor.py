@@ -81,7 +81,7 @@ class WhoisSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the more info attributes."""
         return self._attributes
 
