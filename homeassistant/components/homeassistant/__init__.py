@@ -34,15 +34,13 @@ SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
-SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
-    cv.has_at_least_one_key(ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_CONFIG_ENTRY_ID),
-    vol.Schema(
-        {
-            vol.Optional(ATTR_DOMAIN): cv.string,
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
-        }
-    ),
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.Schema(
+    {
+        ATTR_DOMAIN: cv.string,
+        ATTR_ENTITY_ID: cv.entity_ids,
+        ATTR_CONFIG_ENTRY_ID: str,
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -229,7 +227,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
             if not config_entries:
                 raise ValueError(f"{domain} has no config entries")
             reload_entries.update(entry.entry_id for entry in config_entries)
-        elif ATTR_ENTITY_ID:
+        else:
             referenced = await async_extract_referenced_entity_ids(hass, call)
             ent_reg = entity_registry.async_get(hass)
             for entity_id in referenced.referenced | referenced.indirectly_referenced:
