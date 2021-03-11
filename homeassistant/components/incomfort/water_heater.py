@@ -50,7 +50,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         return "mdi:thermometer-lines"
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 

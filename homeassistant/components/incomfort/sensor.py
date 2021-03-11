@@ -95,6 +95,6 @@ class IncomfortTemperature(IncomfortSensor):
         self._unit_of_measurement = TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the device state attributes."""
         return {self._attr: self._heater.status[self._attr]}

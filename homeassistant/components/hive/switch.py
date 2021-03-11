@@ -47,7 +47,7 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
         return self.device["deviceData"].get("online")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Show Device Attributes."""
         return {
             ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),

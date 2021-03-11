@@ -72,7 +72,7 @@ class Geizwatch(Entity):
         return self._device.prices[0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         while len(self._device.prices) < 4:
             self._device.prices.append("None")

@@ -141,9 +141,9 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
         return True
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the switch-group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self._device.unreach:
             state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True

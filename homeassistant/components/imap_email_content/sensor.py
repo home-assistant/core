@@ -171,7 +171,7 @@ class EmailContentSensor(Entity):
         return self._message
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other state attributes for the message."""
         return self._state_attributes
 

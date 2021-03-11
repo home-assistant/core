@@ -108,7 +108,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return icon_for_icloud_device(self._device)
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return the device state attributes."""
         return self._device.state_attributes
 

@@ -271,7 +271,7 @@ class HERETravelTimeSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(
+    def extra_state_attributes(
         self,
     ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
         """Return the state attributes."""

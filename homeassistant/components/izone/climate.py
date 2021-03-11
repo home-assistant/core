@@ -282,7 +282,7 @@ class ControllerDevice(ClimateEntity):
         return PRECISION_TENTHS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         return {
             "supply_temperature": show_temp(
@@ -660,7 +660,7 @@ class ZoneDevice(ClimateEntity):
         return self._zone.index
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         return {
             "airflow_max": self._zone.airflow_max,

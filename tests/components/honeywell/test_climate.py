@@ -392,10 +392,10 @@ class TestHoneywellUS(unittest.TestCase):
             ATTR_FAN_MODES: somecomfort.FAN_MODES,
             ATTR_HVAC_MODES: somecomfort.SYSTEM_MODES,
         }
-        assert expected == self.honeywell.device_state_attributes
+        assert expected == self.honeywell.extra_state_attributes
         expected["fan"] = "idle"
         self.device.fan_running = False
-        assert expected == self.honeywell.device_state_attributes
+        assert expected == self.honeywell.extra_state_attributes
 
     def test_with_no_fan(self):
         """Test if there is on fan."""
@@ -407,7 +407,7 @@ class TestHoneywellUS(unittest.TestCase):
             ATTR_FAN_MODES: somecomfort.FAN_MODES,
             ATTR_HVAC_MODES: somecomfort.SYSTEM_MODES,
         }
-        assert expected == self.honeywell.device_state_attributes
+        assert expected == self.honeywell.extra_state_attributes
 
     def test_heat_away_mode(self):
         """Test setting the heat away mode."""

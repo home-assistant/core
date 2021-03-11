@@ -457,7 +457,7 @@ class FitbitSensor(Entity):
         return f"mdi:{FITBIT_RESOURCES_LIST[self.resource_type][2]}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 

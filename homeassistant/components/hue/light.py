@@ -535,7 +535,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self.is_group:
             return {}

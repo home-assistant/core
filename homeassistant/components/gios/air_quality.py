@@ -131,7 +131,7 @@ class GiosAirQuality(CoordinatorEntity, AirQualityEntity):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         # Different measuring stations have different sets of sensors. We don't know
         # what data we will get.

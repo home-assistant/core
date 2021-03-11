@@ -56,7 +56,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         return self.device["deviceData"]["online"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Show Device Attributes."""
         return {
             ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE),

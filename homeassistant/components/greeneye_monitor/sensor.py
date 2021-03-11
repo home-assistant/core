@@ -175,7 +175,7 @@ class CurrentSensor(GEMSensor):
         return self._sensor.watts
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return total wattseconds in the state dictionary."""
         if not self._sensor:
             return None
@@ -242,7 +242,7 @@ class PulseCounter(GEMSensor):
         return f"{self._counted_quantity}/{self._time_unit}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return total pulses in the data dictionary."""
         if not self._sensor:
             return None

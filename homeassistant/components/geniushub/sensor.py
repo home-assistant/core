@@ -106,7 +106,7 @@ class GeniusIssue(GeniusEntity):
         return len(self._issues)
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         return {f"{self._level}_list": self._issues}
 

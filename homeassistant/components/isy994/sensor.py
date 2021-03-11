@@ -117,7 +117,7 @@ class ISYSensorVariableEntity(ISYEntity):
         return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
         return {
             "init_value": convert_isy_value_to_hass(

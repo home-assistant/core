@@ -174,7 +174,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return DEVICE_CLASS_PROBLEM
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not (
             self.coordinator.last_update_success

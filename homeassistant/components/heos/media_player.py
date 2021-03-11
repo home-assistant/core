@@ -262,7 +262,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
         }
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Get additional attribute about the state."""
         return {
             "media_album_id": self._player.now_playing_media.album_id,

@@ -177,9 +177,9 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return CURRENT_HVAC_IDLE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide attributes for display on device card."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         humidifier = "off"
         if self._insteon_device.groups[DEHUMIDIFYING].value:
             humidifier = "dehumidifying"

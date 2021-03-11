@@ -222,9 +222,9 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the windspeed sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         temperature_offset = getattr(self._device, "temperatureOffset", None)
         if temperature_offset:
@@ -259,9 +259,9 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity):
         return LIGHT_LUX
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         for attr, attr_key in ILLUMINATION_DEVICE_ATTRIBUTES.items():
             attr_value = getattr(self._device, attr, None)
@@ -312,9 +312,9 @@ class HomematicipWindspeedSensor(HomematicipGenericEntity):
         return SPEED_KILOMETERS_PER_HOUR
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         wind_direction = getattr(self._device, "windDirection", None)
         if wind_direction is not None:
@@ -354,9 +354,9 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity):
         return self._device.leftRightCounterDelta
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the delta counter."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         state_attr[ATTR_LEFT_COUNTER] = self._device.leftCounter
         state_attr[ATTR_RIGHT_COUNTER] = self._device.rightCounter

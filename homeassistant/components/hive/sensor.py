@@ -68,7 +68,7 @@ class HiveSensorEntity(HiveEntity, Entity):
         return self.device["status"]["state"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_AVAILABLE: self.attributes.get(ATTR_AVAILABLE)}
 

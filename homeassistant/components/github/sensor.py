@@ -119,7 +119,7 @@ class GitHubSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_PATH: self._repository_path,

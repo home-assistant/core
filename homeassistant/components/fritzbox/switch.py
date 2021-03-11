@@ -93,7 +93,7 @@ class FritzboxSwitch(SwitchEntity):
             self._fritz.login()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attrs = {}
         attrs[ATTR_STATE_DEVICE_LOCKED] = self._device.device_lock

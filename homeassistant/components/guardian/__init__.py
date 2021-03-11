@@ -246,7 +246,7 @@ class GuardianEntity(CoordinatorEntity):
         return self._device_info
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
 

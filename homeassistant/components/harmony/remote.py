@@ -193,7 +193,7 @@ class HarmonyRemote(ConnectionStateMixin, remote.RemoteEntity, RestoreEntity):
         return self._data.activity_names
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Add platform specific attributes."""
         return {
             ATTR_ACTIVITY_STARTING: self._activity_starting,

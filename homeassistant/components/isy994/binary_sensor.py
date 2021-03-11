@@ -455,9 +455,9 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the state attributes for the device."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         attr["parent_entity_id"] = self._parent_device.entity_id
         return attr
 

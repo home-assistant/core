@@ -79,7 +79,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         return self._battery
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._attributes
 
