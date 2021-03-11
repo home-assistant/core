@@ -81,7 +81,7 @@ class TeslaSensor(TeslaDevice, Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = self._attributes.copy()
         if self.tesla_device.type == "charging rate sensor":

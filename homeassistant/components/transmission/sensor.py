@@ -148,7 +148,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         return "Torrents"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes, if any."""
         info = _torrents_info(
             torrents=self._tm_client.api.torrents,
