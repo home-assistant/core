@@ -109,7 +109,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = coordinator
 
     for platform in PLATFORMS:
-        await discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
+        hass.async_create_task(
+            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
+        )
 
     async def capture_smartcam(service):
         """Capture a new picture from a smartcam."""

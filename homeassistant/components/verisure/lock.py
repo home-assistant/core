@@ -1,7 +1,7 @@
 """Support for Verisure locks."""
 from __future__ import annotations
 
-from time import sleep
+import asyncio
 from typing import Any, Callable
 
 from homeassistant.components.lock import LockEntity
@@ -90,41 +90,46 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         )
         return status == "LOCKED"
 
-    def unlock(self, **kwargs) -> None:
+    async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
         code = kwargs.get(ATTR_CODE, self._default_lock_code)
         if code is None:
             LOGGER.error("Code required but none provided")
             return
 
-        self.set_lock_state(code, STATE_UNLOCKED)
+        await self.async_set_lock_state(code, STATE_UNLOCKED)
 
-    def lock(self, **kwargs) -> None:
+    async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
         code = kwargs.get(ATTR_CODE, self._default_lock_code)
         if code is None:
             LOGGER.error("Code required but none provided")
             return
 
-        self.set_lock_state(code, STATE_LOCKED)
+        await self.async_set_lock_state(code, STATE_LOCKED)
 
-    def set_lock_state(self, code: str, state: str) -> None:
+    async def async_set_lock_state(self, code: str, state: str) -> None:
         """Send set lock state command."""
-        lock_state = "lock" if state == STATE_LOCKED else "unlock"
-        transaction_id = self.coordinator.session.set_lock_state(
-            code, self._device_label, lock_state
-        )["doorLockStateChangeTransactionId"]
+        target_state = "lock" if state == STATE_LOCKED else "unlock"
+        lock_state = await self.hass.async_add_executor_job(
+            self.coordinator.session.set_lock_state,
+            code,
+            self._device_label,
+            target_state,
+        )
+
         LOGGER.debug("Verisure doorlock %s", state)
         transaction = {}
         attempts = 0
         while "result" not in transaction:
-            transaction = self.coordinator.session.get_lock_state_transaction(
-                transaction_id
+            transaction = await self.hass.async_add_executor_job(
+                self.coordinator.session.get_lock_state_transaction,
+                lock_state["doorLockStateChangeTransactionId"],
             )
             attempts += 1
             if attempts == 30:
                 break
             if attempts > 1:
-                sleep(0.5)
+                await asyncio.sleep(0.5)
         if transaction["result"] == "OK":
             self._state = state

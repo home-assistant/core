@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from time import sleep
 from typing import Any, Callable
 
 from homeassistant.components.alarm_control_panel import (
@@ -98,31 +97,30 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         """Return the last change triggered by."""
         return self.coordinator.get_first("$.armState.name")
 
-    def _set_arm_state(self, state: str, code: str | None = None) -> None:
+    async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
         """Send set arm state command."""
-        transaction_id = self.coordinator.session.set_arm_state(code, state)[
-            "armStateChangeTransactionId"
-        ]
-        LOGGER.info("verisure set arm state %s", state)
+        arm_state = await self.hass.async_add_executor_job(
+            self.coordinator.session.set_arm_state, code, state
+        )
+        LOGGER.debug("Verisure set arm state %s", state)
         transaction = {}
         while "result" not in transaction:
-            sleep(0.5)
-            transaction = self.coordinator.session.get_arm_state_transaction(
-                transaction_id
+            await asyncio.sleep(0.5)
+            transaction = await self.hass.async_add_executor_job(
+                self.coordinator.session.get_arm_state_transaction,
+                arm_state["armStateChangeTransactionId"],
             )
-        asyncio.run_coroutine_threadsafe(
-            self.coordinator.async_refresh(),
-            self.hass.loop,
-        ).result()
 
-    def alarm_disarm(self, code: str | None = None) -> None:
+        await self.coordinator.async_refresh()
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self._set_arm_state("DISARMED", code)
+        await self._async_set_arm_state("DISARMED", code)
 
-    def alarm_arm_home(self, code: str | None = None) -> None:
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self._set_arm_state("ARMED_HOME", code)
+        await self._async_set_arm_state("ARMED_HOME", code)
 
-    def alarm_arm_away(self, code: str | None = None) -> None:
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self._set_arm_state("ARMED_AWAY", code)
+        await self._async_set_arm_state("ARMED_AWAY", code)

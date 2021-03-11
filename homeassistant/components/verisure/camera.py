@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import errno
 import os
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 from homeassistant.components.camera import Camera
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -20,16 +20,16 @@ def setup_platform(
     config: dict[str, Any],
     add_entities: Callable[[list[Entity], bool], None],
     discovery_info: dict[str, Any] | None = None,
-) -> None | Literal[False]:
+) -> None:
     """Set up the Verisure Camera."""
     coordinator = hass.data[DOMAIN]
     if not int(coordinator.config.get(CONF_SMARTCAM, 1)):
-        return False
+        return
 
     directory_path = hass.config.config_dir
     if not os.access(directory_path, os.R_OK):
         LOGGER.error("file path %s is not readable", directory_path)
-        return False
+        return
 
     add_entities(
         [

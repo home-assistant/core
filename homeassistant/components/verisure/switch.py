@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from time import monotonic
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -18,12 +18,12 @@ def setup_platform(
     config: dict[str, Any],
     add_entities: Callable[[list[Entity], bool], None],
     discovery_info: dict[str, Any] | None = None,
-) -> None | Literal[False]:
+) -> None:
     """Set up the Verisure switch platform."""
     coordinator = hass.data[DOMAIN]
 
     if not int(coordinator.config.get(CONF_SMARTPLUGS, 1)):
-        return False
+        return
 
     add_entities(
         [
