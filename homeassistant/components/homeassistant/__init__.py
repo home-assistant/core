@@ -220,24 +220,33 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
     async def async_handle_reload_config_entry(call):
         """Service handler for reloading a config entry."""
         data = call.data
-        reload_coro = hass.config_entries.async_reload
-        tasks = []
+        reload_entries = set()
         if ATTR_CONFIG_ENTRY_ID in data:
-            tasks.append(reload_coro(data[ATTR_CONFIG_ENTRY_ID]))
+            reload_entries.add(data[ATTR_CONFIG_ENTRY_ID])
         elif ATTR_DOMAIN in data:
             domain = data[ATTR_DOMAIN]
             config_entries = hass.config_entries.async_entries(domain)
             if not config_entries:
                 raise ValueError(f"{domain} has no config entries")
-            tasks.extend(reload_coro(entry.entry_id) for entry in config_entries)
+            reload_entries.update(entry.entry_id for entry in config_entries)
         elif ATTR_ENTITY_ID:
+            referenced = await async_extract_referenced_entity_ids(hass, call)
             ent_reg = entity_registry.async_get(hass)
-            for entity_id in data[ATTR_ENTITY_ID]:
+            for entity_id in referenced.referenced:
                 entry = ent_reg.async_get(entity_id)
                 if entry is None:
                     raise ValueError("{entity_id} was not found in the entity registry")
-                tasks.append(reload_coro(entry.config_entry_id))
-        await asyncio.gather(*tasks)
+                reload_entries.add(entry.config_entry_id)
+            for entity_id in referenced.indirectly_referenced:
+                entry = ent_reg.async_get(entity_id)
+                if entry is not None:
+                    reload_entries.add(entry.config_entry_id)
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_reload(config_entry_id)
+                for config_entry_id in reload_entries
+            ]
+        )
 
     hass.helpers.service.async_register_admin_service(
         ha.DOMAIN,
