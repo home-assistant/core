@@ -85,7 +85,7 @@ class PushBulletNotificationSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return all known attributes of the sensor."""
         return self._state_attributes
 

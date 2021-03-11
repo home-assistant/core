@@ -522,7 +522,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             _LOGGER.error("Timed out playing on %s", self.name)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {}
         for attr in [

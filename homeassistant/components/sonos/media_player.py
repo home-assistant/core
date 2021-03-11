@@ -1366,7 +1366,7 @@ class SonosEntity(MediaPlayerEntity):
         self.soco.remove_from_queue(queue_position)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return entity specific state attributes."""
         attributes = {ATTR_SONOS_GROUP: [e.entity_id for e in self._sonos_group]}
 

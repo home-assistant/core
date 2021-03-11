@@ -166,7 +166,7 @@ class RainCloudEntity(Entity):
         return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, "identifier": self.data.serial}
 

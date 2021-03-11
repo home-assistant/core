@@ -180,9 +180,9 @@ class HistoryRingSensor(RingSensor):
         return self._latest_event["created_at"].isoformat()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         if self._latest_event:
             attrs["created_at"] = self._latest_event["created_at"]

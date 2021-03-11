@@ -196,7 +196,7 @@ class SMAsensor(Entity):
         return self._sensor.unit
 
     @property
-    def device_state_attributes(self):  # Can be remove from 0.99
+    def extra_state_attributes(self):  # Can be remove from 0.99
         """Return the state attributes of the sensor."""
         return self._attr
 

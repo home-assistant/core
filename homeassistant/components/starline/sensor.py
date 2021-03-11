@@ -109,7 +109,7 @@ class StarlineSensor(StarlineEntity, Entity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._key == "balance":
             return self._account.balance_attrs(self._device)

@@ -164,7 +164,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
         return list(self._group.streams_by_name().keys())
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         name = f"{self._group.friendly_name} {GROUP_SUFFIX}"
         return {"friendly_name": name}
@@ -261,7 +261,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
         return STATE_OFF
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state_attrs = {}
         if self.latency is not None:

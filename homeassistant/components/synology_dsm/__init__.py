@@ -610,7 +610,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._class
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

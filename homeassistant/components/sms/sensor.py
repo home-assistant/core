@@ -75,7 +75,7 @@ class GSMSignalSensor(Entity):
             _LOGGER.error("Failed to read signal quality: %s", exc)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes."""
         return self._state
 

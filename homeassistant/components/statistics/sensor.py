@@ -184,7 +184,7 @@ class StatisticsSensor(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
             return {

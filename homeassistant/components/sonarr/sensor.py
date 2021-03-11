@@ -131,7 +131,7 @@ class SonarrCommandsSensor(SonarrSensor):
         self._commands = await self.sonarr.commands()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -172,7 +172,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         self._total_free = sum([disk.free for disk in self._disks])
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -217,7 +217,7 @@ class SonarrQueueSensor(SonarrSensor):
         self._queue = await self.sonarr.queue()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -258,7 +258,7 @@ class SonarrSeriesSensor(SonarrSensor):
         self._items = await self.sonarr.series()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -301,7 +301,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -342,7 +342,7 @@ class SonarrWantedSensor(SonarrSensor):
         self._total = self._results.total
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         attrs = {}
 
