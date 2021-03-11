@@ -592,19 +592,9 @@ class HomeKit:
         if self.status != STATUS_READY:
             return
         self.status = STATUS_WAIT
-        try:
-            await self.hass.async_add_executor_job(
-                self.setup, await zeroconf.async_get_instance(self.hass)
-            )
-        except (OSError, AttributeError) as ex:
-            _LOGGER.warning(
-                "%s could not be setup because the local port %s is in use",
-                self._name,
-                self._port,
-                exc_info=ex,
-            )
-            self.status = STATUS_STOPPED
-            return
+        await self.hass.async_add_executor_job(
+            self.setup, await zeroconf.async_get_instance(self.hass)
+        )
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
         await self._async_create_accessories()
