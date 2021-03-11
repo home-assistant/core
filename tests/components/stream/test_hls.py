@@ -221,6 +221,9 @@ async def test_stream_ended(hass, stream_worker_sync):
     assert len(segments) > 1
     assert not track.get_segment()
 
+    # Allow worker to exit
+    stream_worker_sync.resume()
+
     # Stop stream, if it hasn't quit already
     stream.stop()
 
