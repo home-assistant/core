@@ -675,7 +675,7 @@ class Device(RestoreEntity):
         return attributes
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return self._attributes
 
