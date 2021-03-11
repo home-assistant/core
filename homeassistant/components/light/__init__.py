@@ -260,7 +260,9 @@ async def async_setup(hass, config):
         # Backwards compatibility: if an RGBWW color is specified, convert to RGB + W
         # for legacy lights
         if ATTR_RGBW_COLOR in params:
-            legacy_supported_color_modes = light._light_internal_supported_color_modes
+            legacy_supported_color_modes = (
+                light._light_internal_supported_color_modes  # pylint: disable=protected-access
+            )
             if (
                 COLOR_MODE_RGBW in legacy_supported_color_modes
                 and not supported_color_modes
@@ -543,8 +545,10 @@ class LightEntity(ToggleEntity):
         ):
             # Backwards compatibility for rgbw_color added in 2021.4
             # Add warning in 2021.6, remove in 2021.10
-            r, g, b = color_util.color_hs_to_RGB(*self.hs_color)
-            w = self.white_value
+            r, g, b = color_util.color_hs_to_RGB(  # pylint: disable=invalid-name
+                *self.hs_color
+            )
+            w = self.white_value  # pylint: disable=invalid-name
             rgbw_color = (r, g, b, w)
 
         return rgbw_color
