@@ -63,3 +63,5 @@ reload_config_entry:
   name: Reload config entry
   description: Reload a config entry that matches a target.
   target:
+    entity: {}
+    device: {}
