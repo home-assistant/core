@@ -377,6 +377,8 @@ def _apply_update(engine, new_version, old_version):
                     "created DATETIME(6)",
                 ],
             )
+    elif new_version == 14:
+        _modify_columns(engine, "events", ["event_type VARCHAR(64)"])
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")
 
