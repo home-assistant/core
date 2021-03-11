@@ -30,7 +30,7 @@
                     "password": "Password",
                     "username": "Email",
                     "with_family": "With family",
-                    "gps_accuracy_threshold": "Discard inaccurate location updates threshold (meters)"
+                    "gps_accuracy_threshold": "Discard inaccurate location updates above threshold (meters)"
                 },
                 "description": "Enter your credentials",
                 "title": "iCloud credentials"
