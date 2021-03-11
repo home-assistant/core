@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
+from pyatag import AtagException, AtagOne
 
 from homeassistant.components.climate import DOMAIN as CLIMATE
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -16,7 +17,6 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from pyatag import AtagException, AtagOne
 
 LOGGER = logging.getLogger(__name__)
 

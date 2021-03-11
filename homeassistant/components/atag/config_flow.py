@@ -1,10 +1,10 @@
 """Config flow for the Atag component."""
+import pyatag
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import pyatag
 
 from . import DOMAIN  # pylint: disable=unused-import
 
