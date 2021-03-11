@@ -785,6 +785,7 @@ omit =
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py
+    homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
@@ -1167,3 +1168,6 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+
+    # TYPE_CHECKING block is never executed during pytest run
+    if TYPE_CHECKING:

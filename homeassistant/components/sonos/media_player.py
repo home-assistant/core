@@ -646,9 +646,12 @@ class SonosEntity(MediaPlayerEntity):
         update_position = new_status != self._status
         self._status = new_status
 
-        track_uri = variables["current_track_uri"] if variables else None
-
-        music_source = self.soco.music_source_from_uri(track_uri)
+        if variables:
+            track_uri = variables["current_track_uri"]
+            music_source = self.soco.music_source_from_uri(track_uri)
+        else:
+            # This causes a network round-trip so we avoid it when possible
+            music_source = self.soco.music_source
 
         if music_source == MUSIC_SRC_TV:
             self.update_media_linein(SOURCE_TV)

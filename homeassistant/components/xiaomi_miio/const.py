@@ -55,6 +55,11 @@ MODELS_FAN_MIIO = [
     MODEL_AIRFRESH_VA2,
 ]
 
+# AirQuality Models
+MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"
+MODEL_AIRQUALITYMONITOR_B1 = "cgllc.airmonitor.b1"
+MODEL_AIRQUALITYMONITOR_S1 = "cgllc.airmonitor.s1"
+
 # Light Models
 MODELS_LIGHT_EYECARE = ["philips.light.sread1"]
 MODELS_LIGHT_CEILING = ["philips.light.ceiling", "philips.light.zyceiling"]
@@ -90,8 +95,13 @@ MODELS_LIGHT = (
     + MODELS_LIGHT_MONO
 )
 MODELS_VACUUM = ["roborock.vacuum", "rockrobo.vacuum"]
+MODELS_AIR_MONITOR = [
+    MODEL_AIRQUALITYMONITOR_V1,
+    MODEL_AIRQUALITYMONITOR_B1,
+    MODEL_AIRQUALITYMONITOR_S1,
+]
 
-MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_FAN + MODELS_VACUUM + MODELS_LIGHT
+MODELS_ALL_DEVICES = MODELS_SWITCH + MODELS_VACUUM + MODELS_AIR_MONITOR + MODELS_FAN + MODELS_LIGHT
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 
 # Fan Services
@@ -145,8 +155,3 @@ SERVICE_STOP_REMOTE_CONTROL = "vacuum_remote_control_stop"
 SERVICE_CLEAN_SEGMENT = "vacuum_clean_segment"
 SERVICE_CLEAN_ZONE = "vacuum_clean_zone"
 SERVICE_GOTO = "vacuum_goto"
-
-# AirQuality Model
-MODEL_AIRQUALITYMONITOR_V1 = "zhimi.airmonitor.v1"
-MODEL_AIRQUALITYMONITOR_B1 = "cgllc.airmonitor.b1"
-MODEL_AIRQUALITYMONITOR_S1 = "cgllc.airmonitor.s1"

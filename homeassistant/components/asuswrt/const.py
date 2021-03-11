@@ -20,5 +20,9 @@ MODE_ROUTER = "router"
 PROTOCOL_SSH = "ssh"
 PROTOCOL_TELNET = "telnet"
 
-# Sensor
-SENSOR_TYPES = ["devices", "upload_speed", "download_speed", "download", "upload"]
+# Sensors
+SENSOR_CONNECTED_DEVICE = "sensor_connected_device"
+SENSOR_RX_BYTES = "sensor_rx_bytes"
+SENSOR_TX_BYTES = "sensor_tx_bytes"
+SENSOR_RX_RATES = "sensor_rx_rates"
+SENSOR_TX_RATES = "sensor_tx_rates"

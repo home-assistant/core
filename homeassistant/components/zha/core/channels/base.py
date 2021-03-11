@@ -8,6 +8,7 @@ from typing import Any, Union
 
 import zigpy.exceptions
 
+from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 
 from .. import typing as zha_typing
@@ -16,7 +17,6 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
-    ATTR_COMMAND,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,

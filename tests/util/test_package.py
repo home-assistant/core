@@ -239,10 +239,55 @@ async def test_async_get_user_site(mock_env_copy):
 
 def test_check_package_global():
     """Test for an installed package."""
-    installed_package = list(pkg_resources.working_set)[0].project_name
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
     assert package.is_installed(installed_package)
+    assert package.is_installed(f"{installed_package}=={installed_version}")
+    assert package.is_installed(f"{installed_package}>={installed_version}")
+    assert package.is_installed(f"{installed_package}<={installed_version}")
+    assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
+def test_check_package_version_does_not_match():
+    """Test for version mismatch."""
+    installed_package = list(pkg_resources.working_set)[0].project_name
+    assert not package.is_installed(f"{installed_package}==999.999.999")
+    assert not package.is_installed(f"{installed_package}>=999.999.999")
 
 
 def test_check_package_zip():
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)
+
+
+def test_get_distribution_falls_back_to_version():
+    """Test for get_distribution failing and fallback to version."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ):
+        assert package.is_installed(installed_package)
+        assert package.is_installed(f"{installed_package}=={installed_version}")
+        assert package.is_installed(f"{installed_package}>={installed_version}")
+        assert package.is_installed(f"{installed_package}<={installed_version}")
+        assert not package.is_installed(f"{installed_package}<{installed_version}")
+
+
+def test_check_package_previous_failed_install():
+    """Test for when a previously install package failed and left cruft behind."""
+    first_package = list(pkg_resources.working_set)[0]
+    installed_package = first_package.project_name
+    installed_version = first_package.version
+
+    with patch(
+        "homeassistant.util.package.pkg_resources.get_distribution",
+        side_effect=pkg_resources.ExtractionError,
+    ), patch("homeassistant.util.package.version", return_value=None):
+        assert not package.is_installed(installed_package)
+        assert not package.is_installed(f"{installed_package}=={installed_version}")

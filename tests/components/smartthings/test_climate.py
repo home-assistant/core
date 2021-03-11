@@ -44,6 +44,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import setup_platform
 
@@ -569,8 +570,8 @@ async def test_set_turn_on(hass, air_conditioner):
 async def test_entity_and_device_attributes(hass, thermostat):
     """Test the attributes of the entries are correct."""
     await setup_platform(hass, CLIMATE_DOMAIN, devices=[thermostat])
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("climate.thermostat")
     assert entry

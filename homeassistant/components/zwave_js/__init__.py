@@ -10,7 +10,12 @@ from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
+    CONF_URL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
@@ -22,7 +27,6 @@ from .api import async_register_api
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
-    ATTR_DEVICE_ID,
     ATTR_ENDPOINT,
     ATTR_HOME_ID,
     ATTR_LABEL,

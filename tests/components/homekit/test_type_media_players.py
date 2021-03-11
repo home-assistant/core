@@ -37,7 +37,7 @@ from homeassistant.const import (
     STATE_STANDBY,
 )
 from homeassistant.core import CoreState
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import async_mock_service
 
@@ -421,7 +421,7 @@ async def test_tv_restore(hass, hk_driver, events):
     """Test setting up an entity from state in the event registry."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         "media_player",

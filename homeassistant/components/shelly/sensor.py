@@ -133,7 +133,7 @@ SENSORS = {
         available=lambda block: block.sensorOp == "normal",
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
-        name="External Temperature",
+        name="Temperature",
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,

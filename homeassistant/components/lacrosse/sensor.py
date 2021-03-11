@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning("Unable to open serial port: %s", exc)
         return False
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lacrosse.close)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda event: lacrosse.close())
 
     if CONF_JEELINK_LED in config:
         lacrosse.led_mode_state(config.get(CONF_JEELINK_LED))
