@@ -207,7 +207,7 @@ async def async_setup(hass, config):
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params = call.data["params"]
+        params = dict(call.data["params"])
 
         # Only process params once we processed brightness step
         if params and (
