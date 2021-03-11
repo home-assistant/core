@@ -28,14 +28,16 @@ def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
     Cleans up an timeframe of an hour, based on the oldest record.
     """
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
-    _LOGGER.debug("Purging states and events before target %s", purge_before)
+    _LOGGER.debug(
+        "Purging states and events before target %s",
+        purge_before.isoformat(sep=" ", timespec="seconds"),
+    )
     try:
         with session_scope(session=instance.get_session()) as session:  # type: ignore
             # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
             event_ids = _select_event_ids_to_purge(session, purge_before)
             state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
             if state_ids:
-                _disconnect_states_about_to_be_purged(session, state_ids)
                 _purge_state_ids(session, state_ids)
             if event_ids:
                 _purge_event_ids(session, event_ids)
@@ -66,7 +68,7 @@ def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
     return True
 
 
-def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list:
+def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list[int]:
     """Return a list of event ids to purge."""
     events = (
         session.query(Events.event_id)
@@ -79,8 +81,8 @@ def _select_event_ids_to_purge(session: Session, purge_before: datetime) -> list
 
 
 def _select_state_ids_to_purge(
-    session: Session, purge_before: datetime, event_ids: list
-) -> list:
+    session: Session, purge_before: datetime, event_ids: list[int]
+) -> list[int]:
     """Return a list of state ids to purge."""
     if not event_ids:
         return []
@@ -94,7 +96,9 @@ def _select_state_ids_to_purge(
     return [state.state_id for state in states]
 
 
-def _disconnect_states_about_to_be_purged(session: Session, state_ids: list) -> None:
+def _purge_state_ids(session: Session, state_ids: list[int]) -> None:
+    """Disconnect states and delete by state id."""
+
     # Update old_state_id to NULL before deleting to ensure
     # the delete does not fail due to a foreign key constraint
     # since some databases (MSSQL) cannot do the ON DELETE SET NULL
@@ -106,9 +110,6 @@ def _disconnect_states_about_to_be_purged(session: Session, state_ids: list) -> 
     )
     _LOGGER.debug("Updated %s states to remove old_state_id", disconnected_rows)
 
-
-def _purge_state_ids(session: Session, state_ids: list) -> None:
-    """Delete by state id."""
     deleted_rows = (
         session.query(States)
         .filter(States.state_id.in_(state_ids))
@@ -117,7 +118,7 @@ def _purge_state_ids(session: Session, state_ids: list) -> None:
     _LOGGER.debug("Deleted %s states", deleted_rows)
 
 
-def _purge_event_ids(session: Session, event_ids: list) -> None:
+def _purge_event_ids(session: Session, event_ids: list[int]) -> None:
     """Delete by event id."""
     deleted_rows = (
         session.query(Events)
