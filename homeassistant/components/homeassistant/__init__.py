@@ -225,16 +225,18 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         if ATTR_CONFIG_ENTRY_ID in data:
             tasks.append(reload_coro(data[ATTR_CONFIG_ENTRY_ID]))
         elif ATTR_DOMAIN in data:
-            tasks.extend(
-                reload_coro(entry.entry_id)
-                for entry in hass.config_entries.async_entries(data[ATTR_DOMAIN])
-            )
+            domain = data[ATTR_DOMAIN]
+            config_entries = hass.config_entries.async_entries(domain)
+            if not config_entries:
+                raise ValueError(f"{domain} has no config entries")
+            tasks.extend(reload_coro(entry.entry_id) for entry in config_entries)
         elif ATTR_ENTITY_ID:
-            ent_reg = entity_registry.async_get()
+            ent_reg = entity_registry.async_get(hass)
             for entity_id in data[ATTR_ENTITY_ID]:
                 entry = ent_reg.async_get(entity_id)
-                if entry is not None:
-                    tasks.append(reload_coro(entry.config_entry_id))
+                if entry is None:
+                    raise ValueError("{entity_id} was not found in the entity registry")
+                tasks.append(reload_coro(entry.config_entry_id))
         await asyncio.gather(*tasks)
 
     hass.helpers.service.async_register_admin_service(
