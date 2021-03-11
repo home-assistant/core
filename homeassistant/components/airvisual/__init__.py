@@ -372,7 +372,7 @@ class AirVisualEntity(CoordinatorEntity):
         self._unit = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 

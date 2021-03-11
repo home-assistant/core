@@ -200,7 +200,7 @@ class HabitipyTaskSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of all user tasks."""
         if self._updater.tasks is not None:
             all_received_tasks = self._updater.tasks

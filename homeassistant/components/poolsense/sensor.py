@@ -108,6 +108,6 @@ class PoolSenseSensor(PoolSenseEntity, Entity):
         return SENSORS[self.info_type]["unit"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}

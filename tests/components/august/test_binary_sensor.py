@@ -1,5 +1,4 @@
 """The binary_sensor tests for the august platform."""
-
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -9,6 +8,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr
 
 from tests.components.august.mocks import (
     _create_august_with_devices,
@@ -119,7 +119,7 @@ async def test_doorbell_device_registry(hass):
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.offline.json")
     await _create_august_with_devices(hass, [doorbell_one])
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     reg_device = device_registry.async_get_device(identifiers={("august", "tmt100")})
     assert reg_device.model == "hydra1"

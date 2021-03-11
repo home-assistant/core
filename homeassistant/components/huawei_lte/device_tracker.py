@@ -126,11 +126,11 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     _is_connected: bool = attr.ib(init=False, default=False)
     _hostname: Optional[str] = attr.ib(init=False, default=None)
-    _device_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
+    _extra_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self) -> None:
         """Initialize internal state."""
-        self._device_state_attributes["mac_address"] = self.mac
+        self._extra_state_attributes["mac_address"] = self.mac
 
     @property
     def _entity_name(self) -> str:
@@ -151,9 +151,9 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         return self._is_connected
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Get additional attributes related to entity state."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     async def async_update(self) -> None:
         """Update state."""
@@ -162,6 +162,6 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._is_connected = host is not None
         if host is not None:
             self._hostname = host.get("HostName")
-            self._device_state_attributes = {
+            self._extra_state_attributes = {
                 _better_snakecase(k): v for k, v in host.items() if k != "HostName"
             }

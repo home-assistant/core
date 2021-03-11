@@ -75,7 +75,7 @@ class UptimeRobotBinarySensor(BinarySensorEntity):
         return DEVICE_CLASS_CONNECTIVITY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION, ATTR_TARGET: self._target}
 

@@ -122,7 +122,7 @@ class MySensorsDevice:
         return f"{self.node_name} {self.child_id}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -162,6 +162,9 @@ class MySensorsDevice:
                 set_req.V_LIGHT,
                 set_req.V_LOCK_STATUS,
                 set_req.V_TRIPPED,
+                set_req.V_UP,
+                set_req.V_DOWN,
+                set_req.V_STOP,
             ):
                 self._values[value_type] = STATE_ON if int(value) == 1 else STATE_OFF
             elif value_type == set_req.V_DIMMER:

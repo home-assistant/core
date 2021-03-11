@@ -197,7 +197,7 @@ class HoneywellUSThermostat(ClimateEntity):
         return self._device.name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the device specific state attributes."""
         data = {}
         data[ATTR_FAN_ACTION] = "running" if self._device.fan_running else "idle"

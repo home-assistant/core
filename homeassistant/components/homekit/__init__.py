@@ -131,6 +131,7 @@ def _has_all_unique_names_and_ports(bridges):
 BRIDGE_SCHEMA = vol.All(
     cv.deprecated(CONF_ZEROCONF_DEFAULT_INTERFACE),
     cv.deprecated(CONF_SAFE_MODE),
+    cv.deprecated(CONF_AUTO_START),
     vol.Schema(
         {
             vol.Optional(CONF_HOMEKIT_MODE, default=DEFAULT_HOMEKIT_MODE): vol.In(
@@ -615,7 +616,7 @@ class HomeKit:
         self._async_register_bridge(dev_reg)
         await self._async_start(bridged_states)
         _LOGGER.debug("Driver start for %s", self._name)
-        self.hass.add_job(self.driver.start_service)
+        await self.driver.async_start()
         self.status = STATUS_RUNNING
 
     @callback

@@ -39,7 +39,7 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         self._room = room
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         return {"status": self._room.status}
 

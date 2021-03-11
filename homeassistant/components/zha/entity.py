@@ -5,6 +5,7 @@ import functools
 import logging
 from typing import Any, Awaitable, Dict, List, Optional
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -18,7 +19,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
@@ -44,7 +44,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._should_poll: bool = False
         self._unique_id: str = unique_id
         self._state: Any = None
-        self._device_state_attributes: Dict[str, Any] = {}
+        self._extra_state_attributes: Dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
         self._unsubs: List[CALLABLE_T] = []
         self.remove_future: Awaitable[None] = None
@@ -65,9 +65,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._zha_device
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return device specific state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def force_update(self) -> bool:
@@ -101,7 +101,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @callback
     def async_update_state_attribute(self, key: str, value: Any) -> None:
         """Update a single device state attribute."""
-        self._device_state_attributes.update({key: value})
+        self._extra_state_attributes.update({key: value})
         self.async_write_ha_state()
 
     @callback

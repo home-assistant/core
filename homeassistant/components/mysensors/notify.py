@@ -5,6 +5,9 @@ from homeassistant.components.notify import ATTR_TARGET, DOMAIN, BaseNotificatio
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the MySensors notification service."""
+    if not discovery_info:
+        return None
+
     new_devices = mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsNotificationDevice
     )

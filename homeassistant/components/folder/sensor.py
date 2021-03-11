@@ -92,7 +92,7 @@ class Folder(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         return {
             "path": self._folder_path,

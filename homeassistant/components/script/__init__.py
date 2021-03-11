@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_ICON,
@@ -27,7 +28,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
-    ATTR_MODE,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
