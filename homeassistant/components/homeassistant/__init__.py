@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 import homeassistant.config as conf_util
 from homeassistant.const import (
-    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -22,7 +21,10 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
 from homeassistant.helpers import config_validation as cv, entity_registry
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_entity_ids,
+    async_extract_referenced_entity_ids,
+)
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
@@ -34,14 +36,6 @@ SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
-SCHEMA_RELOAD_CONFIG_ENTRY = vol.Schema(
-    {
-        ATTR_DOMAIN: cv.string,
-        ATTR_ENTITY_ID: cv.entity_ids,
-        ATTR_CONFIG_ENTRY_ID: str,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -217,24 +211,16 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_reload_config_entry(call):
         """Service handler for reloading a config entry."""
-        data = call.data
         reload_entries = set()
-        if ATTR_CONFIG_ENTRY_ID in data:
-            reload_entries.add(data[ATTR_CONFIG_ENTRY_ID])
-        elif ATTR_DOMAIN in data:
-            domain = data[ATTR_DOMAIN]
-            config_entries = hass.config_entries.async_entries(domain)
-            if not config_entries:
-                raise ValueError(f"{domain} has no config entries")
-            reload_entries.update(entry.entry_id for entry in config_entries)
-        else:
-            referenced = await async_extract_referenced_entity_ids(hass, call)
-            ent_reg = entity_registry.async_get(hass)
-            for entity_id in referenced.referenced | referenced.indirectly_referenced:
-                entry = ent_reg.async_get(entity_id)
-                if entry is None:
-                    raise ValueError("{entity_id} was not found in the entity registry")
-                reload_entries.add(entry.config_entry_id)
+        referenced = await async_extract_entity_ids(hass, call)
+        ent_reg = entity_registry.async_get(hass)
+        for entity_id in referenced:
+            entry = ent_reg.async_get(entity_id)
+            if entry is None:
+                raise ValueError("{entity_id} was not found in the entity registry")
+            reload_entries.add(entry.config_entry_id)
+        if not reload_entries:
+            raise ValueError("There were not matching config entries to reload")
         await asyncio.gather(
             *[
                 hass.config_entries.async_reload(config_entry_id)
@@ -246,7 +232,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         ha.DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
-        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
+        schema=cv.make_entity_service_schema({}),
     )
 
     return True

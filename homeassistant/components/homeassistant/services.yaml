@@ -61,20 +61,5 @@ update_entity:
 
 reload_config_entry:
   name: Reload config entry
-  description: Reload a config entry that matches an area, device, entity_id, config entry id, or integration domain.
+  description: Reload a config entry that matches a target.
   target:
-  fields:
-    config_entry_id:
-      name: Config entry id
-      description: A configuration entry id
-      required: false
-      example: 8955375327824e14ba89e4b29cc3ec9a
-      selector:
-        text:
-    domain:
-      name: Integration domain
-      description: An integration domain. All configuration entries for the domain will be reloaded.
-      required: false
-      example: hue
-      selector:
-        text:

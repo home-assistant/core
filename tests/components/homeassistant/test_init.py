@@ -389,59 +389,6 @@ async def test_not_allowing_recursion(hass, caplog):
         ), service
 
 
-async def test_reload_config_entry_by_entry_id(hass):
-    """Test being able to reload a config entry by config entry id."""
-    await async_setup_component(hass, "homeassistant", {})
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=None,
-    ) as mock_reload:
-        await hass.services.async_call(
-            "homeassistant",
-            "reload_config_entry",
-            {"config_entry_id": "8955375327824e14ba89e4b29cc3ec9a"},
-            blocking=True,
-        )
-
-    assert len(mock_reload.mock_calls) == 1
-    assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
-
-
-async def test_reload_config_entry_by_domain(hass):
-    """Test being able to reload a config entry by domain."""
-    await async_setup_component(hass, "homeassistant", {})
-    entry1 = MockConfigEntry(domain="mockdomain")
-    entry1.add_to_hass(hass)
-    entry2 = MockConfigEntry(domain="mockdomain")
-    entry2.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        return_value=None,
-    ) as mock_reload:
-        await hass.services.async_call(
-            "homeassistant",
-            "reload_config_entry",
-            {"domain": "mockdomain"},
-            blocking=True,
-        )
-
-    assert len(mock_reload.mock_calls) == 2
-    assert {mock_reload.mock_calls[0][1][0], mock_reload.mock_calls[1][1][0]} == {
-        entry1.entry_id,
-        entry2.entry_id,
-    }
-
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            "homeassistant",
-            "reload_config_entry",
-            {"domain": "nonexist"},
-            blocking=True,
-        )
-
-
 async def test_reload_config_entry_by_entity_id(hass):
     """Test being able to reload a config entry by entity_id."""
     await async_setup_component(hass, "homeassistant", {})
