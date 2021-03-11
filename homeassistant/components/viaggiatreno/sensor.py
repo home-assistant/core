@@ -119,7 +119,7 @@ class ViaggiaTrenoSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return extra attributes."""
         self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return self._attributes

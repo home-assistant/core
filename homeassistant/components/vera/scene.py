@@ -53,6 +53,6 @@ class VeraScene(Scene):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the scene."""
         return {"vera_scene_id": self.vera_scene.vera_scene_id}

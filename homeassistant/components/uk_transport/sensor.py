@@ -191,7 +191,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
@@ -261,7 +261,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:

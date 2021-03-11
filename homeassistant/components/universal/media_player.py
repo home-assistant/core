@@ -502,7 +502,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return flags
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}

@@ -81,7 +81,7 @@ class TelldusLiveEntity(Entity):
         return self._client.is_available(self.device_id)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
         if self._battery_level:

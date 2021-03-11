@@ -178,7 +178,7 @@ class Battery(Sensor):
         return value
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return device state attrs for battery sensors."""
         state_attrs = {}
         battery_size = self._channel.cluster.get("battery_size")

@@ -42,9 +42,9 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
         return SOURCE_TYPE_GPS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = super().device_state_attributes.copy()
+        attr = super().extra_state_attributes.copy()
         location = self.tesla_device.get_location()
         if location:
             attr.update(

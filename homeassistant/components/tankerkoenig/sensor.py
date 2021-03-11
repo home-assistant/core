@@ -125,7 +125,7 @@ class FuelPriceSensor(CoordinatorEntity):
         return f"{self._station_id}_{self._fuel_type}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
         data = self.coordinator.data[self._station_id]
 

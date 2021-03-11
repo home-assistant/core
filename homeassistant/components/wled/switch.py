@@ -72,7 +72,7 @@ class WLEDNightlightSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {
             ATTR_DURATION: self.coordinator.data.state.nightlight.duration,
@@ -110,7 +110,7 @@ class WLEDSyncSendSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
@@ -144,7 +144,7 @@ class WLEDSyncReceiveSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 

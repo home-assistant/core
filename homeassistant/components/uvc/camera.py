@@ -111,7 +111,7 @@ class UnifiVideoCamera(Camera):
         return 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the camera state attributes."""
         attr = {}
         if self.motion_detection_enabled:

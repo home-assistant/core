@@ -307,7 +307,7 @@ class TeslaDevice(CoordinatorEntity):
         return ICONS.get(self.tesla_device.type)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = self._attributes
         if self.tesla_device.has_battery():

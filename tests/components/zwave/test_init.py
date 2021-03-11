@@ -242,7 +242,7 @@ async def test_device_entity(hass, mock_openzwave):
     assert not device.should_poll
     assert device.unique_id == "10-11"
     assert device.name == "Mock Node Sensor"
-    assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
+    assert device.extra_state_attributes[zwave.ATTR_POWER] == 50.123
 
 
 async def test_node_removed(hass, mock_openzwave):

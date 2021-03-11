@@ -153,7 +153,7 @@ class TrainSensor(Entity):
         self._delay_in_minutes = self._state.get_delay_time()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._state is None:
             return None

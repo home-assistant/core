@@ -199,7 +199,7 @@ class ZWaveListSensor(ZwaveSensorBase):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the device specific state attributes."""
         # add the value's int value as property for multi-value (list) items
         return {"value": self.info.primary_value.value}

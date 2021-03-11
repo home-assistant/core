@@ -374,9 +374,9 @@ class ZwaveLock(ZWaveDeviceEntity, LockEntity):
         self.values.primary.data = False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self._notification:
             data[ATTR_NOTIFICATION] = self._notification
         if self._lock_status:

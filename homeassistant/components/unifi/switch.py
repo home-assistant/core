@@ -238,7 +238,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
         await self.device.async_set_port_poe_mode(self.client.sw_port, "off")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {
             "power": self.port.poe_power,

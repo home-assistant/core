@@ -165,7 +165,7 @@ class AirMonitorB1(XiaomiMiioEntity, AirQualityEntity):
         return self._humidity
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         data = {}
 

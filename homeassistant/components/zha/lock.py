@@ -73,7 +73,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
         return self._state == STATE_LOCKED
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return state attributes."""
         return self.state_attributes
 

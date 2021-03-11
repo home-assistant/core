@@ -571,9 +571,9 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
                 self.values.zxt_120_swing_mode.data = swing_mode
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self._fan_action:
             data[ATTR_FAN_ACTION] = self._fan_action
         return data

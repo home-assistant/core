@@ -560,7 +560,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {
             "flowing": self.device.is_color_flow_enabled,

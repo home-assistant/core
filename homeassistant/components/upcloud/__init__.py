@@ -296,7 +296,7 @@ class UpCloudServerEntity(CoordinatorEntity):
         return DEFAULT_COMPONENT_DEVICE_CLASS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the UpCloud server."""
         return {
             x: getattr(self._server, x, None)

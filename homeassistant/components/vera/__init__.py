@@ -248,7 +248,7 @@ class VeraDevice(Generic[DeviceType], Entity):
         return self.vera_device.should_poll
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
         attr = {}
 

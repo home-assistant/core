@@ -88,7 +88,7 @@ class TwitchSensor(Entity):
         return self._preview
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = dict(self._statistics)
 
