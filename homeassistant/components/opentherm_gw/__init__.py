@@ -96,11 +96,15 @@ async def async_setup_entry(hass, config_entry):
     gateway = OpenThermGatewayDevice(hass, config_entry)
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
 
-    if config_entry.options[CONF_PRECISION]:
-        migrate_options = {}
-        migrate_options[CONF_READ_PRECISION] = config_entry.options[CONF_PRECISION]
-        migrate_options[CONF_SET_PRECISION] = config_entry.options[CONF_PRECISION]
-        migrate_options[CONF_FLOOR_TEMP] = config_entry.options[CONF_FLOOR_TEMP]
+    if config_entry.options.get(CONF_PRECISION):
+        migrate_options = dict(config_entry.options)
+        migrate_options.update(
+            {
+                CONF_READ_PRECISION: config_entry.options[CONF_PRECISION],
+                CONF_SET_PRECISION: config_entry.options[CONF_PRECISION],
+            }
+        )
+        del migrate_options[CONF_PRECISION]
         hass.config_entries.async_update_entry(config_entry, options=migrate_options)
 
     config_entry.add_update_listener(options_updated)
