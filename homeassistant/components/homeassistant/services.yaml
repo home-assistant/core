@@ -60,12 +60,21 @@ update_entity:
     entity: {}
 
 reload_config_entry:
-  description: Reload a config entry
+  description: Reload a config entry by providing a config_entry_id, a matching entity_id, or a domain.
+  target:
+    entity: {}
   fields:
     config_entry_id:
-      name: Config Entry Id
-      description: The configuration entry id
-      required: true
+      name: Config entry id
+      description: A configuration entry id
+      required: false
       example: 8955375327824e14ba89e4b29cc3ec9a
+      selector:
+        text:
+    domain:
+      name: Integration domain
+      description: An integration domain. All configuration entries for the domain will be reloaded.
+      required: false
+      example: hue
       selector:
         text:
