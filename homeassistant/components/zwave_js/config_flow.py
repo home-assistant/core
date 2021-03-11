@@ -23,9 +23,12 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import disconnect_client
 from .addon import AddonError, AddonInfo, AddonManager, AddonState, get_addon_manager
 from .const import (
     CONF_ADDON_DEVICE,
+    CONF_ADDON_EMULATE_HARDWARE,
+    CONF_ADDON_LOG_LEVEL,
     CONF_ADDON_NETWORK_KEY,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_NETWORK_KEY,
@@ -41,7 +44,24 @@ TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 4
+CONF_EMULATE_HARDWARE = "emulate_hardware"
+CONF_LOG_LEVEL = "log_level"
 SERVER_VERSION_TIMEOUT = 10
+
+ADDON_LOG_LEVELS = {
+    "error": "Error",
+    "warn": "Warn",
+    "info": "Info",
+    "verbose": "Verbose",
+    "debug": "Debug",
+    "silly": "Silly",
+}
+ADDON_USER_INPUT_MAP = {
+    CONF_ADDON_DEVICE: CONF_USB_PATH,
+    CONF_ADDON_NETWORK_KEY: CONF_NETWORK_KEY,
+    CONF_ADDON_LOG_LEVEL: CONF_LOG_LEVEL,
+    CONF_ADDON_EMULATE_HARDWARE: CONF_EMULATE_HARDWARE,
+}
 
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 
@@ -50,6 +70,12 @@ def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
     """Return a schema for the manual step."""
     default_url = user_input.get(CONF_URL, DEFAULT_URL)
     return vol.Schema({vol.Required(CONF_URL, default=default_url): str})
+
+
+def get_on_supervisor_schema(user_input: dict[str, Any]) -> vol.Schema:
+    """Return a schema for the on Supervisor step."""
+    default_use_addon = user_input[CONF_USE_ADDON]
+    return vol.Schema({vol.Optional(CONF_USE_ADDON, default=default_use_addon): bool})
 
 
 async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
@@ -89,6 +115,7 @@ class BaseZwaveJSFlow(FlowHandler):
         self.network_key: str | None = None
         self.usb_path: str | None = None
         self.ws_address: str | None = None
+        self.restart_addon: bool = False
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
         self.install_task: asyncio.Task | None = None
@@ -159,7 +186,10 @@ class BaseZwaveJSFlow(FlowHandler):
         addon_manager: AddonManager = get_addon_manager(self.hass)
         self.version_info = None
         try:
-            await addon_manager.async_schedule_start_addon()
+            if self.restart_addon:
+                await addon_manager.async_schedule_restart_addon()
+            else:
+                await addon_manager.async_schedule_start_addon()
             # Sleep some seconds to let the add-on start properly before connecting.
             for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
                 await asyncio.sleep(ADDON_SETUP_TIMEOUT)
@@ -261,6 +291,14 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
         """Return the correct flow manager."""
         return self.hass.config_entries.flow
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Return the options flow."""
+        return OptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -443,6 +481,235 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
         )
+
+
+class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
+    """Handle an options flow for Z-Wave JS."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Set up the options flow."""
+        super().__init__()
+        self.config_entry = config_entry
+        self.original_addon_config: dict[str, Any] | None = None
+        self.revert_reason: str | None = None
+
+    @property
+    def flow_manager(self) -> config_entries.OptionsFlowManager:
+        """Return the correct flow manager."""
+        return self.hass.config_entries.options
+
+    @callback
+    def _async_update_entry(self, data: dict[str, Any]) -> None:
+        """Update the config entry with new data."""
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if is_hassio(self.hass):
+            return await self.async_step_on_supervisor()
+
+        return await self.async_step_manual()
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a manual configuration."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="manual",
+                data_schema=get_manual_schema(
+                    {CONF_URL: self.config_entry.data[CONF_URL]}
+                ),
+            )
+
+        errors = {}
+
+        try:
+            version_info = await validate_input(self.hass, user_input)
+        except InvalidInput as err:
+            errors["base"] = err.error
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            if self.config_entry.unique_id != version_info.home_id:
+                return self.async_abort(reason="different_device")
+
+            # Make sure we disable any add-on handling
+            # if the controller is reconfigured in a manual step.
+            self._async_update_entry(
+                {
+                    **self.config_entry.data,
+                    **user_input,
+                    CONF_USE_ADDON: False,
+                    CONF_INTEGRATION_CREATED_ADDON: False,
+                }
+            )
+
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
+            return self.async_create_entry(title=TITLE, data={})
+
+        return self.async_show_form(
+            step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
+        )
+
+    async def async_step_on_supervisor(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle logic when on Supervisor host."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="on_supervisor",
+                data_schema=get_on_supervisor_schema(
+                    {CONF_USE_ADDON: self.config_entry.data.get(CONF_USE_ADDON, True)}
+                ),
+            )
+        if not user_input[CONF_USE_ADDON]:
+            return await self.async_step_manual()
+
+        addon_info = await self._async_get_addon_info()
+
+        if addon_info.state == AddonState.NOT_INSTALLED:
+            return await self.async_step_install_addon()
+
+        return await self.async_step_configure_addon()
+
+    async def async_step_configure_addon(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask for config for Z-Wave JS add-on."""
+        addon_info = await self._async_get_addon_info()
+        addon_config = addon_info.options
+
+        if user_input is not None:
+            self.network_key = user_input[CONF_NETWORK_KEY]
+            self.usb_path = user_input[CONF_USB_PATH]
+
+            new_addon_config = {
+                **addon_config,
+                CONF_ADDON_DEVICE: self.usb_path,
+                CONF_ADDON_NETWORK_KEY: self.network_key,
+                CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
+                CONF_ADDON_EMULATE_HARDWARE: user_input[CONF_EMULATE_HARDWARE],
+            }
+
+            if new_addon_config != addon_config:
+                if addon_info.state == AddonState.RUNNING:
+                    self.restart_addon = True
+                # Copy the add-on config to keep the objects separate.
+                self.original_addon_config = dict(addon_config)
+                await self._async_set_addon_config(new_addon_config)
+
+            if addon_info.state == AddonState.RUNNING and not self.restart_addon:
+                return await self.async_step_finish_addon_setup()
+
+            if (
+                self.config_entry.data.get(CONF_USE_ADDON)
+                and self.config_entry.state == config_entries.ConfigEntryState.LOADED
+            ):
+                # Disconnect integration before restarting add-on.
+                await disconnect_client(self.hass, self.config_entry)
+
+            return await self.async_step_start_addon()
+
+        usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        network_key = addon_config.get(CONF_ADDON_NETWORK_KEY, self.network_key or "")
+        log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
+        emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_USB_PATH, default=usb_path): str,
+                vol.Optional(CONF_NETWORK_KEY, default=network_key): str,
+                vol.Optional(CONF_LOG_LEVEL, default=log_level): vol.In(
+                    ADDON_LOG_LEVELS
+                ),
+                vol.Optional(CONF_EMULATE_HARDWARE, default=emulate_hardware): bool,
+            }
+        )
+
+        return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
+
+    async def async_step_start_failed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Add-on start failed."""
+        return await self.async_revert_addon_config(reason="addon_start_failed")
+
+    async def async_step_finish_addon_setup(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Prepare info needed to complete the config entry update.
+
+        Get add-on discovery info and server version info.
+        Check for same unique id and abort if not the same unique id.
+        """
+        if self.revert_reason:
+            self.original_addon_config = None
+            reason = self.revert_reason
+            self.revert_reason = None
+            return await self.async_revert_addon_config(reason=reason)
+
+        if not self.ws_address:
+            discovery_info = await self._async_get_addon_discovery_info()
+            self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
+
+        if not self.version_info:
+            try:
+                self.version_info = await async_get_version_info(
+                    self.hass, self.ws_address
+                )
+            except CannotConnect:
+                return await self.async_revert_addon_config(reason="cannot_connect")
+
+        if self.config_entry.unique_id != self.version_info.home_id:
+            return await self.async_revert_addon_config(reason="different_device")
+
+        self._async_update_entry(
+            {
+                **self.config_entry.data,
+                CONF_URL: self.ws_address,
+                CONF_USB_PATH: self.usb_path,
+                CONF_NETWORK_KEY: self.network_key,
+                CONF_USE_ADDON: True,
+                CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
+            }
+        )
+        # Always reload entry since we may have disconnected the client.
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.config_entry.entry_id)
+        )
+        return self.async_create_entry(title=TITLE, data={})
+
+    async def async_revert_addon_config(self, reason: str) -> FlowResult:
+        """Abort the options flow.
+
+        If the add-on options have been changed, revert those and restart add-on.
+        """
+        # If reverting the add-on options failed, abort immediately.
+        if self.revert_reason:
+            _LOGGER.error(
+                "Failed to revert add-on options before aborting flow, reason: %s",
+                reason,
+            )
+
+        if self.revert_reason or not self.original_addon_config:
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
+            return self.async_abort(reason=reason)
+
+        self.revert_reason = reason
+        addon_config_input = {
+            ADDON_USER_INPUT_MAP[addon_key]: addon_val
+            for addon_key, addon_val in self.original_addon_config.items()
+        }
+        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        return await self.async_step_configure_addon(addon_config_input)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
