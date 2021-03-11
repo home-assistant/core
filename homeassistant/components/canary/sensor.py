@@ -163,7 +163,7 @@ class CanarySensor(CoordinatorEntity, Entity):
         return self._sensor_type[2]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         reading = self.reading
 
