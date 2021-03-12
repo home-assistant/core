@@ -371,6 +371,7 @@ def websocket_get_config_parameters(
         metadata = zwave_value.metadata
         result[value_id] = {
             "property": zwave_value.property_,
+            "property_key": zwave_value.property_key,
             "configuration_value_type": zwave_value.configuration_value_type.value,
             "metadata": {
                 "description": metadata.description,

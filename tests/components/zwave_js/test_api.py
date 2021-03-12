@@ -73,9 +73,13 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert len(result) == 61
     key = "52-112-0-2"
     assert result[key]["property"] == 2
+    assert result[key]["property_key"] is None
     assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
     assert result[key]["metadata"]["states"]
+
+    key = "52-112-0-201-255"
+    assert result[key]["property_key"] == 255
 
     # Test getting non-existent node fails
     await ws_client.send_json(
