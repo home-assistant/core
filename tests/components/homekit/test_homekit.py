@@ -1167,3 +1167,37 @@ async def test_homekit_start_in_accessory_mode(
     )
     assert hk_driver_start.called
     assert homekit.status == STATUS_RUNNING
+
+
+async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):
+    """Test we wait for the port to free before declaring unload success."""
+    await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: BRIDGE_NAME, CONF_PORT: DEFAULT_PORT},
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
+        f"{PATH_HOMEKIT}.HomeKit.async_stop"
+    ), patch(f"{PATH_HOMEKIT}.port_is_available", return_value=True) as port_mock:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert "Waiting for the HomeKit server to shutdown" not in caplog.text
+        assert port_mock.called
+
+    with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
+        f"{PATH_HOMEKIT}.HomeKit.async_stop"
+    ), patch(f"{PATH_HOMEKIT}.asyncio.sleep") as sleep_mock, patch(
+        f"{PATH_HOMEKIT}.port_is_available", return_value=False
+    ) as port_mock:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+        assert "Waiting for the HomeKit server to shutdown" in caplog.text
+        assert port_mock.called
+        assert sleep_mock.called
