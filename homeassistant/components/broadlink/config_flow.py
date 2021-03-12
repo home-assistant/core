@@ -39,11 +39,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_set_device(self, device, raise_on_progress=True):
         """Define a device for the config flow."""
-        supported_types = {
-            device_type
-            for device_types in DOMAINS_AND_TYPES
-            for device_type in device_types[1]
-        }
+        supported_types = set.union(*DOMAINS_AND_TYPES.values())
         if device.type not in supported_types:
             _LOGGER.error(
                 "Unsupported device: %s. If it worked before, please open "
