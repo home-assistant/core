@@ -21,7 +21,7 @@ from tests.components.stream.common import generate_h264_video
 STREAM_SOURCE = "some-stream-source"
 SEQUENCE_BYTES = io.BytesIO(b"some-bytes")
 DURATION = 10
-TEST_TIMEOUT = 8.0  # Lower than 9s home assistant timeout
+TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
@@ -220,9 +220,6 @@ async def test_stream_ended(hass, stream_worker_sync):
     assert len(segments) < MAX_ABORT_SEGMENTS
     assert len(segments) > 1
     assert not track.get_segment()
-
-    # Allow worker to exit
-    stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
     stream.stop()
