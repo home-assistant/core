@@ -52,7 +52,7 @@ ATTR_COLOR_MODE = "color_mode"
 ATTR_SUPPORTED_COLOR_MODES = "supported_color_modes"
 # Possible color modes
 COLOR_MODE_UNKNOWN = "color_mode_unknown"  # Ambiguous color mode
-COLOR_MODE_NONE = "color_mode_onoff"  # Must be the only supported mode
+COLOR_MODE_ONOFF = "color_mode_onoff"  # Must be the only supported mode
 COLOR_MODE_DIMMER = "color_mode_dimmer"  # Must be the only supported mode
 COLOR_MODE_COLOR_TEMP = "color_mode_color_temp"
 COLOR_MODE_HS = "color_mode_hs"
@@ -61,8 +61,8 @@ COLOR_MODE_RGB = "color_mode_rgb"
 COLOR_MODE_RGBW = "color_mode_rgbw"
 COLOR_MODE_RGBWW = "color_mode_rgbww"
 
-COLOR_MODES = {
-    COLOR_MODE_NONE,
+VALID_COLOR_MODES = {
+    COLOR_MODE_ONOFF,
     COLOR_MODE_DIMMER,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
@@ -71,7 +71,7 @@ COLOR_MODES = {
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
 }
-COLOR_MODES_BRIGHTNESS = COLOR_MODES - {COLOR_MODE_NONE}
+COLOR_MODES_BRIGHTNESS = VALID_COLOR_MODES - {COLOR_MODE_ONOFF}
 COLOR_MODES_COLOR = {COLOR_MODE_HS, COLOR_MODE_RGB, COLOR_MODE_XY}
 
 # Float that represents transition time in seconds to make change.
@@ -508,8 +508,8 @@ class LightEntity(ToggleEntity):
                 return COLOR_MODE_COLOR_TEMP
             if COLOR_MODE_DIMMER in supported and self.brightness is not None:
                 return COLOR_MODE_DIMMER
-            if COLOR_MODE_NONE in supported:
-                return COLOR_MODE_NONE
+            if COLOR_MODE_ONOFF in supported:
+                return COLOR_MODE_ONOFF
             return COLOR_MODE_UNKNOWN
 
         return color_mode
@@ -707,7 +707,7 @@ class LightEntity(ToggleEntity):
                 supported_color_modes = {COLOR_MODE_DIMMER}
 
             if not supported_color_modes:
-                supported_color_modes = {COLOR_MODE_NONE}
+                supported_color_modes = {COLOR_MODE_ONOFF}
 
         return supported_color_modes
 

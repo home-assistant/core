@@ -31,10 +31,12 @@ from . import (
     ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
+    COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
+    COLOR_MODE_UNKNOWN,
     COLOR_MODE_XY,
     DOMAIN,
 )
@@ -66,6 +68,7 @@ COLOR_GROUP = [
 ]
 
 COLOR_MODE_TO_ATTRIBUTE = {
+    COLOR_MODE_COLOR_TEMP: ATTR_COLOR_TEMP,
     COLOR_MODE_HS: ATTR_HS_COLOR,
     COLOR_MODE_RGB: ATTR_RGB_COLOR,
     COLOR_MODE_RGBW: ATTR_RGBW_COLOR,
@@ -132,7 +135,12 @@ async def _async_reproduce_state(
             if attr in state.attributes:
                 service_data[attr] = state.attributes[attr]
 
-        if ATTR_COLOR_MODE in state.attributes:
+        if (
+            state.attributes.get(ATTR_COLOR_MODE, COLOR_MODE_UNKNOWN)
+            != COLOR_MODE_UNKNOWN
+        ):
+            # Remove deprecated white value if we got a valid color mode
+            service_data.pop(ATTR_WHITE_VALUE, None)
             color_mode = state.attributes[ATTR_COLOR_MODE]
             if color_attr := COLOR_MODE_TO_ATTRIBUTE.get(color_mode):
                 if color_attr not in state.attributes:
