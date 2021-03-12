@@ -294,5 +294,7 @@ async def test_accessory_friendly_name():
 
     accessory = Mock()
     accessory.display_name = "same"
-    assert accessory_friendly_name("same", accessory) == "same"
+    assert accessory_friendly_name("Same", accessory) == "Same"
     assert accessory_friendly_name("hass title", accessory) == "hass title (same)"
+    accessory.display_name = "Hass title 123"
+    assert accessory_friendly_name("hass title", accessory) == "Hass title 123"
