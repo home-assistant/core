@@ -1819,11 +1819,19 @@ async def test_context_filter(hass, hass_client):
 
     await _async_commit_and_wait(hass)
     client = await hass_client()
+
+    # Test results
     entries = await _async_fetch_logbook(client, {"context_id": context.id})
 
     assert len(entries) == 2
     _assert_entry(entries[0], entity_id=entity_id, state="on")
     _assert_entry(entries[1], entity_id=entity_id, state="unknown")
+
+    # Test we can't combine context filter with entity_id filter
+    response = await client.get(
+        "/api/logbook", params={"context_id": context.id, "entity": entity_id}
+    )
+    assert response.status == 400
 
 
 async def _async_fetch_logbook(client, params=None):

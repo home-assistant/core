@@ -233,6 +233,11 @@ class LogbookView(HomeAssistantView):
         entity_matches_only = "entity_matches_only" in request.query
         context_id = request.query.get("context_id")
 
+        if entity_ids and context_id:
+            return self.json_message(
+                "Can't combine entity with context_id", HTTP_BAD_REQUEST
+            )
+
         def json_events():
             """Fetch events and generate JSON."""
             return self.json(
@@ -418,6 +423,10 @@ def _get_events(
     context_id=None,
 ):
     """Get events for a period of time."""
+    assert not (
+        entity_ids and context_id
+    ), "can't pass in both entity_ids and context_id"
+
     entity_attr_cache = EntityAttributeCache(hass)
     context_lookup = {None: None}
 
@@ -469,8 +478,8 @@ def _get_events(
                     filters.entity_filter() | (Events.event_type != EVENT_STATE_CHANGED)
                 )
 
-        if context_id is not None:
-            query = query.filter(Events.context_id == context_id)
+            if context_id is not None:
+                query = query.filter(Events.context_id == context_id)
 
         query = query.order_by(Events.time_fired)
 
