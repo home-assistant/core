@@ -643,6 +643,7 @@ class HomeKit:
             manufacturer=MANUFACTURER,
             name=accessory_friendly_name(self._entry_title, self.driver.accessory),
             model=f"Home Assistant HomeKit {hk_mode_name}",
+            entry_type="service",
         )
 
     @callback
