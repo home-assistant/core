@@ -5,6 +5,7 @@ import asyncio
 from datetime import datetime, timedelta
 import enum
 from functools import wraps
+from ipaddress import ip_address
 import random
 import re
 import socket
@@ -17,6 +18,7 @@ import slugify as unicode_slug
 
 from ..helpers.deprecation import deprecated_function
 from .dt import as_local, utcnow
+from .network import is_link_local
 
 T = TypeVar("T")
 U = TypeVar("U")  # pylint: disable=invalid-name
@@ -147,7 +149,28 @@ def get_local_ip() -> str:
         sock.close()
 
 
+def get_local_ip6() -> str:
+    """Try to determine the stable IPv6 address of the smallest scope."""
+    try:
+        # We will have to loop through and evaluate each address to workout its scope, network reachablity, and if it is tempoary
+        addresses = socket.getaddrinfo(
+            socket.gethostname(), None, family=socket.AF_INET6
+        )
+        addresses.reverse()  # Reversing so that Link local addresses are first
+        for addrinfo in addresses:
+            ip_addr = addrinfo[-1][0]
+            # check if it is link local, if its no LL and the lowest scope we need, return it
+            if not is_link_local(ip_address(ip_addr)):
+                return ip_addr
+    except OSError:
+        # catch all errors, assuming any error means we should return localhost
+        pass
+    return "::1"
+
+
 # Taken from http://stackoverflow.com/a/23728630
+
+
 def get_random_string(length: int = 10) -> str:
     """Return a random string with letters and digits."""
     generator = random.SystemRandom()

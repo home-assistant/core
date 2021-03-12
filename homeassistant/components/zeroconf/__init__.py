@@ -118,6 +118,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         zc_args["interfaces"] = InterfaceChoice.Default
     if not zc_config.get(CONF_IPV6, DEFAULT_IPV6):
         zc_args["ip_version"] = IPVersion.V4Only
+    else:
+        zc_args[
+            "ip_version"
+        ] = IPVersion.All  # Zeroconf defaults to v4 only unless this is specified
 
     zeroconf = hass.data[DOMAIN] = await _async_get_instance(hass, **zc_args)
 
@@ -172,12 +176,20 @@ def _register_hass_zc_service(
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
 
-    host_ip = util.get_local_ip()
+    host_ip4 = util.get_local_ip()
+    host_ip6 = util.get_local_ip6()
+
+    addrs = []
 
     try:
-        host_ip_pton = socket.inet_pton(socket.AF_INET, host_ip)
+        addrs.append(socket.inet_pton(socket.AF_INET, host_ip4))
     except OSError:
-        host_ip_pton = socket.inet_pton(socket.AF_INET6, host_ip)
+        addrs.append(socket.inet_pton(socket.AF_INET6, host_ip4))
+
+    try:
+        addrs.append(socket.inet_pton(socket.AF_INET6, host_ip6))
+    except OSError:
+        _LOGGER.debug("unable to create v6 pton")
 
     _suppress_invalid_properties(params)
 
@@ -185,7 +197,7 @@ def _register_hass_zc_service(
         ZEROCONF_TYPE,
         name=f"{valid_location_name}.{ZEROCONF_TYPE}",
         server=f"{uuid}.local.",
-        addresses=[host_ip_pton],
+        addresses=addrs,
         port=hass.http.server_port,
         properties=params,
     )

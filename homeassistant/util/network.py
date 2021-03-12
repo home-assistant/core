@@ -21,7 +21,7 @@ PRIVATE_NETWORKS = (
 )
 
 # RFC6890 - Link local ranges
-LINK_LOCAL_NETWORK = ip_network("169.254.0.0/16")
+LINK_LOCAL_NETWORKS = (ip_network("169.254.0.0/16"), ip_network("fe80::/10"))
 
 
 def is_loopback(address: IPv4Address | IPv6Address) -> bool:
@@ -36,7 +36,7 @@ def is_private(address: IPv4Address | IPv6Address) -> bool:
 
 def is_link_local(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is link local."""
-    return address in LINK_LOCAL_NETWORK
+    return any(address in network for network in LINK_LOCAL_NETWORKS)
 
 
 def is_local(address: IPv4Address | IPv6Address) -> bool:
@@ -46,7 +46,7 @@ def is_local(address: IPv4Address | IPv6Address) -> bool:
 
 def is_invalid(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is invalid."""
-    return bool(address == ip_address("0.0.0.0"))
+    return bool(address == ip_address("0.0.0.0") or address == ip_address("::"))
 
 
 def is_ip_address(address: str) -> bool:

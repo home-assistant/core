@@ -30,20 +30,27 @@ def test_is_private():
 def test_is_link_local():
     """Test link local addresses."""
     assert network_util.is_link_local(ip_address("169.254.12.3"))
+    assert network_util.is_link_local(ip_address("fe80::1ff:fe23:4567:890a%eth0"))
     assert not network_util.is_link_local(ip_address("127.0.0.1"))
+    assert not network_util.is_link_local(ip_address("::1"))
 
 
 def test_is_invalid():
     """Test invalid address."""
     assert network_util.is_invalid(ip_address("0.0.0.0"))
+    assert network_util.is_invalid(ip_address("::"))
     assert not network_util.is_invalid(ip_address("127.0.0.1"))
+    assert not network_util.is_invalid(ip_address("::1"))
 
 
 def test_is_local():
     """Test local addresses."""
     assert network_util.is_local(ip_address("192.168.0.1"))
     assert network_util.is_local(ip_address("127.0.0.1"))
+    assert network_util.is_local(ip_address("fd12:3456:789a:1::1"))
+    assert network_util.is_local(ip_address("::1"))
     assert not network_util.is_local(ip_address("208.5.4.2"))
+    assert not network_util.is_local(ip_address("2001:db8:85a3:8d3:1319:8a2e:370:7348"))
 
 
 def test_is_ip_address():
@@ -51,8 +58,10 @@ def test_is_ip_address():
     assert network_util.is_ip_address("192.168.0.1")
     assert network_util.is_ip_address("8.8.8.8")
     assert network_util.is_ip_address("::ffff:127.0.0.0")
+    assert network_util.is_ip_address("2001:db8:85a3:8d3:1319:8a2e:370:7348")
     assert not network_util.is_ip_address("192.168.0.999")
     assert not network_util.is_ip_address("192.168.0.0/24")
+    assert not network_util.is_ip_address("2001:db8::1319::7348")
     assert not network_util.is_ip_address("example.com")
 
 
