@@ -388,7 +388,7 @@ habitipy==0.2.0
 hangups==0.4.11
 
 # homeassistant.components.cloud
-hass-nabucasa==0.41.0
+hass-nabucasa==0.42.0
 
 # homeassistant.components.tasmota
 hatasmota==0.2.9
