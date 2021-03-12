@@ -351,17 +351,16 @@ async def async_extract_referenced_entity_ids(
     dev_reg = device_registry.async_get(hass)
     area_reg = area_registry.async_get(hass)
 
-    selected.referenced_devices.update(selector.device_ids)
-    for device_id in selected.referenced_devices:
+    for device_id in selector.device_ids:
         if device_id not in dev_reg.devices:
             selected.missing_devices.add(device_id)
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
-            continue
 
     # Find devices for this area
+    selected.referenced_devices.update(selector.device_ids)
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
