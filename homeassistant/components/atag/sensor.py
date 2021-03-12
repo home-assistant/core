@@ -26,10 +26,7 @@ SENSORS = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize sensor platform from config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for sensor in SENSORS:
-        entities.append(AtagSensor(coordinator, sensor))
-    async_add_entities(entities)
+    async_add_entities([AtagSensor(coordinator, sensor) for sensor in SENSORS])
 
 
 class AtagSensor(AtagEntity):
@@ -43,32 +40,32 @@ class AtagSensor(AtagEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[self._id].state
+        return self.coordinator.data.report[self._id].state
 
     @property
     def icon(self):
         """Return icon."""
-        return self.coordinator.data[self._id].icon
+        return self.coordinator.data.report[self._id].icon
 
     @property
     def device_class(self):
         """Return deviceclass."""
-        if self.coordinator.data[self._id].sensorclass in [
+        if self.coordinator.data.report[self._id].sensorclass in [
             DEVICE_CLASS_PRESSURE,
             DEVICE_CLASS_TEMPERATURE,
         ]:
-            return self.coordinator.data[self._id].sensorclass
+            return self.coordinator.data.report[self._id].sensorclass
         return None
 
     @property
     def unit_of_measurement(self):
         """Return measure."""
-        if self.coordinator.data[self._id].measure in [
+        if self.coordinator.data.report[self._id].measure in [
             PRESSURE_BAR,
             TEMP_CELSIUS,
             TEMP_FAHRENHEIT,
             PERCENTAGE,
             TIME_HOURS,
         ]:
-            return self.coordinator.data[self._id].measure
+            return self.coordinator.data.report[self._id].measure
         return None
