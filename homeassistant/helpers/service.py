@@ -81,15 +81,15 @@ class ServiceParams(TypedDict):
     target: Optional[Dict]
 
 
-class _ServiceTargetSelector:
+class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    def __init__(
-        self,
-        entity_ids: Optional[Union[str, list]],
-        device_ids: Optional[Union[str, list]],
-        area_ids: Optional[Union[str, list]],
-    ):
+    def __init__(self, service_call: ha.ServiceCall):
+        """Extract ids from service call data."""
+        entity_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_ENTITY_ID)
+        device_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_DEVICE_ID)
+        area_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_AREA_ID)
+
         self.entity_ids = cv.ensure_list(entity_ids)
         self.device_ids = cv.ensure_list(device_ids)
         self.area_ids = cv.ensure_list(area_ids)
@@ -99,6 +99,7 @@ class _ServiceTargetSelector:
 
     @property
     def has_any_selector(self) -> bool:
+        """Determine if any selectors are present."""
         return bool(self.selects_entity or self.selects_device or self.selects_area)
 
 
@@ -330,11 +331,7 @@ async def async_extract_referenced_entity_ids(
     hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
-    selector = _ServiceTargetSelector(
-        service_call.data.get(ATTR_ENTITY_ID),
-        service_call.data.get(ATTR_DEVICE_ID),
-        service_call.data.get(ATTR_AREA_ID),
-    )
+    selector = ServiceTargetSelector(service_call)
     selected = SelectedEntities()
 
     if not selector.has_any_selector:
