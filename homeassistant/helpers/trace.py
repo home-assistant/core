@@ -14,7 +14,7 @@ class TraceElement:
     def __init__(self, variables: TemplateVarsType, path: str):
         """Container for trace data."""
         self._error: Optional[Exception] = None
-        self._path: str = path
+        self.path: str = path
         self._result: Optional[dict] = None
         self._timestamp = dt_util.utcnow()
 
@@ -43,7 +43,7 @@ class TraceElement:
 
     def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this TraceElement."""
-        result: Dict[str, Any] = {"path": self._path, "timestamp": self._timestamp}
+        result: Dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
         if self._variables:
             result["changed_variables"] = self._variables
         if self._error is not None:
@@ -133,7 +133,7 @@ def trace_append_element(
     maxlen: Optional[int] = None,
 ) -> None:
     """Append a TraceElement to trace[path]."""
-    path = trace_element._path
+    path = trace_element.path
     trace = trace_cv.get()
     if trace is None:
         trace = {}
