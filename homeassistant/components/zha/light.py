@@ -114,6 +114,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
+    _FORCE_ON = False
+
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
         super().__init__(*args, **kwargs)
@@ -228,7 +230,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if level:
                 self._brightness = level
 
-        if brightness is None or brightness:
+        if self._FORCE_ON and (brightness is None or brightness):
             # since some lights don't always turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster if brightness is not 0.
             result = await self._on_off_channel.on()
@@ -510,6 +512,17 @@ class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
     _REFRESH_INTERVAL = (3, 5)
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    manufacturers="Jasco",
+)
+class ForceOnLight(Light):
+    """Representation of a light which does not respect move_to_level_with_on_off."""
+
+    _FORCE_ON = True
 
 
 @GROUP_MATCH()
