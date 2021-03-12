@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import automation, config
+from homeassistant.core import Context
 
 from tests.common import assert_lists_same
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
@@ -52,7 +53,8 @@ async def test_get_automation_trace(hass, hass_ws_client):
     client = await hass_ws_client()
 
     # Trigger "sun" automation
-    hass.bus.async_fire("test_event")
+    context = Context()
+    hass.bus.async_fire("test_event", context=context)
     await hass.async_block_till_done()
 
     # List traces
@@ -73,6 +75,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     response = await client.receive_json()
     assert response["success"]
     trace = response["result"]
+    assert trace["context"]["parent_id"] == context.id
     assert len(trace["action_trace"]) == 1
     assert len(trace["action_trace"]["action/0"]) == 1
     assert trace["action_trace"]["action/0"][0]["error"]

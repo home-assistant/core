@@ -390,8 +390,12 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             reason = f' by {run_variables["trigger"]["description"]}'
         self._logger.debug("Automation triggered%s", reason)
 
+        # Create a new context referring to the old context.
+        parent_id = None if context is None else context.id
+        trigger_context = Context(parent_id=parent_id)
+
         with trace_automation(
-            self.hass, self.unique_id, self._raw_config, context
+            self.hass, self.unique_id, self._raw_config, trigger_context
         ) as automation_trace:
             if self._variables:
                 try:
@@ -420,10 +424,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
             # Prepare tracing the execution of the automation's actions
             automation_trace.set_action_trace(trace_get())
-
-            # Create a new context referring to the old context.
-            parent_id = None if context is None else context.id
-            trigger_context = Context(parent_id=parent_id)
 
             self.async_set_context(trigger_context)
             event_data = {
