@@ -22,6 +22,8 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -54,8 +56,6 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
@@ -167,7 +167,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"
-        elif device_class == DEVICE_CLASS_CO2 or DEVICE_CLASS_CO2 in state.entity_id:
+        elif device_class == DEVICE_CLASS_CO2 or "co2" in state.entity_id:
             a_type = "CarbonDioxideSensor"
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ("lm", LIGHT_LUX):
             a_type = "LightSensor"

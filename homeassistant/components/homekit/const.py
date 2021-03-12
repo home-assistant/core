@@ -237,8 +237,6 @@ PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
 
 # #### Device Classes ####
-DEVICE_CLASS_CO = "co"
-DEVICE_CLASS_CO2 = "co2"
 DEVICE_CLASS_DOOR = "door"
 DEVICE_CLASS_GARAGE_DOOR = "garage_door"
 DEVICE_CLASS_GAS = "gas"
