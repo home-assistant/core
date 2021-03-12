@@ -14,7 +14,6 @@ from .const import (
     ADDRESS,
     SENSOR_CART_ITEMS_COUNT,
     SENSOR_CART_TOTAL_PRICE,
-    SENSOR_COMPLETED_DELIVERIES,
     SENSOR_LAST_ORDER_DELIVERY_TIME,
     SENSOR_LAST_ORDER_ETA_END,
     SENSOR_LAST_ORDER_ETA_START,
@@ -26,7 +25,6 @@ from .const import (
     SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
     SENSOR_SELECTED_SLOT_MIN_ORDER_VALUE,
     SENSOR_SELECTED_SLOT_START,
-    SENSOR_TOTAL_ORDERS,
 )
 
 
@@ -36,6 +34,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, picnic_api_client: PicnicAPI):
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
+        self._user_address = None
 
         logger = logging.getLogger(__name__)
         super().__init__(
@@ -60,15 +59,13 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     def fetch_data(self):
         """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
         # Fetch from the API and pre-process the data
-        user = self.picnic_api_client.get_user()
         cart = self.picnic_api_client.get_cart()
         last_order = self._get_last_order()
 
-        if not user or not cart or not last_order:
+        if not cart or not last_order:
             raise UpdateFailed("API response doesn't contain expected data.")
 
         slot_data = self._get_slot_data(cart)
-        address = f'{user["address"]["street"]} {user["address"]["house_number"]}{user["address"]["house_number_ext"]}'
         minimum_order_value = (
             slot_data["minimum_order_value"] / 100
             if slot_data.get("minimum_order_value")
@@ -76,9 +73,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         )
         # Create a flat lookup table to be used in the entities, convert prices from cents to euros
         return {
-            ADDRESS: address,
-            SENSOR_COMPLETED_DELIVERIES: user.get("completed_deliveries", 0),
-            SENSOR_TOTAL_ORDERS: user.get("total_deliveries"),
+            ADDRESS: self._get_address(),
             SENSOR_CART_ITEMS_COUNT: cart.get("total_count", 0),
             SENSOR_CART_TOTAL_PRICE: cart.get("total_price", 0) / 100,
             SENSOR_SELECTED_SLOT_START: slot_data.get("window_start"),
@@ -93,6 +88,14 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             SENSOR_LAST_ORDER_DELIVERY_TIME: last_order["delivery_time"].get("start"),
             SENSOR_LAST_ORDER_TOTAL_PRICE: last_order.get("total_price", 0) / 100,
         }
+
+    def _get_address(self):
+        """Get the address that identifies the Picnic service."""
+        if self._user_address is None:
+            address = self.picnic_api_client.get_user()["address"]
+            self._user_address = f'{address["street"]} {address["house_number"]}{address["house_number_ext"]}'
+
+        return self._user_address
 
     @staticmethod
     def _get_slot_data(cart: dict) -> dict:
