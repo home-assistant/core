@@ -6,6 +6,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "api_version": "API Version"
         }
+      },
+      "pair": {
+        "pin": "[%key:common::config_flow::data::pin%]"
       }
     },
     "error": {
