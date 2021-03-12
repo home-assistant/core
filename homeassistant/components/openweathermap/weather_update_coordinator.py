@@ -33,6 +33,7 @@ from .const import (
     ATTR_API_RAIN,
     ATTR_API_SNOW,
     ATTR_API_TEMPERATURE,
+    ATTR_API_UV_INDEX,
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
@@ -132,6 +133,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_SNOW: self._get_snow(current_weather.snow),
             ATTR_API_WEATHER: current_weather.detailed_status,
             ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
+            ATTR_API_UV_INDEX: current_weather.uvi,
             ATTR_API_WEATHER_CODE: current_weather.weather_code,
             ATTR_API_FORECAST: forecast_weather,
         }
