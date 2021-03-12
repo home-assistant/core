@@ -296,3 +296,5 @@ async def test_accessory_friendly_name():
     accessory.display_name = "same"
     assert accessory_friendly_name("same", accessory) == "same"
     assert accessory_friendly_name("hass title", accessory) == "hass title (same)"
+    accessory.display_name = "hass title 123"
+    assert accessory_friendly_name("hass title", accessory) == "hass title 123"
