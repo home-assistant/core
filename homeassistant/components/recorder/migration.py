@@ -211,7 +211,7 @@ def _modify_columns(engine, table_name, columns_def):
             "Modifying columns in %s is not supported. "
             "If you have issues with the database, "
             "you can recreate the database or modify it manually.",
-            engine.dialect.name
+            engine.dialect.name,
         )
         return
 
@@ -224,7 +224,12 @@ def _modify_columns(engine, table_name, columns_def):
     )
 
     if engine.dialect.name == "postgresql":
-        columns_def = ["ALTER {column} TYPE {type}".format(**dict(zip(["column", "type"], col_def.split(" ", 1)))) for col_def in columns_def]
+        columns_def = [
+            "ALTER {column} TYPE {type}".format(
+                **dict(zip(["column", "type"], col_def.split(" ", 1)))
+            )
+            for col_def in columns_def
+        ]
     elif engine.dialect.name == "mssql":
         columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
     else:
