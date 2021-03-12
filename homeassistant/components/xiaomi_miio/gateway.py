@@ -93,4 +93,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
     @property
     def available(self):
         """Return if entity is available."""
-        return self.coordinator.data.get(self._sub_device.sid, {}).get(ATTR_AVAILABLE, False)
+        if self.coordinator.data is None:
+            return False
+
+        return self.coordinator.data[self._sub_device.sid][ATTR_AVAILABLE]
