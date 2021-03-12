@@ -40,7 +40,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
-from .core import discovery, helpers
+from .core import helpers
 from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
@@ -101,13 +101,39 @@ class LightColorMode(enum.IntEnum):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN]
+    entities_to_create = [
+        ent_cls(*args) for ent_cls, args in hass.data[DATA_ZHA][light.DOMAIN]
+    ]
+
+    normal_light_entities = [
+        light_entity
+        for light_entity in entities_to_create
+        if isinstance(light_entity, Light)
+    ]
+
+    group_light_entities = [
+        light_entity
+        for light_entity in entities_to_create
+        if isinstance(light_entity, LightGroup)
+    ]
+
+    async def _async_add_light_entities(
+        _async_add_entities, _normal_light_entities, _group_light_entities
+    ):
+        if _normal_light_entities:
+            _async_add_entities(normal_light_entities, update_before_add=True)
+        if _group_light_entities:
+            _async_add_entities(group_light_entities, update_before_add=True)
+        hass.data[DATA_ZHA][light.DOMAIN].clear()
 
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            discovery.async_add_entities, async_add_entities, entities_to_create
+            _async_add_light_entities,
+            async_add_entities,
+            normal_light_entities,
+            group_light_entities,
         ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
