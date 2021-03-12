@@ -230,7 +230,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if level:
                 self._brightness = level
 
-        if self._FORCE_ON and (brightness is None or brightness):
+        if brightness is None or (self._FORCE_ON and brightness):
             # since some lights don't always turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster if brightness is not 0.
             result = await self._on_off_channel.on()
