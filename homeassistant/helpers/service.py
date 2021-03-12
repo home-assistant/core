@@ -349,33 +349,29 @@ async def async_extract_referenced_entity_ids(
 
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
+    area_reg = area_registry.async_get(hass)
 
-    selected.referenced_devices.update(selector.device_ids)
-    for device_id in selected.referenced_devices:
+    for device_id in selector.device_ids:
         if device_id not in dev_reg.devices:
             selected.missing_devices.add(device_id)
 
-    area_reg = area_registry.async_get(hass)
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
-            continue
-
-    # Find entities tied to an area
-    for entity_entry in ent_reg.entities.values():
-        if entity_entry.area_id in selector.area_ids:
-            selected.indirectly_referenced.add(entity_entry.entity_id)
 
     # Find devices for this area
+    selected.referenced_devices.update(selector.device_ids)
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
 
-    if not selected.referenced_devices:
+    if not selector.area_ids and not selected.referenced_devices:
         return selected
 
     for ent_entry in ent_reg.entities.values():
-        if not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices:
+        if ent_entry.area_id in selector.area_ids or (
+            not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices
+        ):
             selected.indirectly_referenced.add(ent_entry.entity_id)
 
     return selected
