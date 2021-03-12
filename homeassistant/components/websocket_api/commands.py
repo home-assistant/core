@@ -13,7 +13,7 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers import config_validation as cv, entity, service, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -138,13 +138,20 @@ async def handle_call_service(hass, connection, msg):
 
     try:
         context = connection.context(msg)
+        config = {
+            "service": f'{msg["domain"]}.{msg["service"]}',
+        }
+        if target := msg.get("target"):
+            config["target"] = target
+        if data := msg.get("service_data"):
+            config["data"] = data
+        params = service.async_prepare_call_from_config(
+            hass, config, validate_config=True
+        )
         await hass.services.async_call(
-            msg["domain"],
-            msg["service"],
-            msg.get("service_data"),
-            blocking,
-            context,
-            target=target,
+            **params,
+            blocking=blocking,
+            context=context,
         )
         connection.send_message(
             messages.result_message(msg["id"], {"context": context})
