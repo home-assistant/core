@@ -207,11 +207,12 @@ def _add_columns(engine, table_name, columns_def):
 def _modify_columns(engine, table_name, columns_def):
     """Modify columns in a table."""
     if engine.dialect.name == "sqlite":
-        _LOGGER.warning(
-            "Modifying columns in %s is not supported. "
-            "If you have issues with the database, "
-            "you can recreate the database or modify it manually.",
-            engine.dialect.name,
+        _LOGGER.debug(
+            "Skipping to modify columns %s in table %s. "
+            "Modifying column length in SQLite is unnecessary, "
+            "it does not impose any length restrictions.",
+            ", ".join(column.split(" ")[0] for column in columns_def),
+            table_name,
         )
         return
 
