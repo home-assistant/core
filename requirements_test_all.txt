@@ -261,7 +261,7 @@ defusedxml==0.6.0
 denonavr==0.9.10
 
 # homeassistant.components.devolo_home_control
-devolo-home-control-api==0.16.0
+devolo-home-control-api==0.17.0
 
 # homeassistant.components.directv
 directv==0.4.0
@@ -676,7 +676,7 @@ pyatag==0.3.5.3
 pyatmo==4.2.2
 
 # homeassistant.components.apple_tv
-pyatv==0.7.6
+pyatv==0.7.7
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
