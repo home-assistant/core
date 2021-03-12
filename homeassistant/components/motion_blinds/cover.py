@@ -1,10 +1,10 @@
 """Support for Motion Blinds using their WLAN API."""
 
+from datetime import timedelta
 import logging
 
 from motionblinds import BlindType
 import voluptuous as vol
-from datetime import timedelta
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -20,7 +20,6 @@ from homeassistant.components.cover import (
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -166,7 +165,9 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         """Return True if entity is available."""
         if not self._blind.available:
             track_point_in_time(
-                self.hass, self.coordinator.async_request_refresh, dt_util.utcnow() + timedelta(minutes=1)
+                self.hass,
+                self.coordinator.async_request_refresh,
+                dt_util.utcnow() + timedelta(minutes=1),
             )
 
         return self._blind.available
