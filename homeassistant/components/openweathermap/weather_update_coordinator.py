@@ -151,7 +151,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 entry.rain, entry.snow
             ),
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
-                entry.precipitation_probability * 100
+                round(entry.precipitation_probability * 100)
             ),
             ATTR_FORECAST_PRESSURE: entry.pressure.get("press"),
             ATTR_FORECAST_WIND_SPEED: entry.wind().get("speed"),
