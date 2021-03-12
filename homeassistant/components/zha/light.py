@@ -546,6 +546,10 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
+        self._FORCE_ON = any(
+            self.platform.entities[member_entity_id]._FORCE_ON
+            for member_entity_id in self._entity_ids
+        )
         if self._debounced_member_refresh is None:
             force_refresh_debouncer = Debouncer(
                 self.hass,
