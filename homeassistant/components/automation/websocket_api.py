@@ -71,11 +71,9 @@ def websocket_automation_trace_list(hass, connection, msg):
     if not automation_id:
         automation_traces = get_debug_traces(hass, summary=True)
     else:
-        automation_traces = {
-            automation_id: get_debug_traces_for_automation(
-                hass, automation_id, summary=True
-            )
-        }
+        automation_traces = get_debug_traces_for_automation(
+            hass, automation_id, summary=True
+        )
 
     connection.send_result(msg["id"], automation_traces)
 

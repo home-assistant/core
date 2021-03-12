@@ -109,6 +109,7 @@ class AutomationTrace:
             trigger = self._variables.get("trigger", {}).get("description")
 
         result = {
+            "automation_id": self._unique_id,
             "last_action": last_action,
             "last_condition": last_condition,
             "run_id": self.run_id,
@@ -196,11 +197,9 @@ def get_debug_traces_for_automation(hass, automation_id, summary=False):
 @callback
 def get_debug_traces(hass, summary=False):
     """Return a serializable list of debug traces."""
-    traces = {}
+    traces = []
 
     for automation_id in hass.data[DATA_AUTOMATION_TRACE]:
-        traces[automation_id] = get_debug_traces_for_automation(
-            hass, automation_id, summary
-        )
+        traces.extend(get_debug_traces_for_automation(hass, automation_id, summary))
 
     return traces
