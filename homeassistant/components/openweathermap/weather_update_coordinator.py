@@ -25,6 +25,7 @@ from homeassistant.util import dt
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
     ATTR_API_HUMIDITY,
@@ -118,6 +119,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_TEMPERATURE: current_weather.temperature("celsius").get("temp"),
             ATTR_API_FEELS_LIKE_TEMPERATURE: current_weather.temperature("celsius").get(
                 "feels_like"
+            ),
+            ATTR_API_DEW_POINT: (
+                round(current_weather.dewpoint / 100, 1)
             ),
             ATTR_API_PRESSURE: current_weather.pressure.get("press"),
             ATTR_API_HUMIDITY: current_weather.humidity,
