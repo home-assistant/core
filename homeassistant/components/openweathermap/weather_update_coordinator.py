@@ -121,9 +121,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FEELS_LIKE_TEMPERATURE: current_weather.temperature("celsius").get(
                 "feels_like"
             ),
-            ATTR_API_DEW_POINT: (
-                round(current_weather.dewpoint / 100, 1)
-            ),
+            ATTR_API_DEW_POINT: (round(current_weather.dewpoint / 100, 1)),
             ATTR_API_PRESSURE: current_weather.pressure.get("press"),
             ATTR_API_HUMIDITY: current_weather.humidity,
             ATTR_API_WIND_BEARING: current_weather.wind().get("deg"),
