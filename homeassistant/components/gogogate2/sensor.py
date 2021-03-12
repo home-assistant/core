@@ -1,4 +1,5 @@
 """Support for Gogogate2 garage Doors."""
+from itertools import chain
 from typing import Callable, List, Optional
 
 from gogogate2_api.common import AbstractDoor, get_configured_doors
@@ -30,20 +31,19 @@ async def async_setup_entry(
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)
 
-    async_add_entities(
+    sensors = chain(
         [
             DoorSensorBattery(config_entry, data_update_coordinator, door)
             for door in get_configured_doors(data_update_coordinator.data)
             if door.sensorid and door.sensorid != SENSOR_ID_WIRED
-        ]
-    )
-    async_add_entities(
+        ],
         [
             DoorSensorTemperature(config_entry, data_update_coordinator, door)
             for door in get_configured_doors(data_update_coordinator.data)
             if door.sensorid and door.sensorid != SENSOR_ID_WIRED
-        ]
+        ],
     )
+    async_add_entities(sensors)
 
 
 class DoorSensorBattery(GoGoGate2Entity):
