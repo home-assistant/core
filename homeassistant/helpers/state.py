@@ -22,6 +22,7 @@ from homeassistant.core import Context, State
 from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
 import homeassistant.util.dt as dt_util
 
+from .frame import report
 from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +36,9 @@ class AsyncTrackStates:
     when with-block is exited.
 
     Must be run within the event loop.
+
+    Deprecated. Remove after June 2021.
+    Warning added via `get_changed_since`.
     """
 
     def __init__(self, hass: HomeAssistantType) -> None:
@@ -61,7 +65,11 @@ class AsyncTrackStates:
 def get_changed_since(
     states: Iterable[State], utc_point_in_time: dt.datetime
 ) -> List[State]:
-    """Return list of states that have been changed since utc_point_in_time."""
+    """Return list of states that have been changed since utc_point_in_time.
+
+    Deprecated. Remove after June 2021.
+    """
+    report("uses deprecated `get_changed_since`")
     return [state for state in states if state.last_updated >= utc_point_in_time]
 
 
