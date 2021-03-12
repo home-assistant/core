@@ -18,6 +18,7 @@ from homeassistant.helpers.entity import Entity
 from .common import (
     DeviceDataUpdateCoordinator,
     GoGoGate2Entity,
+    cover_unique_id,
     get_data_update_coordinator,
 )
 from .const import DOMAIN
@@ -66,7 +67,8 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         door: AbstractDoor,
     ) -> None:
         """Initialize the object."""
-        super().__init__(config_entry, data_update_coordinator, door)
+        unique_id = cover_unique_id(config_entry, door)
+        super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._api = data_update_coordinator.api
         self._is_available = True
 

@@ -20,11 +20,13 @@ from homeassistant.components.gogogate2.const import DEVICE_TYPE_ISMARTGATE, DOM
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_USERNAME,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_TEMPERATURE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -34,7 +36,7 @@ from homeassistant.util.dt import utcnow
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-def _mocked_gogogate_sensor_response(battery_level: int):
+def _mocked_gogogate_sensor_response(battery_level: int, temperature: float):
     return GogoGate2InfoResponse(
         user="user1",
         gogogatename="gogogatename0",
@@ -55,7 +57,7 @@ def _mocked_gogogate_sensor_response(battery_level: int):
             sensorid="ABCD",
             camera=False,
             events=2,
-            temperature=None,
+            temperature=temperature,
             voltage=battery_level,
         ),
         door2=GogoGate2Door(
@@ -69,7 +71,7 @@ def _mocked_gogogate_sensor_response(battery_level: int):
             sensorid="WIRE",
             camera=False,
             events=0,
-            temperature=None,
+            temperature=temperature,
             voltage=battery_level,
         ),
         door3=GogoGate2Door(
@@ -83,7 +85,7 @@ def _mocked_gogogate_sensor_response(battery_level: int):
             sensorid=None,
             camera=False,
             events=0,
-            temperature=None,
+            temperature=temperature,
             voltage=battery_level,
         ),
         outputs=Outputs(output1=True, output2=False, output3=True),
@@ -92,7 +94,7 @@ def _mocked_gogogate_sensor_response(battery_level: int):
     )
 
 
-def _mocked_ismartgate_sensor_response(battery_level: int):
+def _mocked_ismartgate_sensor_response(battery_level: int, temperature: float):
     return ISmartGateInfoResponse(
         user="user1",
         ismartgatename="ismartgatename0",
@@ -115,7 +117,7 @@ def _mocked_ismartgate_sensor_response(battery_level: int):
             sensorid="ABCD",
             camera=False,
             events=2,
-            temperature=None,
+            temperature=temperature,
             enabled=True,
             apicode="apicode0",
             customimage=False,
@@ -132,7 +134,7 @@ def _mocked_ismartgate_sensor_response(battery_level: int):
             sensorid="WIRE",
             camera=False,
             events=2,
-            temperature=None,
+            temperature=temperature,
             enabled=True,
             apicode="apicode0",
             customimage=False,
@@ -149,7 +151,7 @@ def _mocked_ismartgate_sensor_response(battery_level: int):
             sensorid=None,
             camera=False,
             events=0,
-            temperature=None,
+            temperature=temperature,
             enabled=True,
             apicode="apicode0",
             customimage=False,
@@ -164,16 +166,23 @@ def _mocked_ismartgate_sensor_response(battery_level: int):
 async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     """Test data update."""
 
-    expected_attributes = {
+    bat_attributes = {
         "device_class": "battery",
         "door_id": 1,
         "friendly_name": "Door1 battery",
         "sensor_id": "ABCD",
     }
+    temp_attributes = {
+        "device_class": "temperature",
+        "door_id": 1,
+        "friendly_name": "Door1 temperature",
+        "sensor_id": "ABCD",
+        "unit_of_measurement": "°C",
+    }
 
     api = MagicMock(GogoGate2Api)
     api.async_activate.return_value = GogoGate2ActivateResponse(result=True)
-    api.async_info.return_value = _mocked_gogogate_sensor_response(25)
+    api.async_info.return_value = _mocked_gogogate_sensor_response(25, 7.0)
     gogogate2api_mock.return_value = api
 
     config_entry = MockConfigEntry(
@@ -189,31 +198,40 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
 
     assert hass.states.get("cover.door1") is None
     assert hass.states.get("cover.door2") is None
-    assert hass.states.get("cover.door2") is None
+    assert hass.states.get("cover.door3") is None
     assert hass.states.get("sensor.door1_battery") is None
     assert hass.states.get("sensor.door2_battery") is None
-    assert hass.states.get("sensor.door2_battery") is None
+    assert hass.states.get("sensor.door3_battery") is None
+    assert hass.states.get("sensor.door1_temperature") is None
+    assert hass.states.get("sensor.door2_temperature") is None
+    assert hass.states.get("sensor.door3_temperature") is None
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1")
     assert hass.states.get("cover.door2")
-    assert hass.states.get("cover.door2")
+    assert hass.states.get("cover.door3")
     assert hass.states.get("sensor.door1_battery").state == "25"
+    assert dict(hass.states.get("sensor.door1_battery").attributes) == bat_attributes
+    assert hass.states.get("sensor.door2_battery") is None
+    assert hass.states.get("sensor.door2_battery") is None
+    assert hass.states.get("sensor.door1_temperature").state == "7.0"
     assert (
-        dict(hass.states.get("sensor.door1_battery").attributes) == expected_attributes
+        dict(hass.states.get("sensor.door1_temperature").attributes) == temp_attributes
     )
-    assert hass.states.get("sensor.door2_battery") is None
-    assert hass.states.get("sensor.door2_battery") is None
+    assert hass.states.get("sensor.door2_temperature") is None
+    assert hass.states.get("sensor.door3_temperature") is None
 
-    api.async_info.return_value = _mocked_gogogate_sensor_response(40)
+    api.async_info.return_value = _mocked_gogogate_sensor_response(40, 10.0)
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.door1_battery").state == "40"
+    assert hass.states.get("sensor.door1_temperature").state == "10.0"
 
-    api.async_info.return_value = _mocked_gogogate_sensor_response(None)
+    api.async_info.return_value = _mocked_gogogate_sensor_response(None, None)
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.door1_battery").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.door1_temperature").state == STATE_UNKNOWN
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert not hass.states.async_entity_ids(DOMAIN)
@@ -222,14 +240,21 @@ async def test_sensor_update(gogogate2api_mock, hass: HomeAssistant) -> None:
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
 async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     """Test availability."""
-    expected_attributes = {
+    bat_attributes = {
         "device_class": "battery",
         "door_id": 1,
         "friendly_name": "Door1 battery",
         "sensor_id": "ABCD",
     }
+    temp_attributes = {
+        "device_class": "temperature",
+        "door_id": 1,
+        "friendly_name": "Door1 temperature",
+        "sensor_id": "ABCD",
+        "unit_of_measurement": "°C",
+    }
 
-    sensor_response = _mocked_ismartgate_sensor_response(35)
+    sensor_response = _mocked_ismartgate_sensor_response(35, -4.0)
     api = MagicMock(ISmartGateApi)
     api.async_info.return_value = sensor_response
     ismartgateapi_mock.return_value = api
@@ -248,21 +273,32 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
 
     assert hass.states.get("cover.door1") is None
     assert hass.states.get("cover.door2") is None
-    assert hass.states.get("cover.door2") is None
+    assert hass.states.get("cover.door3") is None
     assert hass.states.get("sensor.door1_battery") is None
     assert hass.states.get("sensor.door2_battery") is None
-    assert hass.states.get("sensor.door2_battery") is None
+    assert hass.states.get("sensor.door3_battery") is None
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert hass.states.get("cover.door1")
     assert hass.states.get("cover.door2")
-    assert hass.states.get("cover.door2")
+    assert hass.states.get("cover.door3")
     assert hass.states.get("sensor.door1_battery").state == "35"
     assert hass.states.get("sensor.door2_battery") is None
-    assert hass.states.get("sensor.door2_battery") is None
+    assert hass.states.get("sensor.door3_battery") is None
+    assert hass.states.get("sensor.door1_temperature").state == "-4.0"
+    assert hass.states.get("sensor.door2_temperature") is None
+    assert hass.states.get("sensor.door3_temperature") is None
     assert (
         hass.states.get("sensor.door1_battery").attributes[ATTR_DEVICE_CLASS]
         == DEVICE_CLASS_BATTERY
+    )
+    assert (
+        hass.states.get("sensor.door1_temperature").attributes[ATTR_DEVICE_CLASS]
+        == DEVICE_CLASS_TEMPERATURE
+    )
+    assert (
+        hass.states.get("sensor.door1_temperature").attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == "°C"
     )
 
     api.async_info.side_effect = Exception("Error")
@@ -270,12 +306,14 @@ async def test_availability(ismartgateapi_mock, hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.door1_battery").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.door1_temperature").state == STATE_UNAVAILABLE
 
     api.async_info.side_effect = None
     api.async_info.return_value = sensor_response
     async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
     await hass.async_block_till_done()
     assert hass.states.get("sensor.door1_battery").state == "35"
+    assert dict(hass.states.get("sensor.door1_battery").attributes) == bat_attributes
     assert (
-        dict(hass.states.get("sensor.door1_battery").attributes) == expected_attributes
+        dict(hass.states.get("sensor.door1_temperature").attributes) == temp_attributes
     )

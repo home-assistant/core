@@ -69,12 +69,13 @@ class GoGoGate2Entity(CoordinatorEntity):
         config_entry: ConfigEntry,
         data_update_coordinator: DeviceDataUpdateCoordinator,
         door: AbstractDoor,
+        unique_id: str,
     ) -> None:
         """Initialize gogogate2 base entity."""
         super().__init__(data_update_coordinator)
         self._config_entry = config_entry
         self._door = door
-        self._unique_id = cover_unique_id(config_entry, door)
+        self._unique_id = unique_id
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -135,6 +136,13 @@ def get_data_update_coordinator(
 def cover_unique_id(config_entry: ConfigEntry, door: AbstractDoor) -> str:
     """Generate a cover entity unique id."""
     return f"{config_entry.unique_id}_{door.door_id}"
+
+
+def sensor_unique_id(
+    config_entry: ConfigEntry, door: AbstractDoor, sensor_type: str
+) -> str:
+    """Generate a cover entity unique id."""
+    return f"{config_entry.unique_id}_{door.door_id}_{sensor_type}"
 
 
 def get_api(config_data: dict) -> AbstractGateApi:
