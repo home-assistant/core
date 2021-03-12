@@ -87,9 +87,13 @@ class ServiceTargetSelector:
         device_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_DEVICE_ID)
         area_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_AREA_ID)
 
-        self.entity_ids = cv.ensure_list(entity_ids) if _has_selects(entity_ids) else []
-        self.device_ids = cv.ensure_list(device_ids) if _has_selects(device_ids) else []
-        self.area_ids = cv.ensure_list(area_ids) if _has_selects(area_ids) else []
+        self.entity_ids = (
+            set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
+        )
+        self.device_ids = (
+            set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
+        )
+        self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
 
     @property
     def has_any_selector(self) -> bool:
@@ -315,8 +319,8 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-def _has_selects(ids: Optional[Union[str, list]]) -> bool:
-    """Check if ids select anything."""
+def _has_match(ids: Optional[Union[str, list]]) -> bool:
+    """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
 
 
@@ -349,32 +353,27 @@ async def async_extract_referenced_entity_ids(
             selected.missing_devices.add(device_id)
 
     area_reg = area_registry.async_get(hass)
-    area_lookup = set(selector.area_ids)
-
-    for area_id in area_lookup:
+    for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
             continue
 
     # Find entities tied to an area
     for entity_entry in ent_reg.entities.values():
-        if entity_entry.area_id in area_lookup:
+        if entity_entry.area_id in selector.area_ids:
             selected.indirectly_referenced.add(entity_entry.entity_id)
 
     # Find devices for this area
     for device_entry in dev_reg.devices.values():
-        if device_entry.area_id in area_lookup:
+        if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
 
     if not selected.referenced_devices:
         return selected
 
-    for entity_entry in ent_reg.entities.values():
-        if (
-            not entity_entry.area_id
-            and entity_entry.device_id in selected.referenced_devices
-        ):
-            selected.indirectly_referenced.add(entity_entry.entity_id)
+    for ent_entry in ent_reg.entities.values():
+        if not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices:
+            selected.indirectly_referenced.add(ent_entry.entity_id)
 
     return selected
 
