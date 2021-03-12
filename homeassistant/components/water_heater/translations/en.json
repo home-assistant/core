@@ -12,7 +12,8 @@
             "gas": "Gas",
             "heat_pump": "Heat Pump",
             "high_demand": "High Demand",
-            "off": "Off"
+            "off": "Off",
+            "performance": "Performance"
         }
     }
 }
