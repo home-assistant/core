@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please try again.",
+      "invalid_auth": "Invalid authentication.",
+      "too_many_requests": "Too many requests, retry later.",
+      "unknown": "Unexpected error."
+    },
+    "step": {
+      "user": {
+        "description": "Please enter your credentials.",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "client_id": "Application Key / Client ID"
+        },
+        "title": "Gardena Smart System"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "mower_duration": "Mower Duration (minutes)",
+          "smart_irrigation_control_duration": "Smart Irrigation Control Duration (minutes)",
+          "smart_watering_duration": "Smart Watering Duration (minutes)"
+        },
+        "title": "Gardena Smart System - Options"
+      }
+    }
+  }
+}

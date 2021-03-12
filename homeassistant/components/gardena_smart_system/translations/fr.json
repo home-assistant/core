@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "La location est deja configurée"
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter, veuillez ré-essayer.",
+      "invalid_auth": "Authentification invalide.",
+      "too_many_requests": "Trop de requêtes, veuillez ré-essayer plus tard.",
+      "unknown": "Erreur innatendue."
+    },
+    "step": {
+      "user": {
+        "description": "Veuillez renseigner vos identifiants.",
+        "data": {
+          "email": "E-mail",
+          "password": "Mot de passe",
+          "client_id": "Application Key / Client ID"
+        },
+        "title": "Gardena Smart System"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "mower_duration": "Durée de tonte (minutes)",
+          "smart_irrigation_control_duration": "Durée de Smart Irrigation Control (minutes)",
+          "smart_watering_duration": "Durée de Smart Watering (minutes)"
+        },
+        "title": "Gardena Smart System - Options"
+      }
+    }
+  }
+}

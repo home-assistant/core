@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Plasseringen er allerede konfigurert"
+    },
+    "error": {
+      "cannot_connect": "Kunne ikke koble til, prøv igjen.",
+      "invalid_auth": "Ugyldig godkjenning",
+      "too_many_requests": "For mange forespørsler, prøv senere.",
+      "unknown": "Uventet feil."
+    },
+    "step": {
+      "user": {
+        "description": "Vennligst skriv inn legitimasjonen din.",
+        "data": {
+          "email": "E-post",
+          "password": "Passord",
+          "client_id": "Programnøkkel/klient-ID"
+        },
+        "title": "Gardena Smart System"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "user": {
+        "data": {
+          "mower_duration": "Klippevarighet (minutter)",
+          "smart_irrigation_control_duration": "Smart vanningskontrollvarighet (minutter)",
+          "smart_watering_duration": "Smart vanningstid (minutter)"
+        },
+        "title": "Gardena Smart System - Alternativer"
+      }
+    }
+  }
+}
