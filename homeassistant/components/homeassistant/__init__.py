@@ -20,9 +20,9 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, entity_registry
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import (
-    async_extract_entity_ids,
+    async_extract_config_entry_ids,
     async_extract_referenced_entity_ids,
 )
 
@@ -209,14 +209,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_reload_config_entry(call):
         """Service handler for reloading a config entry."""
-        reload_entries = set()
-        referenced = await async_extract_entity_ids(hass, call)
-        ent_reg = entity_registry.async_get(hass)
-        for entity_id in referenced:
-            entry = ent_reg.async_get(entity_id)
-            if entry is None:
-                raise ValueError("{entity_id} was not found in the entity registry")
-            reload_entries.add(entry.config_entry_id)
+        reload_entries = await async_extract_config_entry_ids(hass, call)
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
