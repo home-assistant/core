@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.devolo_home_control.const import DOMAIN
+from homeassistant.components.devolo_home_control.const import DEFAULT_MYDEVOLO, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 
 from .const import (
@@ -70,7 +70,36 @@ async def test_form_advanced_options(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    await _setup(hass, result)
+    with patch(
+        "homeassistant.components.devolo_home_control.async_setup",
+        return_value=True,
+    ) as mock_setup, patch(
+        "homeassistant.components.devolo_home_control.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.devolo_home_control.Mydevolo.uuid",
+        return_value="123456",
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+                "mydevolo_url": "https://test_mydevolo_url.test",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "devolo Home Control"
+    assert result2["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+        "mydevolo_url": "https://test_mydevolo_url.test",
+    }
+
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_show_zeroconf_form(hass):
@@ -128,7 +157,7 @@ async def _setup(hass, result):
     assert result2["data"] == {
         "username": "test-username",
         "password": "test-password",
-        "mydevolo_url": "https://www.mydevolo.com",
+        "mydevolo_url": DEFAULT_MYDEVOLO,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
