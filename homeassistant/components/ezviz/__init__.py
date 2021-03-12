@@ -48,9 +48,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up Ezviz from a config entry."""
 
-    if entry.data.get(CONF_TYPE) == ATTR_TYPE_CAMERA:
-        return True
-
     if not entry.options:
         options = {
             CONF_FFMPEG_ARGUMENTS: entry.data.get(
@@ -59,6 +56,9 @@ async def async_setup_entry(hass, entry):
             CONF_TIMEOUT: entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         }
         hass.config_entries.async_update_entry(entry, options=options)
+
+    if entry.data.get(CONF_TYPE) == ATTR_TYPE_CAMERA:
+        return True
 
     try:
         ezviz_client = await hass.async_add_executor_job(

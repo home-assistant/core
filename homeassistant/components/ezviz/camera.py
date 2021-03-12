@@ -79,9 +79,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
     camera_config_entries = hass.config_entries.async_entries(DOMAIN)
 
-    ffmpeg_arguments = entry.options.get(
-        CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
-    )
     camera_entities = []
 
     for idx, camera in enumerate(coordinator.data):
@@ -99,9 +96,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         if camera_rtsp_entry:
             conf_cameras = camera_rtsp_entry[0]
+            ffmpeg_arguments = conf_cameras.options.get(
+                CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
+            )
 
             camera_username = conf_cameras.data[CONF_USERNAME]
             camera_password = conf_cameras.data[CONF_PASSWORD]
+
             camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{camera['local_ip']}:{local_rtsp_port}{ffmpeg_arguments}"
             _LOGGER.debug(
                 "Camera %s source stream: %s", camera[ATTR_SERIAL], camera_rtsp_stream
