@@ -90,17 +90,14 @@ class ServiceTargetSelector:
         device_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_DEVICE_ID)
         area_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_AREA_ID)
 
-        self.entity_ids = cv.ensure_list(entity_ids)
-        self.device_ids = cv.ensure_list(device_ids)
-        self.area_ids = cv.ensure_list(area_ids)
-        self.selects_entity: bool = _has_selects(entity_ids)
-        self.selects_device: bool = _has_selects(device_ids)
-        self.selects_area: bool = _has_selects(area_ids)
+        self.entity_ids = cv.ensure_list(entity_ids) if _has_selects(entity_ids) else []
+        self.device_ids = cv.ensure_list(device_ids) if _has_selects(device_ids) else []
+        self.area_ids = cv.ensure_list(area_ids) if _has_selects(area_ids) else []
 
     @property
     def has_any_selector(self) -> bool:
         """Determine if any selectors are present."""
-        return bool(self.selects_entity or self.selects_device or self.selects_area)
+        return bool(self.entity_ids or self.device_ids or self.area_ids)
 
 
 @dataclasses.dataclass
@@ -337,43 +334,40 @@ async def async_extract_referenced_entity_ids(
     if not selector.has_any_selector:
         return selected
 
-    if selector.selects_entity:
-        entity_ids = selector.entity_ids
-        if expand_group:
-            entity_ids = hass.components.group.expand_entity_ids(entity_ids)
+    entity_ids = selector.entity_ids
+    if expand_group:
+        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
 
-        selected.referenced.update(entity_ids)
+    selected.referenced.update(entity_ids)
 
-    if not selector.selects_device and not selector.selects_area:
+    if not selector.device_ids and not selector.area_ids:
         return selected
 
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
 
-    if selector.selects_device:
-        selected.referenced_devices.update(selector.device_ids)
-        for device_id in selected.referenced_devices:
-            if device_id not in dev_reg.devices:
-                selected.missing_devices.add(device_id)
+    selected.referenced_devices.update(selector.device_ids)
+    for device_id in selected.referenced_devices:
+        if device_id not in dev_reg.devices:
+            selected.missing_devices.add(device_id)
 
-    if selector.selects_area:
-        area_reg = area_registry.async_get(hass)
-        area_lookup = set(selector.area_ids)
+    area_reg = area_registry.async_get(hass)
+    area_lookup = set(selector.area_ids)
 
-        for area_id in area_lookup:
-            if area_id not in area_reg.areas:
-                selected.missing_areas.add(area_id)
-                continue
+    for area_id in area_lookup:
+        if area_id not in area_reg.areas:
+            selected.missing_areas.add(area_id)
+            continue
 
-        # Find entities tied to an area
-        for entity_entry in ent_reg.entities.values():
-            if entity_entry.area_id in area_lookup:
-                selected.indirectly_referenced.add(entity_entry.entity_id)
+    # Find entities tied to an area
+    for entity_entry in ent_reg.entities.values():
+        if entity_entry.area_id in area_lookup:
+            selected.indirectly_referenced.add(entity_entry.entity_id)
 
-        # Find devices for this area
-        for device_entry in dev_reg.devices.values():
-            if device_entry.area_id in area_lookup:
-                selected.referenced_devices.add(device_entry.id)
+    # Find devices for this area
+    for device_entry in dev_reg.devices.values():
+        if device_entry.area_id in area_lookup:
+            selected.referenced_devices.add(device_entry.id)
 
     if not selected.referenced_devices:
         return selected
