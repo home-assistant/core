@@ -206,6 +206,15 @@ def _add_columns(engine, table_name, columns_def):
 
 def _modify_columns(engine, table_name, columns_def):
     """Modify columns in a table."""
+    if engine.dialect.name == "sqlite":
+        _LOGGER.warning(
+            "Modifying columns in %s is not supported. "
+            "If you have issues with the database, "
+            "you can recreate the database or modify it manually.",
+            engine.dialect.name
+        )
+        return
+
     _LOGGER.warning(
         "Modifying columns %s in table %s. Note: this can take several "
         "minutes on large databases and slow computers. Please "
@@ -213,7 +222,13 @@ def _modify_columns(engine, table_name, columns_def):
         ", ".join(column.split(" ")[0] for column in columns_def),
         table_name,
     )
-    columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
+
+    if engine.dialect.name == "postgresql":
+        columns_def = ["ALTER {column} TYPE {type}".format(**dict(zip(["column", "type"], col_def.split(" ", 1)))) for col_def in columns_def]
+    elif engine.dialect.name == "mssql":
+        columns_def = [f"ALTER COLUMN {col_def}" for col_def in columns_def]
+    else:
+        columns_def = [f"MODIFY {col_def}" for col_def in columns_def]
 
     try:
         engine.execute(
