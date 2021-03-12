@@ -162,7 +162,7 @@ class SolarEdgeDetailsSensor(SolarEdgeSensor):
     """Representation of an SolarEdge Monitoring API details sensor."""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes
 
@@ -182,7 +182,7 @@ class SolarEdgeInventorySensor(SolarEdgeSensor):
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
@@ -202,7 +202,7 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensor):
         self._json_key = SENSOR_TYPES[self.sensor_key][0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 
@@ -232,7 +232,7 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensor):
         return DEVICE_CLASS_POWER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self.data_service.attributes.get(self._json_key)
 

@@ -78,7 +78,7 @@ class LondonTubeSensor(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         self.attrs["Description"] = self._description
         return self.attrs

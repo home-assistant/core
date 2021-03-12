@@ -150,9 +150,7 @@ class BlockAttributeDescription:
     available: Optional[Callable[[aioshelly.Block], bool]] = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Optional[Callable[[dict, aioshelly.Block], bool]] = None
-    device_state_attributes: Optional[
-        Callable[[aioshelly.Block], Optional[dict]]
-    ] = None
+    extra_state_attributes: Optional[Callable[[aioshelly.Block], Optional[dict]]] = None
 
 
 @dataclass
@@ -165,7 +163,7 @@ class RestAttributeDescription:
     value: Callable[[dict, Any], Any] = None
     device_class: Optional[str] = None
     default_enabled: bool = True
-    device_state_attributes: Optional[Callable[[dict], Optional[dict]]] = None
+    extra_state_attributes: Optional[Callable[[dict], Optional[dict]]] = None
 
 
 class ShellyBlockEntity(entity.Entity):
@@ -293,12 +291,12 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.available(self.block)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        if self.description.device_state_attributes is None:
+        if self.description.extra_state_attributes is None:
             return None
 
-        return self.description.device_state_attributes(self.block)
+        return self.description.extra_state_attributes(self.block)
 
 
 class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
@@ -369,12 +367,12 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return f"{self.wrapper.mac}-{self.attribute}"
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
-        if self.description.device_state_attributes is None:
+        if self.description.extra_state_attributes is None:
             return None
 
-        return self.description.device_state_attributes(self.wrapper.device.status)
+        return self.description.extra_state_attributes(self.wrapper.device.status)
 
 
 class ShellySleepingBlockAttributeEntity(ShellyBlockAttributeEntity, RestoreEntity):

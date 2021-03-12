@@ -107,7 +107,7 @@ class LastfmSensor(Entity):
         self._state = f"{now_playing.artist} - {now_playing.title}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

@@ -268,7 +268,7 @@ class QNAPMemorySensor(QNAPSensor):
             return round(used / total * 100)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
@@ -294,7 +294,7 @@ class QNAPNetworkSensor(QNAPSensor):
             return round_nicely(data["rx"] / 1024 / 1024)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["system_stats"]["nics"][self.monitor_device]
@@ -322,7 +322,7 @@ class QNAPSystemSensor(QNAPSensor):
             return int(self._api.data["system_stats"]["system"]["temp_c"])
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["system_stats"]
@@ -360,7 +360,7 @@ class QNAPDriveSensor(QNAPSensor):
         return f"{server_name} {self.var_name} (Drive {self.monitor_device})"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["smart_drive_health"][self.monitor_device]
@@ -394,7 +394,7 @@ class QNAPVolumeSensor(QNAPSensor):
             return round(used_gb / total_gb * 100)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["volumes"][self.monitor_device]

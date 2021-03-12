@@ -536,7 +536,7 @@ class NetatmoPublicSensor(NetatmoBase):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
         attrs = {}
 

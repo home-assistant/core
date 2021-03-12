@@ -112,7 +112,7 @@ class ElecPriceSensor(RestoreEntity):
         return self._pvpc_data.state_available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._pvpc_data.attributes
 

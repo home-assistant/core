@@ -287,7 +287,12 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the lowbound target temperature we try to reach."""
-        return self.target_temperature
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
+        if len(self._current_mode_setpoint_enums) > 1:
+            return self.target_temperature
+        return None
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -326,7 +331,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the optional state attributes."""
         if (
             self._fan_state

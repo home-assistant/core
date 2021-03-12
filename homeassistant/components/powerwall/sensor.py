@@ -136,7 +136,7 @@ class PowerWallEnergySensor(PowerWallEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         meter = self.coordinator.data[POWERWALL_API_METERS].get_meter(self._meter)
         return {

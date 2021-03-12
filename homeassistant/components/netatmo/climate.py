@@ -418,7 +418,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 

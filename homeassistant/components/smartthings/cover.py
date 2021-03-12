@@ -147,7 +147,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get additional state attributes."""
         return self._state_attrs
 
