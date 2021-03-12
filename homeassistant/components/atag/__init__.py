@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "atag"
 PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     coordinator = DataUpdateCoordinator(
         hass,
-        LOGGER,
+        _LOGGER,
         name=DOMAIN.title(),
         update_method=_async_update_data,
         update_interval=timedelta(seconds=60),
