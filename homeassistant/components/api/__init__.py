@@ -39,7 +39,6 @@ from homeassistant.helpers.event import async_state_changed_event_listeners
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.state import AsyncTrackStates
 from homeassistant.helpers.system_info import async_get_system_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -382,20 +381,27 @@ class APIDomainServicesView(HomeAssistantView):
 
         Returns a list of changed states.
         """
-        hass = request.app["hass"]
+        hass: ha.HomeAssistant = request.app["hass"]
         body = await request.text()
         try:
             data = json.loads(body) if body else None
         except ValueError:
             return self.json_message("Data should be valid JSON.", HTTP_BAD_REQUEST)
 
-        with AsyncTrackStates(hass) as changed_states:
-            try:
-                await hass.services.async_call(
-                    domain, service, data, blocking=True, context=self.context(request)
-                )
-            except (vol.Invalid, ServiceNotFound) as ex:
-                raise HTTPBadRequest() from ex
+        context = self.context(request)
+
+        try:
+            await hass.services.async_call(
+                domain, service, data, blocking=True, context=context
+            )
+        except (vol.Invalid, ServiceNotFound) as ex:
+            raise HTTPBadRequest() from ex
+
+        changed_states = []
+
+        for state in hass.states.async_all():
+            if state.context is context:
+                changed_states.append(state)
 
         return self.json(changed_states)
 
