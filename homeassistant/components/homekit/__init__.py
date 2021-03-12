@@ -308,11 +308,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await homekit.async_stop()
 
     for _ in range(0, SHUTDOWN_TIMEOUT):
-        if not await hass.async_add_executor_job(
-            port_is_available, entry.data[CONF_PORT]
-        ):
-            _LOGGER.info("Waiting for the HomeKit server to shutdown")
-            await asyncio.sleep(1)
+        if await hass.async_add_executor_job(port_is_available, entry.data[CONF_PORT]):
+            break
+
+        _LOGGER.info("Waiting for the HomeKit server to shutdown")
+        await asyncio.sleep(1)
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
