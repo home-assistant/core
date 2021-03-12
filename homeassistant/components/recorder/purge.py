@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.expression import distinct
 
 import homeassistant.util.dt as dt_util
 
@@ -22,7 +23,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
+def purge_old_data(
+    instance: Recorder, purge_days: int, repack: bool, apply_filter: bool = False
+) -> bool:
     """Purge events and states older than purge_days ago.
 
     Cleans up an timeframe of an hour, based on the oldest record.
@@ -44,6 +47,9 @@ def purge_old_data(instance: Recorder, purge_days: int, repack: bool) -> bool:
                 # If states or events purging isn't processing the purge_before yet,
                 # return false, as we are not done yet.
                 _LOGGER.debug("Purging hasn't fully completed yet")
+                return False
+            if apply_filter and _purge_filtered_data(instance, session) is False:
+                _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
                 return False
             _purge_old_recorder_runs(instance, session, purge_before)
         if repack:
@@ -140,3 +146,70 @@ def _purge_old_recorder_runs(
         .delete(synchronize_session=False)
     )
     _LOGGER.debug("Deleted %s recorder_runs", deleted_rows)
+
+
+def _purge_filtered_data(instance: Recorder, session: Session) -> bool:
+    """Remove filtered states and events that shouldn't be in the database."""
+    _LOGGER.debug("Cleanup filtered data")
+
+    # Check if excluded entity_ids are in database
+    excluded_entity_ids: list[str] = [
+        entity_id
+        for (entity_id,) in session.query(distinct(States.entity_id)).all()
+        if not instance.entity_filter(entity_id)
+    ]
+    if len(excluded_entity_ids) > 0:
+        _purge_filtered_states(session, excluded_entity_ids)
+        return False
+
+    # Check if excluded event_types are in database
+    excluded_event_types: list[str] = [
+        event_type
+        for (event_type,) in session.query(distinct(Events.event_type)).all()
+        if event_type in instance.exclude_t
+    ]
+    if len(excluded_event_types) > 0:
+        _purge_filtered_events(session, excluded_event_types)
+        return False
+
+    return True
+
+
+def _purge_filtered_states(session: Session, excluded_entity_ids: list[str]) -> None:
+    """Remove filtered states and linked events."""
+    state_ids: list[int]
+    event_ids: list[int | None]
+    state_ids, event_ids = zip(
+        *(
+            session.query(States.state_id, States.event_id)
+            .filter(States.entity_id.in_(excluded_entity_ids))
+            .limit(MAX_ROWS_TO_PURGE)
+            .all()
+        )
+    )
+    event_ids = [id_ for id_ in event_ids if id_ is not None]
+    _LOGGER.debug(
+        "Selected %s state_ids to remove that should be filtered", len(state_ids)
+    )
+    _purge_state_ids(session, state_ids)
+    _purge_event_ids(session, event_ids)  # type: ignore  # type of event_ids already narrowed to 'list[int]'
+
+
+def _purge_filtered_events(session: Session, excluded_event_types: list[str]) -> None:
+    """Remove filtered events and linked states."""
+    events: list[Events] = (
+        session.query(Events.event_id)
+        .filter(Events.event_type.in_(excluded_event_types))
+        .limit(MAX_ROWS_TO_PURGE)
+        .all()
+    )
+    event_ids: list[int] = [event.event_id for event in events]
+    _LOGGER.debug(
+        "Selected %s event_ids to remove that should be filtered", len(event_ids)
+    )
+    states: list[States] = (
+        session.query(States.state_id).filter(States.event_id.in_(event_ids)).all()
+    )
+    state_ids: list[int] = [state.state_id for state in states]
+    _purge_state_ids(session, state_ids)
+    _purge_event_ids(session, event_ids)
