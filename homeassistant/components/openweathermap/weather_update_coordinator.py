@@ -25,6 +25,7 @@ from homeassistant.util import dt
 from .const import (
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
+    ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
     ATTR_API_HUMIDITY,
@@ -32,6 +33,7 @@ from .const import (
     ATTR_API_RAIN,
     ATTR_API_SNOW,
     ATTR_API_TEMPERATURE,
+    ATTR_API_UV_INDEX,
     ATTR_API_WEATHER,
     ATTR_API_WEATHER_CODE,
     ATTR_API_WIND_BEARING,
@@ -119,6 +121,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_FEELS_LIKE_TEMPERATURE: current_weather.temperature("celsius").get(
                 "feels_like"
             ),
+            ATTR_API_DEW_POINT: (round(current_weather.dewpoint / 100, 1)),
             ATTR_API_PRESSURE: current_weather.pressure.get("press"),
             ATTR_API_HUMIDITY: current_weather.humidity,
             ATTR_API_WIND_BEARING: current_weather.wind().get("deg"),
@@ -128,6 +131,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_SNOW: self._get_snow(current_weather.snow),
             ATTR_API_WEATHER: current_weather.detailed_status,
             ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
+            ATTR_API_UV_INDEX: current_weather.uvi,
             ATTR_API_WEATHER_CODE: current_weather.weather_code,
             ATTR_API_FORECAST: forecast_weather,
         }
@@ -151,7 +155,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 entry.rain, entry.snow
             ),
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
-                entry.precipitation_probability * 100
+                round(entry.precipitation_probability * 100)
             ),
             ATTR_FORECAST_PRESSURE: entry.pressure.get("press"),
             ATTR_FORECAST_WIND_SPEED: entry.wind().get("speed"),
