@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 broadcast_port,
             )
         ],
-        True,
+        host is not None,
     )
 
 
@@ -86,10 +86,7 @@ class WolSwitch(SwitchEntity):
             Script(hass, off_action, name, domain) if off_action else None
         )
         self._state = False
-        self._is_dummy = False
-
-        if self._host is None:
-            self._is_dummy = True
+        self._assumed_state = host is None
 
     @property
     def is_on(self):
@@ -100,6 +97,16 @@ class WolSwitch(SwitchEntity):
     def name(self):
         """Return the name of the switch."""
         return self._name
+
+    @property
+    def assumed_state(self):
+        """Return true if no host is provided."""
+        return self._assumed_state
+
+    @property
+    def should_poll(self):
+        """Return false if assumed state is true."""
+        return not self._assumed_state
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -118,38 +125,39 @@ class WolSwitch(SwitchEntity):
 
         wakeonlan.send_magic_packet(self._mac_address, **service_kwargs)
 
-        if self._is_dummy:
+        if self._assumed_state:
             self._state = True
+            self.async_write_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run(context=self._context)
 
-        if self._is_dummy:
+        if self._assumed_state:
             self._state = False
+            self.async_write_ha_state()
 
     def update(self):
-        """Check if device is on and update the state."""
-        if not self._is_dummy:
-            if platform.system().lower() == "windows":
-                ping_cmd = [
-                    "ping",
-                    "-n",
-                    "1",
-                    "-w",
-                    str(DEFAULT_PING_TIMEOUT * 1000),
-                    str(self._host),
-                ]
-            else:
-                ping_cmd = [
-                    "ping",
-                    "-c",
-                    "1",
-                    "-W",
-                    str(DEFAULT_PING_TIMEOUT),
-                    str(self._host),
-                ]
+        """Check if device is on and update the state. Only called if assumed state is false."""
+        if platform.system().lower() == "windows":
+            ping_cmd = [
+                "ping",
+                "-n",
+                "1",
+                "-w",
+                str(DEFAULT_PING_TIMEOUT * 1000),
+                str(self._host),
+            ]
+        else:
+            ping_cmd = [
+                "ping",
+                "-c",
+                "1",
+                "-W",
+                str(DEFAULT_PING_TIMEOUT),
+                str(self._host),
+            ]
 
-            status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
-            self._state = not bool(status)
+        status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
+        self._state = not bool(status)
