@@ -42,7 +42,6 @@ IAS_ACE_GET_ZONE_STATUS = (
 _LOGGER = logging.getLogger(__name__)
 
 
-@registries.ALARM_CONTROL_PANEL_CLUSTERS.register(security.IasAce.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasAce.cluster_id)
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""

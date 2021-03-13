@@ -1,6 +1,7 @@
 """Alarm control panels on Zigbee Home Automation networks."""
 import functools
 import logging
+from typing import Any
 
 from zigpy.zcl.clusters.security import IasAce
 
@@ -43,6 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+
 IAS_ACE_STATE_MAP = {
     IasAce.PanelStatus.Panel_Disarmed: STATE_ALARM_DISARMED,
     IasAce.PanelStatus.Armed_Stay: STATE_ALARM_ARMED_HOME,
@@ -84,10 +86,12 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanel):
         )
 
     @callback
-    def async_set_state(self, state):
-        """Handle state update from channel."""
-        _LOGGER.debug("state=%s", state)
-        self._state = IAS_ACE_STATE_MAP.get(state)
+    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
+        """Set the entity state."""
+        _LOGGER.debug(
+            "attrid: [%s], name: [%s], value: [%s]", attr_id, attr_name, value
+        )
+        self._state = IAS_ACE_STATE_MAP.get(value)
         self.async_write_ha_state()
 
     @callback
