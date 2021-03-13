@@ -43,6 +43,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
+from .modbus_read_cache import ModbusReadCache
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -296,7 +297,7 @@ class ModbusRegisterBitSwitch(ModbusBaseSwitch, SwitchEntity):
 
     def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
         """Initialize the register switch."""
-        super().__init__(hub, config)
+        super().__init__(ModbusReadCache(hub), config)
         self._register = config[CONF_ADDRESS]
         self._verify_state = config[CONF_VERIFY_STATE]
         self._verify_register = config.get(CONF_VERIFY_REGISTER, self._register)

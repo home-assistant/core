@@ -73,7 +73,7 @@ async def base_test(
         read_result = (
             ReadResult(register_words)
             if register_words
-            else ModbusException("Modbus error")
+            else ModbusException("Emulate Modbus read exception")
         )
         mock_sync.read_coils.return_value = read_result
         mock_sync.read_discrete_inputs.return_value = read_result
@@ -125,7 +125,7 @@ async def base_test(
             await hass.async_block_till_done()
 
         # mock_hook may also call an arbitrary service
-        # Then returning state will hold the desired state
+        # Then the resulting state will hold the desired state
         if mock_hook is not None:
             await mock_hook(mock_sync)
             await hass.async_block_till_done()
