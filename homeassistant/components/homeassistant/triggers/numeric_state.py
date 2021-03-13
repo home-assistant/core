@@ -78,12 +78,16 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
+    _variables = {}
+    if automation_info:
+        _variables = automation_info.get("variables") or {}
+
     if value_template is not None:
         value_template.hass = hass
 
     def variables(entity_id):
         """Return a dict with trigger variables."""
-        return {
+        trigger_info = {
             "trigger": {
                 "platform": "numeric_state",
                 "entity_id": entity_id,
@@ -92,6 +96,7 @@ async def async_attach_trigger(
                 "attribute": attribute,
             }
         }
+        return {**_variables, **trigger_info}
 
     @callback
     def check_numeric_state(entity_id, from_s, to_s):

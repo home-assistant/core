@@ -157,7 +157,6 @@ omit =
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
     homeassistant/components/cpuspeed/sensor.py
-    homeassistant/components/crimereports/sensor.py
     homeassistant/components/cups/sensor.py
     homeassistant/components/currencylayer/sensor.py
     homeassistant/components/daikin/*

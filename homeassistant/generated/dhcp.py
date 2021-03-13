@@ -71,6 +71,10 @@ DHCP = [
         "macaddress": "002338*"
     },
     {
+        "domain": "nuki",
+        "hostname": "nuki_bridge_*"
+    },
+    {
         "domain": "powerwall",
         "hostname": "1118431-*",
         "macaddress": "88DA1A*"

@@ -136,7 +136,6 @@ class YamlCollection(ObservableCollection):
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
-
         old_ids = set(self.data)
 
         change_sets = []

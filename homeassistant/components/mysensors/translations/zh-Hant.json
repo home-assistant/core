@@ -3,10 +3,12 @@
         "abort": {
             "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "duplicate_persistence_file": "Persistence \u6a94\u6848\u5df2\u4f7f\u7528\u4e2d",
             "duplicate_topic": "\u4e3b\u984c\u5df2\u4f7f\u7528\u4e2d",
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "invalid_device": "\u88dd\u7f6e\u7121\u6548",
             "invalid_ip": "IP \u4f4d\u5740\u7121\u6548",
+            "invalid_persistence_file": "Persistence \u6a94\u6848\u7121\u6548",
             "invalid_port": "\u901a\u8a0a\u57e0\u865f\u78bc\u7121\u6548",
             "invalid_publish_topic": "\u767c\u5e03\u4e3b\u984c\u7121\u6548",
             "invalid_serial": "\u5e8f\u5217\u57e0\u7121\u6548",

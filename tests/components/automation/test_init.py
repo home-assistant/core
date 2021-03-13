@@ -1,5 +1,6 @@
 """The tests for the automation component."""
 import asyncio
+import logging
 from unittest.mock import Mock, patch
 
 import pytest
@@ -152,7 +153,7 @@ async def test_two_triggers(hass, calls):
     assert len(calls) == 2
 
 
-async def test_trigger_service_ignoring_condition(hass, calls):
+async def test_trigger_service_ignoring_condition(hass, caplog, calls):
     """Test triggers."""
     assert await async_setup_component(
         hass,
@@ -171,11 +172,15 @@ async def test_trigger_service_ignoring_condition(hass, calls):
         },
     )
 
-    with patch("homeassistant.components.automation.LOGGER.warning") as logwarn:
-        hass.bus.async_fire("test_event")
-        await hass.async_block_till_done()
-        assert len(calls) == 0
-        assert len(logwarn.mock_calls) == 1
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
         "automation", "trigger", {"entity_id": "automation.test"}, blocking=True

@@ -855,7 +855,7 @@ class ForkedDaapdUpdater:
                 )
         if update_events:
             await asyncio.wait(
-                [event.wait() for event in update_events.values()]
+                [asyncio.create_task(event.wait()) for event in update_events.values()]
             )  # make sure callbacks done before update
             async_dispatcher_send(
                 self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), True

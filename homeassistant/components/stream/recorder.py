@@ -6,9 +6,9 @@ from typing import List
 
 import av
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
-from .core import PROVIDERS, Segment, StreamOutput
+from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,9 +72,9 @@ def recorder_save_worker(file_out: str, segments: List[Segment], container_forma
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, stream, timeout: int = 30) -> None:
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
         """Initialize recorder output."""
-        super().__init__(stream, timeout)
+        super().__init__(hass, idle_timer)
         self.video_path = None
         self._segments = []
 
@@ -104,12 +104,6 @@ class RecorderOutput(StreamOutput):
         segments = [s for s in segments if s.sequence not in own_segments]
         self._segments = segments + self._segments
 
-    @callback
-    def _timeout(self, _now=None):
-        """Handle recorder timeout."""
-        self._unsub = None
-        self.cleanup()
-
     def cleanup(self):
         """Write recording and clean up."""
         _LOGGER.debug("Starting recorder worker thread")
@@ -120,5 +114,5 @@ class RecorderOutput(StreamOutput):
         )
         thread.start()
 
+        super().cleanup()
         self._segments = []
-        self._stream.remove_provider(self)

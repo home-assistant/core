@@ -178,6 +178,7 @@ async def test_doorbell_event(hass, aioclient_mock):
 
 async def test_proactive_mode_filter_states(hass, aioclient_mock):
     """Test all the cases that filter states."""
+    aioclient_mock.post(TEST_URL, text="", status=202)
     await state_report.async_enable_proactive_mode(hass, DEFAULT_CONFIG)
 
     # First state should report
@@ -186,7 +187,8 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
         "on",
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
-    assert len(aioclient_mock.mock_calls) == 0
+    await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 1
 
     aioclient_mock.clear_requests()
 
@@ -238,3 +240,24 @@ async def test_proactive_mode_filter_states(hass, aioclient_mock):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert len(aioclient_mock.mock_calls) == 0
+
+    # If serializes to same properties, it should not report
+    aioclient_mock.post(TEST_URL, text="", status=202)
+    with patch(
+        "homeassistant.components.alexa.entities.AlexaEntity.serialize_properties",
+        return_value=[{"same": "info"}],
+    ):
+        hass.states.async_set(
+            "binary_sensor.same_serialize",
+            "off",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "binary_sensor.same_serialize",
+            "off",
+            {"friendly_name": "Test Contact Sensor", "device_class": "door"},
+        )
+
+        await hass.async_block_till_done()
+    assert len(aioclient_mock.mock_calls) == 1

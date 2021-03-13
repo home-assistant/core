@@ -3,8 +3,8 @@ from unittest.mock import patch
 
 import pytest
 import pywilight
+from pywilight.const import DOMAIN
 
-from homeassistant.components.wilight.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,

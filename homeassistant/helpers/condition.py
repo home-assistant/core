@@ -314,11 +314,22 @@ def state(
 
     Async friendly.
     """
+    if entity is None:
+        raise ConditionError("No entity specified")
+
     if isinstance(entity, str):
+        entity_id = entity
         entity = hass.states.get(entity)
 
-    if entity is None or (attribute is not None and attribute not in entity.attributes):
-        return False
+        if entity is None:
+            raise ConditionError(f"Unknown entity {entity_id}")
+    else:
+        entity_id = entity.entity_id
+
+    if attribute is not None and attribute not in entity.attributes:
+        raise ConditionError(
+            f"Attribute '{attribute}' (of entity {entity_id}) does not exist"
+        )
 
     assert isinstance(entity, State)
 
@@ -464,8 +475,7 @@ def async_template(
     try:
         value: str = value_template.async_render(variables, parse_result=False)
     except TemplateError as ex:
-        _LOGGER.error("Error during template condition: %s", ex)
-        return False
+        raise ConditionError(f"Error in 'template' condition: {ex}") from ex
 
     return value.lower() == "true"
 

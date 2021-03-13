@@ -19,7 +19,6 @@ DATA_LOCATION_CACHE = "astral_location_cache"
 @bind_hass
 def get_astral_location(hass: HomeAssistantType) -> "astral.Location":
     """Get an astral location for the current Home Assistant configuration."""
-
     from astral import Location  # pylint: disable=import-outside-toplevel
 
     latitude = hass.config.latitude

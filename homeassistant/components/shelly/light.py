@@ -187,6 +187,11 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on light."""
+        if self.block.type == "relay":
+            self.control_result = await self.block.set_state(turn="on")
+            self.async_write_ha_state()
+            return
+
         params = {"turn": "on"}
         if ATTR_BRIGHTNESS in kwargs:
             tmp_brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)

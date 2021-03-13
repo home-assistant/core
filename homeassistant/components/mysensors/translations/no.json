@@ -3,30 +3,75 @@
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
+            "duplicate_persistence_file": "Persistensfil allerede i bruk",
+            "duplicate_topic": "Emnet er allerede i bruk",
             "invalid_auth": "Ugyldig godkjenning",
+            "invalid_device": "Ugyldig enhet",
+            "invalid_ip": "Ugyldig IP-adresse",
+            "invalid_persistence_file": "Ugyldig utholdenhetsfil",
+            "invalid_port": "Ugyldig portnummer",
+            "invalid_publish_topic": "Ugyldig publiseringsemne",
+            "invalid_serial": "Ugyldig serieport",
+            "invalid_subscribe_topic": "Ugyldig abonnementsemne",
+            "invalid_version": "Ugyldig MySensors-versjon",
+            "not_a_number": "Vennligst skriv inn et nummer",
+            "port_out_of_range": "Portnummer m\u00e5 v\u00e6re minst 1 og maksimalt 65535",
+            "same_topic": "Abonner og publiser emner er de samme",
             "unknown": "Uventet feil"
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
             "cannot_connect": "Tilkobling mislyktes",
+            "duplicate_persistence_file": "Persistensfil allerede i bruk",
+            "duplicate_topic": "Emnet er allerede i bruk",
             "invalid_auth": "Ugyldig godkjenning",
+            "invalid_device": "Ugyldig enhet",
+            "invalid_ip": "Ugyldig IP-adresse",
+            "invalid_persistence_file": "Ugyldig utholdenhetsfil",
+            "invalid_port": "Ugyldig portnummer",
+            "invalid_publish_topic": "Ugyldig publiseringsemne",
+            "invalid_serial": "Ugyldig serieport",
+            "invalid_subscribe_topic": "Ugyldig abonnementsemne",
+            "invalid_version": "Ugyldig MySensors-versjon",
+            "not_a_number": "Vennligst skriv inn et nummer",
+            "port_out_of_range": "Portnummer m\u00e5 v\u00e6re minst 1 og maksimalt 65535",
+            "same_topic": "Abonner og publiser emner er de samme",
             "unknown": "Uventet feil"
         },
         "step": {
             "gw_mqtt": {
                 "data": {
+                    "persistence_file": "Persistensfil (la den v\u00e6re tom for automatisk generering)",
+                    "retain": "mqtt beholde",
+                    "topic_in_prefix": "prefiks for input-emner (topic_in_prefix)",
+                    "topic_out_prefix": "prefiks for utgangstemaer (topic_out_prefix)",
                     "version": "MySensors versjon"
-                }
+                },
+                "description": "MQTT gateway-oppsett"
             },
             "gw_serial": {
                 "data": {
+                    "baud_rate": "Overf\u00f8ringshastighet",
+                    "device": "Seriell port",
+                    "persistence_file": "persistensfil  (la den v\u00e6re tom for automatisk generering)",
                     "version": "MySensors versjon"
-                }
+                },
+                "description": "Seriell gatewayoppsett"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "IP-adressen til gatewayen",
+                    "persistence_file": "persistensfil (la den v\u00e6re tom for automatisk generering)",
+                    "tcp_port": "Port",
+                    "version": "MySensors versjon"
+                },
+                "description": "Ethernet gateway-oppsett"
             },
             "user": {
                 "data": {
                     "gateway_type": ""
-                }
+                },
+                "description": "Velg tilkoblingsmetode til gatewayen"
             }
         }
     },

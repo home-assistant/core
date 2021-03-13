@@ -2,16 +2,22 @@
 
 from unittest.mock import patch
 
-from tesla_powerwall import MissingAttributeError, PowerwallUnreachableError
+from tesla_powerwall import (
+    AccessDeniedError,
+    MissingAttributeError,
+    PowerwallUnreachableError,
+)
 
 from homeassistant import config_entries, setup
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.powerwall.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 
 from .mocks import _mock_powerwall_side_effect, _mock_powerwall_site_name
 
 from tests.common import MockConfigEntry
+
+VALID_CONFIG = {CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"}
 
 
 async def test_form_source_user(hass):
@@ -36,13 +42,13 @@ async def test_form_source_user(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_IP_ADDRESS: "1.2.3.4"},
+            VALID_CONFIG,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "My site"
-    assert result2["data"] == {CONF_IP_ADDRESS: "1.2.3.4"}
+    assert result2["data"] == VALID_CONFIG
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -61,11 +67,32 @@ async def test_form_cannot_connect(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_IP_ADDRESS: "1.2.3.4"},
+            VALID_CONFIG,
         )
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
+
+
+async def test_invalid_auth(hass):
+    """Test we handle invalid auth error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_powerwall = _mock_powerwall_side_effect(site_info=AccessDeniedError("any"))
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_form_unknown_exeption(hass):
@@ -81,8 +108,7 @@ async def test_form_unknown_exeption(hass):
         return_value=mock_powerwall,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_IP_ADDRESS: "1.2.3.4"},
+            result["flow_id"], VALID_CONFIG
         )
 
     assert result2["type"] == "form"
@@ -105,7 +131,7 @@ async def test_form_wrong_version(hass):
     ):
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_IP_ADDRESS: "1.2.3.4"},
+            VALID_CONFIG,
         )
 
     assert result3["type"] == "form"
@@ -178,16 +204,54 @@ async def test_dhcp_discovery(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_IP_ADDRESS: "1.1.1.1",
-            },
+            VALID_CONFIG,
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Some site"
-    assert result2["data"] == {
-        CONF_IP_ADDRESS: "1.1.1.1",
-    }
+    assert result2["data"] == VALID_CONFIG
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_reauth(hass):
+    """Test reauthenticate."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id="1.2.3.4",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth"}, data=entry.data
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ), patch(
+        "homeassistant.components.powerwall.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.powerwall.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: "1.2.3.4",
+                CONF_PASSWORD: "new-test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
