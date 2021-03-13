@@ -11,81 +11,30 @@ from screenlogicpy.const import (
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
 )
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .config_flow import discover_gateways
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
+from .config_flow import async_discover_gateways_by_unique_id
+from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): cv.string,
-                vol.Optional(CONF_PORT, default=80): cv.positive_int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "water_heater"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Screenlogic component."""
-    _LOGGER.info("Async Setup")
-    conf = config.get(DOMAIN)
-
-    # Per ADR0010 https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md
-    # new integrations should not implement yaml config so there is no need to implement async_setup or import
-    hass.data[DOMAIN] = conf or {}
-
-    if conf is not None:
-        _LOGGER.info("conf found")
-        _LOGGER.info(conf)
-        if CONF_NAME not in conf:
-            conf[CONF_NAME] = "Unnamed ScreenLogic"
-        config_data = {
-            CONF_HOST: {
-                CONF_IP_ADDRESS: conf[CONF_IP_ADDRESS],
-                CONF_PORT: conf[CONF_PORT],
-                CONF_NAME: conf[CONF_NAME],
-            },
-        }
-        if CONF_SCAN_INTERVAL in conf:
-            config_data[CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=config_data,
-            )
-        )
-
+    hass.data[DOMAIN][DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(
+        hass
+    )
     return True
 
 
@@ -93,37 +42,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Screenlogic from a config entry."""
     _LOGGER.debug("Async Setup Entry")
     _LOGGER.debug(entry.data)
-
-    if CONF_HOST not in entry.data:
-        _LOGGER.error("Invalid config_entry: Missing CONF_HOST")
-        return False
-
-    connect_info = {}
-    if CONF_NAME in entry.data[CONF_HOST]:
-        # Attempt to re-discover named gateway to follow IP changes
-        hosts = await hass.async_add_executor_job(discover_gateways)
-        if len(hosts) > 0:
-            for host in hosts:
-                if host[SL_GATEWAY_NAME] == entry.data[CONF_HOST][CONF_NAME]:
-                    connect_info = host
-                    break
-            if not connect_info:
-                _LOGGER.warning("Gateway name matching failed.")
-
-    if not connect_info and CONF_IP_ADDRESS in entry.data[CONF_HOST]:
+    unique_id = entry.unique_id
+    # Attempt to re-discover named gateway to follow IP changes
+    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
+    if unique_id in discovered_gateways:
+        connect_info = discovered_gateways[unique_id]
+    else:
+        _LOGGER.warning("Gateway rediscovery failed.")
         # Static connection defined or fallback from discovery
-        connect_info[SL_GATEWAY_NAME] = (
-            entry.data[CONF_HOST][CONF_NAME]
-            if CONF_NAME in entry.data[CONF_HOST]
-            else "ScreenLogic"
-        )
-        connect_info[SL_GATEWAY_IP] = entry.data[CONF_HOST][CONF_IP_ADDRESS]
-        if CONF_PORT in entry.data[CONF_HOST]:
-            connect_info[SL_GATEWAY_PORT] = entry.data[CONF_HOST][CONF_PORT]
-
-    if not connect_info:
-        _LOGGER.error("Invalid config_entry")
-        return False
+        connect_info = {
+            SL_GATEWAY_NAME: f"Pentair: {unique_id}",
+            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
+            SL_GATEWAY_PORT: entry.data[CONF_PORT],
+        }
 
     try:
         gateway = ScreenLogicGateway(**connect_info)

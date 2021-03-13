@@ -8,3 +8,5 @@ SL_HOST_PORT = "port"
 SL_HOST_GATEWAY_TYPE = "gtype"
 SL_HOST_GATEWAY_SUBTYPE = "gsubtype"
 SL_HOST_NAME = "name"
+
+DISCOVERED_GATEWAYS = "_discovered_gateways"
