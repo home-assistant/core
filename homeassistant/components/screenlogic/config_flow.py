@@ -1,36 +1,24 @@
 """Config flow for ScreenLogic."""
-from screenlogicpy import discover, ScreenLogicError
-from screenlogicpy.requests import login
-from screenlogicpy.const import (
-    SL_GATEWAY_IP,
-    SL_GATEWAY_PORT,
-    SL_GATEWAY_TYPE,
-    SL_GATEWAY_SUBTYPE,
-    SL_GATEWAY_NAME,
-)
-
 import logging
 
+from screenlogicpy import ScreenLogicError, discover
+from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
+from screenlogicpy.requests import login
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import callback
-
 from homeassistant.const import (
+    CONF_HOST,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
-    CONF_NAME,
-    CONF_HOST,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +27,7 @@ GATEWAY_MANUAL_ENTRY = "manual"
 
 
 def discover_gateways():
+    """Discover screen logic gateways."""
     _LOGGER.debug("Attempting to discover ScreenLogic devices")
     try:
         hosts = discover()
@@ -65,10 +54,12 @@ config_entry_flow.register_discovery_flow(
 
 def configured_instances(hass):
     """Return a set of configured Screenlogic instances."""
+    # entries that have been ignored will not have a unique_id
     return {entry.unique_id for entry in hass.config_entries.async_entries(DOMAIN)}
 
 
 class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Config flow to setup screen logic devices."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -101,8 +92,8 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for host in hosts:
                     self.discovered_gateways[host[SL_GATEWAY_IP]] = host
                 return await self.async_step_gateway_select()
-            else:
-                return await self.async_step_gateway_entry()
+
+            return await self.async_step_gateway_entry()
 
     async def async_step_gateway_select(self, user_input=None):
         """Handle the selection of a discovered ScreenLogic gateway."""
@@ -179,12 +170,14 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_IP_ADDRESS] = "already_configured"
                 return errors
             try:
+                # TODO: run in executor w/async_add_executor_job since this is doing I/O
                 connected_socket = login.create_socket(
                     user_input[CONF_IP_ADDRESS],
                     user_input[CONF_PORT],
                 )
                 if not connected_socket:
                     raise ScreenLogicError("Unknown socket error")
+                # TODO: run in executor w/async_add_executor_job since this is doing I/O
                 mac = login.gateway_connect(connected_socket)
                 if CONF_NAME not in user_input:
                     derived_name = "Pentair: " + "-".join(mac.split("-")[3:])
@@ -204,6 +197,8 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_NAME: user_input[CONF_NAME],
                     },
                 }
+                # TODO: use mac instead of ip address
+                # https://developers.home-assistant.io/docs/config_entries_config_flow_handler/#unique-id-requirements
                 await self.async_set_unique_id(entry_data[CONF_HOST][CONF_IP_ADDRESS])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -219,9 +214,10 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handles the options for the ScreenLogic integration"""
+    """Handles the options for the ScreenLogic integration."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Init the screen logic options flow."""
         _LOGGER.debug(config_entry)
         self.config_entry = config_entry
 
@@ -235,6 +231,9 @@ class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
         current_interval = DEFAULT_SCAN_INTERVAL
+
+        # TODO: migrate the entry data to options flow when the integration is
+        # setup.  There is an example in homekit
         if CONF_SCAN_INTERVAL in self.config_entry.options:
             current_interval = self.config_entry.options[CONF_SCAN_INTERVAL]
         elif CONF_SCAN_INTERVAL in self.config_entry.data:

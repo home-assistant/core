@@ -1,5 +1,4 @@
 {
-  "title": "ScreenLogic",
   "config": {
     "error": {
       "can_not_connect":"Unable to connect to a ScreenLogic Gateway at the address provided.",

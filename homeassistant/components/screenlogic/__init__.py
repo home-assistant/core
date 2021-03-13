@@ -1,48 +1,38 @@
 """The Screenlogic integration."""
 import asyncio
-from slugify import slugify
 from collections import defaultdict
 from datetime import timedelta
-import voluptuous as vol
 import logging
 
-from screenlogicpy import (
-    ScreenLogicGateway,
-    ScreenLogicError,
-)
+from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
     CONTROLLER_HARDWARE,
     SL_GATEWAY_IP,
-    SL_GATEWAY_PORT,
     SL_GATEWAY_NAME,
+    SL_GATEWAY_PORT,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
-
+from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_NAME,
-    CONF_HOST,
-)
-
-from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
-
 from .config_flow import discover_gateways
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,6 +59,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     _LOGGER.info("Async Setup")
     conf = config.get(DOMAIN)
 
+    # Per ADR0010 https://github.com/home-assistant/architecture/blob/master/adr/0010-integration-configuration.md
+    # new integrations should not implement yaml config so there is no need to implement async_setup or import
     hass.data[DOMAIN] = conf or {}
 
     if conf is not None:
@@ -137,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         gateway = ScreenLogicGateway(**connect_info)
     except ScreenLogicError as error:
         _LOGGER.error(error)
-        return False
+        raise ConfigEntryNotReady from error
 
     coordinator = ScreenlogicDataUpdateCoordinator(
         hass, config_entry=entry, gateway=gateway
@@ -207,7 +199,7 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     new_interval = entry.options.get(CONF_SCAN_INTERVAL)
     coordinator.update_interval = timedelta(seconds=new_interval)
     hass.config_entries.async_reload(entry.entry_id)
-    _LOGGER.debug("Update interval set to {}".format(new_interval))
+    _LOGGER.debug("Update interval set to %s", new_interval)
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
@@ -243,22 +235,39 @@ class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
     def __init__(self, coordinator, datakey):
-        """Initialize of the sensor."""
+        """Initialize of the entity."""
         super().__init__(coordinator)
-        self._entity_id = datakey
+        self._data_key = datakey
+        self._controler_id = self.config_data["controler_id"]
 
     @property
     def unique_id(self):
-        slugged_name = slugify(self.coordinator.gateway.name)
-        return slugged_name + "_" + str(self._entity_id)
+        """Entity Unique ID."""
+        return f"{self._controler_id}_{self._data_key}"
+
+    @property
+    def config_data(self):
+        """Shortcut for config data."""
+        return self.coordinator.data["config"]
+
+    @property
+    def gateway(self):
+        """Return the gateway."""
+        return self.coordinator.gateway
+
+    @property
+    def gateway_name(self):
+        """Return the configured name of the gateway."""
+        return self.gateway.name
 
     @property
     def device_info(self):
+        """Return device information for the controller."""
+        controller_type = self.config_data["controler_type"]
+        hardware_type = self.config_data["hardware_type"]
         return {
-            "identifiers": {(DOMAIN, self.coordinator.gateway.name)},
-            "name": self.coordinator.gateway.name,
+            "identifiers": {(DOMAIN, self._controler_id)},
+            "name": self.gateway_name,
             "manufacturer": "Pentair",
-            "model": CONTROLLER_HARDWARE[
-                self.coordinator.data["config"]["controler_type"]
-            ][self.coordinator.data["config"]["hardware_type"]],
+            "model": CONTROLLER_HARDWARE[controller_type][hardware_type],
         }
