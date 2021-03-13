@@ -1,25 +1,21 @@
 """Support for EnOcean cover sources."""
-import math
 
 import voluptuous as vol
 
 from homeassistant.components.cover import (
     PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_STOP,
     CoverEntity,
-    SUPPORT_SET_POSITION,
-)
+    SUPPORT_SET_POSITION)
+
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_DEVICE_CLASS,
-    STATE_CLOSED,
-    STATE_OPEN,
+    STATE_CLOSED)
 
-    )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as ev
 
@@ -41,8 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)]), 
-    }
-)
+    })
 
 
 
@@ -117,15 +112,15 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Send either close or open command one time more for stop
         and calculates Shutter position"""
         if self._last_command == 0x70:
-            command =  [0xF6,0x70]
+            command =  [0xF6, 0x70]
         elif self._last_command == 0x50:
-            command =  [0xF6,0x50]
+            command =  [0xF6, 0x50]
         else:
             return
         self._last_command = None
         command.extend(self._sender_id)
         command.extend([0x30])
-        self.send_command(command, [0x0,0xFF,0xFF], 0x01)
+        self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
 
     def set_cover_position(self,position):
         """ Set cover position in widget. This is the cheap realization with timeouts.
