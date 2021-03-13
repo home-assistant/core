@@ -469,7 +469,7 @@ class ADBDevice(MediaPlayerEntity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide the last ADB command's response and the device's HDMI input as attributes."""
         return {
             "adb_response": self._adb_response,

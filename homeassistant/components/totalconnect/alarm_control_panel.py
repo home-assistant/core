@@ -44,7 +44,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
         self._location_id = location_id
         self._client = client
         self._state = None
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
 
     @property
     def name(self):
@@ -62,9 +62,9 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     def update(self):
         """Return the state of the device."""
@@ -109,7 +109,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanelEntity):
             state = None
 
         self._state = state
-        self._device_state_attributes = attr
+        self._extra_state_attributes = attr
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

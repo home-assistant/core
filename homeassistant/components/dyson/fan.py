@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -155,6 +156,11 @@ class DysonFanEntity(DysonEntity, FanEntity):
         return ranged_value_to_percentage(SPEED_RANGE, int(self._device.state.speed))
 
     @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
+
+    @property
     def preset_modes(self):
         """Return the available preset modes."""
         return PRESET_MODES
@@ -194,7 +200,7 @@ class DysonFanEntity(DysonEntity, FanEntity):
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
             ATTR_NIGHT_MODE: self.night_mode,
@@ -449,10 +455,10 @@ class DysonPureCoolEntity(DysonFanEntity):
         return int(self._device.state.carbon_filter_state)
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            **super().device_state_attributes,
+            **super().extra_state_attributes,
             ATTR_ANGLE_LOW: self.angle_low,
             ATTR_ANGLE_HIGH: self.angle_high,
             ATTR_FLOW_DIRECTION_FRONT: self.flow_direction_front,

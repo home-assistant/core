@@ -519,7 +519,7 @@ class Thermostat(ClimateEntity):
         return CURRENT_HVAC_IDLE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         status = self.thermostat["equipmentStatus"]
         return {

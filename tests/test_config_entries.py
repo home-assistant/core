@@ -8,6 +8,7 @@ import pytest
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -299,7 +300,7 @@ async def test_remove_entry(hass, manager):
     assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
     entity_entry = list(ent_reg.entities.values())[0]
     assert entity_entry.config_entry_id == entry.entry_id
@@ -1106,6 +1107,110 @@ async def test_entry_reload_error(hass, manager, state):
     assert len(async_setup_entry.mock_calls) == 0
 
     assert entry.state == state
+
+
+async def test_entry_disable_succeed(hass, manager):
+    """Test that we can disable an entry."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+    async_unload_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    # Disable
+    assert await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.DISABLED_USER
+    )
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+    # Enable
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+
+async def test_entry_disable_without_reload_support(hass, manager):
+    """Test that we can disable an entry without reload support."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ENTRY_STATE_LOADED)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    # Disable
+    assert not await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.DISABLED_USER
+    )
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_FAILED_UNLOAD
+
+    # Enable
+    with pytest.raises(config_entries.OperationNotAllowed):
+        await manager.async_set_disabled_by(entry.entry_id, None)
+    assert len(async_setup.mock_calls) == 0
+    assert len(async_setup_entry.mock_calls) == 0
+    assert entry.state == config_entries.ENTRY_STATE_FAILED_UNLOAD
+
+
+async def test_entry_enable_without_reload_support(hass, manager):
+    """Test that we can disable an entry without reload support."""
+    entry = MockConfigEntry(domain="comp", disabled_by=config_entries.DISABLED_USER)
+    entry.add_to_hass(hass)
+
+    async_setup = AsyncMock(return_value=True)
+    async_setup_entry = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=async_setup,
+            async_setup_entry=async_setup_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    # Enable
+    assert await manager.async_set_disabled_by(entry.entry_id, None)
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_LOADED
+
+    # Disable
+    assert not await manager.async_set_disabled_by(
+        entry.entry_id, config_entries.DISABLED_USER
+    )
+    assert len(async_setup.mock_calls) == 1
+    assert len(async_setup_entry.mock_calls) == 1
+    assert entry.state == config_entries.ENTRY_STATE_FAILED_UNLOAD
 
 
 async def test_init_custom_integration(hass):

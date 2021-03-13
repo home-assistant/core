@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "create_entry": {
+            "default": "\uc131\uacf5\uc801\uc73c\ub85c \uc778\uc99d\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "reauth": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            }
+        }
+    }
+}

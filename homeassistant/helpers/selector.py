@@ -116,6 +116,13 @@ class NumberSelector(Selector):
     )
 
 
+@SELECTORS.register("addon")
+class AddonSelector(Selector):
+    """Selector of a add-on."""
+
+    CONFIG_SCHEMA = vol.Schema({})
+
+
 @SELECTORS.register("boolean")
 class BooleanSelector(Selector):
     """Selector of a boolean value."""

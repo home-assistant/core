@@ -16,7 +16,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-
     entities = []
     data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data[BRIDGE_LEAP]
@@ -70,6 +69,6 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id}

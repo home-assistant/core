@@ -35,6 +35,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import DOMAIN as HASS_DOMAIN, CoreState, State, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -179,7 +180,7 @@ async def test_unique_id(hass, setup_comp_1):
     )
     await hass.async_block_till_done()
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(ENTITY)
     assert entry

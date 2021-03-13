@@ -415,7 +415,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return self._device.status.temperature
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """
         Return device specific state attributes.
 

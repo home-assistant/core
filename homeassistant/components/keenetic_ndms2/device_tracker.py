@@ -207,7 +207,7 @@ class KeeneticTracker(ScannerEntity):
         return self._router.available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
             return {

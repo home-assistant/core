@@ -53,7 +53,12 @@ class KNXWeather(KnxEntity, WeatherEntity):
     @property
     def humidity(self):
         """Return current humidity."""
-        return self._device.humidity if self._device.humidity is not None else None
+        return self._device.humidity
+
+    @property
+    def wind_bearing(self):
+        """Return current wind bearing in degrees."""
+        return self._device.wind_bearing
 
     @property
     def wind_speed(self):

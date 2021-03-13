@@ -195,6 +195,24 @@ class TestServiceHelpers(unittest.TestCase):
             "area_id": ["test-area-id"],
         }
 
+        config = {
+            "service": "{{ 'test_domain.test_service' }}",
+            "target": {
+                "area_id": ["area-42", "{{ 'area-51' }}"],
+                "device_id": ["abcdef", "{{ 'fedcba' }}"],
+                "entity_id": ["light.static", "{{ 'light.dynamic' }}"],
+            },
+        }
+
+        service.call_from_config(self.hass, config)
+        self.hass.block_till_done()
+
+        assert dict(self.calls[1].data) == {
+            "area_id": ["area-42", "area-51"],
+            "device_id": ["abcdef", "fedcba"],
+            "entity_id": ["light.static", "light.dynamic"],
+        }
+
     def test_service_template_service_call(self):
         """Test legacy service_template call with templating."""
         config = {

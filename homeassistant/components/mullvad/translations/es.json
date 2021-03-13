@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "\u00bfConfigurar la integraci\u00f3n VPN de Mullvad?"
+            }
+        }
+    }
+}

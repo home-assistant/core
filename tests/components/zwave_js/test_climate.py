@@ -5,10 +5,10 @@ from zwave_js_server.event import Event
 from homeassistant.components.climate.const import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
-    ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_IDLE,
@@ -18,16 +18,26 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
-    PRESET_NONE,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+)
 
-CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat"
-CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat"
-CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat"
+from .common import (
+    CLIMATE_DANFOSS_LC13_ENTITY,
+    CLIMATE_FLOOR_THERMOSTAT_ENTITY,
+    CLIMATE_MAIN_HEAT_ACTIONNER,
+    CLIMATE_RADIO_THERMOSTAT_ENTITY,
+)
 
 
 async def test_thermostat_v2(
@@ -49,43 +59,16 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
-
-    # Test setting preset mode
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {
-            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_PRESET_MODE: PRESET_NONE,
-        },
-        blocking=True,
+    assert state.attributes[ATTR_FAN_MODE] == "Auto low"
+    assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_FAN_MODE
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "node.set_value"
-    assert args["nodeId"] == 13
-    assert args["valueId"] == {
-        "commandClassName": "Thermostat Mode",
-        "commandClass": 64,
-        "endpoint": 1,
-        "property": "mode",
-        "propertyName": "mode",
-        "metadata": {
-            "type": "number",
-            "readable": True,
-            "writeable": True,
-            "min": 0,
-            "max": 31,
-            "label": "Thermostat mode",
-            "states": {"0": "Off", "1": "Heat", "2": "Cool", "3": "Auto"},
-        },
-        "value": 1,
-    }
-    assert args["value"] == 1
-
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting hvac mode
     await hass.services.async_call(
@@ -98,8 +81,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args[0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -121,7 +104,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 2
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting temperature
     await hass.services.async_call(
@@ -135,8 +118,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 2
+    args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -157,7 +140,7 @@ async def test_thermostat_v2(
         "value": 1,
     }
     assert args["value"] == 2
-    args = client.async_send_command.call_args_list[1][0][0]
+    args = client.async_send_command_no_wait.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -179,7 +162,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test cool mode update from value updated event
     event = Event(
@@ -230,7 +213,7 @@ async def test_thermostat_v2(
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting temperature with heat_cool
     await hass.services.async_call(
@@ -244,8 +227,8 @@ async def test_thermostat_v2(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 2
+    args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -267,7 +250,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 77
 
-    args = client.async_send_command.call_args_list[1][0][0]
+    args = client.async_send_command_no_wait.call_args_list[1][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 13
     assert args["valueId"] == {
@@ -289,21 +272,7 @@ async def test_thermostat_v2(
     }
     assert args["value"] == 86
 
-    client.async_send_command.reset_mock()
-
-    with pytest.raises(ValueError):
-        # Test setting unknown preset mode
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {
-                ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_PRESET_MODE: "unknown_preset",
-            },
-            blocking=True,
-        )
-
-    assert len(client.async_send_command.call_args_list) == 0
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting invalid hvac mode
     with pytest.raises(ValueError):
@@ -317,14 +286,53 @@ async def test_thermostat_v2(
             blocking=True,
         )
 
-    # Test setting invalid preset mode
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test setting fan mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_FAN_MODE: "Low",
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 13
+    assert args["valueId"] == {
+        "endpoint": 1,
+        "commandClass": 68,
+        "commandClassName": "Thermostat Fan Mode",
+        "property": "mode",
+        "propertyName": "mode",
+        "ccVersion": 0,
+        "metadata": {
+            "type": "number",
+            "readable": True,
+            "writeable": True,
+            "min": 0,
+            "max": 255,
+            "states": {"0": "Auto low", "1": "Low"},
+            "label": "Thermostat fan mode",
+        },
+        "value": 0,
+    }
+    assert args["value"] == 1
+
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test setting invalid fan mode
     with pytest.raises(ValueError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
+            SERVICE_SET_FAN_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_PRESET_MODE: "invalid_mode",
+                ATTR_FAN_MODE: "fake value",
             },
             blocking=True,
         )
@@ -346,11 +354,11 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
 
     assert state
     assert state.state == HVAC_MODE_HEAT
-    assert state.attributes[ATTR_TEMPERATURE] == 25
+    assert state.attributes[ATTR_TEMPERATURE] == 14
     assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setting temperature
     await hass.services.async_call(
@@ -363,8 +371,8 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
-    args = client.async_send_command.call_args_list[0][0][0]
+    assert len(client.async_send_command_no_wait.call_args_list) == 1
+    args = client.async_send_command_no_wait.call_args_list[0][0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
     assert args["valueId"] == {
@@ -373,6 +381,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
         "commandClassName": "Thermostat Setpoint",
         "property": "setpoint",
         "propertyName": "setpoint",
+        "propertyKey": 1,
         "propertyKeyName": "Heating",
         "ccVersion": 2,
         "metadata": {
@@ -382,11 +391,11 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
             "unit": "\u00b0C",
             "ccSpecific": {"setpointType": 1},
         },
-        "value": 25,
+        "value": 14,
     }
     assert args["value"] == 21.5
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
     # Test setpoint mode update from value updated event
     event = Event(
@@ -414,7 +423,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     assert state.state == HVAC_MODE_HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
-    client.async_send_command.reset_mock()
+    client.async_send_command_no_wait.reset_mock()
 
 
 async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integration):
@@ -430,4 +439,21 @@ async def test_thermostat_heatit(hass, client, climate_heatit_z_trm3, integratio
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.9
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_NONE
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+
+
+async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integration):
+    """Test a climate entity from a HRT4-ZW / SRT321 thermostat device.
+
+    This device currently has no setpoint values.
+    """
+    state = hass.states.get(CLIMATE_MAIN_HEAT_ACTIONNER)
+
+    assert state
+    assert state.state == HVAC_MODE_OFF
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVAC_MODE_OFF,
+        HVAC_MODE_HEAT,
+    ]
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0

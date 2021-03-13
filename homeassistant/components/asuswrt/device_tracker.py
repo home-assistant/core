@@ -103,7 +103,7 @@ class AsusWrtDevice(ScannerEntity):
         return self._icon
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return the attributes."""
         return self._attrs
 

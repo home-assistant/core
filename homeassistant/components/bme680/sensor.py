@@ -4,7 +4,7 @@ import threading
 from time import monotonic, sleep
 
 import bme680  # pylint: disable=import-error
-from smbus import SMBus  # pylint: disable=import-error
+from smbus import SMBus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -131,7 +131,6 @@ def _setup_bme680(config):
     sensor_handler = None
     sensor = None
     try:
-        # pylint: disable=no-member
         i2c_address = config[CONF_I2C_ADDRESS]
         bus = SMBus(config[CONF_I2C_BUS])
         sensor = bme680.BME680(i2c_address, bus)

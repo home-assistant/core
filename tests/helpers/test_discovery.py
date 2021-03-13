@@ -4,6 +4,8 @@ from unittest.mock import patch
 from homeassistant import setup
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.util.async_ import run_callback_threadsafe
 
 from tests.common import (
     MockModule,
@@ -31,23 +33,22 @@ class TestHelpersDiscovery:
         """Test discovery listen/discover combo."""
         helpers = self.hass.helpers
         calls_single = []
-        calls_multi = []
 
         @callback
         def callback_single(service, info):
             """Service discovered callback."""
             calls_single.append((service, info))
 
-        @callback
-        def callback_multi(service, info):
-            """Service discovered callback."""
-            calls_multi.append((service, info))
+        self.hass.add_job(
+            helpers.discovery.async_listen, "test service", callback_single
+        )
 
-        helpers.discovery.listen("test service", callback_single)
-        helpers.discovery.listen(["test service", "another service"], callback_multi)
-
-        helpers.discovery.discover(
-            "test service", "discovery info", "test_component", {}
+        self.hass.add_job(
+            helpers.discovery.async_discover,
+            "test service",
+            "discovery info",
+            "test_component",
+            {},
         )
         self.hass.block_till_done()
 
@@ -55,15 +56,6 @@ class TestHelpersDiscovery:
         assert mock_setup_component.call_args[0] == (self.hass, "test_component", {})
         assert len(calls_single) == 1
         assert calls_single[0] == ("test service", "discovery info")
-
-        helpers.discovery.discover(
-            "another service", "discovery info", "test_component", {}
-        )
-        self.hass.block_till_done()
-
-        assert len(calls_single) == 1
-        assert len(calls_multi) == 2
-        assert ["test service", "another service"] == [info[0] for info in calls_multi]
 
     @patch("homeassistant.setup.async_setup_component", return_value=mock_coro(True))
     def test_platform(self, mock_setup_component):
@@ -75,7 +67,13 @@ class TestHelpersDiscovery:
             """Platform callback method."""
             calls.append((platform, info))
 
-        discovery.listen_platform(self.hass, "test_component", platform_callback)
+        run_callback_threadsafe(
+            self.hass.loop,
+            discovery.async_listen_platform,
+            self.hass,
+            "test_component",
+            platform_callback,
+        ).result()
 
         discovery.load_platform(
             self.hass,
@@ -105,13 +103,10 @@ class TestHelpersDiscovery:
         assert len(calls) == 1
         assert calls[0] == ("test_platform", "discovery info")
 
-        self.hass.bus.fire(
-            discovery.EVENT_PLATFORM_DISCOVERED,
-            {
-                discovery.ATTR_SERVICE: discovery.EVENT_LOAD_PLATFORM.format(
-                    "test_component"
-                )
-            },
+        dispatcher_send(
+            self.hass,
+            discovery.SIGNAL_PLATFORM_DISCOVERED,
+            {"service": discovery.EVENT_LOAD_PLATFORM.format("test_component")},
         )
         self.hass.block_till_done()
 
@@ -179,10 +174,12 @@ class TestHelpersDiscovery:
         """
         component_calls = []
 
-        def component1_setup(hass, config):
+        async def component1_setup(hass, config):
             """Set up mock component."""
             print("component1 setup")
-            discovery.discover(hass, "test_component2", {}, "test_component2", {})
+            await discovery.async_discover(
+                hass, "test_component2", {}, "test_component2", {}
+            )
             return True
 
         def component2_setup(hass, config):
@@ -191,7 +188,7 @@ class TestHelpersDiscovery:
             return True
 
         mock_integration(
-            self.hass, MockModule("test_component1", setup=component1_setup)
+            self.hass, MockModule("test_component1", async_setup=component1_setup)
         )
 
         mock_integration(

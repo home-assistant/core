@@ -245,7 +245,11 @@ class VlcDevice(MediaPlayerEntity):
 
     def media_pause(self):
         """Send pause command."""
-        self._vlc.pause()
+        current_state = self._vlc.status().get("state")
+        if current_state != "paused":
+            # Make sure we're not already paused since VLCTelnet.pause() toggles
+            # pause.
+            self._vlc.pause()
         self._state = STATE_PAUSED
 
     def media_stop(self):

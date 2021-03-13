@@ -6,6 +6,7 @@
             "addon_install_failed": "Impossibile installare il componente aggiuntivo Z-Wave JS.",
             "addon_missing_discovery_info": "Informazioni sul rilevamento del componente aggiuntivo Z-Wave JS mancanti.",
             "addon_set_config_failed": "Impossibile impostare la configurazione di Z-Wave JS.",
+            "addon_start_failed": "Impossibile avviare il componente aggiuntivo Z-Wave JS.",
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "cannot_connect": "Impossibile connettersi"
@@ -17,9 +18,17 @@
             "unknown": "Errore imprevisto"
         },
         "progress": {
-            "install_addon": "Attendi il termine dell'installazione del componente aggiuntivo Z-Wave JS. Questa operazione pu\u00f2 richiedere diversi minuti."
+            "install_addon": "Attendi il termine dell'installazione del componente aggiuntivo Z-Wave JS. Questa operazione pu\u00f2 richiedere diversi minuti.",
+            "start_addon": "Attendi il completamento dell'avvio del componente aggiuntivo Z-Wave JS. L'operazione potrebbe richiedere alcuni secondi."
         },
         "step": {
+            "configure_addon": {
+                "data": {
+                    "network_key": "Chiave di rete",
+                    "usb_path": "Percorso del dispositivo USB"
+                },
+                "title": "Accedi alla configurazione del componente aggiuntivo Z-Wave JS"
+            },
             "hassio_confirm": {
                 "title": "Configura l'integrazione di Z-Wave JS con il componente aggiuntivo Z-Wave JS"
             },
@@ -39,11 +48,7 @@
                 "title": "Seleziona il metodo di connessione"
             },
             "start_addon": {
-                "data": {
-                    "network_key": "Chiave di rete",
-                    "usb_path": "Percorso del dispositivo USB"
-                },
-                "title": "Accedi alla configurazione del componente aggiuntivo Z-Wave JS"
+                "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
             },
             "user": {
                 "data": {

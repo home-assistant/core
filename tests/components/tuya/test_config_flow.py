@@ -181,6 +181,15 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
+    # Set up the integration to make sure the config flow module is loaded.
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Unload the integration to prepare for the test.
+    with patch("homeassistant.components.tuya.async_unload_entry", return_value=True):
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
     # Test check for integration not loaded
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

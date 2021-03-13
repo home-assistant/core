@@ -40,6 +40,6 @@ class IncomfortFailed(IncomfortChild, BinarySensorEntity):
         return self._heater.status["is_failed"]
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the device state attributes."""
         return {"fault_code": self._heater.status["fault_code"]}

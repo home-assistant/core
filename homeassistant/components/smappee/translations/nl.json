@@ -3,7 +3,11 @@
         "abort": {
             "already_configured_device": "Apparaat is al geconfigureerd",
             "already_configured_local_device": "Lokale apparaten zijn al geconfigureerd. Verwijder deze eerst voordat u een cloudapparaat configureert.",
-            "cannot_connect": "Kan geen verbinding maken"
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_mdns": "Niet-ondersteund apparaat voor de Smappee-integratie.",
+            "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})"
         },
         "step": {
             "local": {
@@ -11,6 +15,9 @@
                     "host": "Host"
                 },
                 "description": "Voer de host in om de lokale Smappee-integratie te starten"
+            },
+            "pick_implementation": {
+                "title": "Kies een authenticatie methode"
             }
         }
     }

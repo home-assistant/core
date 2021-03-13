@@ -2,12 +2,13 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Iterable, cast
+from typing import Any, Dict, Iterable, List, Optional, cast
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -29,7 +30,8 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVITY = "activity"
-ATTR_COMMAND = "command"
+ATTR_ACTIVITY_LIST = "activity_list"
+ATTR_CURRENT_ACTIVITY = "current_activity"
 ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE = "device"
 ATTR_NUM_REPEATS = "num_repeats"
@@ -56,6 +58,7 @@ DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
 SUPPORT_DELETE_COMMAND = 2
+SUPPORT_ACTIVITY = 4
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
@@ -142,6 +145,27 @@ class RemoteEntity(ToggleEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return 0
+
+    @property
+    def current_activity(self) -> Optional[str]:
+        """Active activity."""
+        return None
+
+    @property
+    def activity_list(self) -> Optional[List[str]]:
+        """List of available activities."""
+        return None
+
+    @property
+    def state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return optional state attributes."""
+        if not self.supported_features & SUPPORT_ACTIVITY:
+            return None
+
+        return {
+            ATTR_ACTIVITY_LIST: self.activity_list,
+            ATTR_CURRENT_ACTIVITY: self.current_activity,
+        }
 
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""

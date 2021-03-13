@@ -86,7 +86,7 @@ class SkybeaconHumid(Entity):
         return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
@@ -115,7 +115,7 @@ class SkybeaconTemp(Entity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 

@@ -4,13 +4,13 @@ from datetime import timedelta
 import logging
 import math
 
-from pywemo.ouimeaux_device.api.service import ActionException
 import voluptuous as vol
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -115,7 +115,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         return "mdi:water-percent"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_CURRENT_HUMIDITY: self._current_humidity,
@@ -127,9 +127,14 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         }
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(SPEED_RANGE, self._fan_mode)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self) -> int:
@@ -138,7 +143,7 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
 
     def _update(self, force_update=True):
         """Update the device state."""
-        try:
+        with self._wemo_exception_handler("update status"):
             self._state = self.wemo.get_state(force_update)
 
             self._fan_mode = self.wemo.fan_mode
@@ -152,14 +157,6 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
             if self.wemo.fan_mode != WEMO_FAN_OFF:
                 self._last_fan_on_mode = self.wemo.fan_mode
 
-            if not self._available:
-                _LOGGER.info("Reconnected to %s", self.name)
-                self._available = True
-        except (AttributeError, ActionException) as err:
-            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
-            self._available = False
-            self.wemo.reconnect_with_device()
-
     def turn_on(
         self,
         speed: str = None,
@@ -172,11 +169,8 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
-        try:
+        with self._wemo_exception_handler("turn off"):
             self.wemo.set_state(WEMO_FAN_OFF)
-        except ActionException as err:
-            _LOGGER.warning("Error while turning off device %s (%s)", self.name, err)
-            self._available = False
 
         self.schedule_update_ha_state()
 
@@ -189,13 +183,8 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         else:
             named_speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
 
-        try:
+        with self._wemo_exception_handler("set speed"):
             self.wemo.set_state(named_speed)
-        except ActionException as err:
-            _LOGGER.warning(
-                "Error while setting speed of device %s (%s)", self.name, err
-            )
-            self._available = False
 
         self.schedule_update_ha_state()
 
@@ -212,24 +201,14 @@ class WemoHumidifier(WemoSubscriptionEntity, FanEntity):
         elif target_humidity >= 100:
             pywemo_humidity = WEMO_HUMIDITY_100
 
-        try:
+        with self._wemo_exception_handler("set humidity"):
             self.wemo.set_humidity(pywemo_humidity)
-        except ActionException as err:
-            _LOGGER.warning(
-                "Error while setting humidity of device: %s (%s)", self.name, err
-            )
-            self._available = False
 
         self.schedule_update_ha_state()
 
     def reset_filter_life(self) -> None:
         """Reset the filter life to 100%."""
-        try:
+        with self._wemo_exception_handler("reset filter life"):
             self.wemo.reset_filter_life()
-        except ActionException as err:
-            _LOGGER.warning(
-                "Error while resetting filter life on device: %s (%s)", self.name, err
-            )
-            self._available = False
 
         self.schedule_update_ha_state()

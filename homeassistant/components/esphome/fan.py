@@ -111,13 +111,18 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         return self._state.state
 
     @esphome_state_property
-    def percentage(self) -> Optional[str]:
+    def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
         if not self._static_info.supports_speed:
             return None
         return ordered_list_item_to_percentage(
             ORDERED_NAMED_FAN_SPEEDS, self._state.speed
         )
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @esphome_state_property
     def oscillating(self) -> None:

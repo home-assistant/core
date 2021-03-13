@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
-import noaa_coops as coops  # pylint: disable=import-error
+import noaa_coops as coops
 import requests
 import voluptuous as vol
 
@@ -90,7 +90,7 @@ class NOAATidesAndCurrentsSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         if self.data is None:

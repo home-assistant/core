@@ -52,10 +52,7 @@ CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Stub to allow setting up this component.
-
-    Configuration through YAML is not supported at this time.
-    """
+    """Stub to allow setting up this component."""
     return True
 
 
@@ -259,13 +256,17 @@ async def _setup_auto_reconnect_logic(
             # really short reconnect interval.
             tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8 ** tries, 60.0)))
-            _LOGGER.info("Trying to reconnect to %s in %s seconds", host, wait_time)
+            if tries == 1:
+                _LOGGER.info("Trying to reconnect to %s in the background", host)
+            _LOGGER.debug("Retrying %s in %d seconds", host, wait_time)
             await asyncio.sleep(wait_time)
 
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info(
+            level = logging.WARNING if tries == 0 else logging.DEBUG
+            _LOGGER.log(
+                level,
                 "Can't connect to ESPHome API for %s (%s): %s",
                 entry.unique_id,
                 host,

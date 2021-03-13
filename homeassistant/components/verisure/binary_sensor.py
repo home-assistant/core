@@ -1,51 +1,68 @@
 """Support for Verisure binary sensors."""
+from __future__ import annotations
+
+from typing import Any, Callable
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_DOOR_WINDOW, HUB as hub
+from . import CONF_DOOR_WINDOW, DOMAIN, VerisureDataUpdateCoordinator
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    add_entities: Callable[[list[Entity], bool], None],
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the Verisure binary sensors."""
-    sensors = []
-    hub.update_overview()
+    coordinator = hass.data[DOMAIN]
 
-    if int(hub.config.get(CONF_DOOR_WINDOW, 1)):
+    sensors = [VerisureEthernetStatus(coordinator)]
+
+    if int(coordinator.config.get(CONF_DOOR_WINDOW, 1)):
         sensors.extend(
             [
-                VerisureDoorWindowSensor(device_label)
-                for device_label in hub.get(
+                VerisureDoorWindowSensor(coordinator, device_label)
+                for device_label in coordinator.get(
                     "$.doorWindow.doorWindowDevice[*].deviceLabel"
                 )
             ]
         )
 
-    sensors.extend([VerisureEthernetStatus()])
     add_entities(sensors)
 
 
-class VerisureDoorWindowSensor(BinarySensorEntity):
+class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of a Verisure door window sensor."""
 
-    def __init__(self, device_label):
+    coordinator: VerisureDataUpdateCoordinator
+
+    def __init__(
+        self, coordinator: VerisureDataUpdateCoordinator, device_label: str
+    ) -> None:
         """Initialize the Verisure door window sensor."""
+        super().__init__(coordinator)
         self._device_label = device_label
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the binary sensor."""
-        return hub.get_first(
+        return self.coordinator.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
             self._device_label,
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
-            hub.get_first(
+            self.coordinator.get_first(
                 "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
                 self._device_label,
             )
@@ -53,46 +70,38 @@ class VerisureDoorWindowSensor(BinarySensorEntity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            hub.get_first(
+            self.coordinator.get_first(
                 "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
                 self._device_label,
             )
             is not None
         )
 
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the state of the sensor."""
-        hub.update_overview()
 
-
-class VerisureEthernetStatus(BinarySensorEntity):
+class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     """Representation of a Verisure VBOX internet status."""
 
+    coordinator: VerisureDataUpdateCoordinator
+
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the binary sensor."""
         return "Verisure Ethernet status"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return hub.get_first("$.ethernetConnectedNow")
+        return self.coordinator.get_first("$.ethernetConnectedNow")
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
-        return hub.get_first("$.ethernetConnectedNow") is not None
-
-    # pylint: disable=no-self-use
-    def update(self):
-        """Update the state of the sensor."""
-        hub.update_overview()
+        return self.coordinator.get_first("$.ethernetConnectedNow") is not None
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_CONNECTIVITY

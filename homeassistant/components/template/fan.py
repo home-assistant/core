@@ -46,6 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FANS = "fans"
 CONF_SPEED_LIST = "speeds"
+CONF_SPEED_COUNT = "speed_count"
 CONF_PRESET_MODES = "preset_modes"
 CONF_SPEED_TEMPLATE = "speed_template"
 CONF_PERCENTAGE_TEMPLATE = "percentage_template"
@@ -86,6 +87,7 @@ FAN_SCHEMA = vol.All(
             vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
             vol.Optional(
                 CONF_SPEED_LIST,
                 default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
@@ -126,6 +128,7 @@ async def _async_create_entities(hass, config):
         set_direction_action = device_config.get(CONF_SET_DIRECTION_ACTION)
 
         speed_list = device_config[CONF_SPEED_LIST]
+        speed_count = device_config.get(CONF_SPEED_COUNT)
         preset_modes = device_config.get(CONF_PRESET_MODES)
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
@@ -148,6 +151,7 @@ async def _async_create_entities(hass, config):
                 set_preset_mode_action,
                 set_oscillating_action,
                 set_direction_action,
+                speed_count,
                 speed_list,
                 preset_modes,
                 unique_id,
@@ -185,6 +189,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         set_preset_mode_action,
         set_oscillating_action,
         set_direction_action,
+        speed_count,
         speed_list,
         preset_modes,
         unique_id,
@@ -260,6 +265,9 @@ class TemplateFan(TemplateEntity, FanEntity):
 
         self._unique_id = unique_id
 
+        # Number of valid speeds
+        self._speed_count = speed_count
+
         # List of valid speeds
         self._speed_list = speed_list
 
@@ -280,6 +288,11 @@ class TemplateFan(TemplateEntity, FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return self._speed_count or super().speed_count
 
     @property
     def speed_list(self) -> list:
@@ -510,7 +523,6 @@ class TemplateFan(TemplateEntity, FanEntity):
         speed = str(speed)
 
         if speed in self._speed_list:
-            self._state = STATE_OFF if speed == SPEED_OFF else STATE_ON
             self._speed = speed
             self._percentage = self.speed_to_percentage(speed)
             self._preset_mode = speed if speed in self.preset_modes else None
@@ -539,7 +551,6 @@ class TemplateFan(TemplateEntity, FanEntity):
             return
 
         if 0 <= percentage <= 100:
-            self._state = STATE_OFF if percentage == 0 else STATE_ON
             self._percentage = percentage
             if self._speed_list:
                 self._speed = self.percentage_to_speed(percentage)
@@ -556,7 +567,6 @@ class TemplateFan(TemplateEntity, FanEntity):
         preset_mode = str(preset_mode)
 
         if preset_mode in self.preset_modes:
-            self._state = STATE_ON
             self._speed = preset_mode
             self._percentage = None
             self._preset_mode = preset_mode

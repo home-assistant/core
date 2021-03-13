@@ -25,7 +25,9 @@
                     "api_key": "Clave API",
                     "latitude": "Latitud",
                     "longitude": "Longitud"
-                }
+                },
+                "description": "Utilice la API de la nube de AirVisual para supervisar una latitud/longitud.",
+                "title": "Configurar una geograf\u00eda"
             },
             "geography_by_name": {
                 "data": {
@@ -33,7 +35,9 @@
                     "city": "Ciudad",
                     "country": "Pa\u00eds",
                     "state": "estado"
-                }
+                },
+                "description": "Utilice la API de la nube de AirVisual para supervisar una ciudad/estado/pa\u00eds.",
+                "title": "Configurar una geograf\u00eda"
             },
             "node_pro": {
                 "data": {

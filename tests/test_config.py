@@ -1088,6 +1088,26 @@ async def test_component_config_exceptions(hass, caplog):
         in caplog.text
     )
 
+    # get_component raising
+    caplog.clear()
+    assert (
+        await config_util.async_process_component_config(
+            hass,
+            {"test_domain": {}},
+            integration=Mock(
+                pkg_path="homeassistant.components.test_domain",
+                domain="test_domain",
+                get_component=Mock(
+                    side_effect=FileNotFoundError(
+                        "No such file or directory: b'liblibc.a'"
+                    )
+                ),
+            ),
+        )
+        is None
+    )
+    assert "Unable to import test_domain: No such file or directory" in caplog.text
+
 
 @pytest.mark.parametrize(
     "domain, schema, expected",
