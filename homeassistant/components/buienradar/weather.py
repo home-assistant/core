@@ -130,7 +130,7 @@ class BrWeather(WeatherEntity):
         if self._data and self._data.condition:
             ccode = self._data.condition.get(CONDCODE)
             if ccode:
-                conditions = self.hass.data.get(DATA_CONDITION)
+                conditions = self.hass.data[DOMAIN].get(DATA_CONDITION)
                 if conditions:
                     return conditions.get(ccode)
 
