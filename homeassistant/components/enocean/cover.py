@@ -32,12 +32,13 @@ DEFAULT_PAYLOAD_STOP = "STOP"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-    vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DRIVING_TIME, default=DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])
+        vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DRIVING_TIME, default=DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])
     }
 )
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EnOcean cover platform."""
@@ -122,12 +123,12 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         in future you should find out the correct command for GFVS driving command
         telegram and teach in telegram."""
         drive_time = int(abs(position - self._position) * self._driving_time / 100)
-        if self._position < position: #Open cover
+        if self._position < position:
             self.open_cover()
-            ev.async_call_later(self.hass, drive_time/10, lambda _:self.stop_cover())
-        elif self._position > position: #Close cover
+            ev.async_call_later(self.hass, drive_time / 10, lambda _: self.stop_cover())
+        elif self._position > position:
             self.close_cover()
-            ev.async_call_later(self.hass, drive_time/10, lambda _:self.stop_cover())
+            ev.async_call_later(self.hass, drive_time / 10, lambda _: self.stop_cover())
 
     def value_changed(self, packet):
         """For Handling if Shutter is started from external trigger
