@@ -52,7 +52,6 @@ from .const import (
     SERVICE_SET_DELAYED_TURN_OFF,
     SERVICE_SET_SCENE,
 )
-
 from .device import XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
 
