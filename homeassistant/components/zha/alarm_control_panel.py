@@ -35,7 +35,6 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -82,15 +81,13 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+            self._channel, "armed_state_changed", self.async_set_armed_mode
         )
 
     @callback
-    def async_set_state(self, attr_id: int, attr_name: str, value: Any) -> None:
+    def async_set_armed_mode(self, value: Any) -> None:
         """Set the entity state."""
-        _LOGGER.debug(
-            "attrid: [%s], name: [%s], value: [%s]", attr_id, attr_name, value
-        )
+        _LOGGER.debug("armed state [%s]", value)
         self._state = IAS_ACE_STATE_MAP.get(value)
         self.async_write_ha_state()
 

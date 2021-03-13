@@ -113,10 +113,16 @@ class IasAce(ZigbeeChannel):
                 response = self.arm_response(
                     security.IasAce.ArmNotification.All_Zones_Armed
                 )
+            elif mode == security.IasAce.ArmMode.Arm_Day_Home_Only:
+                self.warning("Arming IAS ACE Day Home Zones Only")
+                self.armed_state = security.IasAce.PanelStatus.Armed_Stay
+                response = self.arm_response(
+                    security.IasAce.ArmNotification.All_Zones_Armed
+                )
 
         asyncio.create_task(response)
         self.async_send_signal(
-            f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", self.armed_state
+            f"{self.unique_id}_armed_state_changed", self.armed_state
         )
 
     def bypass(self, zone_list, code):
