@@ -1,22 +1,12 @@
 """Support for EnOcean cover sources."""
 
-import voluptuous as vol
-
-from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_STOP,
-    CoverEntity,
-    SUPPORT_SET_POSITION)
-
-from homeassistant.const import (
-    CONF_ID,
-    CONF_NAME,
-    STATE_CLOSED)
-
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as ev
+import voluptuous as vol
+from homeassistant.components.cover import (PLATFORM_SCHEMA, SUPPORT_CLOSE,
+                                            SUPPORT_OPEN, SUPPORT_SET_POSITION,
+                                            SUPPORT_STOP, CoverEntity)
+from homeassistant.const import CONF_ID, CONF_NAME, STATE_CLOSED
 
 from .device import EnOceanEntity
 
