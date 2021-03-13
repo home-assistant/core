@@ -339,7 +339,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Change mock responses to empty data and refresh the coordinator
         self.picnic_mock().get_user.return_value = {}
         self.picnic_mock().get_cart.return_value = {}
-        self.picnic_mock().get_deliveries.return_value = ""
+        self.picnic_mock().get_deliveries.side_effect = ValueError
         await self._coordinator.async_refresh()
 
         # Assert all states are the same while the last update failed
@@ -350,6 +350,19 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
         self._assert_sensor("sensor.picnic_last_order_total_price", "41.33")
+
+    async def test_sensors_malformed_response(self):
+        """Test coordinator update fails when API yields ValueError."""
+        # Setup platform with default responses
+        await self._setup_platform(use_default_responses=True)
+
+        # Change mock responses to empty data and refresh the coordinator
+        self.picnic_mock().get_user.side_effect = ValueError
+        self.picnic_mock().get_cart.side_effect = ValueError
+        await self._coordinator.async_refresh()
+
+        # Assert coordinator update failed
+        assert self._coordinator.last_update_success is False
 
     async def test_device_registry_entry(self):
         """Test if device registry entry is populated correctly."""
