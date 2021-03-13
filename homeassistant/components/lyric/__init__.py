@@ -6,13 +6,15 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
+from aiolyric.exceptions import LyricAuthenticationException, LyricException
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -29,7 +31,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
 from .config_flow import OAuth2FlowHandler
-from .const import DOMAIN, LYRIC_EXCEPTIONS, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -94,7 +96,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()
             return lyric
-        except LYRIC_EXCEPTIONS as exception:
+        except LyricAuthenticationException as exception:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=entry.data,
+                )
+            )
+            raise UpdateFailed(exception) from exception
+        except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
