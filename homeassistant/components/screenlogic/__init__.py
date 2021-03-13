@@ -32,9 +32,8 @@ PLATFORMS = ["switch", "sensor", "binary_sensor", "water_heater"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Screenlogic component."""
-    hass.data[DOMAIN][DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(
-        hass
-    )
+    domain_data = hass.data[DOMAIN] = {}
+    domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)
     return True
 
 
