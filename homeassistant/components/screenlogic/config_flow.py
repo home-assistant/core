@@ -183,13 +183,14 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the manual entry of a ScreenLogic gateway."""
         _LOGGER.debug("Gateway Entry")
         errors = {}
+        ip = self.discovered_ip
+        port = 80
+
         if user_input is not None:
+            ip = user_input[CONF_IP_ADDRESS]
+            port = user_input[CONF_PORT]
             try:
-                mac = format_mac(
-                    await async_get_mac_address(
-                        self.hass, user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
-                    )
-                )
+                mac = format_mac(await async_get_mac_address(self.hass, ip, port))
             except ScreenLogicError:
                 errors[CONF_IP_ADDRESS] = "can_not_connect"
 
@@ -199,13 +200,11 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=_entry_title_for_mac(mac),
                     data={
-                        CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
-                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_IP_ADDRESS: ip,
+                        CONF_PORT: port,
                     },
                 )
 
-        ip = user_input.get(CONF_IP_ADDRESS) or self.discovered_ip
-        port = user_input.get(CONF_PORT) or 80
         return self.async_show_form(
             step_id="gateway_entry",
             data_schema=vol.Schema(
