@@ -32,6 +32,7 @@ async def async_discover_gateways_by_unique_id(hass):
     discovered_gateways = {}
     try:
         hosts = await hass.async_add_executor_job(discover)
+        _LOGGER.debug("Discovered hosts: %s", hosts)
     except ScreenLogicError as ex:
         _LOGGER.debug(ex)
         return discovered_gateways
@@ -40,6 +41,7 @@ async def async_discover_gateways_by_unique_id(hass):
         unique_id = _extract_unique_id_from_name(host[SL_GATEWAY_NAME])
         discovered_gateways[unique_id] = host
 
+    _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
 
 
