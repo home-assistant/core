@@ -52,6 +52,7 @@ from .const import (
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
+from .modbus_read_cache import ModbusReadCache
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -392,7 +393,7 @@ class ModbusBitSensor(ModbusSensorBase):
     ):
         """Initialize the modbus bit sensor."""
         super().__init__(
-            hub,
+            ModbusReadCache(hub),
             name,
             slave,
             register,

@@ -1,6 +1,7 @@
 """The tests for the Modbus sensor component."""
 import pytest
 
+from homeassistant.components.modbus import number as number_helper
 from homeassistant.components.modbus.const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
@@ -19,6 +20,19 @@ from homeassistant.const import (
 )
 
 from .conftest import base_config_test
+
+
+def test_number_helper():
+    """Test number method."""
+    assert number_helper(5) == 5
+    assert number_helper(5.1) == 5.1
+    assert number_helper("5") == 5
+    assert number_helper("5.1") == 5.1
+
+    with pytest.raises(Exception) as ex:
+        number_helper("not a number")
+
+    assert "invalid number" in str(ex)
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])

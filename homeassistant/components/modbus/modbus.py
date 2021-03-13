@@ -1,9 +1,7 @@
 """Support for Modbus."""
 from abc import ABC, abstractmethod
-from functools import lru_cache
 import logging
 import threading
-import time
 
 from pymodbus.client.sync import ModbusSerialClient, ModbusTcpClient, ModbusUdpClient
 from pymodbus.datastore import ModbusServerContext, ModbusSlaveContext
@@ -58,14 +56,6 @@ from .const import (
 from .modbus_slave import ModbusSlavesHolder
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@lru_cache(maxsize=32)
-def _read_cached(client, what, unit, address, count, ttl_bucket):
-    """Return cached or invoke the Modbus client method."""
-
-    kwargs = {"unit": unit} if unit else {}
-    return getattr(client, f"read_{what}")(address, count, **kwargs)
 
 
 def modbus_setup(
@@ -308,59 +298,44 @@ class ModbusClientHub(BaseModbusHub):
     def read_coils(self, unit, address, count):
         """Read coils."""
         with self._lock:
-            return _read_cached(
-                self._client, "coils", unit, address, count, int(time.time())
-            )
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_coils(address, count, **kwargs)
 
     def read_discrete_inputs(self, unit, address, count):
         """Read discrete inputs."""
         with self._lock:
-            return _read_cached(
-                self._client, "discrete_inputs", unit, address, count, int(time.time())
-            )
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_discrete_inputs(address, count, **kwargs)
 
     def read_input_registers(self, unit, address, count):
         """Read input registers."""
         with self._lock:
-            return _read_cached(
-                self._client, "input_registers", unit, address, count, int(time.time())
-            )
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_input_registers(address, count, **kwargs)
 
     def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
         with self._lock:
-            return _read_cached(
-                self._client,
-                "holding_registers",
-                unit,
-                address,
-                count,
-                int(time.time()),
-            )
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_holding_registers(address, count, **kwargs)
 
     def write_coil(self, unit, address, value):
         """Write coil."""
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_coil(address, value, **kwargs)
-            # invalidate cache on write
-            _read_cached.cache_clear()
 
     def write_register(self, unit, address, value):
         """Write register."""
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_register(address, value, **kwargs)
-            # invalidate cache on write
-            _read_cached.cache_clear()
 
     def write_registers(self, unit, address, values):
         """Write registers."""
         with self._lock:
             kwargs = {"unit": unit} if unit else {}
             self._client.write_registers(address, values, **kwargs)
-            # invalidate cache on write
-            _read_cached.cache_clear()
 
 
 class ModbusServerHub(BaseModbusHub):
