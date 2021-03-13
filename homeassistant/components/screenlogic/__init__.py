@@ -178,7 +178,7 @@ class ScreenlogicEntity(CoordinatorEntity):
     @property
     def mac(self):
         """Mac address."""
-        return self._coordinator.config_entry.unique_id
+        return self.coordinator.config_entry.unique_id
 
     @property
     def unique_id(self):
