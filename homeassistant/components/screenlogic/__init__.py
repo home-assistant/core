@@ -128,10 +128,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         gateway = ScreenLogicGateway(**connect_info)
     except ScreenLogicError as ex:
-        _LOGGER.error("Error while connecting to the gateway: %s", ex)
+        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
         raise ConfigEntryNotReady from ex
     except AttributeError as ex:
-        _LOGGER.exception("Unexpected error while connecting to the gateway")
+        _LOGGER.exception(
+            "Unexpected error while connecting to the gateway %s", connect_info
+        )
         raise ConfigEntryNotReady from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
