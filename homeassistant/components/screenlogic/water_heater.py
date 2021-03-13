@@ -17,8 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
+HEAD_MODE_NAMES = HEAT_MODE._names  # pylint: disable=protected-access
+
 MODE_NAME_TO_MODE_NUM = {
-    HEAT_MODE._names[num]: num for num in range(len(HEAT_MODE._names))
+    HEAD_MODE_NAMES[num]: num for num in range(len(HEAD_MODE_NAMES))
 }
 
 
@@ -82,8 +84,7 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
     @property
     def operation_list(self):
         """All available operations."""
-        # TODO: fix Access to a protected member _names of a client class
-        return HEAT_MODE._names
+        return HEAD_MODE_NAMES
 
     @property
     def supported_features(self):

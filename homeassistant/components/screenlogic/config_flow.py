@@ -55,7 +55,7 @@ def _extract_mac_from_name(name):
 
 def short_mac(mac):
     """Short version of the mac as seen in the app."""
-    return "-".join(mac.split(":")[:3])
+    return "-".join(mac.split(":")[3:])
 
 
 def _entry_title_for_mac(mac):
@@ -235,15 +235,9 @@ class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
                 title=self.config_entry.title, data=user_input
             )
 
-        current_interval = DEFAULT_SCAN_INTERVAL
-
-        # TODO: migrate the entry data to options flow when the integration is
-        # setup.  There is an example in homekit
-        if CONF_SCAN_INTERVAL in self.config_entry.options:
-            current_interval = self.config_entry.options[CONF_SCAN_INTERVAL]
-        elif CONF_SCAN_INTERVAL in self.config_entry.data:
-            current_interval = self.config_entry.data[CONF_SCAN_INTERVAL]
-
+        current_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(

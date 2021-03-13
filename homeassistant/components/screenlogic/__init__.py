@@ -140,11 +140,9 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self.gateway = gateway
         self.screenlogic_data = {}
-        interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-        if CONF_SCAN_INTERVAL in config_entry.options:
-            interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
-        elif CONF_SCAN_INTERVAL in config_entry.data:
-            interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
+        interval = timedelta(
+            seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        )
         super().__init__(
             hass,
             _LOGGER,
