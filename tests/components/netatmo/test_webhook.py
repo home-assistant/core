@@ -1,6 +1,6 @@
 """The tests for Netatmo webhook events."""
 from homeassistant.components.netatmo.const import DATA_DEVICE_IDS, DATA_PERSONS
-from homeassistant.components.netatmo.webhook import handle_webhook
+from homeassistant.components.netatmo.webhook import async_handle_webhook
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.aiohttp import MockRequest
 
@@ -25,7 +25,7 @@ async def test_webhook(hass):
         handle_event,
     )
 
-    await handle_webhook(hass, "webhook_id", request)
+    await async_handle_webhook(hass, "webhook_id", request)
     await hass.async_block_till_done()
 
     assert webhook_called
@@ -50,7 +50,7 @@ async def test_webhook_error_in_data(hass):
         handle_event,
     )
 
-    await handle_webhook(hass, "webhook_id", request)
+    await async_handle_webhook(hass, "webhook_id", request)
     await hass.async_block_till_done()
 
     assert not webhook_called
@@ -84,7 +84,7 @@ async def test_webhook_climate_event(hass):
         handle_event,
     )
 
-    await handle_webhook(hass, "webhook_id", request)
+    await async_handle_webhook(hass, "webhook_id", request)
     await hass.async_block_till_done()
 
     assert webhook_called
@@ -126,7 +126,7 @@ async def test_webhook_person_event(hass):
         handle_event,
     )
 
-    await handle_webhook(hass, "webhook_id", request)
+    await async_handle_webhook(hass, "webhook_id", request)
     await hass.async_block_till_done()
 
     assert webhook_called
