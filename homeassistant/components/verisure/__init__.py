@@ -33,6 +33,9 @@ from .const import (
     CONF_CODE_DIGITS,
     CONF_DEFAULT_LOCK_CODE,
     CONF_GIID,
+    CONF_LOCK_CODE_DIGITS,
+    CONF_LOCK_DEFAULT_CODE,
+    DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
     SERVICE_CAPTURE_SMARTCAM,
@@ -58,7 +61,7 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): cv.string,
                     vol.Required(CONF_USERNAME): cv.string,
-                    vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
+                    vol.Optional(CONF_CODE_DIGITS): cv.positive_int,
                     vol.Optional(CONF_GIID): cv.string,
                     vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
                 },
@@ -84,6 +87,8 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
                     CONF_EMAIL: config[DOMAIN][CONF_USERNAME],
                     CONF_PASSWORD: config[DOMAIN][CONF_PASSWORD],
                     CONF_GIID: config[DOMAIN].get(CONF_GIID),
+                    CONF_LOCK_CODE_DIGITS: config[DOMAIN].get(CONF_CODE_DIGITS),
+                    CONF_LOCK_DEFAULT_CODE: config[DOMAIN].get(CONF_LOCK_DEFAULT_CODE),
                 },
             )
         )
@@ -93,6 +98,34 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Verisure from a config entry."""
+    # Migrate old YAML settings (hidden in the config entry),
+    # to config entry options. Can be removed after YAML support is gone.
+    if (
+        CONF_LOCK_CODE_DIGITS not in entry.options
+        and CONF_LOCK_CODE_DIGITS in entry.data
+        and entry.data[CONF_LOCK_CODE_DIGITS] != DEFAULT_LOCK_CODE_DIGITS
+    ):
+        options = {
+            **entry.options,
+            CONF_LOCK_CODE_DIGITS: entry.data[CONF_LOCK_CODE_DIGITS],
+        }
+        data = entry.data.copy()
+        data.pop(CONF_LOCK_CODE_DIGITS)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+    if (
+        CONF_DEFAULT_LOCK_CODE not in entry.options
+        and CONF_DEFAULT_LOCK_CODE in entry.data
+    ):
+        options = {
+            **entry.options,
+            CONF_DEFAULT_LOCK_CODE: entry.data[CONF_DEFAULT_LOCK_CODE],
+        }
+        data = entry.data.copy()
+        data.pop(CONF_DEFAULT_LOCK_CODE)
+        hass.config_entries.async_update_entry(entry, data=data, options=options)
+
+    # Continue as normal...
     coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
     if not await coordinator.async_login():

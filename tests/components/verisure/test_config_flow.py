@@ -266,16 +266,20 @@ async def test_imports(
             context={"source": config_entries.SOURCE_IMPORT},
             data={
                 CONF_EMAIL: "verisure_my_pages@example.com",
-                CONF_PASSWORD: "SuperS3cr3t!",
                 CONF_GIID: giid,
+                CONF_LOCK_CODE_DIGITS: 10,
+                CONF_LOCK_DEFAULT_CODE: "123456",
+                CONF_PASSWORD: "SuperS3cr3t!",
             },
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "ascending (12345th street)"
     assert result["data"] == {
-        CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_GIID: "12345",
+        CONF_LOCK_CODE_DIGITS: 10,
+        CONF_LOCK_DEFAULT_CODE: "123456",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
@@ -296,8 +300,10 @@ async def test_imports_invalid_login(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_IMPORT},
             data={
                 CONF_EMAIL: "verisure_my_pages@example.com",
-                CONF_PASSWORD: "SuperS3cr3t!",
                 CONF_GIID: None,
+                CONF_LOCK_CODE_DIGITS: None,
+                CONF_LOCK_DEFAULT_CODE: None,
+                CONF_PASSWORD: "SuperS3cr3t!",
             },
         )
 
@@ -321,8 +327,10 @@ async def test_imports_needs_user_installation_choice(hass: HomeAssistant) -> No
             context={"source": config_entries.SOURCE_IMPORT},
             data={
                 CONF_EMAIL: "verisure_my_pages@example.com",
-                CONF_PASSWORD: "SuperS3cr3t!",
                 CONF_GIID: None,
+                CONF_LOCK_CODE_DIGITS: None,
+                CONF_LOCK_DEFAULT_CODE: None,
+                CONF_PASSWORD: "SuperS3cr3t!",
             },
         )
 

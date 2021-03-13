@@ -39,7 +39,10 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     installations: dict[str, str]
     email: str
     password: str
+
+    # These can be removed after YAML import has been removed.
     giid: str | None = None
+    settings: dict[str, int | str] = {}
 
     @staticmethod
     @callback
@@ -112,6 +115,7 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_EMAIL: self.email,
                 CONF_PASSWORD: self.password,
                 CONF_GIID: user_input[CONF_GIID],
+                **self.settings,
             },
         )
 
@@ -126,6 +130,12 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             # Therefore, if we don't know the GIID, we can use the discovery
             # without a unique ID logic, to prevent re-import/discovery.
             await self._async_handle_discovery_without_unique_id()
+
+        # Settings, later to be converted to config entry options
+        if user_input[CONF_LOCK_CODE_DIGITS]:
+            self.settings[CONF_LOCK_CODE_DIGITS] = user_input[CONF_LOCK_CODE_DIGITS]
+        if user_input[CONF_LOCK_DEFAULT_CODE]:
+            self.settings[CONF_LOCK_DEFAULT_CODE] = user_input[CONF_LOCK_DEFAULT_CODE]
 
         return await self.async_step_user(user_input)
 
