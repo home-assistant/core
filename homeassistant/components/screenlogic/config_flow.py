@@ -132,6 +132,8 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             }
 
+            # TODO: use mac instead of ip address
+            # https://developers.home-assistant.io/docs/config_entries_config_flow_handler/#unique-id-requirements
             await self.async_set_unique_id(entry_data[CONF_HOST][CONF_IP_ADDRESS])
             self._abort_if_unique_id_configured()
 
