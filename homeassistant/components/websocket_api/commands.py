@@ -131,11 +131,6 @@ async def handle_call_service(hass, connection, msg):
     if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
         blocking = False
 
-    # We do not support templates.
-    target = msg.get("target")
-    if template.is_complex(target):
-        raise vol.Invalid("Templates are not supported here")
-
     try:
         context = connection.context(msg)
         config = {
