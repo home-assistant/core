@@ -8,7 +8,6 @@ CONF_MODULE_STATUS_UPDATE_INTERVAL = "module_status_update_interval"
 DATA_COORDINATOR = "coordinator"
 DOMAIN = "home_plus_control"
 ENTITY_UIDS = "entity_unique_ids"
-OPTS_LISTENER_REMOVERS = "options_listener_removers"
 DISPATCHER_REMOVERS = "dispatcher_removers"
 
 # Legrand Model Identifiers - https://developer.legrand.com/documentation/product-cluster-list/#
@@ -28,7 +27,6 @@ HW_TYPE = {
 # Legrand OAuth2 URIs
 OAUTH2_AUTHORIZE = "https://partners-login.eliotbylegrand.com/authorize"
 OAUTH2_TOKEN = "https://partners-login.eliotbylegrand.com/token"
-PLANT_URL = "https://api.developer.legrand.com/hc/api/v1.0/plants"
 
 # The Legrand Home+ Control API has very limited request quotas - at the time of writing, it is
 # limited to 500 calls per day (resets at 00:00) - so we want to keep updates to a minimum.

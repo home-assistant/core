@@ -1,5 +1,6 @@
 """The Legrand Home+ Control integration."""
 import asyncio
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -12,15 +13,16 @@ from homeassistant.helpers import (
     config_validation as cv,
     dispatcher,
 )
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import api, config_flow, helpers
 from .const import (
     API,
     CONF_SUBSCRIPTION_KEY,
+    DATA_COORDINATOR,
     DISPATCHER_REMOVERS,
     DOMAIN,
     ENTITY_UIDS,
-    OPTS_LISTENER_REMOVERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_REMOVE_ENTITIES,
 )
@@ -53,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         _LOGGER.debug(
             "No config in configuration.yaml for the Legrand Home+ Control component"
         )
-        return True
+        return False
 
     # If there is a configuration section in configuration.yaml, then we add the data into
     # the hass.data object
@@ -74,21 +76,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass_entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
 
     # Retrieve the registered implementation
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, config_entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, config_entry
         )
-    except ValueError:
-        _LOGGER.debug("Implementation is not available. Try the config entry.")
-        implementation = helpers.HomePlusControlOAuth2Implementation(
-            hass, config_entry.data
-        )
-        config_flow.HomePlusControlFlowHandler.async_register_implementation(
-            hass,
-            implementation,
-        )
+    )
 
     # Using an aiohttp-based API lib, so rely on async framework
     # Add the API object to the domain's data in HA
@@ -109,10 +101,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         ),
     ]
 
-    # Register the options listener
-    hass_entry_data[OPTS_LISTENER_REMOVERS] = config_entry.add_update_listener(
-        api.update_api_refresh_intervals
+    # Register the Data Coordinator with the integration
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        # Name of the data. For logging purposes.
+        name="home_plus_control_module",
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=60),
     )
+    hass_entry_data[DATA_COORDINATOR] = coordinator
 
     # Continue setting up the platform
     for component in PLATFORMS:
@@ -134,10 +132,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         )
     )
     if unload_ok:
-        # Unsubscribe the config_entry update listener
-        remover = hass.data[DOMAIN][config_entry.entry_id].pop(OPTS_LISTENER_REMOVERS)
-        remover()
-
         # Unsubscribe the config_entry signal dispatcher connections
         dispatcher_removers = hass.data[DOMAIN][config_entry.entry_id].pop(
             "dispatcher_removers"

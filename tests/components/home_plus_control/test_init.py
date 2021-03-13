@@ -12,12 +12,18 @@ from homeassistant import config_entries, setup
 from homeassistant.components.home_plus_control import api
 from homeassistant.components.home_plus_control.const import (
     API,
+    CONF_SUBSCRIPTION_KEY,
     DOMAIN,
     ENTITY_UIDS,
-    PLANT_URL,
 )
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
 from tests.common import async_fire_time_changed
+from tests.components.home_plus_control.conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    SUBSCRIPTION_KEY,
+)
 
 
 async def entity_assertions(
@@ -65,8 +71,17 @@ async def test_loading(hass, mock_config_entry, current_request_with_host):
     """Test component loading."""
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await setup.async_setup_component(hass, DOMAIN, {})
-
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+        },
+    )
     await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
         hass.data[DOMAIN]["home_plus_control_entry_id"][API],
@@ -75,11 +90,32 @@ async def test_loading(hass, mock_config_entry, current_request_with_host):
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
 
+async def test_loading_with_no_config(
+    hass, mock_config_entry, current_request_with_host
+):
+    """Test component loading failure when it has not configuration."""
+    await setup.async_setup_component(hass, "http", {})
+    assert hass.http.app
+    await setup.async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_add(mock_config_entry)
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+
+
 async def test_unloading(hass, mock_config_entry, current_request_with_host):
     """Test component unloading."""
     await setup.async_setup_component(hass, "http", {})
     assert hass.http.app
-    await setup.async_setup_component(hass, DOMAIN, {})
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+        },
+    )
 
     await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
@@ -107,7 +143,7 @@ async def test_plant_update(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -120,9 +156,18 @@ async def test_plant_update(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -155,7 +200,7 @@ async def test_plant_topology_reduction_change(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -168,9 +213,18 @@ async def test_plant_topology_reduction_change(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -192,7 +246,7 @@ async def test_plant_topology_reduction_change(
     aioclient_mock.clear_requests()
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -242,7 +296,7 @@ async def test_plant_topology_increase_change(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -255,9 +309,18 @@ async def test_plant_topology_increase_change(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -279,7 +342,7 @@ async def test_plant_topology_increase_change(
     aioclient_mock.clear_requests()
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -325,7 +388,7 @@ async def test_module_status_reduction_change(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -338,9 +401,18 @@ async def test_module_status_reduction_change(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -368,7 +440,7 @@ async def test_module_status_reduction_change(
     aioclient_mock.clear_requests()
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -420,7 +492,7 @@ async def test_module_status_increase_change(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -433,9 +505,18 @@ async def test_module_status_increase_change(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -463,7 +544,7 @@ async def test_module_status_increase_change(
     aioclient_mock.clear_requests()
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -514,15 +595,24 @@ async def test_plant_api_timeout(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
         exc=asyncio.TimeoutError,
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -554,7 +644,7 @@ async def test_plant_topology_api_timeout(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -564,9 +654,18 @@ async def test_plant_topology_api_timeout(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -598,7 +697,7 @@ async def test_plant_status_api_timeout(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -612,9 +711,18 @@ async def test_plant_status_api_timeout(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -662,7 +770,7 @@ async def test_update_with_plant_topology_api_timeout(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -675,9 +783,18 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -712,7 +829,7 @@ async def test_update_with_plant_topology_api_timeout(
     aioclient_mock.clear_requests()
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -770,7 +887,7 @@ async def test_update_with_plant_module_status_api_timeout(
 
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(
@@ -783,9 +900,18 @@ async def test_update_with_plant_module_status_api_timeout(
     )
 
     # Load the entry
-    hass.data[DOMAIN] = {}
-    hass.config.components.add(DOMAIN)
-    await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(
+        hass,
+        "home_plus_control",
+        {
+            "home_plus_control": {
+                CONF_CLIENT_ID: CLIENT_ID,
+                CONF_CLIENT_SECRET: CLIENT_SECRET,
+                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+            },
+            "http": {},
+        },
+    )
     assert hass.http.app
     await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
@@ -817,7 +943,7 @@ async def test_update_with_plant_module_status_api_timeout(
     aioclient_mock.clear_requests()
     # Register the mock responses
     aioclient_mock.get(
-        PLANT_URL,
+        PLANT_TOPOLOGY_BASE_URL,
         text=plant_data,
     )
     aioclient_mock.get(

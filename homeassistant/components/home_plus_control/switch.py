@@ -1,21 +1,16 @@
 """Legrand Home+ Control Switch Entity Module that uses the HomeAssistant DataUpdateCoordinator."""
-from datetime import timedelta
 import logging
 
 import async_timeout
+from homepluscontrol.homeplusapi import HomePlusControlApiError
 
 from homeassistant.components.switch import (
     DEVICE_CLASS_OUTLET,
     DEVICE_CLASS_SWITCH,
     SwitchEntity,
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import dispatcher
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
 
 from .const import (
     API,
@@ -51,56 +46,43 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                switch_data = await api.fetch_data()
-        except HomeAssistantError as err:
+                module_data = await api.fetch_data()
+        except HomePlusControlApiError as err:
             raise UpdateFailed(
                 f"Error communicating with API: {err} [{type(err)}]"
             ) from err
 
+        current_entity_uids = set(hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS])
+
         # Send out signal for removal of obsolete entities from Home Assistant
-        if len(api.switches_to_remove.keys()) > 0:
+        entity_uids_to_remove = current_entity_uids - set(module_data)
+        if len(entity_uids_to_remove) > 0:
             device_registry = hass.helpers.device_registry.async_get(hass)
             dispatcher.async_dispatcher_send(
                 hass,
                 SIGNAL_REMOVE_ENTITIES,
-                api.switches_to_remove.keys(),
+                entity_uids_to_remove,
                 hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS],
                 device_registry,
             )
-            # Reset the api object dictionary of deleted elements
-            api.switches_to_remove = {}
 
         # Send out signal for new entity addition to Home Assistant
-        new_entity_uids = []
-        for unique_id in switch_data:
-            if unique_id not in hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS]:
-                new_entity_uids.append(unique_id)
+        new_entity_uids = set(module_data) - current_entity_uids
         if len(new_entity_uids) > 0:
             dispatcher.async_dispatcher_send(
                 hass,
                 SIGNAL_ADD_ENTITIES,
                 new_entity_uids,
+                HomeControlSwitchEntity,
                 coordinator,
                 async_add_entities,
             )
 
-        return switch_data
+        return module_data
 
     # Register the Data Coordinator with the integration
     coordinator = hass.data[DOMAIN][config_entry.entry_id].get(DATA_COORDINATOR)
-    if coordinator is None:
-        coordinator = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="switch",
-            update_method=async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=60),
-        )
-
-        # Add the coordinator to the domain's data in HA
-        hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR] = coordinator
+    coordinator.update_method = async_update_data
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()

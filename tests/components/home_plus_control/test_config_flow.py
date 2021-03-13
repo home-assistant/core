@@ -1,6 +1,8 @@
 """Test the Legrand Home+ Control config flow."""
 import asyncio
 
+import pytest
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.home_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
@@ -23,12 +25,6 @@ async def test_full_flow(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ):
     """Check full flow."""
-    valid_configuration = {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "subscription_key": SUBSCRIPTION_KEY,
-    }
-
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -81,9 +77,6 @@ async def test_full_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Home+ Control"
     config_data = result["data"]
-    for item in valid_configuration:
-        assert item in config_data
-        assert config_data[item] == valid_configuration[item]
     assert config_data["token"]["refresh_token"] == "mock-refresh-token"
     assert config_data["token"]["access_token"] == "mock-access-token"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -252,83 +245,5 @@ async def test_flow_timeout(
         exc=asyncio.TimeoutError,
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "oauth_error"
-
-
-async def test_config_options_flow(hass):
-    """Test config options flow."""
-    valid_option = {
-        "plant_update_interval": "301",
-        "plant_topology_update_interval": "302",
-        "module_status_update_interval": "303",
-    }
-
-    expected_result = {
-        "plant_update_interval": "301",
-        "plant_topology_update_interval": "302",
-        "module_status_update_interval": "303",
-    }
-
-    hass.data[DOMAIN] = {}
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        data={},
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=valid_option
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    for key, value in expected_result.items():
-        assert config_entry.options[key] == value
-
-
-async def test_invalid_options_flow(hass):
-    """Test config options flow with invalid input."""
-    input_option = {
-        "plant_update_interval": "7200",
-        "plant_topology_update_interval": "3600",
-        "module_status_update_interval": "300",
-    }
-
-    # Valid values are: 0 < int <= 86400
-    invalid_values = [-1, "non-int", 0, 86401, 300000]
-
-    hass.data[DOMAIN] = {}
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=DOMAIN,
-        data={},
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    for interval in input_option:
-        for i_value in invalid_values:
-            input_option[interval] = i_value
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input=input_option
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-
-        form_errors = result.get("errors", None)
-        assert form_errors is not None
-        assert form_errors.get(interval) == "invalid_update_interval"
+    with pytest.raises(Exception):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
