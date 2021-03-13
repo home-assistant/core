@@ -119,7 +119,7 @@ aiokafka==0.6.0
 aiolip==1.1.4
 
 # homeassistant.components.lyric
-aiolyric==1.0.5
+aiolyric==1.0.6
 
 # homeassistant.components.notion
 aionotion==1.1.0
