@@ -15,6 +15,7 @@ PROPERTY_DOOR_STATUS_BINARY_SENSOR = (
 )
 CLIMATE_RADIO_THERMOSTAT_ENTITY = "climate.z_wave_thermostat"
 CLIMATE_DANFOSS_LC13_ENTITY = "climate.living_connect_z_thermostat"
+CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY = "climate.thermostatic_valve"
 CLIMATE_FLOOR_THERMOSTAT_ENTITY = "climate.floor_thermostat"
 CLIMATE_MAIN_HEAT_ACTIONNER = "climate.main_heat_actionner"
 BULB_6_MULTI_COLOR_LIGHT_ENTITY = "light.bulb_6_multi_color"
