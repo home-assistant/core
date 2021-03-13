@@ -18,14 +18,9 @@ def configured_instances(hass):
     """Return a set of configured buienradar instances."""
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get(CONF_CAMERA):
-            entries.append(
-                f"{entry.data.get(CONF_DIMENSION)}-{entry.data.get(CONF_COUNTRY)}"
-            )
-        else:
-            entries.append(
-                f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
-            )
+        entries.append(
+            f"{entry.data.get(CONF_LATITUDE)}-{entry.data.get(CONF_LONGITUDE)}"
+        )
     return set(entries)
 
 
