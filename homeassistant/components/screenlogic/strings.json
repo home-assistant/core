@@ -1,0 +1,44 @@
+{
+  "config": {
+    "error": {
+      "can_not_connect":"Unable to connect to a ScreenLogic Gateway at the address provided.",
+      "already_configured": "Gateway already configured."
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to start set up?"
+      },
+      "gateway_entry": {
+        "title": "ScreenLogic",
+        "description": "Enter your ScreenLogic Gateway information.",
+        "data": {
+            "ip_address": "IP Address",
+            "port": "Port"
+          }
+      },
+      "gateway_select": {
+        "title": "ScreenLogic",
+        "description": "The following ScreenLogic gateways were discovered. Please select one to configure, or choose to manually configure a ScreenLogic gateway.",
+        "data": {
+            "selected_gateway": "Gateway"
+          }
+      }
+
+    },
+    "abort": {
+      "already_configured": "Gateway already configured. Only a single configuration of a specific gateway is possible.",
+      "no_devices_found": "No devices found on the network"
+    }
+  },
+  "options":{
+    "step": {
+      "init": {
+        "title": "ScreenLogic",
+        "description": "Specify settings for {gateway_name}",
+        "data": {
+          "scan_interval": "Seconds between scans"
+        }
+      }
+    }
+  }
+}

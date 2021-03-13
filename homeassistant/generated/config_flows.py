@@ -194,6 +194,7 @@ FLOWS = [
     "rpi_power",
     "ruckus_unleashed",
     "samsungtv",
+    "screenlogic",
     "sense",
     "sentry",
     "sharkiq",
