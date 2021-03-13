@@ -13,7 +13,6 @@ from homeassistant.components.cover import (
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
-    CONF_DEVICE_CLASS,
     STATE_CLOSED)
 
 import homeassistant.helpers.config_validation as cv
@@ -33,14 +32,11 @@ DEFAULT_PAYLOAD_STOP = "STOP"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)]), 
+    vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     })
-
-
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EnOcean cover platform."""
@@ -59,7 +55,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Initialize the EnOcean cover source."""
         super().__init__(dev_id, dev_name)
         self._sender_id = sender_id
-        self._driving_time = driving_time[0]*10 #needed in tenth seconds
+        self._driving_time = driving_time[0] * 10 #needed in tenth seconds
         self._state = None
         self._last_command = None
         self._position = None
@@ -94,18 +90,18 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     def open_cover(self):
         """Set the up command for shutter on Eltako FSB14"""
         self._last_command = 0x70
-        command =  [0xF6,0x70]
+        command =  [0xF6, 0x70]
         command.extend(self._sender_id)
         command.extend([0x30])
-        self.send_command(command, [0x0,0xFF,0xFF], 0x01)
+        self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
 
     def close_cover(self):
         """Set the down command for shutter on Eltako FSB14"""
         self._last_command = 0x50
-        command = [0xF6,0x50]
+        command = [0xF6, 0x50]
         command.extend(self._sender_id)
         command.extend([0x30])
-        self.send_command(command, [0x0,0xFF,0xFF], 0x01)
+        self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
         
 
     def stop_cover(self):
@@ -126,13 +122,13 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """ Set cover position in widget. This is the cheap realization with timeouts.
         in future you should find out the correct command for GFVS driving command
         telegram and teach in telegram."""
-        drive_time = int(abs(position - self._position)*self._driving_time/100)
+        drive_time = int(abs(position - self._position) * self._driving_time/100)
         if self._position < position: #Open cover
             self.open_cover()
-            ev.async_call_later(self.hass, drive_time/10,lambda _:self.stop_cover())
+            ev.async_call_later(self.hass, drive_time/10, lambda _:self.stop_cover())
         elif self._position > position: #Close cover
             self.close_cover()
-            ev.async_call_later(self.hass, drive_time/10,lambda _:self.stop_cover())
+            ev.async_call_later(self.hass, drive_time/10, lambda _:self.stop_cover())
 
     def value_changed(self, packet):
         """For Handling if Shutter is started from external trigger
@@ -140,7 +136,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         
         if packet.data[1] == 0x00:
             driven_time = packet.data[2]
-            percentage = int(100*driven_time/self._driving_time)
+            percentage = int(100 * driven_time /self._driving_time)
             if packet.data[3] == 0x01: #open
                 self._position += percentage
             elif packet.data[3] == 0x02: #close
