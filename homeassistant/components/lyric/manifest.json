@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lyric",
   "dependencies": ["http"],
-  "requirements": ["aiolyric==1.0.5"],
+  "requirements": ["aiolyric==1.0.6"],
   "codeowners": ["@timmo001"],
   "quality_scale": "silver",
   "dhcp": [
