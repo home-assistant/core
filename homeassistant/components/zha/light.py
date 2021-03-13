@@ -40,7 +40,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
-from .core import helpers
+from .core import discovery, helpers
 from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
@@ -101,33 +101,14 @@ class LightColorMode(enum.IntEnum):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-
-    async def _async_add_light_entities():
-        entities_to_create = [
-            ent_cls(*args) for ent_cls, args in hass.data[DATA_ZHA][light.DOMAIN]
-        ]
-
-        normal_light_entities = [
-            light_entity
-            for light_entity in entities_to_create
-            if isinstance(light_entity, Light)
-        ]
-
-        group_light_entities = [
-            light_entity
-            for light_entity in entities_to_create
-            if isinstance(light_entity, LightGroup)
-        ]
-        if normal_light_entities:
-            async_add_entities(normal_light_entities, update_before_add=True)
-        if group_light_entities:
-            async_add_entities(group_light_entities, update_before_add=True)
-        hass.data[DATA_ZHA][light.DOMAIN].clear()
+    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN]
 
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
-        _async_add_light_entities,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
@@ -543,7 +524,7 @@ class HueLight(Light):
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
 
-    _FORCE_ON = True
+    force_on = True
 
 
 @GROUP_MATCH()
@@ -565,10 +546,6 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        self._FORCE_ON = any(
-            self.platform.entities[member_entity_id]._FORCE_ON
-            for member_entity_id in self._entity_ids
-        )
         if self._debounced_member_refresh is None:
             force_refresh_debouncer = Debouncer(
                 self.hass,
