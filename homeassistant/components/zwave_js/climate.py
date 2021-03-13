@@ -304,7 +304,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
-                self._current_mode.value
+                str(self._current_mode.value)
             )
             return return_val
         return PRESET_NONE
