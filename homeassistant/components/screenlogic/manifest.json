@@ -4,8 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/screenlogic",
   "requirements": ["screenlogicpy==0.1.0"],
-  "dependencies": [],
   "codeowners": [
     "@dieselrabbit"
-  ]
+  ],
+  "dhcp": [{"hostname":"pentair: *","macaddress":"00C033*"}]
 }

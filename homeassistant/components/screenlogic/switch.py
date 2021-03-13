@@ -1,7 +1,8 @@
 """Support for a ScreenLogic 'circuit' switch."""
+import logging
+
 from screenlogicpy.const import ON_OFF
 
-import logging
 from homeassistant.components.switch import SwitchEntity
 
 from . import ScreenlogicEntity
@@ -13,46 +14,50 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    for switch in hass.data[DOMAIN][config_entry.unique_id]["devices"]["switch"]:
+    data = hass.data[DOMAIN][config_entry.entry_id]
+
+    for switch in data["devices"]["switch"]:
         _LOGGER.info(switch)
-        entities.append(
-            ScreenLogicSwitch(
-                hass.data[DOMAIN][config_entry.unique_id]["coordinator"], switch
-            )
-        )
+        entities.append(ScreenLogicSwitch(data["coordinator"], switch))
     async_add_entities(entities, True)
 
 
 class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
-    """ScreenLogic switch entitiy."""
-
-    def __init__(self, coordinator, switch):
-        super().__init__(coordinator, switch)
+    """ScreenLogic switch entity."""
 
     @property
-    def name(self) -> str:
+    def name(self):
         """Get the name of the switch."""
-        ent_name = self.coordinator.data["circuits"][self._entity_id]["name"]
-        gateway_name = self.coordinator.gateway.name
-        return gateway_name + " " + ent_name
+        return f"{self.gateway_name} {self.circuit['name']}"
 
     @property
     def is_on(self) -> bool:
         """Get whether the switch is in on state."""
-        return self.coordinator.data["circuits"][self._entity_id]["value"] == 1
+        return self.circuit["value"] == 1
 
     async def async_turn_on(self, **kwargs) -> None:
         """Send the ON command."""
-        if self.coordinator.gateway.set_circuit(self._entity_id, ON_OFF.ON):
-            _LOGGER.info("screenlogic turn on " + str(self._entity_id))
-            await self.coordinator.async_request_refresh()
-        else:
-            _LOGGER.info("screenlogic turn on error")
+        return await self._async_set_circuit(ON_OFF.ON)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Send the OFF command."""
-        if self.coordinator.gateway.set_circuit(self._entity_id, ON_OFF.OFF):
-            _LOGGER.info("screenlogic turn of " + str(self._entity_id))
+        return await self._async_set_circuit(ON_OFF.OFF)
+
+    async def _async_set_circuit(self, circuit_value) -> None:
+        if await self.hass.async_add_executor_job(
+            self.gateway.set_circuit, self._data_key, circuit_value
+        ):
+            _LOGGER.info("screenlogic turn %s %s", circuit_value, self._data_key)
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.info("screenlogic turn off error")
+            _LOGGER.info("screenlogic turn %s %s error", circuit_value, self._data_key)
+
+    @property
+    def circuit(self):
+        """Shortcut to access the circuit."""
+        return self.circuits_data[self._data_key]
+
+    @property
+    def circuits_data(self):
+        """Shortcut to access the circuits data."""
+        return self.coordinator.data["circuits"]

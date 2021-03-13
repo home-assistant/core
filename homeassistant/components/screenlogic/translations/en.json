@@ -1,17 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Gateway already configured. Only a single configuration of a specific gateway is possible.",
-            "no_devices_found": "No devices found on the network"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "already_configured": "Gateway already configured.",
-            "can_not_connect": "Unable to connect to a ScreenLogic Gateway at the address provided."
+            "cannot_connect": "Failed to connect"
         },
+        "flow_title": "ScreenLogic {name}",
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
-            },
             "gateway_entry": {
                 "data": {
                     "ip_address": "IP Address",
@@ -39,6 +35,5 @@
                 "title": "ScreenLogic"
             }
         }
-    },
-    "title": "ScreenLogic"
+    }
 }

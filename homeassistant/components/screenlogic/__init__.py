@@ -1,99 +1,40 @@
 """The Screenlogic integration."""
 import asyncio
-from slugify import slugify
 from collections import defaultdict
 from datetime import timedelta
-import voluptuous as vol
 import logging
 
-from screenlogicpy import (
-    ScreenLogicGateway,
-    ScreenLogicError,
-)
+from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
     CONTROLLER_HARDWARE,
     SL_GATEWAY_IP,
-    SL_GATEWAY_PORT,
     SL_GATEWAY_NAME,
+    SL_GATEWAY_PORT,
 )
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_NAME,
-    CONF_HOST,
-)
-
-from .const import (
-    DOMAIN,
-    DEFAULT_SCAN_INTERVAL,
-    MIN_SCAN_INTERVAL,
-)
-
-from .config_flow import discover_gateways
+from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
+from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_IP_ADDRESS): cv.string,
-                vol.Optional(CONF_PORT, default=80): cv.positive_int,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 PLATFORMS = ["switch", "sensor", "binary_sensor", "water_heater"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Screenlogic component."""
-    _LOGGER.info("Async Setup")
-    conf = config.get(DOMAIN)
-
-    hass.data[DOMAIN] = conf or {}
-
-    if conf is not None:
-        _LOGGER.info("conf found")
-        _LOGGER.info(conf)
-        if CONF_NAME not in conf:
-            conf[CONF_NAME] = "Unnamed ScreenLogic"
-        config_data = {
-            CONF_HOST: {
-                CONF_IP_ADDRESS: conf[CONF_IP_ADDRESS],
-                CONF_PORT: conf[CONF_PORT],
-                CONF_NAME: conf[CONF_NAME],
-            },
-        }
-        if CONF_SCAN_INTERVAL in conf:
-            config_data[CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=config_data,
-            )
-        )
-
+    domain_data = hass.data[DOMAIN] = {}
+    domain_data[DISCOVERED_GATEWAYS] = await async_discover_gateways_by_unique_id(hass)
     return True
 
 
@@ -101,43 +42,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Screenlogic from a config entry."""
     _LOGGER.debug("Async Setup Entry")
     _LOGGER.debug(entry.data)
-
-    if CONF_HOST not in entry.data:
-        _LOGGER.error("Invalid config_entry: Missing CONF_HOST")
-        return False
-
-    connect_info = {}
-    if CONF_NAME in entry.data[CONF_HOST]:
-        # Attempt to re-discover named gateway to follow IP changes
-        hosts = await hass.async_add_executor_job(discover_gateways)
-        if len(hosts) > 0:
-            for host in hosts:
-                if host[SL_GATEWAY_NAME] == entry.data[CONF_HOST][CONF_NAME]:
-                    connect_info = host
-                    break
-            if not connect_info:
-                _LOGGER.warning("Gateway name matching failed.")
-
-    if not connect_info and CONF_IP_ADDRESS in entry.data[CONF_HOST]:
+    mac = entry.unique_id
+    # Attempt to re-discover named gateway to follow IP changes
+    discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
+    if mac in discovered_gateways:
+        connect_info = discovered_gateways[mac]
+    else:
+        _LOGGER.warning("Gateway rediscovery failed.")
         # Static connection defined or fallback from discovery
-        connect_info[SL_GATEWAY_NAME] = (
-            entry.data[CONF_HOST][CONF_NAME]
-            if CONF_NAME in entry.data[CONF_HOST]
-            else "ScreenLogic"
-        )
-        connect_info[SL_GATEWAY_IP] = entry.data[CONF_HOST][CONF_IP_ADDRESS]
-        if CONF_PORT in entry.data[CONF_HOST]:
-            connect_info[SL_GATEWAY_PORT] = entry.data[CONF_HOST][CONF_PORT]
-
-    if not connect_info:
-        _LOGGER.error("Invalid config_entry")
-        return False
+        connect_info = {
+            SL_GATEWAY_NAME: name_for_mac(mac),
+            SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
+            SL_GATEWAY_PORT: entry.data[CONF_PORT],
+        }
 
     try:
         gateway = ScreenLogicGateway(**connect_info)
-    except ScreenLogicError as error:
-        _LOGGER.error(error)
-        return False
+    except ScreenLogicError as ex:
+        _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
+        raise ConfigEntryNotReady from ex
+    except AttributeError as ex:
+        _LOGGER.exception(
+            "Unexpected error while connecting to the gateway %s", connect_info
+        )
+        raise ConfigEntryNotReady from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
         hass, config_entry=entry, gateway=gateway
@@ -167,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for body in coordinator.data["bodies"]:
         entities["water_heater"].append(body)
 
-    hass.data[DOMAIN][entry.unique_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "devices": entities,
         "listener": entry.add_update_listener(async_update_listener),
@@ -192,22 +120,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    hass.data[DOMAIN][entry.unique_id]["listener"]()
+    hass.data[DOMAIN][entry.entry_id]["listener"]()
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id][
-        "coordinator"
-    ]
-    new_interval = entry.options.get(CONF_SCAN_INTERVAL)
-    coordinator.update_interval = timedelta(seconds=new_interval)
-    hass.config_entries.async_reload(entry.entry_id)
-    _LOGGER.debug("Update interval set to {}".format(new_interval))
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
@@ -218,11 +140,9 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         self.config_entry = config_entry
         self.gateway = gateway
         self.screenlogic_data = {}
-        interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
-        if CONF_SCAN_INTERVAL in config_entry.options:
-            interval = timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL])
-        elif CONF_SCAN_INTERVAL in config_entry.data:
-            interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
+        interval = timedelta(
+            seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        )
         super().__init__(
             hass,
             _LOGGER,
@@ -243,22 +163,43 @@ class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
     def __init__(self, coordinator, datakey):
-        """Initialize of the sensor."""
+        """Initialize of the entity."""
         super().__init__(coordinator)
-        self._entity_id = datakey
+        self._data_key = datakey
+
+    @property
+    def mac(self):
+        """Mac address."""
+        return self.coordinator.config_entry.unique_id
 
     @property
     def unique_id(self):
-        slugged_name = slugify(self.coordinator.gateway.name)
-        return slugged_name + "_" + str(self._entity_id)
+        """Entity Unique ID."""
+        return f"{self.mac}_{self._data_key}"
+
+    @property
+    def config_data(self):
+        """Shortcut for config data."""
+        return self.coordinator.data["config"]
+
+    @property
+    def gateway(self):
+        """Return the gateway."""
+        return self.coordinator.gateway
+
+    @property
+    def gateway_name(self):
+        """Return the configured name of the gateway."""
+        return self.gateway.name
 
     @property
     def device_info(self):
+        """Return device information for the controller."""
+        controller_type = self.config_data["controler_type"]
+        hardware_type = self.config_data["hardware_type"]
         return {
-            "identifiers": {(DOMAIN, self.coordinator.gateway.name)},
-            "name": self.coordinator.gateway.name,
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            "name": self.gateway_name,
             "manufacturer": "Pentair",
-            "model": CONTROLLER_HARDWARE[
-                self.coordinator.data["config"]["controler_type"]
-            ][self.coordinator.data["config"]["hardware_type"]],
+            "model": CONTROLLER_HARDWARE[controller_type][hardware_type],
         }

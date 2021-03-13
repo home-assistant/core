@@ -1,20 +1,16 @@
 {
-  "title": "ScreenLogic",
   "config": {
+    "flow_title": "ScreenLogic {name}",
     "error": {
-      "can_not_connect":"Unable to connect to a ScreenLogic Gateway at the address provided.",
-      "already_configured": "Gateway already configured."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
-      "confirm": {
-        "description": "Do you want to start set up?"
-      },
       "gateway_entry": {
         "title": "ScreenLogic",
         "description": "Enter your ScreenLogic Gateway information.",
         "data": {
-            "ip_address": "IP Address",
-            "port": "Port"
+            "ip_address": "[%key:common::config_flow::data::ip%]",
+            "port": "[%key:common::config_flow::data::port%]"
           }
       },
       "gateway_select": {
@@ -24,11 +20,9 @@
             "selected_gateway": "Gateway"
           }
       }
-
     },
     "abort": {
-      "already_configured": "Gateway already configured. Only a single configuration of a specific gateway is possible.",
-      "no_devices_found": "No devices found on the network"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options":{
