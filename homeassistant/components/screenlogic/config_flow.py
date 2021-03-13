@@ -103,10 +103,8 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        _LOGGER.debug("async_step_user: user_input")
-        _LOGGER.debug(user_input)
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
-        return await self.async_step_gateway_entry()
+        return await self.async_step_gateway_select()
 
     async def async_step_discovery(
         self, discovery_info: Dict[str, Any]
