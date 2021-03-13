@@ -21,9 +21,9 @@ def cache(hub):
 @mock.patch("time.time", return_value=1)
 def test_consecutive_calls(_, cache, hub):
     """Test consecutive calls reads only once."""
-    hub.read_holding_registers.return_value = [0]
 
-    # Read registers three times in a row
+    # First register read, put the value in the cache
+    hub.read_holding_registers.return_value = [0]
     assert cache.read_holding_registers(50, 70, 1) == [0]
 
     # update an actual value after the first read
@@ -75,7 +75,7 @@ def test_cache_expire_in_one_second(mock_time, cache, hub):
     assert hub.read_holding_registers.call_count == 2
 
 
-def test_pass_throuhg_non_cached(cache, hub):
+def test_pass_through_non_cached(cache, hub):
     """Test non cached calls works as usual."""
     hub.write_holding_registers.return_value = [0]
     assert cache.write_holding_registers(50, 70, 1) == [0]
