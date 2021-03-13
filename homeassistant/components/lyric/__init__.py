@@ -90,6 +90,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
     lyric = Lyric(client, client_id)
 
+    try:
+        async with async_timeout.timeout(60):
+            await lyric.get_locations()
+    except LyricAuthenticationException as exception:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data=entry.data,
+            )
+        )
+        _LOGGER.warning(exception)
+        return False
+    except (LyricException, ClientResponseError) as exception:
+        _LOGGER.error(exception)
+        return False
+
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
         try:
