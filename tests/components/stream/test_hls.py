@@ -4,7 +4,6 @@ import io
 from unittest.mock import patch
 from urllib.parse import urlparse
 
-import async_timeout
 import av
 import pytest
 
@@ -188,41 +187,6 @@ async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
-
-
-async def test_stream_ended(hass, stream_worker_sync):
-    """Test hls stream packets ended."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
-    stream_worker_sync.pause()
-
-    # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source)
-    track = stream.add_provider("hls")
-
-    # Request stream
-    stream.add_provider("hls")
-    stream.start()
-    stream.endpoint_url("hls")
-
-    # Run it dead
-    segments = []
-    while len(segments) < MAX_ABORT_SEGMENTS:
-        with async_timeout.timeout(TEST_TIMEOUT):
-            segment = await track.recv()
-        if not segment:
-            break
-        segments.append(segment.sequence)
-        if len(segments) > 1:
-            stream_worker_sync.resume()
-
-    assert len(segments) < MAX_ABORT_SEGMENTS
-    assert len(segments) > 1
-    assert not track.get_segment()
-
-    # Stop stream, if it hasn't quit already
-    stream.stop()
 
 
 async def test_stream_keepalive(hass):
