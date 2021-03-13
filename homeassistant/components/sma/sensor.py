@@ -21,7 +21,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_CUSTOM,
@@ -106,42 +109,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Check config again during load - dependency available
     config = _check_sensor_schema(config_entry.data)
 
-    # Init all default sensors
-    sensor_def = pysma.Sensors()
-
-    # Sensor from the custom config
-    sensor_def.add(
-        [
-            pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH))
-            for n, o in config[CONF_CUSTOM].items()
-        ]
-    )
-
-    # Use all sensors by default
-    config_sensors = config[CONF_SENSORS]
     hass_sensors = []
     used_sensors = []
-
-    if isinstance(config_sensors, dict):  # will be remove from 0.99
-        if not config_sensors:  # Use all sensors by default
-            config_sensors = {s.name: [] for s in sensor_def}
-
-        # Prepare all Home Assistant sensor entities
-        for name, attr in config_sensors.items():
-            sub_sensors = [sensor_def[s] for s in attr]
-            hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))
-            used_sensors.append(name)
-            used_sensors.extend(attr)
-
-    if isinstance(config_sensors, list):
-        if not config_sensors:  # Use all sensors by default
-            config_sensors = [s.name for s in sensor_def]
-        used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM])))
-        for sensor in used_sensors:
-            hass_sensors.append(SMAsensor(sensor_def[sensor], []))
-
-    used_sensors = [sensor_def[s] for s in set(used_sensors)]
-    async_add_entities(hass_sensors)
 
     # Init the SMA interface
     session = async_get_clientsession(hass, verify_ssl=config[CONF_VERIFY_SSL])
@@ -162,12 +131,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     backoff = 0
     backoff_step = 0
 
-    async def async_sma(event):
+    async def async_update_data():
         """Update all the SMA sensors."""
         nonlocal backoff, backoff_step
         if backoff > 1:
             backoff -= 1
-            return
+            # return
 
         values = await sma.read(used_sensors)
         if not values:
@@ -183,19 +152,56 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensor.async_update_values()
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
-    async_track_time_interval(hass, async_sma, interval)
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="sma",
+        update_method=async_update_data,
+        update_interval=interval,
+    )
+
+    # Init all default sensors
+    sensor_def = pysma.Sensors()
+
+    # Sensor from the custom config
+    sensor_def.add(
+        [
+            pysma.Sensor(o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH))
+            for n, o in config[CONF_CUSTOM].items()
+        ]
+    )
+
+    config_sensors = config[CONF_SENSORS]
+
+    if not config_sensors:  # Use all sensors by default
+        config_sensors = [s.name for s in sensor_def]
+    used_sensors = list(set(config_sensors + list(config[CONF_CUSTOM])))
+    for sensor in used_sensors:
+        hass_sensors.append(
+            SMAsensor(
+                coordinator,
+                config_entry.unique_id,
+                sensor_def[sensor],
+            )
+        )
+
+    used_sensors = [sensor_def[s] for s in set(used_sensors)]
+
+    async_add_entities(hass_sensors)
 
 
-class SMAsensor(Entity):
+class SMAsensor(CoordinatorEntity, Entity):
     """Representation of a SMA sensor."""
 
-    def __init__(self, pysma_sensor, sub_sensors):
+    def __init__(self, coordinator, confg_entry_unique_id, pysma_sensor):
         """Initialize the sensor."""
+        super().__init__(coordinator)
         self._sensor = pysma_sensor
-        self._sub_sensors = sub_sensors  # Can be remove from 0.99
-
-        self._attr = {s.name: "" for s in sub_sensors}
         self._state = self._sensor.value
+
+        self._device_name = f"SMA {confg_entry_unique_id}"
+        self._confg_entry_unique_id = confg_entry_unique_id
 
     @property
     def name(self):
@@ -213,11 +219,6 @@ class SMAsensor(Entity):
         return self._sensor.unit
 
     @property
-    def device_state_attributes(self):  # Can be remove from 0.99
-        """Return the state attributes of the sensor."""
-        return self._attr
-
-    @property
     def poll(self):
         """SMA sensors are updated & don't poll."""
         return False
@@ -226,12 +227,6 @@ class SMAsensor(Entity):
     def async_update_values(self):
         """Update this sensor."""
         update = False
-
-        for sens in self._sub_sensors:  # Can be remove from 0.99
-            newval = f"{sens.value} {sens.unit}"
-            if self._attr[sens.name] != newval:
-                update = True
-                self._attr[sens.name] = newval
 
         if self._sensor.value != self._state:
             update = True
@@ -243,4 +238,12 @@ class SMAsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return f"sma-{self._sensor.key}-{self._sensor.name}"
+        return f"sma-{self._confg_entry_unique_id}-{self._sensor.key}"
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._confg_entry_unique_id)},
+            "name": self._device_name,
+        }
