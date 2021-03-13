@@ -143,7 +143,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             percentage = int(100 * driven_time / self._driving_time)
             if packet.data[3] == 0x01:
                 self._position += percentage
-            elif packet.data[3] == 0x02: 
+            elif packet.data[3] == 0x02:
                 self._position -= percentage
         elif packet.data[1] == 0x70:
             self._position = 100
