@@ -1,16 +1,11 @@
 """Support for EnOcean light sources."""
 import math
 
-import voluptuous as vol
-
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
-from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
+from homeassistant.components.light import (ATTR_BRIGHTNESS, PLATFORM_SCHEMA,
+                                            SUPPORT_BRIGHTNESS, LightEntity)
+from homeassistant.const import CONF_ID, CONF_NAME
 
 from .device import EnOceanEntity
 
