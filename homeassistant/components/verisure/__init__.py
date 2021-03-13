@@ -1,6 +1,10 @@
 """Support for Verisure devices."""
 from __future__ import annotations
 
+import asyncio
+import os
+from typing import Any
+
 from verisure import Error as VerisureError
 import voluptuous as vol
 
@@ -12,34 +16,24 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
+    CONF_EMAIL,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
     ATTR_DEVICE_SERIAL,
-    CONF_ALARM,
     CONF_CODE_DIGITS,
     CONF_DEFAULT_LOCK_CODE,
-    CONF_DOOR_WINDOW,
     CONF_GIID,
-    CONF_HYDROMETERS,
-    CONF_LOCKS,
-    CONF_MOUSE,
-    CONF_SMARTCAM,
-    CONF_SMARTPLUGS,
-    CONF_THERMOMETERS,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
-    MIN_SCAN_INTERVAL,
     SERVICE_CAPTURE_SMARTCAM,
     SERVICE_DISABLE_AUTOLOCK,
     SERVICE_ENABLE_AUTOLOCK,
@@ -56,40 +50,57 @@ PLATFORMS = [
 ]
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_ALARM, default=True): cv.boolean,
-                vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
-                vol.Optional(CONF_DOOR_WINDOW, default=True): cv.boolean,
-                vol.Optional(CONF_GIID): cv.string,
-                vol.Optional(CONF_HYDROMETERS, default=True): cv.boolean,
-                vol.Optional(CONF_LOCKS, default=True): cv.boolean,
-                vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
-                vol.Optional(CONF_MOUSE, default=True): cv.boolean,
-                vol.Optional(CONF_SMARTPLUGS, default=True): cv.boolean,
-                vol.Optional(CONF_THERMOMETERS, default=True): cv.boolean,
-                vol.Optional(CONF_SMARTCAM, default=True): cv.boolean,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): (
-                    vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))
-                ),
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                    vol.Optional(CONF_CODE_DIGITS, default=4): cv.positive_int,
+                    vol.Optional(CONF_GIID): cv.string,
+                    vol.Optional(CONF_DEFAULT_LOCK_CODE): cv.string,
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
+
 
 DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     """Set up the Verisure integration."""
-    coordinator = VerisureDataUpdateCoordinator(hass, config=config[DOMAIN])
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_EMAIL: config[DOMAIN][CONF_USERNAME],
+                    CONF_PASSWORD: config[DOMAIN][CONF_PASSWORD],
+                    CONF_GIID: config[DOMAIN].get(CONF_GIID),
+                },
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Verisure from a config entry."""
+    coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
     if not await coordinator.async_login():
         LOGGER.error("Login failed")
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data=entry.data,
+        )
         return False
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
@@ -99,11 +110,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         LOGGER.error("Update failed")
         return False
 
-    hass.data[DOMAIN] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # Set up all platforms for this device/entry.
     for platform in PLATFORMS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def capture_smartcam(service):
@@ -145,3 +158,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_ENABLE_AUTOLOCK, enable_autolock, schema=DEVICE_SERIAL_SCHEMA
     )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Verisure config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *(
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            )
+        )
+    )
+
+    if unload_ok:
+        cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
+        if os.path.exists(cookie_file):
+            os.unlink(cookie_file)
+        del hass.data[DOMAIN][entry.entry_id]
+
+    if not hass.data[DOMAIN]:
+        del hass.data[DOMAIN]
+
+    return unload_ok

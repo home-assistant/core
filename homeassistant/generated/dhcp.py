@@ -153,5 +153,9 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "verisure",
+        "macaddress": "0023C1*"
     }
 ]

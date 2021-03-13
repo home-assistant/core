@@ -2,29 +2,25 @@
 from __future__ import annotations
 
 from time import monotonic
-from typing import Any, Callable
+from typing import Callable
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SMARTPLUGS, DOMAIN
+from .const import DOMAIN
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[CoordinatorEntity]], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[VerisureSmartplug]], None],
 ) -> None:
-    """Set up the Verisure switch platform."""
-    coordinator = hass.data[DOMAIN]
-
-    if not int(coordinator.config.get(CONF_SMARTPLUGS, 1)):
-        return
-
-    add_entities(
+    """Set up Verisure alarm control panel from a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
         [
             VerisureSmartplug(coordinator, serial_number)
             for serial_number in coordinator.data["smart_plugs"]
@@ -50,6 +46,11 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
     def name(self) -> str:
         """Return the name or location of the smartplug."""
         return self.coordinator.data["smart_plugs"][self.serial_number]["area"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this alarm control panel."""
+        return self.serial_number
 
     @property
     def is_on(self) -> bool:

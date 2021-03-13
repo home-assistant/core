@@ -2,35 +2,37 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable
+from typing import Callable
 
 from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, DOMAIN, LOGGER
+from .const import (
+    CONF_LOCK_CODE_DIGITS,
+    CONF_LOCK_DEFAULT_CODE,
+    DEFAULT_LOCK_CODE_DIGITS,
+    DOMAIN,
+    LOGGER,
+)
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[VerisureDoorlock]], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[list[VerisureDoorlock]], None],
 ) -> None:
-    """Set up the Verisure lock platform."""
-    coordinator = hass.data[DOMAIN]
-    locks = []
-    if int(coordinator.config.get(CONF_LOCKS, 1)):
-        locks.extend(
-            [
-                VerisureDoorlock(coordinator, serial_number)
-                for serial_number in coordinator.data["locks"]
-            ]
-        )
-
-    add_entities(locks)
+    """Set up Verisure alarm control panel from a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities(
+        [
+            VerisureDoorlock(coordinator, serial_number)
+            for serial_number in coordinator.data["locks"]
+        ]
+    )
 
 
 class VerisureDoorlock(CoordinatorEntity, LockEntity):
@@ -45,8 +47,10 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         super().__init__(coordinator)
         self.serial_number = serial_number
         self._state = None
-        self._digits = coordinator.config.get(CONF_CODE_DIGITS)
-        self._default_lock_code = coordinator.config.get(CONF_DEFAULT_LOCK_CODE)
+        self._digits = coordinator.entry.options.get(
+            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
+        )
+        self._default_lock_code = coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
 
     @property
     def name(self) -> str:
