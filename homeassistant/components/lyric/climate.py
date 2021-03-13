@@ -177,9 +177,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     @property
     def hvac_action(self) -> str:
         """Return the current hvac action."""
-        action = HVAC_ACTIONS.get(
-            self.device.operationStatus.mode, self.device.operationStatus.mode
-        )
+        action = HVAC_ACTIONS.get(self.device.operationStatus.mode, None)
         if action == CURRENT_HVAC_OFF and self.hvac_mode != HVAC_MODE_OFF:
             action = CURRENT_HVAC_IDLE
         return action
