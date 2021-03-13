@@ -64,7 +64,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     @property
     def supported_features(self):
-        """Return supported functions"""
+        """Return supported functions."""
         return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
 
     @property
@@ -106,8 +106,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def stop_cover(self):
         """Send either close or open command.
-        
-        One time more for stop and calculates Shutter position."""
+
+        One time more for stop and calculates Shutter position.
+        """
         if self._last_command == 0x70:
             command = [0xF6, 0x70]
         elif self._last_command == 0x50:
@@ -120,10 +121,12 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
 
     def set_cover_position(self, position):
-        """ Set cover position in widget. This is the cheap realization with timeouts.
-
+        """ Set cover position in widget.
+        
+        This is the cheap realization with timeouts.
         In future you should find out the correct command for GFVS driving command
-        telegram and teach in telegram."""
+        telegram and teach in telegram.
+        """
         drive_time = int(abs(position - self._position) * self._driving_time / 100)
         if self._position < position:
             self.open_cover()
