@@ -18,6 +18,7 @@ from .const import (
     CONF_COUNTRY,
     CONF_DELTA,
     CONF_DIMENSION,
+    DEFAULT_COUNTRY,
     DEFAULT_DELTA,
     DEFAULT_DIMENSION,
 )
@@ -32,11 +33,11 @@ async def async_setup_entry(
     config = entry.data
     options = entry.options
 
-    name = config[CONF_NAME]
-    country = config[CONF_COUNTRY]
+    name = config.get(CONF_NAME, "Buienradar")
+    country = options.get(CONF_COUNTRY, config.get(CONF_COUNTRY, DEFAULT_COUNTRY))
 
-    dimension = options.get(CONF_DIMENSION, DEFAULT_DIMENSION)
-    delta = options.get(CONF_DELTA, DEFAULT_DELTA)
+    delta = config.get(CONF_DELTA, DEFAULT_DELTA)
+    dimension = config.get(CONF_DIMENSION, DEFAULT_DIMENSION)
 
     async_add_entities([BuienradarCam(name, dimension, delta, country)])
 
@@ -61,7 +62,7 @@ class BuienradarCam(Camera):
         self._name = name
 
         # dimension (x and y) of returned radar image
-        self._dimension = dimension
+        self._dimension = 700
 
         # time a cached image stays valid for
         self._delta = delta
@@ -183,3 +184,8 @@ class BuienradarCam(Camera):
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return False
