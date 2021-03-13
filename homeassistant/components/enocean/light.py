@@ -90,7 +90,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         bval = math.ceil(self._brightness / 256.0 * 100.0)
 
         if self._teach_in == "True":
-            command =  [0xA5,0xE0,0x40,0x0D,0x80]
+            command = [0xA5, 0xE0, 0x40, 0x0D, 0x80]
         else:
             command = [0xA5, 0x02, bval, 0x01, 0x09]
         command.extend(self._sender_id)
