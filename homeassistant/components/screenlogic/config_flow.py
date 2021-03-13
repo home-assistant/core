@@ -12,6 +12,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import format_mac
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
@@ -27,6 +28,8 @@ GATEWAY_ENTRY_SCHEMA = vol.Schema(
     }
 )
 
+PENTAIR_OUI = "00-C0-33"
+
 
 async def async_discover_gateways_by_unique_id(hass):
     """Discover gateways and return a dict of them by unique id."""
@@ -39,15 +42,25 @@ async def async_discover_gateways_by_unique_id(hass):
         return discovered_gateways
 
     for host in hosts:
-        unique_id = _extract_unique_id_from_name(host[SL_GATEWAY_NAME])
-        discovered_gateways[unique_id] = host
+        mac = _extract_mac_from_name(host[SL_GATEWAY_NAME])
+        discovered_gateways[mac] = host
 
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
 
 
-def _extract_unique_id_from_name(name):
-    return name.split(":")[1].strip()
+def _extract_mac_from_name(name):
+    mac_end = name.split(":")[1].strip().replace("-", ":")
+    return format_mac(f"{PENTAIR_OUI}-{mac_end}")
+
+
+def short_mac(mac):
+    """Short version of the mac as seen in the app."""
+    return "-".join(mac.split(":")[:3])
+
+
+def _entry_title_for_mac(mac):
+    return f"Pentair: {short_mac(mac)}"
 
 
 async def _async_has_devices(hass):
@@ -120,9 +133,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         existing = configured_instances(self.hass)
         unconfigured_gateways = {
-            unique_id: gateway[SL_GATEWAY_NAME]
-            for unique_id, gateway in self.discovered_gateways.items()
-            if unique_id not in existing
+            mac: gateway[SL_GATEWAY_NAME]
+            for mac, gateway in self.discovered_gateways.items()
+            if mac not in existing
         }
 
         if not unconfigured_gateways:
@@ -133,12 +146,12 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[GATEWAY_SELECT_KEY] == GATEWAY_MANUAL_ENTRY:
                 return await self.async_step_gateway_entry()
 
-            unique_id = user_input[GATEWAY_SELECT_KEY]
-            selected_gateway = self.discovered_gateways[unique_id]
-            await self.async_set_unique_id(unique_id)
+            mac = user_input[GATEWAY_SELECT_KEY]
+            selected_gateway = self.discovered_gateways[mac]
+            await self.async_set_unique_id(mac)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"Pentair: {unique_id}",
+                title=_entry_title_for_mac(mac),
                 data={
                     CONF_IP_ADDRESS: selected_gateway[SL_GATEWAY_IP],
                     CONF_PORT: selected_gateway[SL_GATEWAY_PORT],
@@ -167,18 +180,19 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                mac = await async_get_mac_address(
-                    self.hass, user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
+                mac = format_mac(
+                    await async_get_mac_address(
+                        self.hass, user_input[CONF_IP_ADDRESS], user_input[CONF_PORT]
+                    )
                 )
             except ScreenLogicError:
                 errors[CONF_IP_ADDRESS] = "can_not_connect"
 
             if not errors:
-                unique_id = _format_mac_to_unique_id(mac)
-                await self.async_set_unique_id(unique_id)
+                await self.async_set_unique_id(mac)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"Pentair: {unique_id}",
+                    title=_entry_title_for_mac(mac),
                     data={
                         CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
                         CONF_PORT: user_input[CONF_PORT],
@@ -191,10 +205,6 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={},
         )
-
-
-def _format_mac_to_unique_id(mac):
-    return "-".join(mac.split("-"))[3:]
 
 
 class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):

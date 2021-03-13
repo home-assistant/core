@@ -16,13 +16,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .config_flow import async_discover_gateways_by_unique_id
+from .config_flow import async_discover_gateways_by_unique_id, short_mac
 from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,16 +42,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Screenlogic from a config entry."""
     _LOGGER.debug("Async Setup Entry")
     _LOGGER.debug(entry.data)
-    unique_id = entry.unique_id
+    mac = entry.unique_id
     # Attempt to re-discover named gateway to follow IP changes
     discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
-    if unique_id in discovered_gateways:
-        connect_info = discovered_gateways[unique_id]
+    if mac in discovered_gateways:
+        connect_info = discovered_gateways[mac]
     else:
         _LOGGER.warning("Gateway rediscovery failed.")
         # Static connection defined or fallback from discovery
         connect_info = {
-            SL_GATEWAY_NAME: f"Pentair: {unique_id}",
+            SL_GATEWAY_NAME: f"Pentair: {short_mac(mac)}",
             SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
             SL_GATEWAY_PORT: entry.data[CONF_PORT],
         }
@@ -173,12 +174,16 @@ class ScreenlogicEntity(CoordinatorEntity):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self._data_key = datakey
-        self._controler_id = self.config_data["controler_id"]["value"]
+
+    @property
+    def mac(self):
+        """Mac address."""
+        return self._coordinator.config_entry.unique_id
 
     @property
     def unique_id(self):
         """Entity Unique ID."""
-        return f"{self._controler_id}_{self._data_key}"
+        return f"{self.mac}_{self._data_key}"
 
     @property
     def config_data(self):
@@ -201,7 +206,7 @@ class ScreenlogicEntity(CoordinatorEntity):
         controller_type = self.config_data["controler_type"]
         hardware_type = self.config_data["hardware_type"]
         return {
-            "identifiers": {(DOMAIN, self._controler_id)},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "name": self.gateway_name,
             "manufacturer": "Pentair",
             "model": CONTROLLER_HARDWARE[controller_type][hardware_type],
