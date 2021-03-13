@@ -55,7 +55,7 @@ def _extract_mac_from_name(name):
 
 def short_mac(mac):
     """Short version of the mac as seen in the app."""
-    return "-".join(mac.split(":")[3:])
+    return "-".join(mac.split(":")[3:]).upper()
 
 
 def _entry_title_for_mac(mac):
