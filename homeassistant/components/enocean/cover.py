@@ -35,8 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    })
+    vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the EnOcean cover platform."""
@@ -59,7 +58,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._state = None
         self._last_command = None
         self._position = None
-
 
     @property
     def supported_features(self):
@@ -90,7 +88,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     def open_cover(self):
         """Set the up command for shutter on Eltako FSB14"""
         self._last_command = 0x70
-        command =  [0xF6, 0x70]
+        command = [0xF6, 0x70]
         command.extend(self._sender_id)
         command.extend([0x30])
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
