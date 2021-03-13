@@ -120,7 +120,6 @@ DEVICE_CLASS = {
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
 
