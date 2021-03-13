@@ -8,7 +8,11 @@
         }
       },
       "pair": {
-        "pin": "[%key:common::config_flow::data::pin%]"
+        "title": "Pair",
+        "description": "Enter the [%key:common::config_flow::data::pin%] displayed on your TV",
+        "data":{
+          "pin": "[%key:common::config_flow::data::pin%]"
+        }
       }
     },
     "error": {
