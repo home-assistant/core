@@ -16,7 +16,7 @@ from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_TRIGGER,
-    AlarmControlPanel,
+    AlarmControlPanelEntity,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -68,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @STRICT_MATCH(channel_names=CHANNEL_IAS_ACE)
-class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanel):
+class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
     """Entity for ZHA alarm control devices."""
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
