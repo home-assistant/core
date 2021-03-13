@@ -62,19 +62,6 @@ async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
 
 
-async def async_alarm_arm_vacation(hass, code=None, entity_id=ENTITY_MATCH_ALL):
-    """Send the alarm the command for disarm."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(
-        DOMAIN, SERVICE_ALARM_ARM_VACATION, data, blocking=True
-    )
-
-
 async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     """Send the alarm the command for disarm."""
     data = {}
