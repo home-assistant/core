@@ -27,37 +27,29 @@ GATEWAY_ENTRY_SCHEMA = vol.Schema(
 )
 
 
-def discover_gateways():
-    """Discover screen logic gateways."""
-    _LOGGER.debug("Attempting to discover ScreenLogic devices")
+async def async_discover_gateways_by_unique_id(hass):
+    """Discover gateways and return a dict of them by unique id."""
+    discovered_gateways = {}
     try:
-        return discover()
+        hosts = await hass.async_add_executor_job(discover)
     except ScreenLogicError as ex:
         _LOGGER.debug(ex)
-        return None
+        return discovered_gateways
+
+    for host in hosts:
+        unique_id = _extract_unique_id_from_name(host[SL_GATEWAY_NAME])
+        discovered_gateways[unique_id] = host
+
+    return discovered_gateways
 
 
 def _extract_unique_id_from_name(name):
     return name.split(":")[1].strip()
 
 
-async def async_discover_gateways_by_unique_id(hass):
-    """Discover gateways and return a dict of them by unique id."""
-    discovered_gateways = {}
-    hosts = await hass.async_add_executor_job(discover_gateways)
-    if not hosts:
-        return discovered_gateways
-
-    for host in hosts:
-        discovered_gateways[_extract_unique_id_from_name(host[SL_GATEWAY_NAME])] = host
-
-    return discovered_gateways
-
-
 async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
-    hosts = await hass.async_add_executor_job(discover_gateways)
-    return len(hosts) > 0
+    return bool(await async_discover_gateways_by_unique_id(hass))
 
 
 _LOGGER.info("Registering discovery flow")
@@ -125,6 +117,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for unique_id, gateway in self.discovered_gateways.items()
             if unique_id not in existing
         }
+
+        if not unconfigured_gateways:
+            return await self.async_step_gateway_entry()
 
         errors = {}
         if user_input is not None:
