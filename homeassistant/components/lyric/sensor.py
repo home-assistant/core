@@ -31,6 +31,12 @@ LYRIC_SETPOINT_STATUS_NAMES = {
     PRESET_VACATION_HOLD: "Holiday",
 }
 
+LYRIC_OPERATION_MODES = {
+    "Cool": "Cooling",
+    "EquipmentOff": "Equipment Off",
+    "Heat": "Heating",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
@@ -54,6 +60,8 @@ async def async_setup_entry(
                     cls_list.append(LyricNextPeriodSensor)
                 if device.changeableValues.thermostatSetpointStatus:
                     cls_list.append(LyricSetpointStatusSensor)
+            if device.operationStatus and device.operationStatus.mode:
+                cls_list.append(LyricOperationModeSensor)
             for cls in cls_list:
                 entities.append(
                     cls(
@@ -248,4 +256,35 @@ class LyricSetpointStatusSensor(LyricSensor):
             return f"Held until {device.changeableValues.nextPeriodTime}"
         return LYRIC_SETPOINT_STATUS_NAMES.get(
             device.changeableValues.thermostatSetpointStatus, "Unknown"
+        )
+
+
+class LyricOperationModeSensor(LyricSensor):
+    """Defines a Honeywell Lyric sensor."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        location: LyricLocation,
+        device: LyricDevice,
+        unit_of_measurement: str = None,
+    ) -> None:
+        """Initialize Honeywell Lyric sensor."""
+
+        super().__init__(
+            coordinator,
+            location,
+            device,
+            f"{device.macID}_opeation_mode",
+            "Operation Mode",
+            "mdi:hvac",
+            None,
+        )
+
+    @property
+    def state(self) -> str:
+        """Return the state of the sensor."""
+        device = self.device
+        return LYRIC_OPERATION_MODES.get(
+            device.operationStatus.mode, device.operationStatus.mode
         )
