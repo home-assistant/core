@@ -1,5 +1,6 @@
 """Config flow for ScreenLogic."""
 import logging
+from typing import Any, Dict
 
 from screenlogicpy import ScreenLogicError, discover
 from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
@@ -106,6 +107,12 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(user_input)
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
         return await self.async_step_gateway_entry()
+
+    async def async_step_discovery(
+        self, discovery_info: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Handle a flow initialized by discovery."""
+        _LOGGER.debug("discovery flow started: %s", discovery_info)
 
     async def async_step_gateway_select(self, user_input=None):
         """Handle the selection of a discovered ScreenLogic gateway."""
