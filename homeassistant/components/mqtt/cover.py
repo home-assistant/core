@@ -484,7 +484,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         if (
             self._config.get(CONF_TILT_COMMAND_TOPIC) is not None
-            or self._config.get(CONF_TILT_STATE_SOFT) is not None
+            or self._config.get(CONF_TILT_STATE_SOFT)
         ):
             supported_features |= TILT_FEATURES
 
