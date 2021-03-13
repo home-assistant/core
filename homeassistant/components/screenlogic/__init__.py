@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for body in coordinator.data["bodies"]:
         entities["water_heater"].append(body)
 
-    hass.data[DOMAIN][entry.unique_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
         "devices": entities,
         "listener": entry.add_update_listener(async_update_listener),
