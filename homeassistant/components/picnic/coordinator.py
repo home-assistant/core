@@ -121,7 +121,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             return {}
 
         # Determine the last order
-        last_order = deliveries[0]
+        last_order = copy.deepcopy(deliveries[0])
 
         #  Get the position details if the order is not delivered yet
         delivery_position = {}
@@ -152,4 +152,4 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             del last_order["eta2"]
 
         # Make a copy because some references are local
-        return copy.deepcopy(last_order)
+        return last_order

@@ -66,7 +66,7 @@ class PicnicSensor(CoordinatorEntity):
     @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
-        return self._to_title_case(self.sensor_type)
+        return self._to_capitalized_name(self.sensor_type)
 
     @property
     def state(self) -> StateType:
@@ -120,5 +120,5 @@ class PicnicSensor(CoordinatorEntity):
         }
 
     @staticmethod
-    def _to_title_case(name: str) -> str:
+    def _to_capitalized_name(name: str) -> str:
         return name.replace("_", " ").capitalize()
