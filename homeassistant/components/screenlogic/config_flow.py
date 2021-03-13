@@ -1,6 +1,5 @@
 """Config flow for ScreenLogic."""
 import logging
-from typing import Any, Dict
 
 from screenlogicpy import ScreenLogicError, discover
 from screenlogicpy.const import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
@@ -8,6 +7,7 @@ from screenlogicpy.requests import login
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_flow
@@ -106,6 +106,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize ScreenLogic ConfigFlow."""
         self.discovered_gateways = {}
+        self.discovered_ip = None
 
     @staticmethod
     @callback
@@ -118,11 +119,16 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovered_gateways = await async_discover_gateways_by_unique_id(self.hass)
         return await self.async_step_gateway_select()
 
-    async def async_step_discovery(
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Handle a flow initialized by discovery."""
-        _LOGGER.debug("discovery flow started: %s", discovery_info)
+    async def async_step_dhcp(self, dhcp_discovery):
+        """Handle dhcp discovery."""
+        mac = _extract_mac_from_name(dhcp_discovery[HOSTNAME])
+        await self.async_set_unique_id(mac)
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: dhcp_discovery[IP_ADDRESS]}
+        )
+        self.discovered_ip = dhcp_discovery[IP_ADDRESS]
+        self.context["title_placeholders"] = {"name": dhcp_discovery[HOSTNAME]}
+        return await self.async_step_gateway_entry()
 
     async def async_step_gateway_select(self, user_input=None):
         """Handle the selection of a discovered ScreenLogic gateway."""
@@ -198,9 +204,16 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        ip = user_input.get(CONF_IP_ADDRESS) or self.discovered_ip
+        port = user_input.get(CONF_PORT) or 80
         return self.async_show_form(
             step_id="gateway_entry",
-            data_schema=GATEWAY_ENTRY_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_IP_ADDRESS, default=ip): str,
+                    vol.Required(CONF_PORT, default=port): int,
+                }
+            ),
             errors=errors,
             description_placeholders={},
         )

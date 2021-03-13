@@ -8,6 +8,7 @@
             "already_configured": "Gateway already configured.",
             "can_not_connect": "Unable to connect to a ScreenLogic Gateway at the address provided."
         },
+        "flow_title": "ScreenLogic {name}",
         "step": {
             "confirm": {
                 "description": "Do you want to start set up?"

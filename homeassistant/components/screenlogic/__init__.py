@@ -129,13 +129,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.unique_id][
-        "coordinator"
-    ]
-    new_interval = entry.options.get(CONF_SCAN_INTERVAL)
-    coordinator.update_interval = timedelta(seconds=new_interval)
     hass.config_entries.async_reload(entry.entry_id)
-    _LOGGER.debug("Update interval set to %s", new_interval)
 
 
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):

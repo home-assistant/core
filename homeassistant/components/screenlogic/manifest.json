@@ -6,5 +6,6 @@
   "requirements": ["screenlogicpy==0.1.0"],
   "codeowners": [
     "@dieselrabbit"
-  ]
+  ],
+  "dhcp": [{"hostname":"pentair: *","macaddress":"00C033*"}]
 }

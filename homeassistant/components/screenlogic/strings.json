@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "ScreenLogic {name}",
     "error": {
       "can_not_connect":"Unable to connect to a ScreenLogic Gateway at the address provided.",
       "already_configured": "Gateway already configured."
