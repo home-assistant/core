@@ -20,6 +20,8 @@ from tests.components.stream.common import generate_h264_video
 STREAM_SOURCE = "some-stream-source"
 SEQUENCE_BYTES = io.BytesIO(b"some-bytes")
 DURATION = 10
+TEST_TIMEOUT = 5.0  # Lower than 9s home assistant timeout
+MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
 class HlsClient:
@@ -185,39 +187,6 @@ async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
     future = dt_util.utcnow() + timedelta(minutes=5)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
-
-
-async def test_stream_ended(hass, stream_worker_sync):
-    """Test hls stream packets ended."""
-    await async_setup_component(hass, "stream", {"stream": {}})
-
-    stream_worker_sync.pause()
-
-    # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source)
-    track = stream.add_provider("hls")
-
-    # Request stream
-    stream.add_provider("hls")
-    stream.start()
-    stream.endpoint_url("hls")
-
-    # Run it dead
-    while True:
-        segment = await track.recv()
-        if segment is None:
-            break
-        segments = segment.sequence
-        # Allow worker to finalize once enough of the stream is been consumed
-        if segments > 1:
-            stream_worker_sync.resume()
-
-    assert segments > 1
-    assert not track.get_segment()
-
-    # Stop stream, if it hasn't quit already
-    stream.stop()
 
 
 async def test_stream_keepalive(hass):
