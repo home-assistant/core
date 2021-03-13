@@ -41,7 +41,7 @@ async def async_setup_entry(
                         coordinator,
                         tool.name,
                         temp_type,
-                        config_entry.entry_id,
+                        config_entry.unique_id,
                     )
                 )
     else:
