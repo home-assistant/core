@@ -19,21 +19,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities.append(ScreenLogicSensor(data["coordinator"], sensor))
     for pump in data["devices"]["pump"]:
         entities.extend(
-            ScreenLogicPumpSensor(
-                data["coordinator"],
-                pump,
-                "currentWatts",
-            ),
-            ScreenLogicPumpSensor(
-                data["coordinator"],
-                pump,
-                "currentRPM",
-            ),
-            ScreenLogicPumpSensor(
-                data["coordinator"],
-                pump,
-                "currentGPM",
-            ),
+            [
+                ScreenLogicPumpSensor(
+                    data["coordinator"],
+                    pump,
+                    "currentWatts",
+                ),
+                ScreenLogicPumpSensor(
+                    data["coordinator"],
+                    pump,
+                    "currentRPM",
+                ),
+                ScreenLogicPumpSensor(
+                    data["coordinator"],
+                    pump,
+                    "currentGPM",
+                ),
+            ]
         )
 
     async_add_entities(entities, True)
