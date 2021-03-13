@@ -50,8 +50,7 @@ async def async_discover_gateways_by_unique_id(hass):
 
 
 def _extract_mac_from_name(name):
-    mac_end = name.split(":")[1].strip().replace("-", ":")
-    return format_mac(f"{PENTAIR_OUI}-{mac_end}")
+    return format_mac(f"{PENTAIR_OUI}-{name.split(':')[1].strip()}")
 
 
 def short_mac(mac):
