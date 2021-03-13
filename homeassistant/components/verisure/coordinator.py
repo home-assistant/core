@@ -2,9 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, Literal
 
-from jsonpath import jsonpath
 from verisure import (
     Error as VerisureError,
     ResponseError as VerisureResponseError,
@@ -126,8 +124,3 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     def enable_autolock(self, device_id: str) -> None:
         """Enable autolock."""
         self.verisure.set_lock_config(device_id, auto_lock_enabled=True)
-
-    def get_image_info(self, jpath: str, *args) -> list[Any] | Literal[False]:
-        """Get values from the imageseries that matches the jsonpath."""
-        res = jsonpath(self.imageseries, jpath % args)
-        return res or []
