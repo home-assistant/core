@@ -136,7 +136,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         nonlocal backoff, backoff_step
         if backoff > 1:
             backoff -= 1
-            # return
+            return
 
         values = await sma.read(used_sensors)
         if not values:
