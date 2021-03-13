@@ -47,7 +47,7 @@ class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
         return f"{self._nuki_device.nuki_id}_doorsensor"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
