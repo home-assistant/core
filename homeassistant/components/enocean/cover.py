@@ -121,8 +121,8 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
 
     def set_cover_position(self, position):
-        """ Set cover position in widget.
-        
+        """Set cover position in widget.
+
         This is the cheap realization with timeouts.
         In future you should find out the correct command for GFVS driving command
         telegram and teach in telegram.
@@ -136,13 +136,12 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             ev.async_call_later(self.hass, drive_time / 10, lambda _: self.stop_cover())
 
     def value_changed(self, packet):
-        """For Handling if Shutter is started from external trigger
-        """
-        
+        """For Handling if Shutter is started from external trigger."""
+
         if packet.data[1] == 0x00:
             driven_time = packet.data[2]
             percentage = int(100 * driven_time / self._driving_time)
-            if packet.data[3] == 0x01: 
+            if packet.data[3] == 0x01:
                 self._position += percentage
             elif packet.data[3] == 0x02: 
                 self._position -= percentage
