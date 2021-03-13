@@ -1,0 +1,14 @@
+{
+  "title": "Raspberry Pi Power Supply Checker",
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "Can't find the system class needed for this component, make sure that your kernel is recent and the hardware is supported"
+    }
+  }
+}

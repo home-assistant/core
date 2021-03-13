@@ -86,9 +86,9 @@ async def async_setup_entry(hass, entry):
     if not hass.data[DOMAIN][entry.entry_id].available:
         raise ConfigEntryNotReady
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     def blink_refresh(event_time=None):
@@ -103,7 +103,8 @@ async def async_setup_entry(hass, entry):
         """Call blink to send new pin."""
         pin = call.data[CONF_PIN]
         hass.data[DOMAIN][entry.entry_id].auth.send_auth_key(
-            hass.data[DOMAIN][entry.entry_id], pin,
+            hass.data[DOMAIN][entry.entry_id],
+            pin,
         )
 
     hass.services.async_register(DOMAIN, SERVICE_REFRESH, blink_refresh)
@@ -132,8 +133,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

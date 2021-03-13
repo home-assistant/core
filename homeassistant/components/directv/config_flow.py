@@ -47,12 +47,6 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info = {}
 
-    async def async_step_import(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
-        """Handle a flow initiated by configuration file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
         self, user_input: Optional[ConfigType] = None
     ) -> Dict[str, Any]:
@@ -85,7 +79,6 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery_info.get(ATTR_UPNP_SERIAL):
             receiver_id = discovery_info[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": host}})
 
         self.discovery_info.update(
@@ -121,7 +114,8 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=self.discovery_info[CONF_NAME], data=self.discovery_info,
+            title=self.discovery_info[CONF_NAME],
+            data=self.discovery_info,
         )
 
     def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:

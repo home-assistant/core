@@ -1,4 +1,7 @@
 """The tests for the Input select component."""
+# pylint: disable=protected-access
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.input_select import (
@@ -6,6 +9,8 @@ from homeassistant.components.input_select import (
     ATTR_OPTIONS,
     CONF_INITIAL,
     DOMAIN,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
@@ -21,12 +26,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, State
 from homeassistant.exceptions import Unauthorized
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
-# pylint: disable=protected-access
-from tests.async_mock import patch
 from tests.common import mock_restore_cache
 
 
@@ -99,6 +102,32 @@ def select_previous(hass, entity_id):
     hass.async_create_task(
         hass.services.async_call(
             DOMAIN, SERVICE_SELECT_PREVIOUS, {ATTR_ENTITY_ID: entity_id}
+        )
+    )
+
+
+@bind_hass
+def select_first(hass, entity_id):
+    """Set first value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN, SERVICE_SELECT_FIRST, {ATTR_ENTITY_ID: entity_id}
+        )
+    )
+
+
+@bind_hass
+def select_last(hass, entity_id):
+    """Set last value of input_select.
+
+    This is a legacy helper method. Do not use it for new tests.
+    """
+    hass.async_create_task(
+        hass.services.async_call(
+            DOMAIN, SERVICE_SELECT_LAST, {ATTR_ENTITY_ID: entity_id}
         )
     )
 
@@ -200,6 +229,38 @@ async def test_select_previous(hass):
     assert "first option" == state.state
 
     select_previous(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert "last option" == state.state
+
+
+async def test_select_first_last(hass):
+    """Test select_first and _last methods."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                }
+            }
+        },
+    )
+    entity_id = "input_select.test_1"
+
+    state = hass.states.get(entity_id)
+    assert "middle option" == state.state
+
+    select_first(hass, entity_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert "first option" == state.state
+
+    select_last(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -364,7 +425,7 @@ async def test_input_select_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user, hass_read_only_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,
@@ -498,7 +559,7 @@ async def test_ws_delete(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is not None
@@ -531,7 +592,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     input_id = "from_storage"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_OPTIONS] == ["yaml update 1", "yaml update 2"]
@@ -572,7 +633,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     input_id = "new_input"
     input_entity_id = f"{DOMAIN}.{input_id}"
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     state = hass.states.get(input_entity_id)
     assert state is None

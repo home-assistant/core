@@ -1,17 +1,27 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bereits konfiguriert",
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler sind [im Hilfebereich]({docs_url}) zu finden",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "create_entry": {
-            "default": "Siehe [Neato-Dokumentation]({docs_url})."
+            "default": "Erfolgreich authentifiziert"
         },
         "error": {
-            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
-            "unexpected_error": "Unerwarteter Fehler"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "title": "M\u00f6chtest du mit der Einrichtung beginnen?"
+            },
             "user": {
                 "data": {
                     "password": "Passwort",
@@ -22,5 +32,6 @@
                 "title": "Neato-Kontoinformationen"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

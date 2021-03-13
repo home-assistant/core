@@ -95,11 +95,6 @@ class DINRelay(SwitchEntity):
         """Return true if relay is on."""
         return self._state
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     def turn_on(self, **kwargs):
         """Instruct the relay to turn on."""
         self._outlet.on()

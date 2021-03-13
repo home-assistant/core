@@ -15,9 +15,9 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_TOKEN,
     CONF_USERNAME,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TIME_SECONDS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -38,14 +38,14 @@ SENSOR_TYPES = {
     "time": [ATTR_TIME, TIME_SECONDS],
     "pm": [ATTR_PM2_5, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
-    "hum": [ATTR_HUMIDITY, UNIT_PERCENTAGE, "mdi:water-percent"],
+    "hum": [ATTR_HUMIDITY, PERCENTAGE, "mdi:water-percent"],
     "co2": [ATTR_CARBON_DIOXIDE, CONCENTRATION_PARTS_PER_MILLION, "mdi:molecule-co2"],
     "voc": [
         ATTR_VOLATILE_ORGANIC_COMPOUNDS,
         CONCENTRATION_PARTS_PER_BILLION,
         "mdi:cloud",
     ],
-    "allpollu": [ATTR_FOOBOT_INDEX, UNIT_PERCENTAGE, "mdi:percent"],
+    "allpollu": [ATTR_FOOBOT_INDEX, PERCENTAGE, "mdi:percent"],
 }
 
 SCAN_INTERVAL = timedelta(minutes=10)
@@ -82,9 +82,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         asyncio.TimeoutError,
         FoobotClient.TooManyRequests,
         FoobotClient.InternalError,
-    ):
+    ) as err:
         _LOGGER.exception("Failed to connect to foobot servers")
-        raise PlatformNotReady
+        raise PlatformNotReady from err
     except FoobotClient.ClientError:
         _LOGGER.error("Failed to fetch data from foobot servers")
         return

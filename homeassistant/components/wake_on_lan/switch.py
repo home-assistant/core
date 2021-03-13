@@ -117,7 +117,7 @@ class WolSwitch(SwitchEntity):
     def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
-            self._off_script.run()
+            self._off_script.run(context=self._context)
 
     def update(self):
         """Check if device is on and update the state."""

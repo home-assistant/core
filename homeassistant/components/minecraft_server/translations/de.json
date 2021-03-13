@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Der Host ist bereits konfiguriert."
+            "already_configured": "Der Dienst ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung zum Server fehlgeschlagen. Bitte \u00fcberpr\u00fcfe den Host und den Port und versuche es erneut. Stelle au\u00dferdem sicher, dass Du mindestens Minecraft Version 1.7 auf Deinem Server ausf\u00fchrst.",

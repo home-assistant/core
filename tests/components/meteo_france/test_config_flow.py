@@ -1,5 +1,7 @@
 """Tests for the Meteo-France config flow."""
-from meteofrance.model import Place
+from unittest.mock import patch
+
+from meteofrance_api.model import Place
 import pytest
 
 from homeassistant import data_entry_flow
@@ -13,7 +15,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CITY_1_POSTAL = "74220"
@@ -84,9 +85,11 @@ def mock_controller_client_single():
 def mock_setup():
     """Prevent setup."""
     with patch(
-        "homeassistant.components.meteo_france.async_setup", return_value=True,
+        "homeassistant.components.meteo_france.async_setup",
+        return_value=True,
     ), patch(
-        "homeassistant.components.meteo_france.async_setup_entry", return_value=True,
+        "homeassistant.components.meteo_france.async_setup_entry",
+        return_value=True,
     ):
         yield
 
@@ -123,7 +126,9 @@ async def test_user(hass, client_single):
 
     # test with all provided with search returning only 1 place
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_CITY: CITY_1_POSTAL},
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_CITY: CITY_1_POSTAL},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == f"{CITY_1_LAT}, {CITY_1_LON}"
@@ -137,7 +142,9 @@ async def test_user_list(hass, client_multiple):
 
     # test with all provided with search returning more than 1 place
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_CITY: CITY_2_NAME},
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_CITY: CITY_2_NAME},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "cities"
@@ -157,7 +164,9 @@ async def test_import(hass, client_multiple):
     """Test import step."""
     # import with all
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_CITY: CITY_2_NAME},
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_CITY: CITY_2_NAME},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == f"{CITY_2_LAT}, {CITY_2_LON}"
@@ -169,7 +178,9 @@ async def test_import(hass, client_multiple):
 async def test_search_failed(hass, client_empty):
     """Test error displayed if no result in search."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_CITY: CITY_1_POSTAL},
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_CITY: CITY_1_POSTAL},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -186,14 +197,18 @@ async def test_abort_if_already_setup(hass, client_single):
 
     # Should fail, same CITY same postal code (import)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_CITY: CITY_1_POSTAL},
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_CITY: CITY_1_POSTAL},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
     # Should fail, same CITY same postal code (flow)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={CONF_CITY: CITY_1_POSTAL},
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_CITY: CITY_1_POSTAL},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -216,7 +231,8 @@ async def test_options_flow(hass: HomeAssistantType):
 
     # Default
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={},
+        result["flow_id"],
+        user_input={},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_MODE] == FORECAST_MODE_DAILY
@@ -224,7 +240,8 @@ async def test_options_flow(hass: HomeAssistantType):
     # Manual
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_MODE: FORECAST_MODE_HOURLY},
+        result["flow_id"],
+        user_input={CONF_MODE: FORECAST_MODE_HOURLY},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert config_entry.options[CONF_MODE] == FORECAST_MODE_HOURLY

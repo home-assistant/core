@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ONVIF device is already configured.",
-            "already_in_progress": "Config flow for ONVIF device is already in progress.",
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress",
             "no_h264": "There were no H264 streams available.  Check the profile configuration on your device.",
             "no_mac": "Could not configure unique ID for ONVIF device.",
             "onvif_error": "Error setting up ONVIF device.  Check logs for more information."
         },
         "error": {
-            "connection_failed": "Could not connect to ONVIF service with provided credentials."
+            "cannot_connect": "Failed to connect"
         },
         "step": {
             "auth": {

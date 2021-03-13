@@ -18,12 +18,14 @@ from .bridge import authenticate_bridge
 from .const import (  # pylint: disable=unused-import
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
     DOMAIN,
     LOGGER,
 )
 from .errors import AuthenticationRequired, CannotConnect
 
-HUE_MANUFACTURERURL = "http://www.philips.com"
+HUE_MANUFACTURERURL = ("http://www.philips.com", "http://www.philips-hue.com")
 HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 HUE_MANUAL_BRIDGE_ID = "manual"
 
@@ -122,7 +124,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if any(
-            user_input["host"] == entry.data["host"]
+            user_input["host"] == entry.data.get("host")
             for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")
@@ -177,7 +179,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Filter out non-Hue bridges #1
-        if discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL) != HUE_MANUFACTURERURL:
+        if (
+            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            not in HUE_MANUFACTURERURL
+        ):
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2
@@ -205,6 +210,17 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge = bridge
         return await self.async_step_link()
 
+    async def async_step_homekit(self, discovery_info):
+        """Handle a discovered Hue bridge on HomeKit.
+
+        The bridge ID communicated over HomeKit differs, so we cannot use that
+        as the unique identifier. Therefore, this method uses discovery without
+        a unique ID.
+        """
+        self.bridge = self._async_get_bridge(discovery_info[CONF_HOST])
+        await self._async_handle_discovery_without_unique_id()
+        return await self.async_step_link()
+
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry.
 
@@ -216,7 +232,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Check if host exists, abort if so.
         if any(
-            import_info["host"] == entry.data["host"]
+            import_info["host"] == entry.data.get("host")
             for entry in self._async_current_entries()
         ):
             return self.async_abort(reason="already_configured")
@@ -246,13 +262,13 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_ALLOW_HUE_GROUPS,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_HUE_GROUPS, False
+                            CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS
                         ),
                     ): bool,
                     vol.Optional(
                         CONF_ALLOW_UNREACHABLE,
                         default=self.config_entry.options.get(
-                            CONF_ALLOW_UNREACHABLE, False
+                            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
                         ),
                     ): bool,
                 }

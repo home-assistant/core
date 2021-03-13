@@ -1,4 +1,6 @@
 """Test the Nightscout config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientError
 
 from homeassistant.components.nightscout.const import DOMAIN
@@ -9,7 +11,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.nightscout import init_integration
 
@@ -31,7 +32,8 @@ async def test_unload_entry(hass):
 async def test_async_setup_raises_entry_not_ready(hass):
     """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_URL: "https://some.url:1234"},
+        domain=DOMAIN,
+        data={CONF_URL: "https://some.url:1234"},
     )
     config_entry.add_to_hass(hass)
 

@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "This nexia home is already configured"
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
+            "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },

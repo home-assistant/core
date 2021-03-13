@@ -53,15 +53,15 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
             except vol.Invalid:
                 errors[CONF_USERNAME] = "invalid_username"
             except LoginError:
-                errors["base"] = "invalid_credentials"
+                errors["base"] = "invalid_auth"
             except Life360Error as error:
                 _LOGGER.error(
                     "Unexpected error communicating with Life360 server: %s", error
                 )
-                errors["base"] = "unexpected"
+                errors["base"] = "unknown"
             else:
                 if self._username in self.configured_usernames:
-                    errors["base"] = "user_already_configured"
+                    errors["base"] = "already_configured"
                 else:
                     return self.async_create_entry(
                         title=self._username,
@@ -94,12 +94,12 @@ class Life360ConfigFlow(config_entries.ConfigFlow):
             )
         except LoginError:
             _LOGGER.error("Invalid credentials for %s", username)
-            return self.async_abort(reason="invalid_credentials")
+            return self.async_abort(reason="invalid_auth")
         except Life360Error as error:
             _LOGGER.error(
                 "Unexpected error communicating with Life360 server: %s", error
             )
-            return self.async_abort(reason="unexpected")
+            return self.async_abort(reason="unknown")
         return self.async_create_entry(
             title=f"{username} (from configuration)",
             data={

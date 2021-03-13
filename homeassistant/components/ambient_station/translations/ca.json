@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Aquesta clau d'aplicaci\u00f3 ja est\u00e0 en \u00fas."
+            "already_configured": "El servei ja est\u00e0 configurat"
         },
         "error": {
-            "invalid_key": "Clau API i/o clau d'aplicaci\u00f3 inv\u00e0lida/es",
+            "invalid_key": "Clau API inv\u00e0lida",
             "no_devices": "No s'ha trobat cap dispositiu al compte"
         },
         "step": {

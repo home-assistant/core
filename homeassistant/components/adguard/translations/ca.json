@@ -2,10 +2,10 @@
     "config": {
         "abort": {
             "existing_instance_updated": "S'ha actualitzat la configuraci\u00f3 existent.",
-            "single_instance_allowed": "Nom\u00e9s es permet una \u00fanica configuraci\u00f3 d'AdGuard Home."
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
-            "connection_error": "No s'ha pogut connectar."
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "hassio_confirm": {
@@ -17,9 +17,9 @@
                     "host": "[%key::common::config_flow::data::host%]",
                     "password": "[%key::common::config_flow::data::password%]",
                     "port": "[%key::common::config_flow::data::port%]",
-                    "ssl": "AdGuard Home utilitza un certificat SSL",
+                    "ssl": "Utilitza un certificat SSL",
                     "username": "[%key::common::config_flow::data::username%]",
-                    "verify_ssl": "AdGuard Home utilitza un certificat adequat"
+                    "verify_ssl": "Verifica el certificat SSL"
                 },
                 "description": "Configuraci\u00f3 de la inst\u00e0ncia d'AdGuard Home, permet el control i la monitoritzaci\u00f3."
             }

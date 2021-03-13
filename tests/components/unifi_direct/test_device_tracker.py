@@ -1,6 +1,7 @@
 """The tests for the Unifi direct device tracker platform."""
 from datetime import timedelta
 import os
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -22,7 +23,6 @@ from homeassistant.components.unifi_direct.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import MagicMock, call, patch
 from tests.common import assert_setup_component, load_fixture, mock_component
 
 scanner_path = "homeassistant.components.unifi_direct.device_tracker.UnifiDeviceScanner"

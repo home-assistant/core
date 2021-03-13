@@ -1,11 +1,8 @@
 """Support for The Things network."""
-import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_ACCESS_KEY = "access_key"
 CONF_APP_ID = "app_id"

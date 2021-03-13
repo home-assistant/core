@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "backoff": "Urz\u0105dzenie w tej chwili nie akceptuje \u017c\u0105da\u0144 parowania (by\u0107 mo\u017ce zbyt wiele razy wpisa\u0142e\u015b nieprawid\u0142owy kod PIN), spr\u00f3buj ponownie p\u00f3\u017aniej.",
+            "device_did_not_pair": "Nie podj\u0119to pr\u00f3by zako\u0144czenia procesu parowania z urz\u0105dzenia.",
+            "invalid_config": "Konfiguracja tego urz\u0105dzenia jest niekompletna. Spr\u00f3buj doda\u0107 go ponownie.",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "error": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "no_devices_found": "Nie znaleziono urz\u0105dze\u0144 w sieci",
+            "no_usable_service": "Znaleziono urz\u0105dzenie, ale nie uda\u0142o si\u0119 zidentyfikowa\u0107 \u017cadnego sposobu na nawi\u0105zanie z nim po\u0142\u0105czenia. Je\u015bli nadal widzisz t\u0119 wiadomo\u015b\u0107, spr\u00f3buj poda\u0107 jego adres IP lub uruchom ponownie Apple TV.",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "confirm": {
+                "description": "Zamierzasz doda\u0107 Apple TV o nazwie \"{name}\" do Home Assistanta. \n\n **Aby uko\u0144czy\u0107 ca\u0142y proces, mo\u017ce by\u0107 konieczne wprowadzenie wielu kod\u00f3w PIN.** \n\nPami\u0119taj, \u017ce \"NIE\" b\u0119dziesz w stanie wy\u0142\u0105czy\u0107 Apple TV dzi\u0119ki tej integracji. Wy\u0142\u0105cza si\u0119 tylko sam odtwarzacz multimedialny w Home Assistant!",
+                "title": "Potwierdzenie dodania Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "Parowanie jest wymagane dla us\u0142ugi \"{protocol}\". Aby kontynuowa\u0107, wprowad\u017a kod {pin} na swoim Apple TV.",
+                "title": "Parowanie"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "Kod PIN"
+                },
+                "description": "Parowanie jest wymagane dla protoko\u0142u \"{protocol}\". Wprowad\u017a kod PIN wy\u015bwietlony na ekranie. Zera poprzedzaj\u0105ce nale\u017cy pomin\u0105\u0107, tj. wpisa\u0107 123, zamiast 0123.",
+                "title": "Parowanie"
+            },
+            "reconfigure": {
+                "description": "Ten Apple TV ma pewne problemy z po\u0142\u0105czeniem i musi zosta\u0107 ponownie skonfigurowany.",
+                "title": "Ponowna konfiguracja urz\u0105dzenia"
+            },
+            "service_problem": {
+                "description": "Wyst\u0105pi\u0142 problem podczas parowania protoko\u0142u \"{protocol}\". Zostanie on zignorowany.",
+                "title": "Nie uda\u0142o si\u0119 doda\u0107 us\u0142ugi"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Urz\u0105dzenie"
+                },
+                "description": "Zacznij od wprowadzenia nazwy urz\u0105dzenia (np. Kuchnia lub Sypialnia) lub adresu IP Apple TV, kt\u00f3re chcesz doda\u0107. Je\u015bli jakie\u015b urz\u0105dzenia zosta\u0142y automatycznie znalezione w Twojej sieci, s\u0105 one pokazane poni\u017cej. \n\nJe\u015bli nie widzisz swojego urz\u0105dzenia lub wyst\u0119puj\u0105 jakiekolwiek problemy, spr\u00f3buj okre\u015bli\u0107 adres IP urz\u0105dzenia. \n\n{devices}",
+                "title": "Konfiguracja nowego Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Nie w\u0142\u0105czaj urz\u0105dzenia podczas uruchamiania Home Assistanta"
+                },
+                "description": "Skonfiguruj og\u00f3lne ustawienia urz\u0105dzenia"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

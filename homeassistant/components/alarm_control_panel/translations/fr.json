@@ -26,7 +26,7 @@
         "_": {
             "armed": "Activ\u00e9",
             "armed_away": "Enclench\u00e9e (absent)",
-            "armed_custom_bypass": "Activ\u00e9e avec exception",
+            "armed_custom_bypass": "Arm\u00e9 avec exception personnalis\u00e9e",
             "armed_home": "Enclench\u00e9e (pr\u00e9sent)",
             "armed_night": "Enclench\u00e9 (nuit)",
             "arming": "Activation",

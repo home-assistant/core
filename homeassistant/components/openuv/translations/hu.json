@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "A koordin\u00e1t\u00e1k m\u00e1r regisztr\u00e1lva vannak",
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs"
         },
         "step": {

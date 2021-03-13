@@ -1,4 +1,6 @@
 """Define tests for the OpenUV config flow."""
+from unittest.mock import patch
+
 from pyopenuv.errors import InvalidApiKeyError
 import pytest
 
@@ -12,7 +14,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -20,9 +21,11 @@ from tests.common import MockConfigEntry
 def mock_setup():
     """Prevent setup."""
     with patch(
-        "homeassistant.components.openuv.async_setup", return_value=True,
+        "homeassistant.components.openuv.async_setup",
+        return_value=True,
     ), patch(
-        "homeassistant.components.openuv.async_setup_entry", return_value=True,
+        "homeassistant.components.openuv.async_setup_entry",
+        return_value=True,
     ):
         yield
 
@@ -58,7 +61,8 @@ async def test_invalid_api_key(hass):
     }
 
     with patch(
-        "pyopenuv.client.Client.uv_index", side_effect=InvalidApiKeyError,
+        "pyopenuv.client.Client.uv_index",
+        side_effect=InvalidApiKeyError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=conf

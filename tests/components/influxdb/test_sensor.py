@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Dict, List, Type
+from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
@@ -24,7 +25,6 @@ from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_T
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import async_fire_time_changed
 
 INFLUXDB_PATH = "homeassistant.components.influxdb"
@@ -356,7 +356,12 @@ async def test_state_matches_first_query_result_for_multiple_return(
 @pytest.mark.parametrize(
     "mock_client, config_ext, queries, set_query_mock",
     [
-        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_QUERY, _set_query_mock_v1,),
+        (
+            DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            BASE_V1_QUERY,
+            _set_query_mock_v1,
+        ),
         (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_QUERY, _set_query_mock_v2),
     ],
     indirect=["mock_client"],
@@ -577,7 +582,12 @@ async def test_connection_error_at_startup(
     indirect=["mock_client"],
 )
 async def test_data_repository_not_found(
-    hass, caplog, mock_client, config_ext, queries, set_query_mock,
+    hass,
+    caplog,
+    mock_client,
+    config_ext,
+    queries,
+    set_query_mock,
 ):
     """Test sensor is not setup when bucket not available."""
     set_query_mock(mock_client)

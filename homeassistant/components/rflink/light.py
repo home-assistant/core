@@ -9,14 +9,13 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICE_DEFAULTS,
-    CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_GROUP,
     CONF_GROUP_ALIASES,
@@ -195,12 +194,11 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         return self._brightness
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
+        if self._brightness is None:
+            return {}
+        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):
@@ -258,12 +256,11 @@ class HybridRflinkLight(SwitchableRflinkDevice, LightEntity):
         return self._brightness
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
+        if self._brightness is None:
+            return {}
+        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):
@@ -279,11 +276,6 @@ class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
     If the light is on and 'on' gets sent, the light will turn off
     and if the light is off and 'on' gets sent, the light will turn on.
     """
-
-    @property
-    def entity_id(self):
-        """Return entity id."""
-        return f"light.{self.name}"
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""

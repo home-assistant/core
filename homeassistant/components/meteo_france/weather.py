@@ -15,7 +15,10 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MODE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -25,6 +28,8 @@ from .const import (
     DOMAIN,
     FORECAST_MODE_DAILY,
     FORECAST_MODE_HOURLY,
+    MANUFACTURER,
+    MODEL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +52,8 @@ async def async_setup_entry(
     async_add_entities(
         [
             MeteoFranceWeather(
-                coordinator, entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
+                coordinator,
+                entry.options.get(CONF_MODE, FORECAST_MODE_DAILY),
             )
         ],
         True,
@@ -59,12 +65,12 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceWeather(WeatherEntity):
+class MeteoFranceWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, mode: str):
         """Initialise the platform with a data instance and station name."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self._city_name = self.coordinator.data.position["name"]
         self._mode = mode
         self._unique_id = f"{self.coordinator.data.position['lat']},{self.coordinator.data.position['lon']}"
@@ -78,6 +84,17 @@ class MeteoFranceWeather(WeatherEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._city_name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
+            "name": self.coordinator.name,
+            "manufacturer": MANUFACTURER,
+            "model": MODEL,
+            "entry_type": "service",
+        }
 
     @property
     def condition(self):
@@ -129,9 +146,6 @@ class MeteoFranceWeather(WeatherEntity):
             for forecast in self.coordinator.data.forecast:
                 # Can have data in the past
                 if forecast["dt"] < today:
-                    _LOGGER.debug(
-                        "remove forecast in the past: %s %s", self._mode, forecast
-                    )
                     continue
                 forecast_data.append(
                     {
@@ -173,26 +187,3 @@ class MeteoFranceWeather(WeatherEntity):
     def attribution(self):
         """Return the attribution."""
         return ATTRIBUTION
-
-    @property
-    def available(self):
-        """Return if state is available."""
-        return self.coordinator.last_update_success
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    async def async_update(self):
-        """Only used by the generic entity update service."""
-        if not self.enabled:
-            return
-
-        await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self):
-        """Subscribe to updates."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )

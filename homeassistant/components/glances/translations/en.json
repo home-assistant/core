@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host is already configured."
+            "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Unable to connect to host",
+            "cannot_connect": "Failed to connect",
             "wrong_version": "Version not supported (2 or 3 only)"
         },
         "step": {
@@ -14,9 +14,9 @@
                     "name": "Name",
                     "password": "Password",
                     "port": "Port",
-                    "ssl": "Use SSL/TLS to connect to the Glances system",
+                    "ssl": "Uses an SSL certificate",
                     "username": "Username",
-                    "verify_ssl": "Verify the certification of the system",
+                    "verify_ssl": "Verify SSL certificate",
                     "version": "Glances API Version (2 or 3)"
                 },
                 "title": "Setup Glances"

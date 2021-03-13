@@ -1,6 +1,5 @@
 """The sms component."""
 import asyncio
-import logging
 
 import voluptuous as vol
 
@@ -11,8 +10,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
 from .gateway import create_sms_gateway
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["sensor"]
 
@@ -31,7 +28,9 @@ async def async_setup(hass, config):
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=sms_config,
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=sms_config,
         )
     )
 
@@ -47,9 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not gateway:
         return False
     hass.data[DOMAIN][SMS_GATEWAY] = gateway
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -60,8 +59,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

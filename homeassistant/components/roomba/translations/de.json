@@ -1,9 +1,40 @@
 {
     "config": {
-        "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut"
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "not_irobot_device": "Das erkannte Ger\u00e4t ist kein iRobot-Ger\u00e4t"
         },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "W\u00e4hle einen Roomba oder Braava aus.",
+                "title": "Automatisch mit dem Ger\u00e4t verbinden"
+            },
+            "link": {
+                "description": "Halte die Home-Taste von {name} gedr\u00fcckt, bis das Ger\u00e4t einen Ton erzeugt (ca. zwei Sekunden).",
+                "title": "Passwort abrufen"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Passwort"
+                },
+                "description": "Das Passwort konnte nicht automatisch vom Ger\u00e4t abgerufen werden. Bitte die in der Dokumentation beschriebenen Schritte unter {auth_help_url} befolgen",
+                "title": "Passwort eingeben"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Host"
+                },
+                "title": "Manuell mit dem Ger\u00e4t verbinden"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

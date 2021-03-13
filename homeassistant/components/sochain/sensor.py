@@ -1,6 +1,5 @@
 """Support for watching multiple cryptocurrencies."""
 from datetime import timedelta
-import logging
 
 from pysochain import ChainSo
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by chain.so"
 
@@ -72,7 +69,7 @@ class SochainSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

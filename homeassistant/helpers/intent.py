@@ -1,4 +1,6 @@
 """Module to coordinate user intentions."""
+from __future__ import annotations
+
 import logging
 import re
 from typing import Any, Callable, Dict, Iterable, Optional
@@ -29,7 +31,7 @@ SPEECH_TYPE_SSML = "ssml"
 
 @callback
 @bind_hass
-def async_register(hass: HomeAssistantType, handler: "IntentHandler") -> None:
+def async_register(hass: HomeAssistantType, handler: IntentHandler) -> None:
     """Register an intent with Home Assistant."""
     intents = hass.data.get(DATA_KEY)
     if intents is None:
@@ -53,7 +55,7 @@ async def async_handle(
     slots: Optional[_SlotsType] = None,
     text_input: Optional[str] = None,
     context: Optional[Context] = None,
-) -> "IntentResponse":
+) -> IntentResponse:
     """Handle an intent."""
     handler: IntentHandler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
@@ -131,7 +133,7 @@ class IntentHandler:
     platforms: Optional[Iterable[str]] = []
 
     @callback
-    def async_can_handle(self, intent_obj: "Intent") -> bool:
+    def async_can_handle(self, intent_obj: Intent) -> bool:
         """Test if an intent can be handled."""
         return self.platforms is None or intent_obj.platform in self.platforms
 
@@ -152,7 +154,7 @@ class IntentHandler:
 
         return self._slot_schema(slots)  # type: ignore
 
-    async def async_handle(self, intent_obj: "Intent") -> "IntentResponse":
+    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -169,10 +171,13 @@ def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> Optio
     for idx, item in enumerate(items):
         match = regex.search(key(item))
         if match:
-            # Add index so we pick first match in case same group and start
-            matches.append((len(match.group()), match.start(), idx, item))
+            # Add key length so we prefer shorter keys with the same group and start.
+            # Add index so we pick first match in case same group, start, and key length.
+            matches.append(
+                (len(match.group()), match.start(), len(key(item)), idx, item)
+            )
 
-    return sorted(matches)[0][3] if matches else None
+    return sorted(matches)[0][4] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):
@@ -192,7 +197,7 @@ class ServiceIntentHandler(IntentHandler):
         self.service = service
         self.speech = speech
 
-    async def async_handle(self, intent_obj: "Intent") -> "IntentResponse":
+    async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -233,7 +238,7 @@ class Intent:
         self.context = context
 
     @callback
-    def create_response(self) -> "IntentResponse":
+    def create_response(self) -> IntentResponse:
         """Create a response."""
         return IntentResponse(self)
 

@@ -6,6 +6,6 @@
         "data": { "radius": "Radius", "mmi": "MMI" }
       }
     },
-    "abort": { "already_configured": "Location is already configured." }
+    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_service%]" }
   }
 }

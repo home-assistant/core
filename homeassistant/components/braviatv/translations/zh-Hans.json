@@ -1,0 +1,14 @@
+{
+    "config": {
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN \u7801"
+                }
+            },
+            "user": {
+                "description": "\u8bbe\u7f6eSony Bravia\u7535\u89c6\u96c6\u6210\u3002\u5982\u679c\u60a8\u5728\u914d\u7f6e\u65b9\u9762\u9047\u5230\u95ee\u9898\uff0c\u8bf7\u8bbf\u95ee\uff1ahttps://www.home-assistant.io/integrations/braviatv\n\u786e\u4fdd\u7535\u89c6\u5df2\u6253\u5f00\u3002"
+            }
+        }
+    }
+}

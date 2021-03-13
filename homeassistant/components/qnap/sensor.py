@@ -18,8 +18,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -62,12 +62,12 @@ _SYSTEM_MON_COND = {
 }
 _CPU_MON_COND = {
     "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "cpu_usage": ["CPU Usage", UNIT_PERCENTAGE, "mdi:chip"],
+    "cpu_usage": ["CPU Usage", PERCENTAGE, "mdi:chip"],
 }
 _MEMORY_MON_COND = {
     "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory"],
     "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory"],
-    "memory_percent_used": ["Memory Usage", UNIT_PERCENTAGE, "mdi:memory"],
+    "memory_percent_used": ["Memory Usage", PERCENTAGE, "mdi:memory"],
 }
 _NETWORK_MON_COND = {
     "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
@@ -81,16 +81,16 @@ _DRIVE_MON_COND = {
 _VOLUME_MON_COND = {
     "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie"],
     "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", UNIT_PERCENTAGE, "mdi:chart-pie"],
+    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
 }
 
 _MONITORED_CONDITIONS = (
-    list(_SYSTEM_MON_COND.keys())
-    + list(_CPU_MON_COND.keys())
-    + list(_MEMORY_MON_COND.keys())
-    + list(_NETWORK_MON_COND.keys())
-    + list(_DRIVE_MON_COND.keys())
-    + list(_VOLUME_MON_COND.keys())
+    list(_SYSTEM_MON_COND)
+    + list(_CPU_MON_COND)
+    + list(_MEMORY_MON_COND)
+    + list(_NETWORK_MON_COND)
+    + list(_DRIVE_MON_COND)
+    + list(_VOLUME_MON_COND)
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -268,7 +268,7 @@ class QNAPMemorySensor(QNAPSensor):
             return round(used / total * 100)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["system_stats"]["memory"]
@@ -294,7 +294,7 @@ class QNAPNetworkSensor(QNAPSensor):
             return round_nicely(data["rx"] / 1024 / 1024)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["system_stats"]["nics"][self.monitor_device]
@@ -322,7 +322,7 @@ class QNAPSystemSensor(QNAPSensor):
             return int(self._api.data["system_stats"]["system"]["temp_c"])
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["system_stats"]
@@ -360,7 +360,7 @@ class QNAPDriveSensor(QNAPSensor):
         return f"{server_name} {self.var_name} (Drive {self.monitor_device})"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["smart_drive_health"][self.monitor_device]
@@ -394,7 +394,7 @@ class QNAPVolumeSensor(QNAPSensor):
             return round(used_gb / total_gb * 100)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._api.data:
             data = self._api.data["volumes"][self.monitor_device]

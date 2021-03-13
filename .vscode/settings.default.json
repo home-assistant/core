@@ -1,0 +1,9 @@
+{
+  // Please keep this file in sync with settings in home-assistant/.devcontainer/devcontainer.json
+  "python.formatting.provider": "black",
+  // Added --no-cov to work around TypeError: message must be set
+  // https://github.com/microsoft/vscode-python/issues/14067
+  "python.testing.pytestArgs": ["--no-cov"],
+  // https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
+  "python.testing.pytestEnabled": false
+}

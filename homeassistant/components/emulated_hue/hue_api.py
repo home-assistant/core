@@ -43,9 +43,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    ATTR_XY_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -82,6 +85,8 @@ STATE_COLORMODE = "colormode"
 STATE_HUE = "hue"
 STATE_SATURATION = "sat"
 STATE_COLOR_TEMP = "ct"
+STATE_TRANSITON = "tt"
+STATE_XY = "xy"
 
 # Hue API states, defined separately in case they change
 HUE_API_STATE_ON = "on"
@@ -90,7 +95,9 @@ HUE_API_STATE_COLORMODE = "colormode"
 HUE_API_STATE_HUE = "hue"
 HUE_API_STATE_SAT = "sat"
 HUE_API_STATE_CT = "ct"
+HUE_API_STATE_XY = "xy"
 HUE_API_STATE_EFFECT = "effect"
+HUE_API_STATE_TRANSITION = "transitiontime"
 
 # Hue API min/max values - https://developers.meethue.com/develop/hue-api/lights-api/
 HUE_API_STATE_BRI_MIN = 1  # Brightness
@@ -246,6 +253,7 @@ class HueConfigView(HomeAssistantView):
     """Return config view of emulated hue."""
 
     url = "/api/{username}/config"
+    extra_urls = ["/api/config"]
     name = "emulated_hue:username:config"
     requires_auth = False
 
@@ -254,12 +262,10 @@ class HueConfigView(HomeAssistantView):
         self.config = config
 
     @core.callback
-    def get(self, request, username):
+    def get(self, request, username=""):
         """Process a request to get the configuration."""
         if not is_local(ip_address(request.remote)):
             return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
-        if username != HUE_API_USERNAME:
-            return self.json(UNAUTHORIZED_USER)
 
         json_response = create_config_model(self.config, request)
 
@@ -358,6 +364,8 @@ class HueOneLightChangeView(HomeAssistantView):
             STATE_HUE: None,
             STATE_SATURATION: None,
             STATE_COLOR_TEMP: None,
+            STATE_XY: None,
+            STATE_TRANSITON: None,
         }
 
         if HUE_API_STATE_ON in request_json:
@@ -373,6 +381,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (HUE_API_STATE_HUE, STATE_HUE),
             (HUE_API_STATE_SAT, STATE_SATURATION),
             (HUE_API_STATE_CT, STATE_COLOR_TEMP),
+            (HUE_API_STATE_TRANSITION, STATE_TRANSITON),
         ):
             if key in request_json:
                 try:
@@ -380,6 +389,17 @@ class HueOneLightChangeView(HomeAssistantView):
                 except ValueError:
                     _LOGGER.error("Unable to parse data (2): %s", request_json)
                     return self.json_message("Bad request", HTTP_BAD_REQUEST)
+        if HUE_API_STATE_XY in request_json:
+            try:
+                parsed[STATE_XY] = tuple(
+                    (
+                        float(request_json[HUE_API_STATE_XY][0]),
+                        float(request_json[HUE_API_STATE_XY][1]),
+                    )
+                )
+            except ValueError:
+                _LOGGER.error("Unable to parse data (2): %s", request_json)
+                return self.json_message("Bad request", HTTP_BAD_REQUEST)
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
@@ -445,9 +465,16 @@ class HueOneLightChangeView(HomeAssistantView):
 
                         data[ATTR_HS_COLOR] = (hue, sat)
 
+                    if parsed[STATE_XY] is not None:
+                        data[ATTR_XY_COLOR] = parsed[STATE_XY]
+
                 if entity_features & SUPPORT_COLOR_TEMP:
                     if parsed[STATE_COLOR_TEMP] is not None:
                         data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
+
+                if entity_features & SUPPORT_TRANSITION:
+                    if parsed[STATE_TRANSITON] is not None:
+                        data[ATTR_TRANSITION] = parsed[STATE_TRANSITON] / 10
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -558,6 +585,8 @@ class HueOneLightChangeView(HomeAssistantView):
             (STATE_HUE, HUE_API_STATE_HUE),
             (STATE_SATURATION, HUE_API_STATE_SAT),
             (STATE_COLOR_TEMP, HUE_API_STATE_CT),
+            (STATE_XY, HUE_API_STATE_XY),
+            (STATE_TRANSITON, HUE_API_STATE_TRANSITION),
         ):
             if parsed[key] is not None:
                 json_response.append(
@@ -775,12 +804,19 @@ def entity_to_json(config, entity):
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
-    else:
+    elif not config.lights_all_dimmable:
         # On/Off light (ZigBee Device ID: 0x0000)
         # Supports groups, scenes and on/off control
         retval["type"] = "On/Off light"
         retval["productname"] = "On/Off light"
         retval["modelid"] = "HASS321"
+    else:
+        # Dimmable light (Zigbee Device ID: 0x0100)
+        # Supports groups, scenes, on/off and dimming
+        # Reports fixed brightness for compatibility with Alexa.
+        retval["type"] = "Dimmable light"
+        retval["modelid"] = "HASS123"
+        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 

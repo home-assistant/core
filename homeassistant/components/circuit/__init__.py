@@ -1,13 +1,8 @@
 """The Unify Circuit component."""
-
-import logging
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.helpers import config_validation as cv, discovery
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "circuit"
 CONF_WEBHOOK = "webhook"

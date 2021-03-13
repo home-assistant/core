@@ -1,7 +1,6 @@
 """Helpers for device automations."""
 import asyncio
 from functools import wraps
-import logging
 from types import ModuleType
 from typing import Any, List, MutableMapping
 
@@ -21,8 +20,6 @@ from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
 # mypy: allow-untyped-calls, allow-untyped-defs
 
 DOMAIN = "device_automation"
-
-_LOGGER = logging.getLogger(__name__)
 
 
 TRIGGER_BASE_SCHEMA = vol.Schema(
@@ -83,12 +80,14 @@ async def async_get_device_automation_platform(
     try:
         integration = await async_get_integration_with_requirements(hass, domain)
         platform = integration.get_platform(platform_name)
-    except IntegrationNotFound:
-        raise InvalidDeviceAutomationConfig(f"Integration '{domain}' not found")
-    except ImportError:
+    except IntegrationNotFound as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Integration '{domain}' not found"
+        ) from err
+    except ImportError as err:
         raise InvalidDeviceAutomationConfig(
             f"Integration '{domain}' does not support device automation {automation_type}s"
-        )
+        ) from err
 
     return platform
 

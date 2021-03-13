@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hub = Pencompy(host, port, boards=boards)
     except OSError as error:
         _LOGGER.error("Could not connect to pencompy: %s", error)
-        raise PlatformNotReady
+        raise PlatformNotReady from error
 
     # Add devices.
     devs = []
@@ -93,6 +93,6 @@ class PencomRelay(SwitchEntity):
         self._state = self._hub.get(self._board, self._addr)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return supported attributes."""
         return {"board": self._board, "addr": self._addr}

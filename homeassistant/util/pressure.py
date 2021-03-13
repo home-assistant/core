@@ -1,6 +1,4 @@
 """Pressure util functions."""
-
-import logging
 from numbers import Number
 
 from homeassistant.const import (
@@ -12,8 +10,6 @@ from homeassistant.const import (
     PRESSURE_PSI,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 VALID_UNITS = [PRESSURE_PA, PRESSURE_HPA, PRESSURE_MBAR, PRESSURE_INHG, PRESSURE_PSI]
 

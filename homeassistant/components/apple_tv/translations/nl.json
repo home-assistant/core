@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "backoff": "Het apparaat accepteert op dit moment geen koppelingsverzoeken (u heeft mogelijk te vaak een ongeldige pincode ingevoerd), probeer het later opnieuw.",
+            "device_did_not_pair": "Er is geen poging gedaan om het koppelingsproces te voltooien vanaf het apparaat.",
+            "invalid_config": "De configuratie voor dit apparaat is onvolledig. Probeer het opnieuw toe te voegen.",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "invalid_auth": "Ongeldige authenticatie",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "Apple TV: {name}",
+        "step": {
+            "confirm": {
+                "title": "Bevestig het toevoegen van Apple TV"
+            },
+            "pair_no_pin": {
+                "title": "Koppelen"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN-code"
+                },
+                "title": "Koppelen"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Apparaat"
+                },
+                "title": "Stel een nieuwe Apple TV in"
+            }
+        }
+    },
+    "title": "Apple TV"
+}

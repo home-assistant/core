@@ -1,6 +1,4 @@
 """Support Wink alarm control panels."""
-import logging
-
 import pywink
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -15,8 +13,6 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN, WinkDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 STATE_ALARM_PRIVACY = "Private"
 
@@ -74,6 +70,6 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanelEntity):
         self.wink.set_mode("away")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"private": self.wink.private()}

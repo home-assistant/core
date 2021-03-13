@@ -1,10 +1,11 @@
 """Test the Plum Lightpad config flow."""
+from unittest.mock import patch
+
 from requests.exceptions import ConnectTimeout
 
 from homeassistant import config_entries, setup
 from homeassistant.components.plum_lightpad.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -23,12 +24,14 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.plum_lightpad.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry", return_value=True,
+        "homeassistant.components.plum_lightpad.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"username": "test-plum-username", "password": "test-plum-password"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-plum-username"
@@ -36,7 +39,6 @@ async def test_form(hass):
         "username": "test-plum-username",
         "password": "test-plum-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -99,7 +101,8 @@ async def test_import(hass):
     ), patch(
         "homeassistant.components.plum_lightpad.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.plum_lightpad.async_setup_entry", return_value=True,
+        "homeassistant.components.plum_lightpad.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

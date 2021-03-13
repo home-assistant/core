@@ -1,7 +1,7 @@
 """
 Regression tests for Ecobee 3.
 
-https://github.com/home-assistant/home-assistant/issues/15336
+https://github.com/home-assistant/core/issues/15336
 """
 
 from unittest import mock
@@ -12,8 +12,10 @@ from aiohomekit.testing import FakePairing
 from homeassistant.components.climate.const import (
     SUPPORT_TARGET_HUMIDITY,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -29,7 +31,7 @@ async def test_ecobee3_setup(hass):
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     climate = entity_registry.async_get("climate.homew")
     assert climate.unique_id == "homekit-123456789012-16"
@@ -40,7 +42,9 @@ async def test_ecobee3_setup(hass):
     climate_state = await climate_helper.poll_and_get_state()
     assert climate_state.attributes["friendly_name"] == "HomeW"
     assert climate_state.attributes["supported_features"] == (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY
+        SUPPORT_TARGET_TEMPERATURE
+        | SUPPORT_TARGET_TEMPERATURE_RANGE
+        | SUPPORT_TARGET_HUMIDITY
     )
 
     assert climate_state.attributes["hvac_modes"] == [
@@ -70,7 +74,7 @@ async def test_ecobee3_setup(hass):
     occ3 = entity_registry.async_get("binary_sensor.basement")
     assert occ3.unique_id == "homekit-AB3C-56"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     climate_device = device_registry.async_get(climate.device_id)
     assert climate_device.manufacturer == "ecobee Inc."
@@ -109,7 +113,7 @@ async def test_ecobee3_setup_from_cache(hass, hass_storage):
 
     await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     climate = entity_registry.async_get("climate.homew")
     assert climate.unique_id == "homekit-123456789012-16"
@@ -128,7 +132,7 @@ async def test_ecobee3_setup_connection_failure(hass):
     """Test that Ecbobee can be correctly setup from its cached entity map."""
     accessories = await setup_accessories_from_file(hass, "ecobee3.json")
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Test that the connection fails during initial setup.
     # No entities should be created.
@@ -167,7 +171,7 @@ async def test_ecobee3_setup_connection_failure(hass):
 
 async def test_ecobee3_add_sensors_at_runtime(hass):
     """Test that new sensors are automatically added."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Set up a base Ecobee 3 with no additional sensors.
     # There shouldn't be any entities but climate visible.

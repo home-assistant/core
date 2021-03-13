@@ -1,6 +1,5 @@
 """Support for Plum Lightpad lights."""
 import asyncio
-import logging
 from typing import Callable, List
 
 from plumlightpad import Plum
@@ -19,8 +18,6 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

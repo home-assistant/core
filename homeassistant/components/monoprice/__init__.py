@@ -34,9 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     try:
         monoprice = await hass.async_add_executor_job(get_monoprice, port)
-    except SerialException:
+    except SerialException as err:
         _LOGGER.error("Error connecting to Monoprice controller at %s", port)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
 
     # double negative to handle absence of value
     first_run = not bool(entry.data.get(CONF_NOT_FIRST_RUN))
@@ -54,9 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         FIRST_RUN: first_run,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -67,8 +67,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

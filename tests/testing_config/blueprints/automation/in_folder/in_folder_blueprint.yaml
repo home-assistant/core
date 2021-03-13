@@ -1,0 +1,8 @@
+blueprint:
+  name: "In Folder Blueprint"
+  domain: automation
+  input:
+    trigger:
+    action:
+trigger: !input trigger
+action: !input action

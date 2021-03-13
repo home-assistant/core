@@ -1,5 +1,7 @@
 """Tests for the AdGuard Home config flow."""
 
+from unittest.mock import patch
+
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
@@ -12,10 +14,12 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    CONTENT_TYPE_JSON,
 )
+from homeassistant.core import HomeAssistant
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURE_USER_INPUT = {
     CONF_HOST: "127.0.0.1",
@@ -27,7 +31,7 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def test_show_authenticate_form(hass):
+async def test_show_authenticate_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     flow = config_flow.AdGuardHomeFlowHandler()
     flow.hass = hass
@@ -37,7 +41,9 @@ async def test_show_authenticate_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_connection_error(hass, aioclient_mock):
+async def test_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show user form on AdGuard Home connection error."""
     aioclient_mock.get(
         f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
@@ -52,17 +58,19 @@ async def test_connection_error(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_full_flow_implementation(hass, aioclient_mock):
+async def test_full_flow_implementation(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test registering an integration and finishing flow works."""
     aioclient_mock.get(
         f"{'https' if FIXTURE_USER_INPUT[CONF_SSL] else 'http'}"
         f"://{FIXTURE_USER_INPUT[CONF_HOST]}"
         f":{FIXTURE_USER_INPUT[CONF_PORT]}/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     flow = config_flow.AdGuardHomeFlowHandler()
@@ -82,7 +90,7 @@ async def test_full_flow_implementation(hass, aioclient_mock):
     assert result["data"][CONF_VERIFY_SSL] == FIXTURE_USER_INPUT[CONF_VERIFY_SSL]
 
 
-async def test_integration_already_exists(hass):
+async def test_integration_already_exists(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
@@ -93,7 +101,7 @@ async def test_integration_already_exists(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_hassio_single_instance(hass):
+async def test_hassio_single_instance(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     MockConfigEntry(
         domain="adguard", data={"host": "mock-adguard", "port": "3000"}
@@ -108,7 +116,7 @@ async def test_hassio_single_instance(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_hassio_update_instance_not_running(hass):
+async def test_hassio_update_instance_not_running(hass: HomeAssistant) -> None:
     """Test we only allow a single config flow."""
     entry = MockConfigEntry(
         domain="adguard", data={"host": "mock-adguard", "port": "3000"}
@@ -129,17 +137,19 @@ async def test_hassio_update_instance_not_running(hass):
     assert result["reason"] == "existing_instance_updated"
 
 
-async def test_hassio_update_instance_running(hass, aioclient_mock):
+async def test_hassio_update_instance_running(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we only allow a single config flow."""
     aioclient_mock.get(
         "http://mock-adguard-updated:3000/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     entry = MockConfigEntry(
@@ -156,16 +166,22 @@ async def test_hassio_update_instance_running(hass, aioclient_mock):
     entry.add_to_hass(hass)
 
     with patch.object(
-        hass.config_entries, "async_forward_entry_setup", return_value=True,
+        hass.config_entries,
+        "async_forward_entry_setup",
+        return_value=True,
     ) as mock_load:
         assert await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state == config_entries.ENTRY_STATE_LOADED
         assert len(mock_load.mock_calls) == 2
 
     with patch.object(
-        hass.config_entries, "async_forward_entry_unload", return_value=True,
+        hass.config_entries,
+        "async_forward_entry_unload",
+        return_value=True,
     ) as mock_unload, patch.object(
-        hass.config_entries, "async_forward_entry_setup", return_value=True,
+        hass.config_entries,
+        "async_forward_entry_setup",
+        return_value=True,
     ) as mock_load:
         result = await hass.config_entries.flow.async_init(
             "adguard",
@@ -184,12 +200,14 @@ async def test_hassio_update_instance_running(hass, aioclient_mock):
     assert entry.data["host"] == "mock-adguard-updated"
 
 
-async def test_hassio_confirm(hass, aioclient_mock):
+async def test_hassio_confirm(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we can finish a config flow."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status",
         json={"version": "v0.99.0"},
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -212,7 +230,9 @@ async def test_hassio_confirm(hass, aioclient_mock):
     assert result["data"][CONF_VERIFY_SSL]
 
 
-async def test_hassio_connection_error(hass, aioclient_mock):
+async def test_hassio_connection_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test we show Hass.io confirm form on AdGuard Home connection error."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status", exc=aiohttp.ClientError
@@ -228,4 +248,4 @@ async def test_hassio_connection_error(hass, aioclient_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "hassio_confirm"
-    assert result["errors"] == {"base": "connection_error"}
+    assert result["errors"] == {"base": "cannot_connect"}

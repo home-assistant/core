@@ -1,0 +1,74 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "create_entry": {
+            "default": "Pomy\u015blnie po\u0142\u0105czono z AlarmDecoder."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Szybko\u015b\u0107 transmisji urz\u0105dzenia (Baud Rate)",
+                    "device_path": "\u015acie\u017cka urz\u0105dzenia",
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port"
+                },
+                "title": "Konfiguracja ustawie\u0144 po\u0142\u0105czenia"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protok\u00f3\u0142"
+                },
+                "title": "Wybierz protok\u00f3\u0142 AlarmDecodera"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "int": "Poni\u017csze pole musi by\u0107 liczb\u0105 ca\u0142kowit\u0105",
+            "loop_range": "P\u0119tla RF (RF Loop) musi by\u0107 liczb\u0105 ca\u0142kowit\u0105 od 1 do 4",
+            "loop_rfid": "P\u0119tli RF (RF Loop) nie mo\u017cna u\u017cywa\u0107 bez us\u0142ugi RF Serial",
+            "relay_inclusive": "Adres przeka\u017anika i kana\u0142 przeka\u017anika s\u0105 wsp\u00f3\u0142zale\u017cne i musz\u0105 by\u0107 zawarte razem"
+        },
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Alternatywny tryb nocny",
+                    "auto_bypass": "Automatyczne obej\u015bcie przy uzbrajaniu",
+                    "code_arm_required": "Wymagaj kodu do uzbrojenia"
+                },
+                "title": "Konfiguracja AlarmDecoder"
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Edytuj"
+                },
+                "description": "Co chcia\u0142by\u015b edytowa\u0107?",
+                "title": "Konfiguracja AlarmDecoder"
+            },
+            "zone_details": {
+                "data": {
+                    "zone_loop": "P\u0119tla RF (RF Loop)",
+                    "zone_name": "Nazwa strefy",
+                    "zone_relayaddr": "Adres przeka\u017anika",
+                    "zone_relaychan": "Kana\u0142 przeka\u017anika",
+                    "zone_rfid": "RF Serial",
+                    "zone_type": "Rodzaj strefy"
+                },
+                "description": "Wprowad\u017a szczeg\u00f3\u0142y dla strefy {zone_number}. Aby usun\u0105\u0107 stref\u0119 {zone_number}, pozostaw nazw\u0119 strefy pust\u0105.",
+                "title": "Konfiguracja AlarmDecoder"
+            },
+            "zone_select": {
+                "data": {
+                    "zone_number": "Numer strefy"
+                },
+                "description": "Wprowad\u017a numer strefy, kt\u00f3r\u0105 chcesz doda\u0107, edytowa\u0107 lub usun\u0105\u0107.",
+                "title": "Konfiguracja AlarmDecoder"
+            }
+        }
+    }
+}

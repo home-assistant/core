@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
         "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o",
             "wrong_host": "Nome de servidor ou endere\u00e7o IP inv\u00e1lido."
         },
         "step": {
@@ -8,6 +12,11 @@
                 "data": {
                     "host": "Servidor",
                     "type": "Tipo de impressora"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Tipo da impressora"
                 }
             }
         }

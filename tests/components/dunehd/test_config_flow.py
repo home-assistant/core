@@ -1,10 +1,11 @@
 """Define tests for the Dune HD config flow."""
+from unittest.mock import patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.dunehd.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONFIG_HOSTNAME = {CONF_HOST: "dunehd-host"}
@@ -39,7 +40,9 @@ async def test_import_cannot_connect(hass):
 async def test_import_duplicate_error(hass):
     """Test that errors are shown when duplicates are added during import."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "dunehd-host"}, title="dunehd-host",
+        domain=DOMAIN,
+        data={CONF_HOST: "dunehd-host"},
+        title="dunehd-host",
     )
     config_entry.add_to_hass(hass)
 
@@ -74,7 +77,9 @@ async def test_user_cannot_connect(hass):
 async def test_duplicate_error(hass):
     """Test that errors are shown when duplicates are added."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=CONFIG_HOSTNAME, title="dunehd-host",
+        domain=DOMAIN,
+        data=CONFIG_HOSTNAME,
+        title="dunehd-host",
     )
     config_entry.add_to_hass(hass)
 

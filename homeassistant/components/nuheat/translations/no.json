@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Termostaten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Klarte ikke \u00e5 koble til, vennligst pr\u00f8v igjen",
+            "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning",
             "invalid_thermostat": "Termostatens serienummer er ugyldig.",
             "unknown": "Uventet feil"

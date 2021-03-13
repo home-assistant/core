@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "connection_error": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "Jalousien",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel"
+                }
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP-Adresse"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "host": "IP-Adresse"
+                },
+                "description": "Stelle eine Verbindung zu deinem Motion Gateway her. Wenn die IP-Adresse leer bleibt, wird die automatische Erkennung verwendet",
+                "title": "Jalousien"
+            }
+        }
+    }
+}

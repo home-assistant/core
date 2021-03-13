@@ -1,8 +1,7 @@
 """Support for the sensors in a GreenEye Monitor."""
-import logging
-
 from homeassistant.const import (
     CONF_NAME,
+    CONF_SENSOR_TYPE,
     CONF_TEMPERATURE_UNIT,
     POWER_WATT,
     TIME_HOURS,
@@ -18,7 +17,6 @@ from . import (
     CONF_MONITOR_SERIAL_NUMBER,
     CONF_NET_METERING,
     CONF_NUMBER,
-    CONF_SENSOR_TYPE,
     CONF_TIME_UNIT,
     DATA_GREENEYE_MONITOR,
     SENSOR_TYPE_CURRENT,
@@ -26,8 +24,6 @@ from . import (
     SENSOR_TYPE_TEMPERATURE,
     SENSOR_TYPE_VOLTAGE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_PULSES = "pulses"
 DATA_WATT_SECONDS = "watt_seconds"
@@ -179,7 +175,7 @@ class CurrentSensor(GEMSensor):
         return self._sensor.watts
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return total wattseconds in the state dictionary."""
         if not self._sensor:
             return None
@@ -246,7 +242,7 @@ class PulseCounter(GEMSensor):
         return f"{self._counted_quantity}/{self._time_unit}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return total pulses in the data dictionary."""
         if not self._sensor:
             return None

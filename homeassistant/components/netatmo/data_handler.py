@@ -41,7 +41,7 @@ DEFAULT_INTERVALS = {
     HOMEDATA_DATA_CLASS_NAME: 900,
     HOMESTATUS_DATA_CLASS_NAME: 300,
     CAMERA_DATA_CLASS_NAME: 900,
-    WEATHERSTATION_DATA_CLASS_NAME: 300,
+    WEATHERSTATION_DATA_CLASS_NAME: 600,
     HOMECOACH_DATA_CLASS_NAME: 300,
     PUBLICDATA_DATA_CLASS_NAME: 600,
 }
@@ -70,7 +70,9 @@ class NetatmoDataHandler:
 
         self.listeners.append(
             async_dispatcher_connect(
-                self.hass, f"signal-{DOMAIN}-webhook-None", self.handle_event,
+                self.hass,
+                f"signal-{DOMAIN}-webhook-None",
+                self.handle_event,
             )
         )
 
@@ -105,6 +107,10 @@ class NetatmoDataHandler:
             _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
 
+        elif event["data"]["push_type"] == "webhook_deactivation":
+            _LOGGER.info("%s webhook unregistered", MANUFACTURER)
+            self._webhook = False
+
         elif event["data"]["push_type"] == "NACamera-connection":
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
             self._data_classes[CAMERA_DATA_CLASS_NAME][NEXT_SCAN] = time()
@@ -113,15 +119,21 @@ class NetatmoDataHandler:
         """Fetch data and notify."""
         try:
             self.data[data_class_entry] = await self.hass.async_add_executor_job(
-                partial(data_class, **kwargs), self._auth,
+                partial(data_class, **kwargs),
+                self._auth,
             )
+
             for update_callback in self._data_classes[data_class_entry][
                 "subscriptions"
             ]:
                 if update_callback:
                     update_callback()
 
-        except (pyatmo.NoDevice, pyatmo.ApiError) as err:
+        except pyatmo.NoDevice as err:
+            _LOGGER.debug(err)
+            self.data[data_class_entry] = None
+
+        except pyatmo.ApiError as err:
             _LOGGER.debug(err)
 
     async def register_data_class(

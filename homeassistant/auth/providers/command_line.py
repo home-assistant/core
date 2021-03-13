@@ -8,12 +8,12 @@ from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_COMMAND
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-CONF_COMMAND = "command"
 CONF_ARGS = "args"
 CONF_META = "meta"
 
@@ -71,7 +71,7 @@ class CommandLineAuthProvider(AuthProvider):
         except OSError as err:
             # happens when command doesn't exist or permission is denied
             _LOGGER.error("Error while authenticating %r: %s", username, err)
-            raise InvalidAuthError
+            raise InvalidAuthError from err
 
         if process.returncode != 0:
             _LOGGER.error(

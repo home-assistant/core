@@ -1,10 +1,9 @@
 """Test the Hi-Link HLK-SW16 config flow."""
 import asyncio
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.hlk_sw16.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 class MockSW16Client:
@@ -70,11 +69,14 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.hlk_sw16.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry", return_value=True,
+        "homeassistant.components.hlk_sw16.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "127.0.0.1:8080"
@@ -82,7 +84,6 @@ async def test_form(hass):
         "host": "127.0.0.1",
         "port": 8080,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -98,7 +99,10 @@ async def test_form(hass):
     assert result3["type"] == "form"
     assert result3["errors"] == {}
 
-    result4 = await hass.config_entries.flow.async_configure(result3["flow_id"], conf,)
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        conf,
+    )
 
     assert result4["type"] == "form"
     assert result4["errors"] == {"base": "already_configured"}
@@ -127,11 +131,14 @@ async def test_import(hass):
     ), patch(
         "homeassistant.components.hlk_sw16.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.hlk_sw16.async_setup_entry", return_value=True,
+        "homeassistant.components.hlk_sw16.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "127.0.0.1:8080"
@@ -139,7 +146,6 @@ async def test_import(hass):
         "host": "127.0.0.1",
         "port": 8080,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -162,7 +168,8 @@ async def test_form_invalid_data(hass):
         return_value=mock_hlk_sw16_connection,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
 
     assert result2["type"] == "form"
@@ -186,7 +193,8 @@ async def test_form_cannot_connect(hass):
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], conf,
+            result["flow_id"],
+            conf,
         )
 
     assert result2["type"] == "form"

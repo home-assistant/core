@@ -3,7 +3,12 @@ import aiohttp
 from pytest import raises
 
 import homeassistant.components.wunderground.sensor as wunderground
-from homeassistant.const import LENGTH_INCHES, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    LENGTH_INCHES,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
@@ -90,7 +95,7 @@ async def test_sensor(hass, aioclient_mock):
     state = hass.states.get("sensor.pws_weather")
     assert state.state == "Clear"
     assert state.name == "Weather Summary"
-    assert "unit_of_measurement" not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert (
         state.attributes["entity_picture"] == "https://icons.wxug.com/i/c/k/clear.gif"
     )
@@ -114,7 +119,7 @@ async def test_sensor(hass, aioclient_mock):
     assert state.state == "40"
     assert state.name == "Feels Like"
     assert "entity_picture" not in state.attributes
-    assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
 
     state = hass.states.get("sensor.pws_weather_1d_metric")
     assert state.state == "Mostly Cloudy. Fog overnight."
@@ -123,7 +128,7 @@ async def test_sensor(hass, aioclient_mock):
     state = hass.states.get("sensor.pws_precip_1d_in")
     assert state.state == "0.03"
     assert state.name == "Precipitation Intensity Today"
-    assert state.attributes["unit_of_measurement"] == LENGTH_INCHES
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == LENGTH_INCHES
 
 
 async def test_connect_failed(hass, aioclient_mock):

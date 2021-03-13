@@ -1,4 +1,6 @@
 """Pluggable auth modules for Home Assistant."""
+from __future__ import annotations
+
 import importlib
 import logging
 import types
@@ -66,7 +68,7 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
-    async def async_setup_flow(self, user_id: str) -> "SetupFlow":
+    async def async_setup_flow(self, user_id: str) -> SetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -150,7 +152,9 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
         module = importlib.import_module(module_path)
     except ImportError as err:
         _LOGGER.error("Unable to load mfa module %s: %s", module_name, err)
-        raise HomeAssistantError(f"Unable to load mfa module {module_name}: {err}")
+        raise HomeAssistantError(
+            f"Unable to load mfa module {module_name}: {err}"
+        ) from err
 
     if hass.config.skip_pip or not hasattr(module, "REQUIREMENTS"):
         return module

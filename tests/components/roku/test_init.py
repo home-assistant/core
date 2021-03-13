@@ -1,4 +1,6 @@
 """Tests for the Roku integration."""
+from unittest.mock import patch
+
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
@@ -7,7 +9,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.roku import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -29,7 +30,8 @@ async def test_unload_config_entry(
         "homeassistant.components.roku.media_player.async_setup_entry",
         return_value=True,
     ), patch(
-        "homeassistant.components.roku.remote.async_setup_entry", return_value=True,
+        "homeassistant.components.roku.remote.async_setup_entry",
+        return_value=True,
     ):
         entry = await setup_integration(hass, aioclient_mock)
 

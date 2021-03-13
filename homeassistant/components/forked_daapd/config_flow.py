@@ -31,6 +31,7 @@ DATA_SCHEMA_DICT = {
 }
 
 TEST_CONNECTION_ERROR_DICT = {
+    "forbidden": "forbidden",
     "ok": "ok",
     "websocket_not_enabled": "websocket_not_enabled",
     "wrong_host_or_port": "wrong_host_or_port",
@@ -176,7 +177,8 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_HOST) != discovery_info["host"]:
                 continue
             self.hass.config_entries.async_update_entry(
-                entry, title=discovery_info["properties"]["Machine Name"],
+                entry,
+                title=discovery_info["properties"]["Machine Name"],
             )
             return self.async_abort(reason="already_configured")
 
@@ -186,6 +188,5 @@ class ForkedDaapdFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NAME: discovery_info["properties"]["Machine Name"],
         }
         self.discovery_schema = vol.Schema(fill_in_schema_dict(zeroconf_data))
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": zeroconf_data})
         return await self.async_step_user()

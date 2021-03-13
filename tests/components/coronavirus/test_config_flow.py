@@ -13,7 +13,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"country": OPTION_WORLDWIDE},
+        result["flow_id"],
+        {"country": OPTION_WORLDWIDE},
     )
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Worldwide"

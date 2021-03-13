@@ -47,11 +47,13 @@ class RokuRemote(RokuEntity, RemoteEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the device on."""
         await self.coordinator.roku.remote("poweron")
+        await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the device off."""
         await self.coordinator.roku.remote("poweroff")
+        await self.coordinator.async_request_refresh()
 
     @roku_exception_handler
     async def async_send_command(self, command: List, **kwargs) -> None:
@@ -61,3 +63,5 @@ class RokuRemote(RokuEntity, RemoteEntity):
         for _ in range(num_repeats):
             for single_command in command:
                 await self.coordinator.roku.remote(single_command)
+
+        await self.coordinator.async_request_refresh()

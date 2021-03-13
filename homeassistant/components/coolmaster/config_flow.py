@@ -54,7 +54,7 @@ class CoolmasterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not result:
                 errors["base"] = "no_units"
         except (OSError, ConnectionRefusedError, TimeoutError):
-            errors["base"] = "connection_error"
+            errors["base"] = "cannot_connect"
 
         if errors:
             return self.async_show_form(

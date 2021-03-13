@@ -1,7 +1,7 @@
 {
     "config": {
-        "error": {
-            "connection_error": "Falha ao conectar, tente novamente"
+        "abort": {
+            "already_configured": "Este dispositivo j\u00e1 foi adicionado ao Home Assistant"
         },
         "step": {
             "user": {

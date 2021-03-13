@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "error": {
+            "cannot_connect": "Feeler beim verbannen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP Adresse",
+                    "port": "Port"
+                },
+                "description": "Mat der API vun dengem Advantage Air Tablet verbannen",
+                "title": "Verbannen"
+            }
+        }
+    }
+}

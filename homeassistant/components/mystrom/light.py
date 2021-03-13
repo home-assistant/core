@@ -52,9 +52,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if bulb.bulb_type != "rgblamp":
             _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
             return
-    except MyStromConnectionError:
+    except MyStromConnectionError as err:
         _LOGGER.warning("No route to myStrom bulb: %s", host)
-        raise PlatformNotReady()
+        raise PlatformNotReady() from err
 
     async_add_entities([MyStromLight(bulb, name, mac)], True)
 

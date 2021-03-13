@@ -1,12 +1,7 @@
 {
   "domain": "tag",
-  "name": "Tag",
-  "config_flow": false,
+  "name": "Tags",
   "documentation": "https://www.home-assistant.io/integrations/tag",
-  "requirements": [],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": ["@balloob", "@dmulcahey"]
+  "codeowners": ["@balloob", "@dmulcahey"],
+  "quality_scale": "internal"
 }

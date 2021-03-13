@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "port_exists": "Dieser Port ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "connection_failed": "Die Velbus-Verbindung ist fehlgeschlagen",
-            "port_exists": "Dieser Port ist bereits konfiguriert"
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "user": {

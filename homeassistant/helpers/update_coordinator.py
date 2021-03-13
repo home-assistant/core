@@ -3,14 +3,15 @@ import asyncio
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Awaitable, Callable, Generic, List, Optional, TypeVar
+from typing import Any, Awaitable, Callable, Generic, List, Optional, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
 from .debounce import Debouncer
@@ -19,6 +20,8 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 T = TypeVar("T")
+
+# mypy: disallow-any-generics
 
 
 class UpdateFailed(Exception):
@@ -48,6 +51,7 @@ class DataUpdateCoordinator(Generic[T]):
         self.data: Optional[T] = None
 
         self._listeners: List[CALLBACK_TYPE] = []
+        self._job = HassJob(self._handle_refresh_interval)
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.last_update_success = True
@@ -64,6 +68,10 @@ class DataUpdateCoordinator(Generic[T]):
             request_refresh_debouncer.function = self.async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self._async_stop_refresh
+        )
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
@@ -108,7 +116,7 @@ class DataUpdateCoordinator(Generic[T]):
         # as long as the update process takes less than a second
         self._unsub_refresh = event.async_track_point_in_utc_time(
             self.hass,
-            self._handle_refresh_interval,
+            self._job,
             utcnow().replace(microsecond=0) + self.update_interval,
         )
 
@@ -137,9 +145,9 @@ class DataUpdateCoordinator(Generic[T]):
             self._unsub_refresh = None
 
         self._debounced_refresh.async_cancel()
+        start = monotonic()
 
         try:
-            start = monotonic()
             self.data = await self._async_update_data()
 
         except (asyncio.TimeoutError, requests.exceptions.Timeout):
@@ -190,3 +198,74 @@ class DataUpdateCoordinator(Generic[T]):
 
         for update_callback in self._listeners:
             update_callback()
+
+    @callback
+    def async_set_updated_data(self, data: T) -> None:
+        """Manually update data, notify listeners and reset refresh interval."""
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+        self._debounced_refresh.async_cancel()
+
+        self.data = data
+        self.last_update_success = True
+        self.logger.debug(
+            "Manually updated %s data",
+            self.name,
+        )
+
+        if self._listeners:
+            self._schedule_refresh()
+
+        for update_callback in self._listeners:
+            update_callback()
+
+    @callback
+    def _async_stop_refresh(self, _: Event) -> None:
+        """Stop refreshing when Home Assistant is stopping."""
+        self.update_interval = None
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+
+class CoordinatorEntity(entity.Entity):
+    """A class for entities using DataUpdateCoordinator."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator[Any]) -> None:
+        """Create the entity with a DataUpdateCoordinator."""
+        self.coordinator = coordinator
+
+    @property
+    def should_poll(self) -> bool:
+        """No need to poll. Coordinator notifies entity of updates."""
+        return False
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self._handle_coordinator_update)
+        )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        # Ignore manual update requests if the entity is disabled
+        if not self.enabled:
+            return
+
+        await self.coordinator.async_request_refresh()

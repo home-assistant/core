@@ -171,7 +171,7 @@ class EmailContentSensor(Entity):
         return self._message
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other state attributes for the message."""
         return self._state_attributes
 
@@ -183,7 +183,7 @@ class EmailContentSensor(Entity):
             ATTR_DATE: email_message["Date"],
             ATTR_BODY: EmailContentSensor.get_msg_text(email_message),
         }
-        return self._value_template.render(variables)
+        return self._value_template.render(variables, parse_result=False)
 
     def sender_allowed(self, email_message):
         """Check if the sender is in the allowed senders list."""

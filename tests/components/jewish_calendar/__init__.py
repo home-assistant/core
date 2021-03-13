@@ -2,14 +2,14 @@
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
-
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
 
+HDATE_DEFAULT_ALTITUDE = 754
 NYC_LATLNG = _LatLng(40.7128, -74.0060)
 JERUSALEM_LATLNG = _LatLng(31.778, 35.235)
 

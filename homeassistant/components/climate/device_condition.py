@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -63,7 +64,10 @@ async def async_get_conditions(
             }
         )
 
-        if state and state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
+        if (
+            state
+            and state.attributes[ATTR_SUPPORTED_FEATURES] & const.SUPPORT_PRESET_MODE
+        ):
             conditions.append(
                 {
                     CONF_CONDITION: "device",

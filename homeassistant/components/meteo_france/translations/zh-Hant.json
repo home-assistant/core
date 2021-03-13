@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u57ce\u5e02\u5df2\u8a2d\u5b9a\u5b8c\u6210",
-            "unknown": "\u672a\u77e5\u932f\u8aa4\uff1a\u8acb\u7a0d\u5f8c\u518d\u8a66"
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
             "empty": "\u627e\u4e0d\u5230\u76f8\u7b26\u7684\u57ce\u5e02\uff1a\u8acb\u78ba\u8a8d\u57ce\u5e02\u6b04\u4f4d"

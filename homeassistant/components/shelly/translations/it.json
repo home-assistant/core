@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "unsupported_firmware": "Il dispositivo utilizza una versione del firmware non supportata."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Vuoi impostare {model} su {host}? \n\nI dispositivi alimentati a batteria protetti da password devono essere riattivati prima di continuare con la configurazione.\nI dispositivi alimentati a batteria che non sono protetti da password verranno aggiunti quando il dispositivo si riattiver\u00e0, ora puoi riattivare manualmente il dispositivo utilizzando un pulsante su di esso o attendere il prossimo aggiornamento dei dati dal dispositivo."
+            },
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Prima della configurazione, i dispositivi alimentati a batteria devono essere riattivati, ora puoi riattivare il dispositivo utilizzando un pulsante su di esso."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button": "Pulsante",
+            "button1": "Primo pulsante",
+            "button2": "Secondo pulsante",
+            "button3": "Terzo pulsante"
+        },
+        "trigger_type": {
+            "double": "{subtype} premuto due volte",
+            "long": "{subtype} premuto a lungo",
+            "long_single": "{subtype} premuto a lungo e poi singolarmente",
+            "single": "{subtype} premuto singolarmente",
+            "single_long": "{subtype} premuto singolarmente e poi a lungo",
+            "triple": "{subtype} premuto tre volte"
+        }
+    }
+}

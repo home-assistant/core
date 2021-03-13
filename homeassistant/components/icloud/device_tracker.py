@@ -1,5 +1,4 @@
 """Support for tracking for iCloud devices."""
-import logging
 from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
@@ -16,8 +15,6 @@ from .const import (
     DEVICE_LOCATION_LONGITUDE,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_scanner(
@@ -111,7 +108,7 @@ class IcloudTrackerEntity(TrackerEntity):
         return icon_for_icloud_device(self._device)
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return the device state attributes."""
         return self._device.state_attributes
 

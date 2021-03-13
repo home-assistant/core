@@ -7,7 +7,13 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    HTTP_UNAUTHORIZED,
+)
 from homeassistant.core import callback
 from homeassistant.util.network import is_link_local
 
@@ -39,11 +45,11 @@ async def validate_input(hass: core.HomeAssistant, data):
         status = await hass.async_add_executor_job(device.ready)
         info = await hass.async_add_executor_job(device.info)
     except urllib.error.HTTPError as err:
-        if err.code == 401:
-            raise InvalidAuth
-        raise CannotConnect
-    except OSError:
-        raise CannotConnect
+        if err.code == HTTP_UNAUTHORIZED:
+            raise InvalidAuth from err
+        raise CannotConnect from err
+    except OSError as err:
+        raise CannotConnect from err
 
     if not status[0]:
         raise CannotConnect
@@ -97,7 +103,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if friendly_hostname.endswith(chop_ending):
             friendly_hostname = friendly_hostname[: -len(chop_ending)]
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_NAME: friendly_hostname,
             CONF_HOST: discovery_info[CONF_HOST],

@@ -1,4 +1,6 @@
 """The tests the for GPSLogger device tracker platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -12,10 +14,9 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -64,7 +65,8 @@ async def setup_zones(loop, hass):
 async def webhook_id(hass, gpslogger_client):
     """Initialize the GPSLogger component and get the webhook_id."""
     await async_process_ha_core_config(
-        hass, {"internal_url": "http://example.local:8123"},
+        hass,
+        {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -134,10 +136,10 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert STATE_NOT_HOME == state_name
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
 
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
 
 

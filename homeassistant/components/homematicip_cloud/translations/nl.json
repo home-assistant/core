@@ -6,7 +6,7 @@
             "unknown": "Er is een onbekende fout opgetreden."
         },
         "error": {
-            "invalid_pin": "Ongeldige PIN-code, probeer het nogmaals.",
+            "invalid_sgtin_or_pin": "Ongeldige PIN-code, probeer het nogmaals.",
             "press_the_button": "Druk op de blauwe knop.",
             "register_failed": "Kan niet registreren, gelieve opnieuw te proberen.",
             "timeout_button": "Blauwe knop druk op timeout, probeer het opnieuw."

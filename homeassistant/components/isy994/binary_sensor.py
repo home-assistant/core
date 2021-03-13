@@ -49,7 +49,6 @@ from .const import (
 )
 from .entity import ISYNodeEntity, ISYProgramEntity
 from .helpers import migrate_old_unique_ids
-from .services import async_setup_device_services
 
 DEVICE_PARENT_REQUIRED = [
     DEVICE_CLASS_OPENING,
@@ -128,7 +127,7 @@ async def async_setup_entry(
         if (
             device_class == DEVICE_CLASS_MOTION
             and device_type is not None
-            and any([device_type.startswith(t) for t in TYPE_INSTEON_MOTION])
+            and any(device_type.startswith(t) for t in TYPE_INSTEON_MOTION)
         ):
             # Special cases for Insteon Motion Sensors I & II:
             # Some subnodes never report status until activated, so
@@ -172,7 +171,6 @@ async def async_setup_entry(
 
     await migrate_old_unique_ids(hass, BINARY_SENSOR, devices)
     async_add_entities(devices)
-    async_setup_device_services(hass)
 
 
 def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
@@ -196,10 +194,8 @@ def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
     # Other devices (incl Insteon.)
     for device_class in [*BINARY_SENSOR_DEVICE_TYPES_ISY]:
         if any(
-            [
-                device_type.startswith(t)
-                for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
-            ]
+            device_type.startswith(t)
+            for t in set(BINARY_SENSOR_DEVICE_TYPES_ISY[device_class])
         ):
             return device_class, device_type
     return (None, device_type)
@@ -459,9 +455,9 @@ class ISYBinarySensorHeartbeat(ISYNodeEntity, BinarySensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Get the state attributes for the device."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         attr["parent_entity_id"] = self._parent_device.entity_id
         return attr
 

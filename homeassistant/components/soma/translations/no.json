@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_setup": "Du kan bare konfigurere \u00e9n Soma-konto.",
-            "authorize_url_timeout": "Tidsavbrudd ved oppretting av godkjenningsadresse.",
+            "authorize_url_timeout": "Tidsavbrudd genererer godkjennelses-URL.",
             "connection_error": "Kunne ikke koble til SOMA Connect.",
             "missing_configuration": "Soma-komponenten er ikke konfigurert. Vennligst f\u00f8lg dokumentasjonen.",
             "result_error": "SOMA Connect svarte med feilstatus."
@@ -14,7 +14,7 @@
             "user": {
                 "data": {
                     "host": "Vert",
-                    "port": ""
+                    "port": "Port"
                 },
                 "description": "Vennligst fyll inn tilkoblingsinnstillingene for din SOMA Connect.",
                 "title": ""

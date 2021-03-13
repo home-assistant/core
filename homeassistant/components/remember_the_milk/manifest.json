@@ -2,7 +2,7 @@
   "domain": "remember_the_milk",
   "name": "Remember The Milk",
   "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",
-  "requirements": ["RtmAPI==0.7.2", "httplib2==0.10.3"],
+  "requirements": ["RtmAPI==0.7.2", "httplib2==0.19.0"],
   "dependencies": ["configurator"],
   "codeowners": []
 }

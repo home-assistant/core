@@ -1,5 +1,4 @@
 """Support for file notification."""
-import logging
 import os
 
 import voluptuous as vol
@@ -22,8 +21,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_TIMESTAMP, default=False): cv.boolean,
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):

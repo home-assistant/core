@@ -1,10 +1,11 @@
 """Test the Dexcom config flow."""
+from unittest.mock import patch
+
 from pydexcom import AccountError, SessionError
 
 from homeassistant.components.dexcom.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.dexcom import CONFIG, init_integration
 
@@ -19,7 +20,8 @@ async def test_setup_entry_account_error(hass):
         options=None,
     )
     with patch(
-        "homeassistant.components.dexcom.Dexcom", side_effect=AccountError,
+        "homeassistant.components.dexcom.Dexcom",
+        side_effect=AccountError,
     ):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)
@@ -38,7 +40,8 @@ async def test_setup_entry_session_error(hass):
         options=None,
     )
     with patch(
-        "homeassistant.components.dexcom.Dexcom", side_effect=SessionError,
+        "homeassistant.components.dexcom.Dexcom",
+        side_effect=SessionError,
     ):
         entry.add_to_hass(hass)
         result = await hass.config_entries.async_setup(entry.entry_id)

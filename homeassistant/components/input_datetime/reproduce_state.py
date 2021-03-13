@@ -8,15 +8,7 @@ from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from . import (
-    ATTR_DATE,
-    ATTR_DATETIME,
-    ATTR_TIME,
-    CONF_HAS_DATE,
-    CONF_HAS_TIME,
-    DOMAIN,
-    SERVICE_SET_DATETIME,
-)
+from . import ATTR_DATE, ATTR_DATETIME, ATTR_TIME, CONF_HAS_DATE, CONF_HAS_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,22 +45,13 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
+    has_time = cur_state.attributes.get(CONF_HAS_TIME)
+    has_date = cur_state.attributes.get(CONF_HAS_DATE)
+
     if not (
-        (
-            is_valid_datetime(state.state)
-            and cur_state.attributes.get(CONF_HAS_DATE)
-            and cur_state.attributes.get(CONF_HAS_TIME)
-        )
-        or (
-            is_valid_date(state.state)
-            and cur_state.attributes.get(CONF_HAS_DATE)
-            and not cur_state.attributes.get(CONF_HAS_TIME)
-        )
-        or (
-            is_valid_time(state.state)
-            and cur_state.attributes.get(CONF_HAS_TIME)
-            and not cur_state.attributes.get(CONF_HAS_DATE)
-        )
+        (is_valid_datetime(state.state) and has_date and has_time)
+        or (is_valid_date(state.state) and has_date and not has_time)
+        or (is_valid_time(state.state) and has_time and not has_date)
     ):
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
@@ -79,11 +62,7 @@ async def _async_reproduce_state(
     if cur_state.state == state.state:
         return
 
-    service = SERVICE_SET_DATETIME
     service_data = {ATTR_ENTITY_ID: state.entity_id}
-
-    has_time = cur_state.attributes.get(CONF_HAS_TIME)
-    has_date = cur_state.attributes.get(CONF_HAS_DATE)
 
     if has_time and has_date:
         service_data[ATTR_DATETIME] = state.state
@@ -91,12 +70,9 @@ async def _async_reproduce_state(
         service_data[ATTR_TIME] = state.state
     elif has_date:
         service_data[ATTR_DATE] = state.state
-    else:
-        _LOGGER.warning("input_datetime needs either has_date or has_time or both")
-        return
 
     await hass.services.async_call(
-        DOMAIN, service, service_data, context=context, blocking=True
+        DOMAIN, "set_datetime", service_data, context=context, blocking=True
     )
 
 

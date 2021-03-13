@@ -21,7 +21,7 @@ from .const import (
     CONF_SERIALNUMBER,
     DOMAIN,
     MIN_TIME_BETWEEN_UPDATES,
-    SMAPPEE_PLATFORMS,
+    PLATFORMS,
     TOKEN_URL,
 )
 
@@ -79,8 +79,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         smappee = Smappee(api=smappee_api, serialnumber=entry.data[CONF_SERIALNUMBER])
         await hass.async_add_executor_job(smappee.load_local_service_location)
     else:
-        implementation = await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
 
         smappee_api = api.ConfigEntrySmappeeApi(hass, entry, implementation)
@@ -90,9 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = SmappeeBase(hass, smappee)
 
-    for component in SMAPPEE_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -103,8 +105,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SMAPPEE_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

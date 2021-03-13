@@ -7,11 +7,13 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_ICON,
     CONF_MODE,
     CONF_SEQUENCE,
+    CONF_VARIABLES,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -26,8 +28,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
-    ATTR_MODE,
     CONF_MAX,
+    CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
     Script,
     make_script_schema,
@@ -58,6 +60,7 @@ SCRIPT_ENTRY_SCHEMA = make_script_schema(
         vol.Optional(CONF_ICON): cv.icon,
         vol.Required(CONF_SEQUENCE): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DESCRIPTION, default=""): cv.string,
+        vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         vol.Optional(CONF_FIELDS, default={}): {
             cv.string: {
                 vol.Optional(CONF_DESCRIPTION): cv.string,
@@ -74,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): dict}
+    {vol.Optional(ATTR_VARIABLES): {str: cv.match_all}}
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
@@ -178,7 +181,10 @@ async def async_setup(hass, config):
             return
 
         await asyncio.wait(
-            [script_entity.async_turn_off() for script_entity in script_entities]
+            [
+                asyncio.create_task(script_entity.async_turn_off())
+                for script_entity in script_entities
+            ]
         )
 
     async def toggle_service(service):
@@ -260,7 +266,9 @@ class ScriptEntity(ToggleEntity):
             change_listener=self.async_change_listener,
             script_mode=cfg[CONF_MODE],
             max_runs=cfg[CONF_MAX],
+            max_exceeded=cfg[CONF_MAX_EXCEEDED],
             logger=logging.getLogger(f"{__name__}.{object_id}"),
+            variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
 
@@ -300,7 +308,11 @@ class ScriptEntity(ToggleEntity):
         self._changed.set()
 
     async def async_turn_on(self, **kwargs):
-        """Turn the script on."""
+        """Run the script.
+
+        Depending on the script's run mode, this may do nothing, restart the script or
+        fire an additional parallel run.
+        """
         variables = kwargs.get("variables")
         context = kwargs.get("context")
         wait = kwargs.get("wait", True)
@@ -323,7 +335,10 @@ class ScriptEntity(ToggleEntity):
         await self._changed.wait()
 
     async def async_turn_off(self, **kwargs):
-        """Turn script off."""
+        """Stop running the script.
+
+        If multiple runs are in progress, all will be stopped.
+        """
         await self.script.async_stop()
 
     async def async_will_remove_from_hass(self):

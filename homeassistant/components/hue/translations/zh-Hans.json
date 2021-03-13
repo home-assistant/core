@@ -25,5 +25,10 @@
                 "title": "\u8fde\u63a5\u4e2d\u67a2"
             }
         }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "turn_off": "\u5173\u95ed"
+        }
     }
 }

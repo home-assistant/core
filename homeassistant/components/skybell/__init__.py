@@ -77,17 +77,12 @@ class SkybellDevice(Entity):
         """Initialize a sensor for Skybell device."""
         self._device = device
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
     def update(self):
         """Update automation state."""
         self._device.refresh()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

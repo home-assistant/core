@@ -1,7 +1,7 @@
 """Intents for the humidifier integration."""
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
@@ -9,7 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from . import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
@@ -41,8 +40,7 @@ class HumidityHandler(intent.IntentHandler):
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
         state = hass.helpers.intent.async_match_state(
-            slots["name"]["value"],
-            [state for state in hass.states.async_all() if state.domain == DOMAIN],
+            slots["name"]["value"], hass.states.async_all(DOMAIN)
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}
@@ -87,7 +85,7 @@ class SetModeHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
         state = hass.helpers.intent.async_match_state(
             slots["name"]["value"],
-            [state for state in hass.states.async_all() if state.domain == DOMAIN],
+            hass.states.async_all(DOMAIN),
         )
 
         service_data = {ATTR_ENTITY_ID: state.entity_id}

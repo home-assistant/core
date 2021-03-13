@@ -73,11 +73,6 @@ class TwitchSensor(Entity):
         self._statistics = None
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the sensor."""
         return self._channel.display_name
@@ -93,7 +88,7 @@ class TwitchSensor(Entity):
         return self._preview
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = dict(self._statistics)
 

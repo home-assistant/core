@@ -5,6 +5,7 @@ from homeassistant.const import (
     ATTR_STATE,
     CONF_DEVICES,
     CONF_NAME,
+    CONF_REPEAT,
     CONF_SWITCHES,
     CONF_ZONE,
 )
@@ -14,7 +15,6 @@ from .const import (
     CONF_ACTIVATION,
     CONF_MOMENTARY,
     CONF_PAUSE,
-    CONF_REPEAT,
     DOMAIN as KONNECTED_DOMAIN,
     STATE_HIGH,
     STATE_LOW,
@@ -80,6 +80,11 @@ class KonnectedSwitch(ToggleEntity):
         return {
             "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
         }
+
+    @property
+    def available(self):
+        """Return whether the panel is available."""
+        return self.panel.available
 
     async def async_turn_on(self, **kwargs):
         """Send a command to turn on the switch."""

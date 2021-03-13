@@ -6,7 +6,7 @@
         "step": {
             "pairing": {
                 "description": "Takoj, ko je most {name} pripravljen, bo zdru\u017eevanje na voljo v \"Obvestilih\" kot \"Nastavitev HomeKit mostu\".",
-                "title": "Upari HomeKit Most"
+                "title": "Seznani HomeKit"
             },
             "user": {
                 "data": {
@@ -28,12 +28,18 @@
                 "description": "Te nastavitve je treba prilagoditi le, \u010de most HomeKit ni funkcionalen.",
                 "title": "Napredna konfiguracija"
             },
-            "exclude": {
+            "cameras": {
                 "data": {
-                    "exclude_entities": "Subjekti, ki jih je treba izklju\u010diti"
+                    "camera_copy": "Kamere, ki podpirajo izvorne tokove H.264"
                 },
-                "description": "Izberite entitete, ki jih NE \u017eelite premostiti.",
-                "title": "Iz mostu izklju\u010dite subjekte izbranih domen"
+                "title": "Izberite video kodek kamere."
+            },
+            "include_exclude": {
+                "data": {
+                    "entities": "Entitete",
+                    "mode": "Na\u010din"
+                },
+                "title": "Izberite entitete, ki jih \u017eelite izpostaviti"
             },
             "init": {
                 "data": {
@@ -47,6 +53,5 @@
                 "title": "Prilagodi mo\u017enosti mosta HomeKit."
             }
         }
-    },
-    "title": "HomeKit Most"
+    }
 }

@@ -5,6 +5,7 @@ from typing import Optional, Tuple
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     CURRENT_HVAC_COOL,
@@ -252,6 +253,11 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
 
         Must know if single or double setpoint.
         """
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
+
+        if hvac_mode is not None:
+            await self.async_set_hvac_mode(hvac_mode)
+
         if len(self._current_mode_setpoint_values) == 1:
             setpoint = self._current_mode_setpoint_values[0]
             target_temp = kwargs.get(ATTR_TEMPERATURE)
@@ -302,9 +308,9 @@ class ZWaveClimateEntity(ZWaveDeviceEntity, ClimateEntity):
         self.values.mode.send_value(preset_mode_value)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
         if self.values.fan_action:
             data[ATTR_FAN_ACTION] = self.values.fan_action.value
         if self.values.valve_position:

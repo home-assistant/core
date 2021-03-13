@@ -1,23 +1,25 @@
 """Binary sensor support for the Skybell HD Doorbell."""
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+    PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {
-    "button": ["Button", "occupancy", "device:sensor:button"],
-    "motion": ["Motion", "motion", "device:sensor:motion"],
+    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
+    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -74,9 +76,9 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         attrs["event_date"] = self._event.get("createdAt")
 

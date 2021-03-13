@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import HTTP_NOT_FOUND
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
 import homeassistant.helpers.config_validation as cv
 
 
@@ -76,7 +76,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTP_NOT_FOUND)
         except data_entry_flow.UnknownStep:
-            return self.json_message("Handler does not support user", 400)
+            return self.json_message("Handler does not support user", HTTP_BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 
@@ -107,7 +107,7 @@ class FlowManagerResourceView(_BaseFlowManagerView):
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTP_NOT_FOUND)
         except vol.Invalid:
-            return self.json_message("User input malformed", 400)
+            return self.json_message("User input malformed", HTTP_BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 

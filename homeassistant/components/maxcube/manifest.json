@@ -2,6 +2,6 @@
   "domain": "maxcube",
   "name": "eQ-3 MAX!",
   "documentation": "https://www.home-assistant.io/integrations/maxcube",
-  "requirements": ["maxcube-api==0.1.0"],
+  "requirements": ["maxcube-api==0.3.0"],
   "codeowners": []
 }

@@ -1,10 +1,10 @@
 """The tests for mqtt camera component."""
 import json
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import camera, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import camera
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -31,7 +31,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
@@ -152,9 +151,6 @@ async def test_discovery_removal_camera(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_camera(hass, mqtt_mock, caplog):
     """Test update of discovered camera."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
     data1 = '{ "name": "Beer", "topic": "test_topic"}'
     data2 = '{ "name": "Milk", "topic": "test_topic"}'
 
@@ -177,9 +173,6 @@ async def test_discovery_update_unchanged_camera(hass, mqtt_mock, caplog):
 @pytest.mark.no_fail_on_log_exception
 async def test_discovery_broken(hass, mqtt_mock, caplog):
     """Test handling of bad discovery message."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "topic": "test_topic"}'
 

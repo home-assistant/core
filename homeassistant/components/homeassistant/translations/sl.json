@@ -1,3 +1,16 @@
 {
-    "title": "Home Assistant"
+    "system_health": {
+        "info": {
+            "arch": "Arhitektura CPU",
+            "dev": "Razvoj",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Nadzornik",
+            "installation_type": "Vrsta namestitve",
+            "os_version": "Razli\u010dica operacijskega sistema",
+            "python_version": "Razli\u010dica Pythona",
+            "timezone": "\u010casovni pas",
+            "version": "Razli\u010dica"
+        }
+    }
 }

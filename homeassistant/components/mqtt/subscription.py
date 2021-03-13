@@ -1,18 +1,15 @@
 """Helper to handle a set of topics to subscribe to."""
-import logging
 from typing import Any, Callable, Dict, Optional
 
 import attr
 
-from homeassistant.components import mqtt
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 from . import debug_info
+from .. import mqtt
 from .const import DEFAULT_QOS
 from .models import MessageCallbackType
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @attr.s(slots=True)
@@ -29,6 +26,7 @@ class EntitySubscription:
     async def resubscribe_if_necessary(self, hass, other):
         """Re-subscribe to the new topic if necessary."""
         if not self._should_resubscribe(other):
+            self.unsubscribe_callback = other.unsubscribe_callback
             return
 
         if other is not None and other.unsubscribe_callback is not None:

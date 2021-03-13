@@ -21,10 +21,10 @@ ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
 ATTR_ERRORCODE = "error"
 ATTR_MESSAGE = "message"
-ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"
 ATTR_PARAMSET = "paramset"
+ATTR_RX_MODE = "rx_mode"
 ATTR_DISCOVERY_TYPE = "discovery_type"
 ATTR_LOW_BAT = "LOW_BAT"
 ATTR_LOWBAT = "LOWBAT"
@@ -45,6 +45,7 @@ HM_DEVICE_TYPES = {
         "Switch",
         "SwitchPowermeter",
         "IOSwitch",
+        "IOSwitchNoInhibit",
         "IPSwitch",
         "RFSiren",
         "IPSwitchPowermeter",
@@ -57,6 +58,8 @@ HM_DEVICE_TYPES = {
         "IPKeySwitchLevel",
         "IPMultiIO",
         "IPWSwitch",
+        "IOSwitchWireless",
+        "IPWIODevice",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -111,7 +114,11 @@ HM_DEVICE_TYPES = {
         "IPThermostatWall2",
         "IPRemoteMotionV2",
         "HBUNISenWEA",
-        "IPWMotionDection",
+        "PresenceIPW",
+        "IPRainSensor",
+        "ValveBox",
+        "IPKeyBlind",
+        "IPKeyBlindTilt",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -154,6 +161,8 @@ HM_DEVICE_TYPES = {
         "IPRemoteMotionV2",
         "IPWInputDevice",
         "IPWMotionDection",
+        "IPAlarmSensor",
+        "IPRainSensor",
     ],
     DISCOVER_COVER: [
         "Blind",
@@ -222,8 +231,6 @@ DATA_CONF = "homematic_conf"
 CONF_INTERFACES = "interfaces"
 CONF_LOCAL_IP = "local_ip"
 CONF_LOCAL_PORT = "local_port"
-CONF_PORT = "port"
-CONF_PATH = "path"
 CONF_CALLBACK_IP = "callback_ip"
 CONF_CALLBACK_PORT = "callback_port"
 CONF_RESOLVENAMES = "resolvenames"

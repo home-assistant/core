@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "no_devices_found": "\u7db2\u8def\u4e0a\u627e\u4e0d\u5230\u88dd\u7f6e"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "pick_device": {
+                "data": {
+                    "device": "\u88dd\u7f6e"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u5047\u5982\u4e3b\u6a5f\u7aef\u4f4d\u5740\u6b04\u4f4d\u70ba\u7a7a\u767d\uff0c\u5c07\u6703\u63a2\u7d22\u6240\u6709\u53ef\u7528\u88dd\u7f6e\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "model": "\u578b\u865f\uff08\u9078\u9805\uff09",
+                    "nightlight_switch": "\u4f7f\u7528\u591c\u71c8\u958b\u95dc",
+                    "save_on_change": "\u65bc\u8b8a\u66f4\u6642\u5132\u5b58\u72c0\u614b",
+                    "transition": "\u8f49\u63db\u6642\u9593\uff08\u6beb\u79d2\uff09",
+                    "use_music_mode": "\u958b\u555f\u97f3\u6a02\u6a21\u5f0f"
+                },
+                "description": "\u5047\u5982\u578b\u865f\u6b04\u4f4d\u70ba\u7a7a\u767d\uff0c\u5c07\u6703\u81ea\u52d5\u5075\u6e2c\u578b\u865f\u3002"
+            }
+        }
+    }
+}

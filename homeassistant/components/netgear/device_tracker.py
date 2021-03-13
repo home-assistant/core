@@ -71,7 +71,11 @@ class NetgearDeviceScanner(DeviceScanner):
     """Queries a Netgear wireless router using the SOAP-API."""
 
     def __init__(
-        self, api, devices, excluded_devices, accesspoints,
+        self,
+        api,
+        devices,
+        excluded_devices,
+        accesspoints,
     ):
         """Initialize the scanner."""
         self.tracked_devices = devices

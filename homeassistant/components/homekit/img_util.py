@@ -27,7 +27,9 @@ def scale_jpeg_camera_image(cam_image, width, height):
             break
 
     return turbo_jpeg.scale_with_quality(
-        cam_image.content, scaling_factor=scaling_factor, quality=75,
+        cam_image.content,
+        scaling_factor=scaling_factor,
+        quality=75,
     )
 
 

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts ja est\u00e0 configurat",
-            "unknown": "S'ha produ\u00eft un error desconegut."
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
         },
         "error": {
             "invalid_2fa": "La verificaci\u00f3 en dos passos no \u00e9s v\u00e0lida, torna-ho a provar.",

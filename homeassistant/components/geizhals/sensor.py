@@ -1,6 +1,5 @@
 """Parse prices of a device from geizhals."""
 from datetime import timedelta
-import logging
 
 from geizhals import Device, Geizhals
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DESCRIPTION = "description"
 CONF_PRODUCT_ID = "product_id"
@@ -75,7 +72,7 @@ class Geizwatch(Entity):
         return self._device.prices[0]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         while len(self._device.prices) < 4:
             self._device.prices.append("None")

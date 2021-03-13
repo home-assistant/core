@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     HTTP_FORBIDDEN,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,8 +36,8 @@ from .const import (
     DATA_MANAGER,
     DOMAIN,
     EVENT_BUTTON,
+    PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
-    SUPPORTED_PLATFORMS,
     TOKEN_REFRESH_INTERVAL,
 )
 from .smartapp import (
@@ -158,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
     except ClientResponseError as ex:
-        if ex.status in (401, HTTP_FORBIDDEN):
+        if ex.status in (HTTP_UNAUTHORIZED, HTTP_FORBIDDEN):
             _LOGGER.exception(
                 "Unable to setup configuration entry '%s' - please reconfigure the integration",
                 entry.title,
@@ -166,10 +167,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             remove_entry = True
         else:
             _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.debug(ex, exc_info=True)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from ex
 
     if remove_entry:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
@@ -183,9 +184,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             )
         return False
 
-    for component in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
     return True
 
@@ -212,8 +213,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         broker.disconnect()
 
     tasks = [
-        hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in SUPPORTED_PLATFORMS
+        hass.config_entries.async_forward_entry_unload(entry, platform)
+        for platform in PLATFORMS
     ]
     return all(await asyncio.gather(*tasks))
 
@@ -292,11 +293,13 @@ class DeviceBroker:
         for device in devices:
             capabilities = device.capabilities.copy()
             slots = {}
-            for platform_name in SUPPORTED_PLATFORMS:
-                platform = importlib.import_module(f".{platform_name}", self.__module__)
-                if not hasattr(platform, "get_capabilities"):
+            for platform in PLATFORMS:
+                platform_module = importlib.import_module(
+                    f".{platform}", self.__module__
+                )
+                if not hasattr(platform_module, "get_capabilities"):
                     continue
-                assigned = platform.get_capabilities(capabilities)
+                assigned = platform_module.get_capabilities(capabilities)
                 if not assigned:
                     continue
                 # Draw-down capabilities and set slot assignment
@@ -304,7 +307,7 @@ class DeviceBroker:
                     if capability not in capabilities:
                         continue
                     capabilities.remove(capability)
-                    slots[capability] = platform_name
+                    slots[capability] = platform
             assignments[device.device_id] = slots
         return assignments
 
@@ -315,7 +318,8 @@ class DeviceBroker:
         async def regenerate_refresh_token(now):
             """Generate a new refresh token and update the config entry."""
             await self._token.refresh(
-                self._entry.data[CONF_CLIENT_ID], self._entry.data[CONF_CLIENT_SECRET],
+                self._entry.data[CONF_CLIENT_ID],
+                self._entry.data[CONF_CLIENT_SECRET],
             )
             self._hass.config_entries.async_update_entry(
                 self._entry,

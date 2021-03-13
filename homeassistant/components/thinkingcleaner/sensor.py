@@ -1,23 +1,20 @@
 """Support for ThinkingCleaner sensors."""
 from datetime import timedelta
-import logging
 
 from pythinkingcleaner import Discovery, ThinkingCleaner
 import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, UNIT_PERCENTAGE
+from homeassistant.const import CONF_HOST, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SENSOR_TYPES = {
-    "battery": ["Battery", UNIT_PERCENTAGE, "mdi:battery"],
+    "battery": ["Battery", PERCENTAGE, "mdi:battery"],
     "state": ["State", None, None],
     "capacity": ["Capacity", None, None],
 }

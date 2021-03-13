@@ -1,6 +1,4 @@
 """Support for ADS light sources."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -21,7 +19,6 @@ from . import (
     AdsEntity,
 )
 
-_LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "ADS Light"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -71,10 +68,9 @@ class AdsLight(AdsEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        support = 0
         if self._ads_var_brightness is not None:
-            support = SUPPORT_BRIGHTNESS
-        return support
+            return SUPPORT_BRIGHTNESS
+        return 0
 
     @property
     def is_on(self):

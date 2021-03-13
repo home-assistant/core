@@ -1,5 +1,6 @@
 """Test the Control4 config flow."""
 import datetime
+from unittest.mock import AsyncMock, patch
 
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -64,7 +64,8 @@ async def test_form(hass):
     ), patch(
         "homeassistant.components.control4.async_setup", return_value=True
     ) as mock_setup, patch(
-        "homeassistant.components.control4.async_setup_entry", return_value=True,
+        "homeassistant.components.control4.async_setup_entry",
+        return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -74,6 +75,7 @@ async def test_form(hass):
                 CONF_PASSWORD: "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "control4_model_00AA00AA00AA"
@@ -83,7 +85,6 @@ async def test_form(hass):
         CONF_PASSWORD: "test-password",
         "controller_unique_id": "control4_model_00AA00AA00AA",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -171,7 +172,8 @@ async def test_option_flow(hass):
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 4},
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 4},
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {

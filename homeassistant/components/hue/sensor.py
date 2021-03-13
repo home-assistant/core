@@ -10,8 +10,9 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
+    LIGHT_LUX,
+    PERCENTAGE,
     TEMP_CELSIUS,
-    UNIT_PERCENTAGE,
 )
 from homeassistant.helpers.entity import Entity
 
@@ -41,7 +42,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
     device_class = DEVICE_CLASS_ILLUMINANCE
-    unit_of_measurement = "lx"
+    unit_of_measurement = LIGHT_LUX
 
     @property
     def state(self):
@@ -57,9 +58,9 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         return round(float(10 ** ((self.sensor.lightlevel - 1) / 10000)), 2)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         attributes.update(
             {
                 "lightlevel": self.sensor.lightlevel,
@@ -108,7 +109,7 @@ class HueBattery(GenericHueSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
 
 SENSOR_CONFIG_MAP.update(

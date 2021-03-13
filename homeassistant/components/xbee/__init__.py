@@ -15,15 +15,15 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
     EVENT_HOMEASSISTANT_STOP,
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = "xbee"
+_LOGGER = logging.getLogger(__name__)
 
 SIGNAL_XBEE_FRAME_RECEIVED = "xbee_frame_received"
 
@@ -59,7 +59,6 @@ PLATFORM_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the connection to the XBee Zigbee device."""
-
     usb_device = config[DOMAIN].get(CONF_DEVICE, DEFAULT_DEVICE)
     baud = int(config[DOMAIN].get(CONF_BAUD, DEFAULT_BAUD))
     try:
@@ -421,7 +420,7 @@ class XBeeAnalogIn(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return UNIT_PERCENTAGE
+        return PERCENTAGE
 
     def update(self):
         """Get the latest reading from the ADC."""

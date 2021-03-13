@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\ucee8\ud2b8\ub864\ub7ec \uc0ac\uc774\ud2b8\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "already_configured": "\ucee8\ud2b8\ub864\ub7ec \uc0ac\uc774\ud2b8\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
             "faulty_credentials": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
@@ -16,7 +17,7 @@
                     "port": "\ud3ec\ud2b8",
                     "site": "\uc0ac\uc774\ud2b8 ID",
                     "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
-                    "verify_ssl": "\uc62c\ubc14\ub978 \uc778\uc99d\uc11c\ub97c \uc0ac\uc6a9\ud558\ub294 \ucee8\ud2b8\ub864\ub7ec"
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "title": "UniFi \ucee8\ud2b8\ub864\ub7ec \uc124\uc815\ud558\uae30"
             }
@@ -54,7 +55,8 @@
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ub300\uc5ed\ud3ed \uc0ac\uc6a9\ub7c9 \uc13c\uc11c"
+                    "allow_bandwidth_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ub300\uc5ed\ud3ed \uc0ac\uc6a9\ub7c9 \uc13c\uc11c",
+                    "allow_uptime_sensors": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8\ub97c \uc704\ud55c \uac00\ub3d9 \uc2dc\uac04 \uc13c\uc11c"
                 },
                 "description": "\ud1b5\uacc4 \uc13c\uc11c \uad6c\uc131",
                 "title": "UniFi \uc635\uc158 3/3"

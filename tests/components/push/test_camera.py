@@ -12,7 +12,8 @@ from tests.common import async_fire_time_changed
 async def test_bad_posting(hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.com"},
+        hass,
+        {"external_url": "http://example.com"},
     )
 
     await async_setup_component(
@@ -42,7 +43,8 @@ async def test_bad_posting(hass, aiohttp_client):
 async def test_posting_url(hass, aiohttp_client):
     """Test that posting to api endpoint works."""
     await async_process_ha_core_config(
-        hass, {"external_url": "http://example.com"},
+        hass,
+        {"external_url": "http://example.com"},
     )
 
     await async_setup_component(

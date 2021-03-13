@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "start_server_failed": "A szerver ind\u00edt\u00e1sa nem siker\u00fclt."
+        }
+    }
+}

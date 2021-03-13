@@ -62,7 +62,10 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             result = await self.hass.async_add_executor_job(self._try_connect)
 
             if result == RESULT_SUCCESS:
-                return self.async_create_entry(title=DOMAIN, data=self.data,)
+                return self.async_create_entry(
+                    title=DOMAIN,
+                    data=self.data,
+                )
             if result != RESULT_AUTH_FAILED:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -71,7 +74,9 @@ class SpiderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors,
+            step_id="user",
+            data_schema=DATA_SCHEMA_USER,
+            errors=errors,
         )
 
     async def async_step_import(self, import_data):

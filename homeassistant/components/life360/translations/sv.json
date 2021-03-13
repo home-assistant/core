@@ -1,16 +1,10 @@
 {
     "config": {
-        "abort": {
-            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
-        },
         "create_entry": {
             "default": "F\u00f6r att st\u00e4lla in avancerade alternativ, se [Life360 documentation]({docs_url})."
         },
         "error": {
-            "invalid_credentials": "Ogiltiga autentiseringsuppgifter",
-            "invalid_username": "Ogiltigt anv\u00e4ndarnmn",
-            "unexpected": "Ov\u00e4ntat fel vid kommunikation med Life360-servern",
-            "user_already_configured": "Konto har redan konfigurerats"
+            "invalid_username": "Ogiltigt anv\u00e4ndarnmn"
         },
         "step": {
             "user": {

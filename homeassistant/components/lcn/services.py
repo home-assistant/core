@@ -1,4 +1,5 @@
 """Service calls related dependencies for LCN component."""
+
 import pypck
 import voluptuous as vol
 
@@ -54,11 +55,12 @@ class LcnServiceCall:
 
     def __init__(self, hass):
         """Initialize service call."""
+        self.hass = hass
         self.connections = hass.data[DATA_LCN][CONF_CONNECTIONS]
 
-    def get_address_connection(self, call):
-        """Get address connection object."""
-        addr, connection_id = call.data[CONF_ADDRESS]
+    def get_device_connection(self, service):
+        """Get device connection object."""
+        addr, connection_id = service.data[CONF_ADDRESS]
         addr = pypck.lcn_addr.LcnAddr(*addr)
         if connection_id is None:
             connection = self.connections[0]
@@ -66,6 +68,10 @@ class LcnServiceCall:
             connection = get_connection(self.connections, connection_id)
 
         return connection.get_address_conn(addr)
+
+    async def async_call_service(self, service):
+        """Execute service call."""
+        raise NotImplementedError
 
 
 class OutputAbs(LcnServiceCall):
@@ -83,16 +89,16 @@ class OutputAbs(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        output = pypck.lcn_defs.OutputPort[call.data[CONF_OUTPUT]]
-        brightness = call.data[CONF_BRIGHTNESS]
+        output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
+        brightness = service.data[CONF_BRIGHTNESS]
         transition = pypck.lcn_defs.time_to_ramp_value(
-            call.data[CONF_TRANSITION] * 1000
+            service.data[CONF_TRANSITION] * 1000
         )
 
-        address_connection = self.get_address_connection(call)
-        address_connection.dim_output(output.value, brightness, transition)
+        device_connection = self.get_device_connection(service)
+        await device_connection.dim_output(output.value, brightness, transition)
 
 
 class OutputRel(LcnServiceCall):
@@ -107,13 +113,13 @@ class OutputRel(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        output = pypck.lcn_defs.OutputPort[call.data[CONF_OUTPUT]]
-        brightness = call.data[CONF_BRIGHTNESS]
+        output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
+        brightness = service.data[CONF_BRIGHTNESS]
 
-        address_connection = self.get_address_connection(call)
-        address_connection.rel_output(output.value, brightness)
+        device_connection = self.get_device_connection(service)
+        await device_connection.rel_output(output.value, brightness)
 
 
 class OutputToggle(LcnServiceCall):
@@ -128,15 +134,15 @@ class OutputToggle(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        output = pypck.lcn_defs.OutputPort[call.data[CONF_OUTPUT]]
+        output = pypck.lcn_defs.OutputPort[service.data[CONF_OUTPUT]]
         transition = pypck.lcn_defs.time_to_ramp_value(
-            call.data[CONF_TRANSITION] * 1000
+            service.data[CONF_TRANSITION] * 1000
         )
 
-        address_connection = self.get_address_connection(call)
-        address_connection.toggle_output(output.value, transition)
+        device_connection = self.get_device_connection(service)
+        await device_connection.toggle_output(output.value, transition)
 
 
 class Relays(LcnServiceCall):
@@ -146,14 +152,15 @@ class Relays(LcnServiceCall):
         {vol.Required(CONF_STATE): is_relays_states_string}
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
         states = [
-            pypck.lcn_defs.RelayStateModifier[state] for state in call.data[CONF_STATE]
+            pypck.lcn_defs.RelayStateModifier[state]
+            for state in service.data[CONF_STATE]
         ]
 
-        address_connection = self.get_address_connection(call)
-        address_connection.control_relays(states)
+        device_connection = self.get_device_connection(service)
+        await device_connection.control_relays(states)
 
 
 class Led(LcnServiceCall):
@@ -166,13 +173,13 @@ class Led(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        led = pypck.lcn_defs.LedPort[call.data[CONF_LED]]
-        led_state = pypck.lcn_defs.LedStatus[call.data[CONF_STATE]]
+        led = pypck.lcn_defs.LedPort[service.data[CONF_LED]]
+        led_state = pypck.lcn_defs.LedStatus[service.data[CONF_STATE]]
 
-        address_connection = self.get_address_connection(call)
-        address_connection.control_led(led, led_state)
+        device_connection = self.get_device_connection(service)
+        await device_connection.control_led(led, led_state)
 
 
 class VarAbs(LcnServiceCall):
@@ -187,23 +194,21 @@ class VarAbs(LcnServiceCall):
             vol.Required(CONF_VARIABLE): vol.All(
                 vol.Upper, vol.In(VARIABLES + SETPOINTS)
             ),
-            vol.Optional(CONF_VALUE, default=0): vol.All(
-                vol.Coerce(int), vol.Range(min=0)
-            ),
+            vol.Optional(CONF_VALUE, default=0): cv.positive_int,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="native"): vol.All(
                 vol.Upper, vol.In(VAR_UNITS)
             ),
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        var = pypck.lcn_defs.Var[call.data[CONF_VARIABLE]]
-        value = call.data[CONF_VALUE]
-        unit = pypck.lcn_defs.VarUnit.parse(call.data[CONF_UNIT_OF_MEASUREMENT])
+        var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
+        value = service.data[CONF_VALUE]
+        unit = pypck.lcn_defs.VarUnit.parse(service.data[CONF_UNIT_OF_MEASUREMENT])
 
-        address_connection = self.get_address_connection(call)
-        address_connection.var_abs(var, value, unit)
+        device_connection = self.get_device_connection(service)
+        await device_connection.var_abs(var, value, unit)
 
 
 class VarReset(LcnServiceCall):
@@ -213,12 +218,12 @@ class VarReset(LcnServiceCall):
         {vol.Required(CONF_VARIABLE): vol.All(vol.Upper, vol.In(VARIABLES + SETPOINTS))}
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        var = pypck.lcn_defs.Var[call.data[CONF_VARIABLE]]
+        var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
 
-        address_connection = self.get_address_connection(call)
-        address_connection.var_reset(var)
+        device_connection = self.get_device_connection(service)
+        await device_connection.var_reset(var)
 
 
 class VarRel(LcnServiceCall):
@@ -239,15 +244,15 @@ class VarRel(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        var = pypck.lcn_defs.Var[call.data[CONF_VARIABLE]]
-        value = call.data[CONF_VALUE]
-        unit = pypck.lcn_defs.VarUnit.parse(call.data[CONF_UNIT_OF_MEASUREMENT])
-        value_ref = pypck.lcn_defs.RelVarRef[call.data[CONF_RELVARREF]]
+        var = pypck.lcn_defs.Var[service.data[CONF_VARIABLE]]
+        value = service.data[CONF_VALUE]
+        unit = pypck.lcn_defs.VarUnit.parse(service.data[CONF_UNIT_OF_MEASUREMENT])
+        value_ref = pypck.lcn_defs.RelVarRef[service.data[CONF_RELVARREF]]
 
-        address_connection = self.get_address_connection(call)
-        address_connection.var_rel(var, value, unit, value_ref)
+        device_connection = self.get_device_connection(service)
+        await device_connection.var_rel(var, value, unit, value_ref)
 
 
 class LockRegulator(LcnServiceCall):
@@ -260,14 +265,14 @@ class LockRegulator(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        setpoint = pypck.lcn_defs.Var[call.data[CONF_SETPOINT]]
-        state = call.data[CONF_STATE]
+        setpoint = pypck.lcn_defs.Var[service.data[CONF_SETPOINT]]
+        state = service.data[CONF_STATE]
 
         reg_id = pypck.lcn_defs.Var.to_set_point_id(setpoint)
-        address_connection = self.get_address_connection(call)
-        address_connection.lock_regulator(reg_id, state)
+        device_connection = self.get_device_connection(service)
+        await device_connection.lock_regulator(reg_id, state)
 
 
 class SendKeys(LcnServiceCall):
@@ -281,38 +286,38 @@ class SendKeys(LcnServiceCall):
             vol.Optional(CONF_STATE, default="hit"): vol.All(
                 vol.Upper, vol.In(SENDKEYCOMMANDS)
             ),
-            vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_TIME, default=0): cv.positive_int,
             vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        address_connection = self.get_address_connection(call)
+        device_connection = self.get_device_connection(service)
 
         keys = [[False] * 8 for i in range(4)]
 
-        key_strings = zip(call.data[CONF_KEYS][::2], call.data[CONF_KEYS][1::2])
+        key_strings = zip(service.data[CONF_KEYS][::2], service.data[CONF_KEYS][1::2])
 
         for table, key in key_strings:
             table_id = ord(table) - 65
             key_id = int(key) - 1
             keys[table_id][key_id] = True
 
-        delay_time = call.data[CONF_TIME]
+        delay_time = service.data[CONF_TIME]
         if delay_time != 0:
             hit = pypck.lcn_defs.SendKeyCommand.HIT
-            if pypck.lcn_defs.SendKeyCommand[call.data[CONF_STATE]] != hit:
+            if pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]] != hit:
                 raise ValueError(
                     "Only hit command is allowed when sending deferred keys."
                 )
-            delay_unit = pypck.lcn_defs.TimeUnit.parse(call.data[CONF_TIME_UNIT])
-            address_connection.send_keys_hit_deferred(keys, delay_time, delay_unit)
+            delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
+            await device_connection.send_keys_hit_deferred(keys, delay_time, delay_unit)
         else:
-            state = pypck.lcn_defs.SendKeyCommand[call.data[CONF_STATE]]
-            address_connection.send_keys(keys, state)
+            state = pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]]
+            await device_connection.send_keys(keys, state)
 
 
 class LockKeys(LcnServiceCall):
@@ -324,35 +329,38 @@ class LockKeys(LcnServiceCall):
                 vol.Upper, cv.matches_regex(r"^[A-D]$")
             ),
             vol.Required(CONF_STATE): is_key_lock_states_string,
-            vol.Optional(CONF_TIME, default=0): vol.All(int, vol.Range(min=0)),
+            vol.Optional(CONF_TIME, default=0): cv.positive_int,
             vol.Optional(CONF_TIME_UNIT, default=TIME_SECONDS): vol.All(
                 vol.Upper, vol.In(TIME_UNITS)
             ),
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        address_connection = self.get_address_connection(call)
+        device_connection = self.get_device_connection(service)
 
         states = [
             pypck.lcn_defs.KeyLockStateModifier[state]
-            for state in call.data[CONF_STATE]
+            for state in service.data[CONF_STATE]
         ]
-        table_id = ord(call.data[CONF_TABLE]) - 65
+        table_id = ord(service.data[CONF_TABLE]) - 65
 
-        delay_time = call.data[CONF_TIME]
+        delay_time = service.data[CONF_TIME]
         if delay_time != 0:
             if table_id != 0:
                 raise ValueError(
                     "Only table A is allowed when locking keys for a specific time."
                 )
-            delay_unit = pypck.lcn_defs.TimeUnit.parse(call.data[CONF_TIME_UNIT])
-            address_connection.lock_keys_tab_a_temporary(delay_time, delay_unit, states)
+            delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
+            await device_connection.lock_keys_tab_a_temporary(
+                delay_time, delay_unit, states
+            )
         else:
-            address_connection.lock_keys(table_id, states)
+            await device_connection.lock_keys(table_id, states)
 
-        address_connection.request_status_locked_keys_timeout()
+        handler = device_connection.status_request_handler
+        await handler.request_status_locked_keys_timeout()
 
 
 class DynText(LcnServiceCall):
@@ -365,13 +373,13 @@ class DynText(LcnServiceCall):
         }
     )
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        row_id = call.data[CONF_ROW] - 1
-        text = call.data[CONF_TEXT]
+        row_id = service.data[CONF_ROW] - 1
+        text = service.data[CONF_TEXT]
 
-        address_connection = self.get_address_connection(call)
-        address_connection.dyn_text(row_id, text)
+        device_connection = self.get_device_connection(service)
+        await device_connection.dyn_text(row_id, text)
 
 
 class Pck(LcnServiceCall):
@@ -379,8 +387,8 @@ class Pck(LcnServiceCall):
 
     schema = LcnServiceCall.schema.extend({vol.Required(CONF_PCK): str})
 
-    def __call__(self, call):
+    async def async_call_service(self, service):
         """Execute service call."""
-        pck = call.data[CONF_PCK]
-        address_connection = self.get_address_connection(call)
-        address_connection.pck(pck)
+        pck = service.data[CONF_PCK]
+        device_connection = self.get_device_connection(service)
+        await device_connection.pck(pck)

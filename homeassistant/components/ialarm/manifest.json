@@ -1,7 +1,0 @@
-{
-  "domain": "ialarm",
-  "name": "Antifurto365 iAlarm",
-  "documentation": "https://www.home-assistant.io/integrations/ialarm",
-  "requirements": ["pyialarm==0.3"],
-  "codeowners": []
-}

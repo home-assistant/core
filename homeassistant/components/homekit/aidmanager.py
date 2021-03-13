@@ -9,7 +9,6 @@ can't change the hash without causing breakages for HA users.
 
 This module generates and stores them in a HA storage.
 """
-import logging
 import random
 
 from fnvhash import fnv1a_32
@@ -31,8 +30,6 @@ INVALID_AIDS = (0, 1)
 
 AID_MIN = 2
 AID_MAX = 18446744073709551615
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_system_unique_id(entity: RegistryEntry):

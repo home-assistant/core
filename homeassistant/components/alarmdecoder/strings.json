@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Choose AlarmDecoder Protocol",
+        "data": {
+          "protocol": "Protocol"
+        }
+      },
+      "protocol": {
+        "title": "Configure connection settings",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "device_baudrate": "Device Baud Rate",
+          "device_path": "Device Path"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "create_entry": { "default": "Successfully connected to AlarmDecoder." },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure AlarmDecoder",
+        "description": "What would you like to edit?",
+        "data": {
+          "edit_select": "Edit"
+        }
+      },
+      "arm_settings": {
+        "title": "Configure AlarmDecoder",
+        "data": {
+          "auto_bypass": "Auto Bypass on Arm",
+          "code_arm_required": "Code Required for Arming",
+          "alt_night_mode": "Alternative Night Mode"
+        }
+      },
+      "zone_select": {
+        "title": "Configure AlarmDecoder",
+        "description": "Enter the zone number you'd like to to add, edit, or remove.",
+        "data": {
+          "zone_number": "Zone Number"
+        }
+      },
+      "zone_details": {
+        "title": "Configure AlarmDecoder",
+        "description": "Enter details for zone {zone_number}. To delete zone {zone_number}, leave Zone Name blank.",
+        "data": {
+          "zone_name": "Zone Name",
+          "zone_type": "Zone Type",
+          "zone_rfid": "RF Serial",
+          "zone_loop": "RF Loop",
+          "zone_relayaddr": "Relay Address",
+          "zone_relaychan": "Relay Channel"
+        }
+      }
+    },
+    "error": {
+      "relay_inclusive": "Relay Address and Relay Channel are codependent and must be included together.",
+      "int": "The field below must be an integer.",
+      "loop_rfid": "RF Loop cannot be used without RF Serial.",
+      "loop_range": "RF Loop must be an integer between 1 and 4."
+    }
+  }
+}

@@ -3,16 +3,16 @@ from collections import OrderedDict
 
 import yaml
 
-from .objects import NodeListClass
+from .objects import Input, NodeListClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
 
 def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(_dict, default_flow_style=False, allow_unicode=True).replace(
-        ": null\n", ":\n"
-    )
+    return yaml.safe_dump(
+        _dict, default_flow_style=False, allow_unicode=True, sort_keys=False
+    ).replace(": null\n", ":\n")
 
 
 def save_yaml(path: str, data: dict) -> None:
@@ -59,4 +59,9 @@ yaml.SafeDumper.add_representer(
 yaml.SafeDumper.add_representer(
     NodeListClass,
     lambda dumper, value: dumper.represent_sequence("tag:yaml.org,2002:seq", value),
+)
+
+yaml.SafeDumper.add_representer(
+    Input,
+    lambda dumper, value: dumper.represent_scalar("!input", value.name),
 )

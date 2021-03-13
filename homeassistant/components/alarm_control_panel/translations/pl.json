@@ -8,18 +8,18 @@
             "trigger": "wyzw\u00f3l {entity_name}"
         },
         "condition_type": {
-            "is_armed_away": "{entity_name} jest uzbrojony (poza domem)",
-            "is_armed_home": "{entity_name} jest uzbrojony (w domu)",
-            "is_armed_night": "{entity_name} jest uzbrojony (noc)",
-            "is_disarmed": "{entity_name} jest rozbrojony",
-            "is_triggered": "{entity_name} jest wyzwolony"
+            "is_armed_away": "alarm {entity_name} jest uzbrojony (poza domem)",
+            "is_armed_home": "alarm {entity_name} jest uzbrojony (w domu)",
+            "is_armed_night": "alarm {entity_name} jest uzbrojony (noc)",
+            "is_disarmed": "alarm {entity_name} jest rozbrojony",
+            "is_triggered": "alarm {entity_name} jest wyzwolony"
         },
         "trigger_type": {
-            "armed_away": "{entity_name} zostanie uzbrojony (poza domem)",
-            "armed_home": "{entity_name} zostanie uzbrojony (w domu)",
-            "armed_night": "{entity_name} zostanie uzbrojony (noc)",
-            "disarmed": "{entity_name} zostanie rozbrojony",
-            "triggered": "{entity_name} zostanie wyzwolony"
+            "armed_away": "alarm {entity_name} zostanie uzbrojony (poza domem)",
+            "armed_home": "alarm {entity_name} zostanie uzbrojony (w domu)",
+            "armed_night": "alarm {entity_name} zostanie uzbrojony (noc)",
+            "disarmed": "alarm {entity_name} zostanie rozbrojony",
+            "triggered": "alarm {entity_name} zostanie wyzwolony"
         }
     },
     "state": {

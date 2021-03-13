@@ -1,11 +1,11 @@
 """Test Automation config panel."""
 import json
+from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.yaml import dump
-
-from tests.async_mock import patch
 
 
 async def test_update_scene(hass, hass_client):
@@ -115,7 +115,7 @@ async def test_bad_formatted_scene(hass, hass_client):
 
 async def test_delete_scene(hass, hass_client):
     """Test deleting a scene."""
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
 
     assert await async_setup_component(
         hass,

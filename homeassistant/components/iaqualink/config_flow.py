@@ -23,7 +23,7 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
         # Supporting a single account.
         entries = self.hass.config_entries.async_entries(DOMAIN)
         if entries:
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
@@ -36,7 +36,7 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
                 await aqualink.login()
                 return self.async_create_entry(title=username, data=user_input)
             except AqualinkLoginException:
-                errors["base"] = "connection_failure"
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",

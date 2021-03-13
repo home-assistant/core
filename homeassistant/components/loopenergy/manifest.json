@@ -2,6 +2,8 @@
   "domain": "loopenergy",
   "name": "Loop Energy",
   "documentation": "https://www.home-assistant.io/integrations/loopenergy",
-  "requirements": ["pyloopenergy==0.1.3"],
-  "codeowners": []
+  "requirements": ["pyloopenergy==0.2.1"],
+  "codeowners": [
+    "@pavoni"
+  ]
 }

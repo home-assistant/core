@@ -1,6 +1,4 @@
 """Support for interfacing with an instance of getchannels.com."""
-import logging
-
 from pychannels import Channels
 import voluptuous as vol
 
@@ -20,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
 )
 from homeassistant.const import (
+    ATTR_SECONDS,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -30,8 +29,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import SERVICE_SEEK_BACKWARD, SERVICE_SEEK_BY, SERVICE_SEEK_FORWARD
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_CHANNELS = "channels"
 DEFAULT_NAME = "Channels"
@@ -57,10 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-# Service call validation schemas
-ATTR_SECONDS = "seconds"
-
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Channels platform."""
     device = ChannelsPlayer(config[CONF_NAME], config[CONF_HOST], config[CONF_PORT])
@@ -69,13 +62,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     platform = entity_platform.current_platform.get()
 
     platform.async_register_entity_service(
-        SERVICE_SEEK_FORWARD, {}, "seek_forward",
+        SERVICE_SEEK_FORWARD,
+        {},
+        "seek_forward",
     )
     platform.async_register_entity_service(
-        SERVICE_SEEK_BACKWARD, {}, "seek_backward",
+        SERVICE_SEEK_BACKWARD,
+        {},
+        "seek_backward",
     )
     platform.async_register_entity_service(
-        SERVICE_SEEK_BY, {vol.Required(ATTR_SECONDS): vol.Coerce(int)}, "seek_by",
+        SERVICE_SEEK_BY,
+        {vol.Required(ATTR_SECONDS): vol.Coerce(int)},
+        "seek_by",
     )
 
 

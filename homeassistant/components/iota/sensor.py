@@ -1,12 +1,9 @@
 """Support for IOTA wallet sensors."""
 from datetime import timedelta
-import logging
 
 from homeassistant.const import CONF_NAME
 
 from . import CONF_WALLETS, IotaDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_TESTNET = "testnet"
 ATTR_URL = "url"
@@ -88,7 +85,7 @@ class IotaNodeSensor(IotaDevice):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attr
 

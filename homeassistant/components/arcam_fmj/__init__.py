@@ -23,7 +23,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.115")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 async def _await_cancel(task):
@@ -108,8 +108,6 @@ async def _run_client(hass, client, interval):
             await asyncio.sleep(interval)
         except asyncio.TimeoutError:
             continue
-        except asyncio.CancelledError:
-            raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return

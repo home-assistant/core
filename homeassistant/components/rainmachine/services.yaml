@@ -2,42 +2,63 @@
 disable_program:
   description: Disable a program.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     program_id:
       description: The program to disable.
       example: 3
 disable_zone:
   description: Disable a zone.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     zone_id:
       description: The zone to disable.
       example: 3
 enable_program:
   description: Enable a program.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     program_id:
       description: The program to enable.
       example: 3
 enable_zone:
   description: Enable a zone.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     zone_id:
       description: The zone to enable.
       example: 3
 pause_watering:
   description: Pause all watering for a number of seconds.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     seconds:
       description: The number of seconds to pause.
       example: 30
 start_program:
   description: Start a program.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     program_id:
       description: The program to start.
       example: 3
 start_zone:
   description: Start a zone for a set number of seconds.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     zone_id:
       description: The zone to start.
       example: 3
@@ -46,17 +67,31 @@ start_zone:
       example: 120
 stop_all:
   description: Stop all watering activities.
+  fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
 stop_program:
   description: Stop a program.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     program_id:
       description: The program to stop.
       example: 3
 stop_zone:
   description: Stop a zone.
   fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1
     zone_id:
       description: The zone to stop.
       example: 3
 unpause_watering:
   description: Unpause all watering.
+  fields:
+    entity_id:
+      description: An entity from the desired RainMachine controller
+      example: switch.zone_1

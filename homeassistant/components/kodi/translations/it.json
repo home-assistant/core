@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "no_uuid": "L'istanza di Kodi non ha un ID univoco. Ci\u00f2 \u00e8 molto probabilmente dovuto a una vecchia versione di Kodi (17.xo inferiore). Puoi configurare l'integrazione manualmente o eseguire l'aggiornamento a una versione di Kodi pi\u00f9 recente.",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "flow_title": "Kodi: {name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci il tuo nome utente e la password Kodi. Questi sono disponibili in Sistema/Impostazioni/Rete/Servizi."
+            },
+            "discovery_confirm": {
+                "description": "Vuoi aggiungere Kodi (`{name}`) a Home Assistant?",
+                "title": "Rilevato Kodi"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Porta",
+                    "ssl": "Utilizza un certificato SSL"
+                },
+                "description": "Informazioni sulla connessione Kodi. Assicurati di abilitare \"Consenti il controllo di Kodi tramite HTTP\" in Sistema/Impostazioni/Rete/Servizi."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Porta"
+                },
+                "description": "La porta WebSocket (a volte chiamata porta TCP in Kodi). Per connetterti tramite WebSocket, devi abilitare \"Consenti ai programmi ... di controllare Kodi\" in Sistema/Impostazioni/Rete/Servizi. Se WebSocket non \u00e8 abilitato, rimuovere la porta e lasciare vuoto."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "A {entity_name} \u00e8 stato richiesto di spegnere",
+            "turn_on": "A {entity_name} \u00e8 stato richiesto di accendere"
+        }
+    }
+}

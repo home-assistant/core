@@ -3,6 +3,6 @@
   "name": "RainMachine",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rainmachine",
-  "requirements": ["regenmaschine==2.1.0"],
+  "requirements": ["regenmaschine==3.0.0"],
   "codeowners": ["@bachya"]
 }

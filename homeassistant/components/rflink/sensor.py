@@ -1,13 +1,13 @@
 """Support for Rflink sensors."""
-import logging
-
 from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICES,
     CONF_NAME,
+    CONF_SENSOR_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 import homeassistant.helpers.config_validation as cv
@@ -16,7 +16,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
-    CONF_DEVICES,
     DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP,
     EVENT_KEY_ID,
@@ -28,15 +27,11 @@ from . import (
     RflinkDevice,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 SENSOR_ICONS = {
     "humidity": "mdi:water-percent",
     "battery": "mdi:battery",
     "temperature": "mdi:thermometer",
 }
-
-CONF_SENSOR_TYPE = "sensor_type"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

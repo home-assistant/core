@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nightscout",
   "requirements": [
-    "py-nightscout==1.2.1"
+    "py-nightscout==1.2.2"
   ],
   "codeowners": [
     "@marciogranzotto"

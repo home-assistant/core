@@ -1,0 +1,8 @@
+{
+  "domain": "emulated_kasa",
+  "name": "Emulated Kasa",
+  "documentation": "https://www.home-assistant.io/integrations/emulated_kasa",
+  "requirements": ["sense_energy==0.9.0"],
+  "codeowners": ["@kbickar"],
+  "quality_scale": "internal"
+}

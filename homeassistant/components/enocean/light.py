@@ -1,5 +1,4 @@
 """Support for EnOcean light sources."""
-import logging
 import math
 
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .device import EnOceanEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_SENDER_ID = "sender_id"
 

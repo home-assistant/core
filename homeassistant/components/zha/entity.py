@@ -1,9 +1,11 @@
 """Entity for Zigbee Home Automation."""
 
 import asyncio
+import functools
 import logging
 from typing import Any, Awaitable, Dict, List, Optional
 
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Event, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
@@ -17,14 +19,12 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .core.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_NAME,
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DOMAIN,
     SIGNAL_GROUP_ENTITY_REMOVED,
     SIGNAL_GROUP_MEMBERSHIP_CHANGE,
     SIGNAL_REMOVE,
-    SIGNAL_REMOVE_GROUP,
 )
 from .core.helpers import LogMixin
 from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
@@ -44,7 +44,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._should_poll: bool = False
         self._unique_id: str = unique_id
         self._state: Any = None
-        self._device_state_attributes: Dict[str, Any] = {}
+        self._extra_state_attributes: Dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
         self._unsubs: List[CALLABLE_T] = []
         self.remove_future: Awaitable[None] = None
@@ -65,9 +65,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._zha_device
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return device specific state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def force_update(self) -> bool:
@@ -101,7 +101,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @callback
     def async_update_state_attribute(self, key: str, value: Any) -> None:
         """Update a single device state attribute."""
-        self._device_state_attributes.update({key: value})
+        self._extra_state_attributes.update({key: value})
         self.async_write_ha_state()
 
     @callback
@@ -166,7 +166,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
         self.async_accept_signal(
             None,
             f"{SIGNAL_REMOVE}_{self.zha_device.ieee}",
-            self.async_remove,
+            functools.partial(self.async_remove, force_remove=True),
             signal_override=True,
         )
 
@@ -203,9 +203,13 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
-        for channel in self.cluster_channels.values():
-            if hasattr(channel, "async_update"):
-                await channel.async_update()
+        tasks = [
+            channel.async_update()
+            for channel in self.cluster_channels.values()
+            if hasattr(channel, "async_update")
+        ]
+        if tasks:
+            await asyncio.gather(*tasks)
 
 
 class ZhaGroupEntity(BaseZhaEntity):
@@ -217,32 +221,35 @@ class ZhaGroupEntity(BaseZhaEntity):
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
         self._available = False
-        self._name = (
-            f"{zha_device.gateway.groups.get(group_id).name}_zha_group_0x{group_id:04x}"
-        )
+        self._group = zha_device.gateway.groups.get(group_id)
+        self._name = f"{self._group.name}_zha_group_0x{group_id:04x}"
         self._group_id: int = group_id
         self._entity_ids: List[str] = entity_ids
         self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
+        self._handled_group_membership = False
 
     @property
     def available(self) -> bool:
         """Return entity availability."""
         return self._available
 
+    async def _handle_group_membership_changed(self):
+        """Handle group membership changed."""
+        # Make sure we don't call remove twice as members are removed
+        if self._handled_group_membership:
+            return
+
+        self._handled_group_membership = True
+        await self.async_remove(force_remove=True)
+
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
-        self.async_accept_signal(
-            None,
-            f"{SIGNAL_REMOVE_GROUP}_0x{self._group_id:04x}",
-            self.async_remove,
-            signal_override=True,
-        )
 
         self.async_accept_signal(
             None,
             f"{SIGNAL_GROUP_MEMBERSHIP_CHANGE}_0x{self._group_id:04x}",
-            self.async_remove,
+            self._handle_group_membership_changed,
             signal_override=True,
         )
 

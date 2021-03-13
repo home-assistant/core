@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -16,12 +17,12 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
-ATTR_FRIENDLY_NAME = "friendly_name"
 ATTR_INFO_TEXT = "info_text"
 ATTR_ORIGIN_COUNTRY = "origin_country"
 ATTR_PACKAGES = "packages"
@@ -108,7 +109,7 @@ class SeventeenTrackSummarySensor(Entity):
         return self._state is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -151,6 +152,7 @@ class SeventeenTrackSummarySensor(Entity):
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                     ATTR_INFO_TEXT: package.info_text,
                     ATTR_STATUS: package.status,
+                    ATTR_LOCATION: package.location,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
                 }
             )
@@ -188,7 +190,7 @@ class SeventeenTrackPackageSensor(Entity):
         return self._data.packages.get(self._tracking_number) is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -220,7 +222,8 @@ class SeventeenTrackPackageSensor(Entity):
         await self._data.async_update()
 
         if not self.available:
-            self.hass.async_create_task(self._remove())
+            # Entity cannot be removed while its being added
+            async_call_later(self.hass, 1, self._remove)
             return
 
         package = self._data.packages.get(self._tracking_number, None)
@@ -229,7 +232,8 @@ class SeventeenTrackPackageSensor(Entity):
         # delivered, post a notification:
         if package.status == VALUE_DELIVERED and not self._data.show_delivered:
             self._notify_delivered()
-            self.hass.async_create_task(self._remove())
+            # Entity cannot be removed while its being added
+            async_call_later(self.hass, 1, self._remove)
             return
 
         self._attrs.update(
@@ -238,9 +242,9 @@ class SeventeenTrackPackageSensor(Entity):
         self._state = package.status
         self._friendly_name = package.friendly_name
 
-    async def _remove(self):
+    async def _remove(self, *_):
         """Remove entity itself."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         reg = await self.hass.helpers.entity_registry.async_get_registry()
         entity_id = reg.async_get_entity_id(

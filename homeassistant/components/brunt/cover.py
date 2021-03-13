@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_WINDOW,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
@@ -19,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-DEVICE_CLASS = "window"
 
 ATTR_REQUEST_POSITION = "request_position"
 NOTIFICATION_ID = "brunt_notification"
@@ -131,7 +131,7 @@ class BruntDevice(CoverEntity):
         return self.move_state == 2
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the detailed device state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -141,7 +141,7 @@ class BruntDevice(CoverEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS
+        return DEVICE_CLASS_WINDOW
 
     @property
     def supported_features(self):

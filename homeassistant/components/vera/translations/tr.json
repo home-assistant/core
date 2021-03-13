@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "{base_url} url'si ile denetleyiciye ba\u011flan\u0131lamad\u0131"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Vera denetleyici se\u00e7enekleri"
+            }
+        }
+    }
+}

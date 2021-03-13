@@ -77,6 +77,11 @@ class OpenHardwareMonitorDevice(Entity):
         """Return the state attributes of the sun."""
         return self.attributes
 
+    @classmethod
+    def parse_number(cls, string):
+        """In some locales a decimal numbers uses ',' instead of '.'."""
+        return string.replace(",", ".")
+
     def update(self):
         """Update the device from a new JSON object."""
         self._data.update()
@@ -89,12 +94,16 @@ class OpenHardwareMonitorDevice(Entity):
             values = array[path_number]
 
             if path_index == len(self.path) - 1:
-                self.value = values[OHM_VALUE].split(" ")[0]
+                self.value = self.parse_number(values[OHM_VALUE].split(" ")[0])
                 _attributes.update(
                     {
                         "name": values[OHM_NAME],
-                        STATE_MIN_VALUE: values[OHM_MIN].split(" ")[0],
-                        STATE_MAX_VALUE: values[OHM_MAX].split(" ")[0],
+                        STATE_MIN_VALUE: self.parse_number(
+                            values[OHM_MIN].split(" ")[0]
+                        ),
+                        STATE_MAX_VALUE: self.parse_number(
+                            values[OHM_MAX].split(" ")[0]
+                        ),
                     }
                 )
 

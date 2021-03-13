@@ -14,7 +14,7 @@ from yarl import URL
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config import async_hass_config_yaml
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +26,7 @@ from .storage import async_setup_frontend_storage
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 # Fix mimetypes for borked Windows machines
-# https://github.com/home-assistant/home-assistant-polymer/issues/3336
+# https://github.com/home-assistant/frontend/issues/3336
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/javascript", ".js")
 
@@ -70,8 +70,6 @@ MANIFEST_JSON = {
 
 DATA_PANELS = "frontend_panels"
 DATA_JS_VERSION = "frontend_js_version"
-DATA_EXTRA_HTML_URL = "frontend_extra_html_url"
-DATA_EXTRA_HTML_URL_ES5 = "frontend_extra_html_url_es5"
 DATA_EXTRA_MODULE_URL = "frontend_extra_module_url"
 DATA_EXTRA_JS_URL_ES5 = "frontend_extra_js_url_es5"
 
@@ -91,29 +89,23 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.All(
-            cv.deprecated(CONF_EXTRA_HTML_URL, invalidation_version="0.115"),
-            cv.deprecated(CONF_EXTRA_HTML_URL_ES5, invalidation_version="0.115"),
-            vol.Schema(
-                {
-                    vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                    vol.Optional(CONF_THEMES): vol.Schema(
-                        {cv.string: {cv.string: cv.string}}
-                    ),
-                    vol.Optional(CONF_EXTRA_HTML_URL): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    # We no longer use these options.
-                    vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
-                    vol.Optional(CONF_JS_VERSION): cv.match_all,
-                },
-            ),
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+                vol.Optional(CONF_THEMES): vol.Schema(
+                    {cv.string: {cv.string: cv.string}}
+                ),
+                vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional(CONF_EXTRA_JS_URL_ES5): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                # We no longer use these options.
+                vol.Optional(CONF_EXTRA_HTML_URL): cv.match_all,
+                vol.Optional(CONF_EXTRA_HTML_URL_ES5): cv.match_all,
+                vol.Optional(CONF_JS_VERSION): cv.match_all,
+            },
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -121,7 +113,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SET_THEME = "set_theme"
 SERVICE_RELOAD_THEMES = "reload_themes"
-CONF_MODE = "mode"
 
 
 class Panel:
@@ -220,17 +211,6 @@ def async_remove_panel(hass, frontend_url_path):
     hass.bus.async_fire(EVENT_PANELS_UPDATED)
 
 
-@bind_hass
-@callback
-def add_extra_html_url(hass, url, es5=False):
-    """Register extra html url to load."""
-    key = DATA_EXTRA_HTML_URL_ES5 if es5 else DATA_EXTRA_HTML_URL
-    url_set = hass.data.get(key)
-    if url_set is None:
-        url_set = hass.data[key] = set()
-    url_set.add(url)
-
-
 def add_extra_js_url(hass, url, es5=False):
     """Register extra js or module url to load."""
     key = DATA_EXTRA_JS_URL_ES5 if es5 else DATA_EXTRA_MODULE_URL
@@ -267,6 +247,13 @@ async def async_setup(hass, config):
 
     conf = config.get(DOMAIN, {})
 
+    for key in (CONF_EXTRA_HTML_URL, CONF_EXTRA_HTML_URL_ES5, CONF_JS_VERSION):
+        if key in conf:
+            _LOGGER.error(
+                "Please remove %s from your frontend config. It is no longer supported",
+                key,
+            )
+
     repo_path = conf.get(CONF_FRONTEND_REPO)
     is_dev = repo_path is not None
     root_path = _frontend_root(repo_path)
@@ -274,15 +261,19 @@ async def async_setup(hass, config):
     for path, should_cache in (
         ("service_worker.js", False),
         ("robots.txt", False),
-        ("onboarding.html", True),
-        ("static", True),
-        ("frontend_latest", True),
-        ("frontend_es5", True),
+        ("onboarding.html", not is_dev),
+        ("static", not is_dev),
+        ("frontend_latest", not is_dev),
+        ("frontend_es5", not is_dev),
     ):
         hass.http.register_static_path(f"/{path}", str(root_path / path), should_cache)
 
     hass.http.register_static_path(
         "/auth/authorize", str(root_path / "authorize.html"), False
+    )
+    # https://wicg.github.io/change-password-url/
+    hass.http.register_redirect(
+        "/.well-known/change-password", "/profile", redirect_exc=web.HTTPFound
     )
 
     local = hass.config.path("www")
@@ -310,12 +301,6 @@ async def async_setup(hass, config):
         sidebar_title="developer_tools",
         sidebar_icon="hass:hammer",
     )
-
-    if DATA_EXTRA_HTML_URL not in hass.data:
-        hass.data[DATA_EXTRA_HTML_URL] = set()
-
-    for url in conf.get(CONF_EXTRA_HTML_URL, []):
-        add_extra_html_url(hass, url, False)
 
     if DATA_EXTRA_MODULE_URL not in hass.data:
         hass.data[DATA_EXTRA_MODULE_URL] = set()
@@ -518,7 +503,6 @@ class IndexView(web_urldispatcher.AbstractResource):
         return web.Response(
             text=template.render(
                 theme_color=MANIFEST_JSON["theme_color"],
-                extra_urls=hass.data[DATA_EXTRA_HTML_URL],
                 extra_modules=hass.data[DATA_EXTRA_MODULE_URL],
                 extra_js_es5=hass.data[DATA_EXTRA_JS_URL_ES5],
             ),
@@ -574,7 +558,7 @@ def websocket_get_themes(hass, connection, msg):
                     "themes": {
                         "safe_mode": {
                             "primary-color": "#db4437",
-                            "accent-color": "#eeee02",
+                            "accent-color": "#ffca28",
                         }
                     },
                     "default_theme": "safe_mode",

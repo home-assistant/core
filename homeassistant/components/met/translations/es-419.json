@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "name_exists": "El nombre ya existe"
-        },
         "step": {
             "user": {
                 "data": {

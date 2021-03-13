@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "A Z-Wave m\u00e1r konfigur\u00e1lva van",
-            "one_instance_only": "Az \u00f6sszetev\u0151 csak egy Z-Wave p\u00e9ld\u00e1nyt t\u00e1mogat"
+            "already_configured": "A Z-Wave m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
             "option_error": "A Z-Wave \u00e9rv\u00e9nyes\u00edt\u00e9s sikertelen. Az USB-meghajt\u00f3 el\u00e9r\u00e9si \u00fatj\u00e1t helyesen adtad meg?"

@@ -1,12 +1,8 @@
 """Support for Wi-Fi enabled iRobot Roombas."""
-import logging
-
 from . import roomba_reported_state
 from .braava import BraavaJet
 from .const import BLID, DOMAIN, ROOMBA_SESSION
 from .roomba import RoombaVacuum, RoombaVacuumCarpetBoost
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

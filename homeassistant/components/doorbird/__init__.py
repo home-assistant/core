@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     HTTP_OK,
+    HTTP_UNAUTHORIZED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -33,6 +34,7 @@ from .const import (
     DOOR_STATION_EVENT_ENTITY_IDS,
     DOOR_STATION_INFO,
     PLATFORMS,
+    UNDO_UPDATE_LISTENER,
 )
 from .util import get_doorstation_by_token
 
@@ -57,11 +59,14 @@ DEVICE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])}
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])}
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -124,18 +129,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     device = DoorBird(device_ip, username, password)
     try:
-        status = await hass.async_add_executor_job(device.ready)
-        info = await hass.async_add_executor_job(device.info)
+        status, info = await hass.async_add_executor_job(_init_doorbird_device, device)
     except urllib.error.HTTPError as err:
-        if err.code == 401:
+        if err.code == HTTP_UNAUTHORIZED:
             _LOGGER.error(
                 "Authorization rejected by DoorBird for %s@%s", username, device_ip
             )
             return False
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from err
     except OSError as oserr:
         _LOGGER.error("Failed to setup doorbird at %s: %s", device_ip, oserr)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from oserr
 
     if not status[0]:
         _LOGGER.error(
@@ -150,34 +154,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     custom_url = doorstation_config.get(CONF_CUSTOM_URL)
     name = doorstation_config.get(CONF_NAME)
     events = doorstation_options.get(CONF_EVENTS, [])
-    doorstation = ConfiguredDoorBird(device, name, events, custom_url, token)
+    doorstation = ConfiguredDoorBird(device, name, custom_url, token)
+    doorstation.update_events(events)
     # Subscribe to doorbell or motion events
     if not await _async_register_events(hass, doorstation):
         raise ConfigEntryNotReady
 
+    undo_listener = entry.add_update_listener(_update_listener)
+
     hass.data[DOMAIN][config_entry_id] = {
         DOOR_STATION: doorstation,
         DOOR_STATION_INFO: info,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    entry.add_update_listener(_update_listener)
-
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
 
 
+def _init_doorbird_device(device):
+    return device.ready(), device.info()
+
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+
+    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -191,7 +203,7 @@ async def _async_register_events(hass, doorstation):
     try:
         await hass.async_add_executor_job(doorstation.register_events, hass)
     except HTTPError:
-        hass.components.persistent_notification.create(
+        hass.components.persistent_notification.async_create(
             "Doorbird configuration failed.  Please verify that API "
             "Operator permission is enabled for the Doorbird user. "
             "A restart will be required once permissions have been "
@@ -208,8 +220,7 @@ async def _update_listener(hass: HomeAssistant, entry: ConfigEntry):
     """Handle options update."""
     config_entry_id = entry.entry_id
     doorstation = hass.data[DOMAIN][config_entry_id][DOOR_STATION]
-
-    doorstation.events = entry.options[CONF_EVENTS]
+    doorstation.update_events(entry.options[CONF_EVENTS])
     # Subscribe to doorbell or motion events
     await _async_register_events(hass, doorstation)
 
@@ -230,14 +241,19 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
 class ConfiguredDoorBird:
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, events, custom_url, token):
+    def __init__(self, device, name, custom_url, token):
         """Initialize configured device."""
         self._name = name
         self._device = device
         self._custom_url = custom_url
+        self.events = None
+        self.doorstation_events = None
+        self._token = token
+
+    def update_events(self, events):
+        """Update the doorbird events."""
         self.events = events
         self.doorstation_events = [self._get_event_name(event) for event in self.events]
-        self._token = token
 
     @property
     def name(self):
@@ -301,16 +317,7 @@ class ConfiguredDoorBird:
 
     def webhook_is_registered(self, url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
-        favs = favs if favs else self.device.favorites()
-
-        if "http" not in favs:
-            return False
-
-        for fav in favs["http"].values():
-            if fav["value"] == url:
-                return True
-
-        return False
+        return self.get_webhook_id(url, favs) is not None
 
     def get_webhook_id(self, url, favs=None) -> str or None:
         """
@@ -357,7 +364,9 @@ class DoorBirdRequestView(HomeAssistantView):
         device = get_doorstation_by_token(hass, token)
 
         if device is None:
-            return web.Response(status=401, text="Invalid token provided.")
+            return web.Response(
+                status=HTTP_UNAUTHORIZED, text="Invalid token provided."
+            )
 
         if device:
             event_data = device.get_event_data()

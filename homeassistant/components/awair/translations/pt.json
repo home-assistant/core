@@ -2,15 +2,17 @@
     "config": {
         "abort": {
             "already_configured": "Conta j\u00e1 configurada",
-            "no_devices": "Nenhum dispositivo encontrado na rede",
+            "no_devices_found": "Nenhum dispositivo encontrado na rede",
             "reauth_successful": "Token de Acesso actualizado com sucesso"
         },
         "error": {
-            "auth": "Token de acesso inv\u00e1lido"
+            "invalid_access_token": "Token de acesso inv\u00e1lido",
+            "unknown": "Erro inesperado"
         },
         "step": {
             "reauth": {
                 "data": {
+                    "access_token": "Token de Acesso",
                     "email": "Email"
                 }
             },

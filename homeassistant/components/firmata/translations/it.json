@@ -1,11 +1,7 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Impossibile connettersi alla scheda Firmata durante la configurazione"
-        },
-        "step": {
-            "one": "uno",
-            "other": "altri"
+            "cannot_connect": "Impossibile connettersi"
         }
     }
 }

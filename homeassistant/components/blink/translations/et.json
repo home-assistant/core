@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA kood"
+                },
+                "description": "Sisesta E-posti aadressile saadetud PIN-kood",
+                "title": "Kaheastmeline tuvastamine (2FA)"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Logi sisse Blinki kontoga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "simple_options": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "Seadista Blink'i sidumine",
+                "title": "Blink'i valikud"
+            }
+        }
+    }
+}

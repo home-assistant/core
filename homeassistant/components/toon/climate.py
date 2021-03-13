@@ -1,5 +1,4 @@
 """Support for Toon thermostat."""
-import logging
 from typing import Any, Dict, List, Optional
 
 from toonapi import (
@@ -28,8 +27,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
 from .helpers import toon_exception_handler
 from .models import ToonDisplayDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -117,7 +114,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return DEFAULT_MAX_TEMP
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the current state of the burner."""
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 

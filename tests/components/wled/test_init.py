@@ -1,11 +1,12 @@
 """Tests for the WLED integration."""
+from unittest.mock import MagicMock, patch
+
 from wled import WLEDConnectionError
 
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.core import HomeAssistant
 
-from tests.async_mock import MagicMock, patch
 from tests.components.wled import init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 

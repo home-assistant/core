@@ -1,5 +1,4 @@
 """Config flow to configure the WLED integration."""
-import logging
 from typing import Any, Dict, Optional
 
 import voluptuous as vol
@@ -15,8 +14,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN  # pylint: disable=unused-import
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -36,13 +33,12 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
         if user_input is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         # Hostname is format: wled-livingroom.local.
         host = user_input["hostname"].rstrip(".")
         name, _ = host.rsplit(".")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_HOST: user_input["host"],
@@ -65,7 +61,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[ConfigType] = None, prepare: bool = False
     ) -> Dict[str, Any]:
         """Config flow handler for WLED."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         source = self.context.get("source")
 
         # Request user input, unless we are preparing discovery flow
@@ -75,7 +70,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form()
 
         if source == SOURCE_ZEROCONF:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             user_input[CONF_HOST] = self.context.get(CONF_HOST)
             user_input[CONF_MAC] = self.context.get(CONF_MAC)
 
@@ -86,8 +80,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 device = await wled.update()
             except WLEDConnectionError:
                 if source == SOURCE_ZEROCONF:
-                    return self.async_abort(reason="connection_error")
-                return self._show_setup_form({"base": "connection_error"})
+                    return self.async_abort(reason="cannot_connect")
+                return self._show_setup_form({"base": "cannot_connect"})
             user_input[CONF_MAC] = device.info.mac_address
 
         # Check if already configured
@@ -96,7 +90,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         title = user_input[CONF_HOST]
         if source == SOURCE_ZEROCONF:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             title = self.context.get(CONF_NAME)
 
         if prepare:
@@ -117,7 +110,6 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def _show_confirm_dialog(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
         """Show the confirm dialog to the user."""
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         name = self.context.get(CONF_NAME)
         return self.async_show_form(
             step_id="zeroconf_confirm",

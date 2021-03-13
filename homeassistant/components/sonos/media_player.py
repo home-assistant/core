@@ -4,10 +4,18 @@ import datetime
 import functools as ft
 import logging
 import socket
+import urllib.parse
 
 import async_timeout
 import pysonos
 from pysonos import alarms
+from pysonos.core import (
+    MUSIC_SRC_LINE_IN,
+    MUSIC_SRC_RADIO,
+    MUSIC_SRC_TV,
+    PLAY_MODE_BY_MEANING,
+    PLAY_MODES,
+)
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
@@ -16,14 +24,22 @@ import voluptuous as vol
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
+    MEDIA_TYPE_ALBUM,
+    MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
+    MEDIA_TYPE_TRACK,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -31,6 +47,9 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.const import (
     ATTR_TIME,
     EVENT_HOMEASSISTANT_STOP,
@@ -41,15 +60,17 @@ from homeassistant.const import (
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
-from . import (
-    CONF_ADVERTISE_ADDR,
-    CONF_HOSTS,
-    CONF_INTERFACE_ADDR,
+from . import CONF_ADVERTISE_ADDR, CONF_HOSTS, CONF_INTERFACE_ADDR
+from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
+    MEDIA_TYPES_TO_SONOS,
+    PLAYABLE_MEDIA_TYPES,
 )
+from .media_browser import build_item_response, get_media, library_payload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,22 +78,32 @@ SCAN_INTERVAL = 10
 DISCOVERY_INTERVAL = 60
 
 SUPPORT_SONOS = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_SHUFFLE_SET
+    SUPPORT_BROWSE_MEDIA
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_NEXT_TRACK
+    | SUPPORT_PAUSE
+    | SUPPORT_PLAY
+    | SUPPORT_PLAY_MEDIA
+    | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_REPEAT_SET
+    | SUPPORT_SEEK
+    | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SHUFFLE_SET
+    | SUPPORT_STOP
+    | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
 )
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
+
+REPEAT_TO_SONOS = {
+    REPEAT_MODE_OFF: False,
+    REPEAT_MODE_ALL: True,
+    REPEAT_MODE_ONE: "ONE",
+}
+
+SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 ATTR_SONOS_GROUP = "sonos_group"
 
@@ -379,19 +410,20 @@ class SonosEntity(MediaPlayerEntity):
         self._player = player
         self._player_volume = None
         self._player_muted = None
-        self._shuffle = None
+        self._play_mode = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
         self._uri = None
+        self._media_library = pysonos.music_library.MusicLibrary(self.soco)
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
         self._media_image_url = None
+        self._media_channel = None
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
-        self._is_playing_local_queue = None
         self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
@@ -444,13 +476,17 @@ class SonosEntity(MediaPlayerEntity):
             "sw_version": self._sw_version,
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
+            "suggested_area": self._name,
         }
 
     @property
     @soco_coordinator
     def state(self):
         """Return the state of the entity."""
-        if self._status in ("PAUSED_PLAYBACK", "STOPPED",):
+        if self._status in (
+            "PAUSED_PLAYBACK",
+            "STOPPED",
+        ):
             # Sonos can consider itself "paused" but without having media loaded
             # (happens if playing Spotify and via Spotify app you pick another device to play on)
             if self.media_title is None:
@@ -546,7 +582,7 @@ class SonosEntity(MediaPlayerEntity):
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
-            self._shuffle = self.soco.shuffle
+            self._play_mode = self.soco.play_mode
             self.update_volume()
             self._set_favorites()
 
@@ -584,30 +620,42 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
-        transport_info = self.soco.get_current_transport_info()
-        new_status = transport_info.get("current_transport_state")
+        variables = event and event.variables
+
+        if variables:
+            new_status = variables["transport_state"]
+        else:
+            transport_info = self.soco.get_current_transport_info()
+            new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
         if new_status == "TRANSITIONING":
             return
 
-        self._shuffle = self.soco.shuffle
+        self._play_mode = event.current_play_mode if event else self.soco.play_mode
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
+        self._media_channel = None
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
+        self._queue_position = None
         self._source_name = None
 
         update_position = new_status != self._status
         self._status = new_status
 
-        self._is_playing_local_queue = self.soco.is_playing_local_queue
+        if variables:
+            track_uri = variables["current_track_uri"]
+            music_source = self.soco.music_source_from_uri(track_uri)
+        else:
+            # This causes a network round-trip so we avoid it when possible
+            music_source = self.soco.music_source
 
-        if self.soco.is_playing_tv:
+        if music_source == MUSIC_SRC_TV:
             self.update_media_linein(SOURCE_TV)
-        elif self.soco.is_playing_line_in:
+        elif music_source == MUSIC_SRC_LINE_IN:
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
@@ -619,8 +667,7 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_album_name = track_info.get("album")
                 self._media_title = track_info.get("title")
 
-                if self.soco.is_radio_uri(track_info["uri"]):
-                    variables = event and event.variables
+                if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
@@ -645,9 +692,10 @@ class SonosEntity(MediaPlayerEntity):
         self._clear_media_position()
 
         try:
-            library = pysonos.music_library.MusicLibrary(self.soco)
             album_art_uri = variables["current_track_meta_data"].album_art_uri
-            self._media_image_url = library.build_album_art_full_uri(album_art_uri)
+            self._media_image_url = self._media_library.build_album_art_full_uri(
+                album_art_uri
+            )
         except (TypeError, KeyError, AttributeError):
             pass
 
@@ -660,17 +708,20 @@ class SonosEntity(MediaPlayerEntity):
                 uri_meta_data, pysonos.data_structures.DidlAudioBroadcast
             ) and (
                 self.state != STATE_PLAYING
-                or self.soco.is_radio_uri(self._media_title)
+                or self.soco.music_source_from_uri(self._media_title) == MUSIC_SRC_RADIO
                 or self._media_title in self._uri
             ):
                 self._media_title = uri_meta_data.title
         except (TypeError, KeyError, AttributeError):
             pass
 
+        media_info = self.soco.get_current_media_info()
+
+        self._media_channel = media_info["channel"]
+
         # Check if currently playing radio station is in favorites
-        media_info = self.soco.avTransport.GetMediaInfo([("InstanceID", 0)])
         for fav in self._favorites:
-            if fav.reference.get_uri() == media_info["CurrentURI"]:
+            if fav.reference.get_uri() == media_info["uri"]:
                 self._source_name = fav.title
 
     def update_media_music(self, update_media_position, track_info):
@@ -703,7 +754,9 @@ class SonosEntity(MediaPlayerEntity):
 
         self._media_image_url = track_info.get("album_art")
 
-        self._queue_position = int(track_info.get("playlist_position")) - 1
+        playlist_position = int(track_info.get("playlist_position"))
+        if playlist_position > 0:
+            self._queue_position = playlist_position - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -801,8 +854,9 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_content(self, event=None):
         """Update information about available content."""
-        self._set_favorites()
-        self.schedule_update_ha_state()
+        if event and "favorites_update_id" in event.variables:
+            self._set_favorites()
+            self.schedule_update_ha_state()
 
     @property
     def volume_level(self):
@@ -820,7 +874,14 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return self._shuffle
+        return PLAY_MODES[self._play_mode][0]
+
+    @property
+    @soco_coordinator
+    def repeat(self):
+        """Return current repeat mode."""
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
     @soco_coordinator
@@ -859,6 +920,12 @@ class SonosEntity(MediaPlayerEntity):
 
     @property
     @soco_coordinator
+    def media_channel(self):
+        """Channel currently playing."""
+        return self._media_channel or None
+
+    @property
+    @soco_coordinator
     def media_artist(self):
         """Artist of current playing media, music track only."""
         return self._media_artist or None
@@ -879,10 +946,7 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def queue_position(self):
         """If playing local queue return the position in the queue else None."""
-        if self._is_playing_local_queue:
-            return self._queue_position
-
-        return None
+        return self._queue_position
 
     @property
     @soco_coordinator
@@ -915,7 +979,17 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.shuffle = shuffle
+        sonos_shuffle = shuffle
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
+
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @soco_coordinator
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        sonos_shuffle = PLAY_MODES[self._play_mode][0]
+        sonos_repeat = REPEAT_TO_SONOS[repeat]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error()
     def mute_volume(self, mute):
@@ -935,7 +1009,7 @@ class SonosEntity(MediaPlayerEntity):
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if self.soco.is_radio_uri(uri):
+                if self.soco.music_source_from_uri(uri) == MUSIC_SRC_RADIO:
                     self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()
@@ -1006,15 +1080,23 @@ class SonosEntity(MediaPlayerEntity):
         """
         Send the play_media command to the media player.
 
+        If media_id is a Plex payload, attempt Plex->Sonos playback.
+
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type == MEDIA_TYPE_MUSIC:
+        if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            play_on_sonos(self.hass, media_type, media_id, self.name)
+        elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    self.soco.add_uri_to_queue(media_id)
+                    if self.soco.is_service_uri(media_id):
+                        self.soco.add_service_uri_to_queue(media_id)
+                    else:
+                        self.soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
                     _LOGGER.error(
                         'Error parsing media uri "%s", '
@@ -1023,8 +1105,17 @@ class SonosEntity(MediaPlayerEntity):
                         media_id,
                     )
             else:
-                self.soco.play_uri(media_id)
+                if self.soco.is_service_uri(media_id):
+                    self.soco.clear_queue()
+                    self.soco.add_service_uri_to_queue(media_id)
+                    self.soco.play_from_queue(0)
+                else:
+                    self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
+            if media_id.startswith("S:"):
+                item = get_media(self._media_library, media_id, media_type)
+                self.soco.play_uri(item.get_uri())
+                return
             try:
                 playlists = self.soco.get_sonos_playlists()
                 playlist = next(p for p in playlists if p.title == media_id)
@@ -1033,6 +1124,14 @@ class SonosEntity(MediaPlayerEntity):
                 self.soco.play_from_queue(0)
             except StopIteration:
                 _LOGGER.error('Could not find a Sonos playlist named "%s"', media_id)
+        elif media_type in PLAYABLE_MEDIA_TYPES:
+            item = get_media(self._media_library, media_id, media_type)
+
+            if not item:
+                _LOGGER.error('Could not find "%s" in the library', media_id)
+                return
+
+            self.soco.play_uri(item.get_uri())
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
@@ -1267,7 +1366,7 @@ class SonosEntity(MediaPlayerEntity):
         self.soco.remove_from_queue(queue_position)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return entity specific state attributes."""
         attributes = {ATTR_SONOS_GROUP: [e.entity_id for e in self._sonos_group]}
 
@@ -1281,3 +1380,63 @@ class SonosEntity(MediaPlayerEntity):
             attributes[ATTR_QUEUE_POSITION] = self.queue_position
 
         return attributes
+
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Fetch media browser image to serve via proxy."""
+        if (
+            media_content_type in [MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST]
+            and media_content_id
+        ):
+            item = await self.hass.async_add_executor_job(
+                get_media,
+                self._media_library,
+                media_content_id,
+                MEDIA_TYPES_TO_SONOS[media_content_type],
+            )
+            image_url = getattr(item, "album_art_uri", None)
+            if image_url:
+                result = await self._async_fetch_image(image_url)
+                return result
+
+        return (None, None)
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        is_internal = is_internal_request(self.hass)
+
+        def _get_thumbnail_url(
+            media_content_type, media_content_id, media_image_id=None
+        ):
+            if is_internal:
+                item = get_media(
+                    self._media_library,
+                    media_content_id,
+                    media_content_type,
+                )
+                return getattr(item, "album_art_uri", None)
+
+            return self.get_browse_image_url(
+                media_content_type,
+                urllib.parse.quote_plus(media_content_id),
+                media_image_id,
+            )
+
+        if media_content_type in [None, "library"]:
+            return await self.hass.async_add_executor_job(
+                library_payload, self._media_library, _get_thumbnail_url
+            )
+
+        payload = {
+            "search_type": media_content_type,
+            "idstring": media_content_id,
+        }
+        response = await self.hass.async_add_executor_job(
+            build_item_response, self._media_library, payload, _get_thumbnail_url
+        )
+        if response is None:
+            raise BrowseError(
+                f"Media not found: {media_content_type} / {media_content_id}"
+            )
+        return response

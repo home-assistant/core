@@ -10,10 +10,10 @@
       }
     },
     "error": {
-      "invalid_login": "Invalid username or password"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
-      "already_setup": "Only one Vesync instance is allowed"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   }
 }

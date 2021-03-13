@@ -1,6 +1,5 @@
 """Switches on Zigbee Home Automation networks."""
 import functools
-import logging
 from typing import Any, List
 
 from zigpy.zcl.clusters.general import OnOff
@@ -22,7 +21,6 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
-_LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
 

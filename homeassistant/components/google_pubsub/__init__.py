@@ -57,9 +57,7 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         service_principal_path
     )
 
-    topic_path = publisher.topic_path(  # pylint: disable=no-member
-        project_id, topic_name
-    )
+    topic_path = publisher.topic_path(project_id, topic_name)
 
     encoder = DateTimeJSONEncoder()
 
@@ -89,7 +87,7 @@ class DateTimeJSONEncoder(json.JSONEncoder):
     Additionally add encoding for datetime objects as isoformat.
     """
 
-    def default(self, o):  # pylint: disable=method-hidden
+    def default(self, o):
         """Implement encoding logic."""
         if isinstance(o, datetime.datetime):
             return o.isoformat()

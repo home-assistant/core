@@ -1,6 +1,4 @@
 """Support for Aqualink temperature sensors."""
-import logging
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_COLD,
     DOMAIN,
@@ -11,8 +9,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from . import AqualinkEntity
 from .const import DOMAIN as AQUALINK_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

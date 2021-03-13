@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "\uc704\uce58\uac00 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4"
+            "already_configured": "\uc11c\ube44\uc2a4\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {

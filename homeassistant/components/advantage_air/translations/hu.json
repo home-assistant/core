@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "IP c\u00edm",
+                    "port": "Port"
+                },
+                "description": "Csatlakozzon az Advantage Air fali t\u00e1blag\u00e9p API-j\u00e1hoz.",
+                "title": "Csatlakoz\u00e1s"
+            }
+        }
+    }
+}

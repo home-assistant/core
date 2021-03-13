@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "ESP is already configured",
-            "already_in_progress": "ESP configuration is already in progress"
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
         },
         "error": {
             "connection_error": "Can't connect to ESP. Please make sure your YAML file contains an 'api:' line.",
-            "invalid_password": "Invalid password!",
+            "invalid_auth": "Invalid authentication",
             "resolve_error": "Can't resolve address of the ESP. If this error persists, please set a static IP address: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",

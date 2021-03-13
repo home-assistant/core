@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
+    CURRENCY_EURO,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     ELECTRICAL_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     FREQUENCY_HERTZ,
+    PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
     VOLT,
@@ -39,8 +41,8 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 # Sensor type order is: Sensor name, Unit of measurement, api data name, additional options
 
 TOTAL_SENSOR_TYPES = {
-    "total_money_today": ("Total money today", "€", "plantMoneyText", {}),
-    "total_money_total": ("Money lifetime", "€", "totalMoneyText", {}),
+    "total_money_today": ("Total money today", CURRENCY_EURO, "plantMoneyText", {}),
+    "total_money_total": ("Money lifetime", CURRENCY_EURO, "totalMoneyText", {}),
     "total_energy_today": (
         "Energy Today",
         ENERGY_KILO_WATT_HOUR,
@@ -230,7 +232,7 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_battery_percentage": (
         "Battery percentage",
-        "%",
+        PERCENTAGE,
         "capacity",
         {"device_class": DEVICE_CLASS_BATTERY},
     ),
@@ -338,7 +340,7 @@ STORAGE_SENSOR_TYPES = {
     ),
     "storage_load_percentage": (
         "Load percentage",
-        "%",
+        PERCENTAGE,
         "loadPercent",
         {"device_class": DEVICE_CLASS_BATTERY, "round": 2},
     ),

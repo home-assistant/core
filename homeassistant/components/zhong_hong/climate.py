@@ -87,18 +87,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     hub_is_initialized = False
 
+    def _start_hub():
+        """Start the hub socket and query status of all devices."""
+        hub.start_listen()
+        hub.query_all_status()
+
     async def startup():
         """Start hub socket after all climate entity is set up."""
         nonlocal hub_is_initialized
-        if not all([device.is_initialized for device in devices]):
+        if not all(device.is_initialized for device in devices):
             return
 
         if hub_is_initialized:
             return
 
         _LOGGER.debug("zhong_hong hub start listen event")
-        await hass.async_add_job(hub.start_listen)
-        await hass.async_add_job(hub.query_all_status)
+        await hass.async_add_executor_job(_start_hub)
         hub_is_initialized = True
 
     async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)

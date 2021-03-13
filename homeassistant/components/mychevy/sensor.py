@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import UNIT_PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -27,7 +27,7 @@ SENSORS = [
     EVSensorConfig("Charged By", "estimatedFullChargeBy"),
     EVSensorConfig("Charge Mode", "chargeMode"),
     EVSensorConfig(
-        "Battery Level", BATTERY_SENSOR, UNIT_PERCENTAGE, "mdi:battery", ["charging"]
+        "Battery Level", BATTERY_SENSOR, PERCENTAGE, "mdi:battery", ["charging"]
     ),
 ]
 
@@ -160,6 +160,8 @@ class EVSensor(Entity):
         """Update state."""
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
+            if self._unit_of_measurement == "miles":
+                self._state = round(self._state)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
             self.async_write_ha_state()
@@ -170,7 +172,7 @@ class EVSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self._state_attributes
 

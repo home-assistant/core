@@ -126,6 +126,16 @@ class ObihaiServiceSensors(Entity):
             if self._state == "Off Hook":
                 return "mdi:phone-in-talk"
             return "mdi:phone-hangup"
+        if "Service Status" in self._service_name:
+            if "OBiTALK Service Status" in self._service_name:
+                return "mdi:phone-check"
+            if self._state == "0":
+                return "mdi:phone-hangup"
+            return "mdi:phone-in-talk"
+        if "Reboot Required" in self._service_name:
+            if self._state == "false":
+                return "mdi:restart-off"
+            return "mdi:restart-alert"
         return "mdi:phone"
 
     def update(self):

@@ -1,6 +1,7 @@
 """Tests for ZHA config flow."""
 
 import os
+from unittest.mock import AsyncMock, MagicMock, patch, sentinel
 
 import pytest
 import serial.tools.list_ports
@@ -13,13 +14,12 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_SOURCE
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
-from tests.async_mock import AsyncMock, MagicMock, patch, sentinel
 from tests.common import MockConfigEntry
 
 
 def com_port():
     """Mock of a serial port."""
-    port = serial.tools.list_ports_common.ListPortInfo()
+    port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
     port.serial_number = "1234"
     port.manufacturer = "Virtual serial port"
     port.device = "/dev/ttyUSB1234"
@@ -53,7 +53,8 @@ async def test_user_flow(detect_mock, hass):
 
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 @patch(
-    "homeassistant.components.zha.config_flow.detect_radios", return_value=None,
+    "homeassistant.components.zha.config_flow.detect_radios",
+    return_value=None,
 )
 async def test_user_flow_not_detected(detect_mock, hass):
     """Test user flow, radio not detected."""
@@ -73,14 +74,27 @@ async def test_user_flow_not_detected(detect_mock, hass):
     assert detect_mock.await_args[0][0] == port.device
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_flow_show_form(hass):
     """Test user step form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER},
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
     )
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "user"
+
+
+async def test_user_flow_show_manual(hass):
+    """Test user flow manual entry when no comport detected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_radio"
 
 
 async def test_user_flow_manual(hass):
@@ -163,7 +177,8 @@ async def test_user_port_config_fail(probe_mock, hass):
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
+        result["flow_id"],
+        user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "port_config"
@@ -184,7 +199,8 @@ async def test_user_port_config(probe_mock, hass):
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
+        result["flow_id"],
+        user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
 
     assert result["type"] == "create_entry"

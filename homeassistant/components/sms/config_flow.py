@@ -1,7 +1,7 @@
 """Config flow for SMS integration."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -27,8 +27,8 @@ async def get_imei_from_config(hass: core.HomeAssistant, data):
         raise CannotConnect
     try:
         imei = await gateway.get_imei_async()
-    except gammu.GSMError:  # pylint: disable=no-member
-        raise CannotConnect
+    except gammu.GSMError as err:
+        raise CannotConnect from err
     finally:
         await gateway.terminate_async()
 

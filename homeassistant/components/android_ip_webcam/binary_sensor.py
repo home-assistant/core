@@ -1,5 +1,8 @@
 """Support for Android IP Webcam binary sensors."""
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    BinarySensorEntity,
+)
 
 from . import CONF_HOST, CONF_NAME, DATA_IP_WEBCAM, KEY_MAP, AndroidIPCamEntity
 
@@ -47,4 +50,4 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return "motion"
+        return DEVICE_CLASS_MOTION

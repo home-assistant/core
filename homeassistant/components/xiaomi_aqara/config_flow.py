@@ -6,7 +6,7 @@ import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
@@ -14,10 +14,10 @@ from homeassistant.helpers.device_registry import format_mac
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,
-    CONF_PROTOCOL,
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
+    ZEROCONF_ACPARTNER,
     ZEROCONF_GATEWAY,
 )
 
@@ -158,7 +158,9 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_xiaomi_aqara")
 
         # Check if the discovered device is an xiaomi aqara gateway.
-        if not name.startswith(ZEROCONF_GATEWAY):
+        if not (
+            name.startswith(ZEROCONF_GATEWAY) or name.startswith(ZEROCONF_ACPARTNER)
+        ):
             _LOGGER.debug(
                 "Xiaomi device '%s' discovered with host %s, not identified as xiaomi aqara gateway",
                 name,
@@ -178,7 +180,6 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {CONF_HOST: self.host, CONF_MAC: mac_address}
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {"name": self.host}})
 
         return await self.async_step_user()

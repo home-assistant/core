@@ -1,5 +1,4 @@
 """OAuth2 implementations for Toon."""
-import logging
 from typing import Any, Optional, cast
 
 from homeassistant.core import HomeAssistant
@@ -7,8 +6,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import config_flow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def register_oauth2_implementations(
@@ -93,8 +90,8 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         """Initialize local Toon auth implementation."""
         data = {
             "grant_type": "authorization_code",
-            "code": external_data,
-            "redirect_uri": self.redirect_uri,
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
             "tenant_id": self.tenant_id,
         }
 

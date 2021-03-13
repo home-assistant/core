@@ -55,8 +55,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
             effects = await api.get_all_patterns()
 
-        except pyeverlights.ConnectionError:
-            raise PlatformNotReady
+        except pyeverlights.ConnectionError as err:
+            raise PlatformNotReady from err
 
         else:
             lights.append(EverLightsLight(api, pyeverlights.ZONE_1, status, effects))

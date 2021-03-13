@@ -4,7 +4,7 @@
             "already_configured": "Deze co\u00f6rdinaten zijn al geregistreerd."
         },
         "error": {
-            "general_error": "Er is een onbekende fout opgetreden."
+            "unknown": "Onverwachte fout"
         },
         "step": {
             "user": {

@@ -3,6 +3,9 @@ import json
 import os
 import time
 
+# from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
 from august.activity import (
     ACTIVITY_ACTIONS_DOOR_OPERATION,
     ACTIVITY_ACTIONS_DOORBELL_DING,
@@ -27,8 +30,6 @@ from homeassistant.components.august import (
 )
 from homeassistant.setup import async_setup_component
 
-# from tests.async_mock import AsyncMock
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import load_fixture
 
 
@@ -43,12 +44,21 @@ def _mock_get_config():
     }
 
 
+def _mock_authenticator(auth_state):
+    """Mock an august authenticator."""
+    authenticator = MagicMock()
+    type(authenticator).state = PropertyMock(return_value=auth_state)
+    return authenticator
+
+
 @patch("homeassistant.components.august.gateway.ApiAsync")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
     """Set up august integration."""
     authenticate_mock.side_effect = MagicMock(
-        return_value=_mock_august_authentication("original_token", 1234)
+        return_value=_mock_august_authentication(
+            "original_token", 1234, AuthenticationState.AUTHENTICATED
+        )
     )
     api_mock.return_value = api_instance
     assert await async_setup_component(hass, DOMAIN, _mock_get_config())
@@ -185,11 +195,9 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
     return await _mock_setup_august(hass, api_instance)
 
 
-def _mock_august_authentication(token_text, token_timestamp):
+def _mock_august_authentication(token_text, token_timestamp, state):
     authentication = MagicMock(name="august.authentication")
-    type(authentication).state = PropertyMock(
-        return_value=AuthenticationState.AUTHENTICATED
-    )
+    type(authentication).state = PropertyMock(return_value=state)
     type(authentication).access_token = PropertyMock(return_value=token_text)
     type(authentication).access_token_expires = PropertyMock(
         return_value=token_timestamp

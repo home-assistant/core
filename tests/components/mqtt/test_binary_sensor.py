@@ -2,11 +2,11 @@
 import copy
 from datetime import datetime, timedelta
 import json
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import binary_sensor, mqtt
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components import binary_sensor
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -41,7 +41,6 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 DEFAULT_CONFIG = {
@@ -53,9 +52,7 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_setting_sensor_value_expires_availability_topic(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -85,9 +82,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     await expires_helper(hass, mqtt_mock, caplog)
 
 
-async def test_setting_sensor_value_expires(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
+async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     """Test the expiration of the value."""
     assert await async_setup_component(
         hass,
@@ -113,7 +108,8 @@ async def test_setting_sensor_value_expires(
 
 async def expires_helper(hass, mqtt_mock, caplog):
     """Run the basic expiry code."""
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
     with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "ON")
@@ -157,6 +153,86 @@ async def expires_helper(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
 
     # Value is expired now
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
+    hass, mqtt_mock, caplog
+):
+    """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
+    config = {
+        "name": "Test",
+        "state_topic": "test-topic",
+        "expire_after": 4,
+        "force_update": True,
+    }
+
+    config_msg = json.dumps(config)
+
+    # Set time and publish config message to create binary_sensor via discovery with 4 s expiry
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        async_fire_time_changed(hass, now)
+        async_fire_mqtt_message(
+            hass, "homeassistant/binary_sensor/bla/config", config_msg
+        )
+        await hass.async_block_till_done()
+
+    # Test that binary_sensor is not available
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Publish state message
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        async_fire_mqtt_message(hass, "test-topic", "ON")
+        await hass.async_block_till_done()
+
+    # Test that binary_sensor has correct state
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    # Advance +3 seconds
+    now = now + timedelta(seconds=3)
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # binary_sensor is not yet expired
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    # Resend config message to update discovery
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        async_fire_time_changed(hass, now)
+        async_fire_mqtt_message(
+            hass, "homeassistant/binary_sensor/bla/config", config_msg
+        )
+        await hass.async_block_till_done()
+
+    # Test that binary_sensor has not expired
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    # Add +2 seconds
+    now = now + timedelta(seconds=2)
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # Test that binary_sensor has expired
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_UNAVAILABLE
+
+    # Resend config message to update discovery
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
+        async_fire_mqtt_message(
+            hass, "homeassistant/binary_sensor/bla/config", config_msg
+        )
+        await hass.async_block_till_done()
+
+    # Test that binary_sensor is still expired
     state = hass.states.get("binary_sensor.test")
     assert state.state == STATE_UNAVAILABLE
 
@@ -580,17 +656,75 @@ async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
     )
 
 
-async def test_discovery_update_binary_sensor(hass, mqtt_mock, caplog):
+async def test_discovery_update_binary_sensor_topic_template(hass, mqtt_mock, caplog):
     """Test update of discovered binary_sensor."""
     config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
     config2 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
+    config1["state_topic"] = "sensor/state1"
+    config2["state_topic"] = "sensor/state2"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("sensor/state1", '{"state1":{"state":"ON"}}')], "on", None),
+    ]
+    state_data2 = [
+        ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
+        ([("sensor/state2", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("sensor/state1", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state2", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state2", '{"state2":{"state":"OFF"}}')], "off", None),
+    ]
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, data2
+        hass,
+        mqtt_mock,
+        caplog,
+        binary_sensor.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
+    )
+
+
+async def test_discovery_update_binary_sensor_template(hass, mqtt_mock, caplog):
+    """Test update of discovered binary_sensor."""
+    config1 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[binary_sensor.DOMAIN])
+    config1["name"] = "Beer"
+    config2["name"] = "Milk"
+    config1["state_topic"] = "sensor/state1"
+    config2["state_topic"] = "sensor/state1"
+    config1["value_template"] = "{{ value_json.state1.state }}"
+    config2["value_template"] = "{{ value_json.state2.state }}"
+
+    state_data1 = [
+        ([("sensor/state1", '{"state1":{"state":"ON"}}')], "on", None),
+    ]
+    state_data2 = [
+        ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "off", None),
+        ([("sensor/state1", '{"state2":{"state":"ON"}}')], "on", None),
+        ([("sensor/state1", '{"state1":{"state":"OFF"}}')], "on", None),
+        ([("sensor/state1", '{"state2":{"state":"OFF"}}')], "off", None),
+    ]
+
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    await help_test_discovery_update(
+        hass,
+        mqtt_mock,
+        caplog,
+        binary_sensor.DOMAIN,
+        data1,
+        data2,
+        state_data1=state_data1,
+        state_data2=state_data2,
     )
 
 
@@ -606,88 +740,6 @@ async def test_discovery_update_unchanged_binary_sensor(hass, mqtt_mock, caplog)
         await help_test_discovery_update_unchanged(
             hass, mqtt_mock, caplog, binary_sensor.DOMAIN, data1, discovery_update
         )
-
-
-async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
-    hass, mqtt_mock, legacy_patchable_time, caplog
-):
-    """Test that binary_sensor with expire_after set behaves correctly on discovery and discovery update."""
-    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    await async_start(hass, "homeassistant", entry)
-
-    config = {
-        "name": "Test",
-        "state_topic": "test-topic",
-        "expire_after": 4,
-        "force_update": True,
-    }
-
-    config_msg = json.dumps(config)
-
-    # Set time and publish config message to create binary_sensor via discovery with 4 s expiry
-    now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
-        )
-        await hass.async_block_till_done()
-
-    # Test that binary_sensor is not available
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
-
-    # Publish state message
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_mqtt_message(hass, "test-topic", "ON")
-        await hass.async_block_till_done()
-
-    # Test that binary_sensor has correct state
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
-
-    # Advance +3 seconds
-    now = now + timedelta(seconds=3)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-
-    # binary_sensor is not yet expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
-
-    # Resend config message to update discovery
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
-        )
-        await hass.async_block_till_done()
-
-    # Test that binary_sensor has not expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_ON
-
-    # Add +2 seconds
-    now = now + timedelta(seconds=2)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_time_changed(hass, now)
-        await hass.async_block_till_done()
-
-    # Test that binary_sensor has expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
-
-    # Resend config message to update discovery
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
-        async_fire_mqtt_message(
-            hass, "homeassistant/binary_sensor/bla/config", config_msg
-        )
-        await hass.async_block_till_done()
-
-    # Test that binary_sensor is still expired
-    state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.no_fail_on_log_exception

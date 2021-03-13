@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
             "link": {
                 "data": {

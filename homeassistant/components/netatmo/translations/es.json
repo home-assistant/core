@@ -3,7 +3,8 @@
         "abort": {
             "authorize_url_timeout": "Tiempo excedido generando la url de autorizaci\u00f3n.",
             "missing_configuration": "El componente no est\u00e1 configurado. Por favor, consulta la documentaci\u00f3n.",
-            "single_instance_allowed": "Ya est\u00e1 configurado. S\u00f3lo es posible una \u00fanica configuraci\u00f3n."
+            "no_url_available": "No hay URL disponible. Para obtener informaci\u00f3n sobre este error, [consulta la secci\u00f3n de ayuda]({docs_url})",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
         },
         "create_entry": {
             "default": "Autenticado correctamente"
@@ -12,6 +13,28 @@
             "pick_implementation": {
                 "title": "Selecciona un m\u00e9todo de autenticaci\u00f3n"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "fuera",
+            "hg": "protector contra las heladas",
+            "schedule": "Horario"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} ha detectado una alarma",
+            "animal": "{entity_name} ha detectado un animal",
+            "cancel_set_point": "{entity_name} ha reanudado su programaci\u00f3n",
+            "human": "{entity_name} ha detectado una persona",
+            "movement": "{entity_name} ha detectado movimiento",
+            "outdoor": "{entity_name} ha detectado un evento en el exterior",
+            "person": "{entity_name} ha detectado una persona",
+            "person_away": "{entity_name} ha detectado que una persona se ha ido",
+            "set_point": "Temperatura objetivo {entity_name} fijada manualmente",
+            "therm_mode": "{entity_name} cambi\u00f3 a \" {subtype} \"",
+            "turned_off": "{entity_name} desactivado",
+            "turned_on": "{entity_name} activado",
+            "vehicle": "{entity_name} ha detectado un veh\u00edculo"
         }
     },
     "options": {

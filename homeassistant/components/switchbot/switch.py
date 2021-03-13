@@ -1,8 +1,7 @@
 """Support for Switchbot."""
-import logging
 from typing import Any, Dict
 
-# pylint: disable=import-error, no-member
+# pylint: disable=import-error
 import switchbot
 import voluptuous as vol
 
@@ -10,8 +9,6 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Switchbot"
 
@@ -89,6 +86,6 @@ class SwitchBot(SwitchEntity, RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}

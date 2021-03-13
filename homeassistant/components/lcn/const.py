@@ -3,10 +3,10 @@ from itertools import product
 
 from homeassistant.const import (
     DEGREE,
+    PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    UNIT_PERCENTAGE,
     VOLT,
 )
 
@@ -25,7 +25,6 @@ CONF_LOCKABLE = "lockable"
 CONF_VARIABLE = "variable"
 CONF_VALUE = "value"
 CONF_RELVARREF = "value_reference"
-CONF_SOURCE = "source"
 CONF_SETPOINT = "setpoint"
 CONF_LED = "led"
 CONF_KEYS = "keys"
@@ -40,7 +39,6 @@ CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_SCENES = "scenes"
 CONF_REGISTER = "register"
-CONF_SCENE = "scene"
 CONF_OUTPUTS = "outputs"
 CONF_REVERSE_TIME = "reverse_time"
 
@@ -160,7 +158,7 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    UNIT_PERCENTAGE,
+    PERCENTAGE,
     "PERCENT",
     "PPM",
     "VOLT",

@@ -26,6 +26,9 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_dev_reg,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -404,6 +407,7 @@ class OpenThermGatewayDevice:
         self.gw_id = config_entry.data[CONF_ID]
         self.name = config_entry.data[CONF_NAME]
         self.climate_config = config_entry.options
+        self.config_entry_id = config_entry.entry_id
         self.status = {}
         self.update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_update"
         self.options_update_signal = f"{DATA_OPENTHERM_GW}_{self.gw_id}_options_update"
@@ -419,9 +423,22 @@ class OpenThermGatewayDevice:
     async def connect_and_subscribe(self):
         """Connect to serial device and subscribe report handler."""
         self.status = await self.gateway.connect(self.hass.loop, self.device_path)
-        _LOGGER.debug("Connected to OpenTherm Gateway at %s", self.device_path)
-        self.gw_version = self.status.get(gw_vars.OTGW_BUILD)
-
+        version_string = self.status[gw_vars.OTGW].get(gw_vars.OTGW_ABOUT)
+        self.gw_version = version_string[18:] if version_string else None
+        _LOGGER.debug(
+            "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
+        )
+        dev_reg = await async_get_dev_reg(self.hass)
+        gw_dev = dev_reg.async_get_or_create(
+            config_entry_id=self.config_entry_id,
+            identifiers={(DOMAIN, self.gw_id)},
+            name=self.name,
+            manufacturer="Schelte Bron",
+            model="OpenTherm Gateway",
+            sw_version=self.gw_version,
+        )
+        if gw_dev.sw_version != self.gw_version:
+            dev_reg.async_update_device(gw_dev.id, sw_version=self.gw_version)
         self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self.cleanup)
 
         async def handle_report(status):

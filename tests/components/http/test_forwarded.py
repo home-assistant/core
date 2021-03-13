@@ -330,7 +330,8 @@ async def test_x_forwarded_proto_with_multiple_headers(aiohttp_client, caplog):
 
 
 @pytest.mark.parametrize(
-    "x_forwarded_proto", ["", ",", "https, , https", "https, https, "],
+    "x_forwarded_proto",
+    ["", ",", "https, , https", "https, https, "],
 )
 async def test_x_forwarded_proto_empty_element(
     x_forwarded_proto, aiohttp_client, caplog
@@ -342,7 +343,8 @@ async def test_x_forwarded_proto_empty_element(
 
     mock_api_client = await aiohttp_client(app)
     resp = await mock_api_client.get(
-        "/", headers={X_FORWARDED_FOR: "1.1.1.1", X_FORWARDED_PROTO: x_forwarded_proto},
+        "/",
+        headers={X_FORWARDED_FOR: "1.1.1.1", X_FORWARDED_PROTO: x_forwarded_proto},
     )
 
     assert resp.status == 400

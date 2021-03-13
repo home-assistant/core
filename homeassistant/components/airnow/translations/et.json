@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine",
+            "invalid_location": "Selle asukoha jaoks ei leitud andmeid",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "radius": "Jaama raadius (miilid; valikuline)"
+                },
+                "description": "Seadista AirNow \u00f5hukvaliteedi sidumine. API-v\u00f5tme loomiseks mine aadressile https://docs.airnowapi.org/account/request/",
+                "title": ""
+            }
+        }
+    },
+    "title": ""
+}

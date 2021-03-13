@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     # Disconnect when shutting down
     async def disconnect_controller(event):
@@ -99,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     except HeosError as error:
         await controller.disconnect()
         _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from error
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()
@@ -196,7 +196,7 @@ class ControllerManager:
         # mapped_ids contains the mapped IDs (new:old)
         for new_id, old_id in mapped_ids.items():
             # update device registry
-            entry = self._device_registry.async_get_device({(DOMAIN, old_id)}, set())
+            entry = self._device_registry.async_get_device({(DOMAIN, old_id)})
             new_identifiers = {(DOMAIN, new_id)}
             if entry:
                 self._device_registry.async_update_device(

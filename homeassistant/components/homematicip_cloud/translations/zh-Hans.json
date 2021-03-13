@@ -6,7 +6,7 @@
             "unknown": "\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002"
         },
         "error": {
-            "invalid_pin": "PIN \u65e0\u6548\uff0c\u8bf7\u518d\u8bd5\u4e00\u6b21\u3002",
+            "invalid_sgtin_or_pin": "PIN \u65e0\u6548\uff0c\u8bf7\u518d\u8bd5\u4e00\u6b21\u3002",
             "press_the_button": "\u8bf7\u6309\u4e0b\u84dd\u8272\u6309\u94ae\u3002",
             "register_failed": "\u6ce8\u518c\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5",
             "timeout_button": "\u6309\u4e0b\u84dd\u8272\u6309\u94ae\u8d85\u65f6\uff0c\u8bf7\u518d\u8bd5\u4e00\u6b21\u3002"

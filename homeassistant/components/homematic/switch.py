@@ -1,12 +1,8 @@
 """Support for HomeMatic switches."""
-import logging
-
 from homeassistant.components.switch import SwitchEntity
 
 from .const import ATTR_DISCOVER_DEVICES
 from .entity import HMDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

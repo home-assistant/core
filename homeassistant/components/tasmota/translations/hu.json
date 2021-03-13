@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "config": {
+                "title": "Tasmota"
+            }
+        }
+    }
+}

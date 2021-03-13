@@ -49,7 +49,9 @@
         "trigger_type": {
             "remote_button_long_release": "Bouton \" {subtype} \" rel\u00e2ch\u00e9 apr\u00e8s un appui long",
             "remote_button_short_press": "bouton \"{subtype}\" est press\u00e9",
-            "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9"
+            "remote_button_short_release": "Bouton \" {subtype} \" est rel\u00e2ch\u00e9",
+            "remote_double_button_long_press": "Les deux \"{sous-type}\" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s apr\u00e8s un appui long",
+            "remote_double_button_short_press": "Les deux \" {subtype} \" ont \u00e9t\u00e9 rel\u00e2ch\u00e9s"
         }
     },
     "options": {

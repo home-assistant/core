@@ -3,66 +3,78 @@ import logging
 
 from bimmer_connected.state import ChargingState, LockState
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PLUG,
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
+from homeassistant.const import LENGTH_KILOMETERS
 
-from . import DOMAIN as BMW_DOMAIN
-from .const import ATTRIBUTION
+from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
+from .const import CONF_ACCOUNT, DATA_ENTRIES
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    "lids": ["Doors", "opening", "mdi:car-door-lock"],
-    "windows": ["Windows", "opening", "mdi:car-door"],
+    "lids": ["Doors", DEVICE_CLASS_OPENING, "mdi:car-door-lock"],
+    "windows": ["Windows", DEVICE_CLASS_OPENING, "mdi:car-door"],
     "door_lock_state": ["Door lock state", "lock", "mdi:car-key"],
     "lights_parking": ["Parking lights", "light", "mdi:car-parking-lights"],
-    "condition_based_services": ["Condition based services", "problem", "mdi:wrench"],
-    "check_control_messages": ["Control messages", "problem", "mdi:car-tire-alert"],
+    "condition_based_services": [
+        "Condition based services",
+        DEVICE_CLASS_PROBLEM,
+        "mdi:wrench",
+    ],
+    "check_control_messages": [
+        "Control messages",
+        DEVICE_CLASS_PROBLEM,
+        "mdi:car-tire-alert",
+    ],
 }
 
 SENSOR_TYPES_ELEC = {
     "charging_status": ["Charging status", "power", "mdi:ev-station"],
-    "connection_status": ["Connection status", "plug", "mdi:car-electric"],
+    "connection_status": ["Connection status", DEVICE_CLASS_PLUG, "mdi:car-electric"],
 }
 
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the BMW sensors."""
-    accounts = hass.data[BMW_DOMAIN]
-    _LOGGER.debug("Found BMW accounts: %s", ", ".join([a.name for a in accounts]))
-    devices = []
-    for account in accounts:
-        for vehicle in account.account.vehicles:
-            if vehicle.has_hv_battery:
-                _LOGGER.debug("BMW with a high voltage battery")
-                for key, value in sorted(SENSOR_TYPES_ELEC.items()):
-                    if key in vehicle.available_attributes:
-                        device = BMWConnectedDriveSensor(
-                            account, vehicle, key, value[0], value[1], value[2]
-                        )
-                        devices.append(device)
-            elif vehicle.has_internal_combustion_engine:
-                _LOGGER.debug("BMW with an internal combustion engine")
-                for key, value in sorted(SENSOR_TYPES.items()):
-                    if key in vehicle.available_attributes:
-                        device = BMWConnectedDriveSensor(
-                            account, vehicle, key, value[0], value[1], value[2]
-                        )
-                        devices.append(device)
-    add_entities(devices, True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the BMW ConnectedDrive binary sensors from config entry."""
+    account = hass.data[BMW_DOMAIN][DATA_ENTRIES][config_entry.entry_id][CONF_ACCOUNT]
+    entities = []
+
+    for vehicle in account.account.vehicles:
+        if vehicle.has_hv_battery:
+            _LOGGER.debug("BMW with a high voltage battery")
+            for key, value in sorted(SENSOR_TYPES_ELEC.items()):
+                if key in vehicle.available_attributes:
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, key, value[0], value[1], value[2]
+                    )
+                    entities.append(device)
+        elif vehicle.has_internal_combustion_engine:
+            _LOGGER.debug("BMW with an internal combustion engine")
+            for key, value in sorted(SENSOR_TYPES.items()):
+                if key in vehicle.available_attributes:
+                    device = BMWConnectedDriveSensor(
+                        account, vehicle, key, value[0], value[1], value[2]
+                    )
+                    entities.append(device)
+    async_add_entities(entities, True)
 
 
-class BMWConnectedDriveSensor(BinarySensorEntity):
+class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
     """Representation of a BMW vehicle binary sensor."""
 
     def __init__(
         self, account, vehicle, attribute: str, sensor_name, device_class, icon
     ):
         """Initialize sensor."""
-        self._account = account
-        self._vehicle = vehicle
+        super().__init__(account, vehicle)
+
         self._attribute = attribute
         self._name = f"{self._vehicle.name} {self._attribute}"
         self._unique_id = f"{self._vehicle.vin}-{self._attribute}"
@@ -70,14 +82,6 @@ class BMWConnectedDriveSensor(BinarySensorEntity):
         self._device_class = device_class
         self._icon = icon
         self._state = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False.
-
-        Data update is triggered from BMWConnectedDriveEntity.
-        """
-        return False
 
     @property
     def unique_id(self):
@@ -105,13 +109,10 @@ class BMWConnectedDriveSensor(BinarySensorEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
-        result = {
-            "car": self._vehicle.name,
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+        result = self._attrs.copy()
 
         if self._attribute == "lids":
             for lid in vehicle_state.lids:
@@ -192,14 +193,3 @@ class BMWConnectedDriveSensor(BinarySensorEntity):
                 f"{service_type} distance"
             ] = f"{distance} {self.hass.config.units.length_unit}"
         return result
-
-    def update_callback(self):
-        """Schedule a state update."""
-        self.schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
-        self._account.add_update_listener(self.update_callback)

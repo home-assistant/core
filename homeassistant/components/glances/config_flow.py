@@ -52,8 +52,8 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         api = get_api(hass, data)
         await api.get_data()
-    except glances_api.exceptions.GlancesApiConnectionError:
-        raise CannotConnect
+    except glances_api.exceptions.GlancesApiConnectionError as err:
+        raise CannotConnect from err
 
 
 class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Pred nastavitvijo je treba naprave, ki delujejo na baterije, prebuditi s pritiskom na gumb na napravi."
+            }
+        }
+    }
+}

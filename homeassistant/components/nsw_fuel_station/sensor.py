@@ -7,7 +7,7 @@ from nsw_fuel import FuelCheckClient, FuelCheckError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -168,7 +168,7 @@ class StationPriceSensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_data.station_id,
@@ -179,7 +179,7 @@ class StationPriceSensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Return the units of measurement."""
-        return "¢/L"
+        return f"{CURRENCY_CENT}/{VOLUME_LITERS}"
 
     def update(self):
         """Update current conditions."""

@@ -1,5 +1,4 @@
 """Support for Toon switches."""
-import logging
 from typing import Any
 
 from toonapi import (
@@ -26,8 +25,6 @@ from .const import (
 from .coordinator import ToonDataUpdateCoordinator
 from .helpers import toon_exception_handler
 from .models import ToonDisplayDeviceEntity, ToonEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

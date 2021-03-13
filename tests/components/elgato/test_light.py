@@ -1,7 +1,8 @@
 """Tests for the Elgato Key Light light platform."""
 from unittest.mock import patch
 
-from homeassistant.components.elgato.light import ElgatoError
+from elgato import ElgatoError
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -15,6 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import mock_coro
 from tests.components.elgato import init_integration
@@ -27,7 +29,7 @@ async def test_light_state(
     """Test the creation and values of the Elgato Key Lights."""
     await init_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("light.frenck")
@@ -51,7 +53,8 @@ async def test_light_change_state(
     assert state.state == STATE_ON
 
     with patch(
-        "homeassistant.components.elgato.light.Elgato.light", return_value=mock_coro(),
+        "homeassistant.components.elgato.light.Elgato.light",
+        return_value=mock_coro(),
     ) as mock_light:
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -68,7 +71,8 @@ async def test_light_change_state(
         mock_light.assert_called_with(on=True, brightness=100, temperature=100)
 
     with patch(
-        "homeassistant.components.elgato.light.Elgato.light", return_value=mock_coro(),
+        "homeassistant.components.elgato.light.Elgato.light",
+        return_value=mock_coro(),
     ) as mock_light:
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -87,7 +91,8 @@ async def test_light_unavailable(
     """Test error/unavailable handling of an Elgato Key Light."""
     await init_integration(hass, aioclient_mock)
     with patch(
-        "homeassistant.components.elgato.light.Elgato.light", side_effect=ElgatoError,
+        "homeassistant.components.elgato.light.Elgato.light",
+        side_effect=ElgatoError,
     ):
         with patch(
             "homeassistant.components.elgato.light.Elgato.state",

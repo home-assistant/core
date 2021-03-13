@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful",
             "unknown": "Unexpected error"
         },
         "error": {
@@ -10,16 +11,19 @@
         },
         "flow_title": "Sonarr: {name}",
         "step": {
+            "reauth_confirm": {
+                "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}",
+                "title": "Reauthenticate Integration"
+            },
             "user": {
                 "data": {
                     "api_key": "API Key",
                     "base_path": "Path to API",
                     "host": "Host",
                     "port": "Port",
-                    "ssl": "Sonarr uses a SSL certificate",
-                    "verify_ssl": "Sonarr uses a proper certificate"
-                },
-                "title": "Connect to Sonarr"
+                    "ssl": "Uses an SSL certificate",
+                    "verify_ssl": "Verify SSL certificate"
+                }
             }
         }
     },
@@ -32,6 +36,5 @@
                 }
             }
         }
-    },
-    "title": "Sonarr"
+    }
 }

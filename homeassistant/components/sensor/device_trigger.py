@@ -1,10 +1,12 @@
 """Provides device triggers for sensors."""
 import voluptuous as vol
 
-import homeassistant.components.automation.numeric_state as numeric_state_automation
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
+)
+from homeassistant.components.homeassistant.triggers import (
+    numeric_state as numeric_state_trigger,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -15,6 +17,8 @@ from homeassistant.const import (
     CONF_FOR,
     CONF_TYPE,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -37,6 +41,8 @@ from . import DOMAIN
 DEVICE_CLASS_NONE = "none"
 
 CONF_BATTERY_LEVEL = "battery_level"
+CONF_CO = "carbon_monoxide"
+CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
 CONF_ENERGY = "energy"
 CONF_HUMIDITY = "humidity"
@@ -52,6 +58,8 @@ CONF_VALUE = "value"
 
 ENTITY_TRIGGERS = {
     DEVICE_CLASS_BATTERY: [{CONF_TYPE: CONF_BATTERY_LEVEL}],
+    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_CO}],
+    DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_CO2}],
     DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_CURRENT}],
     DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_ENERGY}],
     DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
@@ -74,6 +82,8 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_TYPE): vol.In(
                 [
                     CONF_BATTERY_LEVEL,
+                    CONF_CO,
+                    CONF_CO2,
                     CONF_CURRENT,
                     CONF_ENERGY,
                     CONF_HUMIDITY,
@@ -100,18 +110,18 @@ TRIGGER_SCHEMA = vol.All(
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
     numeric_state_config = {
-        numeric_state_automation.CONF_PLATFORM: "numeric_state",
-        numeric_state_automation.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
+        numeric_state_trigger.CONF_PLATFORM: "numeric_state",
+        numeric_state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
     }
     if CONF_ABOVE in config:
-        numeric_state_config[numeric_state_automation.CONF_ABOVE] = config[CONF_ABOVE]
+        numeric_state_config[numeric_state_trigger.CONF_ABOVE] = config[CONF_ABOVE]
     if CONF_BELOW in config:
-        numeric_state_config[numeric_state_automation.CONF_BELOW] = config[CONF_BELOW]
+        numeric_state_config[numeric_state_trigger.CONF_BELOW] = config[CONF_BELOW]
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_automation.TRIGGER_SCHEMA(numeric_state_config)
-    return await numeric_state_automation.async_attach_trigger(
+    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )
 
@@ -166,7 +176,10 @@ async def async_get_trigger_capabilities(hass, config):
     )
 
     if not state or not unit_of_measurement:
-        raise InvalidDeviceAutomationConfig
+        raise InvalidDeviceAutomationConfig(
+            "No state or unit of measurement found for "
+            f"trigger entity {config[CONF_ENTITY_ID]}"
+        )
 
     return {
         "extra_fields": vol.Schema(

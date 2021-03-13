@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+        },
+        "step": {
+            "select": {
+                "data": {
+                    "select_host": "IP-Adresse des Empf\u00e4ngers"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "IP-Adresse"
+                }
+            }
+        }
+    }
+}

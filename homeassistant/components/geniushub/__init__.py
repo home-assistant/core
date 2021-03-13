@@ -87,7 +87,8 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4, max=28)
         ),
         vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+            cv.time_period,
+            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
     }
 )
@@ -172,7 +173,6 @@ class GeniusBroker:
     @property
     def hub_uid(self) -> int:
         """Return the Hub UID (MAC address)."""
-        # pylint: disable=no-member
         return self._hub_uid if self._hub_uid is not None else self.client.uid
 
     async def async_update(self, now, **kwargs) -> None:
@@ -250,7 +250,7 @@ class GeniusDevice(GeniusEntity):
         self._last_comms = self._state_attr = None
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
@@ -317,7 +317,7 @@ class GeniusZone(GeniusEntity):
         return self._zone.name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the device state attributes."""
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
         return {"status": status}

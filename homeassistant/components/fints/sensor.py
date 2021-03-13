@@ -169,14 +169,6 @@ class FinTsAccount(Entity):
         self._balance: float = None
         self._currency: str = None
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
-
     def update(self) -> None:
         """Get the current balance and currency for the account."""
         bank = self._client.client
@@ -201,7 +193,7 @@ class FinTsAccount(Entity):
         return self._currency
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {ATTR_ACCOUNT: self._account.iban, ATTR_ACCOUNT_TYPE: "balance"}
         if self._client.name:
@@ -229,14 +221,6 @@ class FinTsHoldingsAccount(Entity):
         self._holdings = []
         self._total: float = None
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True.
-
-        Data needs to be polled from the bank servers.
-        """
-        return True
-
     def update(self) -> None:
         """Get the current holdings for the account."""
         bank = self._client.client
@@ -254,7 +238,7 @@ class FinTsHoldingsAccount(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

@@ -1,10 +1,6 @@
 """Device tracker support for OPNSense routers."""
-import logging
-
 from homeassistant.components.device_tracker import DeviceScanner
 from homeassistant.components.opnsense import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_scanner(hass, config, discovery_info=None):
@@ -61,6 +57,6 @@ class OPNSenseDeviceScanner(DeviceScanner):
         if device not in self.last_results:
             return None
         mfg = self.last_results[device].get("manufacturer")
-        if mfg:
-            return {"manufacturer": mfg}
-        return {}
+        if not mfg:
+            return {}
+        return {"manufacturer": mfg}

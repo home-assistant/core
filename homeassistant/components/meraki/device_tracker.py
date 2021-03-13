@@ -36,6 +36,7 @@ class MerakiView(HomeAssistantView):
 
     url = URL
     name = "api:meraki"
+    requires_auth = False
 
     def __init__(self, config, async_see):
         """Initialize Meraki URL endpoints."""

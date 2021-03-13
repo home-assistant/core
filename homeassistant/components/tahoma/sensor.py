@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELSIUS, UNIT_PERCENTAGE
+from homeassistant.const import ATTR_BATTERY_LEVEL, LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -49,9 +49,9 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == "io:SomfyBasicContactIOSystemSensor":
             return None
         if self.tahoma_device.type == "io:LightIOSystemSensor":
-            return "lx"
+            return LIGHT_LUX
         if self.tahoma_device.type == "Humidity Sensor":
-            return UNIT_PERCENTAGE
+            return PERCENTAGE
         if self.tahoma_device.type == "rtds:RTDSContactSensor":
             return None
         if self.tahoma_device.type == "rtds:RTDSMotionSensor":
@@ -62,7 +62,7 @@ class TahomaSensor(TahomaDevice, Entity):
         ):
             return TEMP_CELSIUS
         if self.tahoma_device.type == "somfythermostat:SomfyThermostatHumiditySensor":
-            return UNIT_PERCENTAGE
+            return PERCENTAGE
 
     def update(self):
         """Update the state."""
@@ -110,10 +110,10 @@ class TahomaSensor(TahomaDevice, Entity):
         _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().device_state_attributes
+        super_attr = super().extra_state_attributes
         if super_attr is not None:
             attr.update(super_attr)
 

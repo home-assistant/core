@@ -1,13 +1,10 @@
 """Support for XS1 switches."""
-import logging
 
 from xs1_api_client.api_constants import ActuatorType
 
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import ACTUATORS, DOMAIN as COMPONENT_DOMAIN, XS1DeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

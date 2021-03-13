@@ -1,0 +1,58 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert. Nur eine Konfiguration m\u00f6glich.",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "setup_network": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "title": "Verbindungsadresse ausw\u00e4hlen"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Ger\u00e4t w\u00e4hlen"
+                },
+                "title": "Ger\u00e4t"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB-Ger\u00e4te-Pfad"
+                },
+                "title": "Pfad"
+            },
+            "user": {
+                "data": {
+                    "type": "Verbindungstyp"
+                },
+                "title": "Verbindungstyp ausw\u00e4hlen"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "debug": "Debugging aktivieren"
+                }
+            },
+            "set_device_options": {
+                "data": {
+                    "off_delay": "Ausschaltverz\u00f6gerung",
+                    "off_delay_enabled": "Ausschaltverz\u00f6gerung aktivieren",
+                    "replace_device": "W\u00e4hle ein Ger\u00e4t aus, das ersetzt werden soll"
+                }
+            }
+        }
+    }
+}

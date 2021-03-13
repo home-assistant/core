@@ -60,11 +60,10 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title_port = f":{port}" if port != DEFAULT_PORT else ""
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
-                    title=title, data={CONF_HOST: host, CONF_PORT: port},
+                    title=title,
+                    data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if (  # pylint: disable=no-member
-                self.context["source"] == config_entries.SOURCE_IMPORT
-            ):
+            if self.context["source"] == config_entries.SOURCE_IMPORT:
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:

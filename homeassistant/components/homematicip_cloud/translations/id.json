@@ -6,7 +6,7 @@
             "unknown": "Kesalahan tidak dikenal terjadi."
         },
         "error": {
-            "invalid_pin": "PIN tidak valid, silakan coba lagi.",
+            "invalid_sgtin_or_pin": "PIN tidak valid, silakan coba lagi.",
             "press_the_button": "Silakan tekan tombol biru.",
             "register_failed": "Gagal mendaftar, silakan coba lagi.",
             "timeout_button": "Batas waktu tekan tombol biru berakhir, silakan coba lagi."

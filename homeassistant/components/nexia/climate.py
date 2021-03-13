@@ -1,6 +1,4 @@
 """Support for Nexia / Trane XL thermostats."""
-import logging
-
 from nexia.const import (
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
@@ -81,8 +79,6 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
     }
 )
 
-
-_LOGGER = logging.getLogger(__name__)
 
 #
 # Nexia has two bits to determine hvac mode
@@ -358,9 +354,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         return self._thermostat.is_emergency_heat_active()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
 
         data[ATTR_ZONE_STATUS] = self._zone.get_status()
 
@@ -458,10 +454,3 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         Update a single zone.
         """
         dispatcher_send(self.hass, f"{SIGNAL_ZONE_UPDATE}-{self._zone.zone_id}")
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self._coordinator.async_request_refresh()

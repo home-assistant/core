@@ -1,4 +1,18 @@
 {
+    "device_automation": {
+        "action_type": {
+            "clean": "{entity_name} puhastamise lubamine",
+            "dock": "Laske {entity_name} dokki naasta"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} puhastab",
+            "is_docked": "{entity_name} on emajaamas"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} alustas puhastamist",
+            "docked": "{entity_name} on emajaamas"
+        }
+    },
     "state": {
         "_": {
             "cleaning": "Puhastamine",
@@ -7,9 +21,9 @@
             "idle": "Ootel",
             "off": "V\u00e4ljas",
             "on": "Sees",
-            "paused": "Peatatud",
-            "returning": "P\u00f6\u00f6rdun tagasi dokki"
+            "paused": "Pausil",
+            "returning": "P\u00f6\u00f6rdun tagasi laadimisjaama"
         }
     },
-    "title": "T\u00fchjenda"
+    "title": "Tolmuimeja"
 }

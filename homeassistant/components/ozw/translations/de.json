@@ -1,12 +1,29 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet",
-            "one_instance_allowed": "Die Integration unterst\u00fctzt nur eine Z-Wave-Instanz"
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
+        },
+        "progress": {
+            "install_addon": "Bitte warten, bis die Installation des OpenZWave-Add-Ons abgeschlossen ist. Dies kann einige Minuten dauern."
         },
         "step": {
-            "user": {
-                "title": "Einrichtung best\u00e4tigen"
+            "hassio_confirm": {
+                "title": "Richte die OpenZWave Integration mit dem OpenZWave Add-On ein"
+            },
+            "install_addon": {
+                "title": "Die Installation des OpenZWave-Add-On wurde gestartet"
+            },
+            "on_supervisor": {
+                "title": "Verbindungstyp ausw\u00e4hlen"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "Netzwerk-Schl\u00fcssel",
+                    "usb_path": "USB-Ger\u00e4te-Pfad"
+                }
             }
         }
     }

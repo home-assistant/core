@@ -7,7 +7,6 @@ at https://home-assistant.io/components/zha.climate/
 from datetime import datetime, timedelta
 import enum
 import functools
-import logging
 from random import randint
 from typing import List, Optional, Tuple
 
@@ -37,7 +36,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
@@ -145,8 +144,6 @@ SYSTEM_MODE_2_HVAC = {
 
 ZCL_TEMP = 100
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
@@ -188,7 +185,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._thrm.local_temp / ZCL_TEMP
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         data = {}
         if self.hvac_mode:
@@ -290,7 +287,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
     @property
     def precision(self):
         """Return the precision of the system."""
-        return PRECISION_HALVES
+        return PRECISION_TENTHS
 
     @property
     def preset_mode(self) -> Optional[str]:

@@ -121,23 +121,23 @@ class DiscogsSensor(Entity):
         return SENSORS[self._type]["unit_of_measurement"]
 
     @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
+    def extra_state_attributes(self):
+        """Return the device state attributes of the sensor."""
         if self._state is None or self._attrs is None:
             return None
 
-        if self._type != SENSOR_RANDOM_RECORD_TYPE:
+        if self._type == SENSOR_RANDOM_RECORD_TYPE and self._state is not None:
             return {
+                "cat_no": self._attrs["labels"][0]["catno"],
+                "cover_image": self._attrs["cover_image"],
+                "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
+                "label": self._attrs["labels"][0]["name"],
+                "released": self._attrs["year"],
                 ATTR_ATTRIBUTION: ATTRIBUTION,
                 ATTR_IDENTITY: self._discogs_data["user"],
             }
 
         return {
-            "cat_no": self._attrs["labels"][0]["catno"],
-            "cover_image": self._attrs["cover_image"],
-            "format": f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})",
-            "label": self._attrs["labels"][0]["name"],
-            "released": self._attrs["year"],
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_IDENTITY: self._discogs_data["user"],
         }
@@ -146,11 +146,14 @@ class DiscogsSensor(Entity):
         """Get a random record suggestion from the user's collection."""
         # Index 0 in the folders is the 'All' folder
         collection = self._discogs_data["folders"][0]
-        random_index = random.randrange(collection.count)
-        random_record = collection.releases[random_index].release
+        if collection.count > 0:
+            random_index = random.randrange(collection.count)
+            random_record = collection.releases[random_index].release
 
-        self._attrs = random_record.data
-        return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+            self._attrs = random_record.data
+            return f"{random_record.data['artists'][0]['name']} - {random_record.data['title']}"
+
+        return None
 
     def update(self):
         """Set state to the amount of records in user's collection."""

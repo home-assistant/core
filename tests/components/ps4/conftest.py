@@ -1,7 +1,7 @@
 """Test configuration for PS4."""
-import pytest
+from unittest.mock import patch
 
-from tests.async_mock import patch
+import pytest
 
 
 @pytest.fixture
@@ -18,6 +18,13 @@ def patch_save_json():
         yield mock_save
 
 
+@pytest.fixture
+def patch_get_status():
+    """Prevent save JSON being used."""
+    with patch("pyps4_2ndscreen.ps4.get_status", return_value=None) as mock_get_status:
+        yield mock_get_status
+
+
 @pytest.fixture(autouse=True)
-def patch_io(patch_load_json, patch_save_json):
+def patch_io(patch_load_json, patch_save_json, patch_get_status):
     """Prevent PS4 doing I/O."""

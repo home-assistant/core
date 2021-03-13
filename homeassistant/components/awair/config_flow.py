@@ -10,7 +10,7 @@ from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
+from .const import DOMAIN, LOGGER
 
 
 class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -50,10 +50,10 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
                 title = f"{user.email} ({user.user_id})"
                 return self.async_create_entry(title=title, data=user_input)
 
-            if error != "auth":
+            if error != "invalid_access_token":
                 return self.async_abort(reason=error)
 
-            errors = {CONF_ACCESS_TOKEN: "auth"}
+            errors = {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
         return self.async_show_form(
             step_id="user",
@@ -78,7 +78,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
                         return self.async_abort(reason="reauth_successful")
 
-            if error != "auth":
+            if error != "invalid_access_token":
                 return self.async_abort(reason=error)
 
             errors = {CONF_ACCESS_TOKEN: error}
@@ -98,12 +98,12 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             user = await awair.user()
             devices = await user.devices()
             if not devices:
-                return (None, "no_devices")
+                return (None, "no_devices_found")
 
             return (user, None)
 
         except AuthError:
-            return (None, "auth")
+            return (None, "invalid_access_token")
         except AwairError as err:
             LOGGER.error("Unexpected API error: %s", err)
             return (None, "unknown")

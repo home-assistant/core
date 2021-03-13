@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-    - container: 37
-      image: homeassistant/ci-azure:3.7
     - container: 38
       image: homeassistant/ci-azure:3.8
   repositories:
@@ -25,7 +23,7 @@ resources:
       endpoint: "home-assistant"
 variables:
   - name: PythonMain
-    value: "37"
+    value: "38"
   - name: versionHadolint
     value: "v1.17.6"
 
@@ -150,8 +148,6 @@ stages:
         strategy:
           maxParallel: 3
           matrix:
-            Python37:
-              python.container: "37"
             Python38:
               python.container: "38"
         container: $[ variables['python.container'] ]
@@ -166,9 +162,6 @@ stages:
                 . venv/bin/activate
                 pip install -U pip setuptools pytest-azurepipelines pytest-xdist -c homeassistant/package_constraints.txt
                 pip install -r requirements_test_all.txt
-                # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
-                # Find offending deps with `pipdeptree -r -p typing`
-                pip uninstall -y typing
           - script: |
               . venv/bin/activate
               pip install -e .
@@ -211,9 +204,6 @@ stages:
                 pip install -U pip setuptools wheel
                 pip install -r requirements_all.txt
                 pip install -r requirements_test.txt
-                # This is a TEMP. Eventually we should make sure our 4 dependencies drop typing.
-                # Find offending deps with `pipdeptree -r -p typing`
-                pip uninstall -y typing
           - script: |
               . venv/bin/activate
               pip install -e .

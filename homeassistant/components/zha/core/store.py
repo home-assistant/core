@@ -1,8 +1,6 @@
 """Data storage helper for ZHA."""
-# pylint: disable=unused-import
 from collections import OrderedDict
 import datetime
-import logging
 import time
 from typing import MutableMapping, Optional, cast
 
@@ -13,8 +11,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 from .typing import ZhaDeviceType
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_REGISTRY = "zha_storage"
 

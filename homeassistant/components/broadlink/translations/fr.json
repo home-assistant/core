@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "Il y a d\u00e9j\u00e0 un processus de configuration en cours pour cet appareil",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide",
+            "not_supported": "Dispositif non pris en charge",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_host": "Nom d'h\u00f4te ou adresse IP non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{name} ( {model} \u00e0 {host} )",
+        "step": {
+            "auth": {
+                "title": "S'authentifier sur l'appareil"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nom"
+                },
+                "title": "Choisissez un nom pour l'appareil"
+            },
+            "reset": {
+                "description": "Votre appareil est verrouill\u00e9 pour l'authentification. Suivez les instructions pour le d\u00e9verrouiller: \n 1. R\u00e9initialisez l'appareil aux param\u00e8tres d'usine. \n 2. Utilisez l'application officielle pour ajouter l'appareil \u00e0 votre r\u00e9seau local. \n 3. Arr\u00eatez. Ne terminez pas la configuration. Fermez l'appli. \n 4. Cliquez sur Soumettre.",
+                "title": "D\u00e9verrouiller l'appareil"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Oui, le faire."
+                },
+                "description": "Votre appareil est verrouill\u00e9. Cela peut entra\u00eener des probl\u00e8mes d'authentification dans Home Assistant. Souhaitez-vous le d\u00e9verrouiller ?",
+                "title": "D\u00e9verrouiller l'appareil (facultatif)"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "timeout": "D\u00e9lai expir\u00e9"
+                },
+                "title": "Se connecter \u00e0 l'appareil"
+            }
+        }
+    }
+}

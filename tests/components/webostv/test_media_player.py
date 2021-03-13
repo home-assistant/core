@@ -1,5 +1,6 @@
 """The tests for the LG webOS media player platform."""
-import sys
+
+from unittest.mock import patch
 
 import pytest
 
@@ -11,25 +12,19 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.webostv.const import (
     ATTR_BUTTON,
-    ATTR_COMMAND,
     ATTR_PAYLOAD,
     DOMAIN,
     SERVICE_BUTTON,
     SERVICE_COMMAND,
 )
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     SERVICE_VOLUME_MUTE,
 )
 from homeassistant.setup import async_setup_component
-
-if sys.version_info >= (3, 8, 0):
-    from tests.async_mock import patch
-else:
-    from tests.async_mock import patch
-
 
 NAME = "fake"
 ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
@@ -50,7 +45,9 @@ def client_fixture():
 async def setup_webostv(hass):
     """Initialize webostv and media_player for tests."""
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
     )
     await hass.async_block_till_done()
 

@@ -3,10 +3,6 @@
         "abort": {
             "already_configured": "Denna RainMachine-enhet \u00e4r redan konfigurerad"
         },
-        "error": {
-            "identifier_exists": "Kontot \u00e4r redan registrerat",
-            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
-        },
         "step": {
             "user": {
                 "data": {
@@ -15,6 +11,13 @@
                     "port": "Port"
                 },
                 "title": "Fyll i dina uppgifter"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Konfigurera RainMachine"
             }
         }
     }

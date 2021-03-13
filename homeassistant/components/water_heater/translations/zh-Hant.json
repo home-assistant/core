@@ -1,0 +1,8 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "\u95dc\u9589{entity_name}",
+            "turn_on": "\u958b\u555f{entity_name}"
+        }
+    }
+}

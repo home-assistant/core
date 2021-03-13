@@ -1,0 +1,47 @@
+{
+  "config": {
+    "flow_title": "{name} ({model} at {host})",
+    "step": {
+      "user": {
+        "title": "Connect to the device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "timeout": "Timeout"
+        }
+      },
+      "auth": {
+        "title": "Authenticate to the device"
+      },
+      "reset": {
+        "title": "Unlock the device",
+        "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Click on the device.\n3. Click `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock."
+      },
+      "unlock": {
+        "title": "Unlock the device (optional)",
+        "description": "{name} ({model} at {host}) is locked. This can lead to authentication problems in Home Assistant. Would you like to unlock it?",
+        "data": {
+          "unlock": "Yes, do it."
+        }
+      },
+      "finish": {
+        "title": "Choose a name for the device",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "not_supported": "Device not supported",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

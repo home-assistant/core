@@ -1,7 +1,11 @@
 {
     "config": {
         "abort": {
-            "no_agreements": "Dieses Konto hat keine Toon-Anzeigen."
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_agreements": "Dieses Konto hat keine Toon-Anzeigen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "unknown_authorize_url_generation": "Beim Generieren einer Authentifizierungs-URL ist ein unbekannter Fehler aufgetreten"
         }
     }
 }

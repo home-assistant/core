@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "Codi de dos factors"
                 },
-                "description": "Introdueix el PIN que has rebut per correu electr\u00f2nic. Si el correu no cont\u00e9 cap PIN, deixa-ho en blanc.",
+                "description": "Introdueix el PIN que s'ha enviat al teu correu electr\u00f2nic",
                 "title": "Autenticaci\u00f3 de dos factors"
             },
             "user": {
@@ -22,7 +22,7 @@
                     "password": "Contrasenya",
                     "username": "Nom d'usuari"
                 },
-                "title": "Inici de sessi\u00f3 amb Blink"
+                "title": "Inici de sessi\u00f3 amb un compte de Blink"
             }
         }
     },
