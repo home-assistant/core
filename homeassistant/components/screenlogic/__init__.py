@@ -238,7 +238,7 @@ class ScreenlogicEntity(CoordinatorEntity):
         """Initialize of the entity."""
         super().__init__(coordinator)
         self._data_key = datakey
-        self._controler_id = self.config_data["controler_id"]
+        self._controler_id = self.config_data["controler_id"]["value"]
 
     @property
     def unique_id(self):
