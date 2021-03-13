@@ -23,7 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .config_flow import async_discover_gateways_by_unique_id, short_mac
+from .config_flow import async_discover_gateways_by_unique_id, name_for_mac
 from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.warning("Gateway rediscovery failed.")
         # Static connection defined or fallback from discovery
         connect_info = {
-            SL_GATEWAY_NAME: f"Pentair: {short_mac(mac)}",
+            SL_GATEWAY_NAME: name_for_mac(mac),
             SL_GATEWAY_IP: entry.data[CONF_IP_ADDRESS],
             SL_GATEWAY_PORT: entry.data[CONF_PORT],
         }

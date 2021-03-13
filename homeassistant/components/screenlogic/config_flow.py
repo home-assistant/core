@@ -58,7 +58,8 @@ def short_mac(mac):
     return "-".join(mac.split(":")[3:]).upper()
 
 
-def _entry_title_for_mac(mac):
+def name_for_mac(mac):
+    """Derive the gateway name from the mac."""
     return f"Pentair: {short_mac(mac)}"
 
 
@@ -156,7 +157,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(mac)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=_entry_title_for_mac(mac),
+                title=name_for_mac(mac),
                 data={
                     CONF_IP_ADDRESS: selected_gateway[SL_GATEWAY_IP],
                     CONF_PORT: selected_gateway[SL_GATEWAY_PORT],
@@ -198,7 +199,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(mac)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=_entry_title_for_mac(mac),
+                    title=name_for_mac(mac),
                     data={
                         CONF_IP_ADDRESS: ip,
                         CONF_PORT: port,
