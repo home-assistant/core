@@ -122,8 +122,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(existing_entry, data=conf)
                 await self.hass.config_entries.async_reload(existing_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
-            else:
-                errors["base"] = "unknown"
+            errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
