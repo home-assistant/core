@@ -2,7 +2,7 @@
 import logging
 from urllib.parse import urlsplit
 
-from pyoctoprintapi import ApiError, OctoprintClient
+from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -89,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await self.api_key_task
-        except ApiError as err:
+        except OctoprintException as err:
             _LOGGER.error("Failed to get an application key : %s", err)
             return self.async_show_progress_done(next_step_id="auth_failed")
 
