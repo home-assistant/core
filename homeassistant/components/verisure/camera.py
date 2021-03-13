@@ -70,7 +70,7 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         self.coordinator.update_smartcam_imageseries()
 
         images = self.coordinator.imageseries.get("imageSeries", [])
-        new_image_id = False
+        new_image_id = None
         for image in images:
             if image["deviceLabel"] == self.serial_number:
                 new_image_id = image["image"][0]["imageId"]
