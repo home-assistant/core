@@ -92,6 +92,8 @@ class AutomationTrace:
         )
         if self._error is not None:
             result["error"] = str(self._error)
+
+        _LOGGER.debug("as_dict: %s")
         return result
 
     def as_short_dict(self) -> Dict[str, Any]:
@@ -125,6 +127,8 @@ class AutomationTrace:
         if last_action is not None:
             result["last_action"] = last_action
             result["last_condition"] = last_condition
+
+        _LOGGER.debug("as_short_dict: %s")
 
         return result
 
