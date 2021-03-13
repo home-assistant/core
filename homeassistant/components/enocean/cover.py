@@ -31,16 +31,16 @@ DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_STOP = "STOP"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-{
-vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])})
+    {
+    vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DRIVING_TIME, default=DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
 
-    """Set up the EnOcean cover platform."""
 
+    """Set up the EnOcean cover platform."""
     sender_id = config.get(CONF_SENDER_ID)
     dev_name = config.get(CONF_NAME)
     dev_id = config.get(CONF_ID)
@@ -57,7 +57,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         super().__init__(dev_id, dev_name)
         self._sender_id = sender_id
         self._driving_time = driving_time[0] * 10 
-        #needed in tenth seconds
         self._state = None
         self._last_command = None
         self._position = None
@@ -104,7 +103,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         command.extend([0x30])
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
         
-
     def stop_cover(self):
         """Send either close or open command one time more for stop
         and calculates Shutter position"""
