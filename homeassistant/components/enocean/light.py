@@ -119,7 +119,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
         Eltako series 14 send telegram RPS (0xF6) if its a  simple on/off actuator,
         dimming actuators send in 4BS (0xA5).
         On/Off actuators are handled in the automation.yaml as a binary sensor.
-        Without self._external_value_changed you will get an infinite loop between 
+        Without self._external_value_changed you will get an infinite loop between
         FAM14 and Home Assistant.
         """
         if packet.data[0] == 0xF6:
