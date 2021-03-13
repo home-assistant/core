@@ -31,14 +31,16 @@ DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_PAYLOAD_STOP = "STOP"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-    vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])})
+{
+vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+vol.Optional(CONF_DRIVING_TIME, default =DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
+
     """Set up the EnOcean cover platform."""
+
     sender_id = config.get(CONF_SENDER_ID)
     dev_name = config.get(CONF_NAME)
     dev_id = config.get(CONF_ID)
@@ -54,7 +56,8 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Initialize the EnOcean cover source."""
         super().__init__(dev_id, dev_name)
         self._sender_id = sender_id
-        self._driving_time = driving_time[0] * 10 #needed in tenth seconds
+        self._driving_time = driving_time[0] * 10 
+        #needed in tenth seconds
         self._state = None
         self._last_command = None
         self._position = None
@@ -135,9 +138,11 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         if packet.data[1] == 0x00:
             driven_time = packet.data[2]
             percentage = int(100 * driven_time /self._driving_time)
-            if packet.data[3] == 0x01: #open
+            if packet.data[3] == 0x01: 
+                #open
                 self._position += percentage
-            elif packet.data[3] == 0x02: #close
+            elif packet.data[3] == 0x02: 
+                #close
                 self._position -= percentage
         elif packet.data[1] == 0x70:
             self._position = 100
