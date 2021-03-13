@@ -57,14 +57,14 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Initialize the EnOcean cover source."""
         super().__init__(dev_id, dev_name)
         self._sender_id = sender_id
-        self._driving_time = driving_time[0] * 10 
+        self._driving_time = driving_time[0] * 10
         self._state = None
         self._last_command = None
         self._position = None
 
     @property
     def supported_features(self):
-
+        """Return supported functions"""
         return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
 
     @property
@@ -89,7 +89,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         return self.dev_name
 
     def open_cover(self):
-        """Set the up command for shutter on Eltako FSB14"""
+        """Set the up command for shutter on Eltako FSB14."""
         self._last_command = 0x70
         command = [0xF6, 0x70]
         command.extend(self._sender_id)
@@ -97,16 +97,17 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
 
     def close_cover(self):
-        """Set the down command for shutter on Eltako FSB14"""
+        """Set the down command for shutter on Eltako FSB14."""
         self._last_command = 0x50
         command = [0xF6, 0x50]
         command.extend(self._sender_id)
         command.extend([0x30])
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
-        
+
     def stop_cover(self):
-        """Send either close or open command one time more for stop
-        and calculates Shutter position"""
+        """Send either close or open command.
+        
+        One time more for stop and calculates Shutter position."""
         if self._last_command == 0x70:
             command = [0xF6, 0x70]
         elif self._last_command == 0x50:
@@ -120,7 +121,8 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def set_cover_position(self, position):
         """ Set cover position in widget. This is the cheap realization with timeouts.
-        in future you should find out the correct command for GFVS driving command
+
+        In future you should find out the correct command for GFVS driving command
         telegram and teach in telegram."""
         drive_time = int(abs(position - self._position) * self._driving_time / 100)
         if self._position < position:
