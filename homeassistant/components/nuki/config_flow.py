@@ -116,7 +116,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
 
-        if "base" not in errors:
+        if not errors:
             existing_entry = await self.async_set_unique_id(info["ids"]["hardwareId"])
             if existing_entry:
                 self.hass.config_entries.async_update_entry(existing_entry, data=conf)

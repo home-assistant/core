@@ -59,7 +59,7 @@ class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     @property
     def available(self):
         """Return true if door sensor is present and activated."""
-        return self._nuki_device.is_door_sensor_activated
+        return super().available and self._nuki_device.is_door_sensor_activated
 
     @property
     def door_sensor_state(self):

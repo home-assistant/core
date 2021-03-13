@@ -97,7 +97,7 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._nuki_device.state not in ERROR_STATES
+        return super().available and self._nuki_device.state not in ERROR_STATES
 
     @abstractmethod
     def lock(self, **kwargs):
