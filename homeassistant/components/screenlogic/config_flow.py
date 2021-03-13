@@ -102,6 +102,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             *[gateway[SL_GATEWAY_NAME] for gateway in self.discovered_gateways.values()]
         )
 
+        # TODO: exclude already configured gateways that have a config entry per configured_instances
         GATEWAY_SELECT_SCHEMA = vol.Schema(
             {
                 vol.Required(GATEWAY_SELECT_KEY): vol.In(
