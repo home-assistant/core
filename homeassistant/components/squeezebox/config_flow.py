@@ -80,7 +80,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         return
                 self.discovery_info = {
                     CONF_HOST: server.host,
-                    CONF_PORT: server.port,
+                    CONF_PORT: int(server.port),
                     "uuid": server.uuid,
                 }
                 _LOGGER.debug("Discovered server: %s", self.discovery_info)
