@@ -86,11 +86,6 @@ SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR
 }
 
-SWITCH_CLUSTERS = SetRegistry()
-ALARM_CONTROL_PANEL_CLUSTERS = SetRegistry()
-BINARY_SENSOR_CLUSTERS = SetRegistry()
-BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
 
@@ -125,42 +120,6 @@ DEVICE_CLASS = {
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 CLIENT_CHANNELS_REGISTRY = DictRegistry()
-
-RADIO_TYPES = {
-    RadioType.deconz.name: {
-        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
-        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
-    },
-    RadioType.ezsp.name: {
-        ZHA_GW_RADIO: bellows.ezsp.EZSP,
-        CONTROLLER: bellows.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "EZSP",
-    },
-    RadioType.ti_cc.name: {
-        ZHA_GW_RADIO: zigpy_cc.api.API,
-        CONTROLLER: zigpy_cc.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "TI CC",
-    },
-    RadioType.xbee.name: {
-        ZHA_GW_RADIO: zigpy_xbee.api.XBee,
-        CONTROLLER: zigpy_xbee.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "XBee",
-    },
-    RadioType.zigate.name: {
-        ZHA_GW_RADIO: zigpy_zigate.api.ZiGate,
-        CONTROLLER: zigpy_zigate.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "ZiGate",
-    },
-}
-
-COMPONENT_CLUSTERS = {
-    BINARY_SENSOR: BINARY_SENSOR_CLUSTERS,
-    DEVICE_TRACKER: DEVICE_TRACKER_CLUSTERS,
-    LIGHT: LIGHT_CLUSTERS,
-    SWITCH: SWITCH_CLUSTERS,
-    ALARM: ALARM_CONTROL_PANEL_CLUSTERS,
-}
 
 ZIGBEE_CHANNEL_REGISTRY = DictRegistry()
 
