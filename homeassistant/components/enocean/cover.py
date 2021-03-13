@@ -35,11 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DRIVING_TIME, default=DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])})
+    vol.Optional(CONF_DRIVING_TIME, default=DEFAULT_DRIVING_TIME): vol.All(cv.ensure_list, [vol.Coerce(int)])
+    }
+)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-
-
     """Set up the EnOcean cover platform."""
     sender_id = config.get(CONF_SENDER_ID)
     dev_name = config.get(CONF_NAME)
@@ -107,9 +107,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Send either close or open command one time more for stop
         and calculates Shutter position"""
         if self._last_command == 0x70:
-            command =  [0xF6, 0x70]
+            command = [0xF6, 0x70]
         elif self._last_command == 0x50:
-            command =  [0xF6, 0x50]
+            command = [0xF6, 0x50]
         else:
             return
         self._last_command = None
@@ -117,11 +117,11 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         command.extend([0x30])
         self.send_command(command, [0x0, 0xFF, 0xFF], 0x01)
 
-    def set_cover_position(self,position):
+    def set_cover_position(self, position):
         """ Set cover position in widget. This is the cheap realization with timeouts.
         in future you should find out the correct command for GFVS driving command
         telegram and teach in telegram."""
-        drive_time = int(abs(position - self._position) * self._driving_time/100)
+        drive_time = int(abs(position - self._position) * self._driving_time / 100)
         if self._position < position: #Open cover
             self.open_cover()
             ev.async_call_later(self.hass, drive_time/10, lambda _:self.stop_cover())
