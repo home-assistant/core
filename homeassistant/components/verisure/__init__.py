@@ -16,7 +16,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
@@ -133,12 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = VerisureDataUpdateCoordinator(hass, entry=entry)
 
     if not await coordinator.async_login():
-        LOGGER.error("Login failed")
-        await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH},
-            data=entry.data,
-        )
+        LOGGER.error("Could not login to Verisure, aborting setting up integration")
         return False
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.async_logout)
