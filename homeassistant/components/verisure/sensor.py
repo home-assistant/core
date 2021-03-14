@@ -8,47 +8,43 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import VerisureDataUpdateCoordinator
 from .const import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, DOMAIN
+from .coordinator import VerisureDataUpdateCoordinator
 
 
 def setup_platform(
     hass: HomeAssistant,
     config: dict[str, Any],
-    add_entities: Callable[[list[Entity], bool], None],
+    add_entities: Callable[[list[CoordinatorEntity], bool], None],
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the Verisure platform."""
     coordinator = hass.data[DOMAIN]
 
-    sensors = []
+    sensors: list[CoordinatorEntity] = []
     if int(coordinator.config.get(CONF_THERMOMETERS, 1)):
         sensors.extend(
             [
-                VerisureThermometer(coordinator, device_label)
-                for device_label in coordinator.get(
-                    "$.climateValues[?(@.temperature)].deviceLabel"
-                )
+                VerisureThermometer(coordinator, serial_number)
+                for serial_number, values in coordinator.data["climate"].items()
+                if "temperature" in values
             ]
         )
 
     if int(coordinator.config.get(CONF_HYDROMETERS, 1)):
         sensors.extend(
             [
-                VerisureHygrometer(coordinator, device_label)
-                for device_label in coordinator.get(
-                    "$.climateValues[?(@.humidity)].deviceLabel"
-                )
+                VerisureHygrometer(coordinator, serial_number)
+                for serial_number, values in coordinator.data["climate"].items()
+                if "humidity" in values
             ]
         )
 
     if int(coordinator.config.get(CONF_MOUSE, 1)):
         sensors.extend(
             [
-                VerisureMouseDetection(coordinator, device_label)
-                for device_label in coordinator.get(
-                    "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel"
-                )
+                VerisureMouseDetection(coordinator, serial_number)
+                for serial_number in coordinator.data["mice"]
             ]
         )
 
@@ -61,38 +57,35 @@ class VerisureThermometer(CoordinatorEntity, Entity):
     coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: VerisureDataUpdateCoordinator, device_label: str
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._device_label = device_label
+        self.serial_number = serial_number
 
     @property
     def name(self) -> str:
-        """Return the name of the device."""
-        return (
-            self.coordinator.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
-            )
-            + " temperature"
-        )
+        """Return the name of the entity."""
+        name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
+        return f"{name} Temperature"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.serial_number}_temperature"
 
     @property
     def state(self) -> str | None:
-        """Return the state of the device."""
-        return self.coordinator.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].temperature", self._device_label
-        )
+        """Return the state of the entity."""
+        return self.coordinator.data["climate"][self.serial_number]["temperature"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self.coordinator.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].temperature",
-                self._device_label,
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["climate"]
+            and "temperature" in self.coordinator.data["climate"][self.serial_number]
         )
 
     @property
@@ -107,37 +100,35 @@ class VerisureHygrometer(CoordinatorEntity, Entity):
     coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: VerisureDataUpdateCoordinator, device_label: str
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._device_label = device_label
+        self.serial_number = serial_number
 
     @property
     def name(self) -> str:
-        """Return the name of the device."""
-        return (
-            self.coordinator.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].deviceArea", self._device_label
-            )
-            + " humidity"
-        )
+        """Return the name of the entity."""
+        name = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
+        return f"{name} Humidity"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.serial_number}_humidity"
 
     @property
     def state(self) -> str | None:
-        """Return the state of the device."""
-        return self.coordinator.get_first(
-            "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
-        )
+        """Return the state of the entity."""
+        return self.coordinator.data["climate"][self.serial_number]["humidity"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self.coordinator.get_first(
-                "$.climateValues[?(@.deviceLabel=='%s')].humidity", self._device_label
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["climate"]
+            and "humidity" in self.coordinator.data["climate"][self.serial_number]
         )
 
     @property
@@ -152,37 +143,35 @@ class VerisureMouseDetection(CoordinatorEntity, Entity):
     coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: VerisureDataUpdateCoordinator, device_label: str
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._device_label = device_label
+        self.serial_number = serial_number
 
     @property
     def name(self) -> str:
-        """Return the name of the device."""
-        return (
-            self.coordinator.get_first(
-                "$.eventCounts[?(@.deviceLabel=='%s')].area", self._device_label
-            )
-            + " mouse"
-        )
+        """Return the name of the entity."""
+        name = self.coordinator.data["mice"][self.serial_number]["area"]
+        return f"{name} Mouse"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this entity."""
+        return f"{self.serial_number}_mice"
 
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-        return self.coordinator.get_first(
-            "$.eventCounts[?(@.deviceLabel=='%s')].detections", self._device_label
-        )
+        return self.coordinator.data["mice"][self.serial_number]["detections"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self.coordinator.get_first(
-                "$.eventCounts[?(@.deviceLabel=='%s')]", self._device_label
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["mice"]
+            and "detections" in self.coordinator.data["mice"][self.serial_number]
         )
 
     @property
