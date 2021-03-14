@@ -876,6 +876,24 @@ async def test_flash_short_and_long(hass, mqtt_mock):
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
 
+    await common.async_turn_off(hass, "light.test", flash="short")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", JsonValidator('{"state": "OFF", "flash": 5}'), 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
+    await common.async_turn_off(hass, "light.test", flash="long")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "test_light_rgb/set", JsonValidator('{"state": "OFF", "flash": 15}'), 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("light.test")
+    assert state.state == STATE_OFF
+
 
 async def test_transition(hass, mqtt_mock):
     """Test for transition time being sent when included."""
