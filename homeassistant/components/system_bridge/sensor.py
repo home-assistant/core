@@ -247,7 +247,11 @@ class BridgeFilesystemSensor(BridgeSensor):
     def state(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
-        return round(bridge.filesystem.fsSize[self._key]["use"], 2)
+        return (
+            round(bridge.filesystem.fsSize[self._key]["use"], 2)
+            if bridge.filesystem.fsSize[self._key]["use"] is not None
+            else None
+        )
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -316,15 +320,27 @@ class BridgeProcessesLoadSensor(BridgeSensor):
     def state(self) -> float:
         """Return the state of the sensor."""
         bridge: Bridge = self.coordinator.data
-        return round(bridge.processes.load.currentLoad, 2)
+        return (
+            round(bridge.processes.load.currentLoad, 2)
+            if bridge.processes.load.currentLoad is not None
+            else None
+        )
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         bridge: Bridge = self.coordinator.data
         return {
-            ATTR_LOAD_AVERAGE: round(bridge.processes.load.avgLoad, 2),
-            ATTR_LOAD_USER: round(bridge.processes.load.currentLoadUser, 2),
-            ATTR_LOAD_SYSTEM: round(bridge.processes.load.currentLoadSystem, 2),
-            ATTR_LOAD_IDLE: round(bridge.processes.load.currentLoadIdle, 2),
+            ATTR_LOAD_AVERAGE: round(bridge.processes.load.avgLoad, 2)
+            if bridge.processes.load.avgLoad is not None
+            else None,
+            ATTR_LOAD_USER: round(bridge.processes.load.currentLoadUser, 2)
+            if bridge.processes.load.currentLoadUser is not None
+            else None,
+            ATTR_LOAD_SYSTEM: round(bridge.processes.load.currentLoadSystem, 2)
+            if bridge.processes.load.currentLoadSystem is not None
+            else None,
+            ATTR_LOAD_IDLE: round(bridge.processes.load.currentLoadIdle, 2)
+            if bridge.processes.load.currentLoadIdle is not None
+            else None,
         }
