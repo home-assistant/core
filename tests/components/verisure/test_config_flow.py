@@ -314,11 +314,43 @@ async def test_imports_invalid_login(hass: HomeAssistant) -> None:
             },
         )
 
-    hass.config_entries.flow.async_abort(result["flow_id"])
-
     assert result["step_id"] == "user"
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+    with patch(
+        "homeassistant.components.verisure.config_flow.Verisure",
+    ) as mock_verisure, patch(
+        "homeassistant.components.verisure.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.verisure.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        type(mock_verisure.return_value).installations = PropertyMock(
+            return_value=TEST_INSTALLATION
+        )
+        mock_verisure.login.return_value = True
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "email": "verisure_my_pages@example.com",
+                "password": "SuperS3cr3t!",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "ascending (12345th street)"
+    assert result2["data"] == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "SuperS3cr3t!",
+    }
+
+    assert len(mock_verisure.mock_calls) == 2
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_imports_needs_user_installation_choice(hass: HomeAssistant) -> None:
@@ -343,11 +375,32 @@ async def test_imports_needs_user_installation_choice(hass: HomeAssistant) -> No
             },
         )
 
-    hass.config_entries.flow.async_abort(result["flow_id"])
-
     assert result["step_id"] == "installation"
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
+
+    with patch(
+        "homeassistant.components.verisure.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.verisure.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"giid": "12345"}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == "ascending (12345th street)"
+    assert result2["data"] == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "SuperS3cr3t!",
+    }
+
+    assert len(mock_verisure.mock_calls) == 2
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize("giid", ["12345", None])
