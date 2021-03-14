@@ -3,9 +3,11 @@ from typing import NamedTuple, Set, Tuple
 
 import RFXtrx
 import pytest
+import voluptuous_serialize
 
 import homeassistant.components.automation as automation
-from homeassistant.components.rfxtrx import DOMAIN
+from homeassistant.components.rfxtrx import DOMAIN, device_action
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
@@ -40,6 +42,10 @@ class DeviceTestData(NamedTuple):
 
 DEVICE_LIGHTING_1 = DeviceTestData("0710002a45050170", {("rfxtrx", "10", "0", "E5")})
 
+DEVICE_BLINDS_1 = DeviceTestData(
+    "09190000009ba8010100", {("rfxtrx", "19", "0", "009ba8:1")}
+)
+
 DEVICE_TEMPHUM_1 = DeviceTestData(
     "0a52080705020095220269", {("rfxtrx", "52", "8", "05:02")}
 )
@@ -70,6 +76,7 @@ async def setup_entry(hass, devices):
     "device,expected",
     [
         [DEVICE_LIGHTING_1, [{"type": "send_command"}]],
+        [DEVICE_BLINDS_1, [{"type": "send_command"}]],
         [DEVICE_TEMPHUM_1, []],
     ],
 )
@@ -95,12 +102,13 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     [
         [DEVICE_LIGHTING_1, {"type": "send_command", "data": 1}, "0710000045050100"],
         [DEVICE_LIGHTING_1, {"type": "send_command", "data": 10}, "0710000045050a00"],
+        [DEVICE_BLINDS_1, {"type": "send_command", "data": 10}, "09190000009ba8010a00"],
     ],
 )
 async def test_action(
     hass, device_reg: DeviceRegistry, rfxtrx: RFXtrx.Connect, device, config, expected
 ):
-    """Test for turn_on and turn_off actions."""
+    """Test for actions."""
 
     await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
 
@@ -130,3 +138,41 @@ async def test_action(
     await hass.async_block_till_done()
 
     rfxtrx.transport.send.assert_called_once_with(bytearray.fromhex(expected))
+
+
+@pytest.mark.parametrize(
+    "device,expected",
+    [
+        [DEVICE_LIGHTING_1, RFXtrx.lowlevel.Lighting1.COMMANDS],
+        [DEVICE_BLINDS_1, RFXtrx.lowlevel.RollerTrol.COMMANDS],
+        [DEVICE_TEMPHUM_1, None],
+    ],
+)
+async def test_capabilities(hass, device_reg: DeviceRegistry, device, expected):
+    """Test getting capabilities."""
+    await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
+
+    device_entry = device_reg.async_get_device(device.device_identifiers, set())
+
+    capabilities = await device_action.async_get_action_capabilities(
+        hass,
+        {
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "type": "send_command",
+        },
+    )
+
+    assert capabilities and "extra_fields" in capabilities
+
+    if expected:
+        field = {
+            "type": "select",
+            "options": list((key, value) for key, value in expected.items()),
+        }
+    else:
+        field = {"type": "integer"}
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [{"name": "data", "required": True, **field}]

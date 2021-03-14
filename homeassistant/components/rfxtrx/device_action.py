@@ -59,11 +59,11 @@ async def async_get_action_capabilities(hass, config):
     """List action capabilities."""
 
     device = async_get_device_object(hass, config[CONF_DEVICE_ID])
-    values = getattr(device, ACTION_SELECTION[ACTION_TYPE_COMMAND])
+    values = getattr(device, ACTION_SELECTION[config[CONF_TYPE]], None)
     if values:
         data_schema = vol.In(values)
     else:
-        data_schema = vol.Range(0, 255)
+        data_schema = int
     return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): data_schema})}
 
 
