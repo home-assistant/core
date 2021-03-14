@@ -443,6 +443,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
         '    "mdl":"Generic",'
         '    "sw":"1.2.3.4",'
         '    "mf":"None"'
+        '    "sa":"default_area"'
         "  }"
         "}"
     )

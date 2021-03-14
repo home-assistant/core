@@ -582,6 +582,7 @@ async def test_entity_device_info_with_hub(hass, mqtt_mock):
         identifiers={("mqtt", "hub-id")},
         manufacturer="manufacturer",
         model="hub",
+        suggested_area="default_area",
     )
 
     data = json.dumps(
