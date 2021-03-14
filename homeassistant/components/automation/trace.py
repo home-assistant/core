@@ -185,7 +185,13 @@ def get_debug_trace(hass, automation_id, run_id):
         run_id,
         hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id],
     )
-    return hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id]
+    _LOGGER.debug(
+        "get_debug_trace: %s %s %s",
+        automation_id,
+        run_id,
+        hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id].as_dict(),
+    )
+    return hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id].as_dict()
 
 
 @callback
