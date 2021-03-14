@@ -136,7 +136,6 @@ async def async_setup_entry(hass, config_entry):
     config = config_entry.data
     count = 0
     if hass.config_entries.async_entries(DOMAIN):
-        count = 0
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.title == config_entry.title:
                 break
