@@ -100,28 +100,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Verisure from a config entry."""
     # Migrate old YAML settings (hidden in the config entry),
     # to config entry options. Can be removed after YAML support is gone.
-    if (
-        CONF_LOCK_CODE_DIGITS not in entry.options
-        and CONF_LOCK_CODE_DIGITS in entry.data
-        and entry.data[CONF_LOCK_CODE_DIGITS] != DEFAULT_LOCK_CODE_DIGITS
-    ):
-        options = {
-            **entry.options,
-            CONF_LOCK_CODE_DIGITS: entry.data[CONF_LOCK_CODE_DIGITS],
-        }
+    if CONF_LOCK_CODE_DIGITS in entry.data or CONF_DEFAULT_LOCK_CODE in entry.data:
+        options = entry.options.copy()
+
+        if (
+            CONF_LOCK_CODE_DIGITS in entry.data
+            and CONF_LOCK_CODE_DIGITS not in entry.options
+            and entry.data[CONF_LOCK_CODE_DIGITS] != DEFAULT_LOCK_CODE_DIGITS
+        ):
+            options.update(
+                {
+                    CONF_LOCK_CODE_DIGITS: entry.data[CONF_LOCK_CODE_DIGITS],
+                }
+            )
+
+        if (
+            CONF_DEFAULT_LOCK_CODE in entry.data
+            and CONF_DEFAULT_LOCK_CODE not in entry.options
+        ):
+            options.update(
+                {
+                    CONF_DEFAULT_LOCK_CODE: entry.data[CONF_DEFAULT_LOCK_CODE],
+                }
+            )
+
         data = entry.data.copy()
         data.pop(CONF_LOCK_CODE_DIGITS)
-        hass.config_entries.async_update_entry(entry, data=data, options=options)
-
-    if (
-        CONF_DEFAULT_LOCK_CODE not in entry.options
-        and CONF_DEFAULT_LOCK_CODE in entry.data
-    ):
-        options = {
-            **entry.options,
-            CONF_DEFAULT_LOCK_CODE: entry.data[CONF_DEFAULT_LOCK_CODE],
-        }
-        data = entry.data.copy()
         data.pop(CONF_DEFAULT_LOCK_CODE)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
