@@ -179,6 +179,12 @@ def trace_automation(hass, unique_id, config, context):
 @callback
 def get_debug_trace(hass, automation_id, run_id):
     """Return a serializable debug trace."""
+    _LOGGER.debug(
+        "get_debug_trace: %s %s %s",
+        automation_id,
+        run_id,
+        hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id],
+    )
     return hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id]
 
 
