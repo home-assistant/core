@@ -17,6 +17,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     ATTR_TYPE_CAMERA,
+    ATTR_TYPE_CLOUD,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DATA_UNDO_UPDATE_LISTENER,
@@ -58,6 +59,14 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_update_entry(entry, options=options)
 
     if entry.data.get(CONF_TYPE) == ATTR_TYPE_CAMERA:
+        if hass.data.get(DOMAIN):
+            # Should only execute on addition of new camera entry.
+            # Fetch Entry id of main account and reload it.
+            for item in hass.config_entries.async_entries():
+                if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
+                    _LOGGER.info("Reload Ezviz integration with new camera rtsp entry")
+                    await hass.config_entries.async_reload(item.entry_id)
+
         return True
 
     try:
