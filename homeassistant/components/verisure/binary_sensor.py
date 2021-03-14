@@ -5,33 +5,32 @@ from typing import Any, Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_DOOR_WINDOW, DOMAIN, VerisureDataUpdateCoordinator
+from . import CONF_DOOR_WINDOW, DOMAIN
+from .coordinator import VerisureDataUpdateCoordinator
 
 
 def setup_platform(
     hass: HomeAssistant,
     config: dict[str, Any],
-    add_entities: Callable[[list[Entity], bool], None],
+    add_entities: Callable[[list[CoordinatorEntity]], None],
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the Verisure binary sensors."""
     coordinator = hass.data[DOMAIN]
 
-    sensors = [VerisureEthernetStatus(coordinator)]
+    sensors: list[CoordinatorEntity] = [VerisureEthernetStatus(coordinator)]
 
     if int(coordinator.config.get(CONF_DOOR_WINDOW, 1)):
         sensors.extend(
             [
-                VerisureDoorWindowSensor(coordinator, device_label)
-                for device_label in coordinator.get(
-                    "$.doorWindow.doorWindowDevice[*].deviceLabel"
-                )
+                VerisureDoorWindowSensor(coordinator, serial_number)
+                for serial_number in coordinator.data["door_window"]
             ]
         )
 
@@ -44,40 +43,40 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
     coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: VerisureDataUpdateCoordinator, device_label: str
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure door window sensor."""
         super().__init__(coordinator)
-        self._device_label = device_label
+        self.serial_number = serial_number
 
     @property
     def name(self) -> str:
         """Return the name of the binary sensor."""
-        return self.coordinator.get_first(
-            "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
-            self._device_label,
-        )
+        return self.coordinator.data["door_window"][self.serial_number]["area"]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this alarm control panel."""
+        return f"{self.serial_number}_door_window"
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OPENING
 
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
-            self.coordinator.get_first(
-                "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
-                self._device_label,
-            )
-            == "OPEN"
+            self.coordinator.data["door_window"][self.serial_number]["state"] == "OPEN"
         )
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self.coordinator.get_first(
-                "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
-                self._device_label,
-            )
-            is not None
+            super().available
+            and self.serial_number in self.coordinator.data["door_window"]
         )
 
 
@@ -94,12 +93,12 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self.coordinator.get_first("$.ethernetConnectedNow")
+        return self.coordinator.data["ethernet"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.get_first("$.ethernetConnectedNow") is not None
+        return super().available and self.coordinator.data["ethernet"] is not None
 
     @property
     def device_class(self) -> str:

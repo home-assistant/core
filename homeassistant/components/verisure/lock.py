@@ -7,17 +7,16 @@ from typing import Any, Callable
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import VerisureDataUpdateCoordinator
 from .const import CONF_CODE_DIGITS, CONF_DEFAULT_LOCK_CODE, CONF_LOCKS, DOMAIN, LOGGER
+from .coordinator import VerisureDataUpdateCoordinator
 
 
 def setup_platform(
     hass: HomeAssistant,
     config: dict[str, Any],
-    add_entities: Callable[[list[Entity], bool], None],
+    add_entities: Callable[[list[VerisureDoorlock]], None],
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the Verisure lock platform."""
@@ -26,10 +25,8 @@ def setup_platform(
     if int(coordinator.config.get(CONF_LOCKS, 1)):
         locks.extend(
             [
-                VerisureDoorlock(coordinator, device_label)
-                for device_label in coordinator.get(
-                    "$.doorLockStatusList[*].deviceLabel"
-                )
+                VerisureDoorlock(coordinator, serial_number)
+                for serial_number in coordinator.data["locks"]
             ]
         )
 
@@ -42,11 +39,11 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
-        self, coordinator: VerisureDataUpdateCoordinator, device_label: str
+        self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
     ) -> None:
         """Initialize the Verisure lock."""
         super().__init__(coordinator)
-        self._device_label = device_label
+        self.serial_number = serial_number
         self._state = None
         self._digits = coordinator.config.get(CONF_CODE_DIGITS)
         self._default_lock_code = coordinator.config.get(CONF_DEFAULT_LOCK_CODE)
@@ -54,27 +51,19 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     @property
     def name(self) -> str:
         """Return the name of the lock."""
-        return self.coordinator.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')].area", self._device_label
-        )
+        return self.coordinator.data["locks"][self.serial_number]["area"]
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            self.coordinator.get_first(
-                "$.doorLockStatusList[?(@.deviceLabel=='%s')]", self._device_label
-            )
-            is not None
+            super().available and self.serial_number in self.coordinator.data["locks"]
         )
 
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        return self.coordinator.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')].userString",
-            self._device_label,
-        )
+        return self.coordinator.data["locks"][self.serial_number].get("userString")
 
     @property
     def code_format(self) -> str:
@@ -84,11 +73,10 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        status = self.coordinator.get_first(
-            "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
-            self._device_label,
+        return (
+            self.coordinator.data["locks"][self.serial_number]["lockedState"]
+            == "LOCKED"
         )
-        return status == "LOCKED"
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
@@ -112,9 +100,9 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         """Send set lock state command."""
         target_state = "lock" if state == STATE_LOCKED else "unlock"
         lock_state = await self.hass.async_add_executor_job(
-            self.coordinator.session.set_lock_state,
+            self.coordinator.verisure.set_lock_state,
             code,
-            self._device_label,
+            self.serial_number,
             target_state,
         )
 
@@ -123,7 +111,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         attempts = 0
         while "result" not in transaction:
             transaction = await self.hass.async_add_executor_job(
-                self.coordinator.session.get_lock_state_transaction,
+                self.coordinator.verisure.get_lock_state_transaction,
                 lock_state["doorLockStateChangeTransactionId"],
             )
             attempts += 1
