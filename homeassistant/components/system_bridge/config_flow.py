@@ -19,7 +19,6 @@ from .const import BRIDGE_CONNECTION_ERRORS, DOMAIN  # pylint:disable=unused-imp
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_AUTHENTICATE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -49,10 +48,12 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
             if os.hostname is not None:
                 hostname = os.hostname
             interface: Interface = network.interfaces[network.interfaceDefault]
-    except BridgeAuthenticationException:
-        raise InvalidAuth
-    except BRIDGE_CONNECTION_ERRORS:
-        raise CannotConnect
+    except BridgeAuthenticationException as exception:
+        _LOGGER.info(exception)
+        raise InvalidAuth from exception
+    except BRIDGE_CONNECTION_ERRORS as exception:
+        _LOGGER.info(exception)
+        raise CannotConnect from exception
 
     return {"hostname": hostname, "mac": interface["mac"]}
 
@@ -68,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name: Optional[str] = None
         self._input: Optional[Dict[str, Any]] = {}
 
-    async def _async_get_info(self, user_input={}):
+    async def _async_get_info(self, user_input=None):
         errors = {}
 
         try:
@@ -85,7 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return errors, None
 
-    async def async_step_user(self, user_input={}):
+    async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -104,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_authenticate(self, user_input={}):
+    async def async_step_authenticate(self, user_input=None):
         """Handle getting the api-key for authentication."""
         if self._input != {}:
             user_input = {**self._input, **(user_input or {})}
@@ -147,7 +148,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_authenticate(self._input)
 
-    async def async_step_reauth(self, user_input={}):
+    async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
         if (
             user_input is not None
