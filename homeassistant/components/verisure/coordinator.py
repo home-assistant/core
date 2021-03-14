@@ -112,11 +112,3 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     def smartcam_capture(self, device_id: str) -> None:
         """Capture a new image from a smartcam."""
         self.verisure.capture_image(device_id)
-
-    def disable_autolock(self, device_id: str) -> None:
-        """Disable autolock."""
-        self.verisure.set_lock_config(device_id, auto_lock_enabled=False)
-
-    def enable_autolock(self, device_id: str) -> None:
-        """Enable autolock."""
-        self.verisure.set_lock_config(device_id, auto_lock_enabled=True)

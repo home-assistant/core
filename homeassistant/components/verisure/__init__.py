@@ -5,7 +5,6 @@ import asyncio
 import os
 from typing import Any
 
-from verisure import Error as VerisureError
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
@@ -29,7 +28,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from .const import (
-    ATTR_DEVICE_SERIAL,
     CONF_CODE_DIGITS,
     CONF_DEFAULT_LOCK_CODE,
     CONF_GIID,
@@ -38,9 +36,6 @@ from .const import (
     DEFAULT_LOCK_CODE_DIGITS,
     DOMAIN,
     LOGGER,
-    SERVICE_CAPTURE_SMARTCAM,
-    SERVICE_DISABLE_AUTOLOCK,
-    SERVICE_ENABLE_AUTOLOCK,
 )
 from .coordinator import VerisureDataUpdateCoordinator
 
@@ -71,9 +66,6 @@ CONFIG_SCHEMA = vol.Schema(
     ),
     extra=vol.ALLOW_EXTRA,
 )
-
-
-DEVICE_SERIAL_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_SERIAL): cv.string})
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
@@ -151,44 +143,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
-    async def capture_smartcam(service):
-        """Capture a new picture from a smartcam."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(coordinator.smartcam_capture, device_id)
-            LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
-        except VerisureError as ex:
-            LOGGER.error("Could not capture image, %s", ex)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_CAPTURE_SMARTCAM, capture_smartcam, schema=DEVICE_SERIAL_SCHEMA
-    )
-
-    async def disable_autolock(service):
-        """Disable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(coordinator.disable_autolock, device_id)
-            LOGGER.debug("Disabling autolock on%s", ATTR_DEVICE_SERIAL)
-        except VerisureError as ex:
-            LOGGER.error("Could not disable autolock, %s", ex)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_AUTOLOCK, disable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
-
-    async def enable_autolock(service):
-        """Enable autolock on a doorlock."""
-        device_id = service.data[ATTR_DEVICE_SERIAL]
-        try:
-            await hass.async_add_executor_job(coordinator.enable_autolock, device_id)
-            LOGGER.debug("Enabling autolock on %s", ATTR_DEVICE_SERIAL)
-        except VerisureError as ex:
-            LOGGER.error("Could not enable autolock, %s", ex)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_AUTOLOCK, enable_autolock, schema=DEVICE_SERIAL_SCHEMA
-    )
     return True
 
 
