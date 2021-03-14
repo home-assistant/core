@@ -22,7 +22,17 @@ from .helpers import async_get_device_object
 
 CONF_SUBTYPE = "subtype"
 
-TRIGGER_TYPES = {"command", "status"}
+CONF_TYPE_COMMAND = "command"
+CONF_TYPE_STATUS = "status"
+
+TRIGGER_SELECTION = {
+    CONF_TYPE_COMMAND: "COMMANDS",
+    CONF_TYPE_STATUS: "STATUS",
+}
+TRIGGER_TYPES = [
+    CONF_TYPE_COMMAND,
+    CONF_TYPE_STATUS,
+]
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -37,26 +47,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
 
     device = async_get_device_object(hass, device_id)
     if device:
-        if hasattr(device, "COMMANDS"):
-            for command in device.COMMANDS.values():
+        for conf_type in TRIGGER_TYPES:
+            data = getattr(device, TRIGGER_SELECTION[conf_type], {})
+            for command in data.values():
                 triggers.append(
                     {
                         CONF_PLATFORM: "device",
                         CONF_DEVICE_ID: device_id,
                         CONF_DOMAIN: DOMAIN,
-                        CONF_TYPE: "command",
+                        CONF_TYPE: conf_type,
                         CONF_SUBTYPE: command,
-                    }
-                )
-        if hasattr(device, "STATUS"):
-            for status in device.STATUS.values():
-                triggers.append(
-                    {
-                        CONF_PLATFORM: "device",
-                        CONF_DEVICE_ID: device_id,
-                        CONF_DOMAIN: DOMAIN,
-                        CONF_TYPE: "status",
-                        CONF_SUBTYPE: status,
                     }
                 )
     return triggers
@@ -73,9 +73,9 @@ async def async_attach_trigger(
 
     event_data = {ATTR_DEVICE_ID: config[CONF_DEVICE_ID]}
 
-    if config[CONF_TYPE] == "command":
+    if config[CONF_TYPE] == CONF_TYPE_COMMAND:
         event_data["values"] = {"Command": config[CONF_SUBTYPE]}
-    elif config[CONF_TYPE] == "status":
+    elif config[CONF_TYPE] == CONF_TYPE_STATUS:
         event_data["values"] = {"Status": config[CONF_SUBTYPE]}
     else:
         return None
