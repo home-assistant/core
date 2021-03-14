@@ -258,7 +258,7 @@ debugpy==1.2.1
 defusedxml==0.6.0
 
 # homeassistant.components.denonavr
-denonavr==0.9.10
+denonavr==0.10.1
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.17.1

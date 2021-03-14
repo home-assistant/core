@@ -1,5 +1,6 @@
 """The denonavr component."""
 import logging
+from typing import Dict
 
 import voluptuous as vol
 
@@ -36,7 +37,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-def setup(hass: core.HomeAssistant, config: dict):
+def setup(hass: core.HomeAssistant, config: Dict):
     """Set up the denonavr platform."""
 
     def service_handler(service):
@@ -60,7 +61,6 @@ async def async_setup_entry(
 
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
-        hass,
         entry.data[CONF_HOST],
         DEFAULT_TIMEOUT,
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
