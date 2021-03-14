@@ -162,7 +162,9 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
         )
         self._set_modes_and_presets()
-        self._supported_features = SUPPORT_PRESET_MODE
+        self._supported_features = 0
+        if len(self._hvac_presets) > 1:
+            self._supported_features |= SUPPORT_PRESET_MODE
         # If any setpoint value exists, we can assume temperature
         # can be set
         if any(self._setpoint_values.values()):
@@ -302,7 +304,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
-                self._current_mode.value
+                str(self._current_mode.value)
             )
             return return_val
         return PRESET_NONE

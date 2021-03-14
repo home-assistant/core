@@ -122,7 +122,7 @@ aiokafka==0.6.0
 aiolip==1.1.4
 
 # homeassistant.components.lyric
-aiolyric==1.0.5
+aiolyric==1.0.6
 
 # homeassistant.components.notion
 aionotion==1.1.0
@@ -196,7 +196,7 @@ azure-eventhub==5.1.0
 base36==0.1.1
 
 # homeassistant.components.zha
-bellows==0.22.0
+bellows==0.23.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
