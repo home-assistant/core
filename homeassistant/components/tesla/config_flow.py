@@ -79,7 +79,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_start_oauth(self, user_input=None):
         """Start oauth step for login."""
         self.warning_shown = False
-        websession = aiohttp_client.async_get_clientsession(self.hass)
+        websession = aiohttp_client.async_create_clientsession(self.hass)
         self.controller = TeslaAPI(
             websession,
             update_interval=DEFAULT_SCAN_INTERVAL,
