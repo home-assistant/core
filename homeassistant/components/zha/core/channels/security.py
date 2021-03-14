@@ -38,6 +38,8 @@ IAS_ACE_GET_BYPASSED_ZONE_LIST = 0x0008  # ("get_bypassed_zone_list", (), False)
 IAS_ACE_GET_ZONE_STATUS = (
     0x0009  # ("get_zone_status", (t.uint8_t, t.uint8_t, t.Bool, t.bitmap16), False)
 )
+NAME = 0
+SIGNAL_ARMED_STATE_CHANGED = "armed_state_changed"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +74,7 @@ class IasAce(ZigbeeChannel):
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         self.warning(
-            "received command %s", self._cluster.server_commands.get(command_id)[0]
+            "received command %s", self._cluster.server_commands.get(command_id)[NAME]
         )
         self.command_map[command_id](*args)
 
@@ -80,7 +82,7 @@ class IasAce(ZigbeeChannel):
         """Handle the IAS ACE arm command."""
         mode = security.IasAce.ArmMode(arm_mode)
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_ARM)[0],
+            self._cluster.server_commands.get(IAS_ACE_ARM)[NAME],
             {
                 "arm_mode": mode.value,
                 "arm_mode_description": mode.name,
@@ -122,27 +124,29 @@ class IasAce(ZigbeeChannel):
 
         asyncio.create_task(response)
         self.async_send_signal(
-            f"{self.unique_id}_armed_state_changed", self.armed_state
+            f"{self.unique_id}_{SIGNAL_ARMED_STATE_CHANGED}", self.armed_state
         )
 
     def bypass(self, zone_list, code):
         """Handle the IAS ACE bypass command."""
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_BYPASS)[0],
+            self._cluster.server_commands.get(IAS_ACE_BYPASS)[NAME],
             {"zone_list": zone_list, "code": code},
         )
 
     def emergency(self):
         """Handle the IAS ACE emergency command."""
-        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_EMERGENCY)[0], {})
+        self.zha_send_event(
+            self._cluster.server_commands.get(IAS_ACE_EMERGENCY)[NAME], {}
+        )
 
     def fire(self):
         """Handle the IAS ACE fire command."""
-        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_FIRE)[0], {})
+        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_FIRE)[NAME], {})
 
     def panic(self):
         """Handle the IAS ACE panic command."""
-        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_PANIC)[0], {})
+        self.zha_send_event(self._cluster.server_commands.get(IAS_ACE_PANIC)[NAME], {})
 
     def get_zone_id_map(self):
         """Handle the IAS ACE zone id map command."""
@@ -153,7 +157,7 @@ class IasAce(ZigbeeChannel):
     def get_panel_status(self):
         """Handle the IAS ACE panel status command."""
         self.zha_send_event(
-            self._cluster.server_commands.get(IAS_ACE_GET_PANEL_STATUS)[0], {}
+            self._cluster.server_commands.get(IAS_ACE_GET_PANEL_STATUS)[NAME], {}
         )
         response = self.panel_status_response(
             self.armed_state,

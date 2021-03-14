@@ -30,6 +30,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core import discovery
+from .core.channels.security import SIGNAL_ARMED_STATE_CHANGED
 from .core.const import (
     CHANNEL_IAS_ACE,
     DATA_ZHA,
@@ -81,7 +82,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
-            self._channel, "armed_state_changed", self.async_set_armed_mode
+            self._channel, SIGNAL_ARMED_STATE_CHANGED, self.async_set_armed_mode
         )
 
     @callback
