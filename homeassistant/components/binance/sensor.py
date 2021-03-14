@@ -28,7 +28,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if CONF_BALANCES in coordinator.data:
         for balance in coordinator.data[CONF_BALANCES]:
-            entities.append(Balance(coordinator, balance))
+            if balance["free"] > "0.00000000":
+                entities.append(Balance(coordinator, balance))
 
         for currency in ASSET_VALUE_CURRENCIES:
             entities.append(TotalAssetValue(coordinator, currency))

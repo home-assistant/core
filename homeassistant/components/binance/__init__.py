@@ -111,10 +111,7 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
             balances_dict = {}
 
             for balance in all_balances["balances"]:
-                if (
-                    balance["free"] > "0.00000000"
-                    and balance["asset"] not in balances_dict
-                ):
+                if balance["asset"] not in balances_dict:
                     balances_dict[balance["asset"]] = {}
                     balances_dict[balance["asset"]].update(balance)
 
