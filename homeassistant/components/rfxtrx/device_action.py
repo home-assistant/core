@@ -12,14 +12,10 @@ from .helpers import async_get_device_object
 
 CONF_DATA = "data"
 
-ACTION_TYPE_CHIME = "send_chime"
 ACTION_TYPE_COMMAND = "send_command"
-ACTION_TYPE_STATUS = "send_status"
 
 ACTION_TYPES = {
-    ACTION_TYPE_CHIME,
     ACTION_TYPE_COMMAND,
-    ACTION_TYPE_STATUS,
 }
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
@@ -53,14 +49,13 @@ async def async_get_action_capabilities(hass, config):
     """List action capabilities."""
 
     device = async_get_device_object(hass, config[CONF_DEVICE_ID])
-    if config[CONF_TYPE] == ACTION_TYPE_CHIME:
-        return {"extra_fields": vol.Schema({vol.Required(CONF_DATA, default=1): int})}
     if config[CONF_TYPE] == ACTION_TYPE_COMMAND:
         values = getattr(device, "COMMANDS")
-        return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): vol.In(values)})}
-    if config[CONF_TYPE] == ACTION_TYPE_STATUS:
-        values = getattr(device, "STATUS")
-        return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): vol.In(values)})}
+        if values:
+            data_schema = vol.In(values)
+        else:
+            data_schema = vol.Range(0, 255)
+        return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): data_schema})}
 
     return {}
 
@@ -76,9 +71,5 @@ async def async_call_action_from_config(
 
     send_fun = getattr(device, config[CONF_TYPE])
 
-    if config[CONF_TYPE] == ACTION_TYPE_CHIME:
-        await hass.async_add_executor_job(send_fun, rfx.transport, config[CONF_DATA])
-    elif config[CONF_TYPE] == ACTION_TYPE_COMMAND:
-        await hass.async_add_executor_job(send_fun, rfx.transport, config[CONF_DATA])
-    elif config[CONF_TYPE] == ACTION_TYPE_STATUS:
+    if config[CONF_TYPE] == ACTION_TYPE_COMMAND:
         await hass.async_add_executor_job(send_fun, rfx.transport, config[CONF_DATA])
