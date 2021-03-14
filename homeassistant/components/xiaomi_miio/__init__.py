@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from miio.gateway import GatewayException
+from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
