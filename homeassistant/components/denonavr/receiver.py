@@ -1,7 +1,8 @@
 """Code to handle a DenonAVR receiver."""
 import logging
 
-import denonavr
+from denonavr import DenonAVR
+from denonavr.exceptions import AvrTimoutError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -9,9 +10,15 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectDenonAVR:
     """Class to async connect to a DenonAVR receiver."""
 
-    def __init__(self, hass, host, timeout, show_all_inputs, zone2, zone3):
+    def __init__(
+        self,
+        host: str,
+        timeout: float,
+        show_all_inputs: bool,
+        zone2: bool,
+        zone3: bool,
+    ):
         """Initialize the class."""
-        self._hass = hass
         self._receiver = None
         self._host = host
         self._show_all_inputs = show_all_inputs
@@ -30,7 +37,7 @@ class ConnectDenonAVR:
 
     async def async_connect_receiver(self):
         """Connect to the DenonAVR receiver."""
-        if not await self._hass.async_add_executor_job(self.init_receiver_class):
+        if not await self.async_init_receiver_class():
             return False
 
         if (
@@ -60,18 +67,19 @@ class ConnectDenonAVR:
 
         return True
 
-    def init_receiver_class(self):
-        """Initialize the DenonAVR class in a way that can called by async_add_executor_job."""
+    async def async_init_receiver_class(self):
+        """Initialize the DenonAVR class asynchronously."""
+        self._receiver = DenonAVR(
+            host=self._host,
+            show_all_inputs=self._show_all_inputs,
+            timeout=self._timeout,
+            add_zones=self._zones,
+        )
         try:
-            self._receiver = denonavr.DenonAVR(
-                host=self._host,
-                show_all_inputs=self._show_all_inputs,
-                timeout=self._timeout,
-                add_zones=self._zones,
-            )
-        except ConnectionError:
+            await self._receiver.async_setup()
+        except AvrTimoutError:
             _LOGGER.error(
-                "ConnectionError during setup of denonavr with host %s", self._host
+                "Timeout error during setup of denonavr on host %s", self._host
             )
             return False
 

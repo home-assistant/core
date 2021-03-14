@@ -1,6 +1,7 @@
 """Config flow to configure Denon AVR receivers using their HTTP interface."""
 from functools import partial
 import logging
+from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 import denonavr
@@ -44,7 +45,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: Optional[Dict[str, Any]] = None):
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -90,11 +91,13 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: Optional[Dict[str, Any]] = None):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -105,7 +108,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_connect()
 
             # discovery using denonavr library
-            self.d_receivers = await self.hass.async_add_executor_job(denonavr.discover)
+            self.d_receivers = await denonavr.async_discover()
             # More than one receiver could be discovered by that method
             if len(self.d_receivers) == 1:
                 self.host = self.d_receivers[0]["host"]
@@ -120,7 +123,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_select(self, user_input=None):
+    async def async_step_select(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Handle multiple receivers found."""
         errors = {}
         if user_input is not None:
@@ -139,17 +144,20 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="select", data_schema=select_scheme, errors=errors
         )
 
-    async def async_step_confirm(self, user_input=None):
+    async def async_step_confirm(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return await self.async_step_connect()
 
         return self.async_show_form(step_id="confirm")
 
-    async def async_step_connect(self, user_input=None):
+    async def async_step_connect(
+        self, user_input: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Connect to the receiver."""
         connect_denonavr = ConnectDenonAVR(
-            self.hass,
             self.host,
             self.timeout,
             self.show_all_sources,
@@ -193,7 +201,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info):
+    async def async_step_ssdp(self, discovery_info: Dict[str, Any]) -> Dict[str, Any]:
         """Handle a discovered Denon AVR.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -235,11 +243,11 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     @staticmethod
-    def construct_unique_id(model_name, serial_number):
+    def construct_unique_id(model_name: str, serial_number: str) -> str:
         """Construct the unique id from the ssdp discovery or user_step."""
         return f"{model_name}-{serial_number}"
 
-    async def async_get_mac(self, host):
+    async def async_get_mac(self, host: str) -> Optional[str]:
         """Get the mac address of the DenonAVR receiver."""
         try:
             mac_address = await self.hass.async_add_executor_job(
