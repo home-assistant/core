@@ -75,7 +75,7 @@ CONF_TILT_MAX = "tilt_max"
 CONF_TILT_MIN = "tilt_min"
 CONF_TILT_OPEN_POSITION = "tilt_opened_value"
 CONF_TILT_STATE_OPTIMISTIC = "tilt_optimistic"
-CONF_TILT_STATE_SOFT = "tilt_from_position"
+CONF_TILT_FROM_POSITION = "tilt_from_position"
 
 TILT_PAYLOAD = "tilt"
 COVER_PAYLOAD = "cover"
@@ -133,13 +133,13 @@ def validate_options(value):
             "please invert tilt using 'tilt_min' & 'tilt_max'"
         )
 
-    if CONF_TILT_STATE_SOFT in value and CONF_SET_POSITION_TOPIC not in value:
+    if CONF_TILT_FROM_POSITION in value and CONF_SET_POSITION_TOPIC not in value:
         raise vol.Invalid(
             "'tilt_from_position' must be set together with 'position_topic' "
             "and 'set_position_topic'."
         )
 
-    if CONF_TILT_STATE_SOFT in value and (
+    if CONF_TILT_FROM_POSITION in value and (
         CONF_TILT_COMMAND_TOPIC in value or CONF_TILT_STATUS_TOPIC in value
     ):
         raise vol.Invalid(
@@ -187,7 +187,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(
                 CONF_TILT_STATE_OPTIMISTIC, default=DEFAULT_TILT_OPTIMISTIC
             ): cv.boolean,
-            vol.Optional(CONF_TILT_STATE_SOFT): cv.boolean,
+            vol.Optional(CONF_TILT_FROM_POSITION): cv.boolean,
             vol.Optional(CONF_TILT_STATUS_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TILT_STATUS_TEMPLATE): cv.template,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -375,7 +375,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 return
 
             # Calculate the cover tilt from position change
-            if self._config.get(CONF_TILT_STATE_SOFT):
+            if self._config.get(CONF_TILT_FROM_POSITION):
                 if self._tilt_value is None:
                     if self._position > 50:
                         self._tilt_value = 100
@@ -483,7 +483,7 @@ class MqttCover(MqttEntity, CoverEntity):
             supported_features |= SUPPORT_SET_POSITION
 
         if self._config.get(CONF_TILT_COMMAND_TOPIC) is not None or self._config.get(
-            CONF_TILT_STATE_SOFT
+            CONF_TILT_FROM_POSITION
         ):
             supported_features |= TILT_FEATURES
 
@@ -577,7 +577,7 @@ class MqttCover(MqttEntity, CoverEntity):
         if set_tilt_template is not None:
             tilt = set_tilt_template.async_render(parse_result=False, **kwargs)
 
-        if self._config.get(CONF_TILT_STATE_SOFT):
+        if self._config.get(CONF_TILT_FROM_POSITION):
             position = self._position
             move = tilt - self.find_in_range_from_percent(self._tilt_value)
             position += move
