@@ -446,7 +446,6 @@ influxdb-client==1.14.0
 influxdb==5.2.3
 
 # homeassistant.components.rest
-# homeassistant.components.verisure
 jsonpath==0.82
 
 # homeassistant.components.konnected

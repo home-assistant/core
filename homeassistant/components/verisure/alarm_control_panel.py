@@ -22,8 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import VerisureDataUpdateCoordinator
 from .const import CONF_ALARM, CONF_GIID, DOMAIN, LOGGER
+from .coordinator import VerisureDataUpdateCoordinator
 
 
 def setup_platform(
@@ -56,19 +56,19 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
         giid = self.coordinator.config.get(CONF_GIID)
         if giid is not None:
             aliass = {
-                i["giid"]: i["alias"] for i in self.coordinator.session.installations
+                i["giid"]: i["alias"] for i in self.coordinator.verisure.installations
             }
             if giid in aliass:
                 return "{} alarm".format(aliass[giid])
 
             LOGGER.error("Verisure installation giid not found: %s", giid)
 
-        return "{} alarm".format(self.coordinator.session.installations[0]["alias"])
+        return "{} alarm".format(self.coordinator.verisure.installations[0]["alias"])
 
     @property
     def state(self) -> str | None:
         """Return the state of the device."""
-        status = self.coordinator.get_first("$.armState.statusType")
+        status = self.coordinator.data["alarm"]["statusType"]
         if status == "DISARMED":
             self._state = STATE_ALARM_DISARMED
         elif status == "ARMED_HOME":
@@ -95,19 +95,19 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def changed_by(self) -> str | None:
         """Return the last change triggered by."""
-        return self.coordinator.get_first("$.armState.name")
+        return self.coordinator.data["alarm"]["name"]
 
     async def _async_set_arm_state(self, state: str, code: str | None = None) -> None:
         """Send set arm state command."""
         arm_state = await self.hass.async_add_executor_job(
-            self.coordinator.session.set_arm_state, code, state
+            self.coordinator.verisure.set_arm_state, code, state
         )
         LOGGER.debug("Verisure set arm state %s", state)
         transaction = {}
         while "result" not in transaction:
             await asyncio.sleep(0.5)
             transaction = await self.hass.async_add_executor_job(
-                self.coordinator.session.get_arm_state_transaction,
+                self.coordinator.verisure.get_arm_state_transaction,
                 arm_state["armStateChangeTransactionId"],
             )
 
