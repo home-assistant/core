@@ -96,10 +96,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        _LOGGER.warning("async_step_user")
-        _LOGGER.warning(user_input)
-        _LOGGER.warning(self._input)
-
         if self._input is not None:
             if user_input is not None:
                 user_input = {**self._input, **user_input}
@@ -124,10 +120,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_authenticate(self, user_input=None):
         """Handle getting the api-key for authentication."""
-        _LOGGER.warning("async_step_authenticate")
-        _LOGGER.warning(user_input)
-        _LOGGER.warning(self._input)
-
         if self._input is not None:
             if user_input is not None:
                 user_input = {**self._input, **user_input}
@@ -181,8 +173,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Perform reauth upon an API authentication error."""
-        _LOGGER.warning("async_step_reauth")
-        _LOGGER.warning(user_input)
         if (
             user_input is not None
             and user_input.get(CONF_HOST, None) is not None
@@ -193,7 +183,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
             }
-        _LOGGER.warning(self._input)
 
         if self._input is not None:
             if user_input is not None:
