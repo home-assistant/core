@@ -150,7 +150,7 @@ class VerisureOptionsFlowHandler(OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Manage Hue options."""
+        """Manage Verisure options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
