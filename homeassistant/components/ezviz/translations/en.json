@@ -25,6 +25,14 @@
                     "serial": "serial"
                 },
                 "title": "Add Camera"
+            },
+            "discovery": {
+                "data": {
+                    "username": "username",
+                    "password": "password",
+                    "serial": "serial"
+                },
+                "title": "Discovered Camera"
             }
         }
     },

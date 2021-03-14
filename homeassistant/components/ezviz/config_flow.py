@@ -3,6 +3,7 @@ import logging
 
 from pyezviz import EzvizClient
 from pyezviz.client import PyEzvizError
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -59,7 +60,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(client.login)
 
-        except PyEzvizError as err:
+        except (PyEzvizError, HTTPError) as err:
             raise InvalidAuth from err
 
         auth_data = {
@@ -158,6 +159,41 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user_camera", data_schema=camera_schema, errors=errors or {}
         )
+
+    async def async_step_discovery(self, discovery_info=None):
+        """Handle a flow for discovered camera without rtsp entry."""
+        errors = {}
+
+        discovered_camera_schema = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(ATTR_SERIAL, default=self.unique_id): str,
+            }
+        )
+
+        if discovery_info is None:
+            return self.async_show_form(
+                step_id="discovery",
+                data_schema=discovered_camera_schema,
+                errors=errors or {},
+            )
+
+        if discovery_info is not None:
+            await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
+            self._abort_if_unique_id_configured()
+
+            if discovery_info.get(CONF_PASSWORD) is not None:
+                return self.async_create_entry(
+                    title=discovery_info[ATTR_SERIAL],
+                    data={
+                        CONF_USERNAME: discovery_info[CONF_USERNAME],
+                        CONF_PASSWORD: discovery_info[CONF_PASSWORD],
+                        CONF_TYPE: ATTR_TYPE_CAMERA,
+                    },
+                )
+
+        return await self.async_step_discovery()
 
     async def async_step_import(self, import_config):
         """Handle config import from yaml."""

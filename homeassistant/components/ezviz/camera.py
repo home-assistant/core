@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -85,6 +85,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         # There seem to be a bug related to localRtspPort in Ezviz API...
         local_rtsp_port = DEFAULT_RTSP_PORT
+
         camera_rtsp_entry = [
             item
             for item in camera_config_entries
@@ -109,11 +110,23 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
 
         else:
+
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_DISCOVERY},
+                data={
+                    ATTR_SERIAL: camera[ATTR_SERIAL],
+                    CONF_USERNAME: None,
+                    CONF_PASSWORD: None,
+                },
+            )
+
             camera_username = DEFAULT_CAMERA_USERNAME
             camera_password = ""
             camera_rtsp_stream = ""
-            _LOGGER.info(
-                "Found camera with serial %s without configuration. Please add an integration instance to see the camera stream",
+            ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
+            _LOGGER.warning(
+                "Found camera with serial %s without configuration. Please go to integration to complete setup.",
                 camera[ATTR_SERIAL],
             )
 
