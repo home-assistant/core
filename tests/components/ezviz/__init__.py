@@ -78,6 +78,8 @@ YAML_CONFIG_CAMERA = {
     CONF_PASSWORD: "test-password",
 }
 
+DISCOVERY_INFO = {ATTR_SERIAL: "C666666", CONF_USERNAME: None, CONF_PASSWORD: None}
+
 
 def _patch_async_setup(return_value=True):
     return patch(
