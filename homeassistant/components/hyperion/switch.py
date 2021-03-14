@@ -157,7 +157,7 @@ class HyperionComponentSwitch(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        for component in self._client.components:
+        for component in self._client.components or []:
             if component[KEY_NAME] == self._component_name:
                 return bool(component.setdefault(KEY_ENABLED, False))
         return False
@@ -178,12 +178,10 @@ class HyperionComponentSwitch(SwitchEntity):
             }
         )
 
-    # pylint: disable=unused-argument
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         await self._async_send_set_component(True)
 
-    # pylint: disable=unused-argument
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         await self._async_send_set_component(False)

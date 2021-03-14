@@ -6,14 +6,10 @@
     "status": 4,
     "ready": true,
     "deviceClass": {
-        "basic": "Static Controller",
-        "generic": "Binary Switch",
-        "specific": "Binary Power Switch",
-        "mandatorySupportedCCs": [
-            "Basic",
-            "Binary Switch",
-            "All Switch"
-        ],
+        "basic": {"key": 2, "label":"Static Controller"},
+        "generic": {"key": 16, "label":"Binary Switch"},
+        "specific": {"key": 1, "label":"Binary Power Switch"},
+        "mandatorySupportedCCs": [],
         "mandatoryControlCCs": []
     },
     "isListening": true,
@@ -67,6 +63,7 @@
             "userIcon": 1792
         }
     ],
+    "commandClasses": [],
     "values": [
         {
             "commandClassName": "Binary Switch",

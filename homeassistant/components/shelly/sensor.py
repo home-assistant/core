@@ -149,13 +149,17 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(
+        name="Tilt",
+        unit=DEGREE,
+        icon="mdi:angle-acute",
+    ),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
-        name="Lamp life",
+        name="Lamp Life",
         unit=PERCENTAGE,
         icon="mdi:progress-wrench",
         value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
-        device_state_attributes=lambda block: {
+        extra_state_attributes=lambda block: {
             "Operational hours": round(block.totalWorkTime / 3600, 1)
         },
     ),

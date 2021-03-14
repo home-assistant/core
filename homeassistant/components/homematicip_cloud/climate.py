@@ -237,9 +237,9 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
             await self._device.set_active_profile(profile_idx)
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the access point."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self._device.controlMode == HMIP_ECO_CM:
             if self._indoor_climate.absenceType in [

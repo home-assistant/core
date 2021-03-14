@@ -8,11 +8,16 @@ import pytest
 
 from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from .common import corrupt_db_file, wait_recording_done
+from .common import corrupt_db_file
 
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    async_init_recorder_component,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 
 @pytest.fixture
@@ -142,18 +147,25 @@ def test_validate_or_move_away_sqlite_database_without_integrity_check(
     assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
 
 
-def test_last_run_was_recently_clean(hass_recorder):
+async def test_last_run_was_recently_clean(hass):
     """Test we can check if the last recorder run was recently clean."""
-    hass = hass_recorder()
+    await async_init_recorder_component(hass)
+    await hass.async_block_till_done()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
-    assert util.last_run_was_recently_clean(cursor) is False
+    assert (
+        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
+        is False
+    )
 
-    hass.data[DATA_INSTANCE]._shutdown()
-    wait_recording_done(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
-    assert util.last_run_was_recently_clean(cursor) is True
+    assert (
+        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
+        is True
+    )
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
@@ -161,7 +173,10 @@ def test_last_run_was_recently_clean(hass_recorder):
         "homeassistant.components.recorder.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        assert util.last_run_was_recently_clean(cursor) is False
+        assert (
+            await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
+            is False
+        )
 
 
 def test_basic_sanity_check(hass_recorder):

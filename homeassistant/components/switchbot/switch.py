@@ -1,7 +1,7 @@
 """Support for Switchbot."""
 from typing import Any, Dict
 
-# pylint: disable=import-error, no-member
+# pylint: disable=import-error
 import switchbot
 import voluptuous as vol
 
@@ -86,6 +86,6 @@ class SwitchBot(SwitchEntity, RestoreEntity):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes."""
         return {"last_run_success": self._last_run_success}

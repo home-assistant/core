@@ -18,7 +18,7 @@ from tests.common import (
     async_mock_service,
     mock_component,
 )
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -133,6 +133,44 @@ async def test_if_not_fires_when_true_at_setup(hass, calls):
     hass.states.async_set("test.entity", "hello", force_update=True)
     await hass.async_block_till_done()
     assert len(calls) == 0
+
+
+async def test_if_not_fires_when_true_at_setup_variables(hass, calls):
+    """Test for not firing during startup + trigger_variables."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger_variables": {"entity": "test.entity"},
+                "trigger": {
+                    "platform": "template",
+                    "value_template": '{{ is_state(entity|default("test.entity2"), "hello") }}',
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    assert len(calls) == 0
+
+    # Assert that the trigger doesn't fire immediately when it's setup
+    # If trigger_variable 'entity' is not passed to initial check at setup, the
+    # trigger will immediately fire
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set("test.entity", "goodbye", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Assert that the trigger fires after state change
+    # If trigger_variable 'entity' is not passed to the template trigger, the
+    # trigger will never fire because it falls back to 'test.entity2'
+    hass.states.async_set("test.entity", "hello", force_update=True)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_if_not_fires_because_fail(hass, calls):

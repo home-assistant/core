@@ -121,7 +121,7 @@ class DiscogsSensor(Entity):
         return SENSORS[self._type]["unit_of_measurement"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes of the sensor."""
         if self._state is None or self._attrs is None:
             return None

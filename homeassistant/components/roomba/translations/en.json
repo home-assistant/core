@@ -15,7 +15,7 @@
                     "host": "Host"
                 },
                 "description": "Select a Roomba or Braava.",
-                "title": "Automaticlly connect to the device"
+                "title": "Automatically connect to the device"
             },
             "link": {
                 "description": "Press and hold the Home button on {name} until the device generates a sound (about two seconds).",

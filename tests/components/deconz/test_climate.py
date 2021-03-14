@@ -92,7 +92,7 @@ async def test_simple_climate_device(hass, aioclient_mock):
                 "battery": 59,
                 "displayflipped": None,
                 "heatsetpoint": 2100,
-                "locked": None,
+                "locked": True,
                 "mountingmode": None,
                 "offset": 0,
                 "on": True,
@@ -132,6 +132,7 @@ async def test_simple_climate_device(hass, aioclient_mock):
     ]
     assert climate_thermostat.attributes["current_temperature"] == 21.0
     assert climate_thermostat.attributes["temperature"] == 21.0
+    assert climate_thermostat.attributes["locked"] is True
     assert hass.states.get("sensor.thermostat_battery_level").state == "59"
 
     # Event signals thermostat configured off

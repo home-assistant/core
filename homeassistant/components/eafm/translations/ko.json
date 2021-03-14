@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "no_stations": "\ud64d\uc218 \ubaa8\ub2c8\ud130\ub9c1 \uc2a4\ud14c\uc774\uc158\uc774 \uc5c6\uc2b5\ub2c8\ub2e4."
         },
         "step": {

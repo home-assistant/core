@@ -42,6 +42,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
     ) -> Dict[str, Any]:
         """Confirm setup."""
         if user_input is None:
+            self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
         if self.source == config_entries.SOURCE_USER:

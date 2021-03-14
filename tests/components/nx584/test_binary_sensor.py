@@ -146,7 +146,7 @@ def test_nx584_zone_sensor_normal():
     assert "foo" == sensor.name
     assert not sensor.should_poll
     assert sensor.is_on
-    assert sensor.device_state_attributes["zone_number"] == 1
+    assert sensor.extra_state_attributes["zone_number"] == 1
 
     zone["state"] = False
     assert not sensor.is_on

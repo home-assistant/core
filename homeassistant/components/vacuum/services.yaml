@@ -1,43 +1,53 @@
 # Describes the format for available vacuum services
 
 turn_on:
-  description: Start a new cleaning task
+  name: Turn on
+  description: Start a new cleaning task.
   target:
 
 turn_off:
-  description: Stop the current cleaning task and return to home
+  name: Turn off
+  description: Stop the current cleaning task and return to home.
   target:
 
 stop:
-  description: Stop the current cleaning task
+  name: Stop
+  description: Stop the current cleaning task.
   target:
 
 locate:
-  description: Locate the vacuum cleaner robot
+  name: Locate
+  description: Locate the vacuum cleaner robot.
   target:
 
 start_pause:
-  description: Start, pause, or resume the cleaning task
+  name: Start/Pause
+  description: Start, pause, or resume the cleaning task.
   target:
 
 start:
-  description: Start or resume the cleaning task
+  name: Start
+  description: Start or resume the cleaning task.
   target:
 
 pause:
-  description: Pause the cleaning task
+  name: Pause
+  description: Pause the cleaning task.
   target:
 
 return_to_base:
-  description: Tell the vacuum cleaner to return to its dock
+  name: Return to base
+  description: Tell the vacuum cleaner to return to its dock.
   target:
 
 clean_spot:
-  description: Tell the vacuum cleaner to do a spot clean-up
+  name: Clean spot
+  description: Tell the vacuum cleaner to do a spot clean-up.
   target:
 
 send_command:
-  description: Send a raw command to the vacuum cleaner
+  name: Send command
+  description: Send a raw command to the vacuum cleaner.
   target:
   fields:
     command:
@@ -47,7 +57,6 @@ send_command:
       example: "set_dnd_timer"
       selector:
         text:
-
     params:
       name: Parameters
       description: Parameters for the command.
@@ -56,7 +65,8 @@ send_command:
         object:
 
 set_fan_speed:
-  description: Set the fan speed of the vacuum cleaner
+  name: Set fan speed
+  description: Set the fan speed of the vacuum cleaner.
   target:
   fields:
     fan_speed:

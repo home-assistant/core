@@ -139,7 +139,7 @@ class SwitcherControl(SwitchEntity):
         return self._device_data.power_consumption
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Return the optional state attributes."""
         attribs = {}
 

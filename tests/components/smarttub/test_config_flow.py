@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components.smarttub.const import DOMAIN
 
 
-async def test_form(hass, smarttub_api):
+async def test_form(hass):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

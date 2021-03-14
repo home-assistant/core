@@ -120,7 +120,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._state = self._data.get(ATTR_CURRENT_TIME)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         if self._data is not None:
             attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}

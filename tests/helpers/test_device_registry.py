@@ -797,7 +797,7 @@ async def test_cleanup_device_registry(hass, registry):
         identifiers={("something", "d4")}, config_entry_id="non_existing"
     )
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
     ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
     ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
     ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
@@ -829,7 +829,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, re
     assert len(registry.devices) == 0
     assert len(registry.deleted_devices) == 3
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
     device_registry.async_cleanup(hass, registry, ent_reg)
 
     assert len(registry.devices) == 0
@@ -847,7 +847,6 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, re
 async def test_cleanup_startup(hass):
     """Test we run a cleanup on startup."""
     hass.state = CoreState.not_running
-    await device_registry.async_get_registry(hass)
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_call"
@@ -1209,3 +1208,41 @@ async def test_verify_suggested_area_does_not_overwrite_area_id(
         suggested_area="New Game Room",
     )
     assert entry2.area_id == game_room_area.id
+
+
+async def test_disable_config_entry_disables_devices(hass, registry):
+    """Test that we disable entities tied to a config entry."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    entry1 = registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "12:34:56:AB:CD:EF")},
+    )
+    entry2 = registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={("mac", "34:56:AB:CD:EF:12")},
+        disabled_by="user",
+    )
+
+    assert not entry1.disabled
+    assert entry2.disabled
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, "user")
+    await hass.async_block_till_done()
+
+    entry1 = registry.async_get(entry1.id)
+    assert entry1.disabled
+    assert entry1.disabled_by == "config_entry"
+    entry2 = registry.async_get(entry2.id)
+    assert entry2.disabled
+    assert entry2.disabled_by == "user"
+
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
+
+    entry1 = registry.async_get(entry1.id)
+    assert not entry1.disabled
+    entry2 = registry.async_get(entry2.id)
+    assert entry2.disabled
+    assert entry2.disabled_by == "user"

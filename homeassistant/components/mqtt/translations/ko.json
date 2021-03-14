@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\ud558\ub098\uc758 MQTT \ube0c\ub85c\ucee4\ub9cc \uad6c\uc131\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
+            "single_instance_allowed": "\uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \ud558\ub098\uc758 \uad6c\uc131\ub9cc \uac00\ub2a5\ud569\ub2c8\ub2e4."
         },
         "error": {
-            "cannot_connect": "MQTT \ube0c\ub85c\ucee4\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "broker": {
@@ -52,7 +52,7 @@
         "error": {
             "bad_birth": "Birth \ud1a0\ud53d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "bad_will": "Will \ud1a0\ud53d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
-            "cannot_connect": "MQTT \ube0c\ub85c\ucee4\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "broker": {
@@ -71,6 +71,7 @@
                     "birth_retain": "Birth \uba54\uc2dc\uc9c0 \ub9ac\ud14c\uc778",
                     "birth_topic": "Birth \uba54\uc2dc\uc9c0 \ud1a0\ud53d",
                     "discovery": "\uc7a5\uce58 \uac80\uc0c9 \ud65c\uc131\ud654",
+                    "will_enable": "Will \uba54\uc2dc\uc9c0 \ud65c\uc131\ud654",
                     "will_payload": "Will \uba54\uc2dc\uc9c0 \ud398\uc774\ub85c\ub4dc",
                     "will_qos": "Will \uba54\uc2dc\uc9c0 QoS",
                     "will_retain": "Will \uba54\uc2dc\uc9c0 \ub9ac\ud14c\uc778",

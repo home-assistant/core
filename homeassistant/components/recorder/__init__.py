@@ -1,6 +1,5 @@
 """Support for recording details."""
 import asyncio
-from collections import namedtuple
 import concurrent.futures
 from datetime import datetime
 import logging
@@ -8,7 +7,7 @@ import queue
 import sqlite3
 import threading
 import time
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, NamedTuple, Optional
 
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -48,16 +47,22 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
+SERVICE_ENABLE = "enable"
+SERVICE_DISABLE = "disable"
 
 ATTR_KEEP_DAYS = "keep_days"
 ATTR_REPACK = "repack"
+ATTR_APPLY_FILTER = "apply_filter"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_KEEP_DAYS): cv.positive_int,
         vol.Optional(ATTR_REPACK, default=False): cv.boolean,
+        vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
+SERVICE_ENABLE_SCHEMA = vol.Schema({})
+SERVICE_DISABLE_SCHEMA = vol.Schema({})
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
@@ -199,10 +204,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
+    async def async_handle_enable_sevice(service):
+        instance.set_enable(True)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ENABLE, async_handle_enable_sevice, schema=SERVICE_ENABLE_SCHEMA
+    )
+
+    async def async_handle_disable_service(service):
+        instance.set_enable(False)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DISABLE,
+        async_handle_disable_service,
+        schema=SERVICE_DISABLE_SCHEMA,
+    )
+
     return await instance.async_db_ready
 
 
-PurgeTask = namedtuple("PurgeTask", ["keep_days", "repack"])
+class PurgeTask(NamedTuple):
+    """Object to store information about purge task."""
+
+    keep_days: int
+    repack: bool
+    apply_filter: bool
 
 
 class WaitTask:
@@ -255,6 +282,12 @@ class Recorder(threading.Thread):
         self.get_session = None
         self._completed_database_setup = None
 
+        self.enabled = True
+
+    def set_enable(self, enable):
+        """Enable or disable recording events and states."""
+        self.enabled = enable
+
     @callback
     def async_initialize(self):
         """Initialize the recorder."""
@@ -279,8 +312,9 @@ class Recorder(threading.Thread):
         """Trigger an adhoc purge retaining keep_days worth of data."""
         keep_days = kwargs.get(ATTR_KEEP_DAYS, self.keep_days)
         repack = kwargs.get(ATTR_REPACK)
+        apply_filter = kwargs.get(ATTR_APPLY_FILTER)
 
-        self.queue.put(PurgeTask(keep_days, repack))
+        self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
     def run(self):
         """Start processing events to save."""
@@ -334,7 +368,9 @@ class Recorder(threading.Thread):
             @callback
             def async_purge(now):
                 """Trigger the purge."""
-                self.queue.put(PurgeTask(self.keep_days, repack=False))
+                self.queue.put(
+                    PurgeTask(self.keep_days, repack=False, apply_filter=False)
+                )
 
             # Purge every night at 4:12am
             self.hass.helpers.event.track_time_change(
@@ -364,7 +400,7 @@ class Recorder(threading.Thread):
                 migration.migrate_schema(self)
                 self._setup_run()
             except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.error(
+                _LOGGER.exception(
                     "Error during connection setup to %s: %s (retrying in %s seconds)",
                     self.db_url,
                     err,
@@ -395,8 +431,12 @@ class Recorder(threading.Thread):
         """Process one event."""
         if isinstance(event, PurgeTask):
             # Schedule a new purge task if this one didn't finish
-            if not purge.purge_old_data(self, event.keep_days, event.repack):
-                self.queue.put(PurgeTask(event.keep_days, event.repack))
+            if not purge.purge_old_data(
+                self, event.keep_days, event.repack, event.apply_filter
+            ):
+                self.queue.put(
+                    PurgeTask(event.keep_days, event.repack, event.apply_filter)
+                )
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()
@@ -411,6 +451,9 @@ class Recorder(threading.Thread):
                 if self._timechanges_seen >= self.commit_interval:
                     self._timechanges_seen = 0
                     self._commit_event_session_or_recover()
+            return
+
+        if not self.enabled:
             return
 
         try:

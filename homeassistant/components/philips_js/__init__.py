@@ -8,15 +8,20 @@ from haphilipsjs import ConnectionFailure, PhilipsTV
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_VERSION, CONF_HOST
-from homeassistant.core import Context, HassJob, HomeAssistant, callback
+from homeassistant.const import (
+    CONF_API_VERSION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
+from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["media_player"]
+PLATFORMS = ["media_player", "remote"]
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,16 +35,21 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Philips TV from a config entry."""
 
-    tvapi = PhilipsTV(entry.data[CONF_HOST], entry.data[CONF_API_VERSION])
+    tvapi = PhilipsTV(
+        entry.data[CONF_HOST],
+        entry.data[CONF_API_VERSION],
+        username=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
+    )
 
     coordinator = PhilipsTVDataUpdateCoordinator(hass, tvapi)
 
     await coordinator.async_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -50,8 +60,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -103,7 +113,9 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(self, hass, api: PhilipsTV) -> None:
         """Set up the coordinator."""
         self.api = api
+        self._notify_future: Optional[asyncio.Task] = None
 
+        @callback
         def _update_listeners():
             for update_callback in self._listeners:
                 update_callback()
@@ -120,9 +132,43 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ),
         )
 
+    async def _notify_task(self):
+        while self.api.on and self.api.notify_change_supported:
+            if await self.api.notifyChange(130):
+                self.async_set_updated_data(None)
+
+    @callback
+    def _async_notify_stop(self):
+        if self._notify_future:
+            self._notify_future.cancel()
+            self._notify_future = None
+
+    @callback
+    def _async_notify_schedule(self):
+        if (
+            (self._notify_future is None or self._notify_future.done())
+            and self.api.on
+            and self.api.notify_change_supported
+        ):
+            self._notify_future = asyncio.create_task(self._notify_task())
+
+    @callback
+    def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
+        """Remove data update."""
+        super().async_remove_listener(update_callback)
+        if not self._listeners:
+            self._async_notify_stop()
+
+    @callback
+    def _async_stop_refresh(self, event: asyncio.Event) -> None:
+        super()._async_stop_refresh(event)
+        self._async_notify_stop()
+
+    @callback
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:
-            await self.hass.async_add_executor_job(self.api.update)
+            await self.api.update()
+            self._async_notify_schedule()
         except ConnectionFailure:
             pass

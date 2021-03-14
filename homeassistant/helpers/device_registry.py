@@ -17,6 +17,8 @@ from .typing import UNDEFINED, HomeAssistantType, UndefinedType
 # mypy: disallow_any_generics
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
     from . import entity_registry
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +39,7 @@ IDX_IDENTIFIERS = "identifiers"
 REGISTERED_DEVICE = "registered"
 DELETED_DEVICE = "deleted"
 
+DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_INTEGRATION = "integration"
 DISABLED_USER = "user"
 
@@ -65,6 +68,7 @@ class DeviceEntry:
         default=None,
         validator=attr.validators.in_(
             (
+                DISABLED_CONFIG_ENTRY,
                 DISABLED_INTEGRATION,
                 DISABLED_USER,
                 None,
@@ -648,6 +652,34 @@ def async_entries_for_config_entry(
         for device in registry.devices.values()
         if config_entry_id in device.config_entries
     ]
+
+
+@callback
+def async_config_entry_disabled_by_changed(
+    registry: DeviceRegistry, config_entry: "ConfigEntry"
+) -> None:
+    """Handle a config entry being disabled or enabled.
+
+    Disable devices in the registry that are associated with a config entry when
+    the config entry is disabled, enable devices in the registry that are associated
+    with a config entry when the config entry is enabled and the devices are marked
+    DISABLED_CONFIG_ENTRY.
+    """
+
+    devices = async_entries_for_config_entry(registry, config_entry.entry_id)
+
+    if not config_entry.disabled_by:
+        for device in devices:
+            if device.disabled_by != DISABLED_CONFIG_ENTRY:
+                continue
+            registry.async_update_device(device.id, disabled_by=None)
+        return
+
+    for device in devices:
+        if device.disabled:
+            # Device already disabled, do not overwrite
+            continue
+        registry.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
 
 
 @callback

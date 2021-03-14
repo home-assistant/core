@@ -100,6 +100,8 @@ class ISYEntity(Entity):
                     f"ProductID:{node.zwave_props.product_id}"
                 )
         # Note: sw_version is not exposed by the ISY for the individual devices.
+        if hasattr(node, "folder") and node.folder is not None:
+            device_info["suggested_area"] = node.folder
 
         return device_info
 
@@ -132,7 +134,7 @@ class ISYNodeEntity(ISYEntity):
     """Representation of a ISY Nodebase (Node/Group) entity."""
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Get the state attributes for the device.
 
         The 'aux_properties' in the pyisy Node class are combined with the
@@ -184,7 +186,7 @@ class ISYProgramEntity(ISYEntity):
         self._actions = actions
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
         attr = {}
         if self._actions:

@@ -195,6 +195,8 @@ def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-name
+
+
 def color_RGB_to_xy(
     iR: int, iG: int, iB: int, Gamut: Optional[GamutType] = None
 ) -> Tuple[float, float]:
@@ -205,7 +207,6 @@ def color_RGB_to_xy(
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
-# pylint: disable=invalid-name
 def color_RGB_to_xy_brightness(
     iR: int, iG: int, iB: int, Gamut: Optional[GamutType] = None
 ) -> Tuple[float, float, int]:
@@ -507,12 +508,12 @@ def _get_blue(temperature: float) -> float:
     return _bound(blue)
 
 
-def color_temperature_mired_to_kelvin(mired_temperature: float) -> float:
+def color_temperature_mired_to_kelvin(mired_temperature: float) -> int:
     """Convert absolute mired shift to degrees kelvin."""
     return math.floor(1000000 / mired_temperature)
 
 
-def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
+def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> int:
     """Convert degrees kelvin to mired shift."""
     return math.floor(1000000 / kelvin_temperature)
 

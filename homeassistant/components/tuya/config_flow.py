@@ -42,11 +42,11 @@ from .const import (
     DEFAULT_DISCOVERY_INTERVAL,
     DEFAULT_QUERY_INTERVAL,
     DEFAULT_TUYA_MAX_COLTEMP,
+    DOMAIN,
     TUYA_DATA,
     TUYA_PLATFORMS,
     TUYA_TYPE_NOT_QUERY,
 )
-from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -13,13 +13,15 @@
             "reauth": {
                 "data": {
                     "email": "E-mail",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "region": "Region"
                 }
             },
             "user": {
                 "data": {
                     "email": "E-mail",
-                    "password": "Heslo"
+                    "password": "Heslo",
+                    "region": "Region"
                 }
             }
         }

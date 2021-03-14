@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_OPTION,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -29,7 +30,6 @@ DOMAIN = "input_select"
 CONF_INITIAL = "initial"
 CONF_OPTIONS = "options"
 
-ATTR_OPTION = "option"
 ATTR_OPTIONS = "options"
 ATTR_CYCLE = "cycle"
 

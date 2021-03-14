@@ -34,6 +34,9 @@ CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
 CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
+FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
+ALLOWED_RTSP_TRANSPORT_PROTOCOLS = {"tcp", "udp", "udp_multicast", "http"}
 
 DEFAULT_NAME = "Generic Camera"
 GET_IMAGE_TIMEOUT = 10
@@ -54,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             cv.small_float, cv.positive_int
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(ALLOWED_RTSP_TRANSPORT_PROTOCOLS),
     }
 )
 
@@ -85,15 +89,19 @@ class GenericCamera(Camera):
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
+        if device_info.get(CONF_RTSP_TRANSPORT):
+            self.stream_options[FFMPEG_OPTION_MAP[CONF_RTSP_TRANSPORT]] = device_info[
+                CONF_RTSP_TRANSPORT
+            ]
 
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
 
         if username and password:
             if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                self._auth = httpx.DigestAuth(username, password)
+                self._auth = httpx.DigestAuth(username=username, password=password)
             else:
-                self._auth = httpx.BasicAuth(username, password=password)
+                self._auth = httpx.BasicAuth(username=username, password=password)
         else:
             self._auth = None
 

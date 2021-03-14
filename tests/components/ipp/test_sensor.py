@@ -6,6 +6,7 @@ from homeassistant.components.ipp.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.components.ipp import init_integration, mock_connection
@@ -19,7 +20,7 @@ async def test_sensors(
     mock_connection(aioclient_mock)
 
     entry = await init_integration(hass, aioclient_mock, skip_setup=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     registry.async_get_or_create(
@@ -86,7 +87,7 @@ async def test_disabled_by_default_sensors(
 ) -> None:
     """Test the disabled by default IPP sensors."""
     await init_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("sensor.epson_xp_6000_series_uptime")
     assert state is None
@@ -102,7 +103,7 @@ async def test_missing_entry_unique_id(
 ) -> None:
     """Test the unique_id of IPP sensor when printer is missing identifiers."""
     entry = await init_integration(hass, aioclient_mock, uuid=None, unique_id=None)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entity = registry.async_get("sensor.epson_xp_6000_series")
     assert entity

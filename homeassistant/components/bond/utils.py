@@ -1,7 +1,7 @@
 """Reusable utilities for the Bond component."""
 import asyncio
 import logging
-from typing import List, Optional
+from typing import Any, Dict, List, Optional, Set, cast
 
 from aiohttp import ClientResponseError
 from bond_api import Action, Bond
@@ -14,13 +14,15 @@ _LOGGER = logging.getLogger(__name__)
 class BondDevice:
     """Helper device class to hold ID and attributes together."""
 
-    def __init__(self, device_id: str, attrs: dict, props: dict):
+    def __init__(
+        self, device_id: str, attrs: Dict[str, Any], props: Dict[str, Any]
+    ) -> None:
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
         self.props = props
         self._attrs = attrs
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return readable representation of a bond device."""
         return {
             "device_id": self.device_id,
@@ -31,25 +33,25 @@ class BondDevice:
     @property
     def name(self) -> str:
         """Get the name of this device."""
-        return self._attrs["name"]
+        return cast(str, self._attrs["name"])
 
     @property
     def type(self) -> str:
         """Get the type of this device."""
-        return self._attrs["type"]
+        return cast(str, self._attrs["type"])
 
     @property
-    def location(self) -> str:
+    def location(self) -> Optional[str]:
         """Get the location of this device."""
         return self._attrs.get("location")
 
     @property
-    def template(self) -> str:
+    def template(self) -> Optional[str]:
         """Return this model template."""
         return self._attrs.get("template")
 
     @property
-    def branding_profile(self) -> str:
+    def branding_profile(self) -> Optional[str]:
         """Return this branding profile."""
         return self.props.get("branding_profile")
 
@@ -58,31 +60,39 @@ class BondDevice:
         """Check if Trust State is turned on."""
         return self.props.get("trust_state", False)
 
+    def _has_any_action(self, actions: Set[str]) -> bool:
+        """Check to see if the device supports any of the actions."""
+        supported_actions: List[str] = self._attrs["actions"]
+        for action in supported_actions:
+            if action in actions:
+                return True
+        return False
+
     def supports_speed(self) -> bool:
         """Return True if this device supports any of the speed related commands."""
-        actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Action.SET_SPEED]])
+        return self._has_any_action({Action.SET_SPEED})
 
     def supports_direction(self) -> bool:
         """Return True if this device supports any of the direction related commands."""
-        actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Action.SET_DIRECTION]])
+        return self._has_any_action({Action.SET_DIRECTION})
 
     def supports_light(self) -> bool:
         """Return True if this device supports any of the light related commands."""
-        actions: List[str] = self._attrs["actions"]
-        return bool(
-            [
-                action
-                for action in actions
-                if action in [Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF]
-            ]
+        return self._has_any_action({Action.TURN_LIGHT_ON, Action.TURN_LIGHT_OFF})
+
+    def supports_up_light(self) -> bool:
+        """Return true if the device has an up light."""
+        return self._has_any_action({Action.TURN_UP_LIGHT_ON, Action.TURN_UP_LIGHT_OFF})
+
+    def supports_down_light(self) -> bool:
+        """Return true if the device has a down light."""
+        return self._has_any_action(
+            {Action.TURN_DOWN_LIGHT_ON, Action.TURN_DOWN_LIGHT_OFF}
         )
 
     def supports_set_brightness(self) -> bool:
         """Return True if this device supports setting a light brightness."""
-        actions: List[str] = self._attrs["actions"]
-        return bool([action for action in actions if action in [Action.SET_BRIGHTNESS]])
+        return self._has_any_action({Action.SET_BRIGHTNESS})
 
 
 class BondHub:
@@ -91,11 +101,11 @@ class BondHub:
     def __init__(self, bond: Bond):
         """Initialize Bond Hub."""
         self.bond: Bond = bond
-        self._bridge: Optional[dict] = None
-        self._version: Optional[dict] = None
-        self._devices: Optional[List[BondDevice]] = None
+        self._bridge: Dict[str, Any] = {}
+        self._version: Dict[str, Any] = {}
+        self._devices: List[BondDevice] = []
 
-    async def setup(self, max_devices=None):
+    async def setup(self, max_devices: Optional[int] = None) -> None:
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
@@ -127,12 +137,12 @@ class BondHub:
         return self._version.get("bondid")
 
     @property
-    def target(self) -> str:
+    def target(self) -> Optional[str]:
         """Return this hub target."""
         return self._version.get("target")
 
     @property
-    def model(self) -> str:
+    def model(self) -> Optional[str]:
         """Return this hub model."""
         return self._version.get("model")
 
@@ -142,11 +152,11 @@ class BondHub:
         return self._version.get("make", BRIDGE_MAKE)
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str:
         """Get the name of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].name
-        return self._bridge.get("name")
+        return cast(str, self._bridge["name"])
 
     @property
     def location(self) -> Optional[str]:
@@ -156,7 +166,7 @@ class BondHub:
         return self._bridge.get("location")
 
     @property
-    def fw_ver(self) -> str:
+    def fw_ver(self) -> Optional[str]:
         """Return this hub firmware version."""
         return self._version.get("fw_ver")
 

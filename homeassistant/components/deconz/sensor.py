@@ -155,7 +155,7 @@ class DeconzSensor(DeconzDevice):
         return UNIT_OF_MEASUREMENT.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 
@@ -200,7 +200,18 @@ class DeconzBattery(DeconzDevice):
 
     @property
     def unique_id(self):
-        """Return a unique identifier for this device."""
+        """Return a unique identifier for this device.
+
+        Normally there should only be one battery sensor per device from deCONZ.
+        With specific Danfoss devices each endpoint can report its own battery state.
+        """
+        if self._device.manufacturer == "Danfoss" and self._device.modelid in [
+            "0x8030",
+            "0x8031",
+            "0x8034",
+            "0x8035",
+        ]:
+            return f"{super().unique_id}-battery"
         return f"{self.serial}-battery"
 
     @property
@@ -224,7 +235,7 @@ class DeconzBattery(DeconzDevice):
         return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the battery."""
         attr = {}
 

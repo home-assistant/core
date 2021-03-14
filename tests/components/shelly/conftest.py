@@ -10,10 +10,14 @@ from homeassistant.components.shelly.const import (
     DOMAIN,
     EVENT_SHELLY_CLICK,
 )
-from homeassistant.core import callback as ha_callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service, mock_device_registry
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_mock_service,
+    mock_device_registry,
+)
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -81,9 +85,7 @@ def calls(hass):
 @pytest.fixture
 def events(hass):
     """Yield caught shelly_click events."""
-    ha_events = []
-    hass.bus.async_listen(EVENT_SHELLY_CLICK, ha_callback(ha_events.append))
-    yield ha_events
+    return async_capture_events(hass, EVENT_SHELLY_CLICK)
 
 
 @pytest.fixture

@@ -40,6 +40,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -73,7 +74,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-SUPPORTED_PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -338,20 +339,17 @@ class UniFiController:
 
         self._site_role = description[0]["site_role"]
 
-        # Restore clients that is not a part of active clients list.
+        # Restore clients that are not a part of active clients list.
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
-        for entity in entity_registry.entities.values():
-            if (
-                entity.config_entry_id != self.config_entry.entry_id
-                or "-" not in entity.unique_id
-            ):
+        for entry in async_entries_for_config_entry(
+            entity_registry, self.config_entry.entry_id
+        ):
+            if entry.domain == TRACKER_DOMAIN:
+                mac = entry.unique_id.split("-", 1)[0]
+            elif entry.domain == SWITCH_DOMAIN:
+                mac = entry.unique_id.split("-", 1)[1]
+            else:
                 continue
-
-            mac = ""
-            if entity.domain == TRACKER_DOMAIN:
-                mac = entity.unique_id.split("-", 1)[0]
-            elif entity.domain == SWITCH_DOMAIN:
-                mac = entity.unique_id.split("-", 1)[1]
 
             if mac in self.api.clients or mac not in self.api.clients_all:
                 continue
@@ -360,7 +358,7 @@ class UniFiController:
             self.api.clients.process_raw([client.raw])
             LOGGER.debug(
                 "Restore disconnected client %s (%s)",
-                entity.entity_id,
+                entry.entity_id,
                 client.mac,
             )
 
@@ -368,7 +366,7 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        for platform in SUPPORTED_PLATFORMS:
+        for platform in PLATFORMS:
             self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
@@ -415,9 +413,8 @@ class UniFiController:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if config_entry.entry_id not in hass.data[UNIFI_DOMAIN]:
+        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         controller.load_config_entry_options()
         async_dispatcher_send(hass, controller.signal_options_update)
 
@@ -465,7 +462,7 @@ class UniFiController:
                     self.hass.config_entries.async_forward_entry_unload(
                         self.config_entry, platform
                     )
-                    for platform in SUPPORTED_PLATFORMS
+                    for platform in PLATFORMS
                 ]
             )
         )
