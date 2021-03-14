@@ -111,14 +111,16 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         else:
 
-            await hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_DISCOVERY},
-                data={
-                    ATTR_SERIAL: camera[ATTR_SERIAL],
-                    CONF_USERNAME: None,
-                    CONF_PASSWORD: None,
-                },
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_DISCOVERY},
+                    data={
+                        ATTR_SERIAL: camera[ATTR_SERIAL],
+                        CONF_USERNAME: None,
+                        CONF_PASSWORD: None,
+                    },
+                )
             )
 
             camera_username = DEFAULT_CAMERA_USERNAME
@@ -126,7 +128,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             camera_rtsp_stream = ""
             ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
             _LOGGER.warning(
-                "Found camera with serial %s without configuration. Please go to integration to complete setup.",
+                "Found camera with serial %s without configuration. Please go to integration to complete setup",
                 camera[ATTR_SERIAL],
             )
 

@@ -42,12 +42,11 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_and_create_auth(self, data):
         """Validate the user input allows us to connect.
 
-        Data has the keys from data_schema with values provided by the user.
+        Attempt to login to ezviz cloud account and create entry if successful.
         """
         await self.async_set_unique_id(data[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
-        # constructor does login call
         client = EzvizClient(
             data[CONF_USERNAME],
             data[CONF_PASSWORD],
@@ -56,7 +55,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         # Validate data by sending a login request to ezviz
-
         try:
             await self.hass.async_add_executor_job(client.login)
 
@@ -160,9 +158,20 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user_camera", data_schema=camera_schema, errors=errors or {}
         )
 
-    async def async_step_discovery(self, discovery_info=None):
-        """Handle a flow for discovered camera without rtsp entry."""
+    async def async_step_discovery(self, discovery_info):
+        """Handle a flow for discovered camera without rtsp config entry."""
         errors = {}
+        # This step is called when user goes to integrations,
+        # to complete config for discovered entry.
+        if discovery_info is not None:
+            await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
+            self._abort_if_unique_id_configured()
+
+            # Prevents creation of entry without password when called from camera platform.
+            # When called from integrations it will ask for a password and proceed
+            # to confirm step for entry creation.
+            if discovery_info.get(CONF_PASSWORD) is not None:
+                return await self.async_step_confirm(discovery_info)
 
         discovered_camera_schema = vol.Schema(
             {
@@ -172,28 +181,23 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
-        if discovery_info is None:
-            return self.async_show_form(
-                step_id="discovery",
-                data_schema=discovered_camera_schema,
-                errors=errors or {},
-            )
+        return self.async_show_form(
+            step_id="discovery",
+            data_schema=discovered_camera_schema,
+            errors=errors or {},
+        )
 
-        if discovery_info is not None:
-            await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
-            self._abort_if_unique_id_configured()
+    async def async_step_confirm(self, confirm_info):
+        """Confirm and create entry from discovery step."""
 
-            if discovery_info.get(CONF_PASSWORD) is not None:
-                return self.async_create_entry(
-                    title=discovery_info[ATTR_SERIAL],
-                    data={
-                        CONF_USERNAME: discovery_info[CONF_USERNAME],
-                        CONF_PASSWORD: discovery_info[CONF_PASSWORD],
-                        CONF_TYPE: ATTR_TYPE_CAMERA,
-                    },
-                )
-
-        return await self.async_step_discovery()
+        return self.async_create_entry(
+            title=confirm_info[ATTR_SERIAL],
+            data={
+                CONF_USERNAME: confirm_info[CONF_USERNAME],
+                CONF_PASSWORD: confirm_info[CONF_PASSWORD],
+                CONF_TYPE: ATTR_TYPE_CAMERA,
+            },
+        )
 
     async def async_step_import(self, import_config):
         """Handle config import from yaml."""
