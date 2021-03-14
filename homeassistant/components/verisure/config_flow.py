@@ -46,9 +46,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: ConfigEntry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> VerisureOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return VerisureOptionsFlowHandler(entry)
+        return VerisureOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
