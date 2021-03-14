@@ -493,7 +493,7 @@ def device_info_from_config(config):
     if CONF_VIA_DEVICE in config:
         info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
 
-    if CONF_SUGGESTED_AREA in config:    
+    if CONF_SUGGESTED_AREA in config:
         info["suggested_area"] = config[CONF_SUGGESTED_AREA]
 
     return info
