@@ -96,6 +96,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        _LOGGER.warning("async_step_user")
+        _LOGGER.warning(user_input)
+        _LOGGER.warning(self._input)
+
         if self._input is not None:
             if user_input is not None:
                 user_input = {**self._input, **user_input}
@@ -120,6 +124,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_authenticate(self, user_input=None):
         """Handle getting the api-key for authentication."""
+        _LOGGER.warning("async_step_authenticate")
+        _LOGGER.warning(user_input)
+        _LOGGER.warning(self._input)
+
         if self._input is not None:
             if user_input is not None:
                 user_input = {**self._input, **user_input}
@@ -170,6 +178,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         return await self.async_step_authenticate(self._input)
+
+    async def async_step_reauth(self, user_input=None):
+        """Perform reauth upon an API authentication error."""
+        _LOGGER.warning("async_step_reauth")
+        _LOGGER.warning(user_input)
+        if (
+            user_input is not None
+            and user_input.get(CONF_HOST, None) is not None
+            and user_input.get(CONF_PORT, None) is not None
+        ):
+            self._name = user_input[CONF_HOST]
+            self._input = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+            }
+        _LOGGER.warning(self._input)
+
+        if self._input is not None:
+            if user_input is not None:
+                user_input = {**self._input, **user_input}
+            else:
+                user_input = self._input
+        if user_input is None or user_input.get(CONF_API_KEY, None) is None:
+            return self.async_show_form(
+                step_id="reauth",
+                data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
+                description_placeholders={"name": self._name},
+            )
+
+        errors, info = await self._async_get_info(user_input)
+        if errors is None:
+            existing_entry = await self.async_set_unique_id(info["mac"])
+            if existing_entry:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=user_input
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth",
+            data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
+            description_placeholders={"name": self._name},
+            errors=errors,
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -12,7 +12,7 @@ from systembridge.exceptions import BridgeAuthenticationException
 from systembridge.objects.command.response import CommandResponse
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_COMMAND,
@@ -138,6 +138,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_API_KEY],
     )
 
+    try:
+        await client.async_get_system()
+    except BridgeAuthenticationException as exception:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_REAUTH},
+                data=entry.data,
+            )
+        )
+        _LOGGER.warning(exception)
+        _LOGGER.warning("AUTHFAILRETURNFALSE")
+        return False
+    except BRIDGE_CONNECTION_ERRORS as exception:
+        _LOGGER.error(exception)
+        raise ConfigEntryNotReady from exception
+
     async def async_update_data() -> Bridge:
         """Fetch data from Bridge."""
         try:
@@ -154,7 +171,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     ]
                 )
             return client
-        except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
+        except BridgeAuthenticationException as exception:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data=entry.data,
+                )
+            )
+            raise UpdateFailed(exception) from exception
+        except BRIDGE_CONNECTION_ERRORS as exception:
             raise UpdateFailed(exception) from exception
 
     coordinator = DataUpdateCoordinator(
@@ -164,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         name=f"{DOMAIN}_coordinator",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=120),
+        update_interval=timedelta(seconds=60),
     )
 
     hass.data.setdefault(DOMAIN, {})
