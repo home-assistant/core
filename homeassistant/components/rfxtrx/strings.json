@@ -73,13 +73,13 @@
   },
   "device_automation": {
     "action_type": {
-      "send_status": "Trigger status update",
-      "send_chime": "Send a sound command",
-      "send_command": "Send a command"
+      "send_status": "Trigger status: {subtype}",
+      "send_chime": "Send command: {subtype}",
+      "send_command": "Send command: {subtype}"
     },
     "trigger_type": {
-      "status": "Received '{subtype}' status",
-      "command": "Received '{subtype}' command"
+      "status": "Received status: {subtype}",
+      "command": "Received command: {subtype}"
     }
   }
 }

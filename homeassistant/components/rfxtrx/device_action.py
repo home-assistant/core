@@ -11,6 +11,7 @@ from . import DATA_RFXOBJECT, DOMAIN
 from .helpers import async_get_device_object
 
 CONF_DATA = "data"
+CONF_SUBTYPE = "subtype"
 
 ACTION_TYPE_CHIME = "send_chime"
 ACTION_TYPE_COMMAND = "send_command"
@@ -31,6 +32,7 @@ ACTION_SELECTION = {
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
+        vol.Required(CONF_SUBTYPE): str,
         vol.Required(CONF_DATA): int,
     }
 )
@@ -44,11 +46,23 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
     if device:
         for action_type in ACTION_TYPES:
             if hasattr(device, action_type):
+                values = getattr(device, ACTION_SELECTION[action_type], {})
+                for key, value in values.items():
+                    actions.append(
+                        {
+                            CONF_DEVICE_ID: device_id,
+                            CONF_DOMAIN: DOMAIN,
+                            CONF_TYPE: action_type,
+                            CONF_SUBTYPE: value,
+                            CONF_DATA: key,
+                        }
+                    )
                 actions.append(
                     {
                         CONF_DEVICE_ID: device_id,
                         CONF_DOMAIN: DOMAIN,
                         CONF_TYPE: action_type,
+                        CONF_SUBTYPE: "...",
                     }
                 )
 
@@ -57,14 +71,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
 
 async def async_get_action_capabilities(hass, config):
     """List action capabilities."""
-
-    device = async_get_device_object(hass, config[CONF_DEVICE_ID])
-    values = getattr(device, ACTION_SELECTION[config[CONF_TYPE]], None)
-    if values:
-        data_schema = vol.In(values)
-    else:
-        data_schema = int
-    return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): data_schema})}
+    if CONF_DATA in config:
+        return {}
+    return {"extra_fields": vol.Schema({vol.Required(CONF_DATA): int})}
 
 
 async def async_call_action_from_config(
