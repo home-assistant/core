@@ -524,7 +524,7 @@ class HueLight(Light):
 class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
 
-    force_on = True
+    _FORCE_ON = True
 
 
 @GROUP_MATCH()
