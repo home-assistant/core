@@ -30,18 +30,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: core.HomeAssistant, data: dict):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    if data.get(CONF_HOST, None) is None:
-        raise InvalidHost
-    if data.get(CONF_PORT, None) is None:
-        raise InvalidHost
-    if data.get(CONF_API_KEY, None) is None:
-        raise InvalidAuth
-
     bridge = Bridge(
         BridgeClient(aiohttp_client.async_get_clientsession(hass)),
         f"http://{data[CONF_HOST]}:{data[CONF_PORT]}",
@@ -73,9 +66,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow."""
         self._name: Optional[str] = None
-        self._input: Optional[Dict[str, Any]] = None
+        self._input: Optional[Dict[str, Any]] = {}
 
-    async def _async_get_info(self, user_input=None):
+    async def _async_get_info(self, user_input={}):
         errors = {}
 
         try:
@@ -84,8 +77,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except InvalidHost:
-            errors["base"] = "invalid_host"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
@@ -94,13 +85,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return errors, None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input={}):
         """Handle the initial step."""
-        if self._input is not None:
-            if user_input is not None:
-                user_input = {**self._input, **user_input}
-            else:
-                user_input = self._input
+        if self._input != {}:
+            user_input = {**self._input, **user_input}
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -118,13 +106,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_authenticate(self, user_input=None):
+    async def async_step_authenticate(self, user_input={}):
         """Handle getting the api-key for authentication."""
-        if self._input is not None:
-            if user_input is not None:
-                user_input = {**self._input, **user_input}
-            else:
-                user_input = self._input
+        if user_input is None:
+            user_input = {}
+        if self._input != {}:
+            user_input = {**self._input, **user_input}
         if user_input is None or user_input.get(CONF_API_KEY, None) is None:
             return self.async_show_form(
                 step_id="authenticate",
@@ -171,10 +158,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_authenticate(self._input)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input={}):
         """Perform reauth upon an API authentication error."""
+        if user_input is None:
+            user_input = {}
         if (
-            user_input is not None
+            user_input != {}
             and user_input.get(CONF_HOST, None) is not None
             and user_input.get(CONF_PORT, None) is not None
         ):
@@ -184,11 +173,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PORT: user_input[CONF_PORT],
             }
 
-        if self._input is not None:
-            if user_input is not None:
-                user_input = {**self._input, **user_input}
-            else:
-                user_input = self._input
+        if self._input != {}:
+            user_input = {**self._input, **user_input}
         if user_input is None or user_input.get(CONF_API_KEY, None) is None:
             return self.async_show_form(
                 step_id="reauth",
@@ -220,7 +206,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class InvalidHost(exceptions.HomeAssistantError):
-    """Error to indicate there is an invalid host."""
