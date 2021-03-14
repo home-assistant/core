@@ -190,7 +190,33 @@ async def test_dhcp(hass):
     assert result["step_id"] == "user"
 
 
-async def test_options_flow(hass):
+@pytest.mark.parametrize(
+    "input,output",
+    [
+        (
+            {
+                CONF_LOCK_CODE_DIGITS: 5,
+                CONF_LOCK_DEFAULT_CODE: "123456",
+            },
+            {
+                CONF_LOCK_CODE_DIGITS: 5,
+                CONF_LOCK_DEFAULT_CODE: "123456",
+            },
+        ),
+        (
+            {
+                CONF_LOCK_DEFAULT_CODE: "",
+            },
+            {
+                CONF_LOCK_DEFAULT_CODE: "",
+                CONF_LOCK_CODE_DIGITS: DEFAULT_LOCK_CODE_DIGITS,
+            },
+        ),
+    ],
+)
+async def test_options_flow(
+    hass, input: dict[str, int | str], output: dict[str, int | str]
+) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -203,33 +229,14 @@ async def test_options_flow(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
-    schema = result["data_schema"].schema
-    assert (
-        _get_schema_default(schema, CONF_LOCK_CODE_DIGITS) == DEFAULT_LOCK_CODE_DIGITS
-    )
-    assert _get_schema_default(schema, CONF_LOCK_DEFAULT_CODE) is None
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_LOCK_CODE_DIGITS: 5,
-            CONF_LOCK_DEFAULT_CODE: "123456",
-        },
+        user_input=input,
     )
 
     assert result["type"] == "create_entry"
-    assert result["data"] == {
-        CONF_LOCK_CODE_DIGITS: 5,
-        CONF_LOCK_DEFAULT_CODE: "123456",
-    }
-
-
-def _get_schema_default(schema, key_name):
-    """Iterate schema to find a key."""
-    for schema_key in schema:
-        if schema_key == key_name:
-            return schema_key.default()
-    raise KeyError(f"{key_name} not found in schema")
+    assert result["data"] == output
 
 
 #
@@ -307,6 +314,8 @@ async def test_imports_invalid_login(hass: HomeAssistant) -> None:
             },
         )
 
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
     assert result["step_id"] == "user"
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_auth"}
@@ -333,6 +342,8 @@ async def test_imports_needs_user_installation_choice(hass: HomeAssistant) -> No
                 CONF_PASSWORD: "SuperS3cr3t!",
             },
         )
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
 
     assert result["step_id"] == "installation"
     assert result["type"] == RESULT_TYPE_FORM

@@ -42,7 +42,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     # These can be removed after YAML import has been removed.
     giid: str | None = None
-    settings: dict[str, int | str] = {}
+    settings: dict[str, int | str]
+
+    def __init__(self):
+        """Initialize."""
+        self.settings = {}
 
     @staticmethod
     @callback
