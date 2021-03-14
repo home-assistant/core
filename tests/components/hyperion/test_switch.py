@@ -15,13 +15,28 @@ from hyperion.const import (
     KEY_STATE,
 )
 
-from homeassistant.components.hyperion.const import COMPONENT_TO_NAME
+from homeassistant.components.hyperion import get_hyperion_device_id
+from homeassistant.components.hyperion.const import (
+    COMPONENT_TO_NAME,
+    DOMAIN,
+    HYPERION_MANUFACTURER_NAME,
+    HYPERION_MODEL_NAME,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
-from . import call_registered_callback, create_mock_client, setup_test_config_entry
+from . import (
+    TEST_CONFIG_ENTRY_ID,
+    TEST_INSTANCE,
+    TEST_INSTANCE_1,
+    TEST_SYSINFO_ID,
+    call_registered_callback,
+    create_mock_client,
+    setup_test_config_entry,
+)
 
 TEST_COMPONENTS = [
     {"enabled": True, "name": "ALL"},
@@ -117,8 +132,6 @@ async def test_switch_has_correct_entities(hass: HomeAssistantType) -> None:
         enabled_by_default_mock.return_value = True
         await setup_test_config_entry(hass, hyperion_client=client)
 
-    entity_state = hass.states.get(TEST_SWITCH_COMPONENT_ALL_ENTITY_ID)
-
     for component in (
         KEY_COMPONENTID_ALL,
         KEY_COMPONENTID_SMOOTHING,
@@ -136,3 +149,51 @@ async def test_switch_has_correct_entities(hass: HomeAssistantType) -> None:
         )
         entity_state = hass.states.get(entity_id)
         assert entity_state, f"Couldn't find entity: {entity_id}"
+
+
+async def test_device_info(hass: HomeAssistantType) -> None:
+    """Verify device information includes expected details."""
+    client = create_mock_client()
+    client.components = TEST_COMPONENTS
+
+    with patch(
+        "homeassistant.components.hyperion.switch.HyperionComponentSwitch.entity_registry_enabled_default"
+    ) as enabled_by_default_mock:
+        enabled_by_default_mock.return_value = True
+        await setup_test_config_entry(hass, hyperion_client=client)
+    assert hass.states.get(TEST_SWITCH_COMPONENT_ALL_ENTITY_ID) is not None
+
+    # use identifiers not id in light TODO
+    device_identifer = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
+    device_registry = dr.async_get(hass)
+
+    device = device_registry.async_get_device({(DOMAIN, device_identifer)})
+    assert device
+    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.identifiers == {(DOMAIN, device_identifer)}
+    assert device.manufacturer == HYPERION_MANUFACTURER_NAME
+    assert device.model == HYPERION_MODEL_NAME
+    assert device.name == TEST_INSTANCE_1["friendly_name"]
+
+    entity_registry = await er.async_get_registry(hass)
+    entities_from_device = [
+        entry.entity_id
+        for entry in er.async_entries_for_device(entity_registry, device.id)
+    ]
+
+    for component in (
+        KEY_COMPONENTID_ALL,
+        KEY_COMPONENTID_SMOOTHING,
+        KEY_COMPONENTID_BLACKBORDER,
+        KEY_COMPONENTID_FORWARDER,
+        KEY_COMPONENTID_BOBLIGHTSERVER,
+        KEY_COMPONENTID_GRABBER,
+        KEY_COMPONENTID_LEDDEVICE,
+        KEY_COMPONENTID_V4L,
+    ):
+        entity_id = (
+            TEST_SWITCH_COMPONENT_BASE_ENTITY_ID
+            + "_"
+            + slugify(COMPONENT_TO_NAME[component])
+        )
+        assert entity_id in entities_from_device

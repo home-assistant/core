@@ -72,6 +72,11 @@ def get_hyperion_unique_id(server_id: str, instance: int, name: str) -> str:
     return f"{server_id}_{instance}_{name}"
 
 
+def get_hyperion_device_id(server_id: str, instance: int) -> str:
+    """Get an id for a Hyperion device/instance."""
+    return f"{server_id}_{instance}"
+
+
 def split_hyperion_unique_id(unique_id: str) -> tuple[str, int, str] | None:
     """Split a unique_id into a (server_id, instance, type) tuple."""
     data = tuple(unique_id.split("_", 2))
