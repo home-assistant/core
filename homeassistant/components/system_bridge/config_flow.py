@@ -132,12 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
         """Handle zeroconf discovery."""
-        fqdn = discovery_info["properties"].get("fqdn", None)
-        host = (
-            fqdn
-            if fqdn is not None
-            else discovery_info["properties"].get("host", discovery_info[CONF_HOST])
-        )
+        host = discovery_info["properties"].get("ip", None) 
         mac = discovery_info["properties"].get("mac", None)
 
         # Check if already configured
