@@ -42,7 +42,7 @@ WSDiscovery==2.0.0
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.1.0
+accuweather==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.2.1
