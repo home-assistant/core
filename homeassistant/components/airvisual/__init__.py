@@ -82,8 +82,7 @@ def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
     """
     # Assuming 10,000 calls per month and a "largest possible month" of 31 days; note
     # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
-    # minutes_between_api_calls = ceil(1 / (8500 / 31 / 24 / 60 / num_consumers))
-    minutes_between_api_calls = ceil(num_consumers*31*24*60/8500)
+    minutes_between_api_calls = ceil(num_consumers * 31 * 24 * 60 / 8500)
 
     LOGGER.debug(
         "Leveling API key usage (%s): %s consumers, %s minutes between updates",
