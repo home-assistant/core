@@ -1922,7 +1922,7 @@ pyzbar==0.1.7
 pyzerproc==0.4.8
 
 # homeassistant.components.qnap
-qnapstats==0.3.0
+qnapstats==0.3.1
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.5
