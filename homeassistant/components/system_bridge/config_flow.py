@@ -87,8 +87,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input={}):
         """Handle the initial step."""
-        if self._input != {}:
-            user_input = {**self._input, **user_input}
         if user_input is None:
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
@@ -108,10 +106,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_authenticate(self, user_input={}):
         """Handle getting the api-key for authentication."""
-        if user_input is None:
-            user_input = {}
         if self._input != {}:
-            user_input = {**self._input, **user_input}
+            user_input = {**self._input, **(user_input or {})}
         if user_input is None or user_input.get(CONF_API_KEY, None) is None:
             return self.async_show_form(
                 step_id="authenticate",
@@ -126,8 +122,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_HOST: info["hostname"]})
 
             return self.async_create_entry(title=info["hostname"], data=user_input)
-        elif errors["base"] == "cannot_connect" or errors["base"] == "invalid_host":
-            return await self.async_step_user(user_input)
 
         return self.async_show_form(
             step_id="authenticate",
@@ -160,10 +154,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input={}):
         """Perform reauth upon an API authentication error."""
-        if user_input is None:
-            user_input = {}
         if (
-            user_input != {}
+            user_input is not None
+            and user_input != {}
             and user_input.get(CONF_HOST, None) is not None
             and user_input.get(CONF_PORT, None) is not None
         ):
@@ -174,13 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
 
         if self._input != {}:
-            user_input = {**self._input, **user_input}
-        if user_input is None or user_input.get(CONF_API_KEY, None) is None:
-            return self.async_show_form(
-                step_id="reauth",
-                data_schema=STEP_AUTHENTICATE_DATA_SCHEMA,
-                description_placeholders={"name": self._name},
-            )
+            user_input = {**self._input, **(user_input or {})}
 
         errors, info = await self._async_get_info(user_input)
         if errors is None:

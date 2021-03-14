@@ -295,5 +295,5 @@ async def test_zeroconf_cannot_connect(
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "user"
+    assert result2["step_id"] == "authenticate"
     assert result2["errors"] == {"base": "cannot_connect"}

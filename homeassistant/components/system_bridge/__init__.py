@@ -149,7 +149,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             )
         )
         _LOGGER.warning(exception)
-        _LOGGER.warning("AUTHFAILRETURNFALSE")
         return False
     except BRIDGE_CONNECTION_ERRORS as exception:
         _LOGGER.error(exception)
