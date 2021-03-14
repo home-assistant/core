@@ -142,8 +142,15 @@ class WemoSubscriptionEntity(WemoEntity):
     def should_poll(self) -> bool:
         """Return True if the the device requires local polling, False otherwise.
 
+        It is desirable to allow devices to enter periods of polling when the
+        callback subscription (device push) is not working. To work with the
+        entity platform polling logic, this entity needs to report True for
+        should_poll initially. That is required to cause the entity platform
+        logic to start the polling task (see the discussion in #47182).
+
         Polling can be disabled if three conditions are met:
-        1. The device has polled to get the initial state (self._has_polled).
+        1. The device has polled to get the initial state (self._has_polled) and
+           to satisfy the entity platform constraint mentioned above.
         2. The polling was successful and the device is in a healthy state
            (self.available).
         3. The pywemo subscription registry reports that there is an active

@@ -1,12 +1,13 @@
 """Offer reusable conditions."""
 import asyncio
 from collections import deque
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, Container, List, Optional, Set, Union, cast
+from typing import Any, Callable, Container, Generator, List, Optional, Set, Union, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -51,6 +52,17 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
+from .trace import (
+    TraceElement,
+    trace_append_element,
+    trace_path,
+    trace_path_get,
+    trace_stack_cv,
+    trace_stack_pop,
+    trace_stack_push,
+    trace_stack_top,
+)
+
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 
@@ -61,6 +73,53 @@ INPUT_ENTITY_ID = re.compile(
 )
 
 ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+
+
+def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
+    """Append a TraceElement to trace[path]."""
+    trace_element = TraceElement(variables)
+    trace_append_element(trace_element, path)
+    return trace_element
+
+
+def condition_trace_set_result(result: bool, **kwargs: Any) -> None:
+    """Set the result of TraceElement at the top of the stack."""
+    node = trace_stack_top(trace_stack_cv)
+
+    # The condition function may be called directly, in which case tracing
+    # is not setup
+    if not node:
+        return
+
+    node.set_result(result=result, **kwargs)
+
+
+@contextmanager
+def trace_condition(variables: TemplateVarsType) -> Generator:
+    """Trace condition evaluation."""
+    trace_element = condition_trace_append(variables, trace_path_get())
+    trace_stack_push(trace_stack_cv, trace_element)
+    try:
+        yield trace_element
+    except Exception as ex:  # pylint: disable=broad-except
+        trace_element.set_error(ex)
+        raise ex
+    finally:
+        trace_stack_pop(trace_stack_cv)
+
+
+def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
+    """Wrap a condition function to enable basic tracing."""
+
+    @ft.wraps(condition)
+    def wrapper(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Trace condition."""
+        with trace_condition(variables):
+            result = condition(hass, variables)
+            condition_trace_set_result(result)
+            return result
+
+    return wrapper
 
 
 async def async_from_config(
@@ -111,6 +170,7 @@ async def async_and_from_config(
         await async_from_config(hass, entry, False) for entry in config["conditions"]
     ]
 
+    @trace_condition_function
     def if_and_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -118,8 +178,9 @@ async def async_and_from_config(
         errors = []
         for index, check in enumerate(checks):
             try:
-                if not check(hass, variables):
-                    return False
+                with trace_path(["conditions", str(index)]):
+                    if not check(hass, variables):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex("and", index=index, total=len(checks), error=ex)
@@ -144,6 +205,7 @@ async def async_or_from_config(
         await async_from_config(hass, entry, False) for entry in config["conditions"]
     ]
 
+    @trace_condition_function
     def if_or_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -151,8 +213,9 @@ async def async_or_from_config(
         errors = []
         for index, check in enumerate(checks):
             try:
-                if check(hass, variables):
-                    return True
+                with trace_path(["conditions", str(index)]):
+                    if check(hass, variables):
+                        return True
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex("or", index=index, total=len(checks), error=ex)
@@ -177,6 +240,7 @@ async def async_not_from_config(
         await async_from_config(hass, entry, False) for entry in config["conditions"]
     ]
 
+    @trace_condition_function
     def if_not_condition(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -184,8 +248,9 @@ async def async_not_from_config(
         errors = []
         for index, check in enumerate(checks):
             try:
-                if check(hass, variables):
-                    return False
+                with trace_path(["conditions", str(index)]):
+                    if check(hass, variables):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex("not", index=index, total=len(checks), error=ex)
@@ -265,10 +330,9 @@ def async_numeric_state(
                 "numeric_state", f"template error: {ex}"
             ) from ex
 
+    # Known states that never match the numeric condition
     if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-        raise ConditionErrorMessage(
-            "numeric_state", f"state of {entity_id} is unavailable"
-        )
+        return False
 
     try:
         fvalue = float(value)
@@ -281,15 +345,22 @@ def async_numeric_state(
     if below is not None:
         if isinstance(below, str):
             below_entity = hass.states.get(below)
-            if not below_entity or below_entity.state in (
+            if not below_entity:
+                raise ConditionErrorMessage(
+                    "numeric_state", f"unknown 'below' entity {below}"
+                )
+            if below_entity.state in (
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                raise ConditionErrorMessage(
-                    "numeric_state", f"the 'below' entity {below} is unavailable"
-                )
+                return False
             try:
                 if fvalue >= float(below_entity.state):
+                    condition_trace_set_result(
+                        False,
+                        state=fvalue,
+                        wanted_state_below=float(below_entity.state),
+                    )
                     return False
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
@@ -297,20 +368,28 @@ def async_numeric_state(
                     f"the 'below' entity {below} state '{below_entity.state}' cannot be processed as a number",
                 ) from ex
         elif fvalue >= below:
+            condition_trace_set_result(False, state=fvalue, wanted_state_below=below)
             return False
 
     if above is not None:
         if isinstance(above, str):
             above_entity = hass.states.get(above)
-            if not above_entity or above_entity.state in (
+            if not above_entity:
+                raise ConditionErrorMessage(
+                    "numeric_state", f"unknown 'above' entity {above}"
+                )
+            if above_entity.state in (
                 STATE_UNAVAILABLE,
                 STATE_UNKNOWN,
             ):
-                raise ConditionErrorMessage(
-                    "numeric_state", f"the 'above' entity {above} is unavailable"
-                )
+                return False
             try:
                 if fvalue <= float(above_entity.state):
+                    condition_trace_set_result(
+                        False,
+                        state=fvalue,
+                        wanted_state_above=float(above_entity.state),
+                    )
                     return False
             except (ValueError, TypeError) as ex:
                 raise ConditionErrorMessage(
@@ -318,8 +397,10 @@ def async_numeric_state(
                     f"the 'above' entity {above} state '{above_entity.state}' cannot be processed as a number",
                 ) from ex
         elif fvalue <= above:
+            condition_trace_set_result(False, state=fvalue, wanted_state_above=above)
             return False
 
+    condition_trace_set_result(True, state=fvalue)
     return True
 
 
@@ -335,6 +416,7 @@ def async_numeric_state_from_config(
     above = config.get(CONF_ABOVE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
 
+    @trace_condition_function
     def if_numeric_state(
         hass: HomeAssistant, variables: TemplateVarsType = None
     ) -> bool:
@@ -345,10 +427,17 @@ def async_numeric_state_from_config(
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                if not async_numeric_state(
-                    hass, entity_id, below, above, value_template, variables, attribute
-                ):
-                    return False
+                with trace_path(["entity_id", str(index)]), trace_condition(variables):
+                    if not async_numeric_state(
+                        hass,
+                        entity_id,
+                        below,
+                        above,
+                        value_template,
+                        variables,
+                        attribute,
+                    ):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
@@ -421,9 +510,13 @@ def state(
             break
 
     if for_period is None or not is_state:
+        condition_trace_set_result(is_state, state=value, wanted_state=state_value)
         return is_state
 
-    return dt_util.utcnow() - for_period > entity.last_changed
+    duration = dt_util.utcnow() - for_period
+    duration_ok = duration > entity.last_changed
+    condition_trace_set_result(duration_ok, state=value, duration=duration)
+    return duration_ok
 
 
 def state_from_config(
@@ -440,13 +533,15 @@ def state_from_config(
     if not isinstance(req_states, list):
         req_states = [req_states]
 
+    @trace_condition_function
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
         for index, entity_id in enumerate(entity_ids):
             try:
-                if not state(hass, entity_id, req_states, for_period, attribute):
-                    return False
+                with trace_path(["entity_id", str(index)]), trace_condition(variables):
+                    if not state(hass, entity_id, req_states, for_period, attribute):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(
@@ -529,11 +624,12 @@ def sun_from_config(
     before_offset = config.get("before_offset")
     after_offset = config.get("after_offset")
 
-    def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+    @trace_condition_function
+    def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
         return sun(hass, before, after, before_offset, after_offset)
 
-    return time_if
+    return sun_if
 
 
 def template(
@@ -565,6 +661,7 @@ def async_template_from_config(
         config = cv.TEMPLATE_CONDITION_SCHEMA(config)
     value_template = cast(Template, config.get(CONF_VALUE_TEMPLATE))
 
+    @trace_condition_function
     def template_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate template based if-condition."""
         value_template.hass = hass
@@ -645,6 +742,7 @@ def time_from_config(
     after = config.get(CONF_AFTER)
     weekday = config.get(CONF_WEEKDAY)
 
+    @trace_condition_function
     def time_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Validate time based if-condition."""
         return time(hass, before, after, weekday)
@@ -710,6 +808,7 @@ def zone_from_config(
     entity_ids = config.get(CONF_ENTITY_ID, [])
     zone_entity_ids = config.get(CONF_ZONE, [])
 
+    @trace_condition_function
     def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
@@ -750,9 +849,11 @@ async def async_device_from_config(
     platform = await async_get_device_automation_platform(
         hass, config[CONF_DOMAIN], "condition"
     )
-    return cast(
-        ConditionCheckerType,
-        platform.async_condition_from_config(config, config_validation),  # type: ignore
+    return trace_condition_function(
+        cast(
+            ConditionCheckerType,
+            platform.async_condition_from_config(config, config_validation),  # type: ignore
+        )
     )
 
 

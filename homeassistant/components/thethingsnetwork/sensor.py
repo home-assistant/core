@@ -81,8 +81,8 @@ class TtnDataSensor(Entity):
         """Return the state of the entity."""
         if self._ttn_data_storage.data is not None:
             try:
-                return round(self._state[self._value], 1)
-            except (KeyError, TypeError):
+                return self._state[self._value]
+            except KeyError:
                 return None
         return None
 
@@ -92,7 +92,7 @@ class TtnDataSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._ttn_data_storage.data is not None:
             return {

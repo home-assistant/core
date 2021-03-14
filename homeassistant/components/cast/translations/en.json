@@ -1,12 +1,34 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
+        "error": {
+            "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+        },
         "step": {
+            "config": {
+                "data": {
+                    "known_hosts": "Optional list of known hosts if mDNS discovery is not working."
+                },
+                "description": "Please enter the Google Cast configuration.",
+                "title": "Google Cast"
+            },
             "confirm": {
                 "description": "Do you want to start set up?"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+        },
+        "step": {
+            "options": {
+                "data": {
+                    "known_hosts": "Optional list of known hosts if mDNS discovery is not working."
+                },
+                "description": "Please enter the Google Cast configuration."
             }
         }
     }

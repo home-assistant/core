@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import jewish_calendar
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -84,7 +85,7 @@ async def test_issur_melacha_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     with alter_time(test_time):
         assert await async_setup_component(

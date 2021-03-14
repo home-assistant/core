@@ -706,36 +706,51 @@ async def test_light_turn_on_auth(hass, hass_admin_user):
 async def test_light_brightness_step(hass):
     """Test that light context works."""
     platform = getattr(hass.components, "test.light")
-    platform.init()
-    entity = platform.ENTITIES[0]
-    entity.supported_features = light.SUPPORT_BRIGHTNESS
-    entity.brightness = 100
+    platform.init(empty=True)
+    platform.ENTITIES.append(platform.MockLight("Test_0", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_1", STATE_ON))
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_features = light.SUPPORT_BRIGHTNESS
+    entity0.brightness = 100
+    entity1 = platform.ENTITIES[1]
+    entity1.supported_features = light.SUPPORT_BRIGHTNESS
+    entity1.brightness = 50
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
+    state = hass.states.get(entity0.entity_id)
     assert state is not None
     assert state.attributes["brightness"] == 100
+    state = hass.states.get(entity1.entity_id)
+    assert state is not None
+    assert state.attributes["brightness"] == 50
 
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": entity.entity_id, "brightness_step": -10},
+        {"entity_id": [entity0.entity_id, entity1.entity_id], "brightness_step": -10},
         blocking=True,
     )
 
-    _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 90, data
+    _, data = entity0.last_call("turn_on")
+    assert data["brightness"] == 90  # 100 - 10
+    _, data = entity1.last_call("turn_on")
+    assert data["brightness"] == 40  # 50 - 10
 
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": entity.entity_id, "brightness_step_pct": 10},
+        {
+            "entity_id": [entity0.entity_id, entity1.entity_id],
+            "brightness_step_pct": 10,
+        },
         blocking=True,
     )
 
-    _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 126, data
+    _, data = entity0.last_call("turn_on")
+    assert data["brightness"] == 126  # 100 + (255 * 0.10)
+    _, data = entity1.last_call("turn_on")
+    assert data["brightness"] == 76  # 50 + (255 * 0.10)
 
 
 async def test_light_brightness_pct_conversion(hass):
@@ -760,7 +775,7 @@ async def test_light_brightness_pct_conversion(hass):
     )
 
     _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 3, data
+    assert data["brightness"] == 3
 
     await hass.services.async_call(
         "light",
@@ -770,7 +785,7 @@ async def test_light_brightness_pct_conversion(hass):
     )
 
     _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 5, data
+    assert data["brightness"] == 5
 
     await hass.services.async_call(
         "light",
@@ -780,7 +795,7 @@ async def test_light_brightness_pct_conversion(hass):
     )
 
     _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 128, data
+    assert data["brightness"] == 128
 
     await hass.services.async_call(
         "light",
@@ -790,7 +805,7 @@ async def test_light_brightness_pct_conversion(hass):
     )
 
     _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 252, data
+    assert data["brightness"] == 252
 
     await hass.services.async_call(
         "light",
@@ -800,7 +815,7 @@ async def test_light_brightness_pct_conversion(hass):
     )
 
     _, data = entity.last_call("turn_on")
-    assert data["brightness"] == 255, data
+    assert data["brightness"] == 255
 
 
 def test_deprecated_base_class(caplog):

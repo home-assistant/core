@@ -134,7 +134,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # no pending task
     done, _ = await asyncio.wait(
         [
-            _async_setup_platform(hass, ENTITY_SCHEMA(cfg), async_add_entities)
+            _async_setup_platform(
+                hass, ENTITY_SCHEMA(cfg), async_add_entities, config_entry
+            )
             for cfg in config
         ]
     )
@@ -146,7 +148,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, config_entry
 ):
     """Set up the cast platform."""
     # Import CEC IGNORE attributes
@@ -177,7 +179,7 @@ async def _async_setup_platform(
         async_cast_discovered(chromecast)
 
     ChromeCastZeroconf.set_zeroconf(await zeroconf.async_get_instance(hass))
-    hass.async_add_executor_job(setup_internal_discovery, hass)
+    hass.async_add_executor_job(setup_internal_discovery, hass, config_entry)
 
 
 class CastDevice(MediaPlayerEntity):

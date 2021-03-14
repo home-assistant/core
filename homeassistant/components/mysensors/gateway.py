@@ -26,17 +26,21 @@ from .const import (
     CONF_TOPIC_OUT_PREFIX,
     CONF_VERSION,
     DOMAIN,
-    MYSENSORS_GATEWAY_READY,
     MYSENSORS_GATEWAY_START_TASK,
     MYSENSORS_GATEWAYS,
     GatewayId,
 )
 from .handler import HANDLERS
-from .helpers import discover_mysensors_platform, validate_child, validate_node
+from .helpers import (
+    discover_mysensors_platform,
+    on_unload,
+    validate_child,
+    validate_node,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_READY_TIMEOUT = 15.0
+GATEWAY_READY_TIMEOUT = 20.0
 MQTT_COMPONENT = "mqtt"
 
 
@@ -64,24 +68,16 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
     try:
-        gateway_ready = asyncio.Future()
+        gateway_ready = asyncio.Event()
 
-        def gateway_ready_callback(msg):
-            msg_type = msg.gateway.const.MessageType(msg.type)
-            _LOGGER.debug("Received MySensors msg type %s: %s", msg_type.name, msg)
-            if msg_type.name != "internal":
-                return
-            internal = msg.gateway.const.Internal(msg.sub_type)
-            if internal.name != "I_GATEWAY_READY":
-                return
-            _LOGGER.debug("Received gateway ready")
-            gateway_ready.set_result(True)
+        def on_conn_made(_: BaseAsyncGateway) -> None:
+            gateway_ready.set()
 
         gateway: Optional[BaseAsyncGateway] = await _get_gateway(
             hass,
             device=user_input[CONF_DEVICE],
             version=user_input[CONF_VERSION],
-            event_callback=gateway_ready_callback,
+            event_callback=lambda _: None,
             persistence_file=None,
             baud_rate=user_input.get(CONF_BAUD_RATE),
             tcp_port=user_input.get(CONF_TCP_PORT),
@@ -92,12 +88,13 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         )
         if gateway is None:
             return False
+        gateway.on_conn_made = on_conn_made
 
         connect_task = None
         try:
             connect_task = asyncio.create_task(gateway.start())
-            with async_timeout.timeout(20):
-                await gateway_ready
+            with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
+                await gateway_ready.wait()
                 return True
         except asyncio.TimeoutError:
             _LOGGER.info("Try gateway connect failed with timeout")
@@ -268,8 +265,8 @@ async def _discover_persistent_devices(
 
 async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     """Stop the gateway."""
-    connect_task = hass.data[DOMAIN].get(
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
+    connect_task = hass.data[DOMAIN].pop(
+        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()
@@ -280,6 +277,12 @@ async def _gw_start(
     hass: HomeAssistantType, entry: ConfigEntry, gateway: BaseAsyncGateway
 ):
     """Start the gateway."""
+    gateway_ready = asyncio.Event()
+
+    def gateway_connected(_: BaseAsyncGateway):
+        gateway_ready.set()
+
+    gateway.on_conn_made = gateway_connected
     # Don't use hass.async_create_task to avoid holding up setup indefinitely.
     hass.data[DOMAIN][
         MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
@@ -290,25 +293,24 @@ async def _gw_start(
     async def stop_this_gw(_: Event):
         await gw_stop(hass, entry, gateway)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw)
+    await on_unload(
+        hass,
+        entry.entry_id,
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
+    )
+
     if entry.data[CONF_DEVICE] == MQTT_COMPONENT:
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
-    gateway_ready = asyncio.Future()
-    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(entry.entry_id)
-    hass.data[DOMAIN][gateway_ready_key] = gateway_ready
-
     try:
         with async_timeout.timeout(GATEWAY_READY_TIMEOUT):
-            await gateway_ready
+            await gateway_ready.wait()
     except asyncio.TimeoutError:
         _LOGGER.warning(
-            "Gateway %s not ready after %s secs so continuing with setup",
+            "Gateway %s not connected after %s secs so continuing with setup",
             entry.data[CONF_DEVICE],
             GATEWAY_READY_TIMEOUT,
         )
-    finally:
-        hass.data[DOMAIN].pop(gateway_ready_key, None)
 
 
 def _gw_callback_factory(

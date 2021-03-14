@@ -72,7 +72,6 @@ DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
 ATTR_PSEUDO = "pseudo"
-ATTR_NAME = "name"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_HEATING_POWER_REQUEST = "heating_power_request"
 ATTR_HOME_ID = "home_id"

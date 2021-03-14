@@ -131,7 +131,7 @@ class CupsSensor(Entity):
         return ICON_PRINTER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._printer is None:
             return None
@@ -193,7 +193,7 @@ class IPPSensor(Entity):
         return PRINTER_STATES.get(key, key)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._attributes is None:
             return None
@@ -271,7 +271,7 @@ class MarkerSensor(Entity):
         return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._attributes is None:
             return None

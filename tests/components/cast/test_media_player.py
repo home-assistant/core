@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import json
 from typing import Optional
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
@@ -28,76 +28,13 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.media_player import common
-
-
-@pytest.fixture()
-def dial_mock():
-    """Mock pychromecast dial."""
-    dial_mock = MagicMock()
-    dial_mock.get_device_status.return_value.uuid = "fake_uuid"
-    dial_mock.get_device_status.return_value.manufacturer = "fake_manufacturer"
-    dial_mock.get_device_status.return_value.model_name = "fake_model_name"
-    dial_mock.get_device_status.return_value.friendly_name = "fake_friendly_name"
-    dial_mock.get_multizone_status.return_value.dynamic_groups = []
-    return dial_mock
-
-
-@pytest.fixture()
-def castbrowser_mock():
-    """Mock pychromecast CastBrowser."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def mz_mock():
-    """Mock pychromecast MultizoneManager."""
-    return MagicMock()
-
-
-@pytest.fixture()
-def pycast_mock(castbrowser_mock):
-    """Mock pychromecast."""
-    pycast_mock = MagicMock()
-    pycast_mock.discovery.CastBrowser.return_value = castbrowser_mock
-    pycast_mock.discovery.AbstractCastListener = (
-        pychromecast.discovery.AbstractCastListener
-    )
-    return pycast_mock
-
-
-@pytest.fixture()
-def quick_play_mock():
-    """Mock pychromecast quick_play."""
-    return MagicMock()
-
-
-@pytest.fixture(autouse=True)
-def cast_mock(dial_mock, mz_mock, pycast_mock, quick_play_mock):
-    """Mock pychromecast."""
-    with patch(
-        "homeassistant.components.cast.media_player.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.discovery.pychromecast", pycast_mock
-    ), patch(
-        "homeassistant.components.cast.helpers.dial", dial_mock
-    ), patch(
-        "homeassistant.components.cast.media_player.MultizoneManager",
-        return_value=mz_mock,
-    ), patch(
-        "homeassistant.components.cast.media_player.zeroconf.async_get_instance",
-        AsyncMock(),
-    ), patch(
-        "homeassistant.components.cast.media_player.quick_play",
-        quick_play_mock,
-    ):
-        yield
-
 
 # pylint: disable=invalid-name
 FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
@@ -482,7 +419,8 @@ async def test_replay_past_chromecasts(hass):
     assert add_dev1.call_count == 1
 
     add_dev2 = Mock()
-    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2)
+    entry = hass.config_entries.async_entries("cast")[0]
+    await cast._async_setup_platform(hass, {"host": "host2"}, add_dev2, entry)
     await hass.async_block_till_done()
     assert add_dev2.call_count == 1
 
@@ -552,7 +490,7 @@ async def test_discover_dynamic_group(hass, dial_mock, pycast_mock, caplog):
     zconf_1 = get_fake_zconf(host="host_1", port=23456)
     zconf_2 = get_fake_zconf(host="host_2", port=34567)
 
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     # Fake dynamic group info
     tmp1 = MagicMock()
@@ -676,7 +614,7 @@ async def test_entity_availability(hass: HomeAssistantType):
 async def test_entity_cast_status(hass: HomeAssistantType):
     """Test handling of cast status."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -745,7 +683,7 @@ async def test_entity_cast_status(hass: HomeAssistantType):
 async def test_entity_play_media(hass: HomeAssistantType):
     """Test playing media."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -774,7 +712,7 @@ async def test_entity_play_media(hass: HomeAssistantType):
 async def test_entity_play_media_cast(hass: HomeAssistantType, quick_play_mock):
     """Test playing media with cast special features."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -807,7 +745,7 @@ async def test_entity_play_media_cast(hass: HomeAssistantType, quick_play_mock):
 async def test_entity_play_media_cast_invalid(hass, caplog, quick_play_mock):
     """Test playing media."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -880,7 +818,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistantType):
 async def test_entity_media_content_type(hass: HomeAssistantType):
     """Test various content types."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -934,7 +872,7 @@ async def test_entity_media_content_type(hass: HomeAssistantType):
 async def test_entity_control(hass: HomeAssistantType):
     """Test various device and media controls."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -1043,7 +981,7 @@ async def test_entity_control(hass: HomeAssistantType):
 async def test_entity_media_states(hass: HomeAssistantType):
     """Test various entity media states."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -1102,7 +1040,7 @@ async def test_entity_media_states(hass: HomeAssistantType):
 async def test_group_media_states(hass, mz_mock):
     """Test media states are read from group if entity has no state."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(
@@ -1155,7 +1093,7 @@ async def test_group_media_states(hass, mz_mock):
 async def test_group_media_control(hass, mz_mock):
     """Test media controls are handled by group if entity has no state."""
     entity_id = "media_player.speaker"
-    reg = await hass.helpers.entity_registry.async_get_registry()
+    reg = er.async_get(hass)
 
     info = get_fake_chromecast_info()
     full_info = attr.evolve(

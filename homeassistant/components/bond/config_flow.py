@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .utils import BondHub
@@ -27,7 +28,7 @@ DISCOVERY_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 TOKEN_SCHEMA = vol.Schema({})
 
 
-async def _validate_input(data: Dict[str, Any]) -> Tuple[str, Optional[str]]:
+async def _validate_input(data: Dict[str, Any]) -> Tuple[str, str]:
     """Validate the user input allows us to connect."""
 
     bond = Bond(data[CONF_HOST], data[CONF_ACCESS_TOKEN])
@@ -57,11 +58,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize config flow."""
-        self._discovered: Optional[dict] = None
+        self._discovered: Dict[str, str] = {}
 
-    async def _async_try_automatic_configure(self):
+    async def _async_try_automatic_configure(self) -> None:
         """Try to auto configure the device.
 
         Failure is acceptable here since the device may have been
@@ -82,9 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _, hub_name = await _validate_input(self._discovered)
         self._discovered[CONF_NAME] = hub_name
 
-    async def async_step_zeroconf(
-        self, discovery_info: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType) -> Dict[str, Any]:  # type: ignore
         """Handle a flow initialized by zeroconf discovery."""
         name: str = discovery_info[CONF_NAME]
         host: str = discovery_info[CONF_HOST]
@@ -107,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_confirm(
-        self, user_input: Dict[str, Any] = None
+        self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle confirmation flow for discovered bond hub."""
         errors = {}
@@ -148,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: Dict[str, Any] = None
+        self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle a flow initialized by the user."""
         errors = {}

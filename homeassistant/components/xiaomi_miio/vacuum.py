@@ -2,7 +2,7 @@
 from functools import partial
 import logging
 
-from miio import DeviceException, Vacuum  # pylint: disable=import-error
+from miio import DeviceException, Vacuum
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -305,7 +305,7 @@ class MiroboVacuum(XiaomiMiioEntity, StateVacuumEntity):
         ]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the specific state attributes of this vacuum cleaner."""
         attrs = {}
         if self.vacuum_state is not None:

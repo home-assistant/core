@@ -12,11 +12,11 @@ from homeassistant.components.device_automation import (
     _async_get_device_automations as async_get_device_automations,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service, mock_coro
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 SHORT_PRESS = "remote_button_short_press"
 COMMAND = "command"
@@ -49,7 +49,7 @@ async def test_get_actions(hass, device_ias):
 
     ieee_address = str(device_ias[0].ieee)
 
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
 
     actions = await async_get_device_automations(hass, "action", reg_device.id)
@@ -72,7 +72,7 @@ async def test_action(hass, device_ias):
 
     ieee_address = str(zha_device.ieee)
 
-    ha_device_registry = await async_get_registry(hass)
+    ha_device_registry = dr.async_get(hass)
     reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)})
 
     with patch(

@@ -133,7 +133,7 @@ SENSORS = {
         available=lambda block: block.sensorOp == "normal",
     ),
     ("sensor", "extTemp"): BlockAttributeDescription(
-        name="External Temperature",
+        name="Temperature",
         unit=temperature_unit,
         value=lambda value: round(value, 1),
         device_class=sensor.DEVICE_CLASS_TEMPERATURE,
@@ -159,7 +159,7 @@ SENSORS = {
         unit=PERCENTAGE,
         icon="mdi:progress-wrench",
         value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
-        device_state_attributes=lambda block: {
+        extra_state_attributes=lambda block: {
             "Operational hours": round(block.totalWorkTime / 3600, 1)
         },
     ),

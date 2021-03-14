@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.const import ATTR_DEVICE_CLASS
+from homeassistant.helpers import entity_registry as er
 
 from .common import setup_ozw
 
@@ -34,7 +35,7 @@ async def test_sensor(hass, generic_data):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
 
     # Test ZWaveListSensor disabled by default
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entity_id = "sensor.water_sensor_6_instance_1_water"
     state = hass.states.get(entity_id)
     assert state is None
@@ -55,7 +56,7 @@ async def test_sensor(hass, generic_data):
 async def test_sensor_enabled(hass, generic_data, sensor_msg):
     """Test enabling an advanced sensor."""
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get_or_create(
         SENSOR_DOMAIN,
@@ -79,7 +80,7 @@ async def test_sensor_enabled(hass, generic_data, sensor_msg):
 async def test_string_sensor(hass, string_sensor_data):
     """Test so the returned type is a string sensor."""
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get_or_create(
         SENSOR_DOMAIN,

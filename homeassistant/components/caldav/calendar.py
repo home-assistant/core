@@ -123,7 +123,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         self._offset_reached = False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"offset_reached": self._offset_reached}
 

@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
@@ -64,7 +65,7 @@ async def test_loading_cover(
     assert entry
     assert entry.unique_id == WILIGHT_ID
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # First segment of the strip
     state = hass.states.get("cover.wl000000000099_1")

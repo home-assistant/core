@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-SUPPORTED_DOMAINS = ["cover", "scene"]
+PLATFORMS = ["cover", "scene"]
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -34,9 +34,9 @@ async def async_setup(hass, config):
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
         return False
 
-    for component in SUPPORTED_DOMAINS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            discovery.async_load_platform(hass, component, DOMAIN, {}, config)
+            discovery.async_load_platform(hass, platform, DOMAIN, {}, config)
         )
     return True
 

@@ -155,7 +155,7 @@ class DeconzSensor(DeconzDevice):
         return UNIT_OF_MEASUREMENT.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 
@@ -235,7 +235,7 @@ class DeconzBattery(DeconzDevice):
         return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the battery."""
         attr = {}
 

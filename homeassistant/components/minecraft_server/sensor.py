@@ -141,19 +141,19 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         """Update online players state and device state attributes."""
         self._state = self._server.players_online
 
-        device_state_attributes = None
+        extra_state_attributes = None
         players_list = self._server.players_list
 
         if players_list is not None:
             if len(players_list) != 0:
-                device_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
+                extra_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
 
-        self._device_state_attributes = device_state_attributes
+        self._extra_state_attributes = extra_state_attributes
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return players list in device state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
 
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):

@@ -92,7 +92,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return DEVICE_CLASS.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 
