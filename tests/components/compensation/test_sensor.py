@@ -43,10 +43,7 @@ async def test_linear_state(hass):
 
     assert round(float(state.state), config[DOMAIN]["test"][CONF_PRECISION]) == 5.0
 
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == config[DOMAIN]["test"][ATTR_UNIT_OF_MEASUREMENT]
-    )
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "a"
 
     coefs = [round(v, 1) for v in state.attributes.get(ATTR_COEFFICIENTS)]
     assert coefs == [1.0, 1.0]

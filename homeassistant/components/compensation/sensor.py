@@ -128,7 +128,6 @@ class CompensationSensor(Entity):
                 value = (
                     None if new_state.state == STATE_UNKNOWN else float(new_state.state)
                 )
-            # Calculate the result
             self._state = round(self._poly(value), self._precision)
 
         except (ValueError, TypeError):

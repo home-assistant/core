@@ -85,7 +85,6 @@ async def async_setup(hass, config):
         with np.errstate(all="raise"):
             with warnings.catch_warnings(record=True) as all_warnings:
                 warnings.simplefilter("always")
-                # try to catch 3 possible errors
                 try:
                     coefficients = np.polyfit(x_values, y_values, degree)
                 except FloatingPointError as error:
@@ -94,7 +93,6 @@ async def async_setup(hass, config):
                         compensation,
                         error,
                     )
-                # raise any warnings
                 for warning in all_warnings:
                     _LOGGER.warning(
                         "Setup of %s encountered a warning, %s.",
@@ -102,7 +100,9 @@ async def async_setup(hass, config):
                         str(warning.message).lower(),
                     )
 
-        if coefficients is not None:
+        if coefficients is None:
+            continue
+        else:
             data = {
                 k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
             }
