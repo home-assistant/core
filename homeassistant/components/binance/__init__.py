@@ -114,19 +114,26 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
                 if balance["asset"] not in balances_dict:
                     balances_dict[balance["asset"]] = {}
                     balances_dict[balance["asset"]].update(balance)
+                    base_asset_ticker_details = None
+
+                    total_balance = float(balance["free"]) + float(balance["locked"])
 
                     if ASSET_VALUE_BASE not in balance["asset"]:
                         # Prevent that we try to search ASSET_VALUE_BASE+ASSET_VALUE_BASE (e.g. BTCBTC)
                         base_asset_symbol = str(balance["asset"] + ASSET_VALUE_BASE)
-                        base_asset_ticker_details = next(
-                            item
-                            for item in all_tickers
-                            if item["symbol"] == base_asset_symbol
-                        )
+                        try:
+                            base_asset_ticker_details = next(
+                                item
+                                for item in all_tickers
+                                if item["symbol"] == base_asset_symbol
+                            )
+                        except StopIteration:
+                            # Not all coins might have an asset + ASSET_VALUE_BASE pair, such as $SNTUSDT
+                            continue
                     else:
                         balances_dict[balance["asset"]][
                             "asset_value_in_base_asset"
-                        ] = float(balance["free"]) + float(balance["locked"])
+                        ] = total_balance
 
                     if base_asset_ticker_details:
                         # If we can find a pair with ASSET_VALUE_BASE, include it in the dict
@@ -134,9 +141,11 @@ class BinanceDataUpdateCoordinator(DataUpdateCoordinator):
                         balances_dict[balance["asset"]][ASSET_VALUE_BASE].update(
                             base_asset_ticker_details
                         )
-                        balances_dict[balance["asset"]]["asset_value_in_base_asset"] = (
-                            float(balance["free"]) + float(balance["locked"])
-                        ) * float(base_asset_ticker_details["lastPrice"])
+                        balances_dict[balance["asset"]][
+                            "asset_value_in_base_asset"
+                        ] = total_balance * float(
+                            base_asset_ticker_details["lastPrice"]
+                        )
 
             result_dict["balances"] = balances_dict
 

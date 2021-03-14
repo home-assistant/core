@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if CONF_BALANCES in coordinator.data:
         for balance in coordinator.data[CONF_BALANCES]:
-            if balance["free"] > "0.00000000":
+            if coordinator.data[CONF_BALANCES][balance]["free"] > "0.00000000":
                 entities.append(Balance(coordinator, balance))
 
         for currency in ASSET_VALUE_CURRENCIES:
@@ -233,9 +233,14 @@ class TotalAssetValue(CoordinatorEntity):
         total_base_asset_value = 0.0
 
         for i in self.coordinator.data[CONF_BALANCES].keys():
-            total_base_asset_value += float(
-                self.coordinator.data[CONF_BALANCES][i]["asset_value_in_base_asset"]
-            )
+            try:
+                asset_value = self.coordinator.data[CONF_BALANCES][i][
+                    "asset_value_in_base_asset"
+                ]
+
+                total_base_asset_value += float(asset_value)
+            except KeyError:
+                continue
 
         if self._currency == ASSET_VALUE_BASE:
             total_asset_value = total_base_asset_value
