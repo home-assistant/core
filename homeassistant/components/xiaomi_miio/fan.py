@@ -3,7 +3,6 @@ import asyncio
 from enum import Enum
 from functools import partial
 import logging
-from typing import Optional
 
 from miio import (
     AirFresh,
