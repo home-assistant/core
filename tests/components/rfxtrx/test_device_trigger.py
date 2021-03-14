@@ -26,14 +26,12 @@ class EventTestData(NamedTuple):
     subtype: str
 
 
-DEVICE_SECURITY_1 = {("rfxtrx", "20", "3", "a10900:32")}
-EVENT_SECURITY_1 = EventTestData(
-    "08200300a109000670", DEVICE_SECURITY_1, "status", "Panic"
-)
+DEVICE_LIGHTING_1 = {("rfxtrx", "10", "0", "E5")}
+EVENT_LIGHTING_1 = EventTestData("0710002a45050170", DEVICE_LIGHTING_1, "command", "On")
 
-DEVICE_CHIME_1 = {("rfxtrx", "16", "0", "00:00")}
-EVENT_CHIME_1 = EventTestData(
-    "0a16000000000000000000", DEVICE_CHIME_1, "command", "Chime"
+DEVICE_ROLLERTROL_1 = {("rfxtrx", "19", "0", "009ba8:1")}
+EVENT_ROLLERTROL_1 = EventTestData(
+    "09190000009ba8010100", DEVICE_ROLLERTROL_1, "command", "Down"
 )
 
 
@@ -59,38 +57,18 @@ async def setup_entry(hass, devices):
     "event,expected",
     [
         [
-            EVENT_SECURITY_1,
+            EVENT_LIGHTING_1,
             [
-                {"type": "status", "subtype": subtype}
+                {"type": "command", "subtype": subtype}
                 for subtype in [
-                    "Normal",
-                    "Normal Delayed",
-                    "Alarm",
-                    "Alarm Delayed",
-                    "Motion",
-                    "No Motion",
-                    "Panic",
-                    "End Panic",
-                    "IR",
-                    "Arm Away",
-                    "Arm Away Delayed",
-                    "Arm Home",
-                    "Arm Home Delayed",
-                    "Disarm",
-                    "Light 1 Off",
-                    "Light 1 On",
-                    "Light 2 Off",
-                    "Light 2 On",
-                    "Dark Detected",
-                    "Light Detected",
-                    "Battery low",
-                    "Pairing KD101",
-                    "Normal Tamper",
-                    "Normal Delayed Tamper",
-                    "Alarm Tamper",
-                    "Alarm Delayed Tamper",
-                    "Motion Tamper",
-                    "No Motion Tamper",
+                    "Off",
+                    "On",
+                    "Dim",
+                    "Bright",
+                    "All/group Off",
+                    "All/group On",
+                    "Chime",
+                    "Illegal command",
                 ]
             ],
         ]
@@ -98,7 +76,7 @@ async def setup_entry(hass, devices):
 )
 async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
     """Test we get the expected triggers from a rfxtrx."""
-    await setup_entry(hass, {event.code: {}})
+    await setup_entry(hass, {event.code: {"signal_repetitions": 1}})
 
     device_entry = device_reg.async_get_device(event.device_identifiers, set())
 
@@ -115,14 +93,14 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
 @pytest.mark.parametrize(
     "event",
     [
-        EVENT_SECURITY_1,
-        EVENT_CHIME_1,
+        EVENT_LIGHTING_1,
+        EVENT_ROLLERTROL_1,
     ],
 )
 async def test_firing_event(hass, device_reg, rfxtrx, event):
     """Test for turn_on and turn_off triggers firing."""
 
-    await setup_entry(hass, {event.code: {"fire_event": True}})
+    await setup_entry(hass, {event.code: {"fire_event": True, "signal_repetitions": 1}})
 
     device_entry = device_reg.async_get_device(event.device_identifiers, set())
 
