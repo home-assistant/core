@@ -387,6 +387,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         """Zone cleaning service call."""
         boundary_id = None
         if zone is not None:
+            _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
             for boundary in self._robot_boundaries:
                 if zone in boundary["name"]:
                     boundary_id = boundary["id"]
