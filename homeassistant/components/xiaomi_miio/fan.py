@@ -8,9 +8,9 @@ from miio import (
     AirFresh,
     AirHumidifier,
     AirHumidifierMiot,
-    AirPurifier,
-    AirPurifierMiot,
+    AirPurifier
     AirPurifierMB4,
+    AirPurifierMiot,
     DeviceException,
 )
 from miio.airfresh import (
@@ -64,8 +64,8 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
     MODEL_AIRPURIFIER_3,
-    MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3H
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
