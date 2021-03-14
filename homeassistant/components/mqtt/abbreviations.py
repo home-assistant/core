@@ -180,6 +180,7 @@ ABBREVIATIONS = {
     "tilt_max": "tilt_max",
     "tilt_min": "tilt_min",
     "tilt_opnd_val": "tilt_opened_value",
+    "tilt_from_pos": "tilt_from_position",
     "tilt_opt": "tilt_optimistic",
     "tilt_status_t": "tilt_status_topic",
     "tilt_status_tpl": "tilt_status_template",
