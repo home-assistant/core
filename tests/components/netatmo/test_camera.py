@@ -1,6 +1,4 @@
 """The tests for Netatmo device triggers."""
-from freezegun import freeze_time
-
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
 from homeassistant.components.netatmo.const import (
@@ -11,7 +9,6 @@ from homeassistant.components.netatmo.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
-@freeze_time("2019-06-16")
 async def test_setup_component_with_webhook(hass, camera_entry):
     """Test setup with webhook."""
     await hass.async_block_till_done()
