@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 
-from .const import CONF_HOMESERVER, DOMAIN  # pylint: disable
+from .const import CONF_HOMESERVER, DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ async def validate_input(hass: core.HomeAssistant, data):
         await hass.async_add_executor_job(
             functools.partial(client.login, data[CONF_USERNAME], data[CONF_PASSWORD],)
         )
-    except MatrixRequestError:
-        raise InvalidAuth
+    except MatrixRequestError as err:
+        raise InvalidAuth from err
 
     return {"title": f"{data[CONF_USERNAME]} at {data[CONF_HOMESERVER]}"}
 
