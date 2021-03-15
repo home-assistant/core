@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from time import monotonic
-from typing import Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -16,15 +17,13 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[VerisureSmartplug]], None],
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            VerisureSmartplug(coordinator, serial_number)
-            for serial_number in coordinator.data["smart_plugs"]
-        ]
+        VerisureSmartplug(coordinator, serial_number)
+        for serial_number in coordinator.data["smart_plugs"]
     )
 
 

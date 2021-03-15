@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import errno
 import os
-from typing import Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
@@ -18,17 +19,15 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[VerisureSmartcam]], None],
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     assert hass.config.config_dir
     async_add_entities(
-        [
-            VerisureSmartcam(hass, coordinator, serial_number, hass.config.config_dir)
-            for serial_number in coordinator.data["cameras"]
-        ]
+        VerisureSmartcam(hass, coordinator, serial_number, hass.config.config_dir)
+        for serial_number in coordinator.data["cameras"]
     )
 
 

@@ -1,7 +1,7 @@
 """Support for Verisure sensors."""
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Iterable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
@@ -16,30 +16,26 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[CoordinatorEntity]], None],
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors: list[CoordinatorEntity] = [
+    sensors: list[Entity] = [
         VerisureThermometer(coordinator, serial_number)
         for serial_number, values in coordinator.data["climate"].items()
         if "temperature" in values
     ]
 
     sensors.extend(
-        [
-            VerisureHygrometer(coordinator, serial_number)
-            for serial_number, values in coordinator.data["climate"].items()
-            if "humidity" in values
-        ]
+        VerisureHygrometer(coordinator, serial_number)
+        for serial_number, values in coordinator.data["climate"].items()
+        if "humidity" in values
     )
 
     sensors.extend(
-        [
-            VerisureMouseDetection(coordinator, serial_number)
-            for serial_number in coordinator.data["mice"]
-        ]
+        VerisureMouseDetection(coordinator, serial_number)
+        for serial_number in coordinator.data["mice"]
     )
 
     async_add_entities(sensors)

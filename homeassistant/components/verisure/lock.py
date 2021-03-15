@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -23,15 +24,13 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[VerisureDoorlock]], None],
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            VerisureDoorlock(coordinator, serial_number)
-            for serial_number in coordinator.data["locks"]
-        ]
+        VerisureDoorlock(coordinator, serial_number)
+        for serial_number in coordinator.data["locks"]
     )
 
 
@@ -50,7 +49,6 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         self._digits = coordinator.entry.options.get(
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
-        self._default_lock_code = coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
 
     @property
     def name(self) -> str:

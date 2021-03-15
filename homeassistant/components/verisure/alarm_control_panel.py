@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_GIID, DOMAIN, LOGGER
@@ -29,7 +30,7 @@ from .coordinator import VerisureDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[list[VerisureAlarm]], None],
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
     """Set up Verisure alarm control panel from a config entry."""
     async_add_entities([VerisureAlarm(coordinator=hass.data[DOMAIN][entry.entry_id])])
