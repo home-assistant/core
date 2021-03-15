@@ -28,6 +28,7 @@ from .const import (
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_PRECIPITATION_KIND,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
@@ -163,6 +164,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
+            ATTR_API_FORECAST_PRECIPITATION_KIND: self._calc_precipitation_kind(
+                entry.rain, entry.snow
+            ),
         }
 
         temperature_dict = entry.temperature("celsius")
@@ -208,6 +212,18 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if round(rain_value + snow_value, 2) == 0:
             return None
         return round(rain_value + snow_value, 2)
+
+    @staticmethod
+    def _calc_precipitation_kind(rain, snow):
+        """Determine the precipitation kind."""
+        if WeatherUpdateCoordinator._get_rain(rain) != "not raining":
+            if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
+                return "sleet"
+            return "rain"
+
+        if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
+            return "snow"
+        return "none"
 
     def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
