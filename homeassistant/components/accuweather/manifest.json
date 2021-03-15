@@ -2,7 +2,7 @@
   "domain": "accuweather",
   "name": "AccuWeather",
   "documentation": "https://www.home-assistant.io/integrations/accuweather/",
-  "requirements": ["accuweather==0.1.0"],
+  "requirements": ["accuweather==0.1.1"],
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "quality_scale": "platinum"
