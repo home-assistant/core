@@ -11,7 +11,7 @@ from verisure import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, HTTP_SERVICE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import Throttle
@@ -51,7 +51,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         return True
 
-    async def async_logout(self) -> bool:
+    async def async_logout(self, _event: Event) -> bool:
         """Logout from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.logout)
