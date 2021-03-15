@@ -124,10 +124,6 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_select(self, user_input=None):
         """Handle the selection of a discovered ScreenLogic gateway."""
-        _LOGGER.debug("Gateway Select")
-        _LOGGER.debug(
-            [gateway[SL_GATEWAY_NAME] for gateway in self.discovered_gateways.values()]
-        )
         existing = self._async_current_ids()
         unconfigured_gateways = {
             mac: gateway[SL_GATEWAY_NAME]
