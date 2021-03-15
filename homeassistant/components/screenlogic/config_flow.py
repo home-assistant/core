@@ -21,13 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 GATEWAY_SELECT_KEY = "selected_gateway"
 GATEWAY_MANUAL_ENTRY = "manual"
 
-GATEWAY_ENTRY_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_PORT, default=80): int,
-    }
-)
-
 PENTAIR_OUI = "00-C0-33"
 
 
