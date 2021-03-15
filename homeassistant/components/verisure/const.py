@@ -6,8 +6,6 @@ DOMAIN = "verisure"
 
 LOGGER = logging.getLogger(__package__)
 
-ATTR_DEVICE_SERIAL = "device_serial"
-
 CONF_GIID = "giid"
 CONF_LOCK_CODE_DIGITS = "lock_code_digits"
 CONF_LOCK_DEFAULT_CODE = "lock_default_code"

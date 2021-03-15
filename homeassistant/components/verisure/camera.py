@@ -5,14 +5,17 @@ import errno
 import os
 from typing import Callable, Iterable
 
+from verisure import Error as VerisureError
+
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import current_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
 from .coordinator import VerisureDataUpdateCoordinator
 
 
@@ -23,6 +26,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    platform = current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_CAPTURE_SMARTCAM,
+        {},
+        VerisureSmartcam.capture_smartcam.__name__,
+    )
 
     assert hass.config.config_dir
     async_add_entities(
@@ -114,3 +124,11 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
     def unique_id(self) -> str:
         """Return the unique ID for this camera."""
         return self.serial_number
+
+    def capture_smartcam(self) -> None:
+        """Capture a new picture from a smartcam."""
+        try:
+            self.coordinator.smartcam_capture(self.serial_number)
+            LOGGER.debug("Capturing new image from %s", self.serial_number)
+        except VerisureError as ex:
+            LOGGER.error("Could not capture image, %s", ex)
