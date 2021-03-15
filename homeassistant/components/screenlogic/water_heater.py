@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
-HEAD_MODE_NAMES = HEAT_MODE._names  # pylint: disable=protected-access
+HEAT_MODE_NAMES = HEAT_MODE._names  # pylint: disable=protected-access
 
 MODE_NAME_TO_MODE_NUM = {
     HEAT_MODE_NAMES[num]: num for num in range(len(HEAT_MODE_NAMES))
