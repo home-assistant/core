@@ -203,4 +203,5 @@ DEVICE_ABBREVIATIONS = {
     "mf": "manufacturer",
     "mdl": "model",
     "sw": "sw_version",
+    "sa": "suggested_area",
 }
