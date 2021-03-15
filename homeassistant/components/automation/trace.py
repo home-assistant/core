@@ -2,7 +2,9 @@
 from collections import OrderedDict
 from contextlib import contextmanager
 import datetime as dt
+from datetime import datetime, timedelta
 from itertools import count
+import json
 import logging
 from typing import Any, Awaitable, Callable, Deque, Dict, Optional
 
@@ -203,3 +205,23 @@ def get_debug_traces(hass, summary=False):
         traces.extend(get_debug_traces_for_automation(hass, automation_id, summary))
 
     return traces
+
+
+class TraceJSONEncoder(json.JSONEncoder):
+    """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
+
+    def default(self, o: Any) -> Any:
+        """Convert certain objects.
+
+        Fall back to repr(o).
+        """
+        if isinstance(o, datetime):
+            return o.isoformat()
+        if isinstance(o, timedelta):
+            return str(o)
+        if isinstance(o, set):
+            return list(o)
+        if hasattr(o, "as_dict"):
+            return o.as_dict()
+
+        return repr(o)
