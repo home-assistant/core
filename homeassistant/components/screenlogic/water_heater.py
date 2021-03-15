@@ -30,7 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
 
     for body in data["devices"]["water_heater"]:
-        _LOGGER.info(body)
         entities.append(ScreenLogicWaterHeater(data["coordinator"], body))
     async_add_entities(entities, True)
 
