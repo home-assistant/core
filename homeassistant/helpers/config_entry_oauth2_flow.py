@@ -234,7 +234,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         self, user_input: Optional[dict] = None
     ) -> dict:
         """Handle a flow start."""
-        assert self.hass
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
 
         if user_input is not None:
@@ -318,7 +317,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(self.DOMAIN)
 
-        assert self.hass is not None
         if self.hass.config_entries.async_entries(self.DOMAIN):
             return self.async_abort(reason="already_configured")
 

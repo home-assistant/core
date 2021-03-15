@@ -89,7 +89,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Handle the initial step."""
-        assert self.hass  # typing
         if is_hassio(self.hass):  # type: ignore  # no-untyped-call
             return await self.async_step_on_supervisor()
 
@@ -266,7 +265,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Start Z-Wave JS add-on."""
-        assert self.hass
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
             return self.async_show_progress(
@@ -289,7 +287,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_start_addon(self) -> None:
         """Start the Z-Wave JS add-on."""
-        assert self.hass
         addon_manager: AddonManager = get_addon_manager(self.hass)
         try:
             await addon_manager.async_schedule_start_addon()
@@ -327,7 +324,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         Get add-on discovery info and server version info.
         Set unique id and abort if already configured.
         """
-        assert self.hass
         if not self.ws_address:
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"

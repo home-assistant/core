@@ -425,8 +425,6 @@ class Template:
 
         This method must be run in the event loop.
         """
-        assert self.hass
-
         if self.is_static:
             return False
 

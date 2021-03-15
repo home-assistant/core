@@ -110,7 +110,6 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """Handle the initial step."""
-        assert self.hass
         errors = {}
         if user_input is not None:
             await self.async_set_unique_id(

@@ -158,7 +158,6 @@ class BondEntity(Entity):
         await super().async_added_to_hass()
         self._update_lock = Lock()
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
-        assert self.hass is not None
         self.async_on_remove(
             async_track_time_interval(
                 self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL

@@ -395,7 +395,6 @@ class GroupEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
-        assert self.hass is not None
 
         async def _update_at_start(_):
             await self.async_update()
@@ -405,8 +404,6 @@ class GroupEntity(Entity):
 
     async def async_defer_or_update_ha_state(self) -> None:
         """Only update once at start."""
-        assert self.hass is not None
-
         if self.hass.state != CoreState.running:
             return
 

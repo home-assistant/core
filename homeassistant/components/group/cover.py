@@ -155,7 +155,6 @@ class CoverGroup(GroupEntity, CoverEntity):
             await self.async_update_supported_features(
                 entity_id, new_state, update_state=False
             )
-        assert self.hass is not None
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entities, self._update_supported_features_event

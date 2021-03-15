@@ -636,7 +636,6 @@ class HuaweiLteBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to update signals."""
-        assert self.hass is not None
         self._unsub_handlers.append(
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
         )
