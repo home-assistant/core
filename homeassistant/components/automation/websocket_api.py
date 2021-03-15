@@ -21,7 +21,7 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .trace import get_debug_trace, get_debug_traces
+from .trace import get_debug_trace, get_debug_traces, get_debug_traces_for_automation
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -50,7 +50,7 @@ def async_setup(hass: HomeAssistant) -> None:
     }
 )
 def websocket_automation_trace_get(hass, connection, msg):
-    """Get automation traces."""
+    """Get an automation trace."""
     automation_id = msg["automation_id"]
     run_id = msg["run_id"]
 
@@ -61,10 +61,19 @@ def websocket_automation_trace_get(hass, connection, msg):
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "automation/trace/list"})
+@websocket_api.websocket_command(
+    {vol.Required("type"): "automation/trace/list", vol.Optional("automation_id"): str}
+)
 def websocket_automation_trace_list(hass, connection, msg):
     """Summarize automation traces."""
-    automation_traces = get_debug_traces(hass, summary=True)
+    automation_id = msg.get("automation_id")
+
+    if not automation_id:
+        automation_traces = get_debug_traces(hass, summary=True)
+    else:
+        automation_traces = get_debug_traces_for_automation(
+            hass, automation_id, summary=True
+        )
 
     connection.send_result(msg["id"], automation_traces)
 
