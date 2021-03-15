@@ -1,7 +1,7 @@
 """Support for Verisure binary sensors."""
 from __future__ import annotations
 
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN
+from .const import CONF_GIID, DOMAIN
 from .coordinator import VerisureDataUpdateCoordinator
 
 
@@ -58,6 +58,19 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
         return f"{self.serial_number}_door_window"
 
     @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        area = self.coordinator.data["door_window"][self.serial_number]["area"]
+        return {
+            "name": area,
+            "suggested_area": area,
+            "manufacturer": "Verisure",
+            "model": "Shock Sensor Detector",
+            "identifiers": {(DOMAIN, self.serial_number)},
+            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+        }
+
+    @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_OPENING
@@ -87,6 +100,21 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
     def name(self) -> str:
         """Return the name of the binary sensor."""
         return "Verisure Ethernet status"
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this binary sensor."""
+        return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            "name": "Verisure Alarm",
+            "manufacturer": "Verisure",
+            "model": "VBox",
+            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+        }
 
     @property
     def is_on(self) -> bool:

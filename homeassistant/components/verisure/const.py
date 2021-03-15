@@ -17,6 +17,20 @@ SERVICE_CAPTURE_SMARTCAM = "capture_smartcam"
 SERVICE_DISABLE_AUTOLOCK = "disable_autolock"
 SERVICE_ENABLE_AUTOLOCK = "enable_autolock"
 
+# Mapping of device types to a human readable name
+DEVICE_TYPE_NAME = {
+    "CAMERAPIR2": "Camera detector",
+    "HOMEPAD1": "VoiceBox",
+    "HUMIDITY1": "Climate sensor",
+    "PIR2": "Camera detector",
+    "SIREN1": "Siren",
+    "SMARTCAMERA1": "SmartCam",
+    "SMOKE2": "Smoke detector",
+    "SMOKE3": "Smoke detector",
+    "VOICEBOX1": "VoiceBox",
+    "WATER1": "Water detector",
+}
+
 # Legacy; to remove after YAML removal
 CONF_CODE_DIGITS = "code_digits"
 CONF_DEFAULT_LOCK_CODE = "default_lock_code"
