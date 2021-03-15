@@ -84,7 +84,7 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
     @property
     def operation_list(self):
         """All available operations."""
-        return HEAD_MODE_NAMES
+        return HEAT_MODE_NAMES
 
     @property
     def supported_features(self):
