@@ -9,7 +9,7 @@ from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
 
 from homeassistant import config as hass_config
-from homeassistant.components import zeroconf
+from homeassistant.components import homekit as homekit_base, zeroconf
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_MOTION,
@@ -1191,7 +1191,7 @@ async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):
 
     with patch("pyhap.accessory_driver.AccessoryDriver.async_start"), patch(
         f"{PATH_HOMEKIT}.HomeKit.async_stop"
-    ), patch(f"{PATH_HOMEKIT}.asyncio.sleep") as sleep_mock, patch(
+    ), patch.object(homekit_base, "PORT_CLEANUP_CHECK_INTERVAL_SECS", 0), patch(
         f"{PATH_HOMEKIT}.port_is_available", return_value=False
     ) as port_mock:
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -1200,4 +1200,3 @@ async def test_wait_for_port_to_free(hass, hk_driver, mock_zeroconf, caplog):
         await hass.async_block_till_done()
         assert "Waiting for the HomeKit server to shutdown" in caplog.text
         assert port_mock.called
-        assert sleep_mock.called
