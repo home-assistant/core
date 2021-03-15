@@ -84,7 +84,9 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
 
     async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
-        code = kwargs.get(ATTR_CODE, self._default_lock_code)
+        code = kwargs.get(
+            ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
+        )
         if code is None:
             LOGGER.error("Code required but none provided")
             return
@@ -93,7 +95,9 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
 
     async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
-        code = kwargs.get(ATTR_CODE, self._default_lock_code)
+        code = kwargs.get(
+            ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
+        )
         if code is None:
             LOGGER.error("Code required but none provided")
             return
