@@ -117,6 +117,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
+PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
+
 
 def _has_all_unique_names_and_ports(bridges):
     """Validate that each homekit bridge configured has a unique name."""
@@ -306,12 +308,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if homekit.status == STATUS_RUNNING:
         await homekit.async_stop()
 
+    logged_shutdown_wait = False
     for _ in range(0, SHUTDOWN_TIMEOUT):
-        if not await hass.async_add_executor_job(
-            port_is_available, entry.data[CONF_PORT]
-        ):
+        if await hass.async_add_executor_job(port_is_available, entry.data[CONF_PORT]):
+            break
+
+        if not logged_shutdown_wait:
             _LOGGER.info("Waiting for the HomeKit server to shutdown")
-            await asyncio.sleep(1)
+            logged_shutdown_wait = True
+
+        await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
 
     hass.data[DOMAIN].pop(entry.entry_id)
 
