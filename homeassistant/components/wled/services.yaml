@@ -53,6 +53,7 @@ preset:
   target:
     entity:
       integration: wled
+      domain: light
   fields:
     preset:
       name: Preset ID
