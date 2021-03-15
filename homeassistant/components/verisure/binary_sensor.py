@@ -101,7 +101,7 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this alarm control panel."""
+        """Return the unique ID for this binary sensor."""
         return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
 
     @property
