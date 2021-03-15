@@ -51,19 +51,19 @@ ATTR_COLOR_MODE = "color_mode"
 # List of color modes supported by the light
 ATTR_SUPPORTED_COLOR_MODES = "supported_color_modes"
 # Possible color modes
-COLOR_MODE_UNKNOWN = "color_mode_unknown"  # Ambiguous color mode
-COLOR_MODE_ONOFF = "color_mode_onoff"  # Must be the only supported mode
-COLOR_MODE_DIMMER = "color_mode_dimmer"  # Must be the only supported mode
-COLOR_MODE_COLOR_TEMP = "color_mode_color_temp"
-COLOR_MODE_HS = "color_mode_hs"
-COLOR_MODE_XY = "color_mode_xy"
-COLOR_MODE_RGB = "color_mode_rgb"
-COLOR_MODE_RGBW = "color_mode_rgbw"
-COLOR_MODE_RGBWW = "color_mode_rgbww"
+COLOR_MODE_UNKNOWN = "unknown"  # Ambiguous color mode
+COLOR_MODE_ONOFF = "onoff"  # Must be the only supported mode
+COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
+COLOR_MODE_COLOR_TEMP = "color_temp"
+COLOR_MODE_HS = "hs"
+COLOR_MODE_XY = "xy"
+COLOR_MODE_RGB = "rgb"
+COLOR_MODE_RGBW = "rgbw"
+COLOR_MODE_RGBWW = "rgbww"
 
 VALID_COLOR_MODES = {
     COLOR_MODE_ONOFF,
-    COLOR_MODE_DIMMER,
+    COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_HS,
     COLOR_MODE_XY,
@@ -506,8 +506,8 @@ class LightEntity(ToggleEntity):
                 return COLOR_MODE_HS
             if COLOR_MODE_COLOR_TEMP in supported and self.color_temp is not None:
                 return COLOR_MODE_COLOR_TEMP
-            if COLOR_MODE_DIMMER in supported and self.brightness is not None:
-                return COLOR_MODE_DIMMER
+            if COLOR_MODE_BRIGHTNESS in supported and self.brightness is not None:
+                return COLOR_MODE_BRIGHTNESS
             if COLOR_MODE_ONOFF in supported:
                 return COLOR_MODE_ONOFF
             return COLOR_MODE_UNKNOWN
@@ -705,7 +705,7 @@ class LightEntity(ToggleEntity):
             if supported_features & SUPPORT_WHITE_VALUE:
                 supported_color_modes.add(COLOR_MODE_RGBW)
             if supported_features & SUPPORT_BRIGHTNESS and not supported_color_modes:
-                supported_color_modes = {COLOR_MODE_DIMMER}
+                supported_color_modes = {COLOR_MODE_BRIGHTNESS}
 
             if not supported_color_modes:
                 supported_color_modes = {COLOR_MODE_ONOFF}

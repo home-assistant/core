@@ -165,7 +165,7 @@ async def test_reproducing_states(hass, caplog):
     "color_mode",
     (
         light.COLOR_MODE_COLOR_TEMP,
-        light.COLOR_MODE_DIMMER,
+        light.COLOR_MODE_BRIGHTNESS,
         light.COLOR_MODE_HS,
         light.COLOR_MODE_ONOFF,
         light.COLOR_MODE_RGB,
@@ -198,7 +198,7 @@ async def test_filter_color_modes(hass, caplog, color_mode):
 
     expected_map = {
         light.COLOR_MODE_COLOR_TEMP: VALID_COLOR_TEMP,
-        light.COLOR_MODE_DIMMER: {},
+        light.COLOR_MODE_BRIGHTNESS: {},
         light.COLOR_MODE_HS: VALID_HS_COLOR,
         light.COLOR_MODE_ONOFF: {},
         light.COLOR_MODE_RGB: VALID_RGB_COLOR,

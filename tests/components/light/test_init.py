@@ -971,7 +971,7 @@ async def test_light_backwards_compatibility_supported_color_modes(hass, light_s
         assert state.attributes["color_mode"] == light.COLOR_MODE_ONOFF
 
     state = hass.states.get(entity1.entity_id)
-    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_DIMMER]
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_BRIGHTNESS]
     if light_state == STATE_OFF:
         assert "color_mode" not in state.attributes
     else:
@@ -1072,8 +1072,8 @@ async def test_light_backwards_compatibility_color_mode(hass):
     assert state.attributes["color_mode"] == light.COLOR_MODE_ONOFF
 
     state = hass.states.get(entity1.entity_id)
-    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_DIMMER]
-    assert state.attributes["color_mode"] == light.COLOR_MODE_DIMMER
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_BRIGHTNESS]
+    assert state.attributes["color_mode"] == light.COLOR_MODE_BRIGHTNESS
 
     state = hass.states.get(entity2.entity_id)
     assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_COLOR_TEMP]
