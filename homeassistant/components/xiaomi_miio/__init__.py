@@ -87,17 +87,22 @@ async def async_setup_gateway_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    async def async_update_data():
+    def update_data():
         """Fetch data from the subdevice."""
         data = {}
         for sub_device in gateway.gateway_device.devices.values():
             try:
-                await hass.async_add_executor_job(sub_device.update)
-                data[sub_device.sid] = {ATTR_AVAILABLE: True}
+                sub_device.update()
             except GatewayException as ex:
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
                 data[sub_device.sid] = {ATTR_AVAILABLE: False}
+            else:
+                data[sub_device.sid] = {ATTR_AVAILABLE: True}
         return data
+
+    async def async_update_data():
+        """Fetch data from the subdevice using async_add_executor_job."""
+        return await hass.async_add_executor_job(update_data)
 
     # Create update coordinator
     coordinator = DataUpdateCoordinator(
