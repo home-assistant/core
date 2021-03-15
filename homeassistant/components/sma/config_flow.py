@@ -212,10 +212,11 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config=None):
         """Import a config flow from configuration."""
-        serial = await validate_input(self.hass, import_config)
-        await self.async_set_unique_id(serial)
+        device_info = await validate_input(self.hass, import_config)
+        await self.async_set_unique_id(device_info["serial"])
         self._abort_if_unique_id_configured(import_config)
 
+        import_config[DEVICE_INFO] = device_info
         return self.async_create_entry(
             title=import_config[CONF_HOST], data=import_config
         )
