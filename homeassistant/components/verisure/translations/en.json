@@ -15,7 +15,7 @@
                 },
                 "description": "Home Assistant found multiple Verisure installations in your My Pages account. Please, select the installation to add to Home Assistant."
             },
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "description": "Re-authenticate with your Verisure My Pages account.",
                     "email": "Email",

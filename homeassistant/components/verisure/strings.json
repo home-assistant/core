@@ -14,7 +14,7 @@
           "giid": "Installation"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "description": "Re-authenticate with your Verisure My Pages account.",
           "email": "[%key:common::config_flow::data::email%]",
