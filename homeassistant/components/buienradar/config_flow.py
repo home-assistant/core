@@ -4,11 +4,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CAMERA, CONF_COUNTRY, CONF_DIMENSION, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,18 +61,12 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_input=None):
         """Import a config entry."""
-        if import_input[CONF_CAMERA]:
-            if (
-                f"{import_input[CONF_DIMENSION]}-{import_input[CONF_COUNTRY]}"
-                in configured_instances(self.hass)
-            ):
-                return self.async_abort(reason="already_configured")
-        elif (
-            f"{import_input[CONF_LATITUDE]}-{import_input[CONF_LONGITUDE]}"
-            in configured_instances(self.hass)
-        ):
+        latitude = import_input[CONF_LATITUDE]
+        longitude = import_input[CONF_LONGITUDE]
+
+        if f"{latitude}-{longitude}" in configured_instances(self.hass):
             return self.async_abort(reason="already_configured")
 
-        name = import_input[CONF_NAME]
-
-        return self.async_create_entry(title=name, data=import_input)
+        return self.async_create_entry(
+            title=f"{latitude},{longitude}", data=import_input
+        )

@@ -5,18 +5,21 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 
 from .const import (
     CONF_CAMERA,
     CONF_COUNTRY,
     CONF_DELTA,
+    CONF_DIMENSION,
     CONF_SENSOR,
     CONF_TIMEFRAME,
     CONF_WEATHER,
     DEFAULT_COUNTRY,
     DEFAULT_DELTA,
+    DEFAULT_DIMENSION,
     DEFAULT_TIMEFRAME,
     DOMAIN,
 )
@@ -87,6 +90,16 @@ def _import_weather_configs(hass, weather_configs, sensor_configs, camera_config
 
     configs = weather_configs + sensor_configs
 
+    if len(configs) == 0 and len(camera_configs) > 0:
+        config = {
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
+        }
+        configs.append(config)
+
+    if len(config) > 0:
+        _try_update_unique_id(hass, configs[0], camera_config)
+
     for config in configs:
         _LOGGER.debug("Importing Buienradar %s", config)
 
@@ -96,6 +109,7 @@ def _import_weather_configs(hass, weather_configs, sensor_configs, camera_config
             CONF_TIMEFRAME: config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME),
             CONF_COUNTRY: camera_config.get(CONF_COUNTRY, DEFAULT_COUNTRY),
             CONF_DELTA: camera_config.get(CONF_DELTA, DEFAULT_DELTA),
+            CONF_NAME: config.get(CONF_NAME, "Buienradar"),
         }
 
         hass.async_create_task(
@@ -105,6 +119,23 @@ def _import_weather_configs(hass, weather_configs, sensor_configs, camera_config
                 data=data,
             )
         )
+
+
+def _try_update_unique_id(hass, config, camera_config):
+    dimension = camera_config.get(CONF_DIMENSION, DEFAULT_DIMENSION)
+    country = camera_config.get(CONF_COUNTRY, DEFAULT_COUNTRY)
+
+    registry = entity_registry.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        CONF_CAMERA, DOMAIN, f"{dimension}_{country}"
+    )
+
+    if entity_id is not None:
+        latitude = config[CONF_LATITUDE]
+        longitude = config[CONF_LONGITUDE]
+
+        new_unique_id = f"{latitude:2.6f}{longitude:2.6f}"
+        registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 def _filter_domain_configs(config, domain, platform):
