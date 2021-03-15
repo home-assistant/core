@@ -4,11 +4,11 @@ from contextlib import contextmanager
 import datetime as dt
 from datetime import datetime, timedelta
 from itertools import count
-import json
 import logging
 from typing import Any, Awaitable, Callable, Deque, Dict, Optional
 
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.json import JSONEncoder as HAJSONEncoder
 from homeassistant.helpers.trace import TraceElement, trace_id_set
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
@@ -207,7 +207,7 @@ def get_debug_traces(hass, summary=False):
     return traces
 
 
-class TraceJSONEncoder(json.JSONEncoder):
+class TraceJSONEncoder(HAJSONEncoder):
     """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
 
     def default(self, o: Any) -> Any:
@@ -215,13 +215,9 @@ class TraceJSONEncoder(json.JSONEncoder):
 
         Fall back to repr(o).
         """
-        if isinstance(o, datetime):
-            return o.isoformat()
         if isinstance(o, timedelta):
             return str(o)
-        if isinstance(o, set):
-            return list(o)
-        if hasattr(o, "as_dict"):
-            return o.as_dict()
-
-        return {"__type": str(type(o)), "repr": repr(o)}
+        try:
+            return super().default(o)
+        except TypeError:
+            return {"__type": str(type(o)), "repr": repr(o)}
