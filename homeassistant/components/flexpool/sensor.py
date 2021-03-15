@@ -2,11 +2,6 @@
 from datetime import timedelta
 
 import flexpoolapi
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_SERVICE_DATA
-import homeassistant.helpers.config_validation as cv
 
 from .sensors import (
     FlexpoolBalanceSensor,
@@ -20,20 +15,12 @@ from .sensors import (
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_DEVICES): cv.boolean,
-        vol.Optional(CONF_SERVICE_DATA): cv.boolean,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_entry(hass, entry, add_entities, discovery_info=None):
     """Set up the Etherscan.io sensors."""
-    address = config.get(CONF_ADDRESS)
-    workers = config.get(CONF_DEVICES)
-    poolStats = config.get(CONF_SERVICE_DATA)
+    address = entry.data["address"]
+    workers = entry.data["workers"]
+    poolStats = entry.data["pool"]
 
     sensors = [
         FlexpoolBalanceSensor("flexpool_unpaid_balance", address),

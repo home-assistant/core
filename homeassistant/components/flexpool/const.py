@@ -1,4 +1,7 @@
 """Constants for the Flexpool integration."""
+
+DOMAIN = "flexpool"
+
 SENSOR_DICT = {
     "flexpool_unpaid_balance": [
         "Flexpool Unpaid Balance",
