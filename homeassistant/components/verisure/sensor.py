@@ -1,54 +1,44 @@
 """Support for Verisure sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Callable, Iterable
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_HYDROMETERS, CONF_MOUSE, CONF_THERMOMETERS, DOMAIN
+from .const import DOMAIN
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[CoordinatorEntity], bool], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
-    """Set up the Verisure platform."""
-    coordinator = hass.data[DOMAIN]
+    """Set up Verisure sensors based on a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors: list[CoordinatorEntity] = []
-    if int(coordinator.config.get(CONF_THERMOMETERS, 1)):
-        sensors.extend(
-            [
-                VerisureThermometer(coordinator, serial_number)
-                for serial_number, values in coordinator.data["climate"].items()
-                if "temperature" in values
-            ]
-        )
+    sensors: list[Entity] = [
+        VerisureThermometer(coordinator, serial_number)
+        for serial_number, values in coordinator.data["climate"].items()
+        if "temperature" in values
+    ]
 
-    if int(coordinator.config.get(CONF_HYDROMETERS, 1)):
-        sensors.extend(
-            [
-                VerisureHygrometer(coordinator, serial_number)
-                for serial_number, values in coordinator.data["climate"].items()
-                if "humidity" in values
-            ]
-        )
+    sensors.extend(
+        VerisureHygrometer(coordinator, serial_number)
+        for serial_number, values in coordinator.data["climate"].items()
+        if "humidity" in values
+    )
 
-    if int(coordinator.config.get(CONF_MOUSE, 1)):
-        sensors.extend(
-            [
-                VerisureMouseDetection(coordinator, serial_number)
-                for serial_number in coordinator.data["mice"]
-            ]
-        )
+    sensors.extend(
+        VerisureMouseDetection(coordinator, serial_number)
+        for serial_number in coordinator.data["mice"]
+    )
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class VerisureThermometer(CoordinatorEntity, Entity):

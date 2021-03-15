@@ -1,40 +1,38 @@
 """Support for Verisure binary sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_OPENING,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CONF_DOOR_WINDOW, DOMAIN
+from . import DOMAIN
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[CoordinatorEntity]], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
-    """Set up the Verisure binary sensors."""
-    coordinator = hass.data[DOMAIN]
+    """Set up Verisure sensors based on a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    sensors: list[CoordinatorEntity] = [VerisureEthernetStatus(coordinator)]
+    sensors: list[Entity] = [VerisureEthernetStatus(coordinator)]
 
-    if int(coordinator.config.get(CONF_DOOR_WINDOW, 1)):
-        sensors.extend(
-            [
-                VerisureDoorWindowSensor(coordinator, serial_number)
-                for serial_number in coordinator.data["door_window"]
-            ]
-        )
+    sensors.extend(
+        VerisureDoorWindowSensor(coordinator, serial_number)
+        for serial_number in coordinator.data["door_window"]
+    )
 
-    add_entities(sensors)
+    async_add_entities(sensors)
 
 
 class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
