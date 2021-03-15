@@ -13,3 +13,5 @@ ATTR_WIDTH = "width"
 ATTR_ABSOLUTE_POSITION = "absolute_position"
 
 SERVICE_SET_ABSOLUTE_POSITION = "set_absolute_position"
+
+UPDATE_INTERVAL = 600

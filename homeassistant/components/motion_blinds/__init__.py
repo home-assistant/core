@@ -19,6 +19,7 @@ from .const import (
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
     PLATFORMS,
+    UPDATE_INTERVAL,
 )
 from .gateway import ConnectMotionGateway
 
@@ -62,21 +63,31 @@ async def async_setup_entry(
 
     def update_gateway():
         """Call all updates using one async_add_executor_job."""
+        all_available = True
         motion_gateway.Update()
         for blind in motion_gateway.device_list.values():
             try:
                 blind.Update()
             except timeout:
                 # let the error be logged and handled by the motionblinds library
+                all_available = False
                 pass
+
+        return all_available
 
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
         try:
-            await hass.async_add_executor_job(update_gateway)
+            all_available = await hass.async_add_executor_job(update_gateway)
         except timeout:
             # let the error be logged and handled by the motionblinds library
+            all_available = False
             pass
+
+        if all_available:
+            self.update_interval = UPDATE_INTERVAL
+        else:
+            self.update_interval = 60
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -85,7 +96,7 @@ async def async_setup_entry(
         name=entry.title,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=600),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
     # Fetch initial data so we have data when entities subscribe
