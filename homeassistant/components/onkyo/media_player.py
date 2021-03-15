@@ -300,6 +300,7 @@ class OnkyoAVR(MediaPlayerEntity):
         super().__init__()
         self._avr = avr
         self._name = f"{name} {ZONES[zone] if zone != 'main' else ''}"
+        self._unique_id = None
         self._zone = zone
         self._volume = 0
         self._supports_volume = False
