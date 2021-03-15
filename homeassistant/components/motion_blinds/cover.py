@@ -17,7 +17,6 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.event import track_point_in_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
