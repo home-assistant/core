@@ -1,4 +1,4 @@
-"""The tests the cover command line platform."""
+"""The tests for the Template cover platform."""
 import pytest
 
 from homeassistant import setup
@@ -15,9 +15,11 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
 )
 
@@ -73,6 +75,18 @@ async def test_template_state_text(hass, calls):
 
     state = hass.states.get("cover.test_template_cover")
     assert state.state == STATE_CLOSED
+
+    state = hass.states.async_set("cover.test_state", STATE_OPENING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_OPENING
+
+    state = hass.states.async_set("cover.test_state", STATE_CLOSING)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.test_template_cover")
+    assert state.state == STATE_CLOSING
 
 
 async def test_template_state_boolean(hass, calls):
