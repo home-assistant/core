@@ -48,7 +48,7 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this alarm control panel."""
+        """Return the unique ID for this entity."""
         return self.serial_number
 
     @property
