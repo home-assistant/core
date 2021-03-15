@@ -23,8 +23,8 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADDRESS): cv.string,
-        vol.Optional(CONF_DEVICES): cv.boolean,
-        vol.Optional(CONF_SERVICE_DATA): cv.boolean,
+        vol.Optional(CONF_DEVICES, default=False): cv.boolean,
+        vol.Optional(CONF_SERVICE_DATA, default=False): cv.boolean,
     }
 )
 
