@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
@@ -82,6 +83,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.host = None
         self.mac = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+        """Get the options flow."""
+        return OptionsFlowHandler(config_entry)
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
