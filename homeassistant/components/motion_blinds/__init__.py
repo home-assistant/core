@@ -71,7 +71,6 @@ async def async_setup_entry(
             except timeout:
                 # let the error be logged and handled by the motionblinds library
                 all_available = False
-                pass
 
         return all_available
 
@@ -82,7 +81,6 @@ async def async_setup_entry(
         except timeout:
             # let the error be logged and handled by the motionblinds library
             all_available = False
-            pass
 
         if all_available:
             self.update_interval = UPDATE_INTERVAL
