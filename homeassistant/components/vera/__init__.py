@@ -235,7 +235,7 @@ class VeraDevice(Generic[DeviceType], Entity):
     def update(self):
         """Force a refresh from the device if the device is unavailable."""
         refresh_needed = self.vera_device.should_poll or not self.available
-        _LOGGER.info("%s: update called (refresh=%s)", self._name, refresh_needed)
+        _LOGGER.debug("%s: update called (refresh=%s)", self._name, refresh_needed)
         if refresh_needed:
             self.vera_device.refresh()
 
@@ -243,11 +243,6 @@ class VeraDevice(Generic[DeviceType], Entity):
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self) -> bool:
-        """Enable polling - but handle unneeded polls in update."""
-        return True
 
     @property
     def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
