@@ -151,6 +151,7 @@ FLOWS = [
     "mobile_app",
     "monoprice",
     "motion_blinds",
+    "motioneye",
     "mqtt",
     "mullvad",
     "myq",
