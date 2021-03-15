@@ -14,6 +14,7 @@ from .const import (
     CONF_CLOUD_USERNAME,
     CONF_CLOUD_PASSWORD,
     CONF_CLOUD_COUNTRY,
+    CONF_CLOUD_SUBDEVICES,
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
@@ -53,6 +54,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         settings_schema = vol.Schema(
             {
+                vol.Optional(
+                    CONF_CLOUD_SUBDEVICES,
+                    default=self.config_entry.options.get(
+                        CONF_CLOUD_SUBDEVICES, False
+                    ),
+                ): bool,
                 vol.Optional(
                     CONF_CLOUD_USERNAME,
                     default=self.config_entry.options.get(

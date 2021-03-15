@@ -7,7 +7,7 @@ from miio import DeviceException, gateway
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_AVAILABLE, DOMAIN, CONF_CLOUD_USERNAME, CONF_CLOUD_PASSWORD, CONF_CLOUD_COUNTRY
+from .const import ATTR_AVAILABLE, DOMAIN, CONF_CLOUD_USERNAME, CONF_CLOUD_PASSWORD, CONF_CLOUD_COUNTRY, CONF_CLOUD_SUBDEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ class ConnectXiaomiGateway:
         """Connect to the Xiaomi Gateway."""
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
+        use_cloud = self._config_entry.options.get(CONF_CLOUD_SUBDEVICES)
         cloud_username = self._config_entry.options.get(CONF_CLOUD_USERNAME)
         cloud_password = self._config_entry.options.get(CONF_CLOUD_PASSWORD)
         cloud_country = self._config_entry.options.get(CONF_CLOUD_COUNTRY)
@@ -48,7 +49,7 @@ class ConnectXiaomiGateway:
             )
 
             # get the connected sub devices
-            if cloud_username is not None and cloud_password is not None and cloud_country is not None:
+            if cloud_username is not None and cloud_password is not None and cloud_country is not None and use_cloud:
                 # use miio-cloud
                 mc = MiCloud(cloud_username, cloud_password)
                 if not await self._hass.async_add_executor_job(mc.login):

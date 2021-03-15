@@ -45,6 +45,7 @@
             "title": "Xiaomi Miio",
             "description": "Specify optional settings",
             "data": {
+              "cloud_subdevices": "Use cloud to get connected subdevices",
               "cloud_username": "Cloud username",
               "cloud_password": "Cloud password",
               "cloud_country": "Cloud server country"

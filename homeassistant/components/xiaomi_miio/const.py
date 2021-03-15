@@ -12,6 +12,7 @@ CONF_MAC = "mac"
 CONF_CLOUD_USERNAME = "cloud_username"
 CONF_CLOUD_PASSWORD =  "cloud_password"
 CONF_CLOUD_COUNTRY = "cloud_country"
+CONF_CLOUD_SUBDEVICES = "cloud_subdevices"
 
 KEY_COORDINATOR = "coordinator"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
