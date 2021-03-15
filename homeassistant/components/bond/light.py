@@ -95,7 +95,7 @@ class BondBaseLight(BondEntity, LightEntity):
         return self._light == 1
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return 0
 
@@ -119,7 +119,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         self._brightness = state.get("brightness")
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._device.supports_set_brightness():
             return SUPPORT_BRIGHTNESS
@@ -203,7 +203,7 @@ class BondFireplace(BondEntity, LightEntity):
         self._flame = state.get("flame")
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int:
         """Flag brightness as supported feature to represent flame level."""
         return SUPPORT_BRIGHTNESS
 

@@ -98,7 +98,7 @@ def format_float(value) -> float:
     """Try converting string to float."""
     try:
         return float(value)
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -106,7 +106,7 @@ def format_int(value) -> int:
     """Try converting string to int."""
     try:
         return int(value)
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -393,7 +393,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ),
             ATTR_FORECAST_TEMP: self._get_temperature_day(day),
             ATTR_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
-            ATTR_FORECAST_TIME: dt_util.as_utc(date),
+            ATTR_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
             ATTR_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
             ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
         }
@@ -412,7 +412,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 day, hour
             ),
             ATTR_FORECAST_TEMP: self._get_temperature(day, hour),
-            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt),
+            ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
             ATTR_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
             ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }
@@ -535,9 +535,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_temperature(day_data, hour):
         """Get temperature (hour) from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE], hour)
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     @staticmethod
     def _get_temperature_day(day_data):
@@ -545,9 +543,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_day_value(
             day_data[AEMET_ATTR_TEMPERATURE], key=AEMET_ATTR_MAX
         )
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     @staticmethod
     def _get_temperature_low_day(day_data):
@@ -555,17 +551,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         val = get_forecast_day_value(
             day_data[AEMET_ATTR_TEMPERATURE], key=AEMET_ATTR_MIN
         )
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     @staticmethod
     def _get_temperature_feeling(day_data, hour):
         """Get temperature from weather data."""
         val = get_forecast_hour_value(day_data[AEMET_ATTR_TEMPERATURE_FEELING], hour)
-        if val:
-            return format_int(val)
-        return None
+        return format_int(val)
 
     def _get_town_id(self):
         """Get town ID from weather data."""

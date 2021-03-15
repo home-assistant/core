@@ -75,7 +75,7 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         return True
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Show Device Attributes."""
         return {
             ATTR_MODE: self.attributes.get(ATTR_MODE),

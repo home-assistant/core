@@ -211,7 +211,7 @@ class DerivativeSensor(RestoreEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_SOURCE_ID: self._sensor_source_id}
 

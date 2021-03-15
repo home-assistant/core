@@ -487,8 +487,10 @@ def accessory_friendly_name(hass_name, accessory):
     see both to identify the accessory.
     """
     accessory_mdns_name = accessory.display_name
-    if hass_name.startswith(accessory_mdns_name):
+    if hass_name.casefold().startswith(accessory_mdns_name.casefold()):
         return hass_name
+    if accessory_mdns_name.casefold().startswith(hass_name.casefold()):
+        return accessory_mdns_name
     return f"{hass_name} ({accessory_mdns_name})"
 
 

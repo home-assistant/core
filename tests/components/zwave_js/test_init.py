@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_RETRY,
 )
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .common import (
     AIR_TEMPERATURE_SENSOR,
@@ -117,7 +117,7 @@ async def test_unique_id_migration_dupes(
     hass, multisensor_6_state, client, integration
 ):
     """Test we remove an entity when ."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
 
@@ -160,7 +160,7 @@ async def test_unique_id_migration_dupes(
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature-00-00"
+    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature"
     assert entity_entry.unique_id == new_unique_id
 
     assert ent_reg.async_get(f"{AIR_TEMPERATURE_SENSOR}_1") is None
@@ -168,7 +168,7 @@ async def test_unique_id_migration_dupes(
 
 async def test_unique_id_migration_v1(hass, multisensor_6_state, client, integration):
     """Test unique ID is migrated from old format to new (version 1)."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     # Migrate version 1
     entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
@@ -195,13 +195,13 @@ async def test_unique_id_migration_v1(hass, multisensor_6_state, client, integra
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature-00-00"
+    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature"
     assert entity_entry.unique_id == new_unique_id
 
 
 async def test_unique_id_migration_v2(hass, multisensor_6_state, client, integration):
     """Test unique ID is migrated from old format to new (version 2)."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     # Migrate version 2
     ILLUMINANCE_SENSOR = "sensor.multisensor_6_illuminance"
     entity_name = ILLUMINANCE_SENSOR.split(".")[1]
@@ -228,7 +228,147 @@ async def test_unique_id_migration_v2(hass, multisensor_6_state, client, integra
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(ILLUMINANCE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Illuminance-00-00"
+    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Illuminance"
+    assert entity_entry.unique_id == new_unique_id
+
+
+async def test_unique_id_migration_v3(hass, multisensor_6_state, client, integration):
+    """Test unique ID is migrated from old format to new (version 3)."""
+    ent_reg = er.async_get(hass)
+    # Migrate version 2
+    ILLUMINANCE_SENSOR = "sensor.multisensor_6_illuminance"
+    entity_name = ILLUMINANCE_SENSOR.split(".")[1]
+
+    # Create entity RegistryEntry using old unique ID format
+    old_unique_id = f"{client.driver.controller.home_id}.52-49-0-Illuminance-00-00"
+    entity_entry = ent_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=integration,
+        original_name=entity_name,
+    )
+    assert entity_entry.entity_id == ILLUMINANCE_SENSOR
+    assert entity_entry.unique_id == old_unique_id
+
+    # Add a ready node, unique ID should be migrated
+    node = Node(client, multisensor_6_state)
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    # Check that new RegistryEntry is using new unique ID format
+    entity_entry = ent_reg.async_get(ILLUMINANCE_SENSOR)
+    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Illuminance"
+    assert entity_entry.unique_id == new_unique_id
+
+
+async def test_unique_id_migration_property_key_v1(
+    hass, hank_binary_switch_state, client, integration
+):
+    """Test unique ID with property key is migrated from old format to new (version 1)."""
+    ent_reg = er.async_get(hass)
+
+    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
+    entity_name = SENSOR_NAME.split(".")[1]
+
+    # Create entity RegistryEntry using old unique ID format
+    old_unique_id = f"{client.driver.controller.home_id}.32.32-50-00-value-W_Consumed"
+    entity_entry = ent_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=integration,
+        original_name=entity_name,
+    )
+    assert entity_entry.entity_id == SENSOR_NAME
+    assert entity_entry.unique_id == old_unique_id
+
+    # Add a ready node, unique ID should be migrated
+    node = Node(client, hank_binary_switch_state)
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    # Check that new RegistryEntry is using new unique ID format
+    entity_entry = ent_reg.async_get(SENSOR_NAME)
+    new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
+    assert entity_entry.unique_id == new_unique_id
+
+
+async def test_unique_id_migration_property_key_v2(
+    hass, hank_binary_switch_state, client, integration
+):
+    """Test unique ID with property key is migrated from old format to new (version 2)."""
+    ent_reg = er.async_get(hass)
+
+    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
+    entity_name = SENSOR_NAME.split(".")[1]
+
+    # Create entity RegistryEntry using old unique ID format
+    old_unique_id = (
+        f"{client.driver.controller.home_id}.32.32-50-0-value-66049-W_Consumed"
+    )
+    entity_entry = ent_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=integration,
+        original_name=entity_name,
+    )
+    assert entity_entry.entity_id == SENSOR_NAME
+    assert entity_entry.unique_id == old_unique_id
+
+    # Add a ready node, unique ID should be migrated
+    node = Node(client, hank_binary_switch_state)
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    # Check that new RegistryEntry is using new unique ID format
+    entity_entry = ent_reg.async_get(SENSOR_NAME)
+    new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
+    assert entity_entry.unique_id == new_unique_id
+
+
+async def test_unique_id_migration_property_key_v3(
+    hass, hank_binary_switch_state, client, integration
+):
+    """Test unique ID with property key is migrated from old format to new (version 3)."""
+    ent_reg = er.async_get(hass)
+
+    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
+    entity_name = SENSOR_NAME.split(".")[1]
+
+    # Create entity RegistryEntry using old unique ID format
+    old_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049-W_Consumed"
+    entity_entry = ent_reg.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id=entity_name,
+        config_entry=integration,
+        original_name=entity_name,
+    )
+    assert entity_entry.entity_id == SENSOR_NAME
+    assert entity_entry.unique_id == old_unique_id
+
+    # Add a ready node, unique ID should be migrated
+    node = Node(client, hank_binary_switch_state)
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+
+    # Check that new RegistryEntry is using new unique ID format
+    entity_entry = ent_reg.async_get(SENSOR_NAME)
+    new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
     assert entity_entry.unique_id == new_unique_id
 
 
@@ -236,7 +376,7 @@ async def test_unique_id_migration_notification_binary_sensor(
     hass, multisensor_6_state, client, integration
 ):
     """Test unique ID is migrated from old format to new for a notification binary sensor."""
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
 
@@ -262,7 +402,7 @@ async def test_unique_id_migration_notification_binary_sensor(
 
     # Check that new RegistryEntry is using new unique ID format
     entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_BINARY_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor status-Motion sensor status.8"
+    new_unique_id = f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor status.8"
     assert entity_entry.unique_id == new_unique_id
 
 
@@ -317,6 +457,12 @@ async def test_existing_node_ready(
     assert device_registry.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
+
+
+async def test_null_name(hass, client, null_name_check, integration):
+    """Test that node without a name gets a generic node name."""
+    node = null_name_check
+    assert hass.states.get(f"switch.node_{node.node_id}")
 
 
 async def test_existing_node_not_ready(hass, client, multisensor_6, device_registry):
@@ -445,11 +591,13 @@ async def test_addon_info_failure(
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, update_addon_side_effect",
+    "addon_version, update_available, update_calls, snapshot_calls, "
+    "update_addon_side_effect, create_shapshot_side_effect",
     [
-        ("1.0", True, 1, None),
-        ("1.0", False, 0, None),
-        ("1.0", True, 1, HassioAPIError("Boom")),
+        ("1.0", True, 1, 1, None, None),
+        ("1.0", False, 0, 0, None, None),
+        ("1.0", True, 1, 1, HassioAPIError("Boom"), None),
+        ("1.0", True, 0, 1, None, HassioAPIError("Boom")),
     ],
 )
 async def test_update_addon(
@@ -464,11 +612,14 @@ async def test_update_addon(
     addon_version,
     update_available,
     update_calls,
+    snapshot_calls,
     update_addon_side_effect,
+    create_shapshot_side_effect,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
     addon_info.return_value["version"] = addon_version
     addon_info.return_value["update_available"] = update_available
+    create_shapshot.side_effect = create_shapshot_side_effect
     update_addon.side_effect = update_addon_side_effect
     client.connect.side_effect = InvalidServerVersion("Invalid version")
     device = "/test"
@@ -490,12 +641,7 @@ async def test_update_addon(
     await hass.async_block_till_done()
 
     assert entry.state == ENTRY_STATE_SETUP_RETRY
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
-        hass,
-        {"name": f"addon_core_zwave_js_{addon_version}", "addons": ["core_zwave_js"]},
-        partial=True,
-    )
+    assert create_shapshot.call_count == snapshot_calls
     assert update_addon.call_count == update_calls
 
 
@@ -667,17 +813,13 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     assert len(client.driver.controller.nodes) == 2
 
     # Make sure there are the same number of devices
-    dev_reg = await device_registry.async_get_registry(hass)
-    device_entries = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )
+    dev_reg = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 2
 
     # Check how many entities there are
-    ent_reg = await entity_registry.async_get_registry(hass)
-    entity_entries = entity_registry.async_entries_for_config_entry(
-        ent_reg, integration.entry_id
-    )
+    ent_reg = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 24
 
     # Remove a node and reload the entry
@@ -687,21 +829,17 @@ async def test_removed_device(hass, client, multiple_devices, integration):
 
     # Assert that the node and all of it's entities were removed from the device and
     # entity registry
-    device_entries = device_registry.async_entries_for_config_entry(
-        dev_reg, integration.entry_id
-    )
+    device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
-    entity_entries = entity_registry.async_entries_for_config_entry(
-        ent_reg, integration.entry_id
-    )
+    entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 15
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
 
 
 async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
     """Test that suggested area works."""
-    dev_reg = device_registry.async_get(hass)
-    ent_reg = entity_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)

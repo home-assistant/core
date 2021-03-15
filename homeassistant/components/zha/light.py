@@ -135,7 +135,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._identify_channel = None
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return state attributes."""
         attributes = {"off_brightness": self._off_brightness}
         return attributes

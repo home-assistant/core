@@ -8,6 +8,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.components import blueprint
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_CONDITION,
@@ -46,21 +47,23 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
-    ATTR_MODE,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
 )
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
+from . import websocket_api
+from .config import AutomationConfig, async_validate_config_item
+
 # Not used except by packages to check config structure
 from .config import PLATFORM_SCHEMA  # noqa: F401
-from .config import async_validate_config_item
 from .const import (
     CONF_ACTION,
     CONF_INITIAL_STATE,
@@ -71,6 +74,7 @@ from .const import (
     LOGGER,
 )
 from .helpers import async_get_blueprints
+from .trace import DATA_AUTOMATION_TRACE, trace_automation
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -90,6 +94,7 @@ ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
 
+_LOGGER = logging.getLogger(__name__)
 AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 
@@ -166,8 +171,12 @@ def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 async def async_setup(hass, config):
-    """Set up the automation."""
+    """Set up all automations."""
+    # Local import to avoid circular import
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+    hass.data.setdefault(DATA_AUTOMATION_TRACE, {})
+
+    websocket_api.async_setup(hass)
 
     # To register the automation blueprints
     async_get_blueprints(hass)
@@ -176,7 +185,7 @@ async def async_setup(hass, config):
         await async_get_blueprints(hass).async_populate()
 
     async def trigger_service_handler(entity, service_call):
-        """Handle automation triggers."""
+        """Handle forced automation trigger, e.g. from frontend."""
         await entity.async_trigger(
             service_call.data[ATTR_VARIABLES],
             skip_condition=service_call.data[CONF_SKIP_CONDITION],
@@ -228,6 +237,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         initial_state,
         variables,
         trigger_variables,
+        raw_config,
     ):
         """Initialize an automation entity."""
         self._id = automation_id
@@ -244,6 +254,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
+        self._raw_config = raw_config
 
     @property
     def name(self):
@@ -374,52 +385,75 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        if self._variables:
-            try:
-                variables = self._variables.async_render(self.hass, run_variables)
-            except template.TemplateError as err:
-                self._logger.error("Error rendering variables: %s", err)
-                return
-        else:
-            variables = run_variables
-
-        if (
-            not skip_condition
-            and self._cond_func is not None
-            and not self._cond_func(variables)
-        ):
-            return
+        reason = ""
+        if "trigger" in run_variables and "description" in run_variables["trigger"]:
+            reason = f' by {run_variables["trigger"]["description"]}'
+        self._logger.debug("Automation triggered%s", reason)
 
         # Create a new context referring to the old context.
         parent_id = None if context is None else context.id
         trigger_context = Context(parent_id=parent_id)
 
-        self.async_set_context(trigger_context)
-        event_data = {
-            ATTR_NAME: self._name,
-            ATTR_ENTITY_ID: self.entity_id,
-        }
-        if "trigger" in variables and "description" in variables["trigger"]:
-            event_data[ATTR_SOURCE] = variables["trigger"]["description"]
+        with trace_automation(
+            self.hass, self.unique_id, self._raw_config, trigger_context
+        ) as automation_trace:
+            if self._variables:
+                try:
+                    variables = self._variables.async_render(self.hass, run_variables)
+                except template.TemplateError as err:
+                    self._logger.error("Error rendering variables: %s", err)
+                    automation_trace.set_error(err)
+                    return
+            else:
+                variables = run_variables
+            automation_trace.set_variables(variables)
 
-        @callback
-        def started_action():
-            self.hass.bus.async_fire(
-                EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
-            )
+            # Prepare tracing the evaluation of the automation's conditions
+            automation_trace.set_condition_trace(trace_get())
 
-        try:
-            await self.action_script.async_run(
-                variables, trigger_context, started_action
-            )
-        except (vol.Invalid, HomeAssistantError) as err:
-            self._logger.error(
-                "Error while executing automation %s: %s",
-                self.entity_id,
-                err,
-            )
-        except Exception:  # pylint: disable=broad-except
-            self._logger.exception("While executing automation %s", self.entity_id)
+            if (
+                not skip_condition
+                and self._cond_func is not None
+                and not self._cond_func(variables)
+            ):
+                self._logger.debug(
+                    "Conditions not met, aborting automation. Condition summary: %s",
+                    trace_get(clear=False),
+                )
+                return
+
+            # Prepare tracing the execution of the automation's actions
+            automation_trace.set_action_trace(trace_get())
+
+            self.async_set_context(trigger_context)
+            event_data = {
+                ATTR_NAME: self._name,
+                ATTR_ENTITY_ID: self.entity_id,
+            }
+            if "trigger" in variables and "description" in variables["trigger"]:
+                event_data[ATTR_SOURCE] = variables["trigger"]["description"]
+
+            @callback
+            def started_action():
+                self.hass.bus.async_fire(
+                    EVENT_AUTOMATION_TRIGGERED, event_data, context=trigger_context
+                )
+
+            try:
+                with trace_path("action"):
+                    await self.action_script.async_run(
+                        variables, trigger_context, started_action
+                    )
+            except (vol.Invalid, HomeAssistantError) as err:
+                self._logger.error(
+                    "Error while executing automation %s: %s",
+                    self.entity_id,
+                    err,
+                )
+                automation_trace.set_error(err)
+            except Exception as err:  # pylint: disable=broad-except
+                self._logger.exception("While executing automation %s", self.entity_id)
+                automation_trace.set_error(err)
 
     async def async_will_remove_from_hass(self):
         """Remove listeners when removing automation from Home Assistant."""
@@ -501,7 +535,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return automation attributes."""
         if self._id is None:
             return None
@@ -527,16 +561,16 @@ async def _async_process_config(
         ]
 
         for list_no, config_block in enumerate(conf):
+            raw_config = None
             if isinstance(config_block, blueprint.BlueprintInputs):  # type: ignore
                 blueprints_used = True
                 blueprint_inputs = config_block
 
                 try:
+                    raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
                         Dict[str, Any],
-                        await async_validate_config_item(
-                            hass, blueprint_inputs.async_substitute()
-                        ),
+                        await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:
                     LOGGER.error(
@@ -546,6 +580,8 @@ async def _async_process_config(
                         humanize_error(config_block, err),
                     )
                     continue
+            else:
+                raw_config = cast(AutomationConfig, config_block).raw_config
 
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
@@ -596,6 +632,7 @@ async def _async_process_config(
                 initial_state,
                 variables,
                 config_block.get(CONF_TRIGGER_VARIABLES),
+                raw_config,
             )
 
             entities.append(entity)
@@ -623,8 +660,9 @@ async def _async_process_if(hass, name, config, p_config):
         errors = []
         for index, check in enumerate(checks):
             try:
-                if not check(hass, variables):
-                    return False
+                with trace_path(["condition", str(index)]):
+                    if not check(hass, variables):
+                        return False
             except ConditionError as ex:
                 errors.append(
                     ConditionErrorIndex(

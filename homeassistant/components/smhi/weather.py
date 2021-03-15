@@ -235,7 +235,7 @@ class SmhiWeather(WeatherEntity):
         return data
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Return SMHI specific attributes."""
         if self.cloudiness:
             return {ATTR_SMHI_CLOUDINESS: self.cloudiness}

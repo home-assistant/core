@@ -71,7 +71,7 @@ class AccountSensor(Entity):
         return CURRENCY_ICONS.get(self._unit_of_measurement, DEFAULT_COIN_ICON)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
@@ -120,7 +120,7 @@ class ExchangeRateSensor(Entity):
         return CURRENCY_ICONS.get(self.currency, DEFAULT_COIN_ICON)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 

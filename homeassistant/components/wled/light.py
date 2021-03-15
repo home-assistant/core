@@ -188,7 +188,7 @@ class WLEDSegmentLight(LightEntity, WLEDDeviceEntity):
         return super().available
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         playlist = self.coordinator.data.state.playlist
         if playlist == -1:

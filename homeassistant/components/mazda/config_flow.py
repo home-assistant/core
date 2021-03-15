@@ -40,15 +40,15 @@ class MazdaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_EMAIL].lower())
+            websession = aiohttp_client.async_get_clientsession(self.hass)
+            mazda_client = MazdaAPI(
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+                user_input[CONF_REGION],
+                websession,
+            )
 
             try:
-                websession = aiohttp_client.async_get_clientsession(self.hass)
-                mazda_client = MazdaAPI(
-                    user_input[CONF_EMAIL],
-                    user_input[CONF_PASSWORD],
-                    user_input[CONF_REGION],
-                    websession,
-                )
                 await mazda_client.validate_credentials()
             except MazdaAuthenticationException:
                 errors["base"] = "invalid_auth"

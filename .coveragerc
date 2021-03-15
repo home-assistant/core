@@ -731,6 +731,7 @@ omit =
     homeassistant/components/pencom/switch.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/media_player.py
+    homeassistant/components/philips_js/remote.py
     homeassistant/components/pi_hole/sensor.py
     homeassistant/components/pi4ioe5v9xxxx/binary_sensor.py
     homeassistant/components/pi4ioe5v9xxxx/switch.py
@@ -790,6 +791,7 @@ omit =
     homeassistant/components/raspyrfm/*
     homeassistant/components/recollect_waste/__init__.py
     homeassistant/components/recollect_waste/sensor.py
+    homeassistant/components/recorder/repack.py
     homeassistant/components/recswitch/switch.py
     homeassistant/components/reddit/*
     homeassistant/components/rejseplanen/sensor.py
@@ -1172,3 +1174,6 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+
+    # TYPE_CHECKING block is never executed during pytest run
+    if TYPE_CHECKING:

@@ -46,7 +46,7 @@ homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/arris_tg2492lg/* @vanbalken
-homeassistant/components/asuswrt/* @kennedyshead
+homeassistant/components/asuswrt/* @kennedyshead @ollo69
 homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
@@ -186,7 +186,6 @@ homeassistant/components/guardian/* @bachya
 homeassistant/components/habitica/* @ASMfreaK @leikoilja
 homeassistant/components/harmony/* @ehendrix23 @bramkragten @bdraco @mkeesey
 homeassistant/components/hassio/* @home-assistant/supervisor
-homeassistant/components/hdmi_cec/* @newAM
 homeassistant/components/heatmiser/* @andylockran
 homeassistant/components/heos/* @andrewsayre
 homeassistant/components/here_travel_time/* @eifinger
@@ -437,7 +436,6 @@ homeassistant/components/solarlog/* @Ernst79
 homeassistant/components/solax/* @squishykid
 homeassistant/components/soma/* @ratsept
 homeassistant/components/somfy/* @tetienne
-homeassistant/components/somfy_mylink/* @bdraco
 homeassistant/components/sonarr/* @ctalkington
 homeassistant/components/songpal/* @rytilahti @shenxn
 homeassistant/components/sonos/* @cgtobi
@@ -453,7 +451,7 @@ homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg
-homeassistant/components/stream/* @hunterjm @uvjustin
+homeassistant/components/stream/* @hunterjm @uvjustin @allenporter
 homeassistant/components/stt/* @pvizeli
 homeassistant/components/subaru/* @G-Two
 homeassistant/components/suez_water/* @ooii

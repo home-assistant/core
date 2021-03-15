@@ -193,7 +193,7 @@ class FinTsAccount(Entity):
         return self._currency
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {ATTR_ACCOUNT: self._account.iban, ATTR_ACCOUNT_TYPE: "balance"}
         if self._client.name:
@@ -238,7 +238,7 @@ class FinTsHoldingsAccount(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor.
 
         Lists each holding of the account with the current value.

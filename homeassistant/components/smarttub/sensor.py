@@ -61,7 +61,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
         super().__init__(
-            coordinator, spa, "primary filtration cycle", "primary_filtration"
+            coordinator, spa, "Primary Filtration Cycle", "primary_filtration"
         )
 
     @property
@@ -70,7 +70,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {
@@ -96,7 +96,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return self._state.status.name.lower()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         state = self._state
         return {

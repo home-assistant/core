@@ -11,10 +11,9 @@ import weakref
 import attr
 
 from homeassistant import data_entry_flow, loader
-from homeassistant.const import EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.event import Event
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.setup import async_process_deps_reqs, async_setup_component
@@ -807,12 +806,21 @@ class ConfigEntries:
         entry.disabled_by = disabled_by
         self._async_schedule_save()
 
-        # Unload the config entry, then fire an event
+        dev_reg = device_registry.async_get(self.hass)
+        ent_reg = entity_registry.async_get(self.hass)
+
+        if not entry.disabled_by:
+            # The config entry will no longer be disabled, enable devices and entities
+            device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
+            entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
+
+        # Load or unload the config entry
         reload_result = await self.async_reload(entry_id)
 
-        self.hass.bus.async_fire(
-            EVENT_CONFIG_ENTRY_DISABLED_BY_UPDATED, {"config_entry_id": entry_id}
-        )
+        if entry.disabled_by:
+            # The config entry has been disabled, disable devices and entities
+            device_registry.async_config_entry_disabled_by_changed(dev_reg, entry)
+            entity_registry.async_config_entry_disabled_by_changed(ent_reg, entry)
 
         return reload_result
 
@@ -1003,6 +1011,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
                 return entry
 
         return None
+
+    @callback
+    def _set_confirm_only(
+        self,
+    ) -> None:
+        """Mark the config flow as only needing user confirmation to finish flow."""
+        self.context["confirm_only"] = True
 
     @callback
     def _async_current_entries(self, include_ignore: bool = False) -> List[ConfigEntry]:
@@ -1250,8 +1265,16 @@ class EntityRegistryDisabledHandler:
 
 @callback
 def _handle_entry_updated_filter(event: Event) -> bool:
-    """Handle entity registry entry update filter."""
-    if event.data["action"] != "update" or "disabled_by" not in event.data["changes"]:
+    """Handle entity registry entry update filter.
+
+    Only handle changes to "disabled_by".
+    If "disabled_by" was DISABLED_CONFIG_ENTRY, reload is not needed.
+    """
+    if (
+        event.data["action"] != "update"
+        or "disabled_by" not in event.data["changes"]
+        or event.data["changes"]["disabled_by"] == entity_registry.DISABLED_CONFIG_ENTRY
+    ):
         return False
     return True
 
