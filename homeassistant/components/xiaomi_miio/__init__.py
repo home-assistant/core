@@ -62,7 +62,6 @@ def get_platforms(config_entry):
     model = config_entry.data[CONF_MODEL]
     flow_type = config_entry.data[CONF_FLOW_TYPE]
 
-
     if flow_type == CONF_GATEWAY:
         return GATEWAY_PLATFORMS
     if flow_type == CONF_DEVICE:
@@ -78,8 +77,8 @@ def get_platforms(config_entry):
         for air_monitor_model in MODELS_AIR_MONITOR:
             if model.startswith(air_monitor_model):
                 return AIR_MONITOR_PLATFORMS
-                
-    return None
+
+    return []
 
 
 async def async_setup_gateway_entry(
