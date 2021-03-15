@@ -15,7 +15,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
     # Generic sensors
     for sensor in data["devices"]["sensor"]:
-        _LOGGER.debug(sensor)
         entities.append(ScreenLogicSensor(data["coordinator"], sensor))
     for pump in data["devices"]["pump"]:
         entities.extend(
