@@ -25,7 +25,10 @@ def test_json_encoder(hass):
         hours=8,
         weeks=2,
     )
-    assert ha_json_enc.default(data) == str(data)
+    assert ha_json_enc.default(data) == {
+        "__type": str(type(data)),
+        "total_seconds": data.total_seconds(),
+    }
 
     # Test serializing a set()
     data = {"milk", "beer"}

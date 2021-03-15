@@ -216,7 +216,7 @@ class TraceJSONEncoder(HAJSONEncoder):
         Fall back to repr(o).
         """
         if isinstance(o, timedelta):
-            return str(o)
+            return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
         try:
             return super().default(o)
         except TypeError:
