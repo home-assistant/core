@@ -224,4 +224,4 @@ class TraceJSONEncoder(json.JSONEncoder):
         if hasattr(o, "as_dict"):
             return o.as_dict()
 
-        return {"type": str(type(o)), "repr": repr(o)}
+        return {"__type": str(type(o)), "repr": repr(o)}
