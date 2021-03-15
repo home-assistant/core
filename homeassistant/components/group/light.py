@@ -103,7 +103,6 @@ class LightGroup(GroupEntity, light.LightEntity):
             self.async_set_context(event.context)
             await self.async_defer_or_update_ha_state()
 
-        assert self.hass
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_ids, async_state_changed_listener
