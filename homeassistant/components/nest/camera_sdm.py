@@ -145,6 +145,9 @@ class NestCamera(Camera):
             _LOGGER.debug("Failed to extend stream: %s", err)
             # Next attempt to catch a url will get a new one
             self._stream = None
+            if self.stream:
+                self.stream.stop()
+                self.stream = None
             return
         # Update the stream worker with the latest valid url
         if self.stream:
