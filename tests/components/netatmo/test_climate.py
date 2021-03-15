@@ -36,25 +36,8 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.util.aiohttp import MockRequest
 
 
-async def test_setup_no_data(hass, entry_error):
-    """Test setup with erroneous data."""
-    assert (
-        hass.data["netatmo"][entry_error.entry_id]["netatmo_data_handler"].data[
-            "HomeData"
-        ]
-        is None
-    )
-
-
 async def test_webhook_event_handling_thermostats(hass, climate_entry):
     """Test service and webhook event handling with thermostats."""
-    assert (
-        hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
-            "HomeData"
-        ]
-        is not None
-    )
-
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -431,12 +414,6 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
 
 async def test_service_preset_mode_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves."""
-    assert (
-        hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
-            "HomeData"
-        ]
-        is not None
-    )
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test service setting the preset mode to "boost"
@@ -471,14 +448,6 @@ async def test_service_preset_mode_boost_valves(hass, climate_entry):
 
 async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
     """Test service with invalid preset."""
-    assert (
-        hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
-            "HomeData"
-        ]
-        is not None
-    )
-
-    # Test setting invalid preset mode
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -492,13 +461,6 @@ async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
 
 async def test_valves_service_turn_off(hass, climate_entry):
     """Test service turn off for valves."""
-    assert (
-        hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
-            "HomeData"
-        ]
-        is not None
-    )
-
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve off
@@ -528,13 +490,6 @@ async def test_valves_service_turn_off(hass, climate_entry):
 
 async def test_valves_service_turn_on(hass, climate_entry):
     """Test service turn on for valves."""
-    assert (
-        hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
-            "HomeData"
-        ]
-        is not None
-    )
-
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve on
