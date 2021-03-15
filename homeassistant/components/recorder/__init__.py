@@ -34,6 +34,7 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
     convert_include_exclude_filter,
+    generate_filter,
 )
 from homeassistant.helpers.event import (
     async_track_time_change,
@@ -42,6 +43,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.service import async_extract_entity_ids
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
@@ -63,6 +65,7 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_PURGE = "purge"
+SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 
@@ -71,6 +74,8 @@ ATTR_REPACK = "repack"
 ATTR_APPLY_FILTER = "apply_filter"
 
 MAX_QUEUE_BACKLOG = 30000
+ATTR_DOMAINS = "domains"
+ATTR_ENTITY_GLOBS = "entity_globs"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -79,6 +84,14 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_APPLY_FILTER, default=False): cv.boolean,
     }
 )
+SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
+    }
+).extend(cv.ENTITY_SERVICE_FIELDS)
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
 
@@ -252,6 +265,21 @@ def _async_register_services(hass, instance):
         DOMAIN, SERVICE_PURGE, async_handle_purge_service, schema=SERVICE_PURGE_SCHEMA
     )
 
+    async def async_handle_purge_entities_sevice(service):
+        """Handle calls to the purge entities service."""
+        entity_ids = await async_extract_entity_ids(hass, service)
+        domains = service.data.get(ATTR_DOMAINS, [])
+        entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
+
+        instance.purge_entities(entity_ids, domains, entity_globs)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        async_handle_purge_entities_sevice,
+        schema=SERVICE_PURGE_ENTITIES_SCHEMA,
+    )
+
     async def async_handle_enable_sevice(service):
         instance.set_enable(True)
 
@@ -286,6 +314,12 @@ class StatisticsTask(NamedTuple):
     """An object to insert into the recorder queue to run a statistics task."""
 
     start: datetime.datetime
+
+
+class PurgeEntitiesTask(NamedTuple):
+    """Object to store entity information about purge task."""
+
+    entity_filter: Callable[[str], bool]
 
 
 class WaitTask:
@@ -414,12 +448,20 @@ class Recorder(threading.Thread):
 
         self.queue.put(PurgeTask(keep_days, repack, apply_filter))
 
+    def purge_entities(self, entity_ids, domains, entity_globs):
+        """Trigger an adhoc purge of requested entities."""
+        entity_filter = generate_filter(domains, entity_ids, [], [], entity_globs)
+        self.queue.put(PurgeEntitiesTask(entity_filter))
+
     def do_adhoc_statistics(self, **kwargs):
         """Trigger an adhoc statistics run."""
         start = kwargs.get("start")
         if not start:
             start = statistics.get_start_time()
         self.queue.put(StatisticsTask(start))
+
+    def run(self):
+        """Start processing events to save."""
 
     @callback
     def async_register(self, shutdown_task, hass_started):
@@ -680,6 +722,11 @@ class Recorder(threading.Thread):
             return
         if isinstance(event, StatisticsTask):
             self._run_statistics(event.start)
+            return
+        if isinstance(event, PurgeEntitiesTask):
+            # Schedule a new entity purge task if this one didn't finish
+            if not purge.purge_entity_data(self, event.entity_filter):
+                self.queue.put(PurgeEntitiesTask(event.entity_filter))
             return
         if isinstance(event, WaitTask):
             self._queue_watch.set()

@@ -9,7 +9,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
-from homeassistant.components.recorder.purge import purge_old_data
+from homeassistant.components.recorder.purge import purge_old_data, purge_session
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
@@ -653,7 +653,82 @@ async def test_purge_filtered_events_state_changed(
         assert session.query(States).get(63).old_state_id == 62  # should have been kept
 
 
-async def _add_test_states(hass: HomeAssistant, instance: recorder.Recorder):
+async def test_purge_entities(
+    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+):
+    """Test purging of specific entities."""
+    instance = await async_setup_recorder_instance(hass)
+
+    def _add_db_entries(hass: HomeAssistantType) -> None:
+        with recorder.session_scope(hass=hass) as session:
+            # Add states and state_changed events that should be purged
+            for days in range(1, 4):
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(1000, 1020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "sensor.purge_entity",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(10000, 10020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "purge_domain.entity",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+                timestamp = dt_util.utcnow() - timedelta(days=days)
+                for event_id in range(100000, 100020):
+                    _add_state_and_state_changed_event(
+                        session,
+                        "sensor.purge_glob",
+                        "purgeme",
+                        timestamp,
+                        event_id * days,
+                    )
+            # Add states and state_changed events that should be keeped
+            timestamp = dt_util.utcnow() - timedelta(days=2)
+            for event_id in range(200, 210):
+                _add_state_and_state_changed_event(
+                    session,
+                    "sensor.keep",
+                    "keep",
+                    timestamp,
+                    event_id,
+                )
+
+    service_data = {
+        "entity_id": "sensor.purge_entity",
+        "domains": "purge_domain",
+        "entity_globs": "sensor.purge*",
+    }
+    _add_db_entries(hass)
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        assert states.count() == 190
+
+        await hass.services.async_call(
+            recorder.DOMAIN, recorder.SERVICE_PURGE_ENTITIES, service_data
+        )
+        await hass.async_block_till_done()
+
+        await async_recorder_block_till_done(hass, instance)
+        await async_wait_recording_done(hass, instance)
+
+        assert states.count() == 10
+
+        states_sensor_kept = session.query(States).filter(
+            States.entity_id == "sensor.keep"
+        )
+        assert states_sensor_kept.count() == 10
+
+
+async def _add_test_states(hass: HomeAssistantType, instance: recorder.Recorder):
     """Add multiple states to the db for testing."""
     utcnow = dt_util.utcnow()
     five_days_ago = utcnow - timedelta(days=5)
