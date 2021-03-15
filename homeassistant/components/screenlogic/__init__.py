@@ -40,8 +40,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Screenlogic from a config entry."""
-    _LOGGER.debug("Async Setup Entry")
-    _LOGGER.debug(entry.data)
     mac = entry.unique_id
     # Attempt to re-discover named gateway to follow IP changes
     discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
