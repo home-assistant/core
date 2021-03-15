@@ -641,6 +641,7 @@ class LightEntity(ToggleEntity):
         color_mode = self._light_internal_color_mode
 
         if color_mode not in self._light_internal_supported_color_modes:
+            # Increase severity to warning in 2021.6, reject in 2021.10
             _LOGGER.debug(
                 "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
                 self.entity_id,
