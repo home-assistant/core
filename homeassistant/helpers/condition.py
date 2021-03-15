@@ -77,8 +77,8 @@ ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
     """Append a TraceElement to trace[path]."""
-    trace_element = TraceElement(variables)
-    trace_append_element(trace_element, path)
+    trace_element = TraceElement(variables, path)
+    trace_append_element(trace_element)
     return trace_element
 
 

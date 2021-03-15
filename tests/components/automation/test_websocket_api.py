@@ -9,6 +9,20 @@ from tests.common import assert_lists_same
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
+def _find_run_id(traces, automation_id):
+    """Find newest run_id for an automation."""
+    for trace in reversed(traces):
+        if trace["automation_id"] == automation_id:
+            return trace["run_id"]
+
+    return None
+
+
+def _find_traces_for_automation(traces, automation_id):
+    """Find traces for an automation."""
+    return [trace for trace in traces if trace["automation_id"] == automation_id]
+
+
 async def test_get_automation_trace(hass, hass_ws_client):
     """Test tracing an automation."""
     id = 1
@@ -61,7 +75,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    run_id = response["result"]["sun"][-1]["run_id"]
+    run_id = _find_run_id(response["result"], "sun")
 
     # Get trace
     await client.send_json(
@@ -97,7 +111,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    run_id = response["result"]["moon"][-1]["run_id"]
+    run_id = _find_run_id(response["result"], "moon")
 
     # Get trace
     await client.send_json(
@@ -134,7 +148,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    run_id = response["result"]["moon"][-1]["run_id"]
+    run_id = _find_run_id(response["result"], "moon")
 
     # Get trace
     await client.send_json(
@@ -168,7 +182,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    run_id = response["result"]["moon"][-1]["run_id"]
+    run_id = _find_run_id(response["result"], "moon")
 
     # Get trace
     await client.send_json(
@@ -237,7 +251,7 @@ async def test_automation_trace_overflow(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {}
+    assert response["result"] == []
 
     # Trigger "sun" and "moon" automation once
     hass.bus.async_fire("test_event")
@@ -248,9 +262,9 @@ async def test_automation_trace_overflow(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]["moon"]) == 1
-    moon_run_id = response["result"]["moon"][0]["run_id"]
-    assert len(response["result"]["sun"]) == 1
+    assert len(_find_traces_for_automation(response["result"], "moon")) == 1
+    moon_run_id = _find_run_id(response["result"], "moon")
+    assert len(_find_traces_for_automation(response["result"], "sun")) == 1
 
     # Trigger "moon" automation enough times to overflow the number of stored traces
     for _ in range(automation.trace.STORED_TRACES):
@@ -260,13 +274,15 @@ async def test_automation_trace_overflow(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]["moon"]) == automation.trace.STORED_TRACES
-    assert len(response["result"]["sun"]) == 1
-    assert int(response["result"]["moon"][0]["run_id"]) == int(moon_run_id) + 1
+    moon_traces = _find_traces_for_automation(response["result"], "moon")
+    assert len(moon_traces) == automation.trace.STORED_TRACES
+    assert moon_traces[0]
+    assert int(moon_traces[0]["run_id"]) == int(moon_run_id) + 1
     assert (
-        int(response["result"]["moon"][-1]["run_id"])
+        int(moon_traces[-1]["run_id"])
         == int(moon_run_id) + automation.trace.STORED_TRACES
     )
+    assert len(_find_traces_for_automation(response["result"], "sun")) == 1
 
 
 async def test_list_automation_traces(hass, hass_ws_client):
@@ -315,7 +331,14 @@ async def test_list_automation_traces(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {}
+    assert response["result"] == []
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace/list", "automation_id": "sun"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
 
     # Trigger "sun" automation
     hass.bus.async_fire("test_event")
@@ -325,8 +348,23 @@ async def test_list_automation_traces(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert "moon" not in response["result"]
-    assert len(response["result"]["sun"]) == 1
+    assert len(response["result"]) == 1
+    assert len(_find_traces_for_automation(response["result"], "sun")) == 1
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace/list", "automation_id": "sun"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 1
+    assert len(_find_traces_for_automation(response["result"], "sun")) == 1
+
+    await client.send_json(
+        {"id": next_id(), "type": "automation/trace/list", "automation_id": "moon"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
 
     # Trigger "moon" automation, with passing condition
     hass.bus.async_fire("test_event2")
@@ -344,9 +382,9 @@ async def test_list_automation_traces(hass, hass_ws_client):
     await client.send_json({"id": next_id(), "type": "automation/trace/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert len(response["result"]["moon"]) == 3
-    assert len(response["result"]["sun"]) == 1
-    trace = response["result"]["sun"][0]
+    assert len(_find_traces_for_automation(response["result"], "moon")) == 3
+    assert len(_find_traces_for_automation(response["result"], "sun")) == 1
+    trace = _find_traces_for_automation(response["result"], "sun")[0]
     assert trace["last_action"] == "action/0"
     assert trace["last_condition"] is None
     assert trace["error"] == "Unable to find service test.automation"
@@ -355,7 +393,7 @@ async def test_list_automation_traces(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event'"
     assert trace["unique_id"] == "sun"
 
-    trace = response["result"]["moon"][0]
+    trace = _find_traces_for_automation(response["result"], "moon")[0]
     assert trace["last_action"] == "action/0"
     assert trace["last_condition"] == "condition/0"
     assert "error" not in trace
@@ -364,7 +402,7 @@ async def test_list_automation_traces(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["unique_id"] == "moon"
 
-    trace = response["result"]["moon"][1]
+    trace = _find_traces_for_automation(response["result"], "moon")[1]
     assert trace["last_action"] is None
     assert trace["last_condition"] == "condition/0"
     assert "error" not in trace
@@ -373,7 +411,7 @@ async def test_list_automation_traces(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event3'"
     assert trace["unique_id"] == "moon"
 
-    trace = response["result"]["moon"][2]
+    trace = _find_traces_for_automation(response["result"], "moon")[2]
     assert trace["last_action"] == "action/0"
     assert trace["last_condition"] == "condition/0"
     assert "error" not in trace
@@ -396,7 +434,7 @@ async def test_automation_breakpoints(hass, hass_ws_client):
         await client.send_json({"id": next_id(), "type": "automation/trace/list"})
         response = await client.receive_json()
         assert response["success"]
-        trace = response["result"][automation_id][-1]
+        trace = _find_traces_for_automation(response["result"], automation_id)[-1]
         assert trace["last_action"] == expected_action
         assert trace["state"] == expected_state
         return trace["run_id"]
@@ -567,7 +605,7 @@ async def test_automation_breakpoints_2(hass, hass_ws_client):
         await client.send_json({"id": next_id(), "type": "automation/trace/list"})
         response = await client.receive_json()
         assert response["success"]
-        trace = response["result"][automation_id][-1]
+        trace = _find_traces_for_automation(response["result"], automation_id)[-1]
         assert trace["last_action"] == expected_action
         assert trace["state"] == expected_state
         return trace["run_id"]
@@ -674,7 +712,7 @@ async def test_automation_breakpoints_3(hass, hass_ws_client):
         await client.send_json({"id": next_id(), "type": "automation/trace/list"})
         response = await client.receive_json()
         assert response["success"]
-        trace = response["result"][automation_id][-1]
+        trace = _find_traces_for_automation(response["result"], automation_id)[-1]
         assert trace["last_action"] == expected_action
         assert trace["state"] == expected_state
         return trace["run_id"]

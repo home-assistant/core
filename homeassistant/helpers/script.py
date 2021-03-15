@@ -137,8 +137,8 @@ SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 def action_trace_append(variables, path):
     """Append a TraceElement to trace[path]."""
-    trace_element = TraceElement(variables)
-    trace_append_element(trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
+    trace_element = TraceElement(variables, path)
+    trace_append_element(trace_element, ACTION_TRACE_NODE_MAX_LEN)
     return trace_element
 
 
