@@ -7,9 +7,10 @@ from miio.gateway.gateway import GatewayException
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    ATTR_AVAILABLE,
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
@@ -86,13 +87,22 @@ async def async_setup_gateway_entry(
         sw_version=gateway_info.firmware_version,
     )
 
-    async def async_update_data():
+    def update_data():
         """Fetch data from the subdevice."""
-        try:
-            for sub_device in gateway.gateway_device.devices.values():
-                await hass.async_add_executor_job(sub_device.update)
-        except GatewayException as ex:
-            raise UpdateFailed("Got exception while fetching the state") from ex
+        data = {}
+        for sub_device in gateway.gateway_device.devices.values():
+            try:
+                sub_device.update()
+            except GatewayException as ex:
+                _LOGGER.error("Got exception while fetching the state: %s", ex)
+                data[sub_device.sid] = {ATTR_AVAILABLE: False}
+            else:
+                data[sub_device.sid] = {ATTR_AVAILABLE: True}
+        return data
+
+    async def async_update_data():
+        """Fetch data from the subdevice using async_add_executor_job."""
+        return await hass.async_add_executor_job(update_data)
 
     # Create update coordinator
     coordinator = DataUpdateCoordinator(
