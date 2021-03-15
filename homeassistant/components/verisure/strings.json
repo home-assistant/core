@@ -31,6 +31,9 @@
           "lock_default_code": "Default PIN code for locks, used if none is given"
         }
       }
+    },
+    "error": {
+      "code_format_mismatch": "The default PIN code does not match the required number of digits"
     }
   }
 }

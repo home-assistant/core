@@ -24,6 +24,9 @@
         }
     },
     "options": {
+        "error": {
+            "code_format_mismatch": "The default PIN code does not match the required number of digits"
+        },
         "step": {
             "init": {
                 "data": {

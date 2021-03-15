@@ -196,11 +196,11 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         (
             {
                 CONF_LOCK_CODE_DIGITS: 5,
-                CONF_LOCK_DEFAULT_CODE: "123456",
+                CONF_LOCK_DEFAULT_CODE: "12345",
             },
             {
                 CONF_LOCK_CODE_DIGITS: 5,
-                CONF_LOCK_DEFAULT_CODE: "123456",
+                CONF_LOCK_DEFAULT_CODE: "12345",
             },
         ),
         (
@@ -215,7 +215,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     ],
 )
 async def test_options_flow(
-    hass, input: dict[str, int | str], output: dict[str, int | str]
+    hass: HomeAssistant, input: dict[str, int | str], output: dict[str, int | str]
 ) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(
@@ -236,7 +236,7 @@ async def test_options_flow(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == "form"
+    assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -244,8 +244,45 @@ async def test_options_flow(
         user_input=input,
     )
 
-    assert result["type"] == "create_entry"
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == output
+
+
+async def test_options_flow_code_format_mismatch(hass: HomeAssistant) -> None:
+    """Test options config flow with a code format mismatch."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.verisure.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.verisure.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_LOCK_CODE_DIGITS: 5,
+            CONF_LOCK_DEFAULT_CODE: "123",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "code_format_mismatch"}
 
 
 #

@@ -155,8 +155,16 @@ class VerisureOptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Manage Verisure options."""
+        errors = {}
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if len(user_input[CONF_LOCK_DEFAULT_CODE]) not in [
+                0,
+                user_input[CONF_LOCK_CODE_DIGITS],
+            ]:
+                errors["base"] = "code_format_mismatch"
+            else:
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
@@ -174,4 +182,5 @@ class VerisureOptionsFlowHandler(OptionsFlow):
                     ): str,
                 }
             ),
+            errors=errors,
         )
