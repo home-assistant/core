@@ -112,12 +112,15 @@ def find_paths_unserializable_data(
         except (ValueError, TypeError):
             pass
 
-        # We convert states and events to dict so we can find bad data inside it
-        if isinstance(obj, State):
-            obj_path += f"(state: {obj.entity_id})"
-            obj = obj.as_dict()
-        elif isinstance(obj, Event):
-            obj_path += f"(event: {obj.event_type})"
+        # We convert objects with as_dict to their dict values so we can find bad data inside it
+        if hasattr(obj, "as_dict"):
+            desc = obj.__class__.__name__
+            if isinstance(obj, State):
+                desc += f": {obj.entity_id}"
+            elif isinstance(obj, Event):
+                desc += f": {obj.event_type}"
+
+            obj_path += f"({desc})"
             obj = obj.as_dict()
 
         if isinstance(obj, dict):
