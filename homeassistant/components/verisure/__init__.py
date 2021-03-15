@@ -125,8 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
         data = entry.data.copy()
-        data.pop(CONF_LOCK_CODE_DIGITS)
-        data.pop(CONF_DEFAULT_LOCK_CODE)
+        data.pop(CONF_LOCK_CODE_DIGITS, None)
+        data.pop(CONF_DEFAULT_LOCK_CODE, None)
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
     # Continue as normal...
