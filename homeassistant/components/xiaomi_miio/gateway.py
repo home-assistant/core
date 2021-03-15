@@ -58,7 +58,7 @@ class ConnectXiaomiGateway:
                     mc.get_token
                 )
                 devices_raw = await self._hass.async_add_executor_job(
-                    mc.get_devices, country: cloud_country
+                    mc.get_devices, cloud_country
                 )
                 await self._hass.async_add_executor_job(
                     self._gateway_device.get_devices_from_dict, devices_raw
