@@ -111,16 +111,20 @@ async def async_turn_on(
 
 
 @bind_hass
-def turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None):
+def turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flash=None):
     """Turn all or specified light off."""
-    hass.add_job(async_turn_off, hass, entity_id, transition)
+    hass.add_job(async_turn_off, hass, entity_id, transition, flash)
 
 
-async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None):
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL, transition=None, flash=None):
     """Turn all or specified light off."""
     data = {
         key: value
-        for key, value in [(ATTR_ENTITY_ID, entity_id), (ATTR_TRANSITION, transition)]
+        for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_TRANSITION, transition),
+            (ATTR_FLASH, flash),
+        ]
         if value is not None
     }
 
