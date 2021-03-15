@@ -109,7 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.info("Async Unload Entry")
     unload_ok = all(
         await asyncio.gather(
             *[
