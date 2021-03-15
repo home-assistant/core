@@ -1,4 +1,6 @@
 """The tests for the Buienradar sensor platform."""
+from unittest.mock import patch
+
 from homeassistant.components.buienradar.const import (
     CONF_CAMERA,
     CONF_SENSOR,
@@ -26,8 +28,13 @@ async def test_smoke_test_setup_component(hass):
 
     mock_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.buienradar.sensor.BrSensor.entity_registry_enabled_default"
+    ) as enabled_by_default_mock:
+        enabled_by_default_mock.return_value = True
+
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
 
     for cond in CONDITIONS:
         state = hass.states.get(f"sensor.volkel_{cond}")
