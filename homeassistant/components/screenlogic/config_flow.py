@@ -10,7 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -61,7 +60,6 @@ def short_mac(mac):
 def name_for_mac(mac):
     """Derive the gateway name from the mac."""
     return f"Pentair: {short_mac(mac)}"
-
 
 
 async def async_get_mac_address(hass, ip_address, port):
