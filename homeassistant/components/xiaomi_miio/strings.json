@@ -20,5 +20,18 @@
         "title": "Connect to a Xiaomi Miio Device or Xiaomi Gateway"
       }
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Xiaomi Miio",
+        "description": "Specify optional settings",
+        "data": {
+          "cloud_username": "Cloud username",
+          "cloud_password": "Cloud password",
+          "cloud_country": "Cloud server country"
+        }
+      }
+    }
   }
 }

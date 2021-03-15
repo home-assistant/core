@@ -38,5 +38,18 @@
                 "title": "Xiaomi Miio"
             }
         }
+    },
+    "options": {
+        "step": {
+          "init": {
+            "title": "Xiaomi Miio",
+            "description": "Specify optional settings",
+            "data": {
+              "cloud_username": "Cloud username",
+              "cloud_password": "Cloud password",
+              "cloud_country": "Cloud server country"
+            }
+          }
+        }
     }
 }
