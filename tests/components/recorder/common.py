@@ -8,6 +8,8 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, fire_time_changed
 
+DEFAULT_PURGE_TASKS = 3
+
 
 def wait_recording_done(hass: HomeAssistantType) -> None:
     """Block till recording is done."""
@@ -40,6 +42,22 @@ async def async_wait_recording_done(
     await hass.async_block_till_done()
     await async_recorder_block_till_done(hass, instance)
     await hass.async_block_till_done()
+
+
+async def async_wait_purge_done(
+    hass: HomeAssistantType, instance: recorder.Recorder, max: int = None
+) -> None:
+    """Wait for max number of purge events.
+
+    Because a purge may insert another PurgeTask into
+    the queue after the WaitTask finishes, we need up to
+    a maximum number of WaitTasks that we will put into the
+    queue.
+    """
+    if not max:
+        max = DEFAULT_PURGE_TASKS
+    for _ in range(max + 1):
+        await async_wait_recording_done(hass, instance)
 
 
 @ha.callback
