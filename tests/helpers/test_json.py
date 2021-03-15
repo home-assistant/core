@@ -1,5 +1,5 @@
 """Test Home Assistant remote methods and classes."""
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 import pytest
 
@@ -14,8 +14,8 @@ def test_json_encoder(hass):
     state = core.State("test.test", "hello")
 
     # Test serializing a datetime
-    data = datetime(2011, 11, 4, 0, 5, 23, 283000, tzinfo=timezone.utc)
-    assert ha_json_enc.default(data) == data.isoformat()
+    now = dt_util.utcnow()
+    assert ha_json_enc.default(now) == now.isoformat()
 
     # Test serializing a timedelta
     data = timedelta(
@@ -39,6 +39,3 @@ def test_json_encoder(hass):
     # Default method raises TypeError if non HA object
     with pytest.raises(TypeError):
         ha_json_enc.default(1)
-
-    now = dt_util.utcnow()
-    assert ha_json_enc.default(now) == now.isoformat()
