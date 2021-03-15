@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
 ATTR_INFO_TEXT = "info_text"
+ATTR_TIMESTAMP = "timestamp"
 ATTR_ORIGIN_COUNTRY = "origin_country"
 ATTR_PACKAGES = "packages"
 ATTR_PACKAGE_TYPE = "package_type"
@@ -151,6 +152,7 @@ class SeventeenTrackSummarySensor(Entity):
                 {
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                     ATTR_INFO_TEXT: package.info_text,
+                    ATTR_TIMESTAMP: package.timestamp,
                     ATTR_STATUS: package.status,
                     ATTR_LOCATION: package.location,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
@@ -172,6 +174,7 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_INFO_TEXT: package.info_text,
+            ATTR_TIMESTAMP: package.timestamp,
             ATTR_LOCATION: package.location,
             ATTR_ORIGIN_COUNTRY: package.origin_country,
             ATTR_PACKAGE_TYPE: package.package_type,
@@ -237,7 +240,7 @@ class SeventeenTrackPackageSensor(Entity):
             return
 
         self._attrs.update(
-            {ATTR_INFO_TEXT: package.info_text, ATTR_LOCATION: package.location}
+            {ATTR_INFO_TEXT: package.info_text, ATTR_TIMESTAMP: package.timestamp, ATTR_LOCATION: package.location}
         )
         self._state = package.status
         self._friendly_name = package.friendly_name
