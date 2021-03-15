@@ -1212,7 +1212,11 @@ omit =
     homeassistant/components/zwave_js/discovery.py
     homeassistant/components/zwave_js/light.py
     homeassistant/components/zwave_js/sensor.py
-    homeassistant/components/flexpool/*
+    homeassistant/components/flexpool/__init__.py
+    homeassistant/components/flexpool/const.py
+    homeassistant/components/flexpool/helper.py
+    homeassistant/components/flexpool/sensor.py
+    homeassistant/components/flexpool/sensors.py
 
 [report]
 # Regexes for lines to exclude from consideration

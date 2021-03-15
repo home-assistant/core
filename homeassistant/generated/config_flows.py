@@ -70,6 +70,7 @@ FLOWS = [
     "ezviz",
     "faa_delays",
     "fireservicerota",
+    "flexpool",
     "flick_electric",
     "flo",
     "flume",

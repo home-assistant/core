@@ -317,6 +317,9 @@ faadelays==0.0.7
 # homeassistant.components.feedreader
 feedparser==6.0.2
 
+# homeassistant.components.flexpool
+flexpoolapi==1.2.7.post2
+
 # homeassistant.components.homekit
 fnvhash==0.1.0
 

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "invalid_address": "Failed to connect",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Address",
+                    "pool": "Get Pool Stats",
+                    "workers": "Get Workers"
+                }
+            }
+        }
+    },
+    "title": "Flexpool"
+}
