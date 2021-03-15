@@ -84,9 +84,9 @@ async def async_setup_entry(
             all_available = False
 
         if all_available:
-            self.update_interval = UPDATE_INTERVAL
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
         else:
-            self.update_interval = UPDATE_INTERVAL_FAST
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
 
     coordinator = DataUpdateCoordinator(
         hass,
