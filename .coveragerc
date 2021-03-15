@@ -630,6 +630,7 @@ omit =
     homeassistant/components/netatmo/api.py
     homeassistant/components/netatmo/camera.py
     homeassistant/components/netatmo/data_handler.py
+    homeassistant/components/netatmo/helper.py
     homeassistant/components/netatmo/light.py
     homeassistant/components/netatmo/netatmo_entity_base.py
     homeassistant/components/netatmo/sensor.py
