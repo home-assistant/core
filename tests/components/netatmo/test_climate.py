@@ -31,13 +31,14 @@ from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
 )
-from homeassistant.components.netatmo.webhook import async_handle_webhook
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.components.webhook import async_handle_webhook
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
 from homeassistant.util.aiohttp import MockRequest
 
 
 async def test_webhook_event_handling_thermostats(hass, climate_entry):
     """Test service and webhook event handling with thermostats."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -68,7 +69,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
         b'"temperature": 21, "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -98,7 +99,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
         b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -124,7 +125,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
         b'"push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "off"
@@ -149,7 +150,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
         b'"event_type": "cancel_set_point", "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -161,6 +162,7 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
 
 async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     """Test service with frost guard preset for thermostats."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -190,7 +192,7 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
         b'"push_type":"home_event_changed"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -220,7 +222,7 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
         b'"push_type": "home_event_changed"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -232,6 +234,7 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
 
 async def test_service_preset_modes_thermostat(hass, climate_entry):
     """Test service with preset modes for thermostats."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -258,7 +261,7 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
         b'"push_type": "home_event_changed"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -286,7 +289,7 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
         b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -296,13 +299,15 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
 async def test_webhook_event_handling_no_data(hass, climate_entry):
     """Test service and webhook event handling with erroneous data."""
     # Test webhook without home entry
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+
     response = (
         b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
         b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
         b'"push_type": "home_event_changed"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     # Test webhook with different home id
@@ -314,7 +319,7 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
         b'"event_type": "cancel_set_point", "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     # Test webhook without room entries
@@ -326,7 +331,7 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
         b'"event_type": "cancel_set_point","push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
 
@@ -362,6 +367,7 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
 
 async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves when already in boost mode."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
@@ -382,7 +388,7 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
         b'"mode": "max","event_type": "set_point","push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     # Test service setting the preset mode to "boost"
@@ -405,7 +411,7 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
         b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
@@ -414,6 +420,7 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
 
 async def test_service_preset_mode_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test service setting the preset mode to "boost"
@@ -439,7 +446,7 @@ async def test_service_preset_mode_boost_valves(hass, climate_entry):
         b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
@@ -461,6 +468,7 @@ async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
 
 async def test_valves_service_turn_off(hass, climate_entry):
     """Test service turn off for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve off
@@ -478,11 +486,11 @@ async def test_valves_service_turn_off(hass, climate_entry):
         b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2833524037",'
         b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
         b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
-        b'"therm_setpoint_mode": "off"}], "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada",'
-        b'"type": "NRV"}]}, "mode": "off", "event_type": "set_point", "push_type": "display_change"}'
+        b'"therm_setpoint_mode": "off"}], "modules": [{"id": "12:34:56:00:01:ae","name": "Entrada",'
+        b'"type": "NRV"}]}, "mode": "off", "event_type": "set_point", "push_type":"display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "off"
@@ -490,6 +498,7 @@ async def test_valves_service_turn_off(hass, climate_entry):
 
 async def test_valves_service_turn_on(hass, climate_entry):
     """Test service turn on for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_entrada = "climate.netatmo_entrada"
 
     # Test turning valve on
@@ -512,7 +521,7 @@ async def test_valves_service_turn_on(hass, climate_entry):
         b'"push_type": "display_change"}'
     )
     request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, None, request)
+    await async_handle_webhook(hass, webhook_id, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
