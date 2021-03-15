@@ -460,6 +460,9 @@ construct==2.10.56
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
 
+# homeassistant.components.bitvavo
+cryptoxlib-aio==3.9.0
+
 # homeassistant.components.datadog
 datadog==0.15.0
 

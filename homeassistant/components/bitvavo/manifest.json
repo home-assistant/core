@@ -1,0 +1,12 @@
+{
+  "domain": "bitvavo",
+  "name": "Bitvavo",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bitvavo",
+  "requirements": [
+    "cryptoxlib-aio==3.9.0"
+  ],
+  "codeowners": [
+    "@cyberjunky"
+  ]
+}

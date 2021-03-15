@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration is allowed.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication",
+            "invalid_market": "Invalid market(s)"
+        },
+        "flow_title": "Bitvavo",
+        "step": {
+            "markets": {
+                "data": {
+                    "markets": "Markets"
+                },
+                "title": "Select the cryptocurrency markets",
+                "description": "Select the markets that you would like to track."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "api_secret": "API Secret"
+                },
+                "description": "This integration requires an API Key from Bitvavo with 'Read Info' permissions.",
+                "title": "Connect to Bitvavo"
+            }
+        }
+    }
+}

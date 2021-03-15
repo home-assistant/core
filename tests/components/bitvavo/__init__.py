@@ -1,0 +1,18 @@
+"""Tests for the Bitvavo integration."""
+from homeassistant.components.bitvavo.const import (
+    CONF_API_SECRET,
+    CONF_BALANCES,
+    CONF_MARKETS,
+)
+from homeassistant.const import CONF_API_KEY
+
+USER_INPUT = {
+    CONF_API_KEY: "mock-api-key-423545235432654672768657676456246542654102762745574",
+    CONF_API_SECRET: "mock-api-secret-423545235432654672768657676456246542654102762745574",
+}
+
+USER_INPUT_MARKETS = {CONF_MARKETS: ["ETH-BTC", "LTC-BTC"]}
+
+USER_INPUT_BALANCES = {CONF_BALANCES: ["BTC", "LTC"]}
+
+INTEGRATION_TITLE = "Markets: ETH-BTC, LTC-BTC"
