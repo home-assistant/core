@@ -28,6 +28,8 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = [CONF_WEATHER, CONF_CAMERA, CONF_SENSOR]
 
+DATA_LISTENER = "listener"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -46,16 +48,24 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up buienradar from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
+
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    listener = entry.add_update_listener(async_update_options)
+    hass.data[DOMAIN][entry.entry_id][DATA_LISTENER] = listener
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    listener = hass.data[DOMAIN][entry.entry_id][DATA_LISTENER]
+
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -65,7 +75,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
 
+    if unload_ok:
+        listener()
+
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok
+
+
+async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Update options."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 def _import_weather_configs(hass, weather_configs, sensor_configs, camera_configs):

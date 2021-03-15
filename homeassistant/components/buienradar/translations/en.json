@@ -7,23 +7,21 @@
             "already_configured": "Location is already configured"
         },
         "step": {
-            "camera": {
-                "data": {
-                    "country_code": "Country",
-                    "dimension": "Dimension",
-                    "name": "Name"
-                }
-            },
             "user": {
                 "data": {
-                    "domain": "Select domain to setup"
-                }
-            },
-            "weather": {
-                "data": {
                     "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "name": "Name"
+                    "longitude": "Longitude"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "country_code": "Country code of the country to display camera images.",
+                    "delta": "Time interval in seconds between camera image updates",
+                    "timeframe": "Minutes to look ahead for precipitation forecast"
                 }
             }
         }

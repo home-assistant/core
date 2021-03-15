@@ -8,7 +8,16 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
+from .const import (
+    CONF_COUNTRY,
+    CONF_DELTA,
+    CONF_TIMEFRAME,
+    DEFAULT_COUNTRY,
+    DEFAULT_DELTA,
+    DEFAULT_TIMEFRAME,
+    DOMAIN,
+    SUPPORTED_COUNTRY_CODES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +38,12 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return BuienradarOptionFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -69,4 +84,48 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=f"{latitude},{longitude}", data=import_input
+        )
+
+
+class BuienradarOptionFlowHandler(config_entries.OptionsFlow):
+    """Handle options."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_COUNTRY,
+                        default=self.config_entry.options.get(
+                            CONF_COUNTRY,
+                            self.config_entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY),
+                        ),
+                    ): vol.In(SUPPORTED_COUNTRY_CODES),
+                    vol.Optional(
+                        CONF_DELTA,
+                        default=self.config_entry.options.get(
+                            CONF_DELTA,
+                            self.config_entry.data.get(CONF_DELTA, DEFAULT_DELTA),
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
+                    vol.Optional(
+                        CONF_TIMEFRAME,
+                        default=self.config_entry.options.get(
+                            CONF_TIMEFRAME,
+                            self.config_entry.data.get(
+                                CONF_TIMEFRAME, DEFAULT_TIMEFRAME
+                            ),
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
+                }
+            ),
         )
