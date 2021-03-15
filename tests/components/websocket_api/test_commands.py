@@ -985,3 +985,39 @@ async def test_test_condition(hass, websocket_client):
     assert msg["type"] == const.TYPE_RESULT
     assert msg["success"]
     assert msg["result"]["result"] is True
+
+
+async def test_execute_script(hass, websocket_client):
+    """Test testing a condition."""
+    calls = async_mock_service(hass, "domain_test", "test_service")
+
+    await websocket_client.send_json(
+        {
+            "id": 5,
+            "type": "execute_script",
+            "sequence": [
+                {
+                    "service": "domain_test.test_service",
+                    "data": {"hello": "world"},
+                }
+            ],
+        }
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+
+    assert call.domain == "domain_test"
+    assert call.service == "test_service"
+    assert call.data == {"hello": "world"}
