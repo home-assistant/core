@@ -136,7 +136,7 @@ class DenonDevice(MediaPlayerEntity):
                 return await func(self, *args, **kwargs)  # pylint: disable=not-callable
             except AvrTimoutError:
                 available = False
-                if self._available is True:
+                if self._available is True:  # pylint: disable=protected-access
                     _LOGGER.warning(
                         "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
                         self._receiver.host,
@@ -144,12 +144,12 @@ class DenonDevice(MediaPlayerEntity):
                     self._available = False
             except AvrForbiddenError:
                 available = False
-                if self._available is True:
+                if self._available is True:  # pylint: disable=protected-access
                     _LOGGER.warning(
                         "Denon AVR receiver at host %s responded with HTTP 403 error. Device is unavailable. Please consider power cycling your receiver",
                         self._receiver.host,
                     )
-                    self._available = False
+                    self._available = False  # pylint: disable=protected-access
             except AvrCommandError as err:
                 _LOGGER.error(
                     "Command %s failed with error: %s",
@@ -160,17 +160,17 @@ class DenonDevice(MediaPlayerEntity):
                 _LOGGER.error(
                     "Error %s occurred in method %s for Denon AVR receiver",
                     err,
-                    func._name__,  # pylint: disable=no-member
+                    func.__name__,  # pylint: disable=no-member
                     exc_info=True,
                 )
             finally:
                 if available is True:
-                    if self._available is False:
+                    if self._available is False:  # pylint: disable=protected-access
                         _LOGGER.info(
                             "Denon AVR receiver at host %s is available again",
                             self._receiver.host,
                         )
-                        self._available = True
+                        self._available = True  # pylint: disable=protected-access
 
         return wrapper
 
@@ -239,7 +239,7 @@ class DenonDevice(MediaPlayerEntity):
         """Return the state of the device."""
         if self._available is False:
             return STATE_UNAVAILABLE
-        elif self._receiver.state is None:
+        if self._receiver.state is None:
             return STATE_UNKNOWN
         return self._receiver.state
 
@@ -406,7 +406,6 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_select_sound_mode(self, sound_mode: str):
         """Select sound mode."""
-        # TODO: push fix in denonavr
         await self._receiver.soundmode.async_set_sound_mode(sound_mode)
 
     @async_log_errors
@@ -450,4 +449,6 @@ class DenonDevice(MediaPlayerEntity):
         return await self._receiver.async_get_command(command)
 
     # Decorator defined before is a staticmethod
-    async_log_erros = staticmethod(async_log_errors)
+    async_log_erros = staticmethod(  # pylint: disable=no-staticmethod-decorator
+        async_log_errors
+    )
