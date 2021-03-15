@@ -178,9 +178,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     def _get_rain(rain):
         """Get rain data from weather data."""
         if "all" in rain:
-            return round(rain["all"], 0)
+            return round(rain["all"], 2)
         if "1h" in rain:
-            return round(rain["1h"], 0)
+            return round(rain["1h"], 2)
         return "not raining"
 
     @staticmethod
@@ -188,9 +188,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get snow data from weather data."""
         if snow:
             if "all" in snow:
-                return round(snow["all"], 0)
+                return round(snow["all"], 2)
             if "1h" in snow:
-                return round(snow["1h"], 0)
+                return round(snow["1h"], 2)
             return "not snowing"
         return "not snowing"
 
@@ -205,9 +205,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
             snow_value = WeatherUpdateCoordinator._get_snow(snow)
 
-        if round(rain_value + snow_value, 1) == 0:
+        if round(rain_value + snow_value, 2) == 0:
             return None
-        return round(rain_value + snow_value, 1)
+        return round(rain_value + snow_value, 2)
 
     def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
