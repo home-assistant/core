@@ -7,7 +7,14 @@ from miio import DeviceException, gateway
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_AVAILABLE, DOMAIN, CONF_CLOUD_USERNAME, CONF_CLOUD_PASSWORD, CONF_CLOUD_COUNTRY, CONF_CLOUD_SUBDEVICES
+from .const import (
+    ATTR_AVAILABLE,
+    CONF_CLOUD_COUNTRY,
+    CONF_CLOUD_PASSWORD,
+    CONF_CLOUD_SUBDEVICES,
+    CONF_CLOUD_USERNAME,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,16 +56,21 @@ class ConnectXiaomiGateway:
             )
 
             # get the connected sub devices
-            if cloud_username is not None and cloud_password is not None and cloud_country is not None and use_cloud:
+            if (
+                cloud_username is not None
+                and cloud_password is not None
+                and cloud_country is not None
+                and use_cloud
+            ):
                 # use miio-cloud
-                mc = MiCloud(cloud_username, cloud_password)
-                if not await self._hass.async_add_executor_job(mc.login):
+                miio_cloud = MiCloud(cloud_username, cloud_password)
+                if not await self._hass.async_add_executor_job(miio_cloud.login):
                     _LOGGER.error(
                         "Could not login to Xioami Miio Cloud, check the credentials"
                     )
                     return False
                 devices_raw = await self._hass.async_add_executor_job(
-                    mc.get_devices, cloud_country
+                    miio_cloud.get_devices, cloud_country
                 )
                 await self._hass.async_add_executor_job(
                     self._gateway_device.get_devices_from_dict, devices_raw

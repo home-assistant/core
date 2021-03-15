@@ -11,10 +11,10 @@ from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
 from .const import (
-    CONF_CLOUD_USERNAME,
-    CONF_CLOUD_PASSWORD,
     CONF_CLOUD_COUNTRY,
+    CONF_CLOUD_PASSWORD,
     CONF_CLOUD_SUBDEVICES,
+    CONF_CLOUD_USERNAME,
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
@@ -56,15 +56,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_CLOUD_SUBDEVICES,
-                    default=self.config_entry.options.get(
-                        CONF_CLOUD_SUBDEVICES, False
-                    ),
+                    default=self.config_entry.options.get(CONF_CLOUD_SUBDEVICES, False),
                 ): bool,
                 vol.Optional(
                     CONF_CLOUD_USERNAME,
-                    default=self.config_entry.options.get(
-                        CONF_CLOUD_USERNAME
-                    ),
+                    default=self.config_entry.options.get(CONF_CLOUD_USERNAME),
                 ): str,
                 vol.Optional(
                     CONF_CLOUD_PASSWORD,
@@ -72,11 +68,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): str,
                 vol.Optional(
                     CONF_CLOUD_COUNTRY,
-                    default=self.config_entry.options.get(CONF_CLOUD_COUNTRY, DEFAULT_CLOUD_COUNTRY),
+                    default=self.config_entry.options.get(
+                        CONF_CLOUD_COUNTRY, DEFAULT_CLOUD_COUNTRY
+                    ),
                 ): vol.In(SERVER_COUNTRY_CODES),
             }
         )
-        
+
         return self.async_show_form(step_id="init", data_schema=settings_schema)
 
 

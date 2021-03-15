@@ -187,7 +187,7 @@ async def async_unload_entry(
 ):
     """Unload a config entry."""
     platforms = get_platforms(config_entry)
-    
+
     unload_ok = all(
         await asyncio.gather(
             *[
