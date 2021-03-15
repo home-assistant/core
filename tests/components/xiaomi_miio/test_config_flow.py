@@ -409,7 +409,7 @@ async def test_zeroconf_vacuum_success(hass):
 async def test_options_flow(hass):
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=const.DOMAIN,
         unique_id=TEST_GATEWAY_ID,
         data={
             const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
@@ -422,7 +422,15 @@ async def test_options_flow(hass):
     )
     config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    mock_info = get_mock_info()
+
+    with patch(
+        "homeassistant.components.xiaomi_miio.device.Device.info",
+        return_value=mock_info,
+    ), patch(
+        "homeassistant.components.xiaomi_miio.async_setup_entry", return_value=True
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
