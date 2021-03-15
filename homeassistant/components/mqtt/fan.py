@@ -35,6 +35,7 @@ from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
     percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
 from . import (
@@ -317,10 +318,7 @@ class MqttFan(MqttEntity, FanEntity):
         def percentage_received(msg):
             """Handle new received MQTT message for the percentage."""
             payload = self._templates[ATTR_PERCENTAGE](msg.payload)
-            if payload.isnumeric():
-                percentage = int(msg.payload)
-            else:
-                raise ValueError(f"{msg.payload} is not numeric")
+            percentage = ranged_value_to_percentage(self._speed_range, int(payload))
             if 0 <= percentage <= 100:
                 self._percentage = percentage
             else:
@@ -519,10 +517,9 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        if 0 <= percentage <= 100:
-            mqtt_payload = percentage_to_ranged_value(self._speed_range, percentage)
-        else:
+        if percentage < 0 or percentage > 100:
             raise ValueError(f"{percentage} is not a valid percentage")
+        mqtt_payload = int(percentage_to_ranged_value(self._speed_range, percentage))
         if self._feature_speeds:
             await self.async_set_speed(
                 percentage_to_ordered_list_item(self.speed_list, percentage)
@@ -561,8 +558,8 @@ class MqttFan(MqttEntity, FanEntity):
 
         if preset_mode not in self._config[CONF_PRESET_MODES_LIST]:
             raise NotValidSpeedError(f"{preset_mode} is not a valid preset mode")
-        else:
-            mqtt_payload = preset_mode
+
+        mqtt_payload = preset_mode
 
         mqtt.async_publish(
             self.hass,
