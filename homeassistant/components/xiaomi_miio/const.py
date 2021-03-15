@@ -9,6 +9,8 @@ CONF_MAC = "mac"
 
 KEY_COORDINATOR = "coordinator"
 
+ATTR_AVAILABLE = "available"
+
 # Fan Models
 MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
 MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
