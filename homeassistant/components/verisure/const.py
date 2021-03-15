@@ -22,7 +22,7 @@ DEVICE_TYPE_NAME = {
     "CAMERAPIR2": "Camera detector",
     "HOMEPAD1": "VoiceBox",
     "HUMIDITY1": "Climate sensor",
-    "PIR2": "",
+    "PIR2": "Camera detector",
     "SIREN1": "Siren",
     "SMARTCAMERA1": "SmartCam",
     "SMOKE2": "Smoke detector",
