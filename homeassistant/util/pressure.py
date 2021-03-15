@@ -3,6 +3,7 @@ from numbers import Number
 
 from homeassistant.const import (
     PRESSURE,
+    PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_MBAR,
@@ -11,7 +12,14 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
-VALID_UNITS = [PRESSURE_PA, PRESSURE_HPA, PRESSURE_MBAR, PRESSURE_INHG, PRESSURE_PSI]
+VALID_UNITS = [
+    PRESSURE_PA,
+    PRESSURE_HPA,
+    PRESSURE_MBAR,
+    PRESSURE_INHG,
+    PRESSURE_PSI,
+    PRESSURE_BAR,
+]
 
 UNIT_CONVERSION = {
     PRESSURE_PA: 1,
@@ -19,6 +27,7 @@ UNIT_CONVERSION = {
     PRESSURE_MBAR: 1 / 100,
     PRESSURE_INHG: 1 / 3386.389,
     PRESSURE_PSI: 1 / 6894.757,
+    PRESSURE_BAR: 1 / 100000,
 }
 
 

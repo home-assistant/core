@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.const import (
+    PRESSURE_BAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_MBAR,
@@ -20,6 +21,7 @@ def test_convert_same_unit():
     assert pressure_util.convert(3, PRESSURE_HPA, PRESSURE_HPA) == 3
     assert pressure_util.convert(4, PRESSURE_MBAR, PRESSURE_MBAR) == 4
     assert pressure_util.convert(5, PRESSURE_INHG, PRESSURE_INHG) == 5
+    assert pressure_util.convert(6, PRESSURE_BAR, PRESSURE_BAR) == 6
 
 
 def test_convert_invalid_unit():
@@ -52,6 +54,9 @@ def test_convert_from_hpascals():
     assert pressure_util.convert(
         hpascals, PRESSURE_HPA, PRESSURE_MBAR
     ) == pytest.approx(1000)
+    assert pressure_util.convert(hpascals, PRESSURE_HPA, PRESSURE_BAR) == pytest.approx(
+        1
+    )
 
 
 def test_convert_from_inhg():
@@ -68,4 +73,7 @@ def test_convert_from_inhg():
     )
     assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_MBAR) == pytest.approx(
         1015.9167
+    )
+    assert pressure_util.convert(inhg, PRESSURE_INHG, PRESSURE_BAR) == pytest.approx(
+        1.0159167
     )
