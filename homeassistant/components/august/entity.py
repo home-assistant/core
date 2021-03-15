@@ -75,4 +75,4 @@ def _remove_device_types(name, device_types):
         device_type_with_space = f" {device_type}"
         if lower_name.endswith(device_type_with_space):
             lower_name = lower_name[: -len(device_type_with_space)]
-    return lower_name
+    return name[: len(lower_name)]
