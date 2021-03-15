@@ -3,11 +3,13 @@ from unittest.mock import Mock, patch
 
 from miio import DeviceException
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.components.xiaomi_miio.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+
+from tests.common import MockConfigEntry
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
@@ -24,6 +26,9 @@ TEST_HARDWARE_VERSION = "AB123"
 TEST_FIRMWARE_VERSION = "1.2.3_456"
 TEST_ZEROCONF_NAME = "lumi-gateway-v3_miio12345678._miio._udp.local."
 TEST_SUB_DEVICE_LIST = []
+TEST_CLOUD_PASS = "password"
+TEST_CLOUD_USER = "username"
+TEST_CLOUD_COUNTRY = "cn"
 
 
 def get_mock_info(
@@ -400,3 +405,45 @@ async def test_zeroconf_vacuum_success(hass):
     test_vacuum_model = const.MODELS_VACUUM[0]
     test_zeroconf_name = const.MODELS_VACUUM[0].replace(".", "-")
     await zeroconf_device_success(hass, test_zeroconf_name, test_vacuum_model)
+
+async def test_options_flow(hass):
+    """Test specifying non default settings using options flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            const.CONF_FLOW_TYPE: const.CONF_GATEWAY,
+            CONF_HOST: TEST_HOST,
+            CONF_TOKEN: TEST_TOKEN,
+            const.CONF_MODEL: TEST_MODEL,
+            const.CONF_MAC: TEST_MAC,
+        },
+        title=TEST_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+            const.CONF_CLOUD_SUBDEVICES: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+        const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+        const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+        const.CONF_CLOUD_SUBDEVICES: True,
+    }
