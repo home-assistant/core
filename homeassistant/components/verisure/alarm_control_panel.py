@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -22,22 +23,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_ALARM, CONF_GIID, DOMAIN, LOGGER
+from .const import CONF_GIID, DOMAIN, LOGGER
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[Entity], bool], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
-    """Set up the Verisure platform."""
-    coordinator = hass.data[DOMAIN]
-    alarms = []
-    if int(coordinator.config.get(CONF_ALARM, 1)):
-        alarms.append(VerisureAlarm(coordinator))
-    add_entities(alarms)
+    """Set up Verisure alarm control panel from a config entry."""
+    async_add_entities([VerisureAlarm(coordinator=hass.data[DOMAIN][entry.entry_id])])
 
 
 class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
@@ -53,17 +49,12 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        giid = self.coordinator.config.get(CONF_GIID)
-        if giid is not None:
-            aliass = {
-                i["giid"]: i["alias"] for i in self.coordinator.verisure.installations
-            }
-            if giid in aliass:
-                return "{} alarm".format(aliass[giid])
+        return "Verisure Alarm"
 
-            LOGGER.error("Verisure installation giid not found: %s", giid)
-
-        return "{} alarm".format(self.coordinator.verisure.installations[0]["alias"])
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this alarm control panel."""
+        return self.coordinator.entry.data[CONF_GIID]
 
     @property
     def state(self) -> str | None:

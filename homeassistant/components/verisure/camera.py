@@ -3,34 +3,31 @@ from __future__ import annotations
 
 import errno
 import os
-from typing import Any, Callable
+from typing import Callable, Iterable
 
 from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_SMARTCAM, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import VerisureDataUpdateCoordinator
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: dict[str, Any],
-    add_entities: Callable[[list[VerisureSmartcam]], None],
-    discovery_info: dict[str, Any] | None = None,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
-    """Set up the Verisure Camera."""
-    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN]
-    if not int(coordinator.config.get(CONF_SMARTCAM, 1)):
-        return
+    """Set up Verisure sensors based on a config entry."""
+    coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     assert hass.config.config_dir
-    add_entities(
-        [
-            VerisureSmartcam(hass, coordinator, serial_number, hass.config.config_dir)
-            for serial_number in coordinator.data["cameras"]
-        ]
+    async_add_entities(
+        VerisureSmartcam(hass, coordinator, serial_number, hass.config.config_dir)
+        for serial_number in coordinator.data["cameras"]
     )
 
 

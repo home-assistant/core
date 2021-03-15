@@ -9,9 +9,10 @@ from verisure import (
     Session as Verisure,
 )
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_SERVICE_UNAVAILABLE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, HTTP_SERVICE_UNAVAILABLE
+from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import Throttle
 
@@ -21,14 +22,15 @@ from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     """A Verisure Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
         self.imageseries = {}
-        self.config = config
-        self.giid = config.get(CONF_GIID)
+        self.entry = entry
 
         self.verisure = Verisure(
-            username=config[CONF_USERNAME], password=config[CONF_PASSWORD]
+            username=entry.data[CONF_EMAIL],
+            password=entry.data[CONF_PASSWORD],
+            cookieFileName=hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}"),
         )
 
         super().__init__(
@@ -42,25 +44,19 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureError as ex:
             LOGGER.error("Could not log in to verisure, %s", ex)
             return False
-        if self.giid:
-            return await self.async_set_giid()
+
+        await self.hass.async_add_executor_job(
+            self.verisure.set_giid, self.entry.data[CONF_GIID]
+        )
+
         return True
 
-    async def async_logout(self) -> bool:
+    async def async_logout(self, _event: Event) -> bool:
         """Logout from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.logout)
         except VerisureError as ex:
             LOGGER.error("Could not log out from verisure, %s", ex)
-            return False
-        return True
-
-    async def async_set_giid(self) -> bool:
-        """Set installation GIID."""
-        try:
-            await self.hass.async_add_executor_job(self.verisure.set_giid, self.giid)
-        except VerisureError as ex:
-            LOGGER.error("Could not set installation GIID, %s", ex)
             return False
         return True
 
