@@ -75,8 +75,10 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device information about this entity."""
+        area = self.coordinator.data["cameras"][self.serial_number]["area"]
         return {
-            "name": self.coordinator.data["cameras"][self.serial_number]["area"],
+            "name": area,
+            "suggested_area": area,
             "manufacturer": "Verisure",
             "model": "SmartCam",
             "identifiers": {(DOMAIN, self.serial_number)},

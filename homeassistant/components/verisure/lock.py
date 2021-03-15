@@ -82,8 +82,10 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device information about this entity."""
+        area = self.coordinator.data["locks"][self.serial_number]["area"]
         return {
-            "name": self.coordinator.data["locks"][self.serial_number]["area"],
+            "name": area,
+            "suggested_area": area,
             "manufacturer": "Verisure",
             "model": "Lockguard Smartlock",
             "identifiers": {(DOMAIN, self.serial_number)},

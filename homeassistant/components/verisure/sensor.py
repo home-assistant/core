@@ -70,8 +70,10 @@ class VerisureThermometer(CoordinatorEntity, Entity):
         device_type = self.coordinator.data["climate"][self.serial_number].get(
             "deviceType"
         )
+        area = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
         return {
-            "name": self.coordinator.data["climate"][self.serial_number]["deviceArea"],
+            "name": area,
+            "suggested_area": area,
             "manufacturer": "Verisure",
             "model": DEVICE_TYPE_NAME.get(device_type, device_type),
             "identifiers": {(DOMAIN, self.serial_number)},
@@ -127,8 +129,10 @@ class VerisureHygrometer(CoordinatorEntity, Entity):
         device_type = self.coordinator.data["climate"][self.serial_number].get(
             "deviceType"
         )
+        area = self.coordinator.data["climate"][self.serial_number]["deviceArea"]
         return {
-            "name": self.coordinator.data["climate"][self.serial_number]["deviceArea"],
+            "name": area,
+            "suggested_area": area,
             "manufacturer": "Verisure",
             "model": DEVICE_TYPE_NAME.get(device_type, device_type),
             "identifiers": {(DOMAIN, self.serial_number)},
@@ -181,8 +185,10 @@ class VerisureMouseDetection(CoordinatorEntity, Entity):
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device information about this entity."""
+        area = self.coordinator.data["mice"][self.serial_number]["area"]
         return {
-            "name": self.coordinator.data["mice"][self.serial_number]["area"],
+            "name": area,
+            "suggested_area": area,
             "manufacturer": "Verisure",
             "model": "Mouse detector",
             "identifiers": {(DOMAIN, self.serial_number)},
