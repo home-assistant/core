@@ -191,7 +191,7 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
                 for platform in platforms
             ]
         )
