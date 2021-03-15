@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable, Iterable
+from typing import Any, Callable, Iterable
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -55,6 +55,16 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     def unique_id(self) -> str:
         """Return the unique ID for this alarm control panel."""
         return self.coordinator.entry.data[CONF_GIID]
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return device information about this entity."""
+        return {
+            "name": "Verisure Alarm",
+            "manufacturer": "Verisure",
+            "model": "VBox",
+            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+        }
 
     @property
     def state(self) -> str | None:
