@@ -12,8 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 async def test_data_handler(hass, config_entry):
     """Test the data handler."""
-    await hass.async_block_till_done()
-
     with patch(
         "homeassistant.components.netatmo.api.ConfigEntryNetatmoAuth"
     ) as mock_auth:
