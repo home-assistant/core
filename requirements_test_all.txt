@@ -863,6 +863,9 @@ pyowm==3.2.0
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
 
+# homeassistant.components.lcn
+pypck==0.7.9
+
 # homeassistant.components.plaato
 pyplaato==0.0.15
 
