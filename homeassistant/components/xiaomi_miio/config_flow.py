@@ -10,15 +10,20 @@ from homeassistant.helpers.device_registry import format_mac
 
 # pylint: disable=unused-import
 from .const import (
+    CONF_CLOUD_USERNAME,
+    CONF_CLOUD_PASSWORD,
+    CONF_CLOUD_COUNTRY,
     CONF_DEVICE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     CONF_MAC,
     CONF_MODEL,
+    DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
     MODELS_ALL,
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
+    SERVER_COUNTRY_CODES,
 )
 from .device import ConnectXiaomiDevice
 
@@ -31,6 +36,40 @@ DEVICE_SETTINGS = {
 }
 DEVICE_CONFIG = vol.Schema({vol.Required(CONF_HOST): str}).extend(DEVICE_SETTINGS)
 DEVICE_MODEL_CONFIG = {vol.Optional(CONF_MODEL): vol.In(MODELS_ALL)}
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options for the component."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Init object."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        settings_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_CLOUD_USERNAME,
+                    default=self.config_entry.options.get(
+                        CONF_CLOUD_USERNAME
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_CLOUD_PASSWORD,
+                    default=self.config_entry.options.get(CONF_CLOUD_PASSWORD),
+                ): str,
+                vol.Optional(
+                    CONF_CLOUD_COUNTRY,
+                    default=self.config_entry.options.get(CONF_CLOUD_COUNTRY, DEFAULT_CLOUD_COUNTRY),
+                ): vol.In(SERVER_COUNTRY_CODES),
+            }
+        )
+        
+        return self.async_show_form(step_id="init", data_schema=settings_schema)
 
 
 class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

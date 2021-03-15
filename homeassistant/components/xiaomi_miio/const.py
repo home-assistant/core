@@ -1,15 +1,26 @@
 """Constants for the Xiaomi Miio component."""
 DOMAIN = "xiaomi_miio"
 
+# Config flow
 CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
 CONF_DEVICE = "device"
 CONF_MODEL = "model"
 CONF_MAC = "mac"
 
+# Options flow
+CONF_CLOUD_USERNAME = "cloud_username"
+CONF_CLOUD_PASSWORD =  "cloud_password"
+CONF_CLOUD_COUNTRY = "cloud_country"
+
 KEY_COORDINATOR = "coordinator"
+UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 ATTR_AVAILABLE = "available"
+
+# Cloud
+SERVER_COUNTRY_CODES = ["cn", "de", "i2", "ru", "sg", "us"]
+DEFAULT_CLOUD_COUNTRY = "cn"
 
 # Fan Models
 MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"

@@ -22,6 +22,7 @@ from .const import (
     MODELS_LIGHT,
     MODELS_SWITCH,
     MODELS_VACUUM,
+    UNDO_UPDATE_LISTENER,
 )
 from .gateway import ConnectXiaomiGateway
 
@@ -55,6 +56,32 @@ async def async_setup_entry(
     return True
 
 
+def get_platforms(config_entry):
+    """Return the platforms beloging to a config_entry."""
+    model = config_entry.data[CONF_MODEL]
+    flow_type = config_entry.data[CONF_FLOW_TYPE]
+
+    platforms = []
+
+    if flow_type == CONF_GATEWAY:
+        platforms = GATEWAY_PLATFORMS
+    elif flow_type == CONF_DEVICE:
+        if model in MODELS_SWITCH:
+            platforms = SWITCH_PLATFORMS
+        elif model in MODELS_FAN:
+            platforms = FAN_PLATFORMS
+        elif model in MODELS_LIGHT:
+            platforms = LIGHT_PLATFORMS
+        for vacuum_model in MODELS_VACUUM:
+            if model.startswith(vacuum_model):
+                platforms = VACUUM_PLATFORMS
+        for air_monitor_model in MODELS_AIR_MONITOR:
+            if model.startswith(air_monitor_model):
+                platforms = AIR_MONITOR_PLATFORMS
+
+    return platforms
+
+
 async def async_setup_gateway_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
@@ -69,7 +96,7 @@ async def async_setup_gateway_entry(
         hass.config_entries.async_update_entry(entry, unique_id=entry.data["mac"])
 
     # Connect to gateway
-    gateway = ConnectXiaomiGateway(hass)
+    gateway = ConnectXiaomiGateway(hass, entry)
     if not await gateway.async_connect_gateway(host, token):
         return False
     gateway_info = gateway.gateway_info
@@ -115,9 +142,12 @@ async def async_setup_gateway_entry(
         update_interval=timedelta(seconds=10),
     )
 
+    undo_listener = entry.add_update_listener(update_listener)
+
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_GATEWAY: gateway.gateway_device,
         KEY_COORDINATOR: coordinator,
+        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     for platform in GATEWAY_PLATFORMS:
@@ -132,25 +162,16 @@ async def async_setup_device_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up the Xiaomi Miio device component from a config entry."""
-    model = entry.data[CONF_MODEL]
-
-    # Identify platforms to setup
-    platforms = []
-    if model in MODELS_SWITCH:
-        platforms = SWITCH_PLATFORMS
-    elif model in MODELS_FAN:
-        platforms = FAN_PLATFORMS
-    elif model in MODELS_LIGHT:
-        platforms = LIGHT_PLATFORMS
-    for vacuum_model in MODELS_VACUUM:
-        if model.startswith(vacuum_model):
-            platforms = VACUUM_PLATFORMS
-    for air_monitor_model in MODELS_AIR_MONITOR:
-        if model.startswith(air_monitor_model):
-            platforms = AIR_MONITOR_PLATFORMS
+    platforms = get_platforms(entry)
 
     if not platforms:
         return False
+
+    undo_listener = entry.add_update_listener(update_listener)
+
+    hass.data[DOMAIN][entry.entry_id] = {
+        UNDO_UPDATE_LISTENER: undo_listener,
+    }
 
     for platform in platforms:
         hass.async_create_task(
@@ -158,3 +179,33 @@ async def async_setup_device_entry(
         )
 
     return True
+
+
+async def async_unload_entry(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Unload a config entry."""
+    platforms = get_platforms(config_entry)
+    
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in platforms
+            ]
+        )
+    )
+
+    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(config_entry.entry_id)
+
+    return unload_ok
+
+
+async def update_listener(
+    hass: core.HomeAssistant, config_entry: config_entries.ConfigEntry
+):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)

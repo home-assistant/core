@@ -1,12 +1,13 @@
 """Code to handle a Xiaomi Gateway."""
 import logging
 
+from micloud import MiCloud
 from miio import DeviceException, gateway
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_AVAILABLE, DOMAIN
+from .const import ATTR_AVAILABLE, DOMAIN, CONF_CLOUD_USERNAME, CONF_CLOUD_PASSWORD, CONF_CLOUD_COUNTRY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,9 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectXiaomiGateway:
     """Class to async connect to a Xiaomi Gateway."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, config_entry):
         """Initialize the entity."""
         self._hass = hass
+        self._config_entry = config_entry
         self._gateway_device = None
         self._gateway_info = None
 
@@ -33,16 +35,40 @@ class ConnectXiaomiGateway:
     async def async_connect_gateway(self, host, token):
         """Connect to the Xiaomi Gateway."""
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
+
+        cloud_username = self._config_entry.options.get(CONF_CLOUD_USERNAME)
+        cloud_password = self._config_entry.options.get(CONF_CLOUD_PASSWORD)
+        cloud_country = self._config_entry.options.get(CONF_CLOUD_COUNTRY)
+
         try:
             self._gateway_device = gateway.Gateway(host, token)
             # get the gateway info
             self._gateway_info = await self._hass.async_add_executor_job(
                 self._gateway_device.info
             )
+
             # get the connected sub devices
-            await self._hass.async_add_executor_job(
-                self._gateway_device.discover_devices
-            )
+            if cloud_username is not None and cloud_password is not None and cloud_country is not None:
+                # use miio-cloud
+                mc = MiCloud(cloud_username, cloud_password)
+                await self._hass.async_add_executor_job(
+                    mc.login
+                )
+                await self._hass.async_add_executor_job(
+                    mc.get_token
+                )
+                devices_raw = await self._hass.async_add_executor_job(
+                    mc.get_devices, country=cloud_country
+                )
+                await self._hass.async_add_executor_job(
+                    self._gateway_device.get_devices_from_dict, devices_raw
+                )
+            else:
+                # use local query (not supported by all gateway types)
+                await self._hass.async_add_executor_job(
+                    self._gateway_device.discover_devices
+                )
+
         except DeviceException:
             _LOGGER.error(
                 "DeviceException during setup of xiaomi gateway with host %s", host
