@@ -63,19 +63,6 @@ def name_for_mac(mac):
     return f"Pentair: {short_mac(mac)}"
 
 
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    return bool(await async_discover_gateways_by_unique_id(hass))
-
-
-_LOGGER.info("Registering discovery flow")
-config_entry_flow.register_discovery_flow(
-    DOMAIN,
-    "Pentair ScreenLogic",
-    _async_has_devices,
-    config_entries.CONN_CLASS_LOCAL_POLL,
-)
-
 
 async def async_get_mac_address(hass, ip_address, port):
     """Connect to a screenlogic gateway and return the mac address."""
