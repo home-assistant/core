@@ -47,9 +47,9 @@ class HassAqualinkSwitch(AqualinkEntity, SwitchEntity):
     @refresh_system
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on the switch."""
-        await self.dev.turn_on()
+        await self.safe_exec(self.dev.turn_on())
 
     @refresh_system
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the switch."""
-        await self.dev.turn_off()
+        await self.safe_exec(self.dev.turn_off())
