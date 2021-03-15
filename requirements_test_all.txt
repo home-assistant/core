@@ -412,7 +412,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210313.0
+home-assistant-frontend==20210314.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -449,7 +449,6 @@ influxdb-client==1.14.0
 influxdb==5.2.3
 
 # homeassistant.components.rest
-# homeassistant.components.verisure
 jsonpath==0.82
 
 # homeassistant.components.konnected
@@ -649,7 +648,7 @@ pyMetno==0.8.1
 pyRFXtrx==0.26.1
 
 # homeassistant.components.tibber
-pyTibber==0.16.1
+pyTibber==0.16.2
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -752,7 +751,7 @@ pyhaversion==3.4.2
 pyheos==0.7.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.71
+pyhomematic==0.1.72
 
 # homeassistant.components.icloud
 pyicloud==0.10.2
@@ -939,7 +938,7 @@ python-izone==1.1.4
 python-juicenet==1.0.1
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.4
+python-miio==0.5.5
 
 # homeassistant.components.nest
 python-nest==4.1.0

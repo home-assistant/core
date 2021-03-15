@@ -760,7 +760,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210313.0
+home-assistant-frontend==20210314.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -829,7 +829,6 @@ influxdb==5.2.3
 iperf3==0.1.11
 
 # homeassistant.components.rest
-# homeassistant.components.verisure
 jsonpath==0.82
 
 # homeassistant.components.kaiterra
@@ -1236,7 +1235,7 @@ pyRFXtrx==0.26.1
 # pySwitchmate==0.4.6
 
 # homeassistant.components.tibber
-pyTibber==0.16.1
+pyTibber==0.16.2
 
 # homeassistant.components.dlink
 pyW215==0.7.0
@@ -1432,7 +1431,7 @@ pyhik==0.2.8
 pyhiveapi==0.3.4.4
 
 # homeassistant.components.homematic
-pyhomematic==0.1.71
+pyhomematic==0.1.72
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1796,7 +1795,7 @@ python-juicenet==1.0.1
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.4
+python-miio==0.5.5
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
