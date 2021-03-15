@@ -169,7 +169,6 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_entry(self, user_input=None):
         """Handle the manual entry of a ScreenLogic gateway."""
-        _LOGGER.debug("Gateway Entry")
         errors = {}
         ip_address = self.discovered_ip
         port = 80
