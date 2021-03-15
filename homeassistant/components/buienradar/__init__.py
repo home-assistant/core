@@ -97,7 +97,7 @@ def _import_weather_configs(hass, weather_configs, sensor_configs, camera_config
         }
         configs.append(config)
 
-    if len(config) > 0:
+    if len(configs) > 0:
         _try_update_unique_id(hass, configs[0], camera_config)
 
     for config in configs:
