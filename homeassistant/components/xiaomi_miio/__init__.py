@@ -58,7 +58,7 @@ async def async_setup_entry(
 
 
 def get_platforms(config_entry):
-    """Return the platforms beloging to a config_entry."""
+    """Return the platforms belonging to a config_entry."""
     model = config_entry.data[CONF_MODEL]
     flow_type = config_entry.data[CONF_FLOW_TYPE]
 
