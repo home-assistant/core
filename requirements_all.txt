@@ -375,7 +375,7 @@ bond-api==0.1.11
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
-boto3==1.17.25
+boto3==1.16.52
 
 # homeassistant.components.braviatv
 bravia-tv==1.0.8
