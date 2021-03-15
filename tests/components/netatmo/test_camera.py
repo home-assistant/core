@@ -6,110 +6,66 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.const import CONF_WEBHOOK_ID
+
+from .common import simulate_webhook
 
 
 async def test_setup_component_with_webhook(hass, camera_entry):
     """Test setup with webhook."""
+    webhook_id = camera_entry.data[CONF_WEBHOOK_ID]
     await hass.async_block_till_done()
 
     camera_entity_indoor = "camera.netatmo_hall"
     camera_entity_outdoor = "camera.netatmo_garden"
     assert hass.states.get(camera_entity_indoor).state == "streaming"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8d",
-        "event_type": "off",
-        "device_id": "12:34:56:00:f1:62",
-        "home_id": "91763b24c43d3e344f424e8b",
-        "home_name": "LXMBRG",
-        "camera_id": "12:34:56:00:f1:62",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NACamera-off",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-off",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "off",'
+        b'"device_id": "12:34:56:00:f1:62","home_id": "91763b24c43d3e344f424e8b",'
+        b'"home_name": "LXMBRG","camera_id": "12:34:56:00:f1:62",'
+        b'"event_id": "601dce1560abca1ebad9b723","push_type": "NACamera-off"}'
     )
-    await hass.async_block_till_done()
+    await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "idle"
 
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8d",
-        "event_type": "on",
-        "device_id": "12:34:56:00:f1:62",
-        "home_id": "91763b24c43d3e344f424e8b",
-        "home_name": "LXMBRG",
-        "camera_id": "12:34:56:00:f1:62",
-        "event_id": "646227f1dc0dfa000ec5f350",
-        "push_type": "NACamera-on",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-on",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "on",'
+        b'"device_id": "12:34:56:00:f1:62","home_id": "91763b24c43d3e344f424e8b",'
+        b'"home_name": "LXMBRG","camera_id": "12:34:56:00:f1:62",'
+        b'"event_id": "646227f1dc0dfa000ec5f350","push_type": "NACamera-on"}'
     )
-    await hass.async_block_till_done()
+    await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
 
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8d",
-        "event_type": "light_mode",
-        "device_id": "12:34:56:00:a5:a4",
-        "home_id": "91763b24c43d3e344f424e8b",
-        "home_name": "LXMBRG",
-        "camera_id": "12:34:56:00:a5:a4",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-        "sub_type": "on",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-light_mode",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8d", "event_type": "light_mode",'
+        b'"device_id": "12:34:56:00:a5:a4", "home_id": "91763b24c43d3e344f424e8b",'
+        b'"home_name": "LXMBRG", "camera_id": "12:34:56:00:a5:a4",'
+        b'"event_id": "601dce1560abca1ebad9b723", "push_type": "NOC-light_mode", "sub_type": "on"}'
     )
-    await hass.async_block_till_done()
+    await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "on"
 
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8d",
-        "event_type": "light_mode",
-        "device_id": "12:34:56:00:a5:a4",
-        "home_id": "91763b24c43d3e344f424e8b",
-        "home_name": "LXMBRG",
-        "camera_id": "12:34:56:00:a5:a4",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-        "sub_type": "auto",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-light_mode",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "light_mode",'
+        b'"device_id": "12:34:56:00:a5:a4","home_id": "91763b24c43d3e344f424e8b",'
+        b'"home_name": "LXMBRG","camera_id": "12:34:56:00:a5:a4",'
+        b'"event_id": "601dce1560abca1ebad9b723","push_type": "NOC-light_mode","sub_type": "auto"}'
     )
-    await hass.async_block_till_done()
+    await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
 
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8d",
-        "event_type": "light_mode",
-        "device_id": "12:34:56:00:a5:a4",
-        "home_id": "91763b24c43d3e344f424e8b",
-        "home_name": "LXMBRG",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-light_mode",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "light_mode",'
+        b'"device_id": "12:34:56:00:a5:a4","home_id": "91763b24c43d3e344f424e8b",'
+        b'"home_name":"LXMBRG","event_id":"601dce1560abca1ebad9b723","push_type":"NOC-light_mode"}'
     )
-    await hass.async_block_till_done()
+    await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
@@ -145,7 +101,10 @@ async def test_camera_image_vpn(hass, camera_entry, requests_mock):
     """Test retrieval or remote camera image."""
     await hass.async_block_till_done()
 
-    uri = "https://prodvpn-eu-2.netatmo.net/restricted/10.255.248.91/6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTw,,"
+    uri = (
+        "https://prodvpn-eu-2.netatmo.net/restricted/10.255.248.91/"
+        "6d278460699e56180d47ab47169efb31/MpEylTU2MDYzNjRVD-LJxUnIndumKzLboeAwMDqTTw,,"
+    )
     stream_uri = uri + "/live/files/high/index.m3u8"
     camera_entity_indoor = "camera.netatmo_garden"
     cam = hass.states.get(camera_entity_indoor)
