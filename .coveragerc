@@ -505,7 +505,18 @@ omit =
     homeassistant/components/lastfm/sensor.py
     homeassistant/components/launch_library/const.py
     homeassistant/components/launch_library/sensor.py
-    homeassistant/components/lcn/*
+    homeassistant/components/lcn/__init__.py
+    homeassistant/components/lcn/binary_sensor.py
+    homeassistant/components/lcn/climate.py
+    homeassistant/components/lcn/const.py
+    homeassistant/components/lcn/cover.py
+    homeassistant/components/lcn/helpers.py
+    homeassistant/components/lcn/light.py
+    homeassistant/components/lcn/scene.py
+    homeassistant/components/lcn/schemas.py
+    homeassistant/components/lcn/sensor.py
+    homeassistant/components/lcn/services.py
+    homeassistant/components/lcn/switch.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/life360/*
