@@ -1,4 +1,6 @@
 """Tests for WebSocket API commands."""
+from unittest.mock import ANY, patch
+
 from async_timeout import timeout
 import pytest
 import voluptuous as vol
@@ -60,6 +62,85 @@ async def test_call_service(hass, websocket_client, command):
     assert call.domain == "domain_test"
     assert call.service == "test_service"
     assert call.data == {"hello": "world"}
+
+
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service_blocking(hass, websocket_client, command):
+    """Test call service command blocking."""
+    message = _get_call_service_message(
+        command,
+        {
+            "domain": "domain_test",
+            "service": "test_service",
+            "service_data": {"hello": "world"},
+        },
+    )
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call", autospec=True
+    ) as mock_call:
+        await websocket_client.send_json(message)
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    mock_call.assert_called_once_with(
+        ANY,
+        "domain_test",
+        "test_service",
+        {"hello": "world"},
+        blocking=True,
+        context=ANY,
+        target=ANY,
+    )
+
+    message = _get_call_service_message(
+        command,
+        {
+            "domain": "homeassistant",
+            "service": "test_service",
+        },
+        id=6,
+    )
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call", autospec=True
+    ) as mock_call:
+        await websocket_client.send_json(message)
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 6
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    mock_call.assert_called_once_with(
+        ANY,
+        "homeassistant",
+        "test_service",
+        ANY,
+        blocking=True,
+        context=ANY,
+        target=ANY,
+    )
+
+    message = _get_call_service_message(
+        command,
+        {
+            "domain": "homeassistant",
+            "service": "restart",
+        },
+        id=7,
+    )
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call", autospec=True
+    ) as mock_call:
+        await websocket_client.send_json(message)
+        msg = await websocket_client.receive_json()
+
+    assert msg["id"] == 7
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    mock_call.assert_called_once_with(
+        ANY, "homeassistant", "restart", ANY, blocking=False, context=ANY, target=ANY
+    )
 
 
 @pytest.mark.parametrize("command", ("call_service", "call_service_action"))

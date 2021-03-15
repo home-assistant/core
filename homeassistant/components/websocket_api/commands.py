@@ -13,9 +13,12 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity, service, template
+from homeassistant.helpers import config_validation as cv, entity, template
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
-from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.service import (
+    async_get_all_descriptions,
+    async_prepare_call_from_config,
+)
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from . import const, decorators, messages
@@ -150,7 +153,7 @@ async def handle_call_service_action(hass, connection, msg):
     """Handle call service command with script service action syntax."""
 
     def _prepare_service_data():
-        config = service.async_prepare_call_from_config(
+        config = async_prepare_call_from_config(
             hass, msg["service_action"], validate_config=True
         )
         return (
