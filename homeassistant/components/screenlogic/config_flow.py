@@ -218,8 +218,6 @@ class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            _LOGGER.debug("Options user_input:")
-            _LOGGER.debug(user_input)
             return self.async_create_entry(
                 title=self.config_entry.title, data=user_input
             )
