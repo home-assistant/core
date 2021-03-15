@@ -33,7 +33,6 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.components.netatmo.webhook import async_handle_webhook
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.aiohttp import MockRequest
 
 
@@ -313,64 +312,38 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
 
 async def test_webhook_event_handling_no_data(hass, climate_entry):
     """Test service and webhook event handling with erroneous data."""
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-therm_mode",
-        {"type": None, "data": webhook_data},
+    # Test webhook without home entry
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"push_type": "home_event_changed"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     # Test webhook with different home id
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "3d3e344f491763b24c424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "3d3e344f491763b24c424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [],
-            "modules": [],
-        },
-        "mode": "home",
-        "event_type": "cancel_set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-therm_mode",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "3d3e344f491763b24c424e8b",'
+        b'"room_id": "2746182631", "home": {"id": "3d3e344f491763b24c424e8b",'
+        b'"name": "MYHOME","country": "DE", "rooms": [], "modules": []}, "mode": "home",'
+        b'"event_type": "cancel_set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     # Test webhook without room entries
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [],
-            "modules": [],
-        },
-        "mode": "home",
-        "event_type": "cancel_set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-cancel_set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"room_id": "2746182631", "home": {"id": "91763b24c43d3e344f424e8b",'
+        b'"name": "MYHOME",  "country": "DE",  "rooms": [], "modules": []}, "mode": "home",'
+        b'"event_type": "cancel_set_point","push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
 
@@ -416,35 +389,17 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
 
     # Test webhook valve mode change to "Max"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2833524037",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2833524037",
-                    "name": "Entrada",
-                    "type": "lobby",
-                    "therm_setpoint_mode": "max",
-                    "therm_setpoint_end_time": 1612749189,
-                }
-            ],
-            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
-        },
-        "mode": "max",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"room_id": "2833524037", "home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME",'
+        b'"country": "DE","rooms": [{"id": "2833524037", "name": "Entrada", "type": "lobby",'
+        b'"therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
+        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
+        b'"mode": "max","event_type": "set_point","push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     # Test service setting the preset mode to "boost"
@@ -457,35 +412,17 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Test webhook valve mode change to "Max"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2833524037",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2833524037",
-                    "name": "Entrada",
-                    "type": "lobby",
-                    "therm_setpoint_mode": "max",
-                    "therm_setpoint_end_time": 1612749189,
-                }
-            ],
-            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
-        },
-        "mode": "max",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"room_id": "2833524037", "home": {"id": "91763b24c43d3e344f424e8b",'
+        b'"name": "MYHOME","country": "DE","rooms": [{"id": "2833524037", "name": "Entrada",'
+        b'"type": "lobby", "therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
+        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
+        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
@@ -515,35 +452,17 @@ async def test_service_preset_mode_boost_valves(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake backend response
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2833524037",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2833524037",
-                    "name": "Entrada",
-                    "type": "lobby",
-                    "therm_setpoint_mode": "max",
-                    "therm_setpoint_end_time": 1612749189,
-                }
-            ],
-            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
-        },
-        "mode": "max",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"room_id": "2833524037", "home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME",'
+        b'"country": "DE", "rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
+        b'"therm_setpoint_mode": "max","therm_setpoint_end_time": 1612749189}],'
+        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
+        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
@@ -592,34 +511,16 @@ async def test_valves_service_turn_off(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake backend response for valve being turned off
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2833524037",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2833524037",
-                    "name": "Entrada",
-                    "type": "lobby",
-                    "therm_setpoint_mode": "off",
-                }
-            ],
-            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
-        },
-        "mode": "off",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2833524037",'
+        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
+        b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
+        b'"therm_setpoint_mode": "off"}], "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada",'
+        b'"type": "NRV"}]}, "mode": "off", "event_type": "set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "off"
@@ -646,34 +547,17 @@ async def test_valves_service_turn_on(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake backend response for valve being turned on
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2833524037",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2833524037",
-                    "name": "Entrada",
-                    "type": "lobby",
-                    "therm_setpoint_mode": "home",
-                }
-            ],
-            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
-        },
-        "mode": "home",
-        "event_type": "cancel_set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2833524037",'
+        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
+        b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
+        b'"therm_setpoint_mode": "home"}], "modules": [{"id": "12:34:56:00:01:ae",'
+        b'"name": "Entrada", "type": "NRV"}]}, "mode": "home", "event_type": "cancel_set_point",'
+        b'"push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
