@@ -1,6 +1,7 @@
 """Test the Z-Wave JS sensor platform."""
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -12,6 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import (
     AIR_TEMPERATURE_SENSOR,
     ENERGY_SENSOR,
+    HUMIDITY_SENSOR,
     NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
 )
@@ -25,6 +27,13 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
     assert state.state == "9.0"
     assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
     assert state.attributes["device_class"] == DEVICE_CLASS_TEMPERATURE
+
+    state = hass.states.get(HUMIDITY_SENSOR)
+
+    assert state
+    assert state.state == "65.0"
+    assert state.attributes["unit_of_measurement"] == "%"
+    assert state.attributes["device_class"] == DEVICE_CLASS_HUMIDITY
 
 
 async def test_energy_sensors(hass, hank_binary_switch, integration):
