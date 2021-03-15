@@ -173,7 +173,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
@@ -184,7 +183,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))
 
     def delete_command(self, **kwargs: Any) -> None:
@@ -193,7 +191,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete commands from the database."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
         )
