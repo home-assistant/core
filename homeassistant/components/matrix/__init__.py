@@ -1,9 +1,14 @@
 """The Matrix bot component."""
 from functools import partial
 import logging
+import mimetypes
 import os
 
-from matrix_client.client import MatrixClient, MatrixRequestError
+from matrix_client.client import (
+    MatrixClient,
+    MatrixRequestError,
+    MatrixUnexpectedResponse,
+)
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
@@ -19,7 +24,14 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-from .const import DOMAIN, SERVICE_SEND_MESSAGE
+from .const import (
+    ATTR_FILE,
+    DOMAIN,
+    SERVICE_SEND_FILE,
+    SERVICE_SEND_MESSAGE,
+    SERVICE_SEND_PHOTO,
+    SERVICE_SEND_VIDEO,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +44,7 @@ CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
 
 EVENT_MATRIX_COMMAND = "matrix_command"
+
 
 COMMAND_SCHEMA = vol.All(
     vol.Schema(
@@ -64,10 +77,35 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
+BASE_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
+
+
+SERVICE_SCHEMA_SEND_PHOTO = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_FILE): cv.string,
+    }
+)
+
+SERVICE_SCHEMA_SEND_VIDEO = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_FILE): cv.string,
+    }
+)
+
+SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
+    {
+        vol.Required(ATTR_FILE): cv.string,
     }
 )
 
@@ -97,6 +135,27 @@ def setup(hass, config):
         SERVICE_SEND_MESSAGE,
         bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE,
+    )
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SEND_PHOTO,
+        bot.handle_send_photo,
+        schema=SERVICE_SCHEMA_SEND_PHOTO,
+    )
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SEND_FILE,
+        bot.handle_send_file,
+        schema=SERVICE_SCHEMA_SEND_FILE,
+    )
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SEND_VIDEO,
+        bot.handle_send_video,
+        schema=SERVICE_SCHEMA_SEND_VIDEO,
     )
 
     return True
@@ -351,6 +410,96 @@ class MatrixBot:
                     ex.content,
                 )
 
+    def _send_file(
+        self,
+        file,
+        target_rooms,
+        file_type=SERVICE_SEND_FILE,
+    ):
+        """Send the file/photo/video to the Matrix server."""
+
+        if not self.hass.config.is_allowed_path(file):
+            _LOGGER.error(
+                "%s is not part of allowed paths, can't upload. Skipping.", file
+            )
+            return
+
+        if not os.path.exists(file) or not os.path.isfile(file):
+            _LOGGER.error("Can't find file %s. Skipping.", file)
+            return
+
+        try:
+            fp = open(file, "rb")
+            data = fp.read()
+            fp.close()
+
+        except BaseException as ex:
+            _LOGGER.error("Failed to open file '%s', error: %s", file, ex)
+            return
+
+        contenttype = mimetypes.guess_type(file)[0]
+
+        try:
+            url = self._client.upload(data, contenttype)
+            _LOGGER.info("Uploaded file '%s'/'%s' - URL: %s", file, contenttype, url)
+        except MatrixRequestError as ex:
+            _LOGGER.error(
+                "Failed to upload '%s', got MatrixRequestError %d, %s",
+                file,
+                ex.code,
+                ex.content,
+            )
+            return
+        except MatrixUnexpectedResponse as ex:
+            _LOGGER.error(
+                "Failed to upload '%s', got MatrixUnexpectedResponse: %s",
+                file,
+                ex.content,
+            )
+            return
+
+        for target_room in target_rooms:
+            try:
+                room = self._join_or_get_room(target_room)
+                if file_type == SERVICE_SEND_VIDEO:
+                    _LOGGER.debug(room.send_video(url, file))
+                elif file_type == SERVICE_SEND_PHOTO:
+                    _LOGGER.debug(room.send_image(url, file))
+                else:
+                    _LOGGER.debug(room.send_file(url, file))
+                _LOGGER.info("Posted %s to %s.", url, target_room)
+            except MatrixRequestError as ex:
+                _LOGGER.error(
+                    "Unable to deliver photo to room '%s': %d, %s",
+                    target_room,
+                    ex.code,
+                    ex.content,
+                )
+
     def handle_send_message(self, service):
         """Handle the send_message service."""
         self._send_message(service.data[ATTR_MESSAGE], service.data[ATTR_TARGET])
+
+    def handle_send_photo(self, service):
+        """Handle the send_photo service."""
+        self._send_file(
+            service.data[ATTR_FILE],
+            service.data[ATTR_TARGET],
+            SERVICE_SEND_PHOTO,
+        )
+
+    def handle_send_file(self, service):
+        """Handle the send_photo service."""
+        self._send_file(
+            service.data[ATTR_FILE],
+            service.data[ATTR_TARGET],
+            SERVICE_SEND_FILE,
+        )
+
+    def handle_send_video(self, service):
+        """Handle the send_video service."""
+        self._send_file(
+            service.data[ATTR_FILE],
+            service.data[ATTR_TARGET],
+            SERVICE_SEND_VIDEO,
+        )

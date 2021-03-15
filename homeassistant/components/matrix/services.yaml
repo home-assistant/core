@@ -7,3 +7,30 @@ send_message:
     target:
       description: A list of room(s) to send the message to.
       example: "#hasstest:matrix.org"
+send_photo:
+  description: Send photo to target room(s)
+  fields:
+    file:
+      description: The local path to the photo.
+      example: /storage/somedir/image.jpg
+    target:
+      description: A list of room(s) to send the photo to.
+      example: "#hasstest:matrix.org"
+send_video:
+  description: Send video to target room(s)
+  fields:
+    file:
+      description: The local path to the video.
+      example: /storage/somedir/image.mp4
+    target:
+      description: A list of room(s) to send the video to.
+      example: "#hasstest:matrix.org"
+send_file:
+  description: Send file to target room(s)
+  fields:
+    file:
+      description: The local path to the file.
+      example: /storage/somedir/mynotes.txt
+    target:
+      description: A list of room(s) to send the file to.
+      example: "#hasstest:matrix.org"
