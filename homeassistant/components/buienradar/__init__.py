@@ -5,15 +5,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_CAMERA,
     CONF_COUNTRY,
+    CONF_DELTA,
     CONF_SENSOR,
     CONF_TIMEFRAME,
     CONF_WEATHER,
+    DEFAULT_COUNTRY,
+    DEFAULT_DELTA,
     DEFAULT_TIMEFRAME,
     DOMAIN,
 )
@@ -33,8 +36,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     sensor_configs = _filter_domain_configs(config, "sensor", DOMAIN)
     camera_configs = _filter_domain_configs(config, "camera", DOMAIN)
 
-    _import_camera_configs(hass, camera_configs)
-    _import_weather_configs(hass, weather_configs, sensor_configs)
+    _import_weather_configs(hass, weather_configs, sensor_configs, camera_configs)
 
     return True
 
@@ -63,7 +65,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
-def _import_weather_configs(hass, weather_configs, sensor_configs):
+def _import_weather_configs(hass, weather_configs, sensor_configs, camera_configs):
+    camera_config = {}
+    if len(camera_configs) > 0:
+        camera_config = camera_configs[0]
+
     for config in sensor_configs:
         # Remove weather configurations which share lat/lon with sensor configurations
         matching_weather_config = None
@@ -85,37 +91,13 @@ def _import_weather_configs(hass, weather_configs, sensor_configs):
         _LOGGER.debug("Importing Buienradar %s", config)
 
         data = {
-            CONF_NAME: config.get(CONF_NAME, "br"),
             CONF_LATITUDE: config.get(CONF_LATITUDE, hass.config.latitude),
             CONF_LONGITUDE: config.get(CONF_LONGITUDE, hass.config.longitude),
             CONF_TIMEFRAME: config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME),
-            CONF_CAMERA: False,
-            CONF_SENSOR: True,
-            CONF_WEATHER: True,
+            CONF_COUNTRY: camera_config.get(CONF_COUNTRY, DEFAULT_COUNTRY),
+            CONF_DELTA: camera_config.get(CONF_DELTA, DEFAULT_DELTA),
         }
 
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=data,
-            )
-        )
-
-
-def _import_camera_configs(hass, configs):
-    for config in configs:
-        _LOGGER.debug("Importing Buienradar %s", config)
-
-        data = {
-            CONF_NAME: config.get(CONF_NAME, "br"),
-            CONF_COUNTRY: config.get(CONF_COUNTRY, "NL"),
-            CONF_CAMERA: True,
-            CONF_SENSOR: False,
-            CONF_WEATHER: False,
-        }
-
-        data = {**data, **config}
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN,

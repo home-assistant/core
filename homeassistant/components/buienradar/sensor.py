@@ -192,11 +192,14 @@ async def async_setup_entry(
 ) -> None:
     """Create the buienradar sensor."""
     config = entry.data
+    options = entry.options
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
-    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    timeframe = options.get(
+        CONF_TIMEFRAME, config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    )
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")

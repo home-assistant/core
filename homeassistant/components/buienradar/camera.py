@@ -17,7 +17,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_COUNTRY,
     CONF_DELTA,
-    CONF_DIMENSION,
     DEFAULT_COUNTRY,
     DEFAULT_DELTA,
     DEFAULT_DIMENSION,
@@ -36,10 +35,9 @@ async def async_setup_entry(
     name = config.get(CONF_NAME, "Buienradar")
     country = options.get(CONF_COUNTRY, config.get(CONF_COUNTRY, DEFAULT_COUNTRY))
 
-    delta = config.get(CONF_DELTA, DEFAULT_DELTA)
-    dimension = config.get(CONF_DIMENSION, DEFAULT_DIMENSION)
+    delta = options.get(CONF_DELTA, config.get(CONF_DELTA, DEFAULT_DELTA))
 
-    async_add_entities([BuienradarCam(name, dimension, delta, country)])
+    async_add_entities([BuienradarCam(name, delta, country)])
 
 
 class BuienradarCam(Camera):
@@ -51,7 +49,7 @@ class BuienradarCam(Camera):
     [0]: https://www.buienradar.nl/overbuienradar/gratis-weerdata
     """
 
-    def __init__(self, name: str, dimension: int, delta: float, country: str):
+    def __init__(self, name: str, delta: float, country: str):
         """
         Initialize the component.
 
@@ -62,7 +60,7 @@ class BuienradarCam(Camera):
         self._name = name
 
         # dimension (x and y) of returned radar image
-        self._dimension = 700
+        self._dimension = DEFAULT_DIMENSION
 
         # time a cached image stays valid for
         self._delta = delta
