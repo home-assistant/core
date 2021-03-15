@@ -62,25 +62,24 @@ def get_platforms(config_entry):
     model = config_entry.data[CONF_MODEL]
     flow_type = config_entry.data[CONF_FLOW_TYPE]
 
-    platforms = []
 
     if flow_type == CONF_GATEWAY:
-        platforms = GATEWAY_PLATFORMS
-    elif flow_type == CONF_DEVICE:
+        return GATEWAY_PLATFORMS
+    if flow_type == CONF_DEVICE:
         if model in MODELS_SWITCH:
-            platforms = SWITCH_PLATFORMS
-        elif model in MODELS_FAN:
-            platforms = FAN_PLATFORMS
-        elif model in MODELS_LIGHT:
-            platforms = LIGHT_PLATFORMS
+            return SWITCH_PLATFORMS
+        if model in MODELS_FAN:
+            return FAN_PLATFORMS
+        if model in MODELS_LIGHT:
+            return LIGHT_PLATFORMS
         for vacuum_model in MODELS_VACUUM:
             if model.startswith(vacuum_model):
-                platforms = VACUUM_PLATFORMS
+                return VACUUM_PLATFORMS
         for air_monitor_model in MODELS_AIR_MONITOR:
             if model.startswith(air_monitor_model):
-                platforms = AIR_MONITOR_PLATFORMS
-
-    return platforms
+                return AIR_MONITOR_PLATFORMS
+                
+    return None
 
 
 async def async_setup_gateway_entry(
