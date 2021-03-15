@@ -1,9 +1,10 @@
 {
   "domain": "hive",
   "name": "Hive",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hive",
   "requirements": [
-    "pyhiveapi==0.3.4.4"
+    "pyhiveapi==0.3.9"
   ],
   "codeowners": [
     "@Rendili",
