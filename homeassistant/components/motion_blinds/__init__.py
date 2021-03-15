@@ -75,7 +75,7 @@ async def async_setup_entry(
 
         return all_available
 
-    async def async_update_data():
+    async def async_update_data(self):
         """Fetch data from the gateway and blinds."""
         try:
             all_available = await hass.async_add_executor_job(update_gateway)
