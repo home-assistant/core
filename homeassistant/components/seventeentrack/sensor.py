@@ -240,7 +240,11 @@ class SeventeenTrackPackageSensor(Entity):
             return
 
         self._attrs.update(
-            {ATTR_INFO_TEXT: package.info_text, ATTR_TIMESTAMP: package.timestamp, ATTR_LOCATION: package.location}
+            {
+                ATTR_INFO_TEXT: package.info_text,
+                ATTR_TIMESTAMP: package.timestamp,
+                ATTR_LOCATION: package.location
+            }
         )
         self._state = package.status
         self._friendly_name = package.friendly_name
