@@ -2,7 +2,7 @@
 from collections import OrderedDict
 from contextlib import contextmanager
 import datetime as dt
-from datetime import datetime, timedelta
+from datetime import timedelta
 from itertools import count
 import logging
 from typing import Any, Awaitable, Callable, Deque, Dict, Optional
