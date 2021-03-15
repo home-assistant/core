@@ -20,6 +20,7 @@ from .const import (
     MANUFACTURER,
     PLATFORMS,
     UPDATE_INTERVAL,
+    UPDATE_INTERVAL_FAST,
 )
 from .gateway import ConnectMotionGateway
 
@@ -85,7 +86,7 @@ async def async_setup_entry(
         if all_available:
             self.update_interval = UPDATE_INTERVAL
         else:
-            self.update_interval = 60
+            self.update_interval = UPDATE_INTERVAL_FAST
 
     coordinator = DataUpdateCoordinator(
         hass,
