@@ -1,6 +1,4 @@
 """The tests for Netatmo device triggers."""
-from freezegun import freeze_time
-
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -10,7 +8,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
-@freeze_time("2019-06-16")
 async def test_light_setup_and_services(hass, light_entry):
     """Test setup and services."""
     await hass.async_block_till_done()
