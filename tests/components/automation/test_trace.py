@@ -36,4 +36,4 @@ def test_json_encoder(hass):
 
     # Default method falls back to repr(o)
     o = object()
-    assert ha_json_enc.default(o) == repr(o)
+    assert ha_json_enc.default(o) == {"type": str(type(o)), "repr": repr(o)}
