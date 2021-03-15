@@ -50,8 +50,7 @@ class DevoloHomeControlFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if discovery_info["properties"]["MT"] in ("2600", "2601"):
                 await self._async_handle_discovery_without_unique_id()
                 return await self.async_step_zeroconf_confirm()
-            else:
-                return self.async_abort(reason="Not a devolo Home Control gateway.")
+            return self.async_abort(reason="Not a devolo Home Control gateway.")
         except KeyError:
             return self.async_abort(reason="Not a devolo Home Control gateway.")
 
