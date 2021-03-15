@@ -17,7 +17,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
 
     for switch in data["devices"]["switch"]:
-        _LOGGER.info(switch)
         entities.append(ScreenLogicSwitch(data["coordinator"], switch))
     async_add_entities(entities, True)
 
