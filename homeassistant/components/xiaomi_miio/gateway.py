@@ -51,12 +51,11 @@ class ConnectXiaomiGateway:
             if cloud_username is not None and cloud_password is not None and cloud_country is not None:
                 # use miio-cloud
                 mc = MiCloud(cloud_username, cloud_password)
-                await self._hass.async_add_executor_job(
-                    mc.login
-                )
-                await self._hass.async_add_executor_job(
-                    mc.get_token
-                )
+                if not await self._hass.async_add_executor_job(mc.login):
+                    _LOGGER.error(
+                        "Could not login to Xioami Miio Cloud, check the credentials"
+                    )
+                    return False
                 devices_raw = await self._hass.async_add_executor_job(
                     mc.get_devices, cloud_country
                 )
