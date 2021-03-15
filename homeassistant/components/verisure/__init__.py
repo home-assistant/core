@@ -203,13 +203,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    if unload_ok:
-        cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
-        if os.path.exists(cookie_file):
-            os.unlink(cookie_file)
-        del hass.data[DOMAIN][entry.entry_id]
+    if not unload_ok:
+        return False
+
+    cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
+    try:
+        await hass.async_add_executor_job(os.unlink, cookie_file)
+    except FileNotFoundError:
+        pass
+
+    del hass.data[DOMAIN][entry.entry_id]
 
     if not hass.data[DOMAIN]:
         del hass.data[DOMAIN]
 
-    return unload_ok
+    return True
