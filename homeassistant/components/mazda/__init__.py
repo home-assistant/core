@@ -32,6 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor"]
 
 
+async def with_timeout(task, timeout_seconds=10):
+    """Run an async task with a timeout."""
+    async with async_timeout.timeout(timeout_seconds):
+        return await task
+
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Mazda Connected Services component."""
     hass.data[DOMAIN] = {}
@@ -69,11 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_update_data():
         """Fetch data from Mazda API."""
-
-        async def with_timeout(task):
-            async with async_timeout.timeout(10):
-                return await task
-
         try:
             vehicles = await with_timeout(mazda_client.get_vehicles())
 
