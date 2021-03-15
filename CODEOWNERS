@@ -156,6 +156,7 @@ homeassistant/components/filter/* @dgomes
 homeassistant/components/fireservicerota/* @cyberjunky
 homeassistant/components/firmata/* @DaAwesomeP
 homeassistant/components/fixer/* @fabaff
+homeassistant/components/flexpool/* @DatDraggy
 homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flo/* @dmulcahey
 homeassistant/components/flock/* @fabaff
