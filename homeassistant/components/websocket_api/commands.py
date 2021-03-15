@@ -29,6 +29,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_call_service)
+    async_reg(hass, handle_call_service_action)
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_config)
@@ -127,56 +128,84 @@ def handle_unsubscribe_events(hass, connection, msg):
 @decorators.async_response
 async def handle_call_service(hass, connection, msg):
     """Handle call service command."""
-    blocking = True
-    if msg["domain"] == HASS_DOMAIN and msg["service"] in ["restart", "stop"]:
-        blocking = False
+    # We do not support templates.
+    target = msg.get("target")
+    if template.is_complex(target):
+        raise vol.Invalid("Templates are not supported here")
 
-    try:
-        context = connection.context(msg)
-        config = {
-            "service": f'{msg["domain"]}.{msg["service"]}',
-        }
-        if target := msg.get("target"):
-            config["target"] = target
-        if data := msg.get("service_data"):
-            config["data"] = data
-        params = service.async_prepare_call_from_config(
-            hass, config, validate_config=True
+    def _prepare_service_data():
+        return msg["domain"], msg["service"], msg.get("service_data"), target
+
+    await _handle_call_service(hass, connection, msg["id"], _prepare_service_data)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "call_service_action",
+        vol.Required("service_action"): dict,
+    }
+)
+@decorators.async_response
+async def handle_call_service_action(hass, connection, msg):
+    """Handle call service command with script service action syntax."""
+
+    def _prepare_service_data():
+        config = service.async_prepare_call_from_config(
+            hass, msg["service_action"], validate_config=True
         )
+        return (
+            config["domain"],
+            config["service"],
+            config["service_data"],
+            config["target"],
+        )
+
+    await _handle_call_service(hass, connection, msg["id"], _prepare_service_data)
+
+
+async def _handle_call_service(hass, connection, msg_id, prepare_service_data):
+    """Handle call service command."""
+    try:
+        context = connection.context(None)
+        domain, service, service_data, target = prepare_service_data()
+
+        blocking = True
+        if domain == HASS_DOMAIN and service in ["restart", "stop"]:
+            blocking = False
+
         await hass.services.async_call(
-            **params,
+            domain,
+            service,
+            service_data,
             blocking=blocking,
             context=context,
+            target=target,
         )
-        connection.send_message(
-            messages.result_message(msg["id"], {"context": context})
-        )
+        connection.send_message(messages.result_message(msg_id, {"context": context}))
     except ServiceNotFound as err:
-        if err.domain == msg["domain"] and err.service == msg["service"]:
+        if err.domain == domain and err.service == service:
             connection.send_message(
                 messages.error_message(
-                    msg["id"], const.ERR_NOT_FOUND, "Service not found."
+                    msg_id, const.ERR_NOT_FOUND, "Service not found."
                 )
             )
         else:
             connection.send_message(
-                messages.error_message(
-                    msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err)
-                )
+                messages.error_message(msg_id, const.ERR_HOME_ASSISTANT_ERROR, str(err))
             )
     except vol.Invalid as err:
         connection.send_message(
-            messages.error_message(msg["id"], const.ERR_INVALID_FORMAT, str(err))
+            messages.error_message(msg_id, const.ERR_INVALID_FORMAT, str(err))
         )
     except HomeAssistantError as err:
         connection.logger.exception(err)
         connection.send_message(
-            messages.error_message(msg["id"], const.ERR_HOME_ASSISTANT_ERROR, str(err))
+            messages.error_message(msg_id, const.ERR_HOME_ASSISTANT_ERROR, str(err))
         )
     except Exception as err:  # pylint: disable=broad-except
         connection.logger.exception(err)
         connection.send_message(
-            messages.error_message(msg["id"], const.ERR_UNKNOWN_ERROR, str(err))
+            messages.error_message(msg_id, const.ERR_UNKNOWN_ERROR, str(err))
         )
 
 

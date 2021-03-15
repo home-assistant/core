@@ -1,5 +1,6 @@
 """Tests for WebSocket API commands."""
 from async_timeout import timeout
+import pytest
 import voluptuous as vol
 
 from homeassistant.components.websocket_api import const
@@ -19,19 +20,34 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockEntity, MockEntityPlatform, async_mock_service
 
 
-async def test_call_service(hass, websocket_client):
+def _get_call_service_message(command, data, id=5):
+    """Format service data for call_service or call_service_action."""
+    base = {"id": id, "type": command}
+    if command == "call_service":
+        return {**base, **data}
+
+    config = {"service": f'{data["domain"]}.{data["service"]}'}
+    if target := data.get("target"):
+        config["target"] = target
+    if data := data.get("service_data"):
+        config["data"] = data
+    return {**base, "service_action": config}
+
+
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service(hass, websocket_client, command):
     """Test call service command."""
     calls = async_mock_service(hass, "domain_test", "test_service")
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 5,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {"hello": "world"},
-        }
+        },
     )
+    await websocket_client.send_json(message)
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
@@ -46,14 +62,14 @@ async def test_call_service(hass, websocket_client):
     assert call.data == {"hello": "world"}
 
 
-async def test_call_service_target(hass, websocket_client):
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service_target(hass, websocket_client, command):
     """Test call service command with target."""
     calls = async_mock_service(hass, "domain_test", "test_service")
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 5,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {"hello": "world"},
@@ -61,8 +77,9 @@ async def test_call_service_target(hass, websocket_client):
                 "entity_id": ["entity.one", "entity.two"],
                 "device_id": "deviceid",
             },
-        }
+        },
     )
+    await websocket_client.send_json(message)
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
@@ -103,17 +120,52 @@ async def test_call_service_target_template(hass, websocket_client):
     assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
 
 
-async def test_call_service_not_found(hass, websocket_client):
-    """Test call service command."""
+async def test_call_service_action_target_template(hass, websocket_client):
+    """Test call service action command with target allows template."""
+    calls = async_mock_service(hass, "domain_test", "test_service")
+
     await websocket_client.send_json(
         {
             "id": 5,
-            "type": "call_service",
+            "type": "call_service_action",
+            "service_action": {
+                "service": "domain_test.test_service",
+                "data": {"hello": "world"},
+                "target": {
+                    "entity_id": "{{ 'test.entity_1' }}",
+                },
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == 5
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert len(calls) == 1
+    call = calls[0]
+
+    assert call.domain == "domain_test"
+    assert call.service == "test_service"
+    assert call.data == {
+        "hello": "world",
+        "entity_id": ["test.entity_1"],
+    }
+
+
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service_not_found(hass, websocket_client, command):
+    """Test call service command."""
+    message = _get_call_service_message(
+        command,
+        {
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {"hello": "world"},
-        }
+        },
     )
+    await websocket_client.send_json(message)
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
@@ -122,7 +174,8 @@ async def test_call_service_not_found(hass, websocket_client):
     assert msg["error"]["code"] == const.ERR_NOT_FOUND
 
 
-async def test_call_service_child_not_found(hass, websocket_client):
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service_child_not_found(hass, websocket_client, command):
     """Test not reporting not found errors if it's not the called service."""
 
     async def serv_handler(call):
@@ -130,15 +183,15 @@ async def test_call_service_child_not_found(hass, websocket_client):
 
     hass.services.async_register("domain_test", "test_service", serv_handler)
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 5,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {"hello": "world"},
-        }
+        },
     )
+    await websocket_client.send_json(message)
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
@@ -147,8 +200,9 @@ async def test_call_service_child_not_found(hass, websocket_client):
     assert msg["error"]["code"] == const.ERR_HOME_ASSISTANT_ERROR
 
 
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
 async def test_call_service_schema_validation_error(
-    hass: HomeAssistantType, websocket_client
+    hass: HomeAssistantType, websocket_client, command
 ):
     """Test call service command with invalid service data."""
 
@@ -170,45 +224,50 @@ async def test_call_service_schema_validation_error(
         schema=service_schema,
     )
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 5,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {},
-        }
+        },
     )
+    await websocket_client.send_json(message)
+
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 6,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {"extra_key": "not allowed"},
-        }
+        },
+        id=6,
     )
+    await websocket_client.send_json(message)
+
     msg = await websocket_client.receive_json()
     assert msg["id"] == 6
     assert msg["type"] == const.TYPE_RESULT
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_INVALID_FORMAT
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 7,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "test_service",
             "service_data": {"message": []},
-        }
+        },
+        id=7,
     )
+    await websocket_client.send_json(message)
+
     msg = await websocket_client.receive_json()
     assert msg["id"] == 7
     assert msg["type"] == const.TYPE_RESULT
@@ -218,7 +277,8 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
-async def test_call_service_error(hass, websocket_client):
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service_error(hass, websocket_client, command):
     """Test call service command with error."""
 
     @callback
@@ -232,14 +292,14 @@ async def test_call_service_error(hass, websocket_client):
 
     hass.services.async_register("domain_test", "unknown_error", unknown_error_call)
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 5,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "ha_error",
-        }
+        },
     )
+    await websocket_client.send_json(message)
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 5
@@ -248,14 +308,15 @@ async def test_call_service_error(hass, websocket_client):
     assert msg["error"]["code"] == "home_assistant_error"
     assert msg["error"]["message"] == "error_message"
 
-    await websocket_client.send_json(
+    message = _get_call_service_message(
+        command,
         {
-            "id": 6,
-            "type": "call_service",
             "domain": "domain_test",
             "service": "unknown_error",
-        }
+        },
+        id=6,
     )
+    await websocket_client.send_json(message)
 
     msg = await websocket_client.receive_json()
     assert msg["id"] == 6
@@ -375,7 +436,10 @@ async def test_ping(websocket_client):
     assert msg["type"] == "pong"
 
 
-async def test_call_service_context_with_user(hass, aiohttp_client, hass_access_token):
+@pytest.mark.parametrize("command", ("call_service", "call_service_action"))
+async def test_call_service_context_with_user(
+    hass, aiohttp_client, hass_access_token, command
+):
     """Test that the user is set in the service call context."""
     assert await async_setup_component(hass, "websocket_api", {})
 
@@ -391,15 +455,15 @@ async def test_call_service_context_with_user(hass, aiohttp_client, hass_access_
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_OK
 
-        await ws.send_json(
+        message = _get_call_service_message(
+            command,
             {
-                "id": 5,
-                "type": "call_service",
                 "domain": "domain_test",
                 "service": "test_service",
                 "service_data": {"hello": "world"},
-            }
+            },
         )
+        await ws.send_json(message)
 
         msg = await ws.receive_json()
         assert msg["success"]
