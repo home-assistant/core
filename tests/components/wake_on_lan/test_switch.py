@@ -293,7 +293,7 @@ async def test_no_hostname_state(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
 
@@ -305,7 +305,7 @@ async def test_no_hostname_state(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
+        assert state.state == STATE_ON
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -315,4 +315,4 @@ async def test_no_hostname_state(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        assert state.state == STATE_OFF
