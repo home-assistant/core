@@ -37,8 +37,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 async def test_setup_no_data(hass, entry_error):
     """Test setup with erroneous data."""
-    await hass.async_block_till_done()
-
     assert (
         hass.data["netatmo"][entry_error.entry_id]["netatmo_data_handler"].data[
             "HomeData"
@@ -49,8 +47,6 @@ async def test_setup_no_data(hass, entry_error):
 
 async def test_webhook_event_handling_thermostats(hass, climate_entry):
     """Test service and webhook event handling with thermostats."""
-    await hass.async_block_till_done()
-
     assert (
         hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
             "HomeData"
@@ -260,8 +256,6 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
 
 async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     """Test service with frost guard preset for thermostats."""
-    await hass.async_block_till_done()
-
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -345,8 +339,6 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
 
 async def test_service_preset_modes_thermostat(hass, climate_entry):
     """Test service with preset modes for thermostats."""
-    await hass.async_block_till_done()
-
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -436,8 +428,6 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
 
 async def test_webhook_event_handling_no_data(hass, climate_entry):
     """Test service and webhook event handling with erroneous data."""
-    await hass.async_block_till_done()
-
     # Test webhook without home entry
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
@@ -502,8 +492,6 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
 
 async def test_service_schedule_thermostats(hass, climate_entry, caplog):
     """Test service for selecting Netatmo schedule with thermostats."""
-    await hass.async_block_till_done()
-
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     # Test setting a valid schedule
@@ -534,8 +522,6 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
 
 async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves when already in boost mode."""
-    await hass.async_block_till_done()
-
     climate_entity_entrada = "climate.netatmo_entrada"
 
     assert hass.states.get(climate_entity_entrada).state == "auto"
@@ -624,8 +610,6 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
 
 async def test_service_preset_mode_boost_valves(hass, climate_entry):
     """Test service with boost preset for valves."""
-    await hass.async_block_till_done()
-
     assert (
         hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
             "HomeData"
@@ -684,8 +668,6 @@ async def test_service_preset_mode_boost_valves(hass, climate_entry):
 
 async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
     """Test service with invalid preset."""
-    await hass.async_block_till_done()
-
     assert (
         hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
             "HomeData"
@@ -707,8 +689,6 @@ async def test_service_preset_mode_invalid(hass, climate_entry, caplog):
 
 async def test_valves_service_turn_off(hass, climate_entry):
     """Test service turn off for valves."""
-    await hass.async_block_till_done()
-
     assert (
         hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
             "HomeData"
@@ -763,8 +743,6 @@ async def test_valves_service_turn_off(hass, climate_entry):
 
 async def test_valves_service_turn_on(hass, climate_entry):
     """Test service turn on for valves."""
-    await hass.async_block_till_done()
-
     assert (
         hass.data["netatmo"][climate_entry.entry_id]["netatmo_data_handler"].data[
             "HomeData"

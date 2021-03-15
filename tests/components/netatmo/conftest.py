@@ -105,6 +105,8 @@ async def mock_climate_entry_fixture(hass, config_entry):
     """Mock setup of climate platform."""
     with selected_platforms(["climate"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
@@ -121,4 +123,5 @@ async def mock_entry_error_fixture(hass, config_entry):
         mock_auth.return_value.post_request.side_effect = fake_post_request_no_data
         await hass.config_entries.async_setup(config_entry.entry_id)
 
+    await hass.async_block_till_done()
     return config_entry
