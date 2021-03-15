@@ -31,8 +31,10 @@ from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
 )
+from homeassistant.components.netatmo.webhook import async_handle_webhook
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.util.aiohttp import MockRequest
 
 
 async def test_setup_no_data(hass, entry_error):
@@ -73,39 +75,18 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat manual set point
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": "manual",
-                    "therm_setpoint_temperature": 21,
-                    "therm_setpoint_end_time": 1612734552,
-                }
-            ],
-            "modules": [
-                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
-            ],
-        },
-        "mode": "manual",
-        "event_type": "set_point",
-        "temperature": 21,
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
+        b'"home": { "id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
+        b'"rooms": [{ "id": "2746182631", "name": "Livingroom", "type": "livingroom",'
+        b'"therm_setpoint_mode": "manual", "therm_setpoint_temperature": 21,'
+        b'"therm_setpoint_end_time": 1612734552}], "modules": [{"id": "12:34:56:00:01:ae",'
+        b'"name": "Livingroom", "type": "NATherm1"}]}, "mode": "manual", "event_type": "set_point",'
+        b'"temperature": 21, "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -125,37 +106,17 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Max"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": "max",
-                    "therm_setpoint_end_time": 1612749189,
-                }
-            ],
-            "modules": [
-                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
-            ],
-        },
-        "mode": "max",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
+        b'"home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
+        b'"rooms": [{"id": "2746182631", "name": "Livingroom", "type": "livingroom",'
+        b'"therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
+        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}]},'
+        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -171,36 +132,17 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook turn thermostat off
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": "off",
-                }
-            ],
-            "modules": [
-                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
-            ],
-        },
-        "mode": "off",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
+        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
+        b'"rooms": [{"id": "2746182631","name": "Livingroom","type": "livingroom",'
+        b'"therm_setpoint_mode": "off"}],"modules": [{"id": "12:34:56:00:01:ae",'
+        b'"name": "Livingroom", "type": "NATherm1"}]}, "mode": "off", "event_type": "set_point",'
+        b'"push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "off"
@@ -215,36 +157,17 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat mode cancel set point
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": "home",
-                }
-            ],
-            "modules": [
-                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
-            ],
-        },
-        "mode": "home",
-        "event_type": "cancel_set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-cancel_set_point",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b","room_id": "2746182631",'
+        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
+        b'"rooms": [{"id": "2746182631","name": "Livingroom","type": "livingroom",'
+        b'"therm_setpoint_mode": "home"}], "modules": [{"id": "12:34:56:00:01:ae",'
+        b'"name": "Livingroom", "type": "NATherm1"}]}, "mode": "home",'
+        b'"event_type": "cancel_set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -276,22 +199,16 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     )
     await hass.async_block_till_done()
 
-    # Test webhook thermostat mode change to "Frost Guard"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "event_type": "therm_mode",
-        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "hg"},
-        "mode": "hg",
-        "previous_mode": "schedule",
-        "push_type": "home_event_changed",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-therm_mode",
-        {"type": None, "data": webhook_data},
+    # Fake webhook thermostat mode change to "Frost Guard"
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b","user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"event_type": "therm_mode", "home": {"id": "91763b24c43d3e344f424e8b",'
+        b'"therm_mode": "hg"}, "mode": "hg", "previous_mode": "schedule",'
+        b'"push_type":"home_event_changed"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -313,21 +230,15 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Test webhook thermostat mode change to "Schedule"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "event_type": "therm_mode",
-        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "schedule"},
-        "mode": "schedule",
-        "previous_mode": "hg",
-        "push_type": "home_event_changed",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-therm_mode",
-        {"type": None, "data": webhook_data},
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b","user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"event_type": "therm_mode", "home": {"id": "91763b24c43d3e344f424e8b",'
+        b'"therm_mode": "schedule"}, "mode": "schedule", "previous_mode": "hg",'
+        b'"push_type": "home_event_changed"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -356,22 +267,16 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
     )
     await hass.async_block_till_done()
 
-    # Test webhook thermostat mode change to "Away"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "event_type": "therm_mode",
-        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
-        "mode": "away",
-        "previous_mode": "schedule",
-        "push_type": "home_event_changed",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-therm_mode",
-        {"type": None, "data": webhook_data},
+    # Fake webhook thermostat mode change to "Away"
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b","user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", '
+        b'"event_type": "therm_mode","home": {"id": "91763b24c43d3e344f424e8b",'
+        b'"therm_mode": "away"},"mode": "away","previous_mode": "schedule",'
+        b'"push_type": "home_event_changed"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -388,38 +293,18 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
     )
     await hass.async_block_till_done()
 
-    # Test webhook thermostat mode change to "Max"
-    webhook_data = {
-        "user_id": "91763b24c43d3e344f424e8b",
-        "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
-        "home_id": "91763b24c43d3e344f424e8b",
-        "room_id": "2746182631",
-        "home": {
-            "id": "91763b24c43d3e344f424e8b",
-            "name": "MYHOME",
-            "country": "DE",
-            "rooms": [
-                {
-                    "id": "2746182631",
-                    "name": "Livingroom",
-                    "type": "livingroom",
-                    "therm_setpoint_mode": "max",
-                    "therm_setpoint_end_time": 1612749189,
-                }
-            ],
-            "modules": [
-                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
-            ],
-        },
-        "mode": "max",
-        "event_type": "set_point",
-        "push_type": "display_change",
-    }
-    async_dispatcher_send(
-        hass,
-        "signal-netatmo-webhook-set_point",
-        {"type": None, "data": webhook_data},
+    # TFakeest webhook thermostat mode change to "Max"
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email":"john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
+        b'"home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
+        b'"rooms": [{"id": "2746182631", "name": "Livingroom", "type": "livingroom",'
+        b'"therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
+        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}]},'
+        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
     )
+    request = MockRequest(content=response, mock_source="test")
+    await async_handle_webhook(hass, None, request)
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -428,7 +313,6 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
 
 async def test_webhook_event_handling_no_data(hass, climate_entry):
     """Test service and webhook event handling with erroneous data."""
-    # Test webhook without home entry
     webhook_data = {
         "user_id": "91763b24c43d3e344f424e8b",
         "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
