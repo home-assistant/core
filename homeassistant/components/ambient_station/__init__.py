@@ -187,7 +187,7 @@ SENSOR_TYPES = {
     TYPE_LASTRAIN: ("Last Rain", None, SENSOR, "timestamp"),
     TYPE_MAXDAILYGUST: ("Max Gust", SPEED_MILES_PER_HOUR, SENSOR, None),
     TYPE_MONTHLYRAININ: ("Monthly Rain", "in", SENSOR, None),
-        TYPE_PM25_24H: (
+    TYPE_PM25_24H: (
         "PM25 24h Avg",
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         TYPE_SENSOR,
@@ -291,7 +291,6 @@ async def async_setup(hass, config):
 
     if DOMAIN not in config:
         return True
-
     conf = config[DOMAIN]
 
     # Store config for use during entry setup:
@@ -314,7 +313,6 @@ async def async_setup_entry(hass, config_entry):
         hass.config_entries.async_update_entry(
             config_entry, unique_id=config_entry.data[CONF_APP_KEY]
         )
-
     session = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -372,7 +370,6 @@ async def async_migrate_entry(hass, config_entry):
 
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry)
-
     LOGGER.info("Migration to version %s successful", version)
 
     return True
@@ -430,7 +427,6 @@ class AmbientStation:
             for station in data["devices"]:
                 if station["macAddress"] in self.stations:
                     continue
-
                 LOGGER.debug("New station subscription: %s", data)
 
                 # Only create entities based on the data coming through the socket.
@@ -441,7 +437,6 @@ class AmbientStation:
                 ]
                 if TYPE_SOLARRADIATION in monitored_conditions:
                     monitored_conditions.append(TYPE_SOLARRADIATION_LX)
-
                 self.stations[station["macAddress"]] = {
                     ATTR_LAST_DATA: station["lastData"],
                     ATTR_LOCATION: station.get("info", {}).get("location"),
@@ -450,7 +445,6 @@ class AmbientStation:
                         "name", station["macAddress"]
                     ),
                 }
-
             # If the websocket disconnects and reconnects, the on_subscribed
             # handler will get called again; in that case, we don't want to
             # attempt forward setup of the config entry (because it will have
@@ -463,7 +457,6 @@ class AmbientStation:
                         )
                     )
                 self._entry_setup_complete = True
-
             self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
 
         self.client.websocket.on_connect(on_connect)
