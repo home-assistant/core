@@ -36,8 +36,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
-    installations: dict[str, str]
     email: str
+    entry: ConfigEntry
+    installations: dict[str, str]
     password: str
 
     # These can be removed after YAML import has been removed.
