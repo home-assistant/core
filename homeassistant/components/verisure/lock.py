@@ -77,7 +77,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return f"{self.serial_number}"
+        return self.serial_number
 
     @property
     def device_info(self) -> dict[str, Any]:
