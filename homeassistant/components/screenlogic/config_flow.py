@@ -185,7 +185,8 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 mac = format_mac(
                     await async_get_mac_address(self.hass, ip_address, port)
                 )
-            except ScreenLogicError:
+            except ScreenLogicError as ex:
+                _LOGGER.debug(ex)
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
 
             if not errors:
