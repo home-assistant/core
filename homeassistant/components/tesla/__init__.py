@@ -134,16 +134,8 @@ async def async_setup_entry(hass, config_entry):
     """Set up Tesla as config entry."""
     hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
-    count = 0
-    if hass.config_entries.async_entries(DOMAIN):
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.title == config_entry.title:
-                break
-            count += 1
-    if count > 0:
-        websession = aiohttp_client.async_create_clientsession(hass)
-    else:
-        websession = aiohttp_client.async_get_clientsession(hass)
+    # Because users can have multiple accounts, we always create a new session
+    websession = aiohttp_client.async_create_clientsession(hass)
     email = config_entry.title
     if email in hass.data[DOMAIN] and CONF_SCAN_INTERVAL in hass.data[DOMAIN][email]:
         scan_interval = hass.data[DOMAIN][email][CONF_SCAN_INTERVAL]
