@@ -634,14 +634,6 @@ omit =
     homeassistant/components/n26/*
     homeassistant/components/nad/media_player.py
     homeassistant/components/nanoleaf/light.py
-    homeassistant/components/netatmo/__init__.py
-    homeassistant/components/netatmo/api.py
-    homeassistant/components/netatmo/camera.py
-    homeassistant/components/netatmo/helper.py
-    homeassistant/components/netatmo/light.py
-    homeassistant/components/netatmo/netatmo_entity_base.py
-    homeassistant/components/netatmo/sensor.py
-    homeassistant/components/netatmo/webhook.py
     homeassistant/components/neato/__init__.py
     homeassistant/components/neato/api.py
     homeassistant/components/neato/camera.py
