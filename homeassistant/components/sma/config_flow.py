@@ -1,6 +1,7 @@
 """Config flow for the sma integration."""
 import logging
 
+from aiohttp.client_exceptions import ClientConnectorError
 import pysma
 import voluptuous as vol
 
@@ -23,6 +24,7 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
+    DEVICE_INFO,
     DOMAIN,
     GROUPS,
 )
@@ -37,25 +39,55 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     protocol = "https" if data[CONF_SSL] else "http"
     url = f"{protocol}://{data[CONF_HOST]}"
 
+    # This will also test device connectivity. Raises ClientConnectorError on failure
+    res = await session.get(f"{url}/data/l10n/en-US.json")
+    translate_json = (await res.json()) or {}
+
     sma = pysma.SMA(session, url, data[CONF_PASSWORD], group=data[CONF_GROUP])
 
     if await sma.new_session() is False:
-        raise CannotConnect
+        raise InvalidAuth
 
-    sensors = [pysma.Sensor("6800_00A21E00", "serial_number", "")]
+    sensors = [
+        pysma.Sensor("6800_00A21E00", "serial_number", ""),
+        pysma.Sensor("6800_10821E00", "device_name", ""),
+        pysma.Sensor(
+            "6800_08822000",
+            "device_type_id",
+            "",
+            None,
+            ('"1"[0].val[0].tag', "val[0].tag"),
+        ),
+        pysma.Sensor(
+            "6800_08822B00",
+            "device_manufacturer_id",
+            "",
+            None,
+            ('"1"[0].val[0].tag', "val[0].tag"),
+        ),
+    ]
+
     values = await sma.read(sensors)
 
     if not values:
-        raise CannotRetrieveSerial
+        raise CannotRetrieveDeviceInfo
 
-    serial = sensors[0].value
+    device_info = {
+        "serial": sensors[0].value,
+        "name": sensors[1].value,
+        "type": translate_json.get(str(sensors[2].value), ""),
+        "manufacturer": translate_json.get(str(sensors[3].value), ""),
+    }
 
-    sma.close_session()
-    return serial
+    await sma.close_session()
+    return device_info
 
 
 class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMA."""
+
+    VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -67,6 +99,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PASSWORD: vol.UNDEFINED,
             CONF_SENSORS: [],
             CONF_CUSTOM: {},
+            DEVICE_INFO: {},
         }
 
     async def async_step_user(self, user_input=None):
@@ -80,15 +113,18 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
             try:
-                serial = await validate_input(self.hass, user_input)
-                await self.async_set_unique_id(serial)
+                device_info = await validate_input(self.hass, user_input)
+                await self.async_set_unique_id(device_info["serial"])
                 self._abort_if_unique_id_configured()
 
+                self._data[DEVICE_INFO] = device_info
                 return await self.async_step_sensors()
-            except CannotConnect:
+            except ClientConnectorError:
                 errors["base"] = "cannot_connect"
-            except CannotRetrieveSerial:
-                errors["base"] = "cannot_retrieve_serial"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except CannotRetrieveDeviceInfo:
+                errors["base"] = "cannot_retrieve_device_info"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -185,9 +221,9 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
+class InvalidAuth(exceptions.HomeAssistantError):
+    """Error to indicate there is invalid auth."""
 
 
-class CannotRetrieveSerial(exceptions.HomeAssistantError):
-    """Error to indicate we cannot retrieve the serial of the device."""
+class CannotRetrieveDeviceInfo(exceptions.HomeAssistantError):
+    """Error to indicate we cannot retrieve the device information."""

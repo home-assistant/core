@@ -6,7 +6,8 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "cannot_retrieve_serial": "Successfully connected, but unable to retrieve the device serial",
+            "cannot_retrieve_device_info": "Successfully connected, but unable to retrieve the device information",
+            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {

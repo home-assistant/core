@@ -32,6 +32,8 @@ from .const import (
     CONF_GROUP,
     CONF_KEY,
     CONF_UNIT,
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_INFO,
     DOMAIN,
     GROUPS,
 )
@@ -151,7 +153,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in hass_sensors:
             sensor.async_update_values()
 
-    interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=5)
+    interval = config_entry.options.get(CONF_SCAN_INTERVAL) or timedelta(
+        seconds=DEFAULT_SCAN_INTERVAL
+    )
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -182,6 +186,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             SMAsensor(
                 coordinator,
                 config_entry.unique_id,
+                config[DEVICE_INFO],
                 sensor_def[sensor],
             )
         )
@@ -194,14 +199,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SMAsensor(CoordinatorEntity, Entity):
     """Representation of a SMA sensor."""
 
-    def __init__(self, coordinator, confg_entry_unique_id, pysma_sensor):
+    def __init__(self, coordinator, confg_entry_unique_id, device_info, pysma_sensor):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._sensor = pysma_sensor
         self._state = self._sensor.value
 
-        self._device_name = f"SMA {confg_entry_unique_id}"
         self._confg_entry_unique_id = confg_entry_unique_id
+        self._device_info = device_info
 
     @property
     def name(self):
@@ -245,5 +250,7 @@ class SMAsensor(CoordinatorEntity, Entity):
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._confg_entry_unique_id)},
-            "name": self._device_name,
+            "name": self._device_info["name"],
+            "manufacturer": self._device_info["manufacturer"],
+            "model": self._device_info["type"],
         }
