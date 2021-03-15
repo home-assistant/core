@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
+    CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
     ENTITY_MATCH_ALL,
@@ -41,7 +42,6 @@ GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_ENTITIES = "entities"
 CONF_ALL = "all"
 
 ATTR_ADD_ENTITIES = "add_entities"
@@ -345,7 +345,6 @@ async def async_setup(hass, config):
 
 async def _process_group_platform(hass, domain, platform):
     """Process a group platform."""
-
     current_domain.set(domain)
     platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
@@ -396,7 +395,6 @@ class GroupEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
-        assert self.hass is not None
 
         async def _update_at_start(_):
             await self.async_update()
@@ -406,8 +404,6 @@ class GroupEntity(Entity):
 
     async def async_defer_or_update_ha_state(self) -> None:
         """Only update once at start."""
-        assert self.hass is not None
-
         if self.hass.state != CoreState.running:
             return
 

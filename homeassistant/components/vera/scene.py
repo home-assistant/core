@@ -21,7 +21,7 @@ async def async_setup_entry(
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
     async_add_entities(
-        [VeraScene(device, controller_data) for device in controller_data.scenes]
+        [VeraScene(device, controller_data) for device in controller_data.scenes], True
     )
 
 
@@ -53,6 +53,6 @@ class VeraScene(Scene):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the scene."""
         return {"vera_scene_id": self.vera_scene.vera_scene_id}

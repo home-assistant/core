@@ -1,4 +1,6 @@
 """Support for restoring entity states on startup."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -48,7 +50,7 @@ class StoredState:
         return {"state": self.state.as_dict(), "last_seen": self.last_seen}
 
     @classmethod
-    def from_dict(cls, json_dict: Dict) -> "StoredState":
+    def from_dict(cls, json_dict: Dict) -> StoredState:
         """Initialize a stored state from a dict."""
         last_seen = json_dict["last_seen"]
 
@@ -62,11 +64,11 @@ class RestoreStateData:
     """Helper class for managing the helper saved data."""
 
     @classmethod
-    async def async_get_instance(cls, hass: HomeAssistant) -> "RestoreStateData":
+    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
         """Get the singleton instance of this data helper."""
 
         @singleton(DATA_RESTORE_STATE_TASK)
-        async def load_instance(hass: HomeAssistant) -> "RestoreStateData":
+        async def load_instance(hass: HomeAssistant) -> RestoreStateData:
             """Get the singleton instance of this data helper."""
             data = cls(hass)
 
@@ -233,7 +235,6 @@ class RestoreEntity(Entity):
 
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
-        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_added_to_hass(),
             RestoreStateData.async_get_instance(self.hass),
@@ -242,7 +243,6 @@ class RestoreEntity(Entity):
 
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
-        assert self.hass is not None
         _, data = await asyncio.gather(
             super().async_internal_will_remove_from_hass(),
             RestoreStateData.async_get_instance(self.hass),
@@ -253,7 +253,7 @@ class RestoreEntity(Entity):
         """Get the entity state from the previous run."""
         if self.hass is None or self.entity_id is None:
             # Return None if this entity isn't added to hass yet
-            _LOGGER.warning("Cannot get last state. Entity not added to hass")
+            _LOGGER.warning("Cannot get last state. Entity not added to hass")  # type: ignore[unreachable]
             return None
         data = await RestoreStateData.async_get_instance(self.hass)
         if self.entity_id not in data.last_states:

@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import (
@@ -24,8 +24,6 @@ ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_ICON = "mdi:trash-can-outline"
-
-CONF_NAME = "name"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -88,7 +86,7 @@ class ReCollectWasteSensor(CoordinatorEntity):
         self._state = None
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
 

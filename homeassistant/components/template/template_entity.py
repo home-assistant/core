@@ -168,7 +168,7 @@ class TemplateEntity(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -223,7 +223,6 @@ class TemplateEntity(Entity):
         updates: List[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
-
         if event:
             self.async_set_context(event.context)
 

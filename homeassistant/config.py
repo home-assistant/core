@@ -1,13 +1,14 @@
 """Module to help with parsing and generating configuration files."""
 from collections import OrderedDict
-from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
+from pathlib import Path
 import re
 import shutil
 from types import ModuleType
 from typing import Any, Callable, Dict, Optional, Sequence, Set, Tuple, Union
 
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -51,6 +52,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -58,7 +60,7 @@ from homeassistant.requirements import (
 )
 from homeassistant.util.package import is_docker_env
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.yaml import SECRET_YAML, load_yaml
+from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +76,13 @@ GROUP_CONFIG_PATH = "groups.yaml"
 AUTOMATION_CONFIG_PATH = "automations.yaml"
 SCRIPT_CONFIG_PATH = "scripts.yaml"
 SCENE_CONFIG_PATH = "scenes.yaml"
+
+LOAD_EXCEPTIONS = (ImportError, FileNotFoundError)
+INTEGRATION_LOAD_EXCEPTIONS = (
+    IntegrationNotFound,
+    RequirementsNotFound,
+    *LOAD_EXCEPTIONS,
+)
 
 DEFAULT_CONFIG = f"""
 # Configure a default setup of Home Assistant (frontend, api, etc)
@@ -310,23 +319,33 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     This function allow a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
     """
+    if hass.config.config_dir is None:
+        secrets = None
+    else:
+        secrets = Secrets(Path(hass.config.config_dir))
+
     # Not using async_add_executor_job because this is an internal method.
     config = await hass.loop.run_in_executor(
-        None, load_yaml_config_file, hass.config.path(YAML_CONFIG_FILE)
+        None,
+        load_yaml_config_file,
+        hass.config.path(YAML_CONFIG_FILE),
+        secrets,
     )
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
 
 
-def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
+def load_yaml_config_file(
+    config_path: str, secrets: Optional[Secrets] = None
+) -> Dict[Any, Any]:
     """Parse a YAML configuration file.
 
     Raises FileNotFoundError or HomeAssistantError.
 
     This method needs to run in an executor.
     """
-    conf_dict = load_yaml(config_path)
+    conf_dict = load_yaml(config_path, secrets)
 
     if not isinstance(conf_dict, dict):
         msg = (
@@ -363,15 +382,15 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         "Upgrading configuration directory from %s to %s", conf_version, __version__
     )
 
-    version_obj = LooseVersion(conf_version)
+    version_obj = AwesomeVersion(conf_version)
 
-    if version_obj < LooseVersion("0.50"):
+    if version_obj < AwesomeVersion("0.50"):
         # 0.50 introduced persistent deps dir.
         lib_path = hass.config.path("deps")
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
 
-    if version_obj < LooseVersion("0.92"):
+    if version_obj < AwesomeVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
         config_path = hass.config.path(YAML_CONFIG_FILE)
 
@@ -387,7 +406,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
             except OSError:
                 _LOGGER.exception("Migrating to google_translate tts failed")
 
-    if version_obj < LooseVersion("0.94") and is_docker_env():
+    if version_obj < AwesomeVersion("0.94") and is_docker_env():
         # In 0.94 we no longer install packages inside the deps folder when
         # running inside a Docker container.
         lib_path = hass.config.path("deps")
@@ -688,7 +707,7 @@ async def merge_packages_config(
                     hass, domain
                 )
                 component = integration.get_component()
-            except (IntegrationNotFound, RequirementsNotFound, ImportError) as ex:
+            except INTEGRATION_LOAD_EXCEPTIONS as ex:
                 _log_pkg_error(pack_name, comp_name, config, str(ex))
                 continue
 
@@ -734,8 +753,8 @@ async def merge_packages_config(
 
 
 async def async_process_component_config(
-    hass: HomeAssistant, config: Dict, integration: Integration
-) -> Optional[Dict]:
+    hass: HomeAssistant, config: ConfigType, integration: Integration
+) -> Optional[ConfigType]:
     """Check component configuration and return processed configuration.
 
     Returns None on error.
@@ -745,7 +764,7 @@ async def async_process_component_config(
     domain = integration.domain
     try:
         component = integration.get_component()
-    except ImportError as ex:
+    except LOAD_EXCEPTIONS as ex:
         _LOGGER.error("Unable to import %s: %s", domain, ex)
         return None
 
@@ -824,7 +843,7 @@ async def async_process_component_config(
 
         try:
             platform = p_integration.get_platform(domain)
-        except ImportError:
+        except LOAD_EXCEPTIONS:
             _LOGGER.exception("Platform error: %s", domain)
             continue
 

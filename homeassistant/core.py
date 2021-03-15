@@ -8,7 +8,6 @@ import asyncio
 import datetime
 import enum
 import functools
-from ipaddress import ip_address
 import logging
 import os
 import pathlib
@@ -29,6 +28,7 @@ from typing import (
     Mapping,
     Optional,
     Set,
+    Tuple,
     TypeVar,
     Union,
     cast,
@@ -70,8 +70,12 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location, network
-from homeassistant.util.async_ import fire_coroutine_threadsafe, run_callback_threadsafe
+from homeassistant.util import location
+from homeassistant.util.async_ import (
+    fire_coroutine_threadsafe,
+    run_callback_threadsafe,
+    shutdown_run_callback_threadsafe,
+)
 import homeassistant.util.dt as dt_util
 from homeassistant.util.timeout import TimeoutManager
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
@@ -149,6 +153,7 @@ def is_callback(func: Callable[..., Any]) -> bool:
 
 @enum.unique
 class HassJobType(enum.Enum):
+    # pylint: disable=invalid-name
     """Represent a job type."""
 
     Coroutinefunction = 1
@@ -194,6 +199,7 @@ def _get_callable_job_type(target: Callable) -> HassJobType:
 
 
 class CoreState(enum.Enum):
+    # pylint: disable=invalid-name
     """Represent the current state of Home Assistant."""
 
     not_running = "NOT_RUNNING"
@@ -205,7 +211,7 @@ class CoreState(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class HomeAssistant:
@@ -548,6 +554,14 @@ class HomeAssistant:
         # stage 3
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+
+        # Prevent run_callback_threadsafe from scheduling any additional
+        # callbacks in the event loop as callbacks created on the futures
+        # it returns will never run after the final `self.async_block_till_done`
+        # which will cause the futures to block forever when waiting for
+        # the `result()` which will cause a deadlock when shutting down the executor.
+        shutdown_run_callback_threadsafe(self.loop)
+
         try:
             async with self.timeout.async_timeout(30):
                 await self.async_block_till_done()
@@ -577,6 +591,7 @@ class Context:
 
 
 class EventOrigin(enum.Enum):
+    # pylint: disable=invalid-name
     """Represent the origin of an event."""
 
     local = "LOCAL"
@@ -584,7 +599,7 @@ class EventOrigin(enum.Enum):
 
     def __str__(self) -> str:  # pylint: disable=invalid-str-returned
         """Return the event."""
-        return self.value  # type: ignore
+        return self.value
 
 
 class Event:
@@ -627,7 +642,6 @@ class Event:
 
     def __repr__(self) -> str:
         """Return the representation."""
-        # pylint: disable=maybe-no-member
         if self.data:
             return f"<Event {self.event_type}[{str(self.origin)[0]}]: {util.repr_helper(self.data)}>"
 
@@ -650,7 +664,7 @@ class EventBus:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners: Dict[str, List[HassJob]] = {}
+        self._listeners: Dict[str, List[Tuple[HassJob, Optional[Callable]]]] = {}
         self._hass = hass
 
     @callback
@@ -706,7 +720,14 @@ class EventBus:
         if not listeners:
             return
 
-        for job in listeners:
+        for job, event_filter in listeners:
+            if event_filter is not None:
+                try:
+                    if not event_filter(event):
+                        continue
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error in event filter")
+                    continue
             self._hass.async_add_hass_job(job, event)
 
     def listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
@@ -726,23 +747,38 @@ class EventBus:
         return remove_listener
 
     @callback
-    def async_listen(self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
+    def async_listen(
+        self,
+        event_type: str,
+        listener: Callable,
+        event_filter: Optional[Callable] = None,
+    ) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
         as event_type.
 
+        An optional event_filter, which must be a callable decorated with
+        @callback that returns a boolean value, determines if the
+        listener callable should run.
+
         This method must be run in the event loop.
         """
-        return self._async_listen_job(event_type, HassJob(listener))
+        if event_filter is not None and not is_callback(event_filter):
+            raise HomeAssistantError(f"Event filter {event_filter} is not a callback")
+        return self._async_listen_filterable_job(
+            event_type, (HassJob(listener), event_filter)
+        )
 
     @callback
-    def _async_listen_job(self, event_type: str, hassjob: HassJob) -> CALLBACK_TYPE:
-        self._listeners.setdefault(event_type, []).append(hassjob)
+    def _async_listen_filterable_job(
+        self, event_type: str, filterable_job: Tuple[HassJob, Optional[Callable]]
+    ) -> CALLBACK_TYPE:
+        self._listeners.setdefault(event_type, []).append(filterable_job)
 
         def remove_listener() -> None:
             """Remove the listener."""
-            self._async_remove_listener(event_type, hassjob)
+            self._async_remove_listener(event_type, filterable_job)
 
         return remove_listener
 
@@ -775,12 +811,12 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        job: Optional[HassJob] = None
+        filterable_job: Optional[Tuple[HassJob, Optional[Callable]]] = None
 
         @callback
         def _onetime_listener(event: Event) -> None:
             """Remove listener from event bus and then fire listener."""
-            nonlocal job
+            nonlocal filterable_job
             if hasattr(_onetime_listener, "run"):
                 return
             # Set variable so that we will never run twice.
@@ -789,22 +825,24 @@ class EventBus:
             # multiple times as well.
             # This will make sure the second time it does nothing.
             setattr(_onetime_listener, "run", True)
-            assert job is not None
-            self._async_remove_listener(event_type, job)
+            assert filterable_job is not None
+            self._async_remove_listener(event_type, filterable_job)
             self._hass.async_run_job(listener, event)
 
-        job = HassJob(_onetime_listener)
+        filterable_job = (HassJob(_onetime_listener), None)
 
-        return self._async_listen_job(event_type, job)
+        return self._async_listen_filterable_job(event_type, filterable_job)
 
     @callback
-    def _async_remove_listener(self, event_type: str, hassjob: HassJob) -> None:
+    def _async_remove_listener(
+        self, event_type: str, filterable_job: Tuple[HassJob, Optional[Callable]]
+    ) -> None:
         """Remove a listener of a specific event_type.
 
         This method must be run in the event loop.
         """
         try:
-            self._listeners[event_type].remove(hassjob)
+            self._listeners[event_type].remove(filterable_job)
 
             # delete event_type list if empty
             if not self._listeners[event_type]:
@@ -812,7 +850,9 @@ class EventBus:
         except (KeyError, ValueError):
             # KeyError is key event_type listener did not exist
             # ValueError if listener did not exist within event_type
-            _LOGGER.exception("Unable to remove unknown job listener %s", hassjob)
+            _LOGGER.exception(
+                "Unable to remove unknown job listener %s", filterable_job
+            )
 
 
 class State:
@@ -1346,6 +1386,7 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Optional[Context] = None,
         limit: Optional[float] = SERVICE_CALL_LIMIT,
+        target: Optional[Dict] = None,
     ) -> Optional[bool]:
         """
         Call a service.
@@ -1353,7 +1394,9 @@ class ServiceRegistry:
         See description of async_call for details.
         """
         return asyncio.run_coroutine_threadsafe(
-            self.async_call(domain, service, service_data, blocking, context, limit),
+            self.async_call(
+                domain, service, service_data, blocking, context, limit, target
+            ),
             self._hass.loop,
         ).result()
 
@@ -1365,6 +1408,7 @@ class ServiceRegistry:
         blocking: bool = False,
         context: Optional[Context] = None,
         limit: Optional[float] = SERVICE_CALL_LIMIT,
+        target: Optional[Dict] = None,
     ) -> Optional[bool]:
         """
         Call a service.
@@ -1391,6 +1435,9 @@ class ServiceRegistry:
             handler = self._services[domain][service]
         except KeyError:
             raise ServiceNotFound(domain, service) from None
+
+        if target:
+            service_data.update(target)
 
         if handler.schema:
             try:
@@ -1668,39 +1715,7 @@ class Config:
         )
         data = await store.async_load()
 
-        async def migrate_base_url(_: Event) -> None:
-            """Migrate base_url to internal_url/external_url."""
-            if self.hass.config.api is None:
-                return
-
-            base_url = yarl.URL(self.hass.config.api.deprecated_base_url)
-
-            # Check if this is an internal URL
-            if str(base_url.host).endswith(".local") or (
-                network.is_ip_address(str(base_url.host))
-                and network.is_private(ip_address(base_url.host))
-            ):
-                await self.async_update(
-                    internal_url=network.normalize_url(str(base_url))
-                )
-                return
-
-            # External, ensure this is not a loopback address
-            if not (
-                network.is_ip_address(str(base_url.host))
-                and network.is_loopback(ip_address(base_url.host))
-            ):
-                await self.async_update(
-                    external_url=network.normalize_url(str(base_url))
-                )
-
         if data:
-            # Try to migrate base_url to internal_url/external_url
-            if "external_url" not in data:
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, migrate_base_url
-                )
-
             self._update(
                 source=SOURCE_STORAGE,
                 latitude=data.get("latitude"),

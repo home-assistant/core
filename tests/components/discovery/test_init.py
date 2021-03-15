@@ -16,8 +16,8 @@ from tests.common import async_fire_time_changed, mock_coro
 SERVICE = "yamaha"
 SERVICE_COMPONENT = "media_player"
 
-SERVICE_NO_PLATFORM = "hass_ios"
-SERVICE_NO_PLATFORM_COMPONENT = "ios"
+SERVICE_NO_PLATFORM = "netgear_router"
+SERVICE_NO_PLATFORM_COMPONENT = "device_tracker"
 SERVICE_INFO = {"key": "value"}  # Can be anything
 
 UNKNOWN_SERVICE = "this_service_will_never_be_supported"
@@ -38,19 +38,17 @@ async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     """Mock discoveries."""
     with patch("homeassistant.components.zeroconf.async_get_instance"), patch(
         "homeassistant.components.zeroconf.async_setup", return_value=True
-    ):
+    ), patch.object(discovery, "_discover", discoveries), patch(
+        "homeassistant.components.discovery.async_discover"
+    ) as mock_discover, patch(
+        "homeassistant.components.discovery.async_load_platform",
+        return_value=mock_coro(),
+    ) as mock_platform:
         assert await async_setup_component(hass, "discovery", config)
         await hass.async_block_till_done()
         await hass.async_start()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-
-    with patch.object(discovery, "_discover", discoveries), patch(
-        "homeassistant.components.discovery.async_discover", return_value=mock_coro()
-    ) as mock_discover, patch(
-        "homeassistant.components.discovery.async_load_platform",
-        return_value=mock_coro(),
-    ) as mock_platform:
         async_fire_time_changed(hass, utcnow())
         # Work around an issue where our loop.call_soon not get caught
         await hass.async_block_till_done()

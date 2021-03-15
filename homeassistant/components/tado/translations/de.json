@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, versuchen Sie es erneut",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "no_homes": "Es sind keine Standorte mit diesem Tado-Konto verkn\u00fcpft.",
             "unknown": "Unerwarteter Fehler"
@@ -15,7 +15,7 @@
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
-                "title": "Stellen Sie eine Verbindung zu Ihrem Tado-Konto her"
+                "title": "Stellen eine Verbindung zu deinem Tado-Konto her"
             }
         }
     },
@@ -23,10 +23,10 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Aktivieren Sie den Fallback-Modus."
+                    "fallback": "Aktivieren den Fallback-Modus."
                 },
                 "description": "Der Fallback-Modus wechselt beim n\u00e4chsten Zeitplanwechsel nach dem manuellen Anpassen einer Zone zu Smart Schedule.",
-                "title": "Passen Sie die Tado-Optionen an."
+                "title": "Passe die Tado-Optionen an."
             }
         }
     }

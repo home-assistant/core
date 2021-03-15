@@ -255,7 +255,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return self.sharkiq.get_property_value(Properties.LOW_LIGHT_MISSION)
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Return a dictionary of device state attributes specific to sharkiq."""
         data = {
             ATTR_ERROR_CODE: self.error_code,

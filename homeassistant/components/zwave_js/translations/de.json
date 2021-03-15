@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "usb_path": "USB-Ger\u00e4te-Pfad"
+                }
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    }
+}

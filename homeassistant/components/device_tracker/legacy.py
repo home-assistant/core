@@ -153,7 +153,7 @@ async def async_setup_integration(hass: HomeAssistantType, config: ConfigType) -
     legacy_platforms = await async_extract_config(hass, config)
 
     setup_tasks = [
-        legacy_platform.async_setup_legacy(hass, tracker)
+        asyncio.create_task(legacy_platform.async_setup_legacy(hass, tracker))
         for legacy_platform in legacy_platforms
     ]
 
@@ -675,7 +675,7 @@ class Device(RestoreEntity):
         return attributes
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device state attributes."""
         return self._attributes
 

@@ -144,7 +144,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
         """Remove this entity."""
         self._remove_signal_delete()
         self._remove_signal_update()
-        self.hass.async_create_task(self.async_remove())
+        self.hass.async_create_task(self.async_remove(force_remove=True))
 
     @callback
     def _update_callback(self):
@@ -201,7 +201,7 @@ class GeoJsonLocationEvent(GeolocationEvent):
         return LENGTH_KILOMETERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._external_id:
             return {}

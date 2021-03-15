@@ -5,7 +5,7 @@
         },
         "error": {
             "unknown_error": "Unbekannter Fehler",
-            "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte \u00fcberpr\u00fcfen Sie Host und Port.",
+            "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte Host und Port pr\u00fcfen.",
             "wrong_password": "Ung\u00fcltiges Passwort",
             "wrong_server_type": "F\u00fcr die forked-daapd Integration ist ein forked-daapd Server mit der Version > = 27.0 erforderlich."
         },

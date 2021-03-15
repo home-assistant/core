@@ -11,7 +11,7 @@
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication"
         },
-        "flow_title": "Axis device: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

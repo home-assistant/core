@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.cover import DEVICE_CLASSES_SCHEMA
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_DEFAULT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +29,6 @@ from .const import (
     CONF_CHANNEL,
     CONF_CHANNEL_COVER,
     CONF_CLOSE_PRESET,
-    CONF_DEFAULT,
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
@@ -48,8 +47,8 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TEMPLATES,
     DOMAIN,
-    ENTITY_PLATFORMS,
     LOGGER,
+    PLATFORMS,
     SERVICE_REQUEST_AREA_PRESET,
     SERVICE_REQUEST_CHANNEL_LEVEL,
 )
@@ -181,7 +180,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: Dict[str, Any]) -> bool:
     """Set up the Dynalite platform."""
-
     conf = config.get(DOMAIN)
     LOGGER.debug("Setting up dynalite component config = %s", conf)
 
@@ -269,14 +267,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # need to do it before the listener
     hass.data[DOMAIN][entry.entry_id] = bridge
     entry.add_update_listener(async_entry_changed)
+
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         hass.data[DOMAIN][entry.entry_id] = None
         raise ConfigEntryNotReady
-    for platform in ENTITY_PLATFORMS:
+
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
+
     return True
 
 
@@ -286,7 +287,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN].pop(entry.entry_id)
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, platform)
-        for platform in ENTITY_PLATFORMS
+        for platform in PLATFORMS
     ]
     results = await asyncio.gather(*tasks)
     return False not in results

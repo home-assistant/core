@@ -13,6 +13,7 @@ from homeassistant.components.vera import (
 )
 from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import ComponentFactory, ConfigSource, new_simple_controller_config
 
@@ -40,7 +41,7 @@ async def test_init(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -67,7 +68,7 @@ async def test_init_from_file(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
     assert entry1.unique_id == "vera_first_serial_1"
@@ -117,7 +118,7 @@ async def test_multiple_controllers_with_legacy_one(
         ),
     )
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
@@ -206,6 +207,7 @@ async def test_exclude_and_light_ids(
     vera_device3.name = "dev3"
     vera_device3.category = pv.CATEGORY_SWITCH
     vera_device3.is_switched_on = MagicMock(return_value=False)
+
     entity_id3 = "switch.dev3_3"
 
     vera_device4 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
@@ -214,6 +216,10 @@ async def test_exclude_and_light_ids(
     vera_device4.name = "dev4"
     vera_device4.category = pv.CATEGORY_SWITCH
     vera_device4.is_switched_on = MagicMock(return_value=False)
+    vera_device4.get_brightness = MagicMock(return_value=0)
+    vera_device4.get_color = MagicMock(return_value=[0, 0, 0])
+    vera_device4.is_dimmable = True
+
     entity_id4 = "light.dev4_4"
 
     component_data = await vera_component_factory.configure_component(

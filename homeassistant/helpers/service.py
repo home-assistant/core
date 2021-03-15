@@ -1,4 +1,6 @@
 """Service calling related helpers."""
+from __future__ import annotations
+
 import asyncio
 import dataclasses
 from functools import partial, wraps
@@ -14,6 +16,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypedDict,
     Union,
     cast,
 )
@@ -25,7 +28,9 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    CONF_ENTITY_ID,
     CONF_SERVICE,
+    CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
     ENTITY_MATCH_ALL,
@@ -57,17 +62,25 @@ from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity  # noqa
+    from homeassistant.helpers.entity import Entity
     from homeassistant.helpers.entity_platform import EntityPlatform
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
-CONF_SERVICE_DATA = "data"
 CONF_SERVICE_DATA_TEMPLATE = "data_template"
 
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+class ServiceParams(TypedDict):
+    """Type for service call parameters."""
+
+    domain: str
+    service: str
+    service_data: Dict[str, Any]
+    target: Optional[Dict]
 
 
 @dataclasses.dataclass
@@ -136,7 +149,7 @@ async def async_call_from_config(
             raise
         _LOGGER.error(ex)
     else:
-        await hass.services.async_call(*params, blocking, context)
+        await hass.services.async_call(**params, blocking=blocking, context=context)
 
 
 @ha.callback
@@ -146,7 +159,7 @@ def async_prepare_call_from_config(
     config: ConfigType,
     variables: TemplateVarsType = None,
     validate_config: bool = False,
-) -> Tuple[str, str, Dict[str, Any]]:
+) -> ServiceParams:
     """Prepare to call a service based on a config hash."""
     if validate_config:
         try:
@@ -177,10 +190,24 @@ def async_prepare_call_from_config(
 
     domain, service = domain_service.split(".", 1)
 
-    service_data = {}
-
+    target = {}
     if CONF_TARGET in config:
-        service_data.update(config[CONF_TARGET])
+        conf = config.get(CONF_TARGET)
+        try:
+            template.attach(hass, conf)
+            target.update(template.render_complex(conf, variables))
+            if CONF_ENTITY_ID in target:
+                target[CONF_ENTITY_ID] = cv.comp_entity_ids(target[CONF_ENTITY_ID])
+        except TemplateError as ex:
+            raise HomeAssistantError(
+                f"Error rendering service target template: {ex}"
+            ) from ex
+        except vol.Invalid as ex:
+            raise HomeAssistantError(
+                f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
+            ) from ex
+
+    service_data = {}
 
     for conf in [CONF_SERVICE_DATA, CONF_SERVICE_DATA_TEMPLATE]:
         if conf not in config:
@@ -192,9 +219,17 @@ def async_prepare_call_from_config(
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
     if CONF_SERVICE_ENTITY_ID in config:
-        service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+        if target:
+            target[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
+        else:
+            target = {ATTR_ENTITY_ID: config[CONF_SERVICE_ENTITY_ID]}
 
-    return domain, service, service_data
+    return {
+        "domain": domain,
+        "service": service,
+        "service_data": service_data,
+        "target": target,
+    }
 
 
 @bind_hass
@@ -213,10 +248,10 @@ def extract_entity_ids(
 @bind_hass
 async def async_extract_entities(
     hass: HomeAssistantType,
-    entities: Iterable["Entity"],
+    entities: Iterable[Entity],
     service_call: ha.ServiceCall,
     expand_group: bool = True,
-) -> List["Entity"]:
+) -> List[Entity]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -429,10 +464,16 @@ async def async_get_all_descriptions(
                 # Don't warn for missing services, because it triggers false
                 # positives for things like scripts, that register as a service
 
-                description = descriptions_cache[cache_key] = {
+                description = {
+                    "name": yaml_description.get("name", ""),
                     "description": yaml_description.get("description", ""),
                     "fields": yaml_description.get("fields", {}),
                 }
+
+                if "target" in yaml_description:
+                    description["target"] = yaml_description["target"]
+
+                descriptions_cache[cache_key] = description
 
             descriptions[domain][service] = description
 
@@ -448,9 +489,13 @@ def async_set_service_schema(
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
 
     description = {
-        "description": schema.get("description") or "",
-        "fields": schema.get("fields") or {},
+        "name": schema.get("name", ""),
+        "description": schema.get("description", ""),
+        "fields": schema.get("fields", {}),
     }
+
+    if "target" in schema:
+        description["target"] = schema["target"]
 
     hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
 
@@ -584,8 +629,10 @@ async def entity_service_call(
 
     done, pending = await asyncio.wait(
         [
-            entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, call.context)
+            asyncio.create_task(
+                entity.async_request_call(
+                    _handle_entity_call(hass, entity, func, data, call.context)
+                )
             )
             for entity in entities
         ]
@@ -603,7 +650,7 @@ async def entity_service_call(
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
-        tasks.append(entity.async_update_ha_state(True))
+        tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)
@@ -614,7 +661,7 @@ async def entity_service_call(
 
 async def _handle_entity_call(
     hass: HomeAssistantType,
-    entity: "Entity",
+    entity: Entity,
     func: Union[str, Callable[..., Any]],
     data: Union[Dict, ha.ServiceCall],
     context: ha.Context,
@@ -669,10 +716,14 @@ def async_register_admin_service(
 
 @bind_hass
 @ha.callback
-def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
+def verify_domain_control(
+    hass: HomeAssistantType, domain: str
+) -> Callable[[Callable[[ha.ServiceCall], Any]], Callable[[ha.ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
-    def decorator(service_handler: Callable[[ha.ServiceCall], Any]) -> Callable:
+    def decorator(
+        service_handler: Callable[[ha.ServiceCall], Any]
+    ) -> Callable[[ha.ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")

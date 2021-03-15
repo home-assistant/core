@@ -5,6 +5,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_SELECT_SOURCE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_get_device_automations
 from tests.components.homekit_controller.common import (
@@ -19,7 +20,7 @@ async def test_lg_tv(hass):
     accessories = await setup_accessories_from_file(hass, "lg_tv.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Assert that the entity is correctly added to the entity registry
     entry = entity_registry.async_get("media_player.lg_webos_tv_af80")
@@ -54,7 +55,7 @@ async def test_lg_tv(hass):
     # CURRENT_MEDIA_STATE. Therefore "ok" is the best we can say.
     assert state.state == "ok"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get(entry.device_id)
     assert device.manufacturer == "LG Electronics"
@@ -63,6 +64,7 @@ async def test_lg_tv(hass):
     assert device.sw_version == "04.71.04"
     assert device.via_device_id is None
 
-    # A TV doesn't have any triggers
+    # A TV has media player device triggers
     triggers = await async_get_device_automations(hass, "trigger", device.id)
-    assert triggers == []
+    for trigger in triggers:
+        assert trigger["domain"] == "media_player"

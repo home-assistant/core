@@ -10,10 +10,10 @@ from simplipy.websocket import (
     EVENT_CONNECTION_LOST,
     EVENT_CONNECTION_RESTORED,
     EVENT_DOORBELL_DETECTED,
-    EVENT_ENTRY_DETECTED,
+    EVENT_ENTRY_DELAY,
     EVENT_LOCK_LOCKED,
     EVENT_LOCK_UNLOCKED,
-    EVENT_MOTION_DETECTED,
+    EVENT_SECRET_ALERT_TRIGGERED,
 )
 import voluptuous as vol
 
@@ -71,7 +71,7 @@ EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-SUPPORTED_PLATFORMS = (
+PLATFORMS = (
     "alarm_control_panel",
     "binary_sensor",
     "lock",
@@ -82,8 +82,8 @@ WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
     EVENT_CAMERA_MOTION_DETECTED,
     EVENT_DOORBELL_DETECTED,
-    EVENT_ENTRY_DETECTED,
-    EVENT_MOTION_DETECTED,
+    EVENT_ENTRY_DELAY,
+    EVENT_SECRET_ALERT_TRIGGERED,
 ]
 
 ATTR_CATEGORY = "category"
@@ -219,7 +219,7 @@ async def async_setup_entry(hass, config_entry):
     )
     await simplisafe.async_init()
 
-    for platform in SUPPORTED_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
@@ -327,8 +327,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in SUPPORTED_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -634,7 +634,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         return self._device_info
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attrs
 

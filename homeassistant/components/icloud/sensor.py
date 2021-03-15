@@ -91,7 +91,7 @@ class IcloudDeviceBatterySensor(Entity):
         )
 
     @property
-    def device_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> Dict[str, any]:
         """Return default attributes for the iCloud device entity."""
         return self._device.state_attributes
 

@@ -1,16 +1,24 @@
 {
     "config": {
         "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "unsupported_firmware": "\uc774 \uc7a5\uce58\ub294 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\ub294 \ud38c\uc6e8\uc5b4 \ubc84\uc804\uc744 \uc0ac\uc6a9\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "error": {
-            "invalid_auth": "\uc798\ubabb\ub41c \uc778\uc99d"
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "credentials": {
                 "data": {
-                    "password": "\uc554\ud638",
-                    "username": "\uc0ac\uc6a9\uc790\uba85"
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8"
                 }
             }
         }

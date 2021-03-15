@@ -17,6 +17,7 @@ from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -27,7 +28,6 @@ from homeassistant.setup import (
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
-from homeassistant.util.yaml import clear_secret_cache
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -121,8 +121,6 @@ async def async_setup_hass(
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
             )
-        finally:
-            clear_secret_cache()
 
     if config_dict is None:
         safe_mode = True
@@ -510,10 +508,12 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
-    # Kick off loading the registries. They don't need to be awaited.
-    asyncio.create_task(hass.helpers.device_registry.async_get_registry())
-    asyncio.create_task(hass.helpers.entity_registry.async_get_registry())
-    asyncio.create_task(hass.helpers.area_registry.async_get_registry())
+    # Load the registries
+    await asyncio.gather(
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        area_registry.async_load(hass),
+    )
 
     # Start setup
     if stage_1_domains:

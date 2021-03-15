@@ -2,6 +2,7 @@
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    ATTR_ICON,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
 )
@@ -20,7 +21,6 @@ from .const import (
 
 ATTRIBUTION = "Data provided by AirNow"
 
-ATTR_ICON = "icon"
 ATTR_LABEL = "label"
 ATTR_UNIT = "unit"
 
@@ -84,7 +84,7 @@ class AirNowSensor(CoordinatorEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.kind == ATTR_API_AQI:
             self._attrs[SENSOR_AQI_ATTR_DESCR] = self.coordinator.data[

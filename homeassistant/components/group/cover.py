@@ -155,7 +155,6 @@ class CoverGroup(GroupEntity, CoverEntity):
             await self.async_update_supported_features(
                 entity_id, new_state, update_state=False
             )
-        assert self.hass is not None
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entities, self._update_supported_features_event
@@ -208,7 +207,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         return self._tilt_position
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the cover group."""
         return {ATTR_ENTITY_ID: self._entities}
 

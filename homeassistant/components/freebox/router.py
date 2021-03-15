@@ -1,12 +1,13 @@
 """Represent the Freebox router and its devices and sensors."""
 from datetime import datetime, timedelta
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from aiofreepybox import Freepybox
-from aiofreepybox.api.wifi import Wifi
-from aiofreepybox.exceptions import HttpRequestError
+from freebox_api import Freepybox
+from freebox_api.api.wifi import Wifi
+from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -31,6 +32,18 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
+async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
+    """Get the Freebox API."""
+    freebox_path = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path
+
+    if not os.path.exists(freebox_path):
+        await hass.async_add_executor_job(os.makedirs, freebox_path)
+
+    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
+
+    return Freepybox(APP_DESC, token_file, API_VERSION)
+
+
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
@@ -42,12 +55,13 @@ class FreeboxRouter:
         self._port = entry.data[CONF_PORT]
 
         self._api: Freepybox = None
-        self._name = None
+        self.name = None
         self.mac = None
         self._sw_v = None
         self._attrs = {}
 
-        self.devices: Dict[str, Any] = {}
+        self.devices: Dict[str, Dict[str, Any]] = {}
+        self.disks: Dict[int, Dict[str, Any]] = {}
         self.sensors_temperature: Dict[str, int] = {}
         self.sensors_connection: Dict[str, float] = {}
         self.call_list: List[Dict[str, Any]] = []
@@ -68,7 +82,7 @@ class FreeboxRouter:
         # System
         fbx_config = await self._api.system.get_config()
         self.mac = fbx_config["mac"]
-        self._name = fbx_config["model_info"]["pretty_name"]
+        self.name = fbx_config["model_info"]["pretty_name"]
         self._sw_v = fbx_config["firmware_version"]
 
         # Devices & sensors
@@ -79,18 +93,18 @@ class FreeboxRouter:
 
     async def update_all(self, now: Optional[datetime] = None) -> None:
         """Update all Freebox platforms."""
+        await self.update_device_trackers()
         await self.update_sensors()
-        await self.update_devices()
 
-    async def update_devices(self) -> None:
+    async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
         new_device = False
-        fbx_devices: Dict[str, Any] = await self._api.lan.get_hosts_list()
+        fbx_devices: [Dict[str, Any]] = await self._api.lan.get_hosts_list()
 
         # Adds the Freebox itself
         fbx_devices.append(
             {
-                "primary_name": self._name,
+                "primary_name": self.name,
                 "l2ident": {"id": self.mac},
                 "vendor_name": "Freebox SAS",
                 "host_type": "router",
@@ -138,9 +152,19 @@ class FreeboxRouter:
             "serial": syst_datas["serial"],
         }
 
-        self.call_list = await self._api.call.get_call_list()
+        self.call_list = await self._api.call.get_calls_log()
+
+        await self._update_disks_sensors()
 
         async_dispatcher_send(self.hass, self.signal_sensor_update)
+
+    async def _update_disks_sensors(self) -> None:
+        """Update Freebox disks."""
+        # None at first request
+        fbx_disks: [Dict[str, Any]] = await self._api.storage.get_disks() or []
+
+        for fbx_disk in fbx_disks:
+            self.disks[fbx_disk["id"]] = fbx_disk
 
     async def reboot(self) -> None:
         """Reboot the Freebox."""
@@ -159,7 +183,7 @@ class FreeboxRouter:
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
-            "name": self._name,
+            "name": self.name,
             "manufacturer": "Freebox SAS",
             "sw_version": self._sw_v,
         }
@@ -188,13 +212,3 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
-
-
-async def get_api(hass: HomeAssistantType, host: str) -> Freepybox:
-    """Get the Freebox API."""
-    freebox_path = Path(hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path)
-    freebox_path.mkdir(exist_ok=True)
-
-    token_file = Path(f"{freebox_path}/{slugify(host)}.conf")
-
-    return Freepybox(APP_DESC, token_file, API_VERSION)

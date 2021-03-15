@@ -185,7 +185,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._thrm.local_temp / ZCL_TEMP
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         data = {}
         if self.hvac_mode:

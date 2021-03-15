@@ -19,14 +19,13 @@ from .const import (
     ATTR_API_PM25,
     ATTR_API_PM25_LIMIT,
     ATTR_API_PM25_PERCENT,
+    ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
+    LABEL_ADVICE,
     MANUFACTURER,
 )
 
-ATTRIBUTION = "Data provided by Airly"
-
-LABEL_ADVICE = "advice"
 LABEL_AQI_DESCRIPTION = f"{ATTR_AQI}_description"
 LABEL_AQI_LEVEL = f"{ATTR_AQI}_level"
 LABEL_PM_2_5_LIMIT = f"{ATTR_PM_2_5}_limit"
@@ -118,7 +117,7 @@ class AirlyAirQuality(CoordinatorEntity, AirQualityEntity):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             LABEL_AQI_DESCRIPTION: self.coordinator.data[ATTR_API_CAQI_DESCRIPTION],

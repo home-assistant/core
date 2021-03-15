@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -34,6 +35,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, callback
+from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
@@ -85,6 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRECISION): vol.In(
             [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
         ),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -109,6 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     away_temp = config.get(CONF_AWAY_TEMP)
     precision = config.get(CONF_PRECISION)
     unit = hass.config.units.temperature_unit
+    unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
@@ -128,6 +132,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 away_temp,
                 precision,
                 unit,
+                unique_id,
             )
         ]
     )
@@ -153,6 +158,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         away_temp,
         precision,
         unit,
+        unique_id,
     ):
         """Initialize the thermostat."""
         self._name = name
@@ -177,6 +183,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._max_temp = max_temp
         self._target_temp = target_temp
         self._unit = unit
+        self._unique_id = unique_id
         self._support_flags = SUPPORT_FLAGS
         if away_temp:
             self._support_flags = SUPPORT_FLAGS | SUPPORT_PRESET_MODE
@@ -270,11 +277,23 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of this thermostat."""
+        return self._unique_id
+
+    @property
     def precision(self):
         """Return the precision of the system."""
         if self._temp_precision is not None:
             return self._temp_precision
         return super().precision
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        # Since this integration does not yet have a step size parameter
+        # we have to re-use the precision as the step size for now.
+        return self.precision
 
     @property
     def temperature_unit(self):
@@ -421,12 +440,16 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         current_state = STATE_ON
                     else:
                         current_state = HVAC_MODE_OFF
-                    long_enough = condition.state(
-                        self.hass,
-                        self.heater_entity_id,
-                        current_state,
-                        self.min_cycle_duration,
-                    )
+                    try:
+                        long_enough = condition.state(
+                            self.hass,
+                            self.heater_entity_id,
+                            current_state,
+                            self.min_cycle_duration,
+                        )
+                    except ConditionError:
+                        long_enough = False
+
                     if not long_enough:
                         return
 

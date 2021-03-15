@@ -25,6 +25,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SIGNAL_ADD_ENTITIES
@@ -64,7 +65,8 @@ SUPPORTED_FEATURES = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Insteon climate entities from a config entry."""
 
-    def add_entities(discovery_info=None):
+    @callback
+    def async_add_insteon_climate_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass,
@@ -75,8 +77,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{CLIMATE_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_climate_entities)
+    async_add_insteon_climate_entities()
 
 
 class InsteonClimateEntity(InsteonEntity, ClimateEntity):
@@ -175,9 +177,9 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return CURRENT_HVAC_IDLE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide attributes for display on device card."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         humidifier = "off"
         if self._insteon_device.groups[DEHUMIDIFYING].value:
             humidifier = "dehumidifying"

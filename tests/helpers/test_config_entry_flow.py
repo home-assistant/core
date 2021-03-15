@@ -78,6 +78,15 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "confirm"
 
+    progress = hass.config_entries.flow.async_progress()
+    assert len(progress) == 1
+    assert progress[0]["flow_id"] == result["flow_id"]
+    assert progress[0]["context"] == {
+        "confirm_only": True,
+        "source": config_entries.SOURCE_USER,
+        "unique_id": "test",
+    }
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 

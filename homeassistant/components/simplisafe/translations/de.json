@@ -1,17 +1,21 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet."
+            "already_configured": "Dieses SimpliSafe-Konto wird bereits verwendet.",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
             "identifier_exists": "Konto bereits registriert",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "reauth_confirm": {
                 "data": {
                     "password": "Passwort"
-                }
+                },
+                "description": "Dein Zugriffstoken ist abgelaufen oder wurde widerrufen. Gib dein Passwort ein, um dein Konto erneut zu verkn\u00fcpfen.",
+                "title": "Integration erneut authentifizieren"
             },
             "user": {
                 "data": {

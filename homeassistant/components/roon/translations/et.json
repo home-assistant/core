@@ -17,7 +17,7 @@
                 "data": {
                     "host": ""
                 },
-                "description": "Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
+                "description": "Rooni serverit ei leitud. Sisesta oma Rooni serveri hostinimi v\u00f5i IP."
             }
         }
     }

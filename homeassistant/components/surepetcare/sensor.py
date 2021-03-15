@@ -125,7 +125,7 @@ class Flap(SurePetcareSensor):
         return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -166,7 +166,7 @@ class SureBattery(SurePetcareSensor):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return state attributes."""
         attributes = None
         if self._state:

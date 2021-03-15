@@ -97,7 +97,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -141,7 +140,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         self.add_template_attribute("_state", self._template, None, self._update_state)
 
         if self._delay_on_raw is not None:

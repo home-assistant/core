@@ -1,10 +1,10 @@
 """UniFi switch platform tests."""
 from copy import deepcopy
+from unittest.mock import patch
 
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
-from aiounifi.websocket import SIGNAL_DATA
 
-from homeassistant import config_entries
+from homeassistant import config_entries, core
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
@@ -16,8 +16,8 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.helpers import entity_registry
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -282,21 +282,11 @@ DPI_APPS = [
 ]
 
 
-async def test_platform_manually_configured(hass):
-    """Test that we do not discover anything or try to set up a controller."""
-    assert (
-        await async_setup_component(
-            hass, SWITCH_DOMAIN, {SWITCH_DOMAIN: {"platform": UNIFI_DOMAIN}}
-        )
-        is True
-    )
-    assert UNIFI_DOMAIN not in hass.data
-
-
-async def test_no_clients(hass):
+async def test_no_clients(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
@@ -304,45 +294,46 @@ async def test_no_clients(hass):
         },
     )
 
-    assert len(controller.mock_requests) == 6
+    assert aioclient_mock.call_count == 10
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_controller_not_client(hass):
+async def test_controller_not_client(hass, aioclient_mock):
     """Test that the controller doesn't become a switch."""
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CONTROLLER_HOST],
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
     cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
 
 
-async def test_not_admin(hass):
+async def test_not_admin(hass, aioclient_mock):
     """Test that switch platform only work on an admin account."""
     description = deepcopy(DESCRIPTION)
     description[0]["site_role"] = "not admin"
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         site_description=description,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_switches(hass):
+async def test_switches(hass, aioclient_mock):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
@@ -354,8 +345,8 @@ async def test_switches(hass):
         dpigroup_response=DPI_GROUPS,
         dpiapp_response=DPI_APPS,
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
 
     switch_1 = hass.states.get("switch.poe_client_1")
@@ -380,26 +371,37 @@ async def test_switches(hass):
     dpi_switch = hass.states.get("switch.block_media_streaming")
     assert dpi_switch is not None
     assert dpi_switch.state == "on"
+    assert dpi_switch.attributes["icon"] == "mdi:network"
+
+    # Block and unblock client
+
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
-    assert controller.mock_requests[6] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.mock_calls[10][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "block-sta",
     }
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 8
-    assert controller.mock_requests[7] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "unblock-sta",
     }
+
+    # Enable and disable DPI
+
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}/rest/dpiapp/5f976f62e3c58f018ec7e17d",
+    )
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -407,12 +409,8 @@ async def test_switches(hass):
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert len(controller.mock_requests) == 9
-    assert controller.mock_requests[8] == {
-        "json": {"enabled": False},
-        "method": "put",
-        "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
-    }
+    assert aioclient_mock.call_count == 13
+    assert aioclient_mock.mock_calls[12][2] == {"enabled": False}
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -420,22 +418,25 @@ async def test_switches(hass):
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
     )
-    assert len(controller.mock_requests) == 10
-    assert controller.mock_requests[9] == {
-        "json": {"enabled": True},
-        "method": "put",
-        "path": "/rest/dpiapp/5f976f62e3c58f018ec7e17d",
-    }
+    assert aioclient_mock.call_count == 14
+    assert aioclient_mock.mock_calls[13][2] == {"enabled": True}
+
+    # Make sure no duplicates arise on generic signal update
+    async_dispatcher_send(hass, controller.signal_update)
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 4
 
 
-async def test_remove_switches(hass):
+async def test_remove_switches(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
         clients_response=[CLIENT_1, UNBLOCKED],
         devices_response=[DEVICE_1],
     )
+
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
     poe_switch = hass.states.get("switch.poe_client_1")
@@ -444,11 +445,12 @@ async def test_remove_switches(hass):
     block_switch = hass.states.get("switch.block_client_2")
     assert block_switch is not None
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_CLIENT_REMOVED},
-        "data": [CLIENT_1, UNBLOCKED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT_REMOVED},
+            "data": [CLIENT_1, UNBLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
@@ -460,10 +462,11 @@ async def test_remove_switches(hass):
     assert block_switch is None
 
 
-async def test_block_switches(hass):
+async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     """Test the update_items function with some clients."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
@@ -472,6 +475,7 @@ async def test_block_switches(hass):
         clients_response=[UNBLOCKED],
         clients_all_response=[BLOCKED],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
@@ -483,11 +487,12 @@ async def test_block_switches(hass):
     assert unblocked is not None
     assert unblocked.state == "on"
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_BLOCKED_CLIENT_UNBLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -495,11 +500,12 @@ async def test_block_switches(hass):
     assert blocked is not None
     assert blocked.state == "on"
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_BLOCKED_CLIENT_BLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
@@ -507,31 +513,36 @@ async def test_block_switches(hass):
     assert blocked is not None
     assert blocked.state == "off"
 
+    aioclient_mock.post(
+        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+    )
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
-    assert controller.mock_requests[6] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.mock_calls[10][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "block-sta",
     }
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 8
-    assert controller.mock_requests[7] == {
-        "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
-        "method": "post",
-        "path": "/cmd/stamgr",
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
+        "mac": "00:00:00:00:01:01",
+        "cmd": "unblock-sta",
     }
 
 
-async def test_new_client_discovered_on_block_control(hass):
+async def test_new_client_discovered_on_block_control(
+    hass, aioclient_mock, mock_unifi_websocket
+):
     """Test if 2nd update has a new client."""
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
             CONF_TRACK_CLIENTS: False,
@@ -540,26 +551,27 @@ async def test_new_client_discovered_on_block_control(hass):
         },
     )
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     blocked = hass.states.get("switch.block_client_1")
     assert blocked is None
 
-    controller.api.websocket._data = {
-        "meta": {"message": "sta:sync"},
-        "data": [BLOCKED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": "sta:sync"},
+            "data": [BLOCKED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_BLOCKED_CLIENT_CONNECTED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
@@ -567,10 +579,11 @@ async def test_new_client_discovered_on_block_control(hass):
     assert blocked is not None
 
 
-async def test_option_block_clients(hass):
+async def test_option_block_clients(hass, aioclient_mock):
     """Test the changes to option reflects accordingly."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
         clients_all_response=[BLOCKED, UNBLOCKED],
     )
@@ -578,7 +591,7 @@ async def test_option_block_clients(hass):
 
     # Add a second switch
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
@@ -586,7 +599,7 @@ async def test_option_block_clients(hass):
 
     # Remove the second switch again
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: [BLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
@@ -594,7 +607,7 @@ async def test_option_block_clients(hass):
 
     # Enable one and remove another one
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: [UNBLOCKED["mac"]]},
     )
     await hass.async_block_till_done()
@@ -602,17 +615,18 @@ async def test_option_block_clients(hass):
 
     # Remove one
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_BLOCK_CLIENT: []},
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_option_remove_switches(hass):
+async def test_option_remove_switches(hass, aioclient_mock):
     """Test removal of DPI switch when options updated."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
@@ -626,86 +640,85 @@ async def test_option_remove_switches(hass):
 
     # Disable DPI Switches
     hass.config_entries.async_update_entry(
-        controller.config_entry,
+        config_entry,
         options={CONF_DPI_RESTRICTIONS: False, CONF_POE_CLIENTS: False},
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_new_client_discovered_on_poe_control(hass):
+async def test_new_client_discovered_on_poe_control(
+    hass, aioclient_mock, mock_unifi_websocket
+):
     """Test if 2nd update has a new client."""
-    controller = await setup_unifi_integration(
+    config_entry = await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False},
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
     )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    controller.api.websocket._data = {
-        "meta": {"message": "sta:sync"},
-        "data": [CLIENT_2],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": "sta:sync"},
+            "data": [CLIENT_2],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    controller.api.websocket._data = {
-        "meta": {"message": MESSAGE_EVENT},
-        "data": [EVENT_CLIENT_2_CONNECTED],
-    }
-    controller.api.session_handler(SIGNAL_DATA)
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [EVENT_CLIENT_2_CONNECTED],
+        }
+    )
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
     switch_2 = hass.states.get("switch.poe_client_2")
     assert switch_2 is not None
 
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/mock-id",
+    )
+
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    assert controller.mock_requests[6] == {
-        "json": {
-            "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
-        },
-        "method": "put",
-        "path": "/rest/device/mock-id",
+    assert aioclient_mock.call_count == 11
+    assert aioclient_mock.mock_calls[10][2] == {
+        "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
     }
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 8
-    assert controller.mock_requests[7] == {
-        "json": {
-            "port_overrides": [
-                {"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}
-            ]
-        },
-        "method": "put",
-        "path": "/rest/device/mock-id",
+    assert aioclient_mock.call_count == 12
+    assert aioclient_mock.mock_calls[11][2] == {
+        "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "auto"}]
     }
 
 
-async def test_ignore_multiple_poe_clients_on_same_port(hass):
+async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
     """Ignore when there are multiple POE driven clients on same port.
 
     If there is a non-UniFi switch powered by POE,
     clients will be transparently marked as having POE as well.
     """
-    controller = await setup_unifi_integration(
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         clients_response=POE_SWITCH_CLIENTS,
         devices_response=[DEVICE_1],
     )
 
-    assert len(controller.mock_requests) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
@@ -714,8 +727,66 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     assert switch_2 is None
 
 
-async def test_restoring_client(hass):
-    """Test the update_items function with some clients."""
+async def test_restore_client_succeed(hass, aioclient_mock):
+    """Test that RestoreEntity works as expected."""
+    POE_DEVICE = {
+        "device_id": "12345",
+        "ip": "1.0.1.1",
+        "mac": "00:00:00:00:01:01",
+        "last_seen": 1562600145,
+        "model": "US16P150",
+        "name": "POE Switch",
+        "port_overrides": [
+            {
+                "poe_mode": "off",
+                "port_idx": 1,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+            }
+        ],
+        "port_table": [
+            {
+                "media": "GE",
+                "name": "Port 1",
+                "op_mode": "switch",
+                "poe_caps": 7,
+                "poe_class": "Unknown",
+                "poe_current": "0.00",
+                "poe_enable": False,
+                "poe_good": False,
+                "poe_mode": "off",
+                "poe_power": "0.00",
+                "poe_voltage": "0.00",
+                "port_idx": 1,
+                "port_poe": True,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+                "up": False,
+            },
+        ],
+        "state": 1,
+        "type": "usw",
+        "version": "4.0.42.10433",
+    }
+    POE_CLIENT = {
+        "hostname": "poe_client",
+        "ip": "1.0.0.1",
+        "is_wired": True,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:01",
+        "name": "POE Client",
+        "oui": "Producer",
+    }
+
+    fake_state = core.State(
+        "switch.poe_client",
+        "off",
+        {
+            "power": "0.00",
+            "switch": POE_DEVICE["mac"],
+            "port": 1,
+            "poe_mode": "auto",
+        },
+    )
+
     config_entry = config_entries.ConfigEntry(
         version=1,
         domain=UNIFI_DOMAIN,
@@ -728,36 +799,120 @@ async def test_restoring_client(hass):
         entry_id=1,
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
-        f'{POE_SWITCH}-{CLIENT_1["mac"]}',
-        suggested_object_id=CLIENT_1["hostname"],
-        config_entry=config_entry,
-    )
-    registry.async_get_or_create(
-        SWITCH_DOMAIN,
-        UNIFI_DOMAIN,
-        f'{POE_SWITCH}-{CLIENT_2["mac"]}',
-        suggested_object_id=CLIENT_2["hostname"],
+        f'{POE_SWITCH}-{POE_CLIENT["mac"]}',
+        suggested_object_id=POE_CLIENT["hostname"],
         config_entry=config_entry,
     )
 
-    controller = await setup_unifi_integration(
+    with patch(
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
+        return_value=fake_state,
+    ):
+        await setup_unifi_integration(
+            hass,
+            aioclient_mock,
+            options={
+                CONF_TRACK_CLIENTS: False,
+                CONF_TRACK_DEVICES: False,
+            },
+            clients_response=[],
+            devices_response=[POE_DEVICE],
+            clients_all_response=[POE_CLIENT],
+        )
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    poe_client = hass.states.get("switch.poe_client")
+    assert poe_client.state == "off"
+
+
+async def test_restore_client_no_old_state(hass, aioclient_mock):
+    """Test that RestoreEntity without old state makes entity unavailable."""
+    POE_DEVICE = {
+        "device_id": "12345",
+        "ip": "1.0.1.1",
+        "mac": "00:00:00:00:01:01",
+        "last_seen": 1562600145,
+        "model": "US16P150",
+        "name": "POE Switch",
+        "port_overrides": [
+            {
+                "poe_mode": "off",
+                "port_idx": 1,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+            }
+        ],
+        "port_table": [
+            {
+                "media": "GE",
+                "name": "Port 1",
+                "op_mode": "switch",
+                "poe_caps": 7,
+                "poe_class": "Unknown",
+                "poe_current": "0.00",
+                "poe_enable": False,
+                "poe_good": False,
+                "poe_mode": "off",
+                "poe_power": "0.00",
+                "poe_voltage": "0.00",
+                "port_idx": 1,
+                "port_poe": True,
+                "portconf_id": "5f3edd2aba4cc806a19f2db2",
+                "up": False,
+            },
+        ],
+        "state": 1,
+        "type": "usw",
+        "version": "4.0.42.10433",
+    }
+    POE_CLIENT = {
+        "hostname": "poe_client",
+        "ip": "1.0.0.1",
+        "is_wired": True,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:01",
+        "name": "POE Client",
+        "oui": "Producer",
+    }
+
+    config_entry = config_entries.ConfigEntry(
+        version=1,
+        domain=UNIFI_DOMAIN,
+        title="Mock Title",
+        data=ENTRY_CONFIG,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
+        system_options={},
+        options={},
+        entry_id=1,
+    )
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        UNIFI_DOMAIN,
+        f'{POE_SWITCH}-{POE_CLIENT["mac"]}',
+        suggested_object_id=POE_CLIENT["hostname"],
+        config_entry=config_entry,
+    )
+
+    await setup_unifi_integration(
         hass,
+        aioclient_mock,
         options={
-            CONF_BLOCK_CLIENT: ["random mac"],
             CONF_TRACK_CLIENTS: False,
             CONF_TRACK_DEVICES: False,
         },
-        clients_response=[CLIENT_2],
-        devices_response=[DEVICE_1],
-        clients_all_response=[CLIENT_1],
+        clients_response=[],
+        devices_response=[POE_DEVICE],
+        clients_all_response=[POE_CLIENT],
     )
 
-    assert len(controller.mock_requests) == 6
-    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    device_1 = hass.states.get("switch.client_1")
-    assert device_1 is not None
+    poe_client = hass.states.get("switch.poe_client")
+    assert poe_client.state == "unavailable"  # self.poe_mode is None

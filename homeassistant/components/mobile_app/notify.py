@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 import async_timeout
 
 from homeassistant.components.notify import (
@@ -168,3 +169,5 @@ class MobileAppNotificationService(BaseNotificationService):
 
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout sending notification to %s", push_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error sending notification to %s: %r", push_url, err)

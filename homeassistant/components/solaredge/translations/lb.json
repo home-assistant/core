@@ -1,10 +1,13 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
             "site_exists": "D\u00ebs site_id ass scho konfigur\u00e9iert"
         },
         "error": {
-            "site_exists": "D\u00ebs site_id ass scho konfigur\u00e9iert"
+            "already_configured": "Apparat ass scho konfigur\u00e9iert",
+            "site_exists": "D\u00ebs site_id ass scho konfigur\u00e9iert",
+            "site_not_active": "De Site ass net aktiv"
         },
         "step": {
             "user": {

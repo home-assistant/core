@@ -137,7 +137,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template lights."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -259,7 +258,6 @@ class LightTemplate(TemplateEntity, LightEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         if self._template:
             self.add_template_attribute(
                 "_state", self._template, None, self._update_state
@@ -404,7 +402,6 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_state(self, result):
         """Update the state from the template."""
-
         if isinstance(result, TemplateError):
             # This behavior is legacy
             self._state = False
@@ -431,7 +428,6 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_temperature(self, render):
         """Update the temperature from the template."""
-
         try:
             if render in ("None", ""):
                 self._temperature = None

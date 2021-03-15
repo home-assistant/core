@@ -4,13 +4,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.discovery import SERVICE_FREEBOX
-from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS, SERVICE_REBOOT
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,41 +25,20 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    """Set up the Freebox component."""
-    conf = config.get(DOMAIN)
-
-    async def discovery_dispatch(service, discovery_info):
-        if conf is None:
-            host = discovery_info.get("properties", {}).get("api_domain")
-            port = discovery_info.get("properties", {}).get("https_port")
-            _LOGGER.info("Discovered Freebox server: %s:%s", host, port)
+    """Set up the Freebox integration."""
+    if DOMAIN in config:
+        for entry_config in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_DISCOVERY},
-                    data={CONF_HOST: host, CONF_PORT: port},
+                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry_config
                 )
             )
-
-    discovery.async_listen(hass, SERVICE_FREEBOX, discovery_dispatch)
-
-    if conf is None:
-        return True
-
-    for freebox_conf in conf:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=freebox_conf,
-            )
-        )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Set up Freebox component."""
+    """Set up Freebox entry."""
     router = FreeboxRouter(hass, entry)
     await router.setup()
 
@@ -77,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         """Handle reboot service call."""
         await router.reboot()
 
-    hass.services.async_register(DOMAIN, "reboot", async_reboot)
+    hass.services.async_register(DOMAIN, SERVICE_REBOOT, async_reboot)
 
     async def async_close_connection(event):
         """Close Freebox connection on HA Stop."""
@@ -101,5 +79,6 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     if unload_ok:
         router = hass.data[DOMAIN].pop(entry.unique_id)
         await router.close()
+        hass.services.async_remove(DOMAIN, SERVICE_REBOOT)
 
     return unload_ok

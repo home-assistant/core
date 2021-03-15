@@ -1,4 +1,6 @@
 """Support to keep track of user controlled booleans for within automation."""
+from __future__ import annotations
+
 import logging
 import typing
 
@@ -89,8 +91,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
-    collection.attach_entity_component_collection(
-        component, yaml_collection, lambda conf: InputBoolean(conf, from_yaml=True)
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputBoolean.from_yaml
     )
 
     storage_collection = InputBooleanStorageCollection(
@@ -98,8 +100,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
-    collection.attach_entity_component_collection(
-        component, storage_collection, InputBoolean
+    collection.sync_entity_lifecycle(
+        hass, DOMAIN, DOMAIN, component, storage_collection, InputBoolean
     )
 
     await yaml_collection.async_load(
@@ -110,9 +112,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.StorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
-
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Remove all input booleans and load new ones from config."""
@@ -146,14 +145,19 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, config: typing.Optional[dict], from_yaml: bool = False):
+    def __init__(self, config: typing.Optional[dict]):
         """Initialize a boolean input."""
         self._config = config
-        self._editable = True
+        self.editable = True
         self._state = config.get(CONF_INITIAL)
-        if from_yaml:
-            self._editable = False
-            self.entity_id = f"{DOMAIN}.{self.unique_id}"
+
+    @classmethod
+    def from_yaml(cls, config: typing.Dict) -> InputBoolean:
+        """Return entity instance initialized from yaml storage."""
+        input_bool = cls(config)
+        input_bool.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
+        input_bool.editable = False
+        return input_bool
 
     @property
     def should_poll(self):
@@ -168,7 +172,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes of the entity."""
-        return {ATTR_EDITABLE: self._editable}
+        return {ATTR_EDITABLE: self.editable}
 
     @property
     def icon(self):

@@ -8,10 +8,11 @@ from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -114,6 +115,6 @@ class NightscoutSensor(Entity):
         return switcher.get(self._attributes[ATTR_DIRECTION], "mdi:cloud-question")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes

@@ -10,6 +10,7 @@ import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
 from pychromecast.controllers.multizone import MultizoneManager
 from pychromecast.controllers.plex import PlexController
+from pychromecast.controllers.receiver import VOLUME_CONTROL_TYPE_FIXED
 from pychromecast.quick_play import quick_play
 from pychromecast.socket_client import (
     CONNECTION_STATUS_CONNECTED,
@@ -82,8 +83,6 @@ SUPPORT_CAST = (
     | SUPPORT_STOP
     | SUPPORT_TURN_OFF
     | SUPPORT_TURN_ON
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
 )
 
 
@@ -135,7 +134,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # no pending task
     done, _ = await asyncio.wait(
         [
-            _async_setup_platform(hass, ENTITY_SCHEMA(cfg), async_add_entities)
+            _async_setup_platform(
+                hass, ENTITY_SCHEMA(cfg), async_add_entities, config_entry
+            )
             for cfg in config
         ]
     )
@@ -147,7 +148,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, config_entry
 ):
     """Set up the cast platform."""
     # Import CEC IGNORE attributes
@@ -155,15 +156,15 @@ async def _async_setup_platform(
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
     hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
-    info = None
+    wanted_uuid = None
     if CONF_UUID in config:
-        info = ChromecastInfo(uuid=config[CONF_UUID], services=None)
+        wanted_uuid = config[CONF_UUID]
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
         """Handle discovery of a new chromecast."""
-        # If info is set, we're handling a specific cast device identified by UUID
-        if info is not None and (info.uuid is not None and info.uuid != discover.uuid):
+        # If wanted_uuid is set, we're handling a specific cast device identified by UUID
+        if wanted_uuid is not None and wanted_uuid != discover.uuid:
             # UUID not matching, this is not it.
             return
 
@@ -178,7 +179,7 @@ async def _async_setup_platform(
         async_cast_discovered(chromecast)
 
     ChromeCastZeroconf.set_zeroconf(await zeroconf.async_get_instance(hass))
-    hass.async_add_executor_job(setup_internal_discovery, hass)
+    hass.async_add_executor_job(setup_internal_discovery, hass, config_entry)
 
 
 class CastDevice(MediaPlayerEntity):
@@ -252,8 +253,8 @@ class CastDevice(MediaPlayerEntity):
             self.services,
         )
         chromecast = await self.hass.async_add_executor_job(
-            pychromecast.get_chromecast_from_service,
-            (
+            pychromecast.get_chromecast_from_cast_info,
+            pychromecast.discovery.CastInfo(
                 self.services,
                 self._cast_info.uuid,
                 self._cast_info.model_name,
@@ -743,6 +744,10 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
+        if self.cast_status:
+            if self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED:
+                support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+
         if media_status:
             if media_status.supports_queue_next:
                 support |= SUPPORT_PREVIOUS_TRACK
@@ -872,8 +877,8 @@ class DynamicCastGroup:
             self.services,
         )
         chromecast = await self.hass.async_add_executor_job(
-            pychromecast.get_chromecast_from_service,
-            (
+            pychromecast.get_chromecast_from_cast_info,
+            pychromecast.discovery.CastInfo(
                 self.services,
                 self._cast_info.uuid,
                 self._cast_info.model_name,

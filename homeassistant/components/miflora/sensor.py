@@ -5,7 +5,7 @@ import logging
 
 import btlewrap
 from btlewrap import BluetoothBackendException
-from miflora import miflora_poller  # pylint: disable=import-error
+from miflora import miflora_poller
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -189,7 +189,7 @@ class MiFloraSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {ATTR_LAST_SUCCESSFUL_UPDATE: self.last_successful_update}
 

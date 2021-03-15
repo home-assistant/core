@@ -402,8 +402,8 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SLEEP_SCORE,
         GetSleepSummaryField.SLEEP_SCORE,
         "Sleep score",
-        "",
-        None,
+        const.SCORE_POINTS,
+        "mdi:medal",
         SENSOR_DOMAIN,
         False,
         UpdateType.POLL,
@@ -1070,11 +1070,9 @@ def get_data_manager_by_webhook_id(
 def get_all_data_managers(hass: HomeAssistant) -> Tuple[DataManager, ...]:
     """Get all configured data managers."""
     return tuple(
-        [
-            config_entry_data[const.DATA_MANAGER]
-            for config_entry_data in hass.data[const.DOMAIN].values()
-            if const.DATA_MANAGER in config_entry_data
-        ]
+        config_entry_data[const.DATA_MANAGER]
+        for config_entry_data in hass.data[const.DOMAIN].values()
+        if const.DATA_MANAGER in config_entry_data
     )
 
 
@@ -1101,11 +1099,7 @@ async def async_create_entities(
 def get_platform_attributes(platform: str) -> Tuple[WithingsAttribute, ...]:
     """Get withings attributes used for a specific platform."""
     return tuple(
-        [
-            attribute
-            for attribute in WITHINGS_ATTRIBUTES
-            if attribute.platform == platform
-        ]
+        attribute for attribute in WITHINGS_ATTRIBUTES if attribute.platform == platform
     )
 
 

@@ -1,9 +1,41 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "not_irobot_device": "Wykryte urz\u0105dzenie nie jest urz\u0105dzeniem iRobot"
+        },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
+        "flow_title": "iRobot {name} ({host})",
         "step": {
+            "init": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Wybierz Roomb\u0119 lub Braava",
+                "title": "Po\u0142\u0105cz si\u0119 automatycznie z urz\u0105dzeniem"
+            },
+            "link": {
+                "description": "Naci\u015bnij i przytrzymaj przycisk Home na {name} a\u017c urz\u0105dzenie wygeneruje d\u017awi\u0119k (oko\u0142o dwie sekundy).",
+                "title": "Odzyskiwanie has\u0142a"
+            },
+            "link_manual": {
+                "data": {
+                    "password": "Has\u0142o"
+                },
+                "description": "Nie mo\u017cna automatycznie pobra\u0107 has\u0142a z urz\u0105dzenia. Post\u0119puj zgodnie z instrukcjami podanymi w dokumentacji pod adresem: {auth_help_url}",
+                "title": "Wprowad\u017a has\u0142o"
+            },
+            "manual": {
+                "data": {
+                    "blid": "BLID",
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "W Twojej sieci nie wykryto urz\u0105dzenia Roomba ani Braava. BLID to cz\u0119\u015b\u0107 nazwy hosta urz\u0105dzenia po `iRobot-`. Post\u0119puj zgodnie z instrukcjami podanymi w dokumentacji pod adresem: {auth_help_url}",
+                "title": "R\u0119czne po\u0142\u0105czenie z urz\u0105dzeniem"
+            },
             "user": {
                 "data": {
                     "blid": "BLID",

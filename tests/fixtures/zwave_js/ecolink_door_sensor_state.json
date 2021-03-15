@@ -4,16 +4,11 @@
     "status": 1,
     "ready": true,
     "deviceClass": {
-      "basic": "Static Controller",
-      "generic": "Binary Sensor",
-      "specific": "Routing Binary Sensor",
-      "mandatorySupportedCCs": [
-        "Basic",
-        "Binary Sensor"
-      ],
-      "mandatoryControlCCs": [
-        
-      ]
+      "basic": {"key": 2, "label":"Static Controller"},
+      "generic": {"key": 32, "label":"Binary Sensor"},
+      "specific": {"key": 1, "label":"Routing Binary Sensor"},
+      "mandatorySupportedCCs": [],
+      "mandatoryControlCCs": []
     },
     "isListening": false,
     "isFrequentListening": false,
@@ -61,6 +56,7 @@
         "index": 0
       }
     ],
+    "commandClasses": [],
     "values": [
       {
         "commandClassName": "Basic",

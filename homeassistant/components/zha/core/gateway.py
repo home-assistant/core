@@ -347,7 +347,8 @@ class ZHAGateway:
             remove_tasks = []
             for entity_ref in entity_refs:
                 remove_tasks.append(entity_ref.remove_future)
-            await asyncio.wait(remove_tasks)
+            if remove_tasks:
+                await asyncio.wait(remove_tasks)
         reg_device = self.ha_device_registry.async_get(device.device_id)
         if reg_device is not None:
             self.ha_device_registry.async_remove_device(reg_device.id)

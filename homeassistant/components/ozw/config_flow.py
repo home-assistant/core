@@ -7,8 +7,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,11 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This is the entry point for the logic that is needed
         when this integration will depend on the MQTT integration.
         """
-        if "mqtt" not in self.hass.config.components:
+        mqtt_entries = self.hass.config_entries.async_entries("mqtt")
+        if (
+            not mqtt_entries
+            or mqtt_entries[0].state != config_entries.ENTRY_STATE_LOADED
+        ):
             return self.async_abort(reason="mqtt_required")
         return self._async_create_entry_from_vars()
 
