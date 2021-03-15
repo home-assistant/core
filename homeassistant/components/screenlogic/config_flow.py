@@ -77,15 +77,6 @@ config_entry_flow.register_discovery_flow(
 )
 
 
-def configured_instances(hass):
-    """Return a set of configured Screenlogic instances."""
-    return {
-        entry.unique_id
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.unique_id is not None
-    }
-
-
 async def async_get_mac_address(hass, ip_address, port):
     """Connect to a screenlogic gateway and return the mac address."""
     connected_socket = await hass.async_add_executor_job(
@@ -135,9 +126,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the selection of a discovered ScreenLogic gateway."""
         _LOGGER.debug("Gateway Select")
         _LOGGER.debug(
-            *[gateway[SL_GATEWAY_NAME] for gateway in self.discovered_gateways.values()]
+            [gateway[SL_GATEWAY_NAME] for gateway in self.discovered_gateways.values()]
         )
-        existing = configured_instances(self.hass)
+        existing = self._async_current_ids()
         unconfigured_gateways = {
             mac: gateway[SL_GATEWAY_NAME]
             for mac, gateway in self.discovered_gateways.items()
