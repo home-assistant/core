@@ -8,7 +8,7 @@ from miio import (
     AirFresh,
     AirHumidifier,
     AirHumidifierMiot,
-    AirPurifier
+    AirPurifier,
     AirPurifierMB4,
     AirPurifierMiot,
     DeviceException,
