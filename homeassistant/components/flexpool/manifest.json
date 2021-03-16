@@ -1,7 +1,7 @@
 {
   "domain": "flexpool",
   "name": "Flexpool",
-  "documentation": "https://github.com/datdraggy/flexpool-homeassistant",
+  "documentation": "",
   "requirements": [
     "flexpoolapi==1.2.7.post2"
   ],
