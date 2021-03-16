@@ -22,7 +22,7 @@ from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_TO_DECLARE_DETECTION = timedelta(seconds=60)
+TIME_TO_DECLARE_DETECTION = timedelta(seconds=5)
 
 
 def _retrieve_online_state(data, detail):
