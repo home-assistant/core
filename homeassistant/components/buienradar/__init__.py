@@ -10,13 +10,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 
 from .const import (
-    CONF_CAMERA,
     CONF_COUNTRY,
     CONF_DELTA,
     CONF_DIMENSION,
-    CONF_SENSOR,
     CONF_TIMEFRAME,
-    CONF_WEATHER,
     DEFAULT_COUNTRY,
     DEFAULT_DELTA,
     DEFAULT_DIMENSION,
@@ -26,7 +23,7 @@ from .const import (
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = [CONF_WEATHER, CONF_CAMERA, CONF_SENSOR]
+PLATFORMS = ["weather", "camera", "sensor"]
 
 DATA_LISTENER = "listener"
 
@@ -41,14 +38,13 @@ async def async_setup(hass: HomeAssistant, config: dict):
     sensor_configs = _filter_domain_configs(config, "sensor", DOMAIN)
     camera_configs = _filter_domain_configs(config, "camera", DOMAIN)
 
-    _import_weather_configs(hass, weather_configs, sensor_configs, camera_configs)
+    _import_configs(hass, weather_configs, sensor_configs, camera_configs)
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up buienradar from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
 
     for component in PLATFORMS:
@@ -88,7 +84,7 @@ async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry):
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-def _import_weather_configs(hass, weather_configs, sensor_configs, camera_configs):
+def _import_configs(hass, weather_configs, sensor_configs, camera_configs):
     camera_config = {}
     if len(camera_configs) > 0:
         camera_config = camera_configs[0]
@@ -146,9 +142,7 @@ def _try_update_unique_id(hass, config, camera_config):
     country = camera_config.get(CONF_COUNTRY, DEFAULT_COUNTRY)
 
     registry = entity_registry.async_get(hass)
-    entity_id = registry.async_get_entity_id(
-        CONF_CAMERA, DOMAIN, f"{dimension}_{country}"
-    )
+    entity_id = registry.async_get_entity_id("camera", DOMAIN, f"{dimension}_{country}")
 
     if entity_id is not None:
         latitude = config[CONF_LATITUDE]
