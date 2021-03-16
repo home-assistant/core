@@ -48,12 +48,12 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the device."""
+        """Return the name of the entity."""
         return "Verisure Alarm"
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this alarm control panel."""
+        """Return the unique ID for this entity."""
         return self.coordinator.entry.data[CONF_GIID]
 
     @property
@@ -68,7 +68,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
 
     @property
     def state(self) -> str | None:
-        """Return the state of the device."""
+        """Return the state of the entity."""
         status = self.coordinator.data["alarm"]["statusType"]
         if status == "DISARMED":
             self._state = STATE_ALARM_DISARMED
