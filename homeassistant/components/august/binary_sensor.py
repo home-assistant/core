@@ -17,12 +17,13 @@ from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_AUGUST, DOMAIN
+from .const import ACTIVITY_UPDATE_INTERVAL, DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_TO_DECLARE_DETECTION = timedelta(seconds=5)
+TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds / 2)
+TIME_TO_RECHECK_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds * 2)
 
 
 def _retrieve_online_state(data, detail):
@@ -230,7 +231,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             self._update_from_data()
 
         self._check_for_off_update_listener = async_track_point_in_utc_time(
-            self.hass, _scheduled_update, utcnow() + TIME_TO_DECLARE_DETECTION
+            self.hass, _scheduled_update, utcnow() + TIME_TO_RECHECK_DETECTION
         )
 
     def _cancel_any_pending_updates(self):
