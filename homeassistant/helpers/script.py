@@ -720,22 +720,22 @@ class _ScriptRun:
         else:
             del self._variables["repeat"]
 
-    @trace_path("choose")
     async def _async_choose_step(self) -> None:
         """Choose a sequence."""
         # pylint: disable=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
-        for idx, (conditions, script) in enumerate(choose_data["choices"]):
-            with trace_path(str(idx)):
-                try:
-                    if self._test_conditions(conditions, "choose"):
-                        trace_set_result(choice=idx)
-                        with trace_path("sequence"):
-                            await self._async_run_script(script)
-                            return
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+        with trace_path("choose"):
+            for idx, (conditions, script) in enumerate(choose_data["choices"]):
+                with trace_path(str(idx)):
+                    try:
+                        if self._test_conditions(conditions, "choose"):
+                            trace_set_result(choice=idx)
+                            with trace_path("sequence"):
+                                await self._async_run_script(script)
+                                return
+                    except exceptions.ConditionError as ex:
+                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
         if choose_data["default"]:
             trace_set_result(choice="default")
