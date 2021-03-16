@@ -145,9 +145,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery(self, discovery_info):
         """Handle a flow for discovered camera without rtsp config entry."""
-        if discovery_info is not None:
-            await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
-            self._abort_if_unique_id_configured()
+
+        await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
+        self._abort_if_unique_id_configured()
 
         return await self.async_step_confirm(discovery_info)
 
