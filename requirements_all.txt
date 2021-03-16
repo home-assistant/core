@@ -2008,6 +2008,9 @@ scapy==2.4.4
 # homeassistant.components.deutsche_bahn
 schiene==0.23
 
+# homeassistant.components.screenlogic
+screenlogicpy==0.1.2
+
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
