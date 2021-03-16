@@ -3,7 +3,6 @@
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
   "requirements": ["py-august==0.25.2"],
-  "dependencies": ["configurator"],
   "codeowners": ["@bdraco"],
   "dhcp": [
       {"hostname":"connect","macaddress":"D86162*"},
