@@ -406,6 +406,7 @@ async def test_zeroconf_vacuum_success(hass):
     test_zeroconf_name = const.MODELS_VACUUM[0].replace(".", "-")
     await zeroconf_device_success(hass, test_zeroconf_name, test_vacuum_model)
 
+
 async def test_options_flow(hass):
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(
