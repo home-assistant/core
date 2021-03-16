@@ -89,3 +89,22 @@ def test_pass_through_non_cached(cache, hub):
     # no caching involved
     assert hub.write_holding_registers.call_count == 3
     hub.write_holding_registers.assert_called_with(50, 70, 1)
+
+
+@mock.patch("time.time")
+def test_cache_crear_on_write(mock_time, cache, hub):
+    """Test cache get clear on write call."""
+    hub.read_holding_registers.return_value = [0]
+
+    current_time = 0
+    mock_time.return_value = current_time
+
+    assert cache.read_holding_registers(50, 70, 1) == [0]
+    assert cache.read_holding_registers(50, 70, 1) == [0]
+    hub.read_holding_registers.return_value = [1]
+    # still read cached value
+    assert cache.read_holding_registers(50, 70, 1) == [0]
+    # write should clear cache
+    cache.write_holding_registers(50, 70, 1)
+    # next read call should make a read call and return updated value
+    assert cache.read_holding_registers(50, 70, 1) == [1]
