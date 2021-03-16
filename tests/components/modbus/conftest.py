@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -96,6 +97,10 @@ async def base_test(
                 )
                 config_device = None
             assert await async_setup_component(hass, DOMAIN, config_modbus)
+
+            if config_modbus[DOMAIN][CONF_TYPE] == CONF_TYPE_TCPSERVER:
+                hass.bus.fire(EVENT_HOMEASSISTANT_STARTED, {})
+
             await hass.async_block_till_done()
 
             # setup platform old style
@@ -189,6 +194,7 @@ async def server_test(
     # connected to the modbus server making sensor or switch unavailable
     # setting to the non-empty array emulates the connected client
     mock_value.active_connections = ["connection"]
+    mock_value.server_close.not_async = True
 
     # emulate ModbusDataBlock, holding the register values
     data_block = mock.MagicMock()

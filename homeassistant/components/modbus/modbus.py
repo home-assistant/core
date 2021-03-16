@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers.discovery import load_platform
@@ -48,7 +49,6 @@ from .const import (
     CONF_TYPE_TCP,
     CONF_TYPE_TCPSERVER,
     CONF_TYPE_UDP,
-    EVENT_MODBUS_INITIALIZED,
     MODBUS_DOMAIN as DOMAIN,
     SERVICE_WRITE_COIL,
     SERVICE_WRITE_REGISTER,
@@ -79,9 +79,6 @@ def modbus_setup(
         ):
             if conf_key in conf_hub:
                 load_platform(hass, component, DOMAIN, conf_hub, conf_hub)
-
-    # Asynchronously Notify Modbus servers that configuration has been initialized
-    hass.bus.fire(EVENT_MODBUS_INITIALIZED, None)
 
     def stop_modbus(event):
         """Stop Modbus service."""
@@ -369,7 +366,7 @@ class ModbusServerHub(BaseModbusHub):
         self._block = None
         self._slaves_holder = ModbusSlavesHolder()
 
-        hass.bus.async_listen_once(EVENT_MODBUS_INITIALIZED, self.start_server)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.start_server)
 
     def close(self):
         """Shutdown server."""
@@ -442,7 +439,6 @@ class ModbusServerHub(BaseModbusHub):
         """Start the Modbus Sever."""
         with self._lock:
             self._block = self._slaves_holder.build_server_blocks()
-
         if self._block is None:
             return
 

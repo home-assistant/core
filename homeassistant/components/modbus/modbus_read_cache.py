@@ -20,6 +20,15 @@ class ModbusReadCache:
 
     def __getattr__(self, attr):
         """Forward calls to the Hub object or use cached."""
+
+        # clearing cache on any write_* call
+        # since ModBus controller is a black box, any write into it may
+        # affect any arbitrary register. Think about resetting the controller
+        # also it's crucial for the switch.toggle call. Toggle may be fired multiple
+        # times within one second. Without clear toggle would be possible once a second
+        if attr.startswith("write_"):
+            _read_cached.cache_clear()
+
         if attr not in CACHED_METHODS:
             return getattr(self._hub, attr)
 

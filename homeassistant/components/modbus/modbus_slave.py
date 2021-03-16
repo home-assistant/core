@@ -10,6 +10,8 @@ from .const import DATA_TYPE_FLOAT, DATA_TYPE_INT, DATA_TYPE_STRING, DATA_TYPE_U
 
 _LOGGER = logging.getLogger(__name__)
 
+UNAVAILABLE_VALUES = ["unknown", "unavailable"]
+
 
 def _build_data_register(value, data_type: int, data_count: int):
 
@@ -61,13 +63,13 @@ class RegistersBuilder:
 
     def address(self, address: int):
         """Store address."""
-        self._address = address
+        self._address = int(address)
         return self
 
     def with_bit_mask(self, mask: int):
         """Add mask for the binary state."""
         assert self._is_binary, "You should call binary_state before with_bit_mask"
-        self._bit_mask = mask
+        self._bit_mask = int(mask)
         return self
 
     def binary_state(self, value, count: int = 1):
@@ -76,8 +78,8 @@ class RegistersBuilder:
             self._is_binary is None
         ), "You can't call binary_state after the state call"
         self._is_binary = True
-        self._count = count
-        if value == "unavailable":
+        self._count = int(count)
+        if value in UNAVAILABLE_VALUES:
             value = None
         self._value = bool(value)
         self._bit_mask = 1
@@ -87,8 +89,8 @@ class RegistersBuilder:
         """Register data state."""
         assert self._is_binary is None
         self._is_binary = False
-        self._count = count
-        if value == "unavailable":
+        self._count = int(count)
+        if value in UNAVAILABLE_VALUES:
             value = None
         self._value = value
         self._data_type = data_type
