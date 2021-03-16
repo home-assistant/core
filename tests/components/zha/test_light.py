@@ -392,13 +392,11 @@ async def async_test_level_on_off_from_hass(
     await hass.services.async_call(
         DOMAIN, "turn_on", {"entity_id": entity_id, "brightness": 10}, blocking=True
     )
-    assert on_off_cluster.request.call_count == 1
-    assert on_off_cluster.request.await_count == 1
+    # the onoff cluster is now not used when brightness is present by default
+    assert on_off_cluster.request.call_count == 0
+    assert on_off_cluster.request.await_count == 0
     assert level_cluster.request.call_count == 1
     assert level_cluster.request.await_count == 1
-    assert on_off_cluster.request.call_args == call(
-        False, ON, (), expect_reply=True, manufacturer=None, tries=1, tsn=None
-    )
     assert level_cluster.request.call_args == call(
         False,
         4,
