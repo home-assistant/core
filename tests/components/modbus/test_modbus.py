@@ -1,4 +1,6 @@
 """The tests for the Modbus sensor component."""
+from unittest import mock
+
 import pytest
 
 from homeassistant.components.modbus import number as number_helper
@@ -7,7 +9,15 @@ from homeassistant.components.modbus.const import (
     CONF_BYTESIZE,
     CONF_PARITY,
     CONF_STOPBITS,
+    CONF_TYPE_SERIAL,
+    CONF_TYPE_TCP,
+    CONF_TYPE_TCPSERVER,
     MODBUS_DOMAIN as DOMAIN,
+)
+from homeassistant.components.modbus.modbus import (
+    ModbusClientHub,
+    ModbusHub,
+    ModbusServerHub,
 )
 from homeassistant.const import (
     CONF_DELAY,
@@ -37,10 +47,13 @@ def test_number_helper():
 
 @pytest.mark.parametrize("do_discovery", [False, True])
 @pytest.mark.parametrize("do_options", [False, True])
-@pytest.mark.parametrize("do_type", ["tcp", "serial"])
-async def test_config_modbus(hass, do_discovery, do_options, do_type):
+@pytest.mark.parametrize(
+    "do_type", [CONF_TYPE_TCP, CONF_TYPE_TCPSERVER, CONF_TYPE_SERIAL]
+)
+@mock.patch("homeassistant.components.modbus.modbus.StartTcpServer")
+async def test_config_modbus(mock_server, hass, do_discovery, do_options, do_type):
     """Run test for modbus."""
-    if do_type == "tcp":
+    if do_type == CONF_TYPE_TCP or do_type == CONF_TYPE_TCPSERVER:
         config = {
             DOMAIN: {
                 CONF_TYPE: do_type,
@@ -60,6 +73,7 @@ async def test_config_modbus(hass, do_discovery, do_options, do_type):
                 CONF_STOPBITS: 1,
             },
         }
+
     if do_options:
         config.update(
             {
@@ -78,3 +92,30 @@ async def test_config_modbus(hass, do_discovery, do_options, do_type):
         method_discovery=do_discovery,
         config_modbus=config,
     )
+
+    if do_type == CONF_TYPE_TCPSERVER:
+        mock_server.assert_called_once_with(
+            mock.ANY,
+            address=("modbusTestHost", 5501),
+            allow_reuse_address=True,
+            defer_start=True,
+        )
+
+
+@pytest.mark.parametrize("is_server", [False, True])
+def test_modbus_hub_wrapper(is_server):
+    """Test Modbus Hub Wrapper class."""
+    config = {
+        CONF_TYPE: CONF_TYPE_TCPSERVER if is_server else CONF_TYPE_TCP,
+        CONF_HOST: "modbusTestHost",
+        CONF_PORT: 5501,
+        CONF_NAME: "modbus",
+        CONF_TIMEOUT: 10,
+        CONF_DELAY: 1,
+    }
+    hub = ModbusHub(config, mock.MagicMock())
+
+    if is_server:
+        assert isinstance(hub._hub, ModbusServerHub)
+    else:
+        assert isinstance(hub._hub, ModbusClientHub)

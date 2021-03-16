@@ -136,10 +136,7 @@ class ModbusHub:
         elif configuration_type in ModbusServerHub.CONFIGURATION_TYPES:
             self._hub = ModbusServerHub(client_config, hass)
         else:
-            _LOGGER.error(
-                "Unsupported Modbus configuration type: %s", configuration_type
-            )
-            assert False
+            assert False, f"Unsupported Modbus configuration type: {configuration_type}"
 
     def __getattr__(self, attr):
         """Forward calls to the Hub object."""
@@ -232,7 +229,6 @@ class ModbusClientHub(BaseModbusHub):
         CONF_TYPE_SERIAL,
         CONF_TYPE_RTUOVERTCP,
         CONF_TYPE_TCP,
-        CONF_TYPE_TCPSERVER,
         CONF_TYPE_UDP,
     ]
 
@@ -444,7 +440,6 @@ class ModbusServerHub(BaseModbusHub):
 
     async def start_server(self, _):
         """Start the Modbus Sever."""
-        _LOGGER.warning("**** start_server called")
         with self._lock:
             self._block = self._slaves_holder.build_server_blocks()
 

@@ -110,7 +110,9 @@ class RegistersBuilder:
         if self._is_binary:
             masked_value = self._bit_mask if self._value else 0
             registers = [0] * self._count
-            registers[-1] = masked_value
+            for idx in range(self._count):
+                registers[idx] = masked_value & 0xFFFF
+                masked_value = masked_value >> 16
             return _to_dict(self._name, self._address, registers, self._bit_mask)
 
         registers = _build_data_register(self._value, self._data_type, self._count)
@@ -120,9 +122,8 @@ class RegistersBuilder:
 class ModbusSlaveRegisters:
     """Hold slave registers, build register map."""
 
-    def __init__(self, slave):
+    def __init__(self):
         """Init slave registers class."""
-        self._slave = slave
         self._registers = []
 
     def add_slave_configuration(self, configure_lambda):
@@ -135,13 +136,6 @@ class ModbusSlaveRegisters:
         """Build a register map for the slave."""
         server_registers = {}
         for registers_item in self._registers:
-            _LOGGER.warning(
-                "build_register_map %s %s %s %s",
-                registers_item["name"],
-                registers_item["address"],
-                registers_item["registers"],
-                registers_item["bit_mask"],
-            )
             for idx, register_data in enumerate(registers_item["registers"]):
                 self._process_register(
                     server_registers, registers_item, register_data, idx
@@ -153,12 +147,10 @@ class ModbusSlaveRegisters:
         address = registers_item["address"] + idx
         if registers_item["bit_mask"] is None:
             if address in server_registers:
-                _LOGGER.error(
-                    "Modbus slave entity `%s` register %d overlaps with the already registered entities",
-                    registers_item["name"],
-                    address,
+                assert False, (
+                    f'Modbus slave entity `{registers_item["name"]}`'
+                    f" register {address} overlaps with the already registered entities"
                 )
-                return None
             server_registers[address] = [register_data, 0xFFFF]
         else:
             shift_bits = idx * 16
@@ -173,13 +165,10 @@ class ModbusSlaveRegisters:
                     # mask holds the used positions, value holds combined bit mask for the slave
                     value, mask = server_registers[address]
                     if mask & bit_mask > 0:
-                        _LOGGER.error(
-                            "Modbus slave entity `%s` register %d bit mask %d overlaps with the already registered entities",
-                            registers_item["name"],
-                            address,
-                            bit_mask,
+                        assert False, (
+                            f'Modbus slave entity `{registers_item["name"]}` register {address}'
+                            f" bit mask {bit_mask} overlaps with the already registered entities"
                         )
-                        return None
                     # update resulting register value and used bits mask
                     server_registers[address] = [
                         value | value_data,
@@ -199,7 +188,7 @@ class ModbusSlavesHolder:
     def add_slave_configuration(self, slave, configure_lambda):
         """Get the ModbusSlaveRegisters instance based on the slave."""
         if slave not in self._slaves:
-            self._slaves[slave] = ModbusSlaveRegisters(slave)
+            self._slaves[slave] = ModbusSlaveRegisters()
 
         self._slaves[slave].add_slave_configuration(configure_lambda)
 

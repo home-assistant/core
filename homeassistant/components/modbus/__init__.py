@@ -81,6 +81,11 @@ from .const import (
     CONF_STOPBITS,
     CONF_SWITCHES,
     CONF_TARGET_TEMP,
+    CONF_TYPE_RTUOVERTCP,
+    CONF_TYPE_SERIAL,
+    CONF_TYPE_TCP,
+    CONF_TYPE_TCPSERVER,
+    CONF_TYPE_UDP,
     CONF_UNIT,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
@@ -271,7 +276,7 @@ MODBUS_SCHEMA = vol.Schema(
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): "serial",
+        vol.Required(CONF_TYPE): CONF_TYPE_SERIAL,
         vol.Required(CONF_BAUDRATE): cv.positive_int,
         vol.Required(CONF_BYTESIZE): vol.Any(5, 6, 7, 8),
         vol.Required(CONF_METHOD): vol.Any("rtu", "ascii"),
@@ -285,7 +290,16 @@ ETHERNET_SCHEMA = MODBUS_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Required(CONF_TYPE): vol.Any("tcp", "udp", "rtuovertcp"),
+        vol.Required(CONF_TYPE): vol.Any(
+            CONF_TYPE_RTUOVERTCP, CONF_TYPE_TCP, CONF_TYPE_UDP
+        ),
+    }
+)
+
+ETHERNET_SERVER_SCHEMA = ETHERNET_SCHEMA.extend(
+    {
+        vol.Required(CONF_TYPE): vol.Any(CONF_TYPE_TCPSERVER),
+        vol.Optional(CONF_HOST, default="0.0.0.0"): cv.string,
     }
 )
 
@@ -294,7 +308,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.All(
             cv.ensure_list,
             [
-                vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
+                vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA, ETHERNET_SERVER_SCHEMA),
             ],
         ),
     },
