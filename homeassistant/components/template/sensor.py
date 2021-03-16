@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FORCE_UPDATE,
     CONF_FRIENDLY_NAME_TEMPLATE,
     CONF_ICON_TEMPLATE,
     CONF_SENSORS,
@@ -48,6 +49,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_FORCE_UPDATE, default=False): cv.boolean,
         }
     ),
 )
@@ -72,6 +74,7 @@ async def _async_create_entities(hass, config):
         device_class = device_config.get(CONF_DEVICE_CLASS)
         attribute_templates = device_config[CONF_ATTRIBUTE_TEMPLATES]
         unique_id = device_config.get(CONF_UNIQUE_ID)
+        force_update = device_config.get(CONF_FORCE_UPDATE)
 
         sensors.append(
             SensorTemplate(
@@ -87,6 +90,7 @@ async def _async_create_entities(hass, config):
                 device_class,
                 attribute_templates,
                 unique_id,
+                force_update,
             )
         )
 
@@ -116,6 +120,7 @@ class SensorTemplate(TemplateEntity, Entity):
         device_class,
         attribute_templates,
         unique_id,
+        force_update,
     ):
         """Initialize the sensor."""
         super().__init__(
@@ -135,6 +140,7 @@ class SensorTemplate(TemplateEntity, Entity):
         self._device_class = device_class
 
         self._unique_id = unique_id
+        self._force_update = force_update
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -173,3 +179,8 @@ class SensorTemplate(TemplateEntity, Entity):
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self._unit_of_measurement
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
