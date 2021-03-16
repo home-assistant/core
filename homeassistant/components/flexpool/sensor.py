@@ -16,11 +16,9 @@ from .sensors import (
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-def setup_entry(hass, entry, add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None):
     """Set up the Etherscan.io sensors."""
     address = entry.data["address"]
-    workers = entry.data["workers"]
-    poolStats = entry.data["pool"]
 
     sensors = [
         FlexpoolBalanceSensor("flexpool_unpaid_balance", address),
@@ -29,7 +27,7 @@ def setup_entry(hass, entry, add_entities, discovery_info=None):
         FlexpoolHashrateSensor("flexpool_daily_average", address),
     ]
 
-    if workers:
+    if "workers" in entry.data:
         workers = flexpoolapi.miner(address).workers()
         for worker in workers:
             sensors.append(
@@ -53,9 +51,9 @@ def setup_entry(hass, entry, add_entities, discovery_info=None):
                 )
             )
 
-    if poolStats:
+    if "pool" in entry.data:
         sensors.append(FlexpoolPoolHashrateSensor("flexpool_effective"))
         sensors.append(FlexpoolPoolWorkersSensor("flexpool_workers"))
         sensors.append(FlexpoolPoolLuckSensor("flexpool_luck"))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
