@@ -60,12 +60,7 @@ async def validate_input(hass: HomeAssistant, data: Dict):
                 balances_list.append(balance["symbol"])
         balances_list.sort()
     except BitvavoException as error:
-        if (
-            error.message == "Invalid API-key, IP, or permissions for action."
-            or error.message == "API-key format invalid."
-        ):
-            raise InvalidAuth from error
-        raise InvalidResponse from error
+        raise InvalidAuth from error
     finally:
         await client.close()
 
@@ -136,8 +131,6 @@ class BitvavoConfigFlow(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, config)
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except InvalidResponse:
-            errors["base"] = "invalid_response"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

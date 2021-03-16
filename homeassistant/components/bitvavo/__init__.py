@@ -149,9 +149,6 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
                             "asset_value_in_base_asset"
                         ] = total_balance
 
-                    print("balances_dict symbol:")
-                    print(balances_dict[balance["symbol"]])
-
                     if base_asset_ticker_details:
                         # If we can find a pair with ASSET_VALUE_BASE, include it in the dict
                         balances_dict[balance["symbol"]][ASSET_VALUE_BASE] = {}
