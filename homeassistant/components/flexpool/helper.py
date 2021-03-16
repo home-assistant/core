@@ -2,7 +2,7 @@
 units = ["H/s", "KH/s", "MH/s", "GH/s", "TH/s"]
 
 
-def getHashrate(hashrate):
+def get_hashrate(hashrate):
     """Convert hashrate to kilohash, megahash etc."""
     unit = 0
     while hashrate > 1000:

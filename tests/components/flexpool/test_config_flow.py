@@ -12,7 +12,7 @@ async def test_form(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.flexpool.async_setup", return_value=True

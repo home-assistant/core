@@ -5,7 +5,7 @@ from homeassistant.const import PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
 from .const import SENSOR_DICT
-from .helper import getHashrate
+from .helper import get_hashrate
 
 
 class FlexpoolBalanceSensor(Entity):
@@ -93,7 +93,7 @@ class FlexpoolHashrateSensor(Entity):
         elif self._type == "reported":
             hashrate = stats.current_reported_hashrate
 
-        self._state, self._unit = getHashrate(hashrate)
+        self._state, self._unit = get_hashrate(hashrate)
 
 
 class FlexpoolWorkerHashrateSensor(Entity):
@@ -148,7 +148,7 @@ class FlexpoolWorkerHashrateSensor(Entity):
 
             break
 
-        self._state, self._unit = getHashrate(hashrate)
+        self._state, self._unit = get_hashrate(hashrate)
 
 
 class FlexpoolWorkerShareSensor(Entity):
@@ -241,7 +241,7 @@ class FlexpoolPoolHashrateSensor(Entity):
         """Get the latest state of the sensor."""
         hashrate = flexpoolapi.pool.hashrate()
 
-        self._state, self._unit = getHashrate(hashrate["total"])
+        self._state, self._unit = get_hashrate(hashrate["total"])
 
 
 class FlexpoolPoolWorkersSensor(Entity):
