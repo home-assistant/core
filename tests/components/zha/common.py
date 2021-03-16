@@ -245,3 +245,4 @@ async def async_wait_for_updates(hass):
     await hass.async_block_till_done()
     await asyncio.sleep(0)
     await asyncio.sleep(0)
+    await hass.async_block_till_done()
