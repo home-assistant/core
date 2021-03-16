@@ -43,7 +43,7 @@ class VerisureSmartplug(CoordinatorEntity, SwitchEntity):
 
     @property
     def name(self) -> str:
-        """Return the name or location of the smartplug."""
+        """Return the name of this entity."""
         return self.coordinator.data["smart_plugs"][self.serial_number]["area"]
 
     @property

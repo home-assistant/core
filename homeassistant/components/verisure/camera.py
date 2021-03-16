@@ -64,12 +64,12 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
 
     @property
     def name(self) -> str:
-        """Return the name of this camera."""
+        """Return the name of this entity."""
         return self.coordinator.data["cameras"][self.serial_number]["area"]
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this camera."""
+        """Return the unique ID for this entity."""
         return self.serial_number
 
     @property

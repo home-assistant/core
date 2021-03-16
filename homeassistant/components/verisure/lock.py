@@ -71,7 +71,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the lock."""
+        """Return the name of this entity."""
         return self.coordinator.data["locks"][self.serial_number]["area"]
 
     @property

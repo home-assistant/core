@@ -22,7 +22,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: Callable[[Iterable[Entity]], None],
 ) -> None:
-    """Set up Verisure sensors based on a config entry."""
+    """Set up Verisure binary sensors based on a config entry."""
     coordinator: VerisureDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[Entity] = [VerisureEthernetStatus(coordinator)]
@@ -49,12 +49,12 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the binary sensor."""
+        """Return the name of this entity."""
         return self.coordinator.data["door_window"][self.serial_number]["area"]
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this alarm control panel."""
+        """Return the unique ID for this entity."""
         return f"{self.serial_number}_door_window"
 
     @property
@@ -72,7 +72,7 @@ class VerisureDoorWindowSensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
+        """Return the class of this entity."""
         return DEVICE_CLASS_OPENING
 
     @property
@@ -98,12 +98,12 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the binary sensor."""
+        """Return the name of this entity."""
         return "Verisure Ethernet status"
 
     @property
     def unique_id(self) -> str:
-        """Return the unique ID for this binary sensor."""
+        """Return the unique ID for this entity."""
         return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
 
     @property
@@ -128,5 +128,5 @@ class VerisureEthernetStatus(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
+        """Return the class of this entity."""
         return DEVICE_CLASS_CONNECTIVITY
