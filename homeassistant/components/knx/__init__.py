@@ -49,6 +49,7 @@ from .schema import (
     WeatherSchema,
     ga_validator,
     ia_validator,
+    sensor_type_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,7 +157,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
                 [ga_validator],
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
+            vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
         }
     ),
     vol.Schema(
