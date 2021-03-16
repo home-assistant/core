@@ -110,6 +110,11 @@ DHCP = [
         "macaddress": "501479*"
     },
     {
+        "domain": "screenlogic",
+        "hostname": "pentair: *",
+        "macaddress": "00C033*"
+    },
+    {
         "domain": "sense",
         "hostname": "sense-*",
         "macaddress": "009D6B*"
