@@ -846,7 +846,7 @@ class DataManager:
             data = serie.data
 
             for field in GetSleepSummaryField:
-                raw_values[field].append(data._asdict()[field.value])
+                raw_values[field].append(dict(data)[field.value])
 
         values: Dict[GetSleepSummaryField, float] = {}
 
