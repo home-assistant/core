@@ -323,6 +323,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._percentage = percentage
             else:
                 raise ValueError(f"{msg.payload} is not a valid percentage")
+            self._state = bool(percentage)
             self.async_write_ha_state()
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
@@ -341,7 +342,8 @@ class MqttFan(MqttEntity, FanEntity):
                 self._percentage = ordered_list_item_to_percentage(
                     self.preset_modes, payload
                 )
-                self._preset_mode = payload
+                self._preset_mode = str(payload)
+                self._state = bool(self._percentage)
             else:
                 raise NotValidPresetModeError(
                     f"{msg.payload} is not a valid preset mode"
@@ -428,7 +430,7 @@ class MqttFan(MqttEntity, FanEntity):
 
     @property
     def preset_mode(self):
-        """Return the current percentage."""
+        """Return the current preset _mode."""
         return self._preset_mode
 
     @property
@@ -447,6 +449,15 @@ class MqttFan(MqttEntity, FanEntity):
         return speeds
 
     @property
+    def _speed_list_without_preset_modes(self) -> list:
+        """Return the speed list without preset modes.
+
+        This property provides forward and backwards
+        compatibility for conversion to percentage speeds.
+        """
+        return self._config[CONF_SPEED_LIST]
+
+    @property
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
@@ -461,13 +472,6 @@ class MqttFan(MqttEntity, FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    #
-    # The fan entity model has changed to use percentages and preset_modes
-    # instead of speeds.
-    #
-    # Please review
-    # https://developers.home-assistant.io/docs/core/entity/fan/
-    #
     async def async_turn_on(
         self,
         speed: str = None,
@@ -537,7 +541,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self.async_write_ha_state()
             return
 
-        if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
+        if self._topic[CONF_PERCENTAGE_COMMAND_TOPIC] is not None:
             mqtt.async_publish(
                 self.hass,
                 self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
@@ -586,16 +590,32 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload = self._payload["SPEED_HIGH"]
         elif speed == SPEED_OFF:
             mqtt_payload = self._payload["SPEED_OFF"]
+        elif (
+            self._feature_preset_mode and speed in self._config[CONF_PRESET_MODES_LIST]
+        ):
+            percentage = ordered_list_item_to_percentage(
+                self._config[CONF_PRESET_MODES_LIST], speed
+            )
+            mqtt_payload = percentage_to_ordered_list_item(
+                self._speed_list_without_preset_modes, percentage
+            )
+            self._percentage = percentage
+        elif self._feature_percentage:
+            percentage = int(speed)
+            mqtt_payload = percentage_to_ordered_list_item(
+                self._speed_list_without_preset_modes, percentage
+            )
+            self._percentage = percentage
         else:
             raise NotValidSpeedError(f"{speed} is not a valid fan speed")
-
-        mqtt.async_publish(
-            self.hass,
-            self._topic[CONF_SPEED_COMMAND_TOPIC],
-            mqtt_payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-        )
+        if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
+            mqtt.async_publish(
+                self.hass,
+                self._topic[CONF_SPEED_COMMAND_TOPIC],
+                mqtt_payload,
+                self._config[CONF_QOS],
+                self._config[CONF_RETAIN],
+            )
 
         if self._optimistic_speed:
             self._speed = speed
