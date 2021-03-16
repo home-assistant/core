@@ -47,6 +47,8 @@ sync_state_validator = vol.Any(
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
 
+sensor_type_validator = vol.Any(int, str)
+
 
 ##############
 # CONNECTION
@@ -255,7 +257,7 @@ class ExposeSchema:
 
     SCHEMA = vol.Schema(
         {
-            vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(int, float, str),
+            vol.Required(CONF_KNX_EXPOSE_TYPE): sensor_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
@@ -417,7 +419,7 @@ class SensorSchema:
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): ga_validator,
-            vol.Required(CONF_TYPE): vol.Any(int, float, str),
+            vol.Required(CONF_TYPE): sensor_type_validator,
         }
     )
 
