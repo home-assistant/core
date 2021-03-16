@@ -681,7 +681,7 @@ class DataManager:
         )
 
         # Determine what subscriptions need to be created.
-        ignored_applis = frozenset({NotifyAppli.USER})
+        ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
         to_add_applis = frozenset(
             [
                 appli
