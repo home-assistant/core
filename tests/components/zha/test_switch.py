@@ -20,6 +20,7 @@ from .common import (
 )
 
 from tests.common import mock_coro
+from tests.components.zha.common import async_wait_for_updates
 
 ON = 1
 OFF = 0
@@ -160,6 +161,10 @@ async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     await async_test_rejoin(hass, zigpy_device, [cluster], (1,))
 
 
+@patch(
+    "homeassistant.components.zha.entity.UPDATE_GROUP_FROM_CHILD_DELAY",
+    new=0,
+)
 async def test_zha_group_switch_entity(
     hass, device_switch_1, device_switch_2, coordinator
 ):
@@ -195,14 +200,14 @@ async def test_zha_group_switch_entity(
     dev2_cluster_on_off = device_switch_2.device.endpoints[1].on_off
 
     await async_enable_traffic(hass, [device_switch_1, device_switch_2], enabled=False)
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that the lights were created and that they are off
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
     await async_enable_traffic(hass, [device_switch_1, device_switch_2])
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that the lights were created and are off
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -240,25 +245,25 @@ async def test_zha_group_switch_entity(
     # test some of the group logic to make sure we key off states correctly
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 1})
     await send_attributes_report(hass, dev2_cluster_on_off, {0: 1})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that group light is on
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 0})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that group light is still on
     assert hass.states.get(entity_id).state == STATE_ON
 
     await send_attributes_report(hass, dev2_cluster_on_off, {0: 0})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that group light is now off
     assert hass.states.get(entity_id).state == STATE_OFF
 
     await send_attributes_report(hass, dev1_cluster_on_off, {0: 1})
-    await hass.async_block_till_done()
+    await async_wait_for_updates(hass)
 
     # test that group light is now back on
     assert hass.states.get(entity_id).state == STATE_ON
