@@ -53,7 +53,7 @@ class RestData:
             )
 
         if self.headers_template is not None:
-          self._headers = self.get_headers_from_headers_template(self.headers_template)
+            self._headers = self.get_headers_from_headers_template(self.headers_template)
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:
