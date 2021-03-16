@@ -15,7 +15,7 @@
         "step": {
             "hassio_confirm": {
                 "description": "Vuoi configurare Home Assistant per connettersi al gateway deCONZ fornito dal componente aggiuntivo di Hass.io: {addon}?",
-                "title": "Gateway Pigmee deCONZ tramite il componente aggiuntivo di Hass.io"
+                "title": "Gateway deCONZ Zigbee tramite il componente aggiuntivo di Hass.io"
             },
             "link": {
                 "description": "Sblocca il tuo gateway deCONZ per registrarti con Home Assistant.\n\n1. Vai a Impostazioni deCONZ -> Gateway -> Avanzate\n2. Premere il pulsante \"Autentica app\"",

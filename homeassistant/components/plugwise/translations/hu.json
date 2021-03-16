@@ -1,13 +1,31 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "Smile: {name}",
         "step": {
             "user": {
                 "data": {
                     "flow_type": "Kapcsolat t\u00edpusa"
-                }
+                },
+                "description": "Term\u00e9k:",
+                "title": "Plugwise t\u00edpus"
             },
             "user_gateway": {
-                "description": "K\u00e9rj\u00fck, adja meg"
+                "data": {
+                    "host": "IP c\u00edm",
+                    "password": "Smile azonos\u00edt\u00f3",
+                    "port": "Port",
+                    "username": "Smile Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "K\u00e9rj\u00fck, adja meg",
+                "title": "Csatlakoz\u00e1s a Smile-hoz"
             }
         }
     }

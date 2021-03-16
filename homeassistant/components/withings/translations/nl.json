@@ -12,6 +12,7 @@
         "error": {
             "already_configured": "Account is al geconfigureerd"
         },
+        "flow_title": "Withings: {profile}",
         "step": {
             "pick_implementation": {
                 "title": "Kies Authenticatiemethode"
@@ -24,7 +25,7 @@
                 "title": "Gebruikersprofiel."
             },
             "reauth": {
-                "title": "Profiel opnieuw verifi\u00ebren"
+                "title": "Verifieer de integratie opnieuw"
             }
         }
     }

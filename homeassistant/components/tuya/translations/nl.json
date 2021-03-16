@@ -31,6 +31,9 @@
         },
         "step": {
             "device": {
+                "data": {
+                    "temp_step_override": "Doeltemperatuur stap"
+                },
                 "title": "Configureer Tuya Apparaat"
             },
             "init": {

@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Ativar descoberta"
                 },
-                "description": "Deseja configurar o Home Assistant para se conectar ao broker MQTT fornecido pelo complemento hass.io {addon}?",
-                "title": "MQTT Broker via add-on Hass.io"
+                "description": "Deseja configurar o Home Assistant para se conectar ao broker MQTT fornecido pelo complemento Supervisor {addon}?",
+                "title": "MQTT Broker via add-on Supervisor"
             }
         }
     },

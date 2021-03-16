@@ -10,11 +10,18 @@
             "project_error": "Kon geen projectinformatie ophalen."
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "personal_access_token": "Persoonlijk toegangstoken (PAT)"
+                }
+            },
             "user": {
                 "data": {
                     "organization": "Organisatie",
+                    "personal_access_token": "Persoonlijk toegangstoken (PAT)",
                     "project": "Project"
-                }
+                },
+                "title": "Azure DevOps-project toevoegen"
             }
         }
     }

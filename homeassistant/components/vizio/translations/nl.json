@@ -12,7 +12,7 @@
         "step": {
             "pair_tv": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN-code"
                 },
                 "description": "Uw TV zou een code moeten weergeven. Voer die code in het formulier in en ga dan door naar de volgende stap om de koppeling te voltooien.",
                 "title": "Voltooi het koppelingsproces"

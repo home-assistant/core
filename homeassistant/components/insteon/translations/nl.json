@@ -86,7 +86,11 @@
                     "change_hub_config": "Wijzig de Hub-configuratie.",
                     "remove_override": "Verwijder een apparaatoverschrijving.",
                     "remove_x10": "Verwijder een X10-apparaat."
-                }
+                },
+                "title": "Insteon"
+            },
+            "remove_override": {
+                "title": "Insteon"
             },
             "remove_x10": {
                 "title": "Insteon"

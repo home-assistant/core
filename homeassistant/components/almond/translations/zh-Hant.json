@@ -8,8 +8,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6\uff1a{addon} \u9023\u7dda\u81f3 Almond\uff1f",
-                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6 Almond"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u4f7f\u7528 Hass.io \u9644\u52a0\u5143\u4ef6\uff1a{addon} \u9023\u7dda\u81f3 Almond\uff1f",
+                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u5143\u4ef6 Almond"
             },
             "pick_implementation": {
                 "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"

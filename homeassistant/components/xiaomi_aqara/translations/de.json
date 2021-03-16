@@ -14,7 +14,8 @@
             "select": {
                 "data": {
                     "select_ip": "IP-Adresse"
-                }
+                },
+                "description": "F\u00fchre das Setup erneut aus, wenn du zus\u00e4tzliche Gateways verbinden m\u00f6chtest"
             },
             "user": {
                 "data": {

@@ -15,7 +15,7 @@
                 "title": "Konnected \uae30\uae30 \uc900\ube44"
             },
             "import_confirm": {
-                "description": "Konnected \uc54c\ub78c \ud328\ub110 ID {id} \uac00 configuration.yaml \uc5d0\uc11c \ubc1c\uacac\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uc774 \uacfc\uc815\uc744 \ud1b5\ud574 \uad6c\uc131 \ud56d\ubaa9\uc73c\ub85c \uac00\uc838\uc62c \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
+                "description": "Konnected \uc54c\ub78c \ud328\ub110 ID {id}\uac00 configuration.yaml\uc5d0\uc11c \ubc1c\uacac\ub418\uc5c8\uc2b5\ub2c8\ub2e4. \uc774 \uacfc\uc815\uc744 \ud1b5\ud574 \uad6c\uc131 \ud56d\ubaa9\uc73c\ub85c \uac00\uc838\uc62c \uc218 \uc788\uc2b5\ub2c8\ub2e4.",
                 "title": "Konnected \uae30\uae30 \uac00\uc838\uc624\uae30"
             },
             "user": {
@@ -85,7 +85,7 @@
                 "data": {
                     "api_host": "API \ud638\uc2a4\ud2b8 URL \uc7ac\uc815\uc758 (\uc120\ud0dd \uc0ac\ud56d)",
                     "blink": "\uc0c1\ud0dc \ubcc0\uacbd\uc744 \ubcf4\ub0bc \ub54c \uae5c\ubc15\uc784 \ud328\ub110 LED \ub97c \ucf2d\ub2c8\ub2e4",
-                    "discovery": "\ub124\ud2b8\uc6cc\ud06c\uc758 \uac80\uc0c9 \uc694\uccad\uc5d0 \uc751\ub2f5",
+                    "discovery": "\ub124\ud2b8\uc6cc\ud06c\uc758 \uac80\uc0c9 \uc694\uccad\uc5d0 \uc751\ub2f5\ud558\uae30",
                     "override_api_host": "\uae30\ubcf8 Home Assistant API \ud638\uc2a4\ud2b8 \ud328\ub110 URL \uc7ac\uc815\uc758"
                 },
                 "description": "\ud328\ub110\uc5d0 \uc6d0\ud558\ub294 \ub3d9\uc791\uc744 \uc120\ud0dd\ud574\uc8fc\uc138\uc694",

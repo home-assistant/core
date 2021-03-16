@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "alexa_enabled": "Alexa ingeschakeld",
+            "can_reach_cert_server": "Bereik Certificaatserver",
             "can_reach_cloud": "Bereik Home Assistant Cloud",
             "can_reach_cloud_auth": "Bereik authenticatieserver",
             "google_enabled": "Google ingeschakeld",

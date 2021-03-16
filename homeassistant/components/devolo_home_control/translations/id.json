@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "home_control_url": "URL Home Control",
+                    "mydevolo_url": "URL mydevolo",
+                    "password": "Kata Sandi",
+                    "username": "Email/ID devolo"
+                }
+            }
+        }
+    }
+}

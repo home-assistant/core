@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
+            "invalid_auth": "Autentikasi tidak valid",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "create_entry": {
+            "default": "Berhasil diautentikasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            },
+            "reauth_confirm": {
+                "title": "Ingin memulai penyiapan?"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna",
+                    "vendor": "Vendor"
+                },
+                "description": "Baca [dokumentasi Neato]({docs_url}).",
+                "title": "Info Akun Neato"
+            }
+        }
+    },
+    "title": "Neato Botvac"
+}

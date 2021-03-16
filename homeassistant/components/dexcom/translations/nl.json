@@ -12,7 +12,17 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
+                    "server": "Server",
                     "username": "Gebruikersnaam"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "unit_of_measurement": "Meeteenheid"
                 }
             }
         }

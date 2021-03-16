@@ -1,14 +1,28 @@
 {
+    "device_automation": {
+        "action_type": {
+            "clean": "Perintahkan {entity_name} untuk bersih-bersih",
+            "dock": "Kembalikan {entity_name} ke dok"
+        },
+        "condition_type": {
+            "is_cleaning": "{entity_name} sedang membersihkan",
+            "is_docked": "{entity_name} berlabuh di dok"
+        },
+        "trigger_type": {
+            "cleaning": "{entity_name} mulai membersihkan",
+            "docked": "{entity_name} berlabuh"
+        }
+    },
     "state": {
         "_": {
             "cleaning": "Membersihkan",
             "docked": "Berlabuh",
             "error": "Kesalahan",
             "idle": "Siaga",
-            "off": "Padam",
+            "off": "Mati",
             "on": "Nyala",
-            "paused": "Dijeda",
-            "returning": "Kembali ke dock"
+            "paused": "Jeda",
+            "returning": "Kembali ke dok"
         }
     },
     "title": "Vakum"

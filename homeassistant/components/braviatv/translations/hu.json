@@ -1,15 +1,36 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "no_ip_control": "Az IP-vez\u00e9rl\u00e9s le van tiltva a TV-n, vagy a TV nem t\u00e1mogatja."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_host": "\u00c9rv\u00e9nytelen hosztn\u00e9v vagy IP-c\u00edm",
+            "unsupported_model": "A TV modell nem t\u00e1mogatott."
+        },
         "step": {
             "authorize": {
                 "data": {
-                    "pin": "PIN k\u00f3d"
-                }
+                    "pin": "PIN-k\u00f3d"
+                },
+                "title": "Sony Bravia TV enged\u00e9lyez\u00e9se"
             },
             "user": {
                 "data": {
                     "host": "Hoszt"
-                }
+                },
+                "title": "Sony Bravia TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Figyelmen k\u00edv\u00fcl hagyott forr\u00e1sok list\u00e1ja"
+                },
+                "title": "A Sony Bravia TV be\u00e1ll\u00edt\u00e1sai"
             }
         }
     }

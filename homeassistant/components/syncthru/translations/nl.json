@@ -4,13 +4,15 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
+            "invalid_url": "Ongeldige URL",
             "unknown_state": "Printerstatus onbekend, controleer URL en netwerkconnectiviteit"
         },
         "flow_title": "Samsung SyncThru Printer: {name}",
         "step": {
             "confirm": {
                 "data": {
-                    "name": "Naam"
+                    "name": "Naam",
+                    "url": "Webinterface URL"
                 }
             },
             "user": {

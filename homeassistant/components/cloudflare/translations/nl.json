@@ -26,7 +26,8 @@
             "zone": {
                 "data": {
                     "zone": "Zone"
-                }
+                },
+                "title": "Kies de zone die u wilt bijwerken"
             }
         }
     }

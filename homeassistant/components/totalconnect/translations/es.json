@@ -9,6 +9,9 @@
         },
         "step": {
             "locations": {
+                "data": {
+                    "location": "Localizaci\u00f3n"
+                },
                 "description": "Ingrese el c\u00f3digo de usuario para este usuario en esta ubicaci\u00f3n",
                 "title": "C\u00f3digos de usuario de ubicaci\u00f3n"
             },

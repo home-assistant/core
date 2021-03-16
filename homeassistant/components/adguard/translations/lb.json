@@ -9,8 +9,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam AdGuard Home ze verbannen dee vum hass.io add-on {addon} bereet gestallt g\u00ebtt?",
-                "title": "AdGuard Home via Hass.io add-on"
+                "description": "W\u00ebllt dir Home Assistant konfigur\u00e9iere fir sech mam AdGuard Home ze verbannen dee vum Supervisor add-on {addon} bereet gestallt g\u00ebtt?",
+                "title": "AdGuard Home via Supervisor add-on"
             },
             "user": {
                 "data": {

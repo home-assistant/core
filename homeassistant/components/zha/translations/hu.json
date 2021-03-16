@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Csak egyetlen ZHA konfigur\u00e1ci\u00f3 megengedett."
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
         "error": {
-            "cannot_connect": "Nem lehet csatlakozni a ZHA eszk\u00f6zh\u00f6z."
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
             "port_config": {
@@ -16,6 +16,11 @@
             "user": {
                 "title": "ZHA"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "device_offline": "Eszk\u00f6z offline"
         }
     }
 }

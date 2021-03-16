@@ -9,7 +9,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vuoi configurare Home Assistant per connettersi alla AdGuard Home fornita dal componente aggiuntivo di Hass.io: {addon}?",
+                "description": "Vuoi configurare Home Assistant per connettersi ad AdGuard Home fornito dal componente aggiuntivo di Hass.io: {addon}?",
                 "title": "AdGuard Home tramite il componente aggiuntivo di Hass.io"
             },
             "user": {

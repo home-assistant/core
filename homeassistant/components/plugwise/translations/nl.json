@@ -4,8 +4,8 @@
             "already_configured": "De service is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
-            "invalid_auth": "Ongeldige authenticatie, controleer de 8 karakters van uw Smile-ID",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -20,8 +20,10 @@
                 "data": {
                     "host": "IP-adres",
                     "password": "Smile-ID",
-                    "port": "Poort"
+                    "port": "Poort",
+                    "username": "Smile Gebruikersnaam"
                 },
+                "description": "Voer in",
                 "title": "Maak verbinding met de Smile"
             }
         }

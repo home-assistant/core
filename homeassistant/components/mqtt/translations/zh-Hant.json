@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "\u958b\u555f\u641c\u5c0b"
                 },
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u6574\u5408 {addon} \u4e4b MQTT broker\uff1f",
-                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u7d44\u4ef6 MQTT Broker"
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u5143\u4ef6 {addon} \u4e4b MQTT broker\uff1f",
+                "title": "\u4f7f\u7528 Hass.io \u9644\u52a0\u5143\u4ef6 MQTT Broker"
             }
         }
     },

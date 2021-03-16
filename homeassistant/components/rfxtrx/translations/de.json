@@ -50,7 +50,8 @@
                 "data": {
                     "off_delay": "Ausschaltverz\u00f6gerung",
                     "off_delay_enabled": "Ausschaltverz\u00f6gerung aktivieren",
-                    "replace_device": "W\u00e4hle ein Ger\u00e4t aus, das ersetzt werden soll"
+                    "replace_device": "W\u00e4hle ein Ger\u00e4t aus, das ersetzt werden soll",
+                    "venetian_blind_mode": "Jalousie-Modus"
                 }
             }
         }

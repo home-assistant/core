@@ -1,12 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az UPnP / IGD m\u00e1r konfigur\u00e1l\u00e1sra ker\u00fclt",
-            "no_devices_found": "Nincsenek UPnPIGD eszk\u00f6z\u00f6k a h\u00e1l\u00f3zaton."
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
         },
         "error": {
             "one": "hiba",
             "other": ""
+        },
+        "flow_title": "UPnP/IGD: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "usn": "Eszk\u00f6z"
+                }
+            }
         }
     }
 }

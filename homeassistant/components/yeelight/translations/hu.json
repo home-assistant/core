@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "no_devices_found": "Nincs eszk\u00f6z a h\u00e1l\u00f3zaton"
+            "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
@@ -15,7 +15,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Gazdag\u00e9p"
+                    "host": "Hoszt"
                 },
                 "description": "Ha a gazdag\u00e9pet \u00fcresen hagyja, felder\u00edt\u00e9sre ker\u00fcl automatikusan."
             }

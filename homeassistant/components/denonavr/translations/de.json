@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt"
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es noch einmal. Trennen Sie ggf. Strom- und Ethernetkabel und verbinden Sie diese erneut."
         },
         "step": {
             "select": {

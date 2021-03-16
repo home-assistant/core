@@ -12,5 +12,15 @@
                 }
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "\uc784\uacc4\uac12 (%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA Aurora \uc13c\uc11c"
 }

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "address_already_configured": "BleBox \uae30\uae30\uac00 {address} \ub85c \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
+            "address_already_configured": "BleBox \uae30\uae30\uac00 {address}(\uc73c)\ub85c \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4.",
             "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
@@ -16,7 +16,7 @@
                     "host": "IP \uc8fc\uc18c",
                     "port": "\ud3ec\ud2b8"
                 },
-                "description": "Home Assistant \uc5d0 BleBox \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4.",
+                "description": "Home Assistant\uc5d0 BleBox \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4.",
                 "title": "BleBox \uae30\uae30 \uc124\uc815\ud558\uae30"
             }
         }

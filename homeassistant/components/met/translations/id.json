@@ -1,11 +1,17 @@
 {
     "config": {
+        "error": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
         "step": {
             "user": {
                 "data": {
                     "elevation": "Ketinggian",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
                     "name": "Nama"
                 },
+                "description": "Meteorologisk institutt",
                 "title": "Lokasi"
             }
         }

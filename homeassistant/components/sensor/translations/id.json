@@ -1,8 +1,44 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_battery_level": "Level baterai {entity_name} saat ini",
+            "is_carbon_dioxide": "Level konsentasi karbondioksida {entity_name} saat ini",
+            "is_carbon_monoxide": "Level konsentasi karbonmonoksida {entity_name} saat ini",
+            "is_current": "Arus {entity_name} saat ini",
+            "is_energy": "Energi {entity_name} saat ini",
+            "is_humidity": "Kelembaban {entity_name} saat ini",
+            "is_illuminance": "Pencahayaan {entity_name} saat ini",
+            "is_power": "Daya {entity_name} saat ini",
+            "is_power_factor": "Faktor daya {entity_name} saat ini",
+            "is_pressure": "Tekanan {entity_name} saat ini",
+            "is_signal_strength": "Kekuatan sinyal {entity_name} saat ini",
+            "is_temperature": "Suhu {entity_name} saat ini",
+            "is_timestamp": "Stempel waktu {entity_name} saat ini",
+            "is_value": "Nilai {entity_name} saat ini",
+            "is_voltage": "Tegangan {entity_name} saat ini"
+        },
+        "trigger_type": {
+            "battery_level": "Perubahan level baterai {entity_name}",
+            "carbon_dioxide": "Perubahan konsentrasi karbondioksida {entity_name}",
+            "carbon_monoxide": "Perubahan konsentrasi karbonmonoksida {entity_name}",
+            "current": "Perubahan arus {entity_name}",
+            "energy": "Perubahan energi {entity_name}",
+            "humidity": "Perubahan kelembaban {entity_name}",
+            "illuminance": "Perubahan pencahayaan {entity_name}",
+            "power": "Perubahan daya {entity_name}",
+            "power_factor": "Perubahan faktor daya {entity_name}",
+            "pressure": "Perubahan tekanan {entity_name}",
+            "signal_strength": "Perubahan kekuatan sinyal {entity_name}",
+            "temperature": "Perubahan suhu {entity_name}",
+            "timestamp": "Perubahan stempel waktu {entity_name}",
+            "value": "Perubahan nilai {entity_name}",
+            "voltage": "Perubahan tegangan {entity_name}"
+        }
+    },
     "state": {
         "_": {
-            "off": "Off",
-            "on": "On"
+            "off": "Mati",
+            "on": "Nyala"
         }
     },
     "title": "Sensor"

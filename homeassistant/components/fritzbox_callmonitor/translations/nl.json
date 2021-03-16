@@ -2,12 +2,19 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
+            "insufficient_permissions": "Gebruiker heeft onvoldoende rechten voor toegang tot AVM FRITZ!Box instellingen en de telefoonboeken.",
             "no_devices_found": "Geen apparaten gevonden op het netwerk"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie"
         },
+        "flow_title": "AVM FRITZ!Box oproepmonitor: {name}",
         "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Telefoonboek"
+                }
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -15,6 +22,19 @@
                     "port": "Poort",
                     "username": "Gebruikersnaam"
                 }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Voorvoegsels hebben een onjuiste indeling, controleer hun indeling."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Voorvoegsels (door komma's gescheiden lijst)"
+                },
+                "title": "Configureer voorvoegsels"
             }
         }
     }

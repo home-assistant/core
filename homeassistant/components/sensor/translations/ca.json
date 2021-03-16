@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Nivell de bateria actual de {entity_name}",
+            "is_carbon_dioxide": "Concentraci\u00f3 actual de di\u00f2xid de carboni de {entity_name}",
+            "is_carbon_monoxide": "Concentraci\u00f3 actual de mon\u00f2xid de carboni de {entity_name}",
             "is_current": "Intensitat actual de {entity_name}",
             "is_energy": "Energia actual de {entity_name}",
             "is_humidity": "Humitat actual de {entity_name}",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "Canvia el nivell de bateria de {entity_name}",
+            "carbon_dioxide": "Canvia la concentraci\u00f3 de di\u00f2xid de carboni de {entity_name}",
+            "carbon_monoxide": "Canvia la concentraci\u00f3 de mon\u00f2xid de carboni de {entity_name}",
             "current": "Canvia la intensitat de {entity_name}",
             "energy": "Canvia l'energia de {entity_name}",
             "humidity": "Canvia la humitat de {entity_name}",

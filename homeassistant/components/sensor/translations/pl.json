@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "obecny poziom na\u0142adowania baterii {entity_name}",
+            "is_carbon_dioxide": "Bie\u017c\u0105cy poziom st\u0119\u017cenia dwutlenku w\u0119gla w {entity_name}",
+            "is_carbon_monoxide": "Bie\u017c\u0105cy poziom st\u0119\u017cenia tlenku w\u0119gla w {entity_name}",
             "is_current": "obecne nat\u0119\u017cenie pr\u0105du {entity_name}",
             "is_energy": "obecna energia {entity_name}",
             "is_humidity": "obecna wilgotno\u015b\u0107 {entity_name}",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "zmieni si\u0119 poziom baterii {entity_name}",
+            "carbon_dioxide": "Zmiana st\u0119\u017cenie dwutlenku w\u0119gla w {entity_name}",
+            "carbon_monoxide": "Zmiana st\u0119\u017cenia tlenku w\u0119gla w {entity_name}",
             "current": "zmieni si\u0119 nat\u0119\u017cenie pr\u0105du w {entity_name}",
             "energy": "zmieni si\u0119 energia {entity_name}",
             "humidity": "zmieni si\u0119 wilgotno\u015b\u0107 {entity_name}",

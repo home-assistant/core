@@ -48,7 +48,7 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Naam (optioneel)",
+                    "name": "Naam (optional)",
                     "poll_interval": "Poll interval (minuten) (optioneel)",
                     "type": "Type sensor"
                 },

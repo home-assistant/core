@@ -7,12 +7,12 @@
             "healthy": "Eg\u00e9szs\u00e9ges",
             "host_os": "Gazdag\u00e9p oper\u00e1ci\u00f3s rendszer",
             "installed_addons": "Telep\u00edtett kieg\u00e9sz\u00edt\u0151k",
-            "supervisor_api": "Adminisztr\u00e1tor API",
-            "supervisor_version": "Adminisztr\u00e1tor verzi\u00f3",
+            "supervisor_api": "Supervisor API",
+            "supervisor_version": "Supervisor verzi\u00f3",
             "supported": "T\u00e1mogatott",
             "update_channel": "Friss\u00edt\u00e9si csatorna",
             "version_api": "API verzi\u00f3"
         }
     },
-    "title": "Hass.io"
+    "title": "Home Assistant Supervisor"
 }

@@ -14,8 +14,8 @@
         "flow_title": "Br\u00e1na deCONZ ZigBee ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed hass.io {addon}?",
-                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Hass.io"
+                "description": "Chcete nakonfigurovat slu\u017ebu Home Assistant pro p\u0159ipojen\u00ed k deCONZ br\u00e1n\u011b pomoc\u00ed Supervisor {addon}?",
+                "title": "deCONZ Zigbee br\u00e1na prost\u0159ednictv\u00edm dopl\u0148ku Supervisor"
             },
             "link": {
                 "description": "Odemkn\u011bte br\u00e1nu deCONZ pro registraci v Home Assistant.\n\n 1. P\u0159ejd\u011bte na Nastaven\u00ed deCONZ - > Br\u00e1na - > Pokro\u010dil\u00e9\n 2. Stiskn\u011bte tla\u010d\u00edtko \"Ov\u011b\u0159it aplikaci\"",

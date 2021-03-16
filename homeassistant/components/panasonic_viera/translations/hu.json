@@ -1,16 +1,28 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_pin_code": "A megadott PIN-k\u00f3d \u00e9rv\u00e9nytelen volt"
         },
         "step": {
+            "pairing": {
+                "data": {
+                    "pin": "PIN-k\u00f3d"
+                },
+                "description": "Add meg a TV-k\u00e9sz\u00fcl\u00e9ken megjelen\u0151 PIN-k\u00f3dot",
+                "title": "P\u00e1ros\u00edt\u00e1s"
+            },
             "user": {
                 "data": {
-                    "host": "IP c\u00edm"
-                }
+                    "host": "IP c\u00edm",
+                    "name": "N\u00e9v"
+                },
+                "description": "Add meg a Panasonic Viera TV-hez tartoz\u00f3 IP c\u00edmet"
             }
         }
     }

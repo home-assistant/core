@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "De powerwall is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout",
             "wrong_version": "Uw powerwall gebruikt een softwareversie die niet wordt ondersteund. Overweeg om dit probleem te upgraden of te melden, zodat het kan worden opgelost."
@@ -17,6 +17,7 @@
                     "ip_address": "IP-adres",
                     "password": "Wachtwoord"
                 },
+                "description": "Het wachtwoord is meestal de laatste 5 tekens van het serienummer voor Backup Gateway en is te vinden in de Tesla-app of de laatste 5 tekens van het wachtwoord aan de binnenkant van de deur voor Backup Gateway 2.",
                 "title": "Maak verbinding met de powerwall"
             }
         }

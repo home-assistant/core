@@ -48,10 +48,13 @@
                     "lon_sw": "Lengtegraad Zuidwestelijke hoek",
                     "mode": "Berekening",
                     "show_on_map": "Toon op kaart"
-                }
+                },
+                "description": "Configureer een openbare weersensor voor een gebied.",
+                "title": "Netatmo openbare weersensor"
             },
             "public_weather_areas": {
-                "description": "Configureer openbare weersensoren."
+                "description": "Configureer openbare weersensoren.",
+                "title": "Netatmo openbare weersensor"
             }
         }
     }

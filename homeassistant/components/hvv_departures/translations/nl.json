@@ -5,9 +5,22 @@
         },
         "error": {
             "cannot_connect": "Kon niet verbinden",
-            "invalid_auth": "Ongeldige authenticatie"
+            "invalid_auth": "Ongeldige authenticatie",
+            "no_results": "Geen resultaten. Probeer het met een ander station/adres"
         },
         "step": {
+            "station": {
+                "data": {
+                    "station": "Station/Adres"
+                },
+                "title": "Voer station/adres in"
+            },
+            "station_select": {
+                "data": {
+                    "station": "Station/Adres"
+                },
+                "title": "Selecteer Station/Adres"
+            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -15,6 +28,19 @@
                     "username": "Gebruikersnaam"
                 },
                 "title": "Maak verbinding met de HVV API"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Selecteer lijnen",
+                    "offset": "Offset (minuten)",
+                    "real_time": "Gebruik realtime gegevens"
+                },
+                "description": "Wijzig opties voor deze vertreksensor",
+                "title": "Opties"
             }
         }
     }

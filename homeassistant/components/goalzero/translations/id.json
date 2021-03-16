@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_host": "Nama host atau alamat IP tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nama"
+                },
+                "description": "Pertama, Anda perlu mengunduh aplikasi Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\nIkuti petunjuk untuk menghubungkan Yeti Anda ke jaringan Wi-Fi Anda. Kemudian dapatkan IP host dari router Anda. DHCP harus disetel di pengaturan router Anda untuk perangkat host agar IP host tidak berubah. Lihat manual pengguna router Anda.",
+                "title": "Goal Zero Yeti"
+            }
+        }
+    }
+}

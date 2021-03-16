@@ -1,8 +1,21 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Dieser Flughafen ist bereits konfiguriert"
+        },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_airport": "Flughafencode ist ung\u00fcltig",
             "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Flughafen"
+                },
+                "description": "Geben Sie einen US-Flughafencode im IATA-Format ein",
+                "title": "FAA Delays"
+            }
         }
     }
 }

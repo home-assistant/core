@@ -30,7 +30,7 @@
                 "data": {
                     "code": "PIN Code"
                 },
-                "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided pin code below.",
+                "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided PIN code below.",
                 "title": "Link Nest Account"
             },
             "pick_implementation": {

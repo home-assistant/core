@@ -1,7 +1,9 @@
 {
     "config": {
         "error": {
-            "rate_limited": "Actualmente la tarifa est\u00e1 limitada, por favor int\u00e9ntelo m\u00e1s tarde."
+            "cannot_connect": "Fallo al conectar",
+            "rate_limited": "Actualmente la tarifa est\u00e1 limitada, por favor int\u00e9ntelo m\u00e1s tarde.",
+            "unknown": "Error inesperado"
         },
         "step": {
             "user": {
