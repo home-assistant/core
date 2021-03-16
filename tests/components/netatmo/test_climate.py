@@ -394,6 +394,7 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
 
 async def test_service_schedule_thermostats(hass, climate_entry, caplog):
     """Test service for selecting Netatmo schedule with thermostats."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     # Test setting a valid schedule
@@ -408,6 +409,20 @@ async def test_service_schedule_thermostats(hass, climate_entry, caplog):
     assert (
         "Setting 91763b24c43d3e344f424e8b schedule to Winter (b1b54a2f45795764f59d50d8)"
         in caplog.text
+    )
+
+    # Fake backend response for valve being turned on
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
+        b'"event_type": "schedule", "schedule_id": "b1b54a2f45795764f59d50d8",'
+        b'"previous_schedule_id": "59d32176d183948b05ab4dce", "push_type": "home_event_changed"}'
+    )
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["selected_schedule"]
+        == "Winter"
     )
 
     # Test setting an invalid schedule
