@@ -38,7 +38,7 @@ class AutomationTrace:
         self._action_trace: Optional[Dict[str, Deque[TraceElement]]] = None
         self._condition_trace: Optional[Dict[str, Deque[TraceElement]]] = None
         self._config: Dict[str, Any] = config
-        self._context: Context = context
+        self.context: Context = context
         self._error: Optional[Exception] = None
         self._state: str = "running"
         self.run_id: str = str(next(self._run_ids))
@@ -88,7 +88,7 @@ class AutomationTrace:
                 "action_trace": action_traces,
                 "condition_trace": condition_traces,
                 "config": self._config,
-                "context": self._context,
+                "context": self.context,
                 "variables": self._variables,
             }
         )

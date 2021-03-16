@@ -65,6 +65,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
         await async_setup_component(hass, "config", {})
 
     client = await hass_ws_client()
+    contexts = {}
 
     # Trigger "sun" automation
     context = Context()
@@ -102,6 +103,10 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event'"
     assert trace["unique_id"] == "sun"
     assert trace["variables"]
+    contexts[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "automation_id": trace["automation_id"],
+    }
 
     # Trigger "moon" automation, with passing condition
     hass.bus.async_fire("test_event2")
@@ -139,6 +144,10 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["unique_id"] == "moon"
     assert trace["variables"]
+    contexts[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "automation_id": trace["automation_id"],
+    }
 
     # Trigger "moon" automation, with failing condition
     hass.bus.async_fire("test_event3")
@@ -173,6 +182,10 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event3'"
     assert trace["unique_id"] == "moon"
     assert trace["variables"]
+    contexts[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "automation_id": trace["automation_id"],
+    }
 
     # Trigger "moon" automation, with passing condition
     hass.bus.async_fire("test_event2")
@@ -210,6 +223,16 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert trace["trigger"] == "event 'test_event2'"
     assert trace["unique_id"] == "moon"
     assert trace["variables"]
+    contexts[trace["context"]["id"]] = {
+        "run_id": trace["run_id"],
+        "automation_id": trace["automation_id"],
+    }
+
+    # Check contexts
+    await client.send_json({"id": next_id(), "type": "automation/trace/contexts"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == contexts
 
 
 async def test_automation_trace_overflow(hass, hass_ws_client):

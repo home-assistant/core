@@ -281,6 +281,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
+        if self._id is not None:
+            attrs[CONF_ID] = self._id
         return attrs
 
     @property
@@ -533,14 +535,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             home_assistant_start,
             variables,
         )
-
-    @property
-    def extra_state_attributes(self):
-        """Return automation attributes."""
-        if self._id is None:
-            return None
-
-        return {CONF_ID: self._id}
 
 
 async def _async_process_config(
