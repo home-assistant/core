@@ -13,10 +13,15 @@
             "install_addon": {
                 "title": "De OpenZWave add-on installatie is gestart"
             },
+            "on_supervisor": {
+                "title": "Selecteer een verbindingsmethode"
+            },
             "start_addon": {
                 "data": {
+                    "network_key": "Netwerksleutel",
                     "usb_path": "USB-apparaatpad"
-                }
+                },
+                "title": "Voer de OpenZWave add-on configuratie in"
             }
         }
     }

@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
+            "invalid_pin": "Ongeldige pincode",
+            "pairing_failure": "Kan niet koppelen: {error_id}",
             "unknown": "Onverwachte fout"
         },
         "step": {
@@ -14,6 +16,11 @@
                     "host": "Host"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Apparaat wordt gevraagd om in te schakelen"
         }
     }
 }

@@ -397,7 +397,6 @@ class HyperionBaseLight(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
-        assert self.hass
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

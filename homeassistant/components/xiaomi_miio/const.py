@@ -9,6 +9,8 @@ CONF_MAC = "mac"
 
 KEY_COORDINATOR = "coordinator"
 
+ATTR_AVAILABLE = "available"
+
 # Fan Models
 MODEL_AIRPURIFIER_V1 = "zhimi.airpurifier.v1"
 MODEL_AIRPURIFIER_V2 = "zhimi.airpurifier.v2"
@@ -26,15 +28,20 @@ MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
 MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 MODEL_AIRPURIFIER_3C = "zhimi.airpurifier.mb4"
-
+MODEL_AIRPURIFIER_PROH = "zhimi.airpurifier.va1"
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
 MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
 MODEL_AIRHUMIDIFIER_CA4 = "zhimi.humidifier.ca4"
 MODEL_AIRHUMIDIFIER_CB1 = "zhimi.humidifier.cb1"
-
 MODEL_AIRFRESH_VA2 = "zhimi.airfresh.va2"
 
-MODELS_PURIFIER_MIOT = [MODEL_AIRPURIFIER_3, MODEL_AIRPURIFIER_3C, MODEL_AIRPURIFIER_3H]
+MODELS_PURIFIER_MIOT = [
+    MODEL_AIRPURIFIER_3,
+    MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3H,
+    MODEL_AIRPURIFIER_PROH,
+]
+
 MODELS_HUMIDIFIER_MIOT = [MODEL_AIRHUMIDIFIER_CA4]
 MODELS_FAN_MIIO = [
     MODEL_AIRPURIFIER_V1,

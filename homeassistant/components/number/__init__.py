@@ -110,5 +110,4 @@ class NumberEntity(Entity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(self.set_value, value)

@@ -681,7 +681,7 @@ class DataManager:
         )
 
         # Determine what subscriptions need to be created.
-        ignored_applis = frozenset({NotifyAppli.USER})
+        ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
         to_add_applis = frozenset(
             [
                 appli
@@ -846,7 +846,7 @@ class DataManager:
             data = serie.data
 
             for field in GetSleepSummaryField:
-                raw_values[field].append(data._asdict()[field.value])
+                raw_values[field].append(dict(data)[field.value])
 
         values: Dict[GetSleepSummaryField, float] = {}
 

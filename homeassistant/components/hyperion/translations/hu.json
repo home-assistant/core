@@ -1,12 +1,25 @@
 {
     "config": {
         "abort": {
-            "reauth_successful": "Az \u00fajb\u00f3li azonos\u00edt\u00e1s sikeres"
+            "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token"
         },
         "step": {
             "auth": {
                 "data": {
                     "create_token": "\u00daj token automatikus l\u00e9trehoz\u00e1sa"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
                 }
             }
         }

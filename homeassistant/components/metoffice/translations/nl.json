@@ -14,6 +14,7 @@
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad"
                 },
+                "description": "De lengte- en breedtegraad worden gebruikt om het dichtstbijzijnde weerstation te vinden.",
                 "title": "Maak verbinding met het UK Met Office"
             }
         }

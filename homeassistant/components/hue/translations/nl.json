@@ -2,16 +2,16 @@
     "config": {
         "abort": {
             "all_configured": "Alle Philips Hue bridges zijn al geconfigureerd",
-            "already_configured": "Bridge is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom voor het apparaat is al in volle gang.",
-            "cannot_connect": "Kan geen verbinding maken met bridge",
+            "cannot_connect": "Kan geen verbinding maken",
             "discover_timeout": "Hue bridges kunnen niet worden gevonden",
             "no_bridges": "Geen Philips Hue bridges ontdekt",
             "not_hue_bridge": "Dit is geen Hue bridge",
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "linking": "Er is een onbekende verbindingsfout opgetreden.",
+            "linking": "Onverwachte fout",
             "register_failed": "Registratie is mislukt, probeer het opnieuw"
         },
         "step": {
