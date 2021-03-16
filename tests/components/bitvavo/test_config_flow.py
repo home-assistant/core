@@ -101,7 +101,7 @@ async def test_invalid_api_response(hass):
     """Test that errors are shown when API request is invalid."""
     with patch(
         "homeassistant.components.binance.AsyncClient.get_all_tickers",
-        side_effect=BinanceRequestException("Invalid API Response"),
+        side_effect=BitvavoException("Invalid API Response"),
     ):
 
         result = await hass.config_entries.flow.async_init(
