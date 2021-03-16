@@ -4,7 +4,6 @@ from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
-from august.authenticator import ValidationResult
 from august.doorbell import DoorbellDetail
 from august.exceptions import AugustApiAIOHTTPError
 from august.lock import LockDetail
@@ -13,15 +12,9 @@ from august.util import (
     update_doorbell_details_from_pubnub_message,
     update_lock_details_from_pubnub_message,
 )
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, HTTP_UNAUTHORIZED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
