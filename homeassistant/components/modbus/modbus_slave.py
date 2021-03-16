@@ -55,6 +55,10 @@ class RegistersBuilder:
         self._address = None
         self._is_binary = None
         self._slave_registers = []
+        self._bit_mask = None
+        self._count = 1
+        self._value = None
+        self._data_type = DATA_TYPE_INT
 
     def name(self, name: str):
         """Store name."""
