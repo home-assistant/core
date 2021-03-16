@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
-from samsungtvws.exceptions import ConnectionFailure
+from samsungtvws.exceptions import ConnectionFailure, HttpApiError
 from websocket import WebSocketException
 
 from homeassistant.const import (
@@ -22,11 +22,12 @@ from .const import (
     LOGGER,
     METHOD_LEGACY,
     RESULT_AUTH_MISSING,
-    RESULT_CANNOT_CONNECT,
+    RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
     VALUE_CONF_ID,
     VALUE_CONF_NAME,
+    WEBSOCKET_PORTS,
 )
 
 
@@ -57,6 +58,10 @@ class SamsungTVBridge(ABC):
     @abstractmethod
     def try_connect(self):
         """Try to connect to the TV."""
+
+    @abstractmethod
+    def device_info(self):
+        """Try to gather infos of this TV."""
 
     def is_on(self):
         """Tells if the TV is on."""
@@ -164,7 +169,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             return RESULT_NOT_SUPPORTED
         except OSError as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
-            return RESULT_CANNOT_CONNECT
+            return RESULT_NOT_SUCCESSFUL
+
+    def device_info(self):
+        """Try to gather infos of this device."""
+        return None
 
     def _get_remote(self):
         """Create or return a remote control instance."""
@@ -196,7 +205,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
     def try_connect(self):
         """Try to connect to the Websocket TV."""
-        for self.port in (8001, 8002):
+        for self.port in WEBSOCKET_PORTS:
             config = {
                 CONF_NAME: VALUE_CONF_NAME,
                 CONF_HOST: self.host,
@@ -232,7 +241,18 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if result:
                 return result
 
-        return RESULT_CANNOT_CONNECT
+        return RESULT_NOT_SUCCESSFUL
+
+    def device_info(self):
+        """Try to gather infos of this TV."""
+        remote = self._get_remote()
+        if remote:
+            try:
+                return remote.rest_device_info()
+            except HttpApiError:
+                # unable to get, ignore
+                pass
+        return None
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""
@@ -258,7 +278,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except ConnectionFailure:
                 self._notify_callback()
-                raise
-            except WebSocketException:
+            except (WebSocketException, OSError):
                 self._remote = None
         return self._remote
