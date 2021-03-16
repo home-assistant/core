@@ -102,7 +102,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise data_entry_flow.AbortFlow("already_configured")
 
             if (
-                self._host == entry.data[CONF_HOST]
+                (self._host and self._host == entry.data.get(CONF_HOST))
                 or (self._id and self._id == entry.unique_id)
                 or (self._mac and self._mac == entry.data.get(CONF_MAC))
             ):
@@ -178,6 +178,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._id = self._id[5:]
 
         await self.async_set_unique_id(self._id)
+        await self._abort_if_already_configured()
+
         await self._get_and_check_device_info()
 
         self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
@@ -190,8 +192,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
 
-        await self._abort_if_already_configured()
-
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
 
@@ -202,6 +202,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self._id:
             await self.async_set_unique_id(self._id)
+            await self._abort_if_already_configured()
+
         await self._get_and_check_device_info()
 
         self._mac = user_input[ATTR_PROPERTIES].get("deviceid")
@@ -210,8 +212,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._model = user_input[ATTR_PROPERTIES].get("model")
         self._name = f"{self._manufacturer} {self._model}"
         self._title = self._model
-
-        await self._abort_if_already_configured()
 
         self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
