@@ -746,12 +746,21 @@ def deprecated(
     def validator(config: Dict) -> Dict:
         """Check if key is in config and log warning."""
         if key in config:
-            KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                warning,
-                key=key,
-                replacement_key=replacement_key,
-            )
-
+            try:
+                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                    warning.replace(
+                        "'{key}' option",
+                        f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
+                    ),
+                    key=key,
+                    replacement_key=replacement_key,
+                )
+            except AttributeError:
+                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
+                    warning,
+                    key=key,
+                    replacement_key=replacement_key,
+                )
             value = config[key]
             if replacement_key:
                 config.pop(key)
