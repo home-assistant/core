@@ -26,19 +26,20 @@ from . import const, decorators, messages
 @callback
 def async_register_commands(hass, async_reg):
     """Register commands."""
-    async_reg(hass, handle_subscribe_events)
-    async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_call_service)
-    async_reg(hass, handle_get_states)
-    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_entity_source)
+    async_reg(hass, handle_execute_script)
     async_reg(hass, handle_get_config)
+    async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_states)
+    async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
-    async_reg(hass, handle_manifest_list)
-    async_reg(hass, handle_manifest_get)
-    async_reg(hass, handle_entity_source)
+    async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
+    async_reg(hass, handle_unsubscribe_events)
 
 
 def pong_message(iden):
@@ -420,3 +421,23 @@ async def handle_test_condition(hass, connection, msg):
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "execute_script",
+        vol.Required("sequence"): cv.SCRIPT_SCHEMA,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_execute_script(hass, connection, msg):
+    """Handle execute script command."""
+    # Circular dep
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.helpers.script import Script
+
+    context = connection.context(msg)
+    script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
+    await script_obj.async_run(context=context)
+    connection.send_message(messages.result_message(msg["id"], {"context": context}))
