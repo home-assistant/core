@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze combinatie van host en poort is al geconfigureerd",
+            "already_configured": "Service is al geconfigureerd",
             "import_failed": "Importeren vanuit configuratie is mislukt"
         },
         "error": {
