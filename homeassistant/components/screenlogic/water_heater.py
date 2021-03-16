@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
-HEAD_MODE_NAMES = HEAT_MODE._names  # pylint: disable=protected-access
+HEAT_MODE_NAMES = HEAT_MODE.Names
 
 MODE_NAME_TO_MODE_NUM = {
-    HEAD_MODE_NAMES[num]: num for num in range(len(HEAD_MODE_NAMES))
+    HEAT_MODE_NAMES[num]: num for num in range(len(HEAT_MODE_NAMES))
 }
 
 
@@ -30,7 +30,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
 
     for body in data["devices"]["water_heater"]:
-        _LOGGER.info(body)
         entities.append(ScreenLogicWaterHeater(data["coordinator"], body))
     async_add_entities(entities, True)
 
@@ -79,12 +78,18 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return operation."""
-        return HEAT_MODE.GetFriendlyName(self.body["heat_mode"]["value"])
+        return HEAT_MODE_NAMES[self.body["heat_mode"]["value"]]
 
     @property
     def operation_list(self):
         """All available operations."""
-        return HEAD_MODE_NAMES
+        supported_heat_modes = [HEAT_MODE.OFF]
+        # Is solar listed as available equipment?
+        if self.coordinator.data["config"]["equipment_flags"] & 0x1:
+            supported_heat_modes.extend([HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERED])
+        supported_heat_modes.append(HEAT_MODE.HEATER)
+
+        return [HEAT_MODE_NAMES[mode_num] for mode_num in supported_heat_modes]
 
     @property
     def supported_features(self):

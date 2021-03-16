@@ -105,6 +105,8 @@ async def test_purge_method(
     await _add_test_events(hass, instance)
     await _add_test_states(hass, instance)
     await _add_test_recorder_runs(hass, instance)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass, instance)
 
     # make sure we start with 6 states
     with session_scope(hass=hass) as session:
@@ -116,9 +118,7 @@ async def test_purge_method(
 
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
-
-        await hass.async_block_till_done()
-        await async_wait_recording_done(hass, instance)
+        runs_before_purge = recorder_runs.all()
 
         # run purge method - no service data, use defaults
         await hass.services.async_call("recorder", "purge")
@@ -145,7 +145,10 @@ async def test_purge_method(
         assert events.count() == 2
 
         # now we should only have 3 recorder runs left
-        assert recorder_runs.count() == 3
+        runs = recorder_runs.all()
+        assert runs[0] == runs_before_purge[0]
+        assert runs[1] == runs_before_purge[5]
+        assert runs[2] == runs_before_purge[6]
 
         assert not ("EVENT_TEST_PURGE" in (event.event_type for event in events.all()))
 

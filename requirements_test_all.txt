@@ -45,7 +45,7 @@ WazeRouteCalculator==0.12
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.1.0
+accuweather==0.1.1
 
 # homeassistant.components.androidtv
 adb-shell[async]==0.2.1
@@ -352,7 +352,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.2.0
+gios==0.2.1
 
 # homeassistant.components.glances
 glances_api==0.2.0
@@ -805,7 +805,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.0.8
+pymazda==0.0.9
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.2
@@ -1037,7 +1037,7 @@ samsungtvws==1.6.0
 scapy==2.4.4
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.1.0
+screenlogicpy==0.1.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense

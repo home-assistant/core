@@ -207,11 +207,14 @@ class RecorderRuns(Base):  # type: ignore
 
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
+        end = (
+            f"'{self.end.isoformat(sep=' ', timespec='seconds')}'" if self.end else None
+        )
         return (
             f"<recorder.RecorderRuns("
-            f"id={self.run_id}, start='{self.start.isoformat(sep='', timespec='seconds')}', "
-            f"end='{self.end.isoformat(sep='', timespec='seconds')}', closed_incorrect={self.closed_incorrect}, "
-            f"created='{self.created.isoformat(sep='', timespec='seconds')}'"
+            f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
+            f"end={end}, closed_incorrect={self.closed_incorrect}, "
+            f"created='{self.created.isoformat(sep=' ', timespec='seconds')}'"
             f")>"
         )
 

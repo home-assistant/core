@@ -40,8 +40,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Screenlogic from a config entry."""
-    _LOGGER.debug("Async Setup Entry")
-    _LOGGER.debug(entry.data)
     mac = entry.unique_id
     # Attempt to re-discover named gateway to follow IP changes
     discovered_gateways = hass.data[DOMAIN][DISCOVERED_GATEWAYS]
@@ -71,33 +69,33 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass, config_entry=entry, gateway=gateway
     )
 
-    entities = defaultdict(list)
+    device_data = defaultdict(list)
 
     await coordinator.async_refresh()
 
     for circuit in coordinator.data["circuits"]:
-        entities["switch"].append(circuit)
+        device_data["switch"].append(circuit)
 
     for sensor in coordinator.data["sensors"]:
         if sensor == "chem_alarm":
-            entities["binary_sensor"].append(sensor)
+            device_data["binary_sensor"].append(sensor)
         else:
             if coordinator.data["sensors"][sensor]["value"] != 0:
-                entities["sensor"].append(sensor)
+                device_data["sensor"].append(sensor)
 
     for pump in coordinator.data["pumps"]:
         if (
             coordinator.data["pumps"][pump]["data"] != 0
             and "currentWatts" in coordinator.data["pumps"][pump]
         ):
-            entities["pump"].append(pump)
+            device_data["pump"].append(pump)
 
     for body in coordinator.data["bodies"]:
-        entities["water_heater"].append(body)
+        device_data["water_heater"].append(body)
 
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
-        "devices": entities,
+        "devices": device_data,
         "listener": entry.add_update_listener(async_update_listener),
     }
 
@@ -111,7 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.info("Async Unload Entry")
     unload_ok = all(
         await asyncio.gather(
             *[
@@ -153,7 +150,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
-            self.gateway.update()
+            await self.hass.async_add_executor_job(self.gateway.update)
             return self.gateway.get_data()
         except ScreenLogicError as error:
             raise UpdateFailed(error) from error

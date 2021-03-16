@@ -10,23 +10,16 @@ from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
+from .const import DEFAULT_SCAN_INTERVAL, MIN_SCAN_INTERVAL
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_SELECT_KEY = "selected_gateway"
 GATEWAY_MANUAL_ENTRY = "manual"
-
-GATEWAY_ENTRY_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_PORT, default=80): int,
-    }
-)
 
 PENTAIR_OUI = "00-C0-33"
 
@@ -61,29 +54,6 @@ def short_mac(mac):
 def name_for_mac(mac):
     """Derive the gateway name from the mac."""
     return f"Pentair: {short_mac(mac)}"
-
-
-async def _async_has_devices(hass):
-    """Return if there are devices that can be discovered."""
-    return bool(await async_discover_gateways_by_unique_id(hass))
-
-
-_LOGGER.info("Registering discovery flow")
-config_entry_flow.register_discovery_flow(
-    DOMAIN,
-    "Pentair ScreenLogic",
-    _async_has_devices,
-    config_entries.CONN_CLASS_LOCAL_POLL,
-)
-
-
-def configured_instances(hass):
-    """Return a set of configured Screenlogic instances."""
-    return {
-        entry.unique_id
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.unique_id is not None
-    }
 
 
 async def async_get_mac_address(hass, ip_address, port):
@@ -133,11 +103,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_select(self, user_input=None):
         """Handle the selection of a discovered ScreenLogic gateway."""
-        _LOGGER.debug("Gateway Select")
-        _LOGGER.debug(
-            *[gateway[SL_GATEWAY_NAME] for gateway in self.discovered_gateways.values()]
-        )
-        existing = configured_instances(self.hass)
+        existing = self._async_current_ids()
         unconfigured_gateways = {
             mac: gateway[SL_GATEWAY_NAME]
             for mac, gateway in self.discovered_gateways.items()
@@ -182,7 +148,6 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_gateway_entry(self, user_input=None):
         """Handle the manual entry of a ScreenLogic gateway."""
-        _LOGGER.debug("Gateway Entry")
         errors = {}
         ip_address = self.discovered_ip
         port = 80
@@ -194,7 +159,8 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 mac = format_mac(
                     await async_get_mac_address(self.hass, ip_address, port)
                 )
-            except ScreenLogicError:
+            except ScreenLogicError as ex:
+                _LOGGER.debug(ex)
                 errors[CONF_IP_ADDRESS] = "cannot_connect"
 
             if not errors:
@@ -226,14 +192,11 @@ class ScreenLogicOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry):
         """Init the screen logic options flow."""
-        _LOGGER.debug(config_entry)
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if user_input is not None:
-            _LOGGER.debug("Options user_input:")
-            _LOGGER.debug(user_input)
             return self.async_create_entry(
                 title=self.config_entry.title, data=user_input
             )

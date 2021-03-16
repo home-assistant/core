@@ -17,7 +17,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     data = hass.data[DOMAIN][config_entry.entry_id]
 
     for binary_sensor in data["devices"]["binary_sensor"]:
-        _LOGGER.debug(binary_sensor)
         entities.append(
             ScreenLogicBinarySensor(
                 data["coordinator"],

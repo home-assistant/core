@@ -96,7 +96,7 @@ WazeRouteCalculator==0.12
 abodepy==1.2.0
 
 # homeassistant.components.accuweather
-accuweather==0.1.0
+accuweather==0.1.1
 
 # homeassistant.components.bmp280
 adafruit-circuitpython-bmp280==3.1.1
@@ -655,7 +655,7 @@ georss_qld_bushfire_alert_client==0.3
 getmac==0.8.2
 
 # homeassistant.components.gios
-gios==0.2.0
+gios==0.2.1
 
 # homeassistant.components.gitter
 gitterpy==0.1.7
@@ -910,7 +910,7 @@ magicseaweed==1.0.3
 matrix-client==0.3.2
 
 # homeassistant.components.maxcube
-maxcube-api==0.3.0
+maxcube-api==0.4.1
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
@@ -1061,7 +1061,7 @@ opensensemap-api==0.1.5
 openwebifpy==3.2.7
 
 # homeassistant.components.luci
-openwrt-luci-rpc==1.1.6
+openwrt-luci-rpc==1.1.8
 
 # homeassistant.components.ubus
 openwrt-ubus-rpc==0.0.2
@@ -1518,7 +1518,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.0.8
+pymazda==0.0.9
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4.1
@@ -2009,7 +2009,7 @@ scapy==2.4.4
 schiene==0.23
 
 # homeassistant.components.screenlogic
-screenlogicpy==0.1.0
+screenlogicpy==0.1.2
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
