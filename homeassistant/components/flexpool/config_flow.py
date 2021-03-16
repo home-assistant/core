@@ -10,11 +10,12 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required("address"): str,
-    vol.Optional("workers"): bool,
-    vol.Optional("pool"): bool,
-}
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required("address"): str,
+        vol.Optional("workers"): bool,
+        vol.Optional("pool"): bool,
+    }
 )
 
 
