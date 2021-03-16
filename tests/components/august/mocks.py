@@ -22,12 +22,8 @@ from august.authenticator import AuthenticationState
 from august.doorbell import Doorbell, DoorbellDetail
 from august.lock import Lock, LockDetail
 
-from homeassistant.components.august import (
-    CONF_LOGIN_METHOD,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.august.const import CONF_LOGIN_METHOD, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_fixture
 
