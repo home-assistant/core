@@ -4,10 +4,14 @@ from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
+from august.doorbell import DoorbellDetail
 from august.exceptions import AugustApiAIOHTTPError
 from august.lock import LockDetail
 from august.pubnub_async import AugustPubNub, async_create_pubnub
-from august.util import update_lock_details_from_pubnub_message
+from august.util import (
+    update_doorbell_details_from_pubnub_message,
+    update_lock_details_from_pubnub_message,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, HTTP_UNAUTHORIZED
@@ -161,6 +165,9 @@ class AugustData(AugustSubscriberMixin):
         device = self.get_device_detail(device_id)
         if isinstance(device, LockDetail):
             if update_lock_details_from_pubnub_message(device, date_time, message):
+                self.async_signal_device_id_update(device.device_id)
+        elif isinstance(device, DoorbellDetail):
+            if update_doorbell_details_from_pubnub_message(device, date_time, message):
                 self.async_signal_device_id_update(device.device_id)
         self.activity_stream.async_schedule_house_id_refresh(device.house_id)
 
