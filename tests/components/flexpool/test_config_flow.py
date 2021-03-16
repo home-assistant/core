@@ -44,19 +44,13 @@ async def test_form_invalid_address(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.flexpool.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.flexpool.async_setup_entry",
-        return_value=True,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "address": "0xf98bc863ad9d5dc6415360251ca6f793efc3c39X",
-            },
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "address": "0xf98bc863ad9d5dc6415360251ca6f793efc3c39X",
+        },
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {"base": "invalid_address"}

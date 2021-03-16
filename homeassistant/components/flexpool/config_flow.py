@@ -27,7 +27,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     address = data["address"]
     if not re.findall("^0x[a-fA-F0-9]{40}$", address):
-        return InvalidAddress
+        raise InvalidAddress
 
     return {"title": address}
 
