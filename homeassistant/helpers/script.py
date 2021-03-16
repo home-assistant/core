@@ -640,6 +640,7 @@ class _ScriptRun:
         result = traced_test_conditions(self._hass, self._variables)
         return result
 
+    @trace_path("repeat")
     async def _async_repeat_step(self):
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
@@ -658,7 +659,7 @@ class _ScriptRun:
 
         async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
-            with trace_path(str(self._step)):
+            with trace_path("sequence"):
                 await self._async_run_script(script)
 
         if CONF_COUNT in repeat:
@@ -724,19 +725,21 @@ class _ScriptRun:
         # pylint: disable=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
-        for idx, (conditions, script) in enumerate(choose_data["choices"]):
-            with trace_path(str(idx)):
-                try:
-                    if self._test_conditions(conditions, "choose"):
-                        trace_set_result(choice=idx)
-                        await self._async_run_script(script)
-                        return
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+        with trace_path("choose"):
+            for idx, (conditions, script) in enumerate(choose_data["choices"]):
+                with trace_path(str(idx)):
+                    try:
+                        if self._test_conditions(conditions, "choose"):
+                            trace_set_result(choice=idx)
+                            with trace_path("sequence"):
+                                await self._async_run_script(script)
+                                return
+                    except exceptions.ConditionError as ex:
+                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
         if choose_data["default"]:
             trace_set_result(choice="default")
-            with trace_path("default"):
+            with trace_path(["default", "sequence"]):
                 await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):
