@@ -41,7 +41,7 @@ class ActivityStream(AugustSubscriberMixin):
                 await self._async_update_house_id(house_id)
 
             self._update_debounce[house_id] = Debouncer(
-                self.hass,
+                self._hass,
                 _LOGGER,
                 cooldown=ACTIVITY_UPDATE_INTERVAL.seconds,
                 immediate=True,
