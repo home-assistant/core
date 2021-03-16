@@ -370,9 +370,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     media_content_type=MEDIA_TYPE_CHANNEL,
                     can_play=True,
                     can_expand=False,
-                    thumbnail=self.get_browse_image_url(
-                        MEDIA_TYPE_APP, channel_id, media_image_id=None
-                    ),
                 )
                 for channel_id, channel in self._tv.channels.items()
             ]
@@ -410,9 +407,6 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         media_content_type=MEDIA_TYPE_CHANNEL,
                         can_play=True,
                         can_expand=False,
-                        thumbnail=self.get_browse_image_url(
-                            MEDIA_TYPE_APP, channel, media_image_id=None
-                        ),
                     )
                     for channel in favorites
                 ]
