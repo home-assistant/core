@@ -210,7 +210,7 @@ class VerisureMouseDetection(CoordinatorEntity, Entity):
 
     @property
     def state(self) -> str | None:
-        """Return the state of the device."""
+        """Return the state of the entity."""
         return self.coordinator.data["mice"][self.serial_number]["detections"]
 
     @property
