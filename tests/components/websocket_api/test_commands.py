@@ -44,6 +44,7 @@ async def test_call_service(hass, websocket_client):
     assert call.domain == "domain_test"
     assert call.service == "test_service"
     assert call.data == {"hello": "world"}
+    assert call.context.as_dict() == msg["result"]["context"]
 
 
 async def test_call_service_target(hass, websocket_client):
@@ -79,6 +80,7 @@ async def test_call_service_target(hass, websocket_client):
         "entity_id": ["entity.one", "entity.two"],
         "device_id": ["deviceid"],
     }
+    assert call.context.as_dict() == msg["result"]["context"]
 
 
 async def test_call_service_target_template(hass, websocket_client):
@@ -1021,3 +1023,4 @@ async def test_execute_script(hass, websocket_client):
     assert call.domain == "domain_test"
     assert call.service == "test_service"
     assert call.data == {"hello": "world"}
+    assert call.context.as_dict() == msg["result"]["context"]
