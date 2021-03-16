@@ -19,7 +19,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     for idx, camera in enumerate(coordinator.data):
         for name in camera:
-            if name == "battery_level" and not camera.get(name):
+            # Only add sensor with value.
+            if camera.get(name) is None:
                 continue
 
             if name in SensorType.__members__:

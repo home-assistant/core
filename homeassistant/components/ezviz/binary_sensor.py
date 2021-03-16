@@ -19,6 +19,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     for idx, camera in enumerate(coordinator.data):
         for name in camera:
+            # Only add sensor with value.
+            if camera.get(name) is None:
+                continue
 
             if name in BinarySensorType.__members__:
                 sensor_type_name = getattr(BinarySensorType, name).value

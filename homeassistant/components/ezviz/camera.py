@@ -123,8 +123,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     context={"source": SOURCE_DISCOVERY},
                     data={
                         ATTR_SERIAL: camera[ATTR_SERIAL],
-                        CONF_USERNAME: None,
-                        CONF_PASSWORD: None,
                     },
                 )
             )

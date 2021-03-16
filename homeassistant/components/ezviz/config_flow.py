@@ -149,35 +149,33 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
-        return await self.async_step_confirm(discovery_info)
+        return await self.async_step_confirm()
 
-    async def async_step_confirm(self, confirm_info):
+    async def async_step_confirm(self, user_input=None):
         """Confirm and create entry from discovery step."""
         errors = {}
 
-        if confirm_info is not None:
-            if confirm_info.get(CONF_PASSWORD) is not None:
-                return self.async_create_entry(
-                    title=confirm_info[ATTR_SERIAL],
-                    data={
-                        CONF_USERNAME: confirm_info[CONF_USERNAME],
-                        CONF_PASSWORD: confirm_info[CONF_PASSWORD],
-                        CONF_TYPE: ATTR_TYPE_CAMERA,
-                    },
-                )
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.unique_id,
+                data={
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    CONF_TYPE: ATTR_TYPE_CAMERA,
+                },
+            )
 
         discovered_camera_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(ATTR_SERIAL, default=self.unique_id): str,
             }
         )
 
         return self.async_show_form(
             step_id="confirm",
             data_schema=discovered_camera_schema,
-            errors=errors or {},
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):
