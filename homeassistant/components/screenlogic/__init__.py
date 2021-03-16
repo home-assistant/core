@@ -150,7 +150,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch data from the Screenlogic gateway."""
         try:
-            await hass.async_add_executor_job(self.gateway.update)
+            await self.hass.async_add_executor_job(self.gateway.update)
             return self.gateway.get_data()
         except ScreenLogicError as error:
             raise UpdateFailed(error) from error
