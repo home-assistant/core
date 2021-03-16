@@ -47,7 +47,7 @@ sync_state_validator = vol.Any(
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
 
-sensor_type_validator = vol.Any(int, vol.Coerce(str))
+sensor_type_validator = vol.Any(int, str)
 
 
 ##############
