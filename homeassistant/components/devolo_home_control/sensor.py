@@ -5,6 +5,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    DEVICE_CLASS_VOLTAGE,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -20,6 +21,7 @@ DEVICE_CLASS_MAPPING = {
     "humidity": DEVICE_CLASS_HUMIDITY,
     "current": DEVICE_CLASS_POWER,
     "total": DEVICE_CLASS_POWER,
+    "voltage": DEVICE_CLASS_VOLTAGE,
 }
 
 
