@@ -249,29 +249,29 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                     self._color_mode = COLOR_MODE_HS
                     self._hs = (hue, saturation)
                 elif color_mode == COLOR_MODE_RGB:
-                    r = int(values["color"]["r"])
-                    g = int(values["color"]["g"])
-                    b = int(values["color"]["b"])
+                    r = int(values["color"]["r"])  # pylint: disable=invalid-name
+                    g = int(values["color"]["g"])  # pylint: disable=invalid-name
+                    b = int(values["color"]["b"])  # pylint: disable=invalid-name
                     self._color_mode = COLOR_MODE_RGB
                     self._rgb = (r, g, b)
                 elif color_mode == COLOR_MODE_RGBW:
-                    r = int(values["color"]["r"])
-                    g = int(values["color"]["g"])
-                    b = int(values["color"]["b"])
-                    w = int(values["color"]["w"])
+                    r = int(values["color"]["r"])  # pylint: disable=invalid-name
+                    g = int(values["color"]["g"])  # pylint: disable=invalid-name
+                    b = int(values["color"]["b"])  # pylint: disable=invalid-name
+                    w = int(values["color"]["w"])  # pylint: disable=invalid-name
                     self._color_mode = COLOR_MODE_RGBW
                     self._rgbw = (r, g, b, w)
                 elif color_mode == COLOR_MODE_RGBWW:
-                    r = int(values["color"]["r"])
-                    g = int(values["color"]["g"])
-                    b = int(values["color"]["b"])
-                    c = int(values["color"]["c"])
-                    w = int(values["color"]["w"])
+                    r = int(values["color"]["r"])  # pylint: disable=invalid-name
+                    g = int(values["color"]["g"])  # pylint: disable=invalid-name
+                    b = int(values["color"]["b"])  # pylint: disable=invalid-name
+                    c = int(values["color"]["c"])  # pylint: disable=invalid-name
+                    w = int(values["color"]["w"])  # pylint: disable=invalid-name
                     self._color_mode = COLOR_MODE_RGBWW
                     self._rgbww = (r, g, b, c, w)
                 elif color_mode == COLOR_MODE_XY:
-                    x = float(values["color"]["x"])
-                    y = float(values["color"]["y"])
+                    x = float(values["color"]["x"])  # pylint: disable=invalid-name
+                    y = float(values["color"]["y"])  # pylint: disable=invalid-name
                     self._color_mode = COLOR_MODE_XY
                     self._xy = (x, y)
             except (KeyError, ValueError):
@@ -558,7 +558,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_XY_COLOR in kwargs and self._supports_color_mode(COLOR_MODE_XY):
-            xy = kwargs[ATTR_XY_COLOR]
+            xy = kwargs[ATTR_XY_COLOR]  # pylint: disable=invalid-name
             message["color"] = {"x": xy[0], "y": xy[1]}
             if self._optimistic:
                 self._color_mode = COLOR_MODE_XY
