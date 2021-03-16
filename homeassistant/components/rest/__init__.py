@@ -181,5 +181,5 @@ def create_rest_data_from_config(hass, config):
         params,
         payload,
         verify_ssl,
-        timeout
+        timeout,
     )
