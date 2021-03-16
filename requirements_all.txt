@@ -2311,7 +2311,7 @@ wiffi==1.0.1
 wirelesstagpy==0.4.1
 
 # homeassistant.components.withings
-withings-api==2.1.6
+withings-api==2.3.2
 
 # homeassistant.components.wled
 wled==0.4.4
