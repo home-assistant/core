@@ -27,7 +27,7 @@ from .trace import (
     TraceJSONEncoder,
     get_debug_trace,
     get_debug_traces,
-    get_debug_traces_for_automation
+    get_debug_traces_for_automation,
 )
 
 # mypy: allow-untyped-calls, allow-untyped-defs
