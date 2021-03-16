@@ -3,6 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from pyfreedompro import get_list, get_states
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -10,7 +12,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import COORDINATOR, DOMAIN, UNDO_UPDATE_LISTENER
-from .utils import get_list, get_states
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,13 +86,13 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         if self._devices is None:
-            result = await get_list(self._hass, self._api_key)
+            result = await get_list(self._api_key)
             if result["state"]:
                 self._devices = result["devices"]
             else:
                 raise UpdateFailed()
 
-        result = await get_states(self._hass, self._api_key)
+        result = await get_states(self._api_key)
 
         devices = []
         for device in self._devices:

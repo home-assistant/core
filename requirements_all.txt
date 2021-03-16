@@ -1450,6 +1450,9 @@ pyfnip==0.2
 # homeassistant.components.forked_daapd
 pyforked-daapd==0.1.11
 
+# homeassistant.components.freedompro
+pyfreedompro==1.0.0
+
 # homeassistant.components.fritzbox
 pyfritzhome==0.4.2
 

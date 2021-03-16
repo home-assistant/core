@@ -1,11 +1,11 @@
 """Config flow to configure Freedompro."""
+from pyfreedompro import get_list
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .const import FREEDOMPRO_URL
-from .utils import get_list
 
 STEP_USER_DATA_SCHEMA = vol.Schema({"api_key": str})
 
@@ -21,7 +21,7 @@ class Hub:
 
     async def authenticate(self) -> bool:
         """Freedompro Hub class authenticate."""
-        result = await get_list(self._hass, self._api_key)
+        result = await get_list(self._api_key)
         return result
 
 
