@@ -494,7 +494,7 @@ async def test_nogroup_alias(hass, monkeypatch):
     # should not affect state
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
 
-    # test sending group command to nogroup alias
+    # test sending group commands to nogroup alias
     event_callback({"id": "test_nogroup_0_0", "command": "on"})
     await hass.async_block_till_done()
     # should affect state
