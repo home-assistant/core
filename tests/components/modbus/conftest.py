@@ -222,7 +222,7 @@ async def server_test(
             mock_hook,
         )
         mock_server.assert_called_once()
-    return state
+    return state, data_block
 
 
 @pytest.fixture

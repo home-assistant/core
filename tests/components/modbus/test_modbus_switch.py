@@ -1,4 +1,6 @@
 """The tests for the Modbus switch component."""
+from unittest import mock
+
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -15,6 +17,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWITCHES,
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
+    MODBUS_DOMAIN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -22,13 +25,15 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_DEVICE_CLASS,
+    CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
     CONF_SLAVE,
     STATE_OFF,
     STATE_ON,
 )
 
-from .conftest import base_config_test, base_test
+from .conftest import base_config_test, base_test, server_test
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
@@ -36,7 +41,17 @@ from .conftest import base_config_test, base_test
 @pytest.mark.parametrize(
     "read_type", [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT, CALL_TYPE_COIL]
 )
-async def test_config_switch(hass, do_discovery, do_options, read_type):
+@pytest.mark.parametrize("do_server", [False, True])
+@mock.patch("homeassistant.components.modbus.modbus.StartTcpServer")
+async def test_config_switch(
+    mock_server,
+    hass,
+    do_discovery,
+    do_options,
+    read_type,
+    do_server,
+    config_modbus_server,
+):
     """Run test for switch."""
     device_name = "test_switch"
 
@@ -91,7 +106,18 @@ async def test_config_switch(hass, do_discovery, do_options, read_type):
         CONF_SWITCHES,
         array_type,
         method_discovery=do_discovery,
+        config_modbus=config_modbus_server if do_server else None,
     )
+    if do_server:
+        mock_server.assert_called_once_with(
+            mock.ANY,
+            address=(
+                config_modbus_server[MODBUS_DOMAIN][CONF_HOST],
+                config_modbus_server[MODBUS_DOMAIN][CONF_PORT],
+            ),
+            allow_reuse_address=True,
+            defer_start=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -166,27 +192,50 @@ async def test_coil_switch(hass, regs, expected):
         ),
     ],
 )
-async def test_register_switch(hass, regs, expected):
+@pytest.mark.parametrize("do_server", [True, False])
+async def test_register_switch(do_server, config_modbus_server, hass, regs, expected):
     """Run test for given config."""
     switch_name = "modbus_test_switch"
-    state = await base_test(
-        hass,
-        {
-            CONF_NAME: switch_name,
-            CONF_REGISTER: 1234,
-            CONF_SLAVE: 1,
-            CONF_COMMAND_OFF: 0x00,
-            CONF_COMMAND_ON: 0x01,
-        },
-        switch_name,
-        SWITCH_DOMAIN,
-        CONF_SWITCHES,
-        CONF_REGISTERS,
-        regs,
-        expected,
-        method_discovery=False,
-        scan_interval=5,
-    )
+
+    if do_server:
+        state, _ = await server_test(
+            hass,
+            {
+                CONF_NAME: switch_name,
+                CONF_REGISTER: 1234,
+                CONF_SLAVE: 1,
+                CONF_COMMAND_OFF: 0x00,
+                CONF_COMMAND_ON: 0x01,
+            },
+            switch_name,
+            SWITCH_DOMAIN,
+            CONF_SWITCHES,
+            CONF_REGISTERS,
+            regs,
+            expected,
+            method_discovery=False,
+            scan_interval=5,
+            config_modbus=config_modbus_server,
+        )
+    else:
+        state = await base_test(
+            hass,
+            {
+                CONF_NAME: switch_name,
+                CONF_REGISTER: 1234,
+                CONF_SLAVE: 1,
+                CONF_COMMAND_OFF: 0x00,
+                CONF_COMMAND_ON: 0x01,
+            },
+            switch_name,
+            SWITCH_DOMAIN,
+            CONF_SWITCHES,
+            CONF_REGISTERS,
+            regs,
+            expected,
+            method_discovery=False,
+            scan_interval=5,
+        )
     assert state == expected
 
 

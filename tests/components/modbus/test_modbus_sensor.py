@@ -318,7 +318,7 @@ async def test_all_sensor(do_server, config_modbus_server, hass, cfg, regs, expe
     sensor_name = "modbus_test_sensor"
 
     if do_server:
-        state = await server_test(
+        state, _ = await server_test(
             hass,
             {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, CONF_SLAVE: 10, **cfg},
             sensor_name,
@@ -329,7 +329,7 @@ async def test_all_sensor(do_server, config_modbus_server, hass, cfg, regs, expe
             expected,
             method_discovery=True,
             scan_interval=5,
-            config_modbus=config_modbus_server if do_server else None,
+            config_modbus=config_modbus_server,
         )
     else:
         state = await base_test(
@@ -343,6 +343,5 @@ async def test_all_sensor(do_server, config_modbus_server, hass, cfg, regs, expe
             expected,
             method_discovery=True,
             scan_interval=5,
-            config_modbus=config_modbus_server if do_server else None,
         )
     assert state == expected
