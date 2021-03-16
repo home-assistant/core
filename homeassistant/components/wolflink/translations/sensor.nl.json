@@ -1,6 +1,15 @@
 {
     "state": {
         "wolflink__state": {
+            "1_x_warmwasser": "1 x DHW",
+            "auto": "Auto",
+            "automatik_aus": "Automatisch UIT",
+            "automatik_ein": "Automatisch AAN",
+            "cooling": "Koelen",
+            "deaktiviert": "Inactief",
+            "dhw_prior": "DHWPrior",
+            "eco": "Eco",
+            "ein": "Ingeschakeld",
             "frost_warmwasser": "DHW vorst",
             "frostschutz": "Vorstbescherming",
             "gasdruck": "Gasdruk",
@@ -11,7 +20,18 @@
             "initialisierung": "Initialisatie",
             "kalibration": "Kalibratie",
             "kalibration_heizbetrieb": "Kalibratie verwarmingsmodus",
+            "kalibration_warmwasserbetrieb": "DHW-kalibratie",
+            "kombibetrieb": "Combi-modus",
+            "kombigerat": "Combiketel",
+            "nur_heizgerat": "Alleen ketel",
+            "partymodus": "Feestmodus",
             "permanent": "Permanent",
+            "permanentbetrieb": "Permanente modus",
+            "reduzierter_betrieb": "Beperkte modus",
+            "schornsteinfeger": "Emissietest",
+            "smart_grid": "SmartGrid",
+            "smart_home": "SmartHome",
+            "sparbetrieb": "Spaarstand",
             "standby": "Stand-by",
             "start": "Start",
             "storung": "Fout",
@@ -19,7 +39,9 @@
             "tpw": "TPW",
             "urlaubsmodus": "Vakantiemodus",
             "ventilprufung": "Kleptest",
-            "warmwasser": "DHW"
+            "warmwasser": "DHW",
+            "warmwasserbetrieb": "DHW-modus",
+            "zunden": "Ontsteking"
         }
     }
 }

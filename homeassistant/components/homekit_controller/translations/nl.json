@@ -19,19 +19,25 @@
         },
         "flow_title": "HomeKit-accessoire: {name}",
         "step": {
+            "max_tries_error": {
+                "title": "Maximum aantal authenticatiepogingen overschreden"
+            },
             "pair": {
                 "data": {
                     "pairing_code": "Koppelingscode"
                 },
-                "description": "Voer uw HomeKit pairing code (in het formaat XXX-XX-XXX) om dit accessoire te gebruiken",
+                "description": "HomeKit Controller communiceert met {name} via het lokale netwerk met behulp van een beveiligde versleutelde verbinding zonder een aparte HomeKit-controller of iCloud. Voer uw HomeKit-koppelcode in (in de indeling XXX-XX-XXX) om dit accessoire te gebruiken. Deze code is meestal te vinden op het apparaat zelf of in de verpakking.",
                 "title": "Koppel met HomeKit accessoire"
+            },
+            "protocol_error": {
+                "title": "Fout bij het communiceren met de accessoire"
             },
             "user": {
                 "data": {
                     "device": "Apparaat"
                 },
-                "description": "Selecteer het apparaat waarmee u wilt koppelen",
-                "title": "Koppel met HomeKit accessoire"
+                "description": "HomeKit Controller communiceert via het lokale netwerk met behulp van een veilige versleutelde verbinding zonder een aparte HomeKit-controller of iCloud. Selecteer het apparaat dat u wilt koppelen:",
+                "title": "Apparaat selectie"
             }
         }
     },
@@ -55,5 +61,5 @@
             "single_press": "\" {subtype} \" ingedrukt"
         }
     },
-    "title": "HomeKit Accessoires"
+    "title": "HomeKit Controller"
 }

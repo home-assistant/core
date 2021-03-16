@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Huidige batterijniveau {entity_name}",
+            "is_carbon_dioxide": "Huidig niveau {entity_name} kooldioxideconcentratie",
+            "is_carbon_monoxide": "Huidig niveau {entity_name} koolmonoxideconcentratie",
             "is_current": "Huidige {entity_name} stroom",
             "is_energy": "Huidige {entity_name} energie",
             "is_humidity": "Huidige {entity_name} vochtigheidsgraad",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "{entity_name} batterijniveau gewijzigd",
+            "carbon_dioxide": "{entity_name} kooldioxideconcentratie gewijzigd",
+            "carbon_monoxide": "{entity_name} koolmonoxideconcentratie gewijzigd",
             "current": "{entity_name} huidige wijzigingen",
             "energy": "{entity_name} energieveranderingen",
             "humidity": "{entity_name} vochtigheidsgraad gewijzigd",
