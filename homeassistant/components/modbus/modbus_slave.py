@@ -112,7 +112,6 @@ class RegistersBuilder:
             }
 
         assert self._is_binary is not None, "You should call binary_state or state"
-        """Build registers. Return registers, usage bit mask."""
         if self._is_binary:
             masked_value = self._bit_mask if self._value else 0
             registers = [0] * self._count
@@ -123,6 +122,41 @@ class RegistersBuilder:
 
         registers = _build_data_register(self._value, self._data_type, self._count)
         return _to_dict(self._name, self._address, registers, None)
+
+
+def _process_register(server_registers, registers_item, register_data, idx):
+    address = registers_item["address"] + idx
+    if registers_item["bit_mask"] is None:
+        if address in server_registers:
+            assert False, (
+                f'Modbus slave entity `{registers_item["name"]}`'
+                f" register {address} overlaps with the already registered entities"
+            )
+        server_registers[address] = [register_data, 0xFFFF]
+    else:
+        shift_bits = idx * 16
+        bit_mask = (
+            int(registers_item["bit_mask"]) & (0xFFFF << shift_bits)
+        ) >> shift_bits
+        # Skip register entirely if the bit mask has no set bits in this word
+        if bit_mask > 0:
+            # value_data represent a turned on bits in the result register if state is ON
+            value_data = bit_mask if register_data else 0
+            if address in server_registers:
+                # mask holds the used positions, value holds combined bit mask for the slave
+                value, mask = server_registers[address]
+                if mask & bit_mask > 0:
+                    assert False, (
+                        f'Modbus slave entity `{registers_item["name"]}` register {address}'
+                        f" bit mask {bit_mask} overlaps with the already registered entities"
+                    )
+                # update resulting register value and used bits mask
+                server_registers[address] = [
+                    value | value_data,
+                    mask | bit_mask,
+                ]
+            else:
+                server_registers[address] = [value_data, bit_mask]
 
 
 class ModbusSlaveRegisters:
@@ -143,45 +177,9 @@ class ModbusSlaveRegisters:
         server_registers = {}
         for registers_item in self._registers:
             for idx, register_data in enumerate(registers_item["registers"]):
-                self._process_register(
-                    server_registers, registers_item, register_data, idx
-                )
+                _process_register(server_registers, registers_item, register_data, idx)
 
         return {address: server_registers[address][0] for address in server_registers}
-
-    def _process_register(self, server_registers, registers_item, register_data, idx):
-        address = registers_item["address"] + idx
-        if registers_item["bit_mask"] is None:
-            if address in server_registers:
-                assert False, (
-                    f'Modbus slave entity `{registers_item["name"]}`'
-                    f" register {address} overlaps with the already registered entities"
-                )
-            server_registers[address] = [register_data, 0xFFFF]
-        else:
-            shift_bits = idx * 16
-            bit_mask = (
-                int(registers_item["bit_mask"]) & (0xFFFF << shift_bits)
-            ) >> shift_bits
-            # Skip register entirely if the bit mask has no set bits in this word
-            if bit_mask > 0:
-                # value_data represent a turned on bits in the result register if state is ON
-                value_data = bit_mask if register_data else 0
-                if address in server_registers:
-                    # mask holds the used positions, value holds combined bit mask for the slave
-                    value, mask = server_registers[address]
-                    if mask & bit_mask > 0:
-                        assert False, (
-                            f'Modbus slave entity `{registers_item["name"]}` register {address}'
-                            f" bit mask {bit_mask} overlaps with the already registered entities"
-                        )
-                    # update resulting register value and used bits mask
-                    server_registers[address] = [
-                        value | value_data,
-                        mask | bit_mask,
-                    ]
-                else:
-                    server_registers[address] = [value_data, bit_mask]
 
 
 class ModbusSlavesHolder:
