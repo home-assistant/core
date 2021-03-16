@@ -51,7 +51,6 @@ CONF_TYPE_RTUOVERTCP = "rtuovertcp"
 CONF_TYPE_TCP = "tcp"
 CONF_TYPE_TCPSERVER = "tcpserver"
 CONF_TYPE_UDP = "udp"
-EVENT_MODBUS_INITIALIZED = "modbus_integration_initialized"
 
 # binary_sensor.py
 CONF_INPUTS = "inputs"
