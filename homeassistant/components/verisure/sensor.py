@@ -132,6 +132,7 @@ class VerisureHygrometer(CoordinatorEntity, Entity):
         """Return the unique ID for this entity."""
         return f"{self.serial_number}_humidity"
 
+    @property
     def device_class(self) -> str:
         """Return the class of this entity."""
         return DEVICE_CLASS_HUMIDITY
