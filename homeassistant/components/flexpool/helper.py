@@ -1,4 +1,5 @@
 """Helper function for the Flexpool integration."""
+
 units = ["H/s", "KH/s", "MH/s", "GH/s", "TH/s"]
 
 
