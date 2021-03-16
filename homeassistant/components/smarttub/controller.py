@@ -18,6 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ATTR_LIGHTS,
     ATTR_PUMPS,
+    ATTR_REMINDERS,
     ATTR_STATUS,
     DOMAIN,
     POLLING_TIMEOUT,
@@ -93,15 +94,17 @@ class SmartTubController:
         return data
 
     async def _get_spa_data(self, spa):
-        status, pumps, lights = await asyncio.gather(
+        status, pumps, lights, reminders = await asyncio.gather(
             spa.get_status(),
             spa.get_pumps(),
             spa.get_lights(),
+            spa.get_reminders(),
         )
         return {
             ATTR_STATUS: status,
             ATTR_PUMPS: {pump.id: pump for pump in pumps},
             ATTR_LIGHTS: {light.zone: light for light in lights},
+            ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
         }
 
     async def async_register_devices(self, entry):
