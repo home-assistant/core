@@ -383,8 +383,11 @@ class KNXModule:
         """Call invoked after a KNX telegram was received."""
         data = None
         # Not all telegrams have serializable data.
-        if isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse)):
-            data = telegram.payload.value.value  # type: ignore
+        if (
+            isinstance(telegram.payload, (GroupValueWrite, GroupValueResponse))
+            and telegram.payload.value is not None
+        ):
+            data = telegram.payload.value.value
 
         self.hass.bus.async_fire(
             "knx_event",
