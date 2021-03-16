@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Activer la d\u00e9couverte"
                 },
-                "description": "Vous voulez configurer Home Assistant pour vous connecter au broker MQTT fourni par l\u2019Add-on hass.io {addon} ?",
-                "title": "MQTT Broker via le module compl\u00e9mentaire Hass.io"
+                "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte au courtier MQTT fourni par le module compl\u00e9mentaire Hass.io {addon} ?",
+                "title": "Courtier MQTT via le module compl\u00e9mentaire Hass.io"
             }
         }
     },

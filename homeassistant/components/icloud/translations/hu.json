@@ -1,6 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+        },
         "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "send_verification_code": "Nem siker\u00fclt elk\u00fcldeni az ellen\u0151rz\u0151 k\u00f3dot",
             "validate_verification_code": "Nem siker\u00fclt ellen\u0151rizni az ellen\u0151rz\u0151 k\u00f3dot, ki kell v\u00e1lasztania egy megb\u00edzhat\u00f3s\u00e1gi eszk\u00f6zt, \u00e9s \u00fajra kell ind\u00edtania az ellen\u0151rz\u00e9st"
         },
@@ -8,7 +13,8 @@
             "reauth": {
                 "data": {
                     "password": "Jelsz\u00f3"
-                }
+                },
+                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
             },
             "trusted_device": {
                 "data": {

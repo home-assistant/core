@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang"
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "not_denonavr_manufacturer": "Geen Denon AVR Netwerk Receiver, ontdekte fabrikant komt niet overeen"
         },
         "flow_title": "Denon AVR Network Receiver: {name}",
         "step": {
@@ -27,6 +28,11 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "show_all_sources": "Toon alle bronnen",
+                    "zone2": "Stel Zone 2 in",
+                    "zone3": "Stel Zone 3 in"
+                },
                 "title": "Denon AVR Network Receivers"
             }
         }

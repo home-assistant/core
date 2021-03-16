@@ -23,5 +23,15 @@
                 "title": "Stel het Axis-apparaat in"
             }
         }
+    },
+    "options": {
+        "step": {
+            "configure_stream": {
+                "data": {
+                    "stream_profile": "Selecteer stream profiel om te gebruiken"
+                },
+                "title": "Opties voor videostreams van Axis-apparaten"
+            }
+        }
     }
 }

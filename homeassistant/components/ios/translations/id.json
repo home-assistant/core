@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Hanya satu konfigurasi Home Assistant iOS yang diperlukan."
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "step": {
             "confirm": {
-                "description": "Apakah Anda ingin mengatur komponen iOS Home Assistant?"
+                "description": "Ingin memulai penyiapan?"
             }
         }
     }

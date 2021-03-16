@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "invalid_pin": "PIN no v\u00e1lido",
+            "pairing_failure": "No se ha podido emparejar: {error_id}"
+        },
         "step": {
             "user": {
                 "data": {

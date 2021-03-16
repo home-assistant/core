@@ -120,13 +120,11 @@ class LightSwitch(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        assert self.hass is not None
         self._switch_state = self.hass.states.get(self._switch_entity_id)
 
         @callback
         def async_state_changed_listener(*_: Any) -> None:
             """Handle child updates."""
-            assert self.hass is not None
             self._switch_state = self.hass.states.get(self._switch_entity_id)
             self.async_write_ha_state()
 

@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "Autoritza aquesta aplicaci\u00f3 a https://www.ecobee.com/consumerportal/index.html amb el codi pin seg\u00fcent: \n\n {pin} \n \n A continuaci\u00f3, prem Enviar.",
+                "description": "Autoritza aquesta aplicaci\u00f3 a https://www.ecobee.com/consumerportal/index.html amb el codi PIN: \n\n {pin} \n \n A continuaci\u00f3, prem Envia.",
                 "title": "Autoritzaci\u00f3 de l'aplicaci\u00f3 a ecobee.com"
             },
             "user": {

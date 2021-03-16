@@ -1,6 +1,7 @@
 {
     "state": {
         "wolflink__state": {
+            "partymodus": "Party-Modus",
             "permanent": "Permanent",
             "solarbetrieb": "Solarmodus",
             "sparbetrieb": "Sparmodus",
