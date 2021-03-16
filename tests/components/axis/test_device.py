@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 
 import axis as axislib
 from axis.event_stream import OPERATION_INITIALIZED
-from axis.rtsp import SIGNAL_FAILED, SIGNAL_PLAYING
 import pytest
 import respx
 
@@ -24,7 +23,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
 from tests.common import MockConfigEntry, async_fire_mqtt_message
@@ -390,33 +391,38 @@ async def test_update_address(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_device_unavailable(hass, mock_axis_rtspclient):
+async def test_device_unavailable(hass, mock_rtsp_event, mock_rtsp_signal_state):
     """Successful setup."""
     await setup_axis_integration(hass)
 
     # Provide an entity that can be used to verify connection state on
-    mock_axis_rtspclient(
-        data=b'<?xml version="1.0" encoding="UTF-8"?>\n<tt:MetadataStream xmlns:tt="http://www.onvif.org/ver10/schema">\n<tt:Event><wsnt:NotificationMessage xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:wsa5="http://www.w3.org/2005/08/addressing"><wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">tns1:AudioSource/tnsaxis:TriggerLevel</wsnt:Topic><wsnt:ProducerReference><wsa5:Address>uri://1c8ae81b-3b00-46cf-bf76-79cc3fa533dc/ProducerReference</wsa5:Address></wsnt:ProducerReference><wsnt:Message><tt:Message UtcTime="2019-02-06T18:58:50.922426Z" PropertyOperation="Initialized"><tt:Source><tt:SimpleItem Name="channel" Value="1"/></tt:Source><tt:Key></tt:Key><tt:Data><tt:SimpleItem Name="triggered" Value="0"/></tt:Data></tt:Message></wsnt:Message></wsnt:NotificationMessage></tt:Event></tt:MetadataStream>\n'
+    mock_rtsp_event(
+        topic="tns1:AudioSource/tnsaxis:TriggerLevel",
+        data_type="triggered",
+        data_value="10",
+        source_name="channel",
+        source_idx="1",
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == "off"
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
     # Connection to device has failed
 
-    mock_axis_rtspclient(state=SIGNAL_FAILED)
+    mock_rtsp_signal_state(connected=False)
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == "unavailable"
+        hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state
+        == STATE_UNAVAILABLE
     )
 
     # Connection to device has been restored
 
-    mock_axis_rtspclient(state=SIGNAL_PLAYING)
+    mock_rtsp_signal_state(connected=True)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == "off"
+    assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
 
 async def test_device_reset(hass):

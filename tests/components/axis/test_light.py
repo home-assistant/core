@@ -28,10 +28,6 @@ API_DISCOVERY_LIGHT_CONTROL = {
 }
 
 
-LIGHT_STATUS_OFF = b'<?xml version="1.0" encoding="UTF-8"?>\n<tt:MetadataStream xmlns:tt="http://www.onvif.org/ver10/schema">\n<tt:Event><wsnt:NotificationMessage xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:wsa5="http://www.w3.org/2005/08/addressing"><wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">tns1:Device/tnsaxis:Light/Status</wsnt:Topic><wsnt:ProducerReference><wsa5:Address>uri://755cc9bb-cf3a-410b-bd1b-0ec97c6d6256/ProducerReference</wsa5:Address></wsnt:ProducerReference><wsnt:Message><tt:Message UtcTime="2020-09-05T04:25:51.692744Z" PropertyOperation="Initialized"><tt:Source><tt:SimpleItem Name="id" Value="0"/></tt:Source><tt:Key></tt:Key><tt:Data><tt:SimpleItem Name="state" Value="OFF"/></tt:Data></tt:Message></wsnt:Message></wsnt:NotificationMessage></tt:Event></tt:MetadataStream>\n'
-LIGHT_STATUS_ON = b'<?xml version="1.0" encoding="UTF-8"?>\n<tt:MetadataStream xmlns:tt="http://www.onvif.org/ver10/schema">\n<tt:Event><wsnt:NotificationMessage xmlns:tns1="http://www.onvif.org/ver10/topics" xmlns:tnsaxis="http://www.axis.com/2009/event/topics" xmlns:wsnt="http://docs.oasis-open.org/wsn/b-2" xmlns:wsa5="http://www.w3.org/2005/08/addressing"><wsnt:Topic Dialect="http://docs.oasis-open.org/wsn/t-1/TopicExpression/Simple">tns1:Device/tnsaxis:Light/Status</wsnt:Topic><wsnt:ProducerReference><wsa5:Address>uri://755cc9bb-cf3a-410b-bd1b-0ec97c6d6256/ProducerReference</wsa5:Address></wsnt:ProducerReference><wsnt:Message><tt:Message UtcTime="2020-09-05T04:25:51.692744Z" PropertyOperation="Initialized"><tt:Source><tt:SimpleItem Name="id" Value="0"/></tt:Source><tt:Key></tt:Key><tt:Data><tt:SimpleItem Name="state" Value="ON"/></tt:Data></tt:Message></wsnt:Message></wsnt:NotificationMessage></tt:Event></tt:MetadataStream>\n'
-
-
 async def test_platform_manually_configured(hass):
     """Test that nothing happens when platform is manually configured."""
     assert await async_setup_component(
@@ -49,7 +45,7 @@ async def test_no_lights(hass):
 
 
 async def test_no_light_entity_without_light_control_representation(
-    hass, mock_axis_rtspclient
+    hass, mock_rtsp_event
 ):
     """Verify no lights entities get created without light control representation."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
@@ -63,13 +59,19 @@ async def test_no_light_entity_without_light_control_representation(
     ):
         await setup_axis_integration(hass)
 
-    mock_axis_rtspclient(LIGHT_STATUS_ON)
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Light/Status",
+        data_type="state",
+        data_value="ON",
+        source_name="id",
+        source_idx="0",
+    )
     await hass.async_block_till_done()
 
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
-async def test_lights(hass, mock_axis_rtspclient):
+async def test_lights(hass, mock_rtsp_event):
     """Test that lights are loaded properly."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
@@ -85,7 +87,13 @@ async def test_lights(hass, mock_axis_rtspclient):
         "axis.light_control.LightControl.get_valid_intensity",
         return_value={"data": {"ranges": [{"high": 150}]}},
     ):
-        mock_axis_rtspclient(data=LIGHT_STATUS_ON)
+        mock_rtsp_event(
+            topic="tns1:Device/tnsaxis:Light/Status",
+            data_type="state",
+            data_value="ON",
+            source_name="id",
+            source_idx="0",
+        )
         await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
@@ -130,7 +138,13 @@ async def test_lights(hass, mock_axis_rtspclient):
         mock_deactivate.assert_called_once()
 
     # Event turn off light
-    mock_axis_rtspclient(data=LIGHT_STATUS_OFF)
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Light/Status",
+        data_type="state",
+        data_value="OFF",
+        source_name="id",
+        source_idx="0",
+    )
     await hass.async_block_till_done()
 
     light_0 = hass.states.get(entity_id)
