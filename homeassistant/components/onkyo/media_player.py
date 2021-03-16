@@ -314,6 +314,8 @@ class OnkyoAVR(MediaPlayerEntity):
         self._sound_mode = None
         self._attributes = {}
         self._supports_sound_mode = False
+        self._supports_audio_info = False
+        self._supports_video_info = False
         self._query_timer = None
 
     async def async_added_to_hass(self):
@@ -362,8 +364,10 @@ class OnkyoAVR(MediaPlayerEntity):
             self._supports_sound_mode = True
             self._parse_sound_mode(value)
         elif command == "audio-information":
+            self._supports_audio_info = True
             self._parse_audio_inforamtion(value)
         elif command == "video-information":
+            self._supports_video_info = True
             self._parse_video_inforamtion(value)
         elif command == "fl-display-information":
             self._query_delayed_av_info()
@@ -570,8 +574,10 @@ class OnkyoAVR(MediaPlayerEntity):
 
     @callback
     def _query_av_info(self):
-        self._query_avr("audio-information")
-        self._query_avr("video-information")
+        if self._supports_audio_info:
+            self._query_avr("audio-information")
+        if self._supports_video_info:
+            self._query_avr("video-information")
         self._query_timer = None
 
     @callback
