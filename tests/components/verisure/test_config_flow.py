@@ -190,6 +190,127 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            CONF_EMAIL: "verisure_my_pages@example.com",
+            CONF_GIID: "12345",
+            CONF_PASSWORD: "SuperS3cr3t!",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data={"entry": entry}
+    )
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.verisure.config_flow.Verisure.login",
+        return_value=True,
+    ) as mock_verisure, patch(
+        "homeassistant.components.verisure.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.verisure.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "email": "verisure_my_pages@example.com",
+                "password": "correct horse battery staple",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "reauth_successful"
+    assert entry.data == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "correct horse battery staple",
+    }
+
+    assert len(mock_verisure.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_flow_invalid_login(hass: HomeAssistant) -> None:
+    """Test a reauthentication flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            CONF_EMAIL: "verisure_my_pages@example.com",
+            CONF_GIID: "12345",
+            CONF_PASSWORD: "SuperS3cr3t!",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data={"entry": entry}
+    )
+
+    with patch(
+        "homeassistant.components.verisure.config_flow.Verisure.login",
+        side_effect=VerisureLoginError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "email": "verisure_my_pages@example.com",
+                "password": "WrOngP4ssw0rd!",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_flow_unknown_error(hass: HomeAssistant) -> None:
+    """Test a reauthentication flow, with an unknown error happening."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            CONF_EMAIL: "verisure_my_pages@example.com",
+            CONF_GIID: "12345",
+            CONF_PASSWORD: "SuperS3cr3t!",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data={"entry": entry}
+    )
+
+    with patch(
+        "homeassistant.components.verisure.config_flow.Verisure.login",
+        side_effect=VerisureError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "email": "verisure_my_pages@example.com",
+                "password": "WrOngP4ssw0rd!",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 @pytest.mark.parametrize(
     "input,output",
     [

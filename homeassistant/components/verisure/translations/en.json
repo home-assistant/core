@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "invalid_auth": "Invalid authentication",
@@ -13,6 +14,13 @@
                     "giid": "Installation"
                 },
                 "description": "Home Assistant found multiple Verisure installations in your My Pages account. Please, select the installation to add to Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Re-authenticate with your Verisure My Pages account.",
+                    "email": "Email",
+                    "password": "Password"
+                }
             },
             "user": {
                 "data": {

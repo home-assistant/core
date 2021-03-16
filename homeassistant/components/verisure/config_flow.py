@@ -36,8 +36,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
-    installations: dict[str, str]
     email: str
+    entry: ConfigEntry
+    installations: dict[str, str]
     password: str
 
     # These can be removed after YAML import has been removed.
@@ -121,6 +122,55 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_GIID: user_input[CONF_GIID],
                 **self.settings,
             },
+        )
+
+    async def async_step_reauth(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Handle initiation of re-authentication with Verisure."""
+        self.entry = data["entry"]
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Handle re-authentication with Verisure."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            verisure = Verisure(
+                username=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
+            )
+            try:
+                await self.hass.async_add_executor_job(verisure.login)
+            except VerisureLoginError as ex:
+                LOGGER.debug("Could not log in to Verisure, %s", ex)
+                errors["base"] = "invalid_auth"
+            except (VerisureError, VerisureResponseError) as ex:
+                LOGGER.debug("Unexpected response from Verisure, %s", ex)
+                errors["base"] = "unknown"
+            else:
+                data = self.entry.data.copy()
+                self.hass.config_entries.async_update_entry(
+                    self.entry,
+                    data={
+                        **data,
+                        CONF_EMAIL: user_input[CONF_EMAIL],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_EMAIL, default=self.entry.data[CONF_EMAIL]): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> dict[str, Any]:
