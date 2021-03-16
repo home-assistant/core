@@ -27,7 +27,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
