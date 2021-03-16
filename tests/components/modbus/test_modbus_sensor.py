@@ -1,4 +1,6 @@
 """The tests for the Modbus sensor component."""
+from unittest import mock
+
 import pytest
 
 from homeassistant.components.modbus.const import (
@@ -18,17 +20,20 @@ from homeassistant.components.modbus.const import (
     DATA_TYPE_INT,
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
+    MODBUS_DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE_CLASS,
+    CONF_HOST,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_PORT,
     CONF_SLAVE,
 )
 
-from .conftest import base_config_test, base_test
+from .conftest import base_config_test, base_test, server_test
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
@@ -36,7 +41,17 @@ from .conftest import base_config_test, base_test
 @pytest.mark.parametrize(
     "do_type", [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_REGISTER_INPUT]
 )
-async def test_config_sensor(hass, do_discovery, do_options, do_type):
+@pytest.mark.parametrize("do_server", [False, True])
+@mock.patch("homeassistant.components.modbus.modbus.StartTcpServer")
+async def test_config_sensor(
+    mock_server,
+    hass,
+    do_discovery,
+    do_options,
+    do_type,
+    do_server,
+    config_modbus_server,
+):
     """Run test for sensor."""
     sensor_name = "test_sensor"
     config_sensor = {
@@ -72,7 +87,19 @@ async def test_config_sensor(hass, do_discovery, do_options, do_type):
         CONF_SENSORS,
         CONF_REGISTERS,
         method_discovery=do_discovery,
+        config_modbus=config_modbus_server if do_server else None,
     )
+
+    if do_server:
+        mock_server.assert_called_once_with(
+            mock.ANY,
+            address=(
+                config_modbus_server[MODBUS_DOMAIN][CONF_HOST],
+                config_modbus_server[MODBUS_DOMAIN][CONF_PORT],
+            ),
+            allow_reuse_address=True,
+            defer_start=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -285,19 +312,37 @@ async def test_config_sensor(hass, do_discovery, do_options, do_type):
         ),
     ],
 )
-async def test_all_sensor(hass, cfg, regs, expected):
+@pytest.mark.parametrize("do_server", [True, False])
+async def test_all_sensor(do_server, config_modbus_server, hass, cfg, regs, expected):
     """Run test for sensor."""
     sensor_name = "modbus_test_sensor"
-    state = await base_test(
-        hass,
-        {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
-        sensor_name,
-        SENSOR_DOMAIN,
-        CONF_SENSORS,
-        CONF_REGISTERS,
-        regs,
-        expected,
-        method_discovery=True,
-        scan_interval=5,
-    )
+
+    if do_server:
+        state = await server_test(
+            hass,
+            {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, CONF_SLAVE: 10, **cfg},
+            sensor_name,
+            SENSOR_DOMAIN,
+            CONF_SENSORS,
+            CONF_REGISTERS,
+            regs,
+            expected,
+            method_discovery=True,
+            scan_interval=5,
+            config_modbus=config_modbus_server if do_server else None,
+        )
+    else:
+        state = await base_test(
+            hass,
+            {CONF_NAME: sensor_name, CONF_ADDRESS: 1234, **cfg},
+            sensor_name,
+            SENSOR_DOMAIN,
+            CONF_SENSORS,
+            CONF_REGISTERS,
+            regs,
+            expected,
+            method_discovery=True,
+            scan_interval=5,
+            config_modbus=config_modbus_server if do_server else None,
+        )
     assert state == expected

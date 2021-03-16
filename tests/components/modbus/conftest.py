@@ -6,13 +6,19 @@ from unittest import mock
 from pymodbus.exceptions import ModbusException
 import pytest
 
-from homeassistant.components.modbus.const import DEFAULT_HUB, MODBUS_DOMAIN as DOMAIN
+from homeassistant.components.modbus.const import (
+    CONF_TYPE_TCPSERVER,
+    DEFAULT_HUB,
+    MODBUS_DOMAIN as DOMAIN,
+)
+from homeassistant.components.modbus.modbus_slave import ModbusSlavesHolder
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
     CONF_TYPE,
 )
 from homeassistant.setup import async_setup_component
@@ -159,3 +165,74 @@ async def base_config_test(
         check_config_only=True,
         config_modbus=config_modbus,
     )
+
+
+async def server_test(
+    hass,
+    config_device,
+    device_name,
+    entity_domain,
+    array_name_discovery,
+    array_name_old_config,
+    register_words,
+    expected,
+    method_discovery=False,
+    check_config_only=False,
+    config_modbus=None,
+    scan_interval=None,
+    mock_hook=None,
+):
+    """Configure Modbus TCP Server for testing using base_test."""
+
+    mock_value = mock.AsyncMock()
+    # Modbus server _ensure_connected throws exception if no client
+    # connected to the modbus server making sensor or switch unavailable
+    # setting to the non-empty array emulates the connected client
+    mock_value.active_connections = ["connection"]
+
+    # emulate ModbusDataBlock, holding the register values
+    data_block = mock.MagicMock()
+    data_block.getValues.return_value = register_words
+
+    # emulate the SlavesHolder::build_server_blocks()
+    blocks = mock.MagicMock()
+    blocks.return_value = {config_device.get(CONF_SLAVE, 0): data_block}
+
+    with mock.patch.object(
+        ModbusSlavesHolder,
+        "build_server_blocks",
+        blocks,
+    ), mock.patch(
+        "homeassistant.components.modbus.modbus.StartTcpServer"
+    ) as mock_server:
+        mock_server.return_value = mock_value
+        state = await base_test(
+            hass,
+            config_device,
+            device_name,
+            entity_domain,
+            array_name_discovery,
+            array_name_old_config,
+            register_words,
+            expected,
+            method_discovery,
+            check_config_only,
+            config_modbus,
+            scan_interval,
+            mock_hook,
+        )
+        mock_server.assert_called_once()
+    return state
+
+
+@pytest.fixture
+def config_modbus_server():
+    """Fixture to provide a modbus slave configuration."""
+    return {
+        DOMAIN: {
+            CONF_NAME: DEFAULT_HUB,
+            CONF_TYPE: CONF_TYPE_TCPSERVER,
+            CONF_HOST: "modbusTest",
+            CONF_PORT: 5001,
+        },
+    }

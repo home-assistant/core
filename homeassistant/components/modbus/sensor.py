@@ -342,6 +342,8 @@ class ModbusRegisterSensor(ModbusSensorBase):
 
         registers = result.registers
         if self._reverse_order:
+            # avoid inplace reverse
+            registers = [*registers]
             registers.reverse()
 
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
