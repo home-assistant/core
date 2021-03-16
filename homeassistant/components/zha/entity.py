@@ -32,6 +32,7 @@ from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
+UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -267,7 +268,11 @@ class ZhaGroupEntity(BaseZhaEntity):
     @callback
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
-        self.async_schedule_update_ha_state(True)
+        # Delay to ensure that we get updates from all members before updating the group
+        self.hass.loop.call_later(
+            UPDATE_GROUP_FROM_CHILD_DELAY,
+            lambda: self.async_schedule_update_ha_state(True),
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""
