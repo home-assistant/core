@@ -172,14 +172,14 @@ def create_rest_data_from_config(hass, config):
         auth = None
 
     return RestData(
-        hass, 
-        method, 
-        resource, 
-        auth, 
-        headers, 
-        headers_template, 
-        params, 
-        payload, 
-        verify_ssl, 
+        hass,
+        method,
+        resource,
+        auth,
+        headers,
+        headers_template,
+        params,
+        payload,
+        verify_ssl,
         timeout
     )
