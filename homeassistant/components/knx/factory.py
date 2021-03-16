@@ -264,9 +264,9 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
         on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
-        create_temperature_sensors=config.get(
+        create_temperature_sensors=config[
             ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
-        ),
+        ],
     )
 
 
@@ -277,7 +277,7 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
         name=config[CONF_NAME],
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
-        invert=config.get(SwitchSchema.CONF_INVERT),
+        invert=config[SwitchSchema.CONF_INVERT],
     )
 
 
@@ -320,7 +320,7 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         knx_module,
         name=device_name,
         group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
-        invert=config.get(BinarySensorSchema.CONF_INVERT),
+        invert=config[BinarySensorSchema.CONF_INVERT],
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
