@@ -1,7 +1,7 @@
 {
   "domain": "flexpool",
   "name": "Flexpool",
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/integrations/flexpool/",
   "requirements": [
     "flexpoolapi==1.2.7.post2"
   ],
