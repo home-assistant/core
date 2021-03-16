@@ -78,12 +78,18 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
     @property
     def current_operation(self) -> str:
         """Return operation."""
-        return HEAT_MODE.GetFriendlyName(self.body["heat_mode"]["value"])
+        return HEAT_MODE_NAMES[self.body["heat_mode"]["value"]]
 
     @property
     def operation_list(self):
         """All available operations."""
-        return HEAT_MODE_NAMES
+        supported_heat_modes = [HEAT_MODE.OFF]
+        # Is solar listed as available equipment?
+        if self.coordinator.data["config"]["equipment_flags"] & 0x1:
+            supported_heat_modes.extend([HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERED])
+        supported_heat_modes.append(HEAT_MODE.HEATER)
+
+        return [HEAT_MODE_NAMES[mode_num] for mode_num in supported_heat_modes]
 
     @property
     def supported_features(self):
