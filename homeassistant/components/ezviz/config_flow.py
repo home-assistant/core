@@ -40,10 +40,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     async def _validate_and_create_auth(self, data):
-        """Validate the user input allows us to connect.
-
-        Attempt to login to ezviz cloud account and create entry if successful.
-        """
+        """Try to login to ezviz cloud account and create entry if successful."""
         await self.async_set_unique_id(data[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
@@ -54,7 +51,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
-        # Validate data by sending a login request to ezviz
+        # Attempts a login request.
         try:
             await self.hass.async_add_executor_job(client.login)
 
@@ -70,19 +67,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=data[CONF_USERNAME], data=auth_data)
 
-    async def _create_camera_rtsp(self, data):
-        """Create RTSP auth entry per camera in config."""
-
-        await self.async_set_unique_id(data[ATTR_SERIAL])
-        self._abort_if_unique_id_configured()
-
-        _LOGGER.debug("Create camera with: %s", data)
-
-        cam_serial = data.pop(ATTR_SERIAL)
-        data[CONF_TYPE] = ATTR_TYPE_CAMERA
-
-        return self.async_create_entry(title=cam_serial, data=data)
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -92,7 +76,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
 
-        # Check if ezviz cloud account is present
+        # Check if ezviz cloud account is present in entry config.
+        # Return camera user flow if present.
         for item in self._async_current_entries():
             if item.data.get(CONF_TYPE) == ATTR_TYPE_CLOUD:
                 return await self.async_step_user_camera()
@@ -160,18 +145,26 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery(self, discovery_info):
         """Handle a flow for discovered camera without rtsp config entry."""
-        errors = {}
-        # This step is called when user goes to integrations,
-        # to complete config for discovered entry.
         if discovery_info is not None:
             await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
             self._abort_if_unique_id_configured()
 
-            # Prevents creation of entry without password when called from camera platform.
-            # When called from integrations it will ask for a password and proceed
-            # to confirm step for entry creation.
-            if discovery_info.get(CONF_PASSWORD) is not None:
-                return await self.async_step_confirm(discovery_info)
+        return await self.async_step_confirm(discovery_info)
+
+    async def async_step_confirm(self, confirm_info):
+        """Confirm and create entry from discovery step."""
+        errors = {}
+
+        if confirm_info is not None:
+            if confirm_info.get(CONF_PASSWORD) is not None:
+                return self.async_create_entry(
+                    title=confirm_info[ATTR_SERIAL],
+                    data={
+                        CONF_USERNAME: confirm_info[CONF_USERNAME],
+                        CONF_PASSWORD: confirm_info[CONF_PASSWORD],
+                        CONF_TYPE: ATTR_TYPE_CAMERA,
+                    },
+                )
 
         discovered_camera_schema = vol.Schema(
             {
@@ -182,40 +175,20 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="discovery",
+            step_id="confirm",
             data_schema=discovered_camera_schema,
             errors=errors or {},
-        )
-
-    async def async_step_confirm(self, confirm_info):
-        """Confirm and create entry from discovery step."""
-
-        return self.async_create_entry(
-            title=confirm_info[ATTR_SERIAL],
-            data={
-                CONF_USERNAME: confirm_info[CONF_USERNAME],
-                CONF_PASSWORD: confirm_info[CONF_PASSWORD],
-                CONF_TYPE: ATTR_TYPE_CAMERA,
-            },
         )
 
     async def async_step_import(self, import_config):
         """Handle config import from yaml."""
         _LOGGER.debug("import config: %s", import_config)
 
+        # Check importing camera.
         if ATTR_SERIAL in import_config:
-            try:
-                return await self._create_camera_rtsp(import_config)
+            return await self.async_step_import_camera(import_config)
 
-            except AbortFlow:
-                raise
-
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception(
-                    "Error importing ezviz platform config: unexpected exception"
-                )
-            return self.async_abort(reason="unknown")
-
+        # Validate and setup of main ezviz cloud account.
         try:
             return await self._validate_and_create_auth(import_config)
 
@@ -231,6 +204,19 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Error importing ezviz platform config: unexpected exception"
             )
         return self.async_abort(reason="unknown")
+
+    async def async_step_import_camera(self, data):
+        """Create RTSP auth entry per camera in config."""
+
+        await self.async_set_unique_id(data[ATTR_SERIAL])
+        self._abort_if_unique_id_configured()
+
+        _LOGGER.debug("Create camera with: %s", data)
+
+        cam_serial = data.pop(ATTR_SERIAL)
+        data[CONF_TYPE] = ATTR_TYPE_CAMERA
+
+        return self.async_create_entry(title=cam_serial, data=data)
 
 
 class EzvizOptionsFlowHandler(OptionsFlow):

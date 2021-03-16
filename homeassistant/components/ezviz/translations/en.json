@@ -26,7 +26,7 @@
                 },
                 "title": "Add Camera"
             },
-            "discovery": {
+            "confirm": {
                 "data": {
                     "username": "username",
                     "password": "password",

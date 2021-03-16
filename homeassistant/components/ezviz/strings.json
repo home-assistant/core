@@ -18,7 +18,7 @@
           "serial": "Camera serial number"
         }
       },
-      "discovery": {
+      "confirm": {
         "title": "Discovered Camera",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
