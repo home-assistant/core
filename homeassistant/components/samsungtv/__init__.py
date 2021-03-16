@@ -1,6 +1,4 @@
 """The Samsung TV integration."""
-import socket
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,7 +12,7 @@ from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 def ensure_unique_hosts(value):
     """Validate that all configs have a unique host."""
     vol.Schema(vol.Unique("duplicate host entries found"))(
-        [socket.gethostbyname(entry[CONF_HOST]) for entry in value]
+        [entry[CONF_HOST] for entry in value]
     )
     return value
 
@@ -43,15 +41,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Samsung TV integration."""
+    hass.data[DOMAIN] = {}
     if DOMAIN in config:
-        hass.data[DOMAIN] = {}
         for entry_config in config[DOMAIN]:
-            ip_address = await hass.async_add_executor_job(
-                socket.gethostbyname, entry_config[CONF_HOST]
-            )
-            hass.data[DOMAIN][ip_address] = {
-                CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)
-            }
+            host = entry_config[CONF_HOST]
+            hass.data[DOMAIN][host] = {CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)}
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
