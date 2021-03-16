@@ -683,3 +683,45 @@ async def test_get_all_home_ids():
     }
     expected = ["123", "987"]
     assert climate.get_all_home_ids(home_data) == expected
+
+
+async def test_webhook_home_id_mismatch(hass, climate_entry):
+    """Test service turn on for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_entrada = "climate.netatmo_entrada"
+
+    assert hass.states.get(climate_entity_entrada).state == "auto"
+
+    # Fake backend response for valve being turned on
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2833524037",'
+        b'"home": {"id": "123","name": "MYHOME","country": "DE",'
+        b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
+        b'"therm_setpoint_mode": "home"}], "modules": [{"id": "12:34:56:00:01:ae",'
+        b'"name": "Entrada", "type": "NRV"}]}, "mode": "home", "event_type": "cancel_set_point",'
+        b'"push_type": "display_change"}'
+    )
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_entrada).state == "auto"
+
+
+async def test_webhook_set_point(hass, climate_entry):
+    """Test service turn on for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_entrada = "climate.netatmo_entrada"
+
+    # Fake backend response for valve being turned on
+    response = (
+        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
+        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
+        b'"home": { "id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
+        b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
+        b'"therm_setpoint_mode": "home", "therm_setpoint_temperature": 30}],'
+        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
+        b'"mode":"home","event_type":"set_point", "temperature": 21, "push_type": "display_change"}'
+    )
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_entrada).state == "heat"
