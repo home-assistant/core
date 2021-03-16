@@ -15,9 +15,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
 
     for switch in data["devices"]["switch"]:
-        entities.append(ScreenLogicSwitch(data["coordinator"], switch))
+        entities.append(ScreenLogicSwitch(coordinator, switch))
     async_add_entities(entities, True)
 
 

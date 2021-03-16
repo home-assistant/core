@@ -8,34 +8,20 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
     # Generic sensors
     for sensor in data["devices"]["sensor"]:
-        entities.append(ScreenLogicSensor(data["coordinator"], sensor))
+        entities.append(ScreenLogicSensor(coordinator, sensor))
     for pump in data["devices"]["pump"]:
-        entities.extend(
-            [
-                ScreenLogicPumpSensor(
-                    data["coordinator"],
-                    pump,
-                    "currentWatts",
-                ),
-                ScreenLogicPumpSensor(
-                    data["coordinator"],
-                    pump,
-                    "currentRPM",
-                ),
-                ScreenLogicPumpSensor(
-                    data["coordinator"],
-                    pump,
-                    "currentGPM",
-                ),
-            ]
-        )
+        for pump_key in PUMP_SENSORS:
+            entities.append(ScreenLogicPumpSensor(coordinator, pump, pump_key))
 
     async_add_entities(entities, True)
 

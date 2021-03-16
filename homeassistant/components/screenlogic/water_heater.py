@@ -28,9 +28,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
 
     for body in data["devices"]["water_heater"]:
-        entities.append(ScreenLogicWaterHeater(data["coordinator"], body))
+        entities.append(ScreenLogicWaterHeater(coordinator, body))
     async_add_entities(entities, True)
 
 
