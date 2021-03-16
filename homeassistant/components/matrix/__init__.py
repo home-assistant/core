@@ -433,7 +433,7 @@ class MatrixBot:
             data = fp.read()
             fp.close()
 
-        except BaseException as ex:
+        except OSError as ex:
             _LOGGER.error("Failed to open file '%s', error: %s", file, ex)
             return
 
