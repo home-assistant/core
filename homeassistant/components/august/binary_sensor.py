@@ -59,7 +59,7 @@ def _activity_time_based_state(data, device_id, activity_types):
         start = latest.activity_start_time
         end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
         return start <= datetime.now() <= end
-    return None
+    return False
 
 
 SENSOR_NAME = 0
@@ -181,24 +181,29 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
         return self._state
 
     @property
+    def _sensor_config(self):
+        """Return the config for the sensor."""
+        return SENSOR_TYPES_DOORBELL[self._sensor_type]
+
+    @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_DEVICE_CLASS]
+        return self._sensor_config[SENSOR_DEVICE_CLASS]
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        return f"{self._device.device_name} {SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME]}"
+        return f"{self._device.device_name} {self._sensor_config[SENSOR_NAME]}"
 
     @property
     def _state_provider(self):
         """Return the state provider for the binary sensor."""
-        return SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_STATE_PROVIDER]
+        return self._sensor_config[SENSOR_STATE_PROVIDER]
 
     @property
     def _is_time_based(self):
         """Return true of false if the sensor is time based."""
-        return SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_STATE_IS_TIME_BASED]
+        return self._sensor_config[SENSOR_STATE_IS_TIME_BASED]
 
     @callback
     def _update_from_data(self):
@@ -236,10 +241,11 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
 
     def _cancel_any_pending_updates(self):
         """Cancel any updates to recheck a sensor to see if it is ready to turn off."""
-        if self._check_for_off_update_listener:
-            _LOGGER.debug("%s: canceled pending update", self.entity_id)
-            self._check_for_off_update_listener()
-            self._check_for_off_update_listener = None
+        if not self._check_for_off_update_listener:
+            return
+        _LOGGER.debug("%s: canceled pending update", self.entity_id)
+        self._check_for_off_update_listener()
+        self._check_for_off_update_listener = None
 
     async def async_added_to_hass(self):
         """Call the mixin to subscribe and setup an async_track_point_in_utc_time to turn off the sensor if needed."""
@@ -249,7 +255,4 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Get the unique id of the doorbell sensor."""
-        return (
-            f"{self._device_id}_"
-            f"{SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower()}"
-        )
+        return f"{self._device_id}_{self._sensor_config[SENSOR_NAME].lower()}"
