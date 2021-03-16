@@ -241,15 +241,12 @@ class MqttFan(MqttEntity, FanEntity):
             self._feature_preset_mode = 0
         if not config[CONF_PRESET_MODES_LIST] and self._feature_preset_mode:
             self._feature_preset_mode = 0
-            _LOGGER.warning("No preset modes set, preset mode feature disabled")
+            raise ValueError("No preset_modes configured, preset mode feature disabled")
         if (
             self._feature_speeds + self._feature_percentage + self._feature_preset_mode
             > 1
         ):
-            self._feature_preset_mode = 0
-            self._feature_percentage = 0
-            self._feature_speeds = 0
-            _LOGGER.error(
+            raise ValueError(
                 "Mix use of percentage / preset mode / speeds setting not allowed"
             )
 
