@@ -21,8 +21,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import (
     CONF_HOST,
-    CONF_ID,
-    CONF_IP_ADDRESS,
+    CONF_MAC,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -31,6 +30,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
@@ -62,15 +62,15 @@ SUPPORT_SAMSUNGTV = (
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    host = config_entry.data[CONF_HOST]
     on_script = None
     if (
         DOMAIN in hass.data
-        and ip_address in hass.data[DOMAIN]
-        and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]
-        and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+        and host in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][host]
+        and hass.data[DOMAIN][host][CONF_ON_ACTION]
     ):
-        turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+        turn_on_action = hass.data[DOMAIN][host][CONF_ON_ACTION]
         on_script = Script(
             hass, turn_on_action, config_entry.data.get(CONF_NAME, DEFAULT_NAME), DOMAIN
         )
@@ -103,11 +103,12 @@ class SamsungTVDevice(MediaPlayerEntity):
     def __init__(self, bridge, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
+        self._mac = config_entry.data.get(CONF_MAC)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
         self._name = config_entry.data.get(CONF_NAME)
         self._on_script = on_script
-        self._uuid = config_entry.data.get(CONF_ID)
+        self._uuid = config_entry.unique_id
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -166,14 +167,22 @@ class SamsungTVDevice(MediaPlayerEntity):
         return self._state
 
     @property
+    def available(self):
+        """Return the availability of the device."""
+        return self._state == STATE_ON or self._on_script
+
+    @property
     def device_info(self):
         """Return device specific attributes."""
-        return {
+        info = {
             "name": self.name,
             "identifiers": {(DOMAIN, self.unique_id)},
             "manufacturer": self._manufacturer,
             "model": self._model,
         }
+        if self._mac:
+            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
+        return info
 
     @property
     def is_volume_muted(self):
