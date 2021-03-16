@@ -11,6 +11,11 @@ ZEROCONF = {
             "domain": "volumio"
         }
     ],
+    "_airplay._tcp.local.": [
+        {
+            "domain": "samsungtv"
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
