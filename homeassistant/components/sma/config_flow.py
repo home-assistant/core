@@ -25,9 +25,9 @@ from .const import (
     CONF_KEY,
     CONF_UNIT,
     DEVICE_INFO,
-    DOMAIN,
     GROUPS,
 )
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,10 +157,8 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if user_input.get("add_custom", False):
                 return await self.async_step_custom_sensor()
-            else:
-                return self.async_create_entry(
-                    title=self._data[CONF_HOST], data=self._data
-                )
+
+            return self.async_create_entry(title=self._data[CONF_HOST], data=self._data)
 
         return self.async_show_form(
             step_id="sensors",
@@ -188,10 +186,8 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if user_input.get("add_another", False):
                 return await self.async_step_custom_sensor()
-            else:
-                return self.async_create_entry(
-                    title=self._data[CONF_HOST], data=self._data
-                )
+
+            return self.async_create_entry(title=self._data[CONF_HOST], data=self._data)
 
         return self.async_show_form(
             step_id="custom_sensor",
