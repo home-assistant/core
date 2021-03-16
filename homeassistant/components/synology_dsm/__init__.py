@@ -441,12 +441,11 @@ class SynoApi:
             )
             return
 
+        # surveillance_station is updated by own coordinator
+        self.dsm.reset(self.surveillance_station)
+
         # Determine if we should fetch an API
         self._with_system = bool(self.dsm.apis.get(SynoCoreSystem.API_KEY))
-        self._with_surveillance_station = bool(
-            self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
-        ) or bool(self.dsm.apis.get(SynoSurveillanceStation.HOME_MODE_API_KEY))
-
         self._with_security = bool(
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
@@ -496,14 +495,6 @@ class SynoApi:
             )
             self.dsm.reset(self.utilisation)
             self.utilisation = None
-
-        if not self._with_surveillance_station:
-            _LOGGER.debug(
-                "Disable surveillance_station api from being updated for '%s'",
-                self._entry.unique_id,
-            )
-            self.dsm.reset(self.surveillance_station)
-            self.surveillance_station = None
 
     def _fetch_device_configuration(self):
         """Fetch initial device config."""
