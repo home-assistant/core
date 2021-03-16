@@ -1,5 +1,5 @@
 """Config flow for Samsung TV."""
-import socket
+from socket import gethostbyname
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -12,6 +12,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
 )
+from homeassistant.components.zeroconf import ATTR_PROPERTIES
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -66,6 +67,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
 
     def __init__(self):
         """Initialize flow."""
