@@ -20,6 +20,7 @@ class RestData:
         resource,
         auth,
         headers,
+        headers_template,
         params,
         data,
         verify_ssl,
@@ -31,6 +32,7 @@ class RestData:
         self._resource = resource
         self._auth = auth
         self._headers = headers
+        self.headers_template = headers_template
         self._params = params
         self._request_data = data
         self._timeout = timeout
@@ -50,6 +52,9 @@ class RestData:
                 self._hass, verify_ssl=self._verify_ssl
             )
 
+        if self.headers_template is not None:
+          self._headers = self.get_headers_from_headers_template(self.headers_template)
+
         _LOGGER.debug("Updating from %s", self._resource)
         try:
             response = await self._async_client.request(
@@ -67,3 +72,11 @@ class RestData:
             _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None
             self.headers = None
+
+    def get_headers_from_headers_template(self, headers_template):
+        """Get headers from headers template."""
+        headers = {}
+        for key, value in headers_template.items():
+            value.hass = self._hass
+            headers[key] = value.async_render()
+        return headers

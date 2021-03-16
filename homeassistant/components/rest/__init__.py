@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
-
+CONF_HEADERS_TEMPLATE = "headers_template"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the rest platforms."""
@@ -156,6 +156,7 @@ def create_rest_data_from_config(hass, config):
     headers = config.get(CONF_HEADERS)
     params = config.get(CONF_PARAMS)
     timeout = config.get(CONF_TIMEOUT)
+    headers_template = config.get(CONF_HEADERS_TEMPLATE)
 
     if resource_template is not None:
         resource_template.hass = hass
@@ -170,5 +171,5 @@ def create_rest_data_from_config(hass, config):
         auth = None
 
     return RestData(
-        hass, method, resource, auth, headers, params, payload, verify_ssl, timeout
+        hass, method, resource, auth, headers, headers_template, params, payload, verify_ssl, timeout
     )

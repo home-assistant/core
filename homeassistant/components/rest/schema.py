@@ -46,6 +46,8 @@ from .const import (
 )
 from .data import DEFAULT_TIMEOUT
 
+CONF_HEADERS_TEMPLATE = "headers_template"
+
 RESOURCE_SCHEMA = {
     vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
     vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
@@ -53,6 +55,9 @@ RESOURCE_SCHEMA = {
         [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
     ),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
+    vol.Exclusive(CONF_HEADERS_TEMPLATE, CONF_HEADERS): vol.Schema(
+        {cv.string: cv.template_complex}
+    ),
     vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_USERNAME): cv.string,
