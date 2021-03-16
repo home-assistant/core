@@ -43,6 +43,7 @@ PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
 CONF_HEADERS_TEMPLATE = "headers_template"
 
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the rest platforms."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
