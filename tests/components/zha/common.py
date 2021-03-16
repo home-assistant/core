@@ -242,6 +242,6 @@ async def async_test_rejoin(hass, zigpy_device, clusters, report_counts, ep_id=1
 
 async def async_wait_for_updates(hass):
     """Wait until all scheduled updates are executed."""
-    await asyncio.sleep(0)
-    await asyncio.sleep(0)
     await hass.async_block_till_done()
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
