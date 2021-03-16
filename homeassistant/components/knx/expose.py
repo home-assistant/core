@@ -169,5 +169,4 @@ class KNXExposeTime:
     @callback
     def shutdown(self) -> None:
         """Prepare for deletion."""
-        if self.device is not None:
-            self.device.shutdown()
+        self.device.shutdown()
