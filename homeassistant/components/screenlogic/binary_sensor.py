@@ -15,14 +15,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = data["coordinator"]
 
     for binary_sensor in data["devices"]["binary_sensor"]:
-        entities.append(
-            ScreenLogicBinarySensor(
-                data["coordinator"],
-                binary_sensor,
-            )
-        )
+        entities.append(ScreenLogicBinarySensor(coordinator, binary_sensor))
     async_add_entities(entities, True)
 
 
