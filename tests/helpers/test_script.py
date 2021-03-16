@@ -1236,7 +1236,7 @@ async def test_repeat_count(hass, caplog, count):
     assert_action_trace(
         {
             "0": [{}],
-            "0/0/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
+            "0/sequence/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
         }
     )
 
@@ -1578,6 +1578,10 @@ async def test_choose(hass, caplog, var, result):
             },
         }
     )
+
+    # Prepare tracing
+    trace.trace_get()
+
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
 
     await script_obj.async_run(MappingProxyType({"var": var}), Context())
@@ -1589,6 +1593,21 @@ async def test_choose(hass, caplog, var, result):
     if var == 3:
         expected_choice = "default"
     assert f"{alias}: {expected_choice}: Executing step {aliases[var]}" in caplog.text
+
+    expected_trace = {"0": [{}]}
+    if var >= 1:
+        expected_trace["0/choose/0"] = [{}]
+        expected_trace["0/choose/0/conditions/0"] = [{}]
+    if var >= 2:
+        expected_trace["0/choose/1"] = [{}]
+        expected_trace["0/choose/1/conditions/0"] = [{}]
+    if var == 1:
+        expected_trace["0/choose/0/sequence/0"] = [{}]
+    if var == 2:
+        expected_trace["0/choose/1/sequence/0"] = [{}]
+    if var == 3:
+        expected_trace["0/default/sequence/0"] = [{}]
+    assert_action_trace(expected_trace)
 
 
 @pytest.mark.parametrize(
