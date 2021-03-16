@@ -1,7 +1,7 @@
 """Config flow for the sma integration."""
 import logging
 
-from aiohttp.client_exceptions import ClientConnectorError
+import aiohttp
 import pysma
 import voluptuous as vol
 
@@ -39,7 +39,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     protocol = "https" if data[CONF_SSL] else "http"
     url = f"{protocol}://{data[CONF_HOST]}"
 
-    # This will also test device connectivity. Raises ClientConnectorError on failure
+    # This will also test device connectivity. Raises ClientError on failure
     res = await session.get(f"{url}/data/l10n/en-US.json")
     translate_json = (await res.json()) or {}
 
@@ -113,13 +113,8 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
             try:
-                device_info = await validate_input(self.hass, user_input)
-                await self.async_set_unique_id(device_info["serial"])
-                self._abort_if_unique_id_configured()
-
-                self._data[DEVICE_INFO] = device_info
-                return await self.async_step_sensors()
-            except ClientConnectorError:
+                self._data[DEVICE_INFO] = await validate_input(self.hass, user_input)
+            except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
@@ -128,6 +123,11 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+            if not errors:
+                await self.async_set_unique_id(self._data[DEVICE_INFO]["serial"])
+                self._abort_if_unique_id_configured()
+                return await self.async_step_sensors()
 
         return self.async_show_form(
             step_id="user",
