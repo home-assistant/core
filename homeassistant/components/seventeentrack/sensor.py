@@ -243,7 +243,7 @@ class SeventeenTrackPackageSensor(Entity):
             {
                 ATTR_INFO_TEXT: package.info_text,
                 ATTR_TIMESTAMP: package.timestamp,
-                ATTR_LOCATION: package.location
+                ATTR_LOCATION: package.location,
             }
         )
         self._state = package.status
