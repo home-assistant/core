@@ -1,4 +1,6 @@
 """Websocket API for automation."""
+import json
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -21,7 +23,12 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .trace import get_debug_trace, get_debug_traces, get_debug_traces_for_automation
+from .trace import (
+    TraceJSONEncoder,
+    get_debug_trace,
+    get_debug_traces,
+    get_debug_traces_for_automation,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -55,8 +62,9 @@ def websocket_automation_trace_get(hass, connection, msg):
     run_id = msg["run_id"]
 
     trace = get_debug_trace(hass, automation_id, run_id)
+    message = websocket_api.messages.result_message(msg["id"], trace)
 
-    connection.send_result(msg["id"], trace)
+    connection.send_message(json.dumps(message, cls=TraceJSONEncoder, allow_nan=False))
 
 
 @callback

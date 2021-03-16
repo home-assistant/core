@@ -2,11 +2,13 @@
 from collections import OrderedDict
 from contextlib import contextmanager
 import datetime as dt
+from datetime import timedelta
 from itertools import count
 import logging
 from typing import Any, Awaitable, Callable, Deque, Dict, Optional
 
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.json import JSONEncoder as HAJSONEncoder
 from homeassistant.helpers.trace import TraceElement, trace_id_set
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
@@ -203,3 +205,19 @@ def get_debug_traces(hass, summary=False):
         traces.extend(get_debug_traces_for_automation(hass, automation_id, summary))
 
     return traces
+
+
+class TraceJSONEncoder(HAJSONEncoder):
+    """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
+
+    def default(self, o: Any) -> Any:
+        """Convert certain objects.
+
+        Fall back to repr(o).
+        """
+        if isinstance(o, timedelta):
+            return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
+        try:
+            return super().default(o)
+        except TypeError:
+            return {"__type": str(type(o)), "repr": repr(o)}
