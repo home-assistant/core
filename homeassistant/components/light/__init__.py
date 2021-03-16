@@ -298,6 +298,10 @@ async def async_setup(hass, config):
             elif COLOR_MODE_RGB in supported_color_modes:
                 params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
 
+        # Remove deprecated white value if the light supports color mode
+        if supported_color_modes:
+            params.pop(ATTR_WHITE_VALUE, None)
+
         # Zero brightness: Light will be turned off
         if params.get(ATTR_BRIGHTNESS) == 0:
             await light.async_turn_off(**filter_turn_off_params(params))
@@ -670,12 +674,12 @@ class LightEntity(ToggleEntity):
         if color_mode == COLOR_MODE_RGBWW:
             data[ATTR_RGBWW_COLOR] = self.rgbww_color
 
-        if supported_features & SUPPORT_COLOR_TEMP:
+        if supported_features & SUPPORT_COLOR_TEMP and not self.supported_color_modes:
             # Backwards compatibility
             # Add warning in 2021.6, remove in 2021.10
             data[ATTR_COLOR_TEMP] = self.color_temp
 
-        if supported_features & SUPPORT_WHITE_VALUE:
+        if supported_features & SUPPORT_WHITE_VALUE and not self.supported_color_modes:
             # Backwards compatibility
             # Add warning in 2021.6, remove in 2021.10
             data[ATTR_WHITE_VALUE] = self.white_value
