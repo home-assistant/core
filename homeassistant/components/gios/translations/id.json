@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lokasi sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_sensors_data": "Data sensor tidak valid untuk stasiun pengukuran ini.",
+            "wrong_station_id": "ID stasiun pengukuran salah."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nama",
+                    "station_id": "ID stasiun pengukuran"
+                },
+                "description": "Siapkan integrasi kualitas udara GIO\u015a (Inspektorat Jenderal Perlindungan Lingkungan Polandia). Jika Anda memerlukan bantuan tentang konfigurasi, baca di sini: https://www.home-assistant.io/integrations/gios",
+                "title": "GIO\u015a (Inspektorat Jenderal Perlindungan Lingkungan Polandia)"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Keterjangkauan server GIO\u015a"
+        }
+    }
+}

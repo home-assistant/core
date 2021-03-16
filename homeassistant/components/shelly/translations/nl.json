@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "unsupported_firmware": "Het apparaat gebruikt een niet-ondersteunde firmwareversie."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -22,7 +23,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Slapende (op batterij werkende) apparaten moeten wakker zijn wanneer deze apparaten opgezet worden. Je kunt deze apparaten nu wakker maken door op de knop erop te drukken"
             }
         }
     },
@@ -35,6 +37,9 @@
         },
         "trigger_type": {
             "double": "{subtype} dubbel geklikt",
+            "long": "{subtype} lang geklikt",
+            "long_single": "{subtype} lang geklikt en daarna \u00e9\u00e9n keer geklikt",
+            "single": "{subtype} enkel geklikt",
             "single_long": "{subtype} een keer geklikt en daarna lang geklikt",
             "triple": "{subtype} driemaal geklikt"
         }

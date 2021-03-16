@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze nexia-woning is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
             "cannot_connect": "Verbinding mislukt, probeer het opnieuw",
