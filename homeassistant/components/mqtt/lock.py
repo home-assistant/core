@@ -26,16 +26,20 @@ from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_hel
 
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
+CONF_PAYLOAD_OPEN = "payload_open"
 
 CONF_STATE_LOCKED = "state_locked"
 CONF_STATE_UNLOCKED = "state_unlocked"
+CONF_STATE_OPENED = "state_opened"
 
 DEFAULT_NAME = "MQTT Lock"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_LOCK = "LOCK"
 DEFAULT_PAYLOAD_UNLOCK = "UNLOCK"
+DEFAULT_PAYLOAD_OPEN = "OPEN"
 DEFAULT_STATE_LOCKED = "LOCKED"
 DEFAULT_STATE_UNLOCKED = "UNLOCKED"
+DEFAULT_STATE_OPENED = "OPENED"
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
@@ -43,8 +47,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_LOCK, default=DEFAULT_PAYLOAD_LOCK): cv.string,
         vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK): cv.string,
+        vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
         vol.Optional(CONF_STATE_LOCKED, default=DEFAULT_STATE_LOCKED): cv.string,
         vol.Optional(CONF_STATE_UNLOCKED, default=DEFAULT_STATE_UNLOCKED): cv.string,
+        vol.Optional(CONF_STATE_OPENED, default=DEFAULT_STATE_OPENED): cv.string,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -110,6 +116,8 @@ class MqttLock(MqttEntity, LockEntity):
                 self._state = True
             elif payload == self._config[CONF_STATE_UNLOCKED]:
                 self._state = False
+            elif payload == self._config[CONF_STATE_OPENED]:
+                self._state = False
 
             self.async_write_ha_state()
 
@@ -165,6 +173,23 @@ class MqttLock(MqttEntity, LockEntity):
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             self._config[CONF_PAYLOAD_UNLOCK],
+            self._config[CONF_QOS],
+            self._config[CONF_RETAIN],
+        )
+        if self._optimistic:
+            # Optimistically assume that the lock has changed state.
+            self._state = False
+            self.async_write_ha_state()
+
+    async def async_open(self, **kwargs):
+        """Open the door latch.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass,
+            self._config[CONF_COMMAND_TOPIC],
+            self._config[CONF_PAYLOAD_OPEN],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
