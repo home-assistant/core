@@ -452,7 +452,7 @@ class MqttFan(MqttEntity, FanEntity):
         This property provides forward and backwards
         compatibility for conversion to percentage speeds.
         """
-        return self._config[CONF_SPEED_LIST]
+        return speed_list_without_preset_modes(self._config[CONF_SPEED_LIST])
 
     @property
     def supported_features(self) -> int:
@@ -518,8 +518,6 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
-        if percentage < 0 or percentage > 100:
-            raise ValueError(f"{percentage} is not a valid percentage")
         mqtt_payload = int(percentage_to_ranged_value(self._speed_range, percentage))
         if self._feature_speeds:
             await self.async_set_speed(
@@ -596,13 +594,12 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload = percentage_to_ordered_list_item(
                 self._speed_list_without_preset_modes, percentage
             )
-            self._percentage = percentage
-        elif self._feature_percentage:
-            percentage = int(speed)
-            mqtt_payload = percentage_to_ordered_list_item(
-                self._speed_list_without_preset_modes, percentage
-            )
-            self._percentage = percentage
+        #        elif self._feature_percentage:
+        #            percentage = int(speed)
+        #            if percentage:
+        #                mqtt_payload = percentage_to_ordered_list_item(
+        #                    self._speed_list_without_preset_modes, percentage
+        #                )
         else:
             raise NotValidSpeedError(f"{speed} is not a valid fan speed")
         if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
