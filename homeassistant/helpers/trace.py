@@ -4,7 +4,19 @@ from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import partial, wraps
-from typing import Any, Awaitable, Callable, Deque, Dict, Generator, List, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Deque,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    cast,
+)
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -169,7 +181,7 @@ def trace_set_result(**kwargs: Any) -> None:
 @contextmanager
 def trace_path(suffix: Union[str, List[str]]) -> Generator:
     """Go deeper in the config tree.
-    
+
     Can not be used as a decorator on couroutine functions.
     """
     count = trace_path_push(suffix)

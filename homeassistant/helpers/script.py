@@ -625,7 +625,7 @@ class _ScriptRun:
 
     def _test_conditions(self, conditions, name, condition_path=None):
         if condition_path is None:
-            condition_path=name
+            condition_path = name
 
         @trace_condition_function
         def traced_test_conditions(hass, variables):
