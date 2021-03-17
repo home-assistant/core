@@ -25,6 +25,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE, NEW_SENSOR
 from .deconz_device import DeconzDevice
@@ -67,6 +68,11 @@ PRESET_MODE_TO_DECONZ = {
 }
 
 DECONZ_TO_PRESET_MODE = {value: key for key, value in PRESET_MODE_TO_DECONZ.items()}
+
+DEFAULT_MIN_TEMP = 5
+DEFAULT_MAX_TEMP = 30
+
+EUROTRONIC_SPZB0001 = "SPZB0001"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -116,7 +122,18 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         super().__init__(device, gateway)
 
         self._hvac_mode_to_deconz = dict(HVAC_MODE_TO_DECONZ)
-        if "mode" not in device.raw["config"]:
+        """Handle Euronics Spirit Zigbee
+
+        If modelid is SPZB0001 it's a Euronics Spirit Zigbee Thermostat,
+        it has mode heat for Boost and auto is eq to heat.
+        So we remap the HVAC Modes to match the device in deCONZ.
+        """
+        if self._device.modelid == EUROTRONIC_SPZB0001:
+            self._hvac_mode_to_deconz = {
+                HVAC_MODE_HEAT: "auto",
+                HVAC_MODE_OFF: "off",
+            }
+        elif "mode" not in device.raw["config"]:
             self._hvac_mode_to_deconz = {
                 HVAC_MODE_HEAT: True,
                 HVAC_MODE_OFF: False,
@@ -139,6 +156,26 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         return self._features
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature.
+
+        At this moment deCONZ doesn't return a min temp.
+        """
+        return convert_temperature(
+            DEFAULT_MIN_TEMP, TEMP_CELSIUS, self.temperature_unit
+        )
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature.
+
+        At this moment deCONZ doesn't return a max temp.
+        """
+        return convert_temperature(
+            DEFAULT_MAX_TEMP, TEMP_CELSIUS, self.temperature_unit
+        )
 
     # Fan control
 
@@ -187,7 +224,10 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
             raise ValueError(f"Unsupported HVAC mode {hvac_mode}")
 
         data = {"mode": self._hvac_mode_to_deconz[hvac_mode]}
-        if len(self._hvac_mode_to_deconz) == 2:  # Only allow turn on and off thermostat
+        if (
+            len(self._hvac_mode_to_deconz) == 2
+            and self._device.modelid != EUROTRONIC_SPZB0001
+        ):  # Only allow turn on and off thermostat
             data = {"on": self._hvac_mode_to_deconz[hvac_mode]}
 
         await self._device.async_set_config(data)

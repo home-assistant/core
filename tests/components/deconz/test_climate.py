@@ -662,6 +662,102 @@ async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_webs
         )
 
 
+async def test_climate_device_with_euronics(
+    hass, aioclient_mock, mock_deconz_websocket
+):
+    """Test successful creation of euronics spirit zigbee entities.
+
+    The euronics spirit zigbee uses auto mode for normal heat and heat for boost.
+    HVAC_MODE_HEAT should be auto in deConz.
+    """
+    data = {
+        "sensors": {
+            "0": {
+                "config": {
+                    "battery": 25,
+                    "displayflipped": False,
+                    "heatsetpoint": 2222,
+                    "locked": False,
+                    "mode": "off",
+                    "offset": 0,
+                    "on": True,
+                    "reachable": True,
+                },
+                "ep": 1,
+                "etag": "bf079744dc54abef9fcd4e1423332632",
+                "lastseen": "2020-11-27T13:45Z",
+                "manufacturername": "Eurotronic",
+                "modelid": "SPZB0001",
+                "name": "SPZB0001",
+                "state": {
+                    "lastupdated": "2020-11-27T13:42:40.863",
+                    "on": False,
+                    "temperature": 2320,
+                },
+                "type": "ZHAThermostat",
+                "uniqueid": "00:15:8d:00:03:2f:5f:f7-01-0201",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 2
+
+    climate_spzb0001 = hass.states.get("climate.spzb0001")
+    assert climate_spzb0001.state == HVAC_MODE_OFF
+    assert climate_spzb0001.attributes["current_temperature"] == 23.2
+    assert climate_spzb0001.attributes["temperature"] == 22.2
+
+    # Event signals deCONZ mode
+
+    event_changed_sensor = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "0",
+        "config": {"mode": "auto"},
+    }
+    await mock_deconz_websocket(data=event_changed_sensor)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.spzb0001").state == HVAC_MODE_HEAT
+
+    # Verify service calls
+
+    mock_deconz_put_request(aioclient_mock, config_entry.data, "/sensors/0/config")
+
+    # Service set preset to HASS preset
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.spzb0001", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"mode": "auto"}
+
+    # Service set preset to custom deCONZ preset
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.spzb0001", ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"mode": "off"}
+
+    # Service set preset to unsupported value
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.spzb0001", ATTR_HVAC_MODE: HVAC_MODE_COOL},
+            blocking=True,
+        )
+
+
 async def test_clip_climate_device(hass, aioclient_mock):
     """Test successful creation of sensor entities."""
     data = {
