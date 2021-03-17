@@ -28,8 +28,8 @@ from .const import (
     ATTR_API_DEW_POINT,
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_FORECAST,
-    ATTR_API_FORECAST_PRECIPITATION_KIND,
     ATTR_API_HUMIDITY,
+    ATTR_API_PRECIPITATION_KIND,
     ATTR_API_PRESSURE,
     ATTR_API_RAIN,
     ATTR_API_SNOW,
@@ -130,6 +130,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_API_CLOUDS: current_weather.clouds,
             ATTR_API_RAIN: self._get_rain(current_weather.rain),
             ATTR_API_SNOW: self._get_snow(current_weather.snow),
+            ATTR_API_PRECIPITATION_KIND: self._calc_precipitation_kind(
+                current_weather.rain, current_weather.snow
+            ),
             ATTR_API_WEATHER: current_weather.detailed_status,
             ATTR_API_CONDITION: self._get_condition(current_weather.weather_code),
             ATTR_API_UV_INDEX: current_weather.uvi,
@@ -163,9 +166,6 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_WIND_BEARING: entry.wind().get("deg"),
             ATTR_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
-            ),
-            ATTR_API_FORECAST_PRECIPITATION_KIND: self._calc_precipitation_kind(
-                entry.rain, entry.snow
             ),
         }
 
