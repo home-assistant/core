@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bitvavo",
   "requirements": [
-    "cryptoxlib-aio==3.9.0"
+    "bitvavo-aio==1.0.1"
   ],
   "codeowners": [
     "@cyberjunky"

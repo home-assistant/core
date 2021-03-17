@@ -354,6 +354,9 @@ bellows==0.24.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
 
+# homeassistant.components.bitvavo
+bitvavo-aio==1.0.1
+
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
@@ -459,9 +462,6 @@ construct==2.10.56
 
 # homeassistant.components.coronavirus
 coronavirus==1.1.1
-
-# homeassistant.components.bitvavo
-cryptoxlib-aio==3.9.0
 
 # homeassistant.components.datadog
 datadog==0.15.0

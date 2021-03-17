@@ -1,8 +1,8 @@
-"""Define tests for the Binance config flow."""
+"""Define tests for the Bitvavo config flow."""
 import json
 from unittest.mock import patch
 
-from cryptoxlib.clients.bitvavo.exceptions import BitvavoException
+from bitvavo.BitvavoExceptions import BitvavoException
 
 from homeassistant import data_entry_flow, setup
 from homeassistant.components.bitvavo.const import CONF_API_SECRET, CONF_MARKETS, DOMAIN
@@ -35,14 +35,15 @@ async def test_show_form(hass):
 async def test_user_form(hass):
     """Test we get the user initiated form."""
     with patch(
-        "homeassistant.components.binance.AsyncClient.get_all_tickers",
-        return_value=json.loads(load_fixture("binance/ticker_data.json")),
+        "homeassistant.components.bitvavo.BitvavoClient.get_price_ticker",
+        return_value=json.loads(load_fixture("bitvavo/ticker_data.json")),
     ), patch(
-        "homeassistant.components.binance.AsyncClient.get_account",
-        return_value=json.loads(load_fixture("binance/account_data.json")),
+        "homeassistant.components.bitvavo.BitvavoClient.get_balance",
+        return_value=json.loads(load_fixture("bitvavo/balance_data.json")),
     ), patch(
-        "homeassistant.components.binance.async_setup_entry", return_value=True
+        "homeassistant.components.bitvavo.async_setup_entry", return_value=True
     ):
+
         await setup.async_setup_component(hass, "persistent_notification", {})
 
         result = await hass.config_entries.flow.async_init(
@@ -83,9 +84,9 @@ async def test_user_form(hass):
 async def test_create_entry(hass):
     """Test that the user step works."""
     with patch(
-        "homeassistant.components.binance.AsyncClient.get_all_tickers",
-        return_value=json.loads(load_fixture("binance/ticker_data.json")),
-    ), patch("homeassistant.components.binance.async_setup_entry", return_value=True):
+        "homeassistant.components.bitvavo.BitvavoClient.get_price_ticker",
+        return_value=json.loads(load_fixture("bitvavo/ticker_data.json")),
+    ), patch("homeassistant.components.bitvavo.async_setup_entry", return_value=True):
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -97,11 +98,11 @@ async def test_create_entry(hass):
         assert result["step_id"] == SOURCE_USER
 
 
-async def test_invalid_api_response(hass):
+async def test_invalid_auth_response(hass):
     """Test that errors are shown when API request is invalid."""
     with patch(
-        "homeassistant.components.binance.AsyncClient.get_all_tickers",
-        side_effect=BitvavoException("Invalid API Response"),
+        "homeassistant.components.bitvavo.BitvavoClient.get_price_ticker",
+        side_effect=BitvavoException("403", "Invalid Auth"),
     ):
 
         result = await hass.config_entries.flow.async_init(
@@ -110,13 +111,13 @@ async def test_invalid_api_response(hass):
             data=USER_INPUT,
         )
 
-        assert result["errors"] == {"base": "invalid_response"}
+        assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_api_unexpected_exception(hass):
     """Test that errors are shown when the API returns an unexpected exception."""
     with patch(
-        "homeassistant.components.binance.AsyncClient.get_all_tickers",
+        "homeassistant.components.bitvavo.BitvavoClient.get_price_ticker",
         side_effect=Exception("Unexpected exception"),
     ):
 
@@ -132,8 +133,8 @@ async def test_api_unexpected_exception(hass):
 async def test_integration_already_exists(hass):
     """Test we only allow a single config flow."""
     with patch(
-        "homeassistant.components.binance.AsyncClient.get_all_tickers",
-        return_value=json.loads(load_fixture("binance/ticker_data.json")),
+        "homeassistant.components.bitvavo.BitvavoClient.get_price_ticker",
+        return_value=json.loads(load_fixture("bitvavo/ticker_data.json")),
     ):
         MockConfigEntry(
             domain=DOMAIN,

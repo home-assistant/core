@@ -2,8 +2,9 @@
 import logging
 from typing import Dict, List, Optional
 
-from cryptoxlib.CryptoXLib import CryptoXLib
-from cryptoxlib.clients.bitvavo.exceptions import BitvavoException
+from bitvavo.BitvavoClient import BitvavoClient
+from bitvavo.BitvavoExceptions import BitvavoException
+
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
@@ -47,20 +48,21 @@ async def validate_input(hass: HomeAssistant, data: Dict):
     api_secret = data[CONF_API_SECRET]
 
     try:
-        client = CryptoXLib.create_bitvavo_client(api_key, api_secret)
-
-        markets = (await client.get_price_ticker())["response"]
+        client = BitvavoClient(api_key, api_secret)
+        markets = await client.get_price_ticker()
         for market in markets:
             markets_list.append(market["market"])
         markets_list.sort()
 
-        balances = (await client.get_balance())["response"]
+        balances = await client.get_balance()
         for balance in balances:
             if balance["available"] != "0":
                 balances_list.append(balance["symbol"])
         balances_list.sort()
     except BitvavoException as error:
-        raise InvalidAuth from error
+        if str(error.status_code) == "403":
+            raise InvalidAuth from error
+        raise InvalidResponse from error
     finally:
         await client.close()
 

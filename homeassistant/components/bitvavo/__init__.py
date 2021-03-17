@@ -2,8 +2,8 @@
 import logging
 from typing import Dict, List, Optional
 
-from cryptoxlib.CryptoXLib import CryptoXLib
-from cryptoxlib.clients.bitvavo.exceptions import BitvavoException
+from bitvavo.BitvavoClient import BitvavoClient
+from bitvavo.BitvavoExceptions import BitvavoException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -68,15 +68,13 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Fetch Bitvavo data."""
         try:
-            client = CryptoXLib.create_bitvavo_client(self._api_key, self._api_secret)
+            client = BitvavoClient(self._api_key, self._api_secret)
 
-            all_tickers = (await client.get_price_ticker())["response"]
-            all_orderbook_tickers = (await client.get_best_orderbook_ticker())[
-                "response"
-            ]
-            all_markets = (await client.get_exchange_info())["response"]
-            all_balances = (await client.get_balance())["response"]
-            open_orders = (await client.get_open_orders())["response"]
+            tickers = await client.get_price_ticker()
+            orderbook_tickers = await client.get_best_orderbook_ticker()
+            markets = await client.get_markets()
+            balances = await client.get_balance()
+            open_orders = await client.get_open_orders()
 
             tickers_dict = {}
 
@@ -84,15 +82,13 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
                 if market not in tickers_dict:
                     tickers_dict[market] = {}
                     ticker_details = next(
-                        item for item in all_tickers if item["market"] == market
+                        item for item in tickers if item["market"] == market
                     )
                     market_details = next(
-                        item for item in all_markets if item["market"] == market
+                        item for item in markets if item["market"] == market
                     )
                     orderbook_ticker_details = next(
-                        item
-                        for item in all_orderbook_tickers
-                        if item["market"] == market
+                        item for item in orderbook_tickers if item["market"] == market
                     )
                     combined_details_dict = {
                         **ticker_details,
@@ -113,7 +109,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
                     if currency not in asset_tickers_dict:
                         asset_tickers_dict[currency] = {}
                         ticker_details = next(
-                            item for item in all_tickers if item["market"] == currency
+                            item for item in tickers if item["market"] == currency
                         )
                         asset_tickers_dict[currency].update(ticker_details)
 
@@ -121,7 +117,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
             balances_dict = {}
 
-            for balance in all_balances:
+            for balance in balances:
                 if balance["symbol"] not in balances_dict:
                     balances_dict[balance["symbol"]] = {}
                     balances_dict[balance["symbol"]].update(balance)
@@ -139,7 +135,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
                         try:
                             base_asset_ticker_details = next(
                                 item
-                                for item in all_tickers
+                                for item in tickers
                                 if item["market"] == base_asset_symbol
                             )
                         except StopIteration:
