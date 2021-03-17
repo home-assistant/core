@@ -12,9 +12,20 @@ from homeassistant.components.zwave_js.lock import (
     SERVICE_CLEAR_LOCK_USERCODE,
     SERVICE_SET_LOCK_USERCODE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_LOCKED,
+    STATE_UNAVAILABLE,
+    STATE_UNLOCKED,
+)
 
-SCHLAGE_BE469_LOCK_ENTITY = "lock.touchscreen_deadbolt"
+from .common import SCHLAGE_BE469_LOCK_ENTITY
+
+
+async def test_dead_node(hass, client, dead_node, integration):
+    """Test a dead lock entity is marked unavailable."""
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state and state.state == STATE_UNAVAILABLE
 
 
 async def test_door_lock(hass, client, lock_schlage_be469, integration):
