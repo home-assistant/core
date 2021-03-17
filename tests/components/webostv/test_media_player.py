@@ -56,8 +56,10 @@ async def setup_webostv(hass):
     await hass.async_block_till_done()
 
 
-def cleanup_webostv(hass):
+@pytest.fixture
+def cleanup_config(hass):
     """Test cleanup, remove the config file."""
+    yield
     os.remove(hass.config.path(WEBOSTV_CONFIG_FILE))
 
 
@@ -139,7 +141,7 @@ async def test_command_with_optional_arg(hass, client):
     )
 
 
-async def test_migrate_keyfile_to_sqlite(hass, client):
+async def test_migrate_keyfile_to_sqlite(hass, client, cleanup_config):
     """Test migration from JSON key-file to Sqlite based one."""
     key = "3d5b1aeeb98e"
     # Create config file with JSON content
@@ -154,10 +156,8 @@ async def test_migrate_keyfile_to_sqlite(hass, client):
     with SqliteDict(config_file) as conf:
         assert conf.get("host") == key
 
-    cleanup_webostv(hass)
 
-
-async def test_dont_migrate_sqlite_keyfile(hass, client):
+async def test_dont_migrate_sqlite_keyfile(hass, client, cleanup_config):
     """Test that migration is not performed and setup still succeeds when config file is already an Sqlite DB."""
     key = "3d5b1aeeb98e"
 
@@ -173,5 +173,3 @@ async def test_dont_migrate_sqlite_keyfile(hass, client):
     # Assert that the config file is still an Sqlite database and setup didn't fail
     with SqliteDict(config_file) as conf:
         assert conf.get("host") == key
-
-    cleanup_webostv(hass)
