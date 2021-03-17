@@ -1,5 +1,6 @@
 """The tests for the Netatmo climate platform."""
-from freezegun import freeze_time
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.netatmo import sensor
@@ -7,12 +8,12 @@ from homeassistant.components.netatmo.helper import NetatmoArea
 from homeassistant.components.netatmo.sensor import MODULE_TYPE_WIND
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .common import TEST_TIME
+from .conftest import selected_platforms
 
-@freeze_time("2019-06-01")
+
 async def test_weather_sensor(hass, sensor_entry):
     """Test weather sensor setup."""
-    await hass.async_block_till_done()
-
     prefix = "sensor.netatmo_mystation_"
 
     assert hass.states.get(prefix + "temperature").state == "24.6"
@@ -21,7 +22,6 @@ async def test_weather_sensor(hass, sensor_entry):
     assert hass.states.get(prefix + "pressure").state == "1017.3"
 
 
-@freeze_time("2019-06-01")
 async def test_public_weather_sensor(hass, sensor_entry):
     """Test public weather sensor setup."""
     await hass.async_block_till_done()
@@ -147,7 +147,6 @@ async def test_fix_angle(angle, expected):
     assert sensor.fix_angle(angle) == expected
 
 
-@freeze_time("2019-06-01")
 @pytest.mark.parametrize(
     "uid, name, expected",
     [
@@ -214,18 +213,21 @@ async def test_fix_angle(angle, expected):
         ),
     ],
 )
-async def test_weather_sensor_enabled(hass, sensor_entry, uid, name, expected):
+async def test_weather_sensor_enabled(hass, config_entry, uid, name, expected):
     """Test by default disabled sensors."""
-    registry = await hass.helpers.entity_registry.async_get_registry()
 
-    registry.async_get_or_create(
-        "sensor",
-        "netatmo",
-        uid,
-        suggested_object_id=name,
-        disabled_by=None,
-    )
+    with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
+        registry = await hass.helpers.entity_registry.async_get_registry()
 
-    await hass.async_block_till_done()
+        registry.async_get_or_create(
+            "sensor",
+            "netatmo",
+            uid,
+            suggested_object_id=name,
+            disabled_by=None,
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert hass.states.get("sensor." + name).state == expected
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor." + name).state == expected
