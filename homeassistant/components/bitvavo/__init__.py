@@ -1,6 +1,6 @@
 """Gather the market details from Bitvavo."""
-import logging
 import asyncio
+import logging
 from typing import Dict, List, Optional
 
 from bitvavo.BitvavoClient import BitvavoClient

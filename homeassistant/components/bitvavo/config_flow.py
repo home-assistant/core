@@ -4,7 +4,6 @@ from typing import Dict, List, Optional
 
 from bitvavo.BitvavoClient import BitvavoClient
 from bitvavo.BitvavoExceptions import BitvavoException
-
 import voluptuous as vol
 
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow
