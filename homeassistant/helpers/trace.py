@@ -1,8 +1,10 @@
 """Helpers for script and condition tracing."""
+import asyncio
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, Deque, Dict, Generator, List, Optional, Tuple, Union, cast
+from functools import partial, wraps
+from typing import Any, Awaitable, Callable, Deque, Dict, Generator, List, Optional, Tuple, Union, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -166,9 +168,50 @@ def trace_set_result(**kwargs: Any) -> None:
 
 @contextmanager
 def trace_path(suffix: Union[str, List[str]]) -> Generator:
-    """Go deeper in the config tree."""
+    """Go deeper in the config tree.
+    
+    Can not be used as a decorator on couroutine functions.
+    """
     count = trace_path_push(suffix)
     try:
         yield
     finally:
         trace_path_pop(count)
+
+
+def trace_path_decorator(suffix: Union[str, List[str]]) -> Callable:
+    """Go deeper in the config tree.
+
+    Can be used as a decorator both on normal and coroutine functions.
+    """
+
+    def _trace_path_decorator(func: Callable) -> Callable:
+        """Decorate a callback to catch and log exceptions."""
+        # Check for partials to properly determine if coroutine function
+        check_func = func
+        while isinstance(check_func, partial):
+            check_func = check_func.func
+
+        wrapper_func: Union[Callable[..., None], Callable[..., Awaitable[None]]]
+        if asyncio.iscoroutinefunction(check_func):
+            async_func = cast(Callable[..., Awaitable[None]], func)
+
+            @wraps(async_func)
+            async def async_wrapper(*args: Any) -> None:
+                """Catch and log exception."""
+                with trace_path(suffix):
+                    await async_func(*args)
+
+            wrapper_func = async_wrapper
+        else:
+
+            @wraps(func)
+            def wrapper(*args: Any) -> None:
+                """Catch and log exception."""
+                with trace_path(suffix):
+                    func(*args)
+
+            wrapper_func = wrapper
+        return wrapper_func
+
+    return _trace_path_decorator

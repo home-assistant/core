@@ -1236,7 +1236,7 @@ async def test_repeat_count(hass, caplog, count):
     assert_action_trace(
         {
             "0": [{}],
-            "0/sequence/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
+            "0/repeat/sequence/0": [{}] * min(count, script.ACTION_TRACE_NODE_MAX_LEN),
         }
     )
 
