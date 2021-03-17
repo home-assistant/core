@@ -1,4 +1,4 @@
-"""Contants for Bitvavo."""
+"""Constants for Bitvavo."""
 from datetime import timedelta
 
 DOMAIN = "bitvavo"
