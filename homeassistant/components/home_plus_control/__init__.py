@@ -55,7 +55,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         _LOGGER.debug(
             "No config in configuration.yaml for the Legrand Home+ Control component"
         )
-        return False
+        return True
 
     # If there is a configuration section in configuration.yaml, then we add the data into
     # the hass.data object

@@ -1,8 +1,4 @@
 """Test the Legrand Home+ Control config flow."""
-import asyncio
-
-import pytest
-
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.home_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
@@ -34,10 +30,8 @@ async def test_full_flow(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
     result = await hass.config_entries.flow.async_init(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
@@ -93,7 +87,6 @@ async def test_abort_if_entry_in_progress(hass, current_request_with_host):
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
 
@@ -148,10 +141,8 @@ async def test_abort_if_invalid_token(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
     result = await hass.config_entries.flow.async_init(
         "home_plus_control", context={"source": config_entries.SOURCE_USER}
     )
@@ -190,60 +181,3 @@ async def test_abort_if_invalid_token(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "oauth_error"
-
-
-async def test_flow_timeout(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
-):
-    """Check timeout in config flow."""
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
-            },
-            "http": {},
-        },
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        "home_plus_control", context={"source": config_entries.SOURCE_USER}
-    )
-
-    state = config_entry_oauth2_flow._encode_jwt(  # pylint: disable=protected-access
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
-        },
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
-    assert result["step_id"] == "auth"
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
-
-    client = await aiohttp_client(hass.http.app)
-    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
-    assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    aioclient_mock.post(
-        OAUTH2_TOKEN,
-        json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-        exc=asyncio.TimeoutError,
-    )
-
-    with pytest.raises(Exception):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])

@@ -4,6 +4,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.home_plus_control.const import DOMAIN
 
+from tests.common import MockConfigEntry
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 SUBSCRIPTION_KEY = "12345678901234567890123456789012"
@@ -16,11 +18,10 @@ def mock_config_entry():
     This is a minimal entry to setup the integration and to ensure that the
     OAuth access token will not expire.
     """
-    return config_entries.ConfigEntry(
-        1,
-        DOMAIN,
-        "Home+ Control",
-        {
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Home+ Control",
+        data={
             "auth_implementation": "home_plus_control",
             "token": {
                 "refresh_token": "mock-refresh-token",
@@ -31,8 +32,8 @@ def mock_config_entry():
                 "expires_on": 9999999999,
             },
         },
-        "test",
-        config_entries.CONN_CLASS_LOCAL_POLL,
+        source="test",
+        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
         options={},
         system_options={"disable_new_entities": False},
         unique_id=DOMAIN,

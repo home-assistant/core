@@ -67,10 +67,9 @@ async def one_entity_assertion(hass, entity_id, availability):
     )
 
 
-async def test_loading(hass, mock_config_entry, current_request_with_host):
+async def test_loading(hass, mock_config_entry):
     """Test component loading."""
-    await setup.async_setup_component(hass, "http", {})
-    assert hass.http.app
+    mock_config_entry.add_to_hass(hass)
     await setup.async_setup_component(
         hass,
         DOMAIN,
@@ -82,7 +81,6 @@ async def test_loading(hass, mock_config_entry, current_request_with_host):
             },
         },
     )
-    await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
         hass.data[DOMAIN]["home_plus_control_entry_id"][API],
         api.HomePlusControlAsyncApi,
@@ -90,21 +88,17 @@ async def test_loading(hass, mock_config_entry, current_request_with_host):
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
 
-async def test_loading_with_no_config(
-    hass, mock_config_entry, current_request_with_host
-):
+async def test_loading_with_no_config(hass, mock_config_entry):
     """Test component loading failure when it has not configuration."""
-    await setup.async_setup_component(hass, "http", {})
-    assert hass.http.app
+    mock_config_entry.add_to_hass(hass)
     await setup.async_setup_component(hass, DOMAIN, {})
-    await hass.config_entries.async_add(mock_config_entry)
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
+    # Component setup fails because the oauth2 implementation could not be registered
+    assert mock_config_entry.state == config_entries.ENTRY_STATE_SETUP_ERROR
 
 
-async def test_unloading(hass, mock_config_entry, current_request_with_host):
+async def test_unloading(hass, mock_config_entry):
     """Test component unloading."""
-    await setup.async_setup_component(hass, "http", {})
-    assert hass.http.app
+    mock_config_entry.add_to_hass(hass)
     await setup.async_setup_component(
         hass,
         DOMAIN,
@@ -117,7 +111,6 @@ async def test_unloading(hass, mock_config_entry, current_request_with_host):
         },
     )
 
-    await hass.config_entries.async_add(mock_config_entry)
     assert isinstance(
         hass.data[DOMAIN]["home_plus_control_entry_id"][API],
         api.HomePlusControlAsyncApi,
@@ -137,7 +130,6 @@ async def test_plant_update(
     plant_data,
     plant_topology,
     plant_modules,
-    current_request_with_host,
 ):
     """Test entity and device loading."""
 
@@ -156,6 +148,7 @@ async def test_plant_update(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -165,11 +158,8 @@ async def test_plant_update(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -194,7 +184,6 @@ async def test_plant_topology_reduction_change(
     plant_topology,
     plant_modules,
     plant_topology_reduced,
-    current_request_with_host,
 ):
     """Test an entity leaving the plant topology."""
 
@@ -213,6 +202,7 @@ async def test_plant_topology_reduction_change(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -222,11 +212,8 @@ async def test_plant_topology_reduction_change(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -309,6 +296,7 @@ async def test_plant_topology_increase_change(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -318,11 +306,8 @@ async def test_plant_topology_increase_change(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -401,6 +386,7 @@ async def test_module_status_reduction_change(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -410,11 +396,8 @@ async def test_module_status_reduction_change(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -505,6 +488,7 @@ async def test_module_status_increase_change(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -514,11 +498,8 @@ async def test_module_status_increase_change(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -601,6 +582,7 @@ async def test_plant_api_timeout(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -610,11 +592,8 @@ async def test_plant_api_timeout(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 1 time only - fails on plant data update
@@ -654,6 +633,7 @@ async def test_plant_topology_api_timeout(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -663,11 +643,8 @@ async def test_plant_topology_api_timeout(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 2 times - fails on plant topology update
@@ -711,6 +688,7 @@ async def test_plant_status_api_timeout(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -720,11 +698,8 @@ async def test_plant_status_api_timeout(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times - fails on plant status update
@@ -783,6 +758,7 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -792,11 +768,8 @@ async def test_update_with_plant_topology_api_timeout(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times
@@ -900,6 +873,7 @@ async def test_update_with_plant_module_status_api_timeout(
     )
 
     # Load the entry
+    mock_config_entry.add_to_hass(hass)
     assert await setup.async_setup_component(
         hass,
         "home_plus_control",
@@ -909,11 +883,8 @@ async def test_update_with_plant_module_status_api_timeout(
                 CONF_CLIENT_SECRET: CLIENT_SECRET,
                 CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
             },
-            "http": {},
         },
     )
-    assert hass.http.app
-    await hass.config_entries.async_add(mock_config_entry)
     await hass.async_block_till_done()
 
     # The setup of the integration calls the API 3 times

@@ -56,7 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # Send out signal for removal of obsolete entities from Home Assistant
         entity_uids_to_remove = current_entity_uids - set(module_data)
-        if len(entity_uids_to_remove) > 0:
+        if entity_uids_to_remove:
             device_registry = hass.helpers.device_registry.async_get(hass)
             dispatcher.async_dispatcher_send(
                 hass,
