@@ -185,7 +185,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             return round(rain["all"], 2)
         if "1h" in rain:
             return round(rain["1h"], 2)
-        return "not raining"
+        return 0
 
     @staticmethod
     def _get_snow(snow):
@@ -195,35 +195,32 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
                 return round(snow["all"], 2)
             if "1h" in snow:
                 return round(snow["1h"], 2)
-            return "not snowing"
-        return "not snowing"
+        return 0
 
     @staticmethod
     def _calc_precipitation(rain, snow):
         """Calculate the precipitation."""
         rain_value = 0
-        if WeatherUpdateCoordinator._get_rain(rain) != "not raining":
+        if WeatherUpdateCoordinator._get_rain(rain) != 0:
             rain_value = WeatherUpdateCoordinator._get_rain(rain)
 
         snow_value = 0
-        if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
+        if WeatherUpdateCoordinator._get_snow(snow) != 0:
             snow_value = WeatherUpdateCoordinator._get_snow(snow)
 
-        if round(rain_value + snow_value, 2) == 0:
-            return None
         return round(rain_value + snow_value, 2)
 
     @staticmethod
     def _calc_precipitation_kind(rain, snow):
         """Determine the precipitation kind."""
-        if WeatherUpdateCoordinator._get_rain(rain) != "not raining":
-            if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
-                return "sleet"
-            return "rain"
+        if WeatherUpdateCoordinator._get_rain(rain) != 0:
+            if WeatherUpdateCoordinator._get_snow(snow) != 0:
+                return "Snow and Rain"
+            return "Rain"
 
-        if WeatherUpdateCoordinator._get_snow(snow) != "not snowing":
-            return "snow"
-        return "none"
+        if WeatherUpdateCoordinator._get_snow(snow) != 0:
+            return "Snow"
+        return "None"
 
     def _get_condition(self, weather_code, timestamp=None):
         """Get weather condition from weather data."""
