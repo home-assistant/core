@@ -1,6 +1,8 @@
 """Config flow for BSB-Lan integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from bsblan import BSBLan, BSBLanError, Info
 import voluptuous as vol
@@ -26,8 +28,8 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._show_setup_form()
@@ -59,7 +61,7 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _show_setup_form(self, errors: Optional[Dict] = None) -> Dict[str, Any]:
+    def _show_setup_form(self, errors: dict | None = None) -> dict[str, Any]:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -78,9 +80,9 @@ class BSBLanFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _get_bsblan_info(
         self,
         host: str,
-        username: Optional[str],
-        password: Optional[str],
-        passkey: Optional[str],
+        username: str | None,
+        password: str | None,
+        passkey: str | None,
         port: int,
     ) -> Info:
         """Get device information from an BSBLan device."""
