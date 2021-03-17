@@ -1,17 +1,15 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
         "error": {
-            "invalid_address": "Failed to connect"
+            "invalid_address": "Address is invalid",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
+                    "address": "Address",
+                    "pool": "Get Pool Stats",
+                    "workers": "Get Workers"
                 }
             }
         }

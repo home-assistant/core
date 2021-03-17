@@ -6,13 +6,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 
+from ...const import CONF_ADDRESS
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("address"): str,
+        vol.Required(CONF_ADDRESS): str,
         vol.Optional("workers"): bool,
         vol.Optional("pool"): bool,
     }

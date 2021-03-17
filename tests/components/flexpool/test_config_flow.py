@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.flexpool.const import DOMAIN
+from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_form(hass):
@@ -54,3 +55,26 @@ async def test_form_invalid_address(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_address"}
+
+
+async def test_form_unknown_error(hass):
+    """Test we get the form with an invalid address."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.flexpool.validate_input",
+        side_effect=HomeAssistantError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "address": "0xf98bc863ad9d5dc6415360251ca6f793efc3c390",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "unknown"}

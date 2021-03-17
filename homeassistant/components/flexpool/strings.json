@@ -1,11 +1,8 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
         "error": {
-            "invalid_address": "Failed to connect",
-            "unknown": "Unexpected error"
+            "invalid_address": "Address is invalid",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
         },
         "step": {
             "user": {
