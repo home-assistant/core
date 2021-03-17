@@ -400,11 +400,18 @@ async def test_utc_timestamp(hass):
         "2020-08-10 10:32",
         206,
         2,
-        tz = "Asia/Jakarta"
+        tz = "Asia/Jakarta",
     )
     ProfileMock.package_list = [package]
-    
+
     await _setup_seventeentrack(hass)
     assert hass.states.get("sensor.seventeentrack_package_456") is not None
     assert len(hass.states.async_entity_ids()) == 1
-    assert str(hass.states.get("sensor.seventeentrack_package_456").attributes.get('timestamp')) == "2020-08-10 03:32:00+00:00"
+    assert (
+        str(
+            hass.states.get("sensor.seventeentrack_package_456").attributes.get(
+                'timestamp'
+            )
+        )
+        == "2020-08-10 03:32:00+00:00"
+    )
