@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, exceptions
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -33,25 +33,6 @@ def _schema_with_defaults(username="", host=None, port=80, path="/", ssl=False):
         },
         extra=vol.ALLOW_EXTRA,
     )
-
-
-async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect."""
-
-    session = async_get_clientsession(hass)
-    octoprint = OctoprintClient(
-        data[CONF_HOST], session, data[CONF_PORT], data[CONF_SSL], data[CONF_PATH]
-    )
-    octoprint.set_api_key(data[CONF_API_KEY])
-
-    try:
-        discovery = await octoprint.get_discovery_info()
-    except ApiError as conn_err:
-        _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
-        raise CannotConnect from conn_err
-
-    # Return info that you want to store in the config entry.
-    return {"title": data[CONF_HOST], "uuid": discovery.upnp_uuid}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -92,31 +73,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except OctoprintException as err:
             _LOGGER.error("Failed to get an application key : %s", err)
             return self.async_show_progress_done(next_step_id="auth_failed")
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Failed to get an application key : %s", err)
+            return self.async_show_progress_done(next_step_id="auth_failed")
 
         return self.async_show_progress_done(next_step_id="finish")
 
     async def async_step_finish(self, user_input=None):
         """Finish the configuration setup."""
         user_input = user_input or self.user_input
-        error = None
+        session = async_get_clientsession(self.hass)
+        octoprint = OctoprintClient(
+            user_input[CONF_HOST],
+            session,
+            user_input[CONF_PORT],
+            user_input[CONF_SSL],
+            user_input[CONF_PATH],
+        )
+        octoprint.set_api_key(user_input[CONF_API_KEY])
 
         try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            error = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            error = "unknown"
-        else:
-            await self.async_set_unique_id(info["uuid"], raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=info["title"], data=user_input)
+            discovery = await octoprint.get_discovery_info()
+        except ApiError as err:
+            _LOGGER.exception("Failed to connect to printer: %r", err)
+            return self.async_abort(reason="cannot_connect")
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception: %r", err)
+            return self.async_abort(reason="unknown")
 
-        return self._create_setup_failure(user_input, error)
+        await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
     async def async_step_auth_failed(self, user_input):
         """Handle api fetch failure."""
-        return self._create_setup_failure(self.user_input, "auth_failed")
+        return self.async_abort(reason="auth_failed")
 
     async def async_step_import(self, user_input):
         """Handle import."""
@@ -180,18 +171,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     flow_id=self.flow_id, user_input=self.user_input
                 )
             )
-
-    def _create_setup_failure(self, user_input: dict, error_code: str):
-        data_schema = _schema_with_defaults(
-            username=user_input[CONF_USERNAME],
-            host=user_input[CONF_HOST],
-            port=user_input[CONF_PORT],
-            path=user_input[CONF_PATH],
-            ssl=user_input[CONF_SSL],
-        )
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors={"base": error_code}
-        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

@@ -4,7 +4,6 @@ from unittest.mock import patch
 from pyoctoprintapi import ApiError, DiscoverySettings
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.components.octoprint.config_flow import CannotConnect
 from homeassistant.components.octoprint.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -111,12 +110,12 @@ async def test_form_cannot_connect(hass):
     assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
-        side_effect=CannotConnect,
+        side_effect=ApiError,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_form_unknown_exception(hass):
@@ -152,8 +151,8 @@ async def test_form_unknown_exception(hass):
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
 
 
 async def test_show_zerconf_form(hass: HomeAssistant) -> None:
@@ -361,11 +360,7 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] == "progress_done"
-    with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "auth_failed"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "auth_failed"
