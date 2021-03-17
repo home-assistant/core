@@ -1,9 +1,11 @@
 """Support for esphome devices."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
 import math
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from aioesphomeapi import (
     APIClient,
@@ -155,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await cli.send_home_assistant_state(entity_id, new_state.state)
 
     async def _send_home_assistant_state(
-        entity_id: str, new_state: Optional[State]
+        entity_id: str, new_state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
         await cli.send_home_assistant_state(entity_id, new_state.state)
@@ -384,7 +386,7 @@ async def _register_service(
 
 
 async def _setup_services(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: List[UserService]
+    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: list[UserService]
 ):
     old_services = entry_data.services.copy()
     to_unregister = []
@@ -461,7 +463,7 @@ async def platform_async_setup_entry(
     entry_data.state[component_key] = {}
 
     @callback
-    def async_list_entities(infos: List[EntityInfo]):
+    def async_list_entities(infos: list[EntityInfo]):
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos = {}
@@ -535,7 +537,7 @@ def esphome_state_property(func):
 class EsphomeEnumMapper:
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], Dict[int, str]]):
+    def __init__(self, func: Callable[[], dict[int, str]]):
         """Construct a EsphomeEnumMapper."""
         self._func = func
 
@@ -549,7 +551,7 @@ class EsphomeEnumMapper:
         return inverse[value]
 
 
-def esphome_map_enum(func: Callable[[], Dict[int, str]]):
+def esphome_map_enum(func: Callable[[], dict[int, str]]):
     """Map esphome int enum values to hass string constants.
 
     This class has to be used as a decorator. This ensures the aioesphomeapi
@@ -621,7 +623,7 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.client
 
     @property
-    def _state(self) -> Optional[EntityState]:
+    def _state(self) -> EntityState | None:
         try:
             return self._entry_data.state[self._component_key][self._key]
         except KeyError:
@@ -640,14 +642,14 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.available
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique id identifying the entity."""
         if not self._static_info.unique_id:
             return None
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}

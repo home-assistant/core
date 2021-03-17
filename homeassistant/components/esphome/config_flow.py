@@ -1,6 +1,7 @@
 """Config flow to configure esphome component."""
+from __future__ import annotations
+
 from collections import OrderedDict
-from typing import Optional
 
 from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
@@ -23,12 +24,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._host: Optional[str] = None
-        self._port: Optional[int] = None
-        self._password: Optional[str] = None
+        self._host: str | None = None
+        self._port: int | None = None
+        self._password: str | None = None
 
     async def async_step_user(
-        self, user_input: Optional[ConfigType] = None, error: Optional[str] = None
+        self, user_input: ConfigType | None = None, error: str | None = None
     ):  # pylint: disable=arguments-differ
         """Handle a flow initialized by the user."""
         if user_input is not None:

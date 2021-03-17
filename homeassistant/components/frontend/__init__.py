@@ -1,10 +1,12 @@
 """Handle the frontend for Home Assistant."""
+from __future__ import annotations
+
 import json
 import logging
 import mimetypes
 import os
 import pathlib
-from typing import Any, Dict, Optional, Set, Tuple
+from typing import Any
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
@@ -119,19 +121,19 @@ class Panel:
     """Abstract class for panels."""
 
     # Name of the webcomponent
-    component_name: Optional[str] = None
+    component_name: str | None = None
 
     # Icon to show in the sidebar
-    sidebar_icon: Optional[str] = None
+    sidebar_icon: str | None = None
 
     # Title to show in the sidebar
-    sidebar_title: Optional[str] = None
+    sidebar_title: str | None = None
 
     # Url to show the panel in the frontend
-    frontend_url_path: Optional[str] = None
+    frontend_url_path: str | None = None
 
     # Config to pass to the webcomponent
-    config: Optional[Dict[str, Any]] = None
+    config: dict[str, Any] | None = None
 
     # If the panel should only be visible to admins
     require_admin = False
@@ -443,7 +445,7 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def resolve(
         self, request: web.Request
-    ) -> Tuple[Optional[web_urldispatcher.UrlMappingMatchInfo], Set[str]]:
+    ) -> tuple[web_urldispatcher.UrlMappingMatchInfo | None, set[str]]:
         """Resolve resource.
 
         Return (UrlMappingMatchInfo, allowed_methods) pair.

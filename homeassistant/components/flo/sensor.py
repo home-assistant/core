@@ -1,6 +1,5 @@
 """Support for Flo Water Monitor sensors."""
-
-from typing import List, Optional
+from __future__ import annotations
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -31,7 +30,7 @@ NAME_BATTERY = "Battery"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Flo sensors from config entry."""
-    devices: List[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
+    devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
     entities = []
@@ -71,7 +70,7 @@ class FloDailyUsageSensor(FloEntity):
         return WATER_ICON
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the current daily usage."""
         if self._device.consumption_today is None:
             return None
@@ -92,7 +91,7 @@ class FloSystemModeSensor(FloEntity):
         self._state: str = None
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the current system mode."""
         if not self._device.current_system_mode:
             return None
@@ -113,7 +112,7 @@ class FloCurrentFlowRateSensor(FloEntity):
         return GAUGE_ICON
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the current flow rate."""
         if self._device.current_flow_rate is None:
             return None
@@ -134,7 +133,7 @@ class FloTemperatureSensor(FloEntity):
         self._state: float = None
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the current temperature."""
         if self._device.temperature is None:
             return None
@@ -146,7 +145,7 @@ class FloTemperatureSensor(FloEntity):
         return TEMP_FAHRENHEIT
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class for this sensor."""
         return DEVICE_CLASS_TEMPERATURE
 
@@ -160,7 +159,7 @@ class FloHumiditySensor(FloEntity):
         self._state: float = None
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the current humidity."""
         if self._device.humidity is None:
             return None
@@ -172,7 +171,7 @@ class FloHumiditySensor(FloEntity):
         return PERCENTAGE
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class for this sensor."""
         return DEVICE_CLASS_HUMIDITY
 
@@ -186,7 +185,7 @@ class FloPressureSensor(FloEntity):
         self._state: float = None
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the current water pressure."""
         if self._device.current_psi is None:
             return None
@@ -198,7 +197,7 @@ class FloPressureSensor(FloEntity):
         return PRESSURE_PSI
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class for this sensor."""
         return DEVICE_CLASS_PRESSURE
 
@@ -212,7 +211,7 @@ class FloBatterySensor(FloEntity):
         self._state: float = None
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the current battery level."""
         return self._device.battery_level
 
@@ -222,6 +221,6 @@ class FloBatterySensor(FloEntity):
         return PERCENTAGE
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class for this sensor."""
         return DEVICE_CLASS_BATTERY

@@ -1,4 +1,6 @@
 """Allows the creation of a sensor that filters state property."""
+from __future__ import annotations
+
 from collections import Counter, deque
 from copy import copy
 from datetime import timedelta
@@ -6,7 +8,6 @@ from functools import partial
 import logging
 from numbers import Number
 import statistics
-from typing import Optional
 
 import voluptuous as vol
 
@@ -394,8 +395,8 @@ class Filter:
         self,
         name,
         window_size: int = 1,
-        precision: Optional[int] = None,
-        entity: Optional[str] = None,
+        precision: int | None = None,
+        entity: str | None = None,
     ):
         """Initialize common attributes.
 
@@ -463,9 +464,9 @@ class RangeFilter(Filter):
     def __init__(
         self,
         entity,
-        precision: Optional[int] = DEFAULT_PRECISION,
-        lower_bound: Optional[float] = None,
-        upper_bound: Optional[float] = None,
+        precision: int | None = DEFAULT_PRECISION,
+        lower_bound: float | None = None,
+        upper_bound: float | None = None,
     ):
         """Initialize Filter.
 

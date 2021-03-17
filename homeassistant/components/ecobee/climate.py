@@ -1,6 +1,7 @@
 """Support for Ecobee Thermostats."""
+from __future__ import annotations
+
 import collections
-from typing import Optional
 
 import voluptuous as vol
 
@@ -406,7 +407,7 @@ class Thermostat(ClimateEntity):
         )
 
     @property
-    def target_humidity(self) -> Optional[int]:
+    def target_humidity(self) -> int | None:
         """Return the desired humidity set point."""
         if self.has_humidifier_control:
             return self.thermostat["runtime"]["desiredHumidity"]
@@ -484,7 +485,7 @@ class Thermostat(ClimateEntity):
         return self._operation_list
 
     @property
-    def current_humidity(self) -> Optional[int]:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self.thermostat["runtime"]["actualHumidity"]
 
