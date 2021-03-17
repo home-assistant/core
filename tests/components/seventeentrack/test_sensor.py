@@ -172,7 +172,14 @@ async def test_invalid_config(hass):
 async def test_add_package(hass):
     """Ensure package is added correctly when user add a new package."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -181,7 +188,14 @@ async def test_add_package(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package2 = Package(
-        "789", 206, "friendly name 2", "info text 2", "location 2", "2020-08-10 14:25", 206, 2
+        "789",
+        206,
+        "friendly name 2",
+        "info text 2",
+        "location 2",
+        "2020-08-10 14:25",
+        206,
+        2,
     )
     ProfileMock.package_list = [package, package2]
 
@@ -194,10 +208,24 @@ async def test_add_package(hass):
 async def test_remove_package(hass):
     """Ensure entity is not there anymore if package is not there."""
     package1 = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     package2 = Package(
-        "789", 206, "friendly name 2", "info text 2", "location 2", "2020-08-10 14:25", 206, 2
+        "789",
+        206,
+        "friendly name 2",
+        "info text 2",
+        "location 2",
+        "2020-08-10 14:25",
+        206,
+        2,
     )
 
     ProfileMock.package_list = [package1, package2]
@@ -220,7 +248,14 @@ async def test_remove_package(hass):
 async def test_friendly_name_changed(hass):
     """Test friendly name change."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -230,7 +265,14 @@ async def test_friendly_name_changed(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package = Package(
-        "456", 206, "friendly name 2", "info text 1", "location 1", "2020-08-10 10:32", 206, 2
+        "456",
+        206,
+        "friendly name 2",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -247,7 +289,15 @@ async def test_friendly_name_changed(hass):
 async def test_delivered_not_shown(hass):
     """Ensure delivered packages are not shown."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2, 40
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        40,
     )
     ProfileMock.package_list = [package]
 
@@ -262,7 +312,15 @@ async def test_delivered_not_shown(hass):
 async def test_delivered_shown(hass):
     """Ensure delivered packages are show when user choose to show them."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2, 40
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        40,
     )
     ProfileMock.package_list = [package]
 
@@ -277,7 +335,14 @@ async def test_delivered_shown(hass):
 async def test_becomes_delivered_not_shown_notification(hass):
     """Ensure notification is triggered when package becomes delivered."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -287,7 +352,15 @@ async def test_becomes_delivered_not_shown_notification(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package_delivered = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", "2020-08-10 10:32", 206, 2, 40
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        40,
     )
     ProfileMock.package_list = [package_delivered]
 
