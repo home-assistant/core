@@ -4,10 +4,9 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock, patch
 
-from pytz import timezone
-
 from py17track.package import Package
 import pytest
+from pytz import timezone
 
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
