@@ -1,5 +1,6 @@
 """Config flow to configure the AIS SUPLA MQTT component."""
 
+from collections import OrderedDict
 import logging
 
 import aiohttp
@@ -123,4 +124,49 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return self.async_create_entry(
             title="SUPLA MQTT BRIDGE", data=self.bridge_config
+        )
+
+    # options step
+    async def async_step_broker(self, user_input=None):
+        """Manage the MQTT options."""
+        errors = {}
+        current_config = self.config_entry.data
+        if user_input is not None:
+            # can_connect = await self.hass.async_add_executor_job(
+            #     try_connection,
+            #     user_input[CONF_BROKER],
+            #     user_input[CONF_PORT],
+            #     user_input.get(CONF_USERNAME),
+            #     user_input.get(CONF_PASSWORD),
+            # )
+            #
+            # if can_connect:
+            #     self.broker_config.update(user_input)
+            #     return await self.async_step_options()
+
+            errors["base"] = "cannot_connect"
+
+        fields = OrderedDict()
+        # current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
+        # current_port = current_config.get(CONF_PORT, yaml_config.get(CONF_PORT))
+        # current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
+        # current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
+        # fields[vol.Required(CONF_BROKER, default=current_broker)] = str
+        # fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
+        # fields[
+        #     vol.Optional(
+        #         CONF_USERNAME,
+        #         description={"suggested_value": current_user},
+        #     )
+        # ] = str
+        # fields[
+        #     vol.Optional(
+        #         CONF_PASSWORD,
+        #         description={"suggested_value": current_pass},
+        #     )
+        # ] = str
+
+        return self.async_show_form(
+            step_id="broker",
+            errors=errors,
         )
