@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
@@ -124,7 +125,12 @@ class Device(CoordinatorEntity, LightEntity):
             payload["saturation"] = self._saturation
             payload["hue"] = self._hue
         payload = json.dumps(payload)
-        await put_state(self._api_key, self._uid, payload)
+        await put_state(
+            aiohttp_client.async_get_clientsession(self._hass),
+            self._api_key,
+            self._uid,
+            payload,
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
@@ -132,5 +138,10 @@ class Device(CoordinatorEntity, LightEntity):
         self._on = False
         payload = {"on": self._on}
         payload = json.dumps(payload)
-        await put_state(self._api_key, self._uid, payload)
+        await put_state(
+            aiohttp_client.async_get_clientsession(self._hass),
+            self._api_key,
+            self._uid,
+            payload,
+        )
         await self.coordinator.async_request_refresh()

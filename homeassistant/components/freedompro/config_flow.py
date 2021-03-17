@@ -3,6 +3,7 @@ from pyfreedompro import get_list
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .const import FREEDOMPRO_URL
@@ -21,7 +22,9 @@ class Hub:
 
     async def authenticate(self) -> bool:
         """Freedompro Hub class authenticate."""
-        result = await get_list(self._api_key)
+        result = await get_list(
+            aiohttp_client.async_get_clientsession(self._hass), self._api_key
+        )
         return result
 
 
