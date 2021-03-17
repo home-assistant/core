@@ -242,13 +242,6 @@ class MqttFan(MqttEntity, FanEntity):
         if not config[CONF_PRESET_MODES_LIST] and self._feature_preset_mode:
             self._feature_preset_mode = 0
             raise ValueError("No preset_modes configured, preset mode feature disabled")
-        if (
-            self._feature_speeds + self._feature_percentage + self._feature_preset_mode
-            > 1
-        ):
-            raise ValueError(
-                "Mix use of percentage / preset mode / speeds setting not allowed"
-            )
 
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
@@ -336,9 +329,6 @@ class MqttFan(MqttEntity, FanEntity):
             """Handle new received MQTT message for preset mode."""
             payload = self._templates[ATTR_PRESET_MODE](msg.payload)
             if payload in self.preset_modes:
-                self._percentage = ordered_list_item_to_percentage(
-                    self.preset_modes, payload
-                )
                 self._preset_mode = str(payload)
                 self._state = bool(self._percentage)
             else:

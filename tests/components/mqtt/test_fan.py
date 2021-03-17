@@ -50,8 +50,8 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_invalid_configuration_setup1(hass, mqtt_mock):
-    """Test invalid combination speed and percentage mode."""
+async def test_combined_configuration_setup1(hass, mqtt_mock):
+    """Test combination speed and percentage mode."""
     assert await async_setup_component(
         hass,
         fan.DOMAIN,
@@ -69,12 +69,11 @@ async def test_invalid_configuration_setup1(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    with pytest.raises(Exception):
-        assert state.state == STATE_OFF
+    assert state.state == STATE_OFF
 
 
-async def test_invalid_configuration_setup2(hass, mqtt_mock):
-    """Test invalid combination preset_mode and percentage mode."""
+async def test_combined_configuration_setup2(hass, mqtt_mock):
+    """Test combination preset_mode and percentage mode."""
     assert await async_setup_component(
         hass,
         fan.DOMAIN,
@@ -93,12 +92,11 @@ async def test_invalid_configuration_setup2(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    with pytest.raises(Exception):
-        assert state.state == STATE_OFF
+    assert state.state == STATE_OFF
 
 
-async def test_invalid_configuration_setup3(hass, mqtt_mock):
-    """Test invalid combination preset_mode without preset_modes set."""
+async def test_configuration_setup3(hass, mqtt_mock):
+    """Test preset_mode without preset_modes set."""
     assert await async_setup_component(
         hass,
         fan.DOMAIN,
@@ -435,12 +433,10 @@ async def test_preset_mode_controlling_state_via_topic_and_json_message(
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "mode1"}')
     state = hass.states.get("fan.test")
-    assert state.attributes.get("percentage") == 50
     assert state.attributes.get("preset_mode") == "mode1"
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "mode2"}')
     state = hass.states.get("fan.test")
-    assert state.attributes.get("percentage") == 100
     assert state.attributes.get("preset_mode") == "mode2"
 
 
