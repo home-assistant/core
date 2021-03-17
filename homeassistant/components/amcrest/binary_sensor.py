@@ -34,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
 _ONLINE_SCAN_INTERVAL = timedelta(seconds=60 - BINARY_SENSOR_SCAN_INTERVAL_SECS)
 
-
 BINARY_SENSOR_ALARM_TRIGGERED = "alarm_triggered"
 BINARY_SENSOR_AUDIO_DETECTED = "audio_detected"
 BINARY_SENSOR_AUDIO_DETECTED_POLLED = "audio_detected_polled"
