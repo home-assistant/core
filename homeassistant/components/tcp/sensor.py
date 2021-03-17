@@ -2,6 +2,7 @@
 import logging
 import select
 import socket
+import ssl
 
 import voluptuous as vol
 
@@ -14,6 +15,8 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -27,6 +30,8 @@ CONF_VALUE_ON = "value_on"
 DEFAULT_BUFFER_SIZE = 1024
 DEFAULT_NAME = "TCP Sensor"
 DEFAULT_TIMEOUT = 10
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,6 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_ON): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -72,6 +79,15 @@ class TcpSensor(Entity):
             CONF_VALUE_ON: config.get(CONF_VALUE_ON),
             CONF_BUFFER_SIZE: config.get(CONF_BUFFER_SIZE),
         }
+
+        if config.get(CONF_SSL):
+            self._ssl_context = ssl.create_default_context()
+            if not config.get(CONF_VERIFY_SSL):
+                self._ssl_context.check_hostname = False
+                self._ssl_context.verify_mode = ssl.CERT_NONE
+        else:
+            self._ssl_context = None
+
         self._state = None
         self.update()
 
@@ -104,6 +120,11 @@ class TcpSensor(Entity):
                     err,
                 )
                 return
+
+            if self._ssl_context is not None:
+                sock = self._ssl_context.wrap_socket(
+                    sock, server_hostname=self._config[CONF_HOST]
+                )
 
             try:
                 sock.send(self._config[CONF_PAYLOAD].encode())
