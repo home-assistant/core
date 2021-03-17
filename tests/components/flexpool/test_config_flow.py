@@ -58,7 +58,7 @@ async def test_form_invalid_address(hass):
 
 
 async def test_form_unknown_error(hass):
-    """Test we get the form with an invalid address."""
+    """Test validation with intentionally unknown error."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
