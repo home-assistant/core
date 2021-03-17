@@ -442,7 +442,8 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
         '    "sw":"1.2.3.4",'
-        '    "mf":"None"'
+        '    "mf":"None",'
+        '    "sa":"default_area"'
         "  }"
         "}"
     )

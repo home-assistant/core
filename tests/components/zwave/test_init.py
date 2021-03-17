@@ -18,8 +18,7 @@ from homeassistant.components.zwave import (
 )
 from homeassistant.components.zwave.binary_sensor import get_device
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import async_fire_time_changed, mock_registry
 from tests.mock.zwave import MockEntityValues, MockNetwork, MockNode, MockValue
@@ -243,7 +242,7 @@ async def test_device_entity(hass, mock_openzwave):
     assert not device.should_poll
     assert device.unique_id == "10-11"
     assert device.name == "Mock Node Sensor"
-    assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
+    assert device.extra_state_attributes[zwave.ATTR_POWER] == 50.123
 
 
 async def test_node_removed(hass, mock_openzwave):
@@ -472,8 +471,8 @@ async def test_value_entities(hass, mock_openzwave):
     assert hass.states.get("binary_sensor.mock_node_mock_value").state == "off"
     assert hass.states.get("binary_sensor.mock_node_mock_value_b").state == "off"
 
-    ent_reg = await async_get_registry(hass)
-    dev_reg = await get_dev_reg(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
 
     entry = ent_reg.async_get("zwave.mock_node")
     assert entry is not None

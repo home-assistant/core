@@ -162,6 +162,17 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
         )
         self._set_modes_and_presets()
+        self._supported_features = 0
+        if len(self._hvac_presets) > 1:
+            self._supported_features |= SUPPORT_PRESET_MODE
+        # If any setpoint value exists, we can assume temperature
+        # can be set
+        if any(self._setpoint_values.values()):
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE
+        if HVAC_MODE_HEAT_COOL in self.hvac_modes:
+            self._supported_features |= SUPPORT_TARGET_TEMPERATURE_RANGE
+        if self._fan_mode:
+            self._supported_features |= SUPPORT_FAN_MODE
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
@@ -259,7 +270,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[0])
-        except ValueError:
+        except (IndexError, ValueError):
             return None
         return temp.value if temp else None
 
@@ -271,14 +282,19 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         try:
             temp = self._setpoint_value(self._current_mode_setpoint_enums[1])
-        except ValueError:
+        except (IndexError, ValueError):
             return None
         return temp.value if temp else None
 
     @property
     def target_temperature_low(self) -> Optional[float]:
         """Return the lowbound target temperature we try to reach."""
-        return self.target_temperature
+        if self._current_mode and self._current_mode.value is None:
+            # guard missing value
+            return None
+        if len(self._current_mode_setpoint_enums) > 1:
+            return self.target_temperature
+        return None
 
     @property
     def preset_mode(self) -> Optional[str]:
@@ -288,7 +304,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             return None
         if self._current_mode and int(self._current_mode.value) not in THERMOSTAT_MODES:
             return_val: str = self._current_mode.metadata.states.get(
-                self._current_mode.value
+                str(self._current_mode.value)
             )
             return return_val
         return PRESET_NONE
@@ -317,7 +333,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         return None
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the optional state attributes."""
         if (
             self._fan_state
@@ -335,14 +351,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        support = SUPPORT_PRESET_MODE
-        if len(self._current_mode_setpoint_enums) == 1:
-            support |= SUPPORT_TARGET_TEMPERATURE
-        if len(self._current_mode_setpoint_enums) > 1:
-            support |= SUPPORT_TARGET_TEMPERATURE_RANGE
-        if self._fan_mode:
-            support |= SUPPORT_FAN_MODE
-        return support
+        return self._supported_features
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -364,7 +373,6 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        assert self.hass
         hvac_mode: Optional[str] = kwargs.get(ATTR_HVAC_MODE)
 
         if hvac_mode is not None:

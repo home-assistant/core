@@ -11,6 +11,10 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
@@ -41,6 +45,10 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
+LYRIC_HVAC_ACTION_OFF = "EquipmentOff"
+LYRIC_HVAC_ACTION_HEAT = "Heat"
+LYRIC_HVAC_ACTION_COOL = "Cool"
+
 LYRIC_HVAC_MODE_OFF = "Off"
 LYRIC_HVAC_MODE_HEAT = "Heat"
 LYRIC_HVAC_MODE_COOL = "Cool"
@@ -58,6 +66,12 @@ HVAC_MODES = {
     LYRIC_HVAC_MODE_HEAT: HVAC_MODE_HEAT,
     LYRIC_HVAC_MODE_COOL: HVAC_MODE_COOL,
     LYRIC_HVAC_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
+}
+
+HVAC_ACTIONS = {
+    LYRIC_HVAC_ACTION_OFF: CURRENT_HVAC_OFF,
+    LYRIC_HVAC_ACTION_HEAT: CURRENT_HVAC_HEAT,
+    LYRIC_HVAC_ACTION_COOL: CURRENT_HVAC_COOL,
 }
 
 SERVICE_HOLD_TIME = "set_hold_time"
@@ -151,6 +165,14 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
         return self.device.indoorTemperature
+
+    @property
+    def hvac_action(self) -> str:
+        """Return the current hvac action."""
+        action = HVAC_ACTIONS.get(self.device.operationStatus.mode, None)
+        if action == CURRENT_HVAC_OFF and self.hvac_mode != HVAC_MODE_OFF:
+            action = CURRENT_HVAC_IDLE
+        return action
 
     @property
     def hvac_mode(self) -> str:

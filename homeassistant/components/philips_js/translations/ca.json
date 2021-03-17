@@ -10,6 +10,13 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "Codi PIN"
+                },
+                "description": "Introdueix el PIN que apareix a la pantalla del televisor",
+                "title": "Emparellar"
+            },
             "user": {
                 "data": {
                     "api_version": "Versi\u00f3 de l'API",

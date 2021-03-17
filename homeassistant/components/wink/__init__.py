@@ -778,7 +778,7 @@ class WinkDevice(Entity):
         return self.wink.pubnub_channel is None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
         battery = self._battery_level
@@ -855,9 +855,9 @@ class WinkSirenDevice(WinkDevice):
         return "mdi:bell-ring"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
 
         auto_shutoff = self.wink.auto_shutoff()
         if auto_shutoff is not None:
@@ -913,9 +913,9 @@ class WinkNimbusDialDevice(WinkDevice):
         return f"{self.parent.name()} dial {self.wink.index() + 1}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         dial_attributes = self.dial_attributes()
 
         return {**attributes, **dial_attributes}

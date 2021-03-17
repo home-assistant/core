@@ -32,6 +32,7 @@ from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_SUFFIX = "entity_suffix"
+UPDATE_GROUP_FROM_CHILD_DELAY = 0.2
 
 
 class BaseZhaEntity(LogMixin, entity.Entity):
@@ -44,7 +45,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._should_poll: bool = False
         self._unique_id: str = unique_id
         self._state: Any = None
-        self._device_state_attributes: Dict[str, Any] = {}
+        self._extra_state_attributes: Dict[str, Any] = {}
         self._zha_device: ZhaDeviceType = zha_device
         self._unsubs: List[CALLABLE_T] = []
         self.remove_future: Awaitable[None] = None
@@ -65,9 +66,9 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         return self._zha_device
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return device specific state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @property
     def force_update(self) -> bool:
@@ -101,7 +102,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @callback
     def async_update_state_attribute(self, key: str, value: Any) -> None:
         """Update a single device state attribute."""
-        self._device_state_attributes.update({key: value})
+        self._extra_state_attributes.update({key: value})
         self.async_write_ha_state()
 
     @callback
@@ -267,7 +268,11 @@ class ZhaGroupEntity(BaseZhaEntity):
     @callback
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
-        self.async_schedule_update_ha_state(True)
+        # Delay to ensure that we get updates from all members before updating the group
+        self.hass.loop.call_later(
+            UPDATE_GROUP_FROM_CHILD_DELAY,
+            lambda: self.async_schedule_update_ha_state(True),
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""

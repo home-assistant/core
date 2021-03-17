@@ -2,7 +2,7 @@
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, Deque, Dict, Generator, List, Optional, Union, cast
+from typing import Any, Deque, Dict, Generator, List, Optional, Tuple, Union, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -11,12 +11,23 @@ import homeassistant.util.dt as dt_util
 class TraceElement:
     """Container for trace data."""
 
-    def __init__(self, variables: TemplateVarsType):
+    def __init__(self, variables: TemplateVarsType, path: str):
         """Container for trace data."""
         self._error: Optional[Exception] = None
+        self.path: str = path
         self._result: Optional[dict] = None
         self._timestamp = dt_util.utcnow()
-        self._variables = variables
+
+        if variables is None:
+            variables = {}
+        last_variables = variables_cv.get() or {}
+        variables_cv.set(dict(variables))
+        changed_variables = {
+            key: value
+            for key, value in variables.items()
+            if key not in last_variables or last_variables[key] != value
+        }
+        self._variables = changed_variables
 
     def __repr__(self) -> str:
         """Container for trace data."""
@@ -32,9 +43,9 @@ class TraceElement:
 
     def as_dict(self) -> Dict[str, Any]:
         """Return dictionary version of this TraceElement."""
-        result: Dict[str, Any] = {"timestamp": self._timestamp}
-        # Commented out because we get too many copies of the same data
-        # result["variables"] = self._variables
+        result: Dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
+        if self._variables:
+            result["changed_variables"] = self._variables
         if self._error is not None:
             result["error"] = str(self._error)
         if self._result is not None:
@@ -55,6 +66,22 @@ trace_stack_cv: ContextVar[Optional[List[TraceElement]]] = ContextVar(
 trace_path_stack_cv: ContextVar[Optional[List[str]]] = ContextVar(
     "trace_path_stack_cv", default=None
 )
+# Copy of last variables
+variables_cv: ContextVar[Optional[Any]] = ContextVar("variables_cv", default=None)
+# Automation ID + Run ID
+trace_id_cv: ContextVar[Optional[Tuple[str, str]]] = ContextVar(
+    "trace_id_cv", default=None
+)
+
+
+def trace_id_set(trace_id: Tuple[str, str]) -> None:
+    """Set id of the current trace."""
+    trace_id_cv.set(trace_id)
+
+
+def trace_id_get() -> Optional[Tuple[str, str]]:
+    """Get id if the current trace."""
+    return trace_id_cv.get()
 
 
 def trace_stack_push(trace_stack_var: ContextVar, node: Any) -> None:
@@ -103,10 +130,10 @@ def trace_path_get() -> str:
 
 def trace_append_element(
     trace_element: TraceElement,
-    path: str,
     maxlen: Optional[int] = None,
 ) -> None:
     """Append a TraceElement to trace[path]."""
+    path = trace_element.path
     trace = trace_cv.get()
     if trace is None:
         trace = {}
@@ -128,6 +155,7 @@ def trace_clear() -> None:
     trace_cv.set({})
     trace_stack_cv.set(None)
     trace_path_stack_cv.set(None)
+    variables_cv.set(None)
 
 
 def trace_set_result(**kwargs: Any) -> None:

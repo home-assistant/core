@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "\u76ee\u524d{entity_name}\u96fb\u91cf",
+            "is_carbon_dioxide": "\u76ee\u524d {entity_name} \u4e8c\u6c27\u5316\u78b3\u6fc3\u5ea6\u72c0\u614b",
+            "is_carbon_monoxide": "\u76ee\u524d {entity_name} \u4e00\u6c27\u5316\u78b3\u6fc3\u5ea6\u72c0\u614b",
             "is_current": "\u76ee\u524d{entity_name}\u96fb\u6d41",
             "is_energy": "\u76ee\u524d{entity_name}\u96fb\u529b",
             "is_humidity": "\u76ee\u524d{entity_name}\u6fd5\u5ea6",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "{entity_name}\u96fb\u91cf\u8b8a\u66f4",
+            "carbon_dioxide": "{entity_name} \u4e8c\u6c27\u5316\u78b3\u6fc3\u5ea6\u8b8a\u5316",
+            "carbon_monoxide": "{entity_name} \u4e00\u6c27\u5316\u78b3\u6fc3\u5ea6\u8b8a\u5316",
             "current": "\u76ee\u524d{entity_name}\u96fb\u6d41\u8b8a\u66f4",
             "energy": "\u76ee\u524d{entity_name}\u96fb\u529b\u8b8a\u66f4",
             "humidity": "{entity_name}\u6fd5\u5ea6\u8b8a\u66f4",

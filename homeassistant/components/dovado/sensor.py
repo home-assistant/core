@@ -105,6 +105,6 @@ class DovadoSensor(Entity):
         return SENSORS[self._sensor][2]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {k: v for k, v in self._data.state.items() if k not in ["date", "time"]}

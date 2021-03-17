@@ -23,7 +23,7 @@ from homeassistant.components.zwave_js.api import (
     VALUE,
 )
 from homeassistant.components.zwave_js.const import DOMAIN
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 
 
 async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
@@ -73,9 +73,13 @@ async def test_websocket_api(hass, integration, multisensor_6, hass_ws_client):
     assert len(result) == 61
     key = "52-112-0-2"
     assert result[key]["property"] == 2
+    assert result[key]["property_key"] is None
     assert result[key]["metadata"]["type"] == "number"
     assert result[key]["configuration_value_type"] == "enumerated"
     assert result[key]["metadata"]["states"]
+
+    key = "52-112-0-201-255"
+    assert result[key]["property_key"] == 255
 
     # Test getting non-existent node fails
     await ws_client.send_json(
@@ -197,7 +201,7 @@ async def test_remove_node(
     # Add mock node to controller
     client.driver.controller.nodes[67] = nortek_thermostat
 
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
 
     # Create device registry entry for mock node
     device = dev_reg.async_get_or_create(

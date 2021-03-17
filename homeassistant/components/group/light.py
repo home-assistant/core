@@ -88,8 +88,8 @@ class LightGroup(GroupEntity, light.LightEntity):
         self._brightness: Optional[int] = None
         self._hs_color: Optional[Tuple[float, float]] = None
         self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 154
-        self._max_mireds: Optional[int] = 500
+        self._min_mireds: int = 154
+        self._max_mireds: int = 500
         self._white_value: Optional[int] = None
         self._effect_list: Optional[List[str]] = None
         self._effect: Optional[str] = None
@@ -103,7 +103,6 @@ class LightGroup(GroupEntity, light.LightEntity):
             self.async_set_context(event.context)
             await self.async_defer_or_update_ha_state()
 
-        assert self.hass
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass, self._entity_ids, async_state_changed_listener
@@ -152,12 +151,12 @@ class LightGroup(GroupEntity, light.LightEntity):
         return self._color_temp
 
     @property
-    def min_mireds(self) -> Optional[int]:
+    def min_mireds(self) -> int:
         """Return the coldest color_temp that this light group supports."""
         return self._min_mireds
 
     @property
-    def max_mireds(self) -> Optional[int]:
+    def max_mireds(self) -> int:
         """Return the warmest color_temp that this light group supports."""
         return self._max_mireds
 
@@ -187,7 +186,7 @@ class LightGroup(GroupEntity, light.LightEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes for the light group."""
         return {ATTR_ENTITY_ID: self._entity_ids}
 

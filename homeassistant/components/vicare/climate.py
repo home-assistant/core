@@ -278,7 +278,7 @@ class ViCareClimate(ClimateEntity):
         self._api.activateProgram(vicare_program)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Show Device Attributes."""
         return self._attributes
 

@@ -6,7 +6,13 @@
         "step": {
             "geography": {
                 "data": {
-                    "api_key": "\u05de\u05e4\u05ea\u05d7 API"
+                    "api_key": "\u05de\u05e4\u05ea\u05d7 API",
+                    "longitude": "\u05e7\u05d5 \u05d0\u05d5\u05e8\u05da"
+                }
+            },
+            "node_pro": {
+                "data": {
+                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4"
                 }
             }
         }

@@ -89,10 +89,13 @@ class Entity(ABC):
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
-    entity_id = None  # type: str
+    entity_id: str = None  # type: ignore
 
     # Owning hass instance. Will be set by EntityPlatform
-    hass: Optional[HomeAssistant] = None
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
+    hass: HomeAssistant = None  # type: ignore
 
     # Owning platform instance. Will be set by EntityPlatform
     platform: Optional[EntityPlatform] = None
@@ -160,14 +163,23 @@ class Entity(ABC):
     def state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes.
 
-        Implemented by component base class. Convention for attribute names
-        is lowercase snake_case.
+        Implemented by component base class, should not be extended by integrations.
+        Convention for attribute names is lowercase snake_case.
         """
         return None
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return device specific state attributes.
+        """Return entity specific state attributes.
+
+        This method is deprecated, platform classes should implement
+        extra_state_attributes instead.
+        """
+        return None
+
+    @property
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return entity specific state attributes.
 
         Implemented by platform classes. Convention for attribute names
         is lowercase snake_case.
@@ -319,7 +331,12 @@ class Entity(ABC):
             sstate = self.state
             state = STATE_UNKNOWN if sstate is None else str(sstate)
             attr.update(self.state_attributes or {})
-            attr.update(self.device_state_attributes or {})
+            extra_state_attributes = self.extra_state_attributes
+            # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
+            # Add warning in 2021.6, remove in 2021.10
+            if extra_state_attributes is None:
+                extra_state_attributes = self.device_state_attributes
+            attr.update(extra_state_attributes or {})
 
         unit_of_measurement = self.unit_of_measurement
         if unit_of_measurement is not None:
@@ -377,7 +394,6 @@ class Entity(ABC):
             )
 
         # Overwrite properties that have been set in the config file.
-        assert self.hass is not None
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
@@ -418,7 +434,6 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        assert self.hass is not None
         self.hass.add_job(self.async_update_ha_state(force_refresh))  # type: ignore
 
     @callback
@@ -434,7 +449,6 @@ class Entity(ABC):
         been executed, the intermediate state transitions will be missed.
         """
         if force_refresh:
-            assert self.hass is not None
             self.hass.async_create_task(self.async_update_ha_state(force_refresh))
         else:
             self.async_write_ha_state()
@@ -518,7 +532,7 @@ class Entity(ABC):
     @callback
     def add_to_platform_abort(self) -> None:
         """Abort adding an entity to a platform."""
-        self.hass = None
+        self.hass = None  # type: ignore
         self.platform = None
         self.parallel_updates = None
         self._added = False
@@ -539,8 +553,6 @@ class Entity(ABC):
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
-        assert self.hass is not None
-
         if self.platform and not self._added:
             raise HomeAssistantError(
                 f"Entity {self.entity_id} async_remove called twice"
@@ -583,8 +595,6 @@ class Entity(ABC):
 
         Not to be extended by integrations.
         """
-        assert self.hass is not None
-
         if self.platform:
             info = {"domain": self.platform.platform_name}
 
@@ -614,7 +624,6 @@ class Entity(ABC):
         Not to be extended by integrations.
         """
         if self.platform:
-            assert self.hass is not None
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
     async def _async_registry_updated(self, event: Event) -> None:
@@ -628,7 +637,6 @@ class Entity(ABC):
         if data["action"] != "update":
             return
 
-        assert self.hass is not None
         ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
@@ -703,7 +711,6 @@ class ToggleEntity(Entity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -712,7 +719,6 @@ class ToggleEntity(Entity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:

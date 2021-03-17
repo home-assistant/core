@@ -506,7 +506,7 @@ class FibaroDevice(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {"fibaro_id": self.fibaro_device.id}
 

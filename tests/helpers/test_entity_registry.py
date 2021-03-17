@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
 from homeassistant.core import CoreState, callback, valid_entity_id
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import (
     MockConfigEntry,
@@ -32,7 +32,7 @@ def update_events(hass):
     def async_capture(event):
         events.append(event.data)
 
-    hass.bus.async_listen(entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, async_capture)
+    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, async_capture)
 
     return events
 
@@ -74,7 +74,7 @@ def test_get_or_create_updates_data(registry):
         capabilities={"max": 100},
         supported_features=5,
         device_class="mock-device-class",
-        disabled_by=entity_registry.DISABLED_HASS,
+        disabled_by=er.DISABLED_HASS,
         unit_of_measurement="initial-unit_of_measurement",
         original_name="initial-original_name",
         original_icon="initial-original_icon",
@@ -85,7 +85,7 @@ def test_get_or_create_updates_data(registry):
     assert orig_entry.capabilities == {"max": 100}
     assert orig_entry.supported_features == 5
     assert orig_entry.device_class == "mock-device-class"
-    assert orig_entry.disabled_by == entity_registry.DISABLED_HASS
+    assert orig_entry.disabled_by == er.DISABLED_HASS
     assert orig_entry.unit_of_measurement == "initial-unit_of_measurement"
     assert orig_entry.original_name == "initial-original_name"
     assert orig_entry.original_icon == "initial-original_icon"
@@ -101,7 +101,7 @@ def test_get_or_create_updates_data(registry):
         capabilities={"new-max": 100},
         supported_features=10,
         device_class="new-mock-device-class",
-        disabled_by=entity_registry.DISABLED_USER,
+        disabled_by=er.DISABLED_USER,
         unit_of_measurement="updated-unit_of_measurement",
         original_name="updated-original_name",
         original_icon="updated-original_icon",
@@ -116,7 +116,7 @@ def test_get_or_create_updates_data(registry):
     assert new_entry.original_name == "updated-original_name"
     assert new_entry.original_icon == "updated-original_icon"
     # Should not be updated
-    assert new_entry.disabled_by == entity_registry.DISABLED_HASS
+    assert new_entry.disabled_by == er.DISABLED_HASS
 
 
 def test_get_or_create_suggested_object_id_conflict_register(registry):
@@ -162,7 +162,7 @@ async def test_loading_saving_data(hass, registry):
         capabilities={"max": 100},
         supported_features=5,
         device_class="mock-device-class",
-        disabled_by=entity_registry.DISABLED_HASS,
+        disabled_by=er.DISABLED_HASS,
         original_name="Original Name",
         original_icon="hass:original-icon",
     )
@@ -173,7 +173,7 @@ async def test_loading_saving_data(hass, registry):
     assert len(registry.entities) == 2
 
     # Now load written data in new registry
-    registry2 = entity_registry.EntityRegistry(hass)
+    registry2 = er.EntityRegistry(hass)
     await flush_store(registry._store)
     await registry2.async_load()
 
@@ -187,7 +187,7 @@ async def test_loading_saving_data(hass, registry):
 
     assert new_entry2.device_id == "mock-dev-id"
     assert new_entry2.area_id == "mock-area-id"
-    assert new_entry2.disabled_by == entity_registry.DISABLED_HASS
+    assert new_entry2.disabled_by == er.DISABLED_HASS
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.supported_features == 5
     assert new_entry2.device_class == "mock-device-class"
@@ -220,8 +220,8 @@ def test_is_registered(registry):
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_extra_values(hass, hass_storage):
     """Test we load extra data from the registry."""
-    hass_storage[entity_registry.STORAGE_KEY] = {
-        "version": entity_registry.STORAGE_VERSION,
+    hass_storage[er.STORAGE_KEY] = {
+        "version": er.STORAGE_VERSION,
         "data": {
             "entities": [
                 {
@@ -257,8 +257,8 @@ async def test_loading_extra_values(hass, hass_storage):
         },
     }
 
-    await entity_registry.async_load(hass)
-    registry = entity_registry.async_get(hass)
+    await er.async_load(hass)
+    registry = er.async_get(hass)
 
     assert len(registry.entities) == 4
 
@@ -279,9 +279,9 @@ async def test_loading_extra_values(hass, hass_storage):
         "test", "super_platform", "disabled-user"
     )
     assert entry_disabled_hass.disabled
-    assert entry_disabled_hass.disabled_by == entity_registry.DISABLED_HASS
+    assert entry_disabled_hass.disabled_by == er.DISABLED_HASS
     assert entry_disabled_user.disabled
-    assert entry_disabled_user.disabled_by == entity_registry.DISABLED_USER
+    assert entry_disabled_user.disabled_by == er.DISABLED_USER
 
 
 def test_async_get_entity_id(registry):
@@ -367,8 +367,8 @@ async def test_migration(hass):
     with patch("os.path.isfile", return_value=True), patch("os.remove"), patch(
         "homeassistant.helpers.entity_registry.load_yaml", return_value=old_conf
     ):
-        await entity_registry.async_load(hass)
-        registry = entity_registry.async_get(hass)
+        await er.async_load(hass)
+        registry = er.async_get(hass)
 
     assert registry.async_is_registered("light.kitchen")
     entry = registry.async_get_or_create(
@@ -384,8 +384,8 @@ async def test_migration(hass):
 
 async def test_loading_invalid_entity_id(hass, hass_storage):
     """Test we autofix invalid entity IDs."""
-    hass_storage[entity_registry.STORAGE_KEY] = {
-        "version": entity_registry.STORAGE_VERSION,
+    hass_storage[er.STORAGE_KEY] = {
+        "version": er.STORAGE_VERSION,
         "data": {
             "entities": [
                 {
@@ -408,7 +408,7 @@ async def test_loading_invalid_entity_id(hass, hass_storage):
         },
     }
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     entity_invalid_middle = registry.async_get_or_create(
         "test", "super_platform", "id-invalid-middle"
@@ -479,7 +479,7 @@ async def test_update_entity(registry):
     for attr_name, new_value in (
         ("name", "new name"),
         ("icon", "new icon"),
-        ("disabled_by", entity_registry.DISABLED_USER),
+        ("disabled_by", er.DISABLED_USER),
     ):
         changes = {attr_name: new_value}
         updated_entry = registry.async_update_entity(entry.entity_id, **changes)
@@ -531,7 +531,7 @@ async def test_restore_states(hass):
     """Test restoring states."""
     hass.state = CoreState.not_running
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = er.async_get(hass)
 
     registry.async_get_or_create(
         "light",
@@ -545,7 +545,7 @@ async def test_restore_states(hass):
         "hue",
         "5678",
         suggested_object_id="disabled",
-        disabled_by=entity_registry.DISABLED_HASS,
+        disabled_by=er.DISABLED_HASS,
     )
     registry.async_get_or_create(
         "light",
@@ -597,7 +597,7 @@ async def test_async_get_device_class_lookup(hass):
     """Test registry device class lookup."""
     hass.state = CoreState.not_running
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = er.async_get(hass)
 
     ent_reg.async_get_or_create(
         "binary_sensor",
@@ -888,10 +888,10 @@ async def test_disabled_entities_excluded_from_entity_list(hass, registry):
         disabled_by="user",
     )
 
-    entries = entity_registry.async_entries_for_device(registry, device_entry.id)
+    entries = er.async_entries_for_device(registry, device_entry.id)
     assert entries == [entry1]
 
-    entries = entity_registry.async_entries_for_device(
+    entries = er.async_entries_for_device(
         registry, device_entry.id, include_disabled_entities=True
     )
     assert entries == [entry1, entry2]

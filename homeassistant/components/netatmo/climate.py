@@ -2,6 +2,7 @@
 import logging
 from typing import List, Optional
 
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -251,7 +252,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         """Handle webhook events."""
         data = event["data"]
 
-        if not data.get("home"):
+        if data.get("home") is None:
             return
 
         home = data["home"]
@@ -418,7 +419,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 
@@ -569,7 +570,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 schedule_id = sid
 
         if not schedule_id:
-            _LOGGER.error("You passed an invalid schedule")
+            _LOGGER.error(
+                "%s is not a invalid schedule", kwargs.get(ATTR_SCHEDULE_NAME)
+            )
             return
 
         self._data.switch_home_schedule(home_id=self._home_id, schedule_id=schedule_id)
@@ -586,7 +589,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return {**super().device_info, "suggested_area": self._room_data["name"]}
 
 
-def interpolate(batterylevel, module_type):
+def interpolate(batterylevel: int, module_type: str) -> int:
     """Interpolate battery level depending on device type."""
     na_battery_levels = {
         NA_THERM: {
@@ -628,7 +631,7 @@ def interpolate(batterylevel, module_type):
     return int(pct)
 
 
-def get_all_home_ids(home_data):
+def get_all_home_ids(home_data: pyatmo.HomeData) -> List[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
         return []

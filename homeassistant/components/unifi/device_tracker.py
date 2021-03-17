@@ -249,7 +249,7 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         return f"{self.client.mac}-{self.controller.site}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the client state attributes."""
         raw = self.client.raw
 
@@ -421,7 +421,7 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.device.state == 0:
             return {}
