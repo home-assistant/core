@@ -101,7 +101,10 @@ class ProfileMock:
         return self.__class__.login_result
 
     async def packages(
-        self, package_state: int | str = "", show_archived: bool = False
+        self,
+        package_state: Union[int, str] = "",
+        show_archived: bool = False,
+        tz: str = "UTC",
     ) -> list:
         """Packages mock."""
         return self.__class__.package_list[:]
