@@ -86,7 +86,8 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     @staticmethod
-    def _markets(marketscfg, markets, tickers, orderbook_tickers):
+    def _prep_markets(marketscfg, markets, tickers, orderbook_tickers):
+        """ Prepare markets data"""
 
         tickers_dict = {}
 
@@ -112,7 +113,8 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
         return tickers_dict
 
     @staticmethod
-    def _tickers(asset_currencies, tickers):
+    def _prep_tickers(asset_currencies, tickers):
+        """ Prepare tickers data"""
 
         asset_tickers_dict = {}
 
@@ -131,7 +133,8 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
         return asset_tickers_dict
 
     @staticmethod
-    def _balances(balances, tickers):
+    def _prep_balances(balances, tickers):
+        """ Prepare balances data"""
 
         balances_dict = {}
 
@@ -183,12 +186,14 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
             open_orders = await client.get_open_orders()
 
             result_dict = {
-                "tickers": self._markets(
+                "tickers": self._prep_markets(
                     self.markets, tickers, markets, orderbook_tickers
                 )
             }
-            result_dict["asset_tickers"] = self._tickers(self.asset_currencies, tickers)
-            result_dict["balances"] = self._balances(balances, tickers)
+            result_dict["asset_tickers"] = self._prep_tickers(
+                self.asset_currencies, tickers
+            )
+            result_dict["balances"] = self._prep_balances(balances, tickers)
 
             if open_orders:
                 result_dict["open_orders"] = open_orders
