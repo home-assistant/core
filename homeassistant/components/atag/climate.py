@@ -1,5 +1,5 @@
 """Initialization of ATAG One climate platform."""
-from typing import List, Optional
+from __future__ import annotations
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -43,46 +43,46 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         return SUPPORT_FLAGS
 
     @property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.climate.hvac_mode in HVAC_MODES:
             return self.coordinator.data.climate.hvac_mode
         return None
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return HVAC_MODES
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.data.climate.status
         return CURRENT_HVAC_HEAT if is_active else CURRENT_HVAC_IDLE
 
     @property
-    def temperature_unit(self) -> Optional[str]:
+    def temperature_unit(self) -> str | None:
         """Return the unit of measurement."""
         return self.coordinator.data.climate.temp_unit
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.data.climate.temperature
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.data.climate.target_temperature
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, manual, fireplace, extend, etc."""
         preset = self.coordinator.data.climate.preset_mode
         return PRESET_INVERTED.get(preset)
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return list(PRESET_MAP.keys())
 

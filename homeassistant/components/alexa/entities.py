@@ -1,6 +1,8 @@
 """Alexa entity adapters."""
+from __future__ import annotations
+
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -300,7 +302,7 @@ class AlexaEntity:
         Raises _UnsupportedInterface.
         """
 
-    def interfaces(self) -> List[AlexaCapability]:
+    def interfaces(self) -> list[AlexaCapability]:
         """Return a list of supported interfaces.
 
         Used for discovery. The list should contain AlexaInterface instances.
@@ -353,7 +355,7 @@ class AlexaEntity:
 
 
 @callback
-def async_get_entities(hass, config) -> List[AlexaEntity]:
+def async_get_entities(hass, config) -> list[AlexaEntity]:
     """Return all entities that are supported by Alexa."""
     entities = []
     for state in hass.states.async_all():

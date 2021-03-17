@@ -1,8 +1,9 @@
 """Provide animated GIF loops of Buienradar imagery."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 import aiohttp
 import voluptuous as vol
@@ -85,13 +86,13 @@ class BuienradarCam(Camera):
         # invariant: this condition is private to and owned by this instance.
         self._condition = asyncio.Condition()
 
-        self._last_image: Optional[bytes] = None
+        self._last_image: bytes | None = None
         # value of the last seen last modified header
-        self._last_modified: Optional[str] = None
+        self._last_modified: str | None = None
         # loading status
         self._loading = False
         # deadline for image refresh - self.delta after last successful load
-        self._deadline: Optional[datetime] = None
+        self._deadline: datetime | None = None
 
         self._unique_id = f"{self._dimension}_{self._country}"
 
@@ -140,7 +141,7 @@ class BuienradarCam(Camera):
             _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 
-    async def async_camera_image(self) -> Optional[bytes]:
+    async def async_camera_image(self) -> bytes | None:
         """
         Return a still image response from the camera.
 

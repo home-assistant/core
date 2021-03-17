@@ -1,6 +1,8 @@
 """Support for Azure DevOps."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from aioazuredevops.client import DevOpsClient
 import aiohttp
@@ -114,7 +116,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
     """Defines a Azure DevOps device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Azure DevOps instance."""
         return {
             "identifiers": {

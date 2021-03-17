@@ -1,6 +1,7 @@
 """Alexa capabilities."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     cover,
@@ -72,7 +73,7 @@ class AlexaCapability:
 
     supported_locales = {"en-US"}
 
-    def __init__(self, entity: State, instance: Optional[str] = None):
+    def __init__(self, entity: State, instance: str | None = None):
         """Initialize an Alexa capability."""
         self.entity = entity
         self.instance = instance
@@ -82,7 +83,7 @@ class AlexaCapability:
         raise NotImplementedError
 
     @staticmethod
-    def properties_supported() -> List[dict]:
+    def properties_supported() -> list[dict]:
         """Return what properties this entity supports."""
         return []
 
