@@ -113,9 +113,12 @@ class LitterRobotEntity(CoordinatorEntity):
         if parsed_time is None:
             return None
 
-        return time(
-            hour=parsed_time.hour,
-            minute=parsed_time.minute,
-            second=parsed_time.second,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
+        return (
+            dt_util.start_of_local_day()
+            .replace(
+                hour=parsed_time.hour,
+                minute=parsed_time.minute,
+                second=parsed_time.second,
+            )
+            .timetz()
         )
