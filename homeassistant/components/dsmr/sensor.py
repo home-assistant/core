@@ -1,10 +1,11 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
+from __future__ import annotations
+
 import asyncio
 from asyncio import CancelledError
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Dict
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -363,7 +364,7 @@ class DSMREntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._device_serial)},

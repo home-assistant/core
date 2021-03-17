@@ -1,5 +1,5 @@
 """Code to set up a device tracker platform using a config entry."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components import zone
 from homeassistant.const import (
@@ -18,7 +18,7 @@ from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, 
 
 async def async_setup_entry(hass, entry):
     """Set up an entry."""
-    component: Optional[EntityComponent] = hass.data.get(DOMAIN)
+    component: EntityComponent | None = hass.data.get(DOMAIN)
 
     if component is None:
         component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)

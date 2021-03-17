@@ -1,9 +1,10 @@
 """Support for DLNA DMR (Device Media Renderer)."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import functools
 import logging
-from typing import Optional
 
 import aiohttp
 from async_upnp_client import UpnpFactory
@@ -116,7 +117,7 @@ async def async_start_event_handler(
     server_host: str,
     server_port: int,
     requester,
-    callback_url_override: Optional[str] = None,
+    callback_url_override: str | None = None,
 ):
     """Register notify view."""
     hass_data = hass.data[DLNA_DMR_DATA]

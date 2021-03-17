@@ -1,5 +1,5 @@
 """Provides device automations for Climate."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -58,7 +58,7 @@ CURRENT_TRIGGER_SCHEMA = vol.All(
 TRIGGER_SCHEMA = vol.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Climate devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []

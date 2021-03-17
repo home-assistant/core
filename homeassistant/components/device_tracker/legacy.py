@@ -1,9 +1,11 @@
 """Legacy device tracker classes."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Sequence
 
 import attr
 import voluptuous as vol
@@ -205,7 +207,7 @@ class DeviceTrackerPlatform:
 
     name: str = attr.ib()
     platform: ModuleType = attr.ib()
-    config: Dict = attr.ib()
+    config: dict = attr.ib()
 
     @property
     def type(self):
@@ -285,7 +287,7 @@ async def async_extract_config(hass, config):
 
 async def async_create_platform_type(
     hass, config, p_type, p_config
-) -> Optional[DeviceTrackerPlatform]:
+) -> DeviceTrackerPlatform | None:
     """Determine type of platform."""
     platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
 
@@ -786,7 +788,7 @@ class DeviceScanner:
 
     hass: HomeAssistantType = None
 
-    def scan_devices(self) -> List[str]:
+    def scan_devices(self) -> list[str]:
         """Scan for devices."""
         raise NotImplementedError()
 

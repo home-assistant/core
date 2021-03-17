@@ -1,5 +1,7 @@
 """Support for the Dynalite devices as entities."""
-from typing import Any, Callable, Dict
+from __future__ import annotations
+
+from typing import Any, Callable
 
 from homeassistant.components.dynalite.bridge import DynaliteBridge
 from homeassistant.config_entries import ConfigEntry
@@ -58,7 +60,7 @@ class DynaliteBase(Entity):
         return self._device.available
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Device info for this entity."""
         return {
             "identifiers": {(DOMAIN, self._device.unique_id)},
