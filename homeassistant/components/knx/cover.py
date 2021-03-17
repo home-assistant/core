@@ -166,6 +166,5 @@ class KNXCover(KnxEntity, CoverEntity):
         """Call for the autoupdater."""
         self.async_write_ha_state()
         if self._device.position_reached():
+            self.hass.async_create_task(self._device.auto_stop_if_necessary())
             self.stop_auto_updater()
-
-        self.hass.add_job(self._device.auto_stop_if_necessary())
