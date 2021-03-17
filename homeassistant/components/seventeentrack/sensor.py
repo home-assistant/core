@@ -34,7 +34,6 @@ ATTR_TRACKING_NUMBER = "tracking_number"
 
 CONF_SHOW_ARCHIVED = "show_archived"
 CONF_SHOW_DELIVERED = "show_delivered"
-CONF_TIMEZONE = "timezone"
 
 DATA_PACKAGES = "package_data"
 DATA_SUMMARY = "summary_data"
@@ -60,7 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SHOW_ARCHIVED, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_DELIVERED, default=False): cv.boolean,
-        vol.Optional(CONF_TIMEZONE, default="UTC"): cv.string,
     }
 )
 
@@ -92,7 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scan_interval,
         config[CONF_SHOW_ARCHIVED],
         config[CONF_SHOW_DELIVERED],
-        config[CONF_TIMEZONE],
+        str(hass.config.time_zone),
     )
     await data.async_update()
 
