@@ -1,6 +1,7 @@
 """Code to handle a Pulse Hub."""
+from __future__ import annotations
+
 import asyncio
-from typing import Optional
 
 import aiopulse
 
@@ -17,7 +18,7 @@ class PulseHub:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.api: Optional[aiopulse.Hub] = None
+        self.api: aiopulse.Hub | None = None
         self.tasks = []
         self.current_rollers = {}
         self.cleanup_callbacks = []
