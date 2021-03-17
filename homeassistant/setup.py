@@ -1,9 +1,11 @@
 """All methods needed to bootstrap a Home Assistant instance."""
+from __future__ import annotations
+
 import asyncio
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Awaitable, Callable, Optional, Set
+from typing import Awaitable, Callable
 
 from homeassistant import config as conf_util, core, loader, requirements
 from homeassistant.config import async_notify_setup_error
@@ -26,7 +28,7 @@ SLOW_SETUP_MAX_WAIT = 300
 
 
 @core.callback
-def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: Set[str]) -> None:
+def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) -> None:
     """Set domains that are going to be loaded from the config.
 
     This will allow us to properly handle after_dependencies.
@@ -133,7 +135,7 @@ async def _async_setup_component(
     This method is a coroutine.
     """
 
-    def log_error(msg: str, link: Optional[str] = None) -> None:
+    def log_error(msg: str, link: str | None = None) -> None:
         """Log helper."""
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
         async_notify_setup_error(hass, domain, link)
@@ -268,7 +270,7 @@ async def _async_setup_component(
 
 async def async_prepare_setup_platform(
     hass: core.HomeAssistant, hass_config: ConfigType, domain: str, platform_name: str
-) -> Optional[ModuleType]:
+) -> ModuleType | None:
     """Load a platform and makes sure dependencies are setup.
 
     This method is a coroutine.
