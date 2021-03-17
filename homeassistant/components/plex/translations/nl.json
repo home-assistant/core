@@ -3,15 +3,15 @@
         "abort": {
             "all_configured": "Alle gekoppelde servers zijn al geconfigureerd",
             "already_configured": "Deze Plex-server is al geconfigureerd",
-            "already_in_progress": "Plex wordt geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "reauth_successful": "Herauthenticatie was succesvol",
             "token_request_timeout": "Time-out verkrijgen van token",
-            "unknown": "Mislukt om onbekende reden"
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "faulty_credentials": "Autorisatie mislukt",
+            "faulty_credentials": "Autorisatie mislukt, controleer token",
             "host_or_token": "Moet ten minste \u00e9\u00e9n host of token verstrekken.",
-            "no_servers": "Geen servers gekoppeld aan account",
+            "no_servers": "Geen servers gekoppeld aan Plex account",
             "not_found": "Plex-server niet gevonden",
             "ssl_error": "SSL-certificaatprobleem"
         },

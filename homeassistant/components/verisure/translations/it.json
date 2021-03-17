@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
+        },
+        "error": {
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "installation": {
+                "data": {
+                    "giid": "Installazione"
+                },
+                "description": "Home Assistant ha trovato pi\u00f9 installazioni Verisure nel tuo account My Pages. Per favore, seleziona l'installazione da aggiungere a Home Assistant."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Autenticati nuovamente con il tuo account Verisure My Pages.",
+                    "email": "E-mail",
+                    "password": "Password"
+                }
+            },
+            "user": {
+                "data": {
+                    "description": "Accedi con il tuo account Verisure My Pages.",
+                    "email": "E-mail",
+                    "password": "Password"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Il codice PIN predefinito non corrisponde al numero di cifre richiesto"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "lock_code_digits": "Numero di cifre nel codice PIN per le serrature",
+                    "lock_default_code": "Codice PIN predefinito per le serrature, utilizzato se non ne viene fornito nessuno"
+                }
+            }
+        }
+    }
+}

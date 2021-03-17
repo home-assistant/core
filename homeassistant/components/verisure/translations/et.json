@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kasutaja on juba seadistatud"
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
             "invalid_auth": "Vigane autentimine",
@@ -13,6 +14,13 @@
                     "giid": "Paigaldus"
                 },
                 "description": "Home Assistant leidis kontolt Minu lehed mitu Verisure paigaldust. Vali Home Assistantile lisatav paigaldus."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "description": "Taastuvasta oma Verisure My Pages'i kontoga.",
+                    "email": "E-posti aadress",
+                    "password": "Salas\u00f5na"
+                }
             },
             "user": {
                 "data": {

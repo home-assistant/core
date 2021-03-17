@@ -25,6 +25,7 @@
                 "title": "Gebruikersprofiel."
             },
             "reauth": {
+                "description": "Het \"{profile}\" profiel moet opnieuw worden geverifieerd om Withings gegevens te kunnen blijven ontvangen.",
                 "title": "Verifieer de integratie opnieuw"
             }
         }

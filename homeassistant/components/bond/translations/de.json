@@ -9,6 +9,11 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "confirm": {
+                "data": {
+                    "access_token": "Zugangstoken"
+                }
+            },
             "user": {
                 "data": {
                     "access_token": "Zugriffstoken",

@@ -5,6 +5,9 @@
         },
         "step": {
             "config": {
+                "data": {
+                    "discovery_prefix": "Discovery-onderwerpvoorvoegsel"
+                },
                 "description": "Vul de Tasmota gegevens in",
                 "title": "Tasmota"
             },

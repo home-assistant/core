@@ -12,6 +12,7 @@
             "user": {
                 "data": {
                     "password": "Passwort",
+                    "server": "Server",
                     "username": "Benutzername"
                 }
             }

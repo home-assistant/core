@@ -52,6 +52,7 @@
             },
             "public_weather_areas": {
                 "data": {
+                    "new_area": "Bereichsname",
                     "weather_areas": "Wettergebiete"
                 },
                 "description": "Konfiguriere \u00f6ffentliche Wettersensoren.",

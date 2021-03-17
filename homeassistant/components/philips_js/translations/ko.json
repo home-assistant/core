@@ -10,6 +10,11 @@
             "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN \ucf54\ub4dc"
+                }
+            },
             "user": {
                 "data": {
                     "api_version": "API \ubc84\uc804",

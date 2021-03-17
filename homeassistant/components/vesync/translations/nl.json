@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Wachtwoord",
-                    "username": "E-mailadres"
+                    "username": "E-mail"
                 },
                 "title": "Voer gebruikersnaam en wachtwoord in"
             }
