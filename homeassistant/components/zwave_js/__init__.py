@@ -5,7 +5,7 @@ from typing import Callable, List
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
-from zwave_js_server.model.node import Node as ZwaveNode, NodeStatus
+from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
 
@@ -106,10 +106,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_on_node_ready(node: ZwaveNode) -> None:
         """Handle node ready event."""
-        if node.status == NodeStatus.DEAD:
-            LOGGER.debug("Ignoring dead node %s", node)
-            return
-
         LOGGER.debug("Processing node %s", node)
 
         # register (or update) node in device registry

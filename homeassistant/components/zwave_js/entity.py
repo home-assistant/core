@@ -4,6 +4,7 @@ import logging
 from typing import List, Optional, Union
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.node import NodeStatus
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -138,7 +139,11 @@ class ZWaveBaseEntity(Entity):
     @property
     def available(self) -> bool:
         """Return entity availability."""
-        return self.client.connected and bool(self.info.node.ready)
+        return (
+            self.client.connected
+            and bool(self.info.node.ready)
+            and self.info.node.status != NodeStatus.DEAD
+        )
 
     @callback
     def _value_changed(self, event_data: dict) -> None:
