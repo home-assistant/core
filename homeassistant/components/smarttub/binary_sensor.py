@@ -1,5 +1,4 @@
 """Platform for binary sensor integration."""
-from datetime import datetime, timedelta
 import logging
 
 from smarttub import SpaReminder
@@ -83,12 +82,10 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
         return self.reminder.remaining_days == 0
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        when = datetime.now() + timedelta(days=self.reminder.remaining_days)
         return {
             ATTR_REMINDER_SNOOZED: self.reminder.snoozed,
-            ATTR_REMINDER_DATE: when.date().isoformat(),
         }
 
     @property
