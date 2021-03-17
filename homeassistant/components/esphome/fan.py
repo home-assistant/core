@@ -1,4 +1,5 @@
 """Support for ESPHome fans."""
+import math
 from typing import Optional
 
 from aioesphomeapi import FanDirection, FanInfo, FanSpeed, FanState
@@ -16,6 +17,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
 )
 
 from . import (
@@ -62,6 +65,11 @@ class EsphomeFan(EsphomeEntity, FanEntity):
     def _state(self) -> Optional[FanState]:
         return super()._state
 
+    @property
+    def _supports_speed_levels(self) -> bool:
+        api_version = self._client.api_version
+        return api_version.major == 1 and api_version.minor > 3
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -70,10 +78,17 @@ class EsphomeFan(EsphomeEntity, FanEntity):
 
         data = {"key": self._static_info.key, "state": True}
         if percentage is not None:
-            named_speed = percentage_to_ordered_list_item(
-                ORDERED_NAMED_FAN_SPEEDS, percentage
-            )
-            data["speed"] = named_speed
+            if self._supports_speed_levels:
+                data["speed_level"] = math.ceil(
+                    percentage_to_ranged_value(
+                        (1, self._static_info.supported_speed_levels), percentage
+                    )
+                )
+            else:
+                named_speed = percentage_to_ordered_list_item(
+                    ORDERED_NAMED_FAN_SPEEDS, percentage
+                )
+                data["speed"] = named_speed
         await self._client.fan_command(**data)
 
     async def async_turn_on(
@@ -115,14 +130,22 @@ class EsphomeFan(EsphomeEntity, FanEntity):
         """Return the current speed percentage."""
         if not self._static_info.supports_speed:
             return None
-        return ordered_list_item_to_percentage(
-            ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+
+        if not self._supports_speed_levels:
+            return ordered_list_item_to_percentage(
+                ORDERED_NAMED_FAN_SPEEDS, self._state.speed
+            )
+
+        return ranged_value_to_percentage(
+            (1, self._static_info.supported_speed_levels), self._state.speed_level
         )
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return len(ORDERED_NAMED_FAN_SPEEDS)
+        if not self._supports_speed_levels:
+            return len(ORDERED_NAMED_FAN_SPEEDS)
+        return self._static_info.supported_speed_levels
 
     @esphome_state_property
     def oscillating(self) -> None:
