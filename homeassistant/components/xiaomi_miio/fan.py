@@ -346,6 +346,8 @@ OPERATION_MODES_AIRPURIFIER_V3 = [
 ]
 OPERATION_MODES_AIRFRESH = ["Auto", "Silent", "Interval", "Low", "Middle", "Strong"]
 
+SPEED_AUTO = "auto"
+
 SUCCESS = ["ok"]
 
 FEATURE_SET_BUZZER = 1
@@ -1036,7 +1038,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         elif self._model in [MODEL_AIRHUMIDIFIER_CA4]:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA4
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA4
-            self._speed_list = [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+            self._speed_list = [SPEED_AUTO, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
@@ -1150,6 +1152,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
     """Representation of a Xiaomi Air Humidifier (MiOT protocol)."""
 
     MODE_MAPPING = {
+        AirhumidifierMiotOperationMode.Auto: SPEED_AUTO,
         AirhumidifierMiotOperationMode.Low: SPEED_LOW,
         AirhumidifierMiotOperationMode.Mid: SPEED_MEDIUM,
         AirhumidifierMiotOperationMode.High: SPEED_HIGH,
