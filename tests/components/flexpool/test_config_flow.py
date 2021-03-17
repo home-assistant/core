@@ -65,7 +65,7 @@ async def test_form_unknown_error(hass):
     )
 
     with patch(
-        "homeassistant.components.flexpool.validate_input",
+        "homeassistant.components.flexpool.config_flow.validate_input",
         side_effect=HomeAssistantError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
