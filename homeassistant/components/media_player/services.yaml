@@ -189,6 +189,7 @@ join:
   description:
     Group players together. Only works on platforms with support for player
     groups.
+  name: Join
   target:
   fields:
     group_members:
@@ -202,4 +203,5 @@ unjoin:
   description:
     Unjoin the player from a group. Only works on platforms with support for
     player groups.
+  name: Unjoin
   target:
