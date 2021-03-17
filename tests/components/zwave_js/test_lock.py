@@ -1,6 +1,7 @@
 """Test the Z-Wave JS lock platform."""
 from zwave_js_server.const import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.event import Event
+from zwave_js_server.model.node import NodeStatus
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -20,12 +21,6 @@ from homeassistant.const import (
 )
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY
-
-
-async def test_dead_node(hass, client, dead_node, integration):
-    """Test a dead lock entity is marked unavailable."""
-    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
-    assert state and state.state == STATE_UNAVAILABLE
 
 
 async def test_door_lock(hass, client, lock_schlage_be469, integration):
@@ -214,3 +209,16 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
         "value": 1,
     }
     assert args["value"] == 0
+
+    event = Event(
+        type="dead",
+        data={
+            "source": "node",
+            "event": "dead",
+            "nodeId": 20,
+        },
+    )
+    node.receive_event(event)
+
+    assert node.status == NodeStatus.DEAD
+    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE

@@ -306,12 +306,6 @@ def null_name_check_state_fixture():
     return json.loads(load_fixture("zwave_js/null_name_check_state.json"))
 
 
-@pytest.fixture(name="dead_node_state", scope="session")
-def dead_node_state_fixture():
-    """Load the dead node state fixture data."""
-    return json.loads(load_fixture("zwave_js/dead_node_state.json"))
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state):
     """Mock a client."""
@@ -520,14 +514,6 @@ def in_wall_smart_fan_control_fixture(client, in_wall_smart_fan_control_state):
 def null_name_check_fixture(client, null_name_check_state):
     """Mock a node with no name."""
     node = Node(client, copy.deepcopy(null_name_check_state))
-    client.driver.controller.nodes[node.node_id] = node
-    return node
-
-
-@pytest.fixture(name="dead_node")
-def dead_node_fixture(client, dead_node_state):
-    """Mock a dead node."""
-    node = Node(client, copy.deepcopy(dead_node_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
