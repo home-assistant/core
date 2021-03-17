@@ -1,6 +1,7 @@
 """InfluxDB component which allows you to get data from an Influx database."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 import voluptuous as vol
 
@@ -67,7 +68,7 @@ def _merge_connection_config_into_query(conf, query):
             query[key] = conf[key]
 
 
-def validate_query_format_for_version(conf: Dict) -> Dict:
+def validate_query_format_for_version(conf: dict) -> dict:
     """Ensure queries are provided in correct format based on API version."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_QUERIES_FLUX not in conf:

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 import voluptuous as vol
 
@@ -173,16 +172,16 @@ class InputTextStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_text))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return _cv_input_text({**data, **update_data})
@@ -191,14 +190,14 @@ class InputTextStorageCollection(collection.StorageCollection):
 class InputText(RestoreEntity):
     """Represent a text box."""
 
-    def __init__(self, config: typing.Dict):
+    def __init__(self, config: dict):
         """Initialize a text input."""
         self._config = config
         self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> InputText:
+    def from_yaml(cls, config: dict) -> InputText:
         """Return entity instance initialized from yaml storage."""
         input_text = cls(config)
         input_text.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -241,7 +240,7 @@ class InputText(RestoreEntity):
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def unique_id(self) -> typing.Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
@@ -282,7 +281,7 @@ class InputText(RestoreEntity):
         self._current_value = value
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: typing.Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()
