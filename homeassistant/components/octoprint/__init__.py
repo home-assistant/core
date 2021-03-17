@@ -3,10 +3,10 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from pyoctoprintapi import OctoprintClient, PrinterOffline
+from pyoctoprintapi import ApiError, OctoprintClient, PrinterOffline
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryNotReady
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
 
@@ -160,6 +160,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_refresh()
 
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
+
     hass.data[DOMAIN][entry.entry_id] = {"coordinator": coordinator, "client": client}
 
     for component in PLATFORMS:
@@ -204,12 +207,16 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=interval),
         )
         self._octoprint = octoprint
+        self._printer_offline = False
         self.data = {"printer": None, "job": None, "last_read_time": None}
 
     async def _async_update_data(self):
         """Update data via API."""
         printer = None
-        job = await self._octoprint.get_job_info()
+        try:
+            job = await self._octoprint.get_job_info()
+        except ApiError as err:
+            raise UpdateFailed(err) from err
 
         # If octoprint is on, but the printer is disconnected
         # printer will return a 409, so continue using the last
@@ -217,8 +224,12 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             printer = await self._octoprint.get_printer_info()
         except PrinterOffline:
-            _LOGGER.error("Unable to retrieve printer information: Printer offline")
+            if not self._printer_offline:
+                _LOGGER.error("Unable to retrieve printer information: Printer offline")
+            self._printer_offline = True
             if self.data and "printer" in self.data:
                 printer = self.data["printer"]
+        except ApiError as err:
+            raise UpdateFailed(err) from err
 
         return {"job": job, "printer": printer, "last_read_time": dt_util.utcnow()}
