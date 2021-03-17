@@ -1,7 +1,9 @@
 """Flo device object."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
@@ -26,8 +28,8 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         self._flo_location_id: str = location_id
         self._flo_device_id: str = device_id
         self._manufacturer: str = "Flo by Moen"
-        self._device_information: Optional[Dict[str, Any]] = None
-        self._water_usage: Optional[Dict[str, Any]] = None
+        self._device_information: dict[str, Any] | None = None
+        self._water_usage: dict[str, Any] | None = None
         super().__init__(
             hass,
             LOGGER,
