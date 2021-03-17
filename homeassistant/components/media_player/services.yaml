@@ -189,15 +189,11 @@ join:
   description:
     Group players together. Only works on platforms with support for player
     groups.
+  target:
   fields:
-    entity_id:
-      description:
-        The media player entity whose playback will be expanded to the players
-        specified in group_members.
-      example: "media_player.multiroom_player1"
     group_members:
       description:
-        The players which will be synced with the player from entity_id.
+        The players which will be synced with the target player.
       example:
         - "media_player.multiroom_player2"
         - "media_player.multiroom_player3"
@@ -206,8 +202,4 @@ unjoin:
   description:
     Unjoin the player from a group. Only works on platforms with support for
     player groups.
-  fields:
-    entity_id:
-      description:
-        Name(s) of entities that will be unjoined from their media player group.
-      example: "media_player.multiroom_player2"
+  target:
