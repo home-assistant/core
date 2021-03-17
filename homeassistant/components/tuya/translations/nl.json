@@ -27,11 +27,14 @@
             "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
+            "dev_multi_type": "Meerdere geselecteerde apparaten om te configureren moeten van hetzelfde type zijn",
+            "dev_not_config": "Apparaattype kan niet worden geconfigureerd",
             "dev_not_found": "Apparaat niet gevonden"
         },
         "step": {
             "device": {
                 "data": {
+                    "brightness_range_mode": "Helderheidsbereik gebruikt door apparaat",
                     "temp_step_override": "Doeltemperatuur stap"
                 },
                 "title": "Configureer Tuya Apparaat"
