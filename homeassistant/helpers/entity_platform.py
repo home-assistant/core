@@ -6,7 +6,7 @@ from contextvars import ContextVar
 from datetime import datetime, timedelta
 from logging import Logger
 from types import ModuleType
-from typing import TYPE_CHECKING, Callable, Coroutine, Dict, Iterable, List, Optional
+from typing import TYPE_CHECKING, Callable, Coroutine, Iterable
 
 from homeassistant import config_entries
 from homeassistant.const import ATTR_RESTORED, DEVICE_DEFAULT_NAME
@@ -49,9 +49,9 @@ class EntityPlatform:
         logger: Logger,
         domain: str,
         platform_name: str,
-        platform: Optional[ModuleType],
+        platform: ModuleType | None,
         scan_interval: timedelta,
-        entity_namespace: Optional[str],
+        entity_namespace: str | None,
     ):
         """Initialize the entity platform."""
         self.hass = hass
@@ -61,18 +61,18 @@ class EntityPlatform:
         self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
-        self.config_entry: Optional[config_entries.ConfigEntry] = None
-        self.entities: Dict[str, Entity] = {}
-        self._tasks: List[asyncio.Future] = []
+        self.config_entry: config_entries.ConfigEntry | None = None
+        self.entities: dict[str, Entity] = {}
+        self._tasks: list[asyncio.Future] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
         # Method to cancel the state change listener
-        self._async_unsub_polling: Optional[CALLBACK_TYPE] = None
+        self._async_unsub_polling: CALLBACK_TYPE | None = None
         # Method to cancel the retry of setup
-        self._async_cancel_retry_setup: Optional[CALLBACK_TYPE] = None
-        self._process_updates: Optional[asyncio.Lock] = None
+        self._async_cancel_retry_setup: CALLBACK_TYPE | None = None
+        self._process_updates: asyncio.Lock | None = None
 
-        self.parallel_updates: Optional[asyncio.Semaphore] = None
+        self.parallel_updates: asyncio.Semaphore | None = None
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
@@ -89,7 +89,7 @@ class EntityPlatform:
     @callback
     def _get_parallel_updates_semaphore(
         self, entity_has_async_update: bool
-    ) -> Optional[asyncio.Semaphore]:
+    ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
         Semaphore will be created on demand because we base it off if update method is async or not.
@@ -364,7 +364,7 @@ class EntityPlatform:
                 return
 
         requested_entity_id = None
-        suggested_object_id: Optional[str] = None
+        suggested_object_id: str | None = None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
@@ -378,7 +378,7 @@ class EntityPlatform:
                 suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
 
             if self.config_entry is not None:
-                config_entry_id: Optional[str] = self.config_entry.entry_id
+                config_entry_id: str | None = self.config_entry.entry_id
             else:
                 config_entry_id = None
 
@@ -408,7 +408,7 @@ class EntityPlatform:
                 if device:
                     device_id = device.id
 
-            disabled_by: Optional[str] = None
+            disabled_by: str | None = None
             if not entity.entity_registry_enabled_default:
                 disabled_by = DISABLED_INTEGRATION
 
@@ -550,7 +550,7 @@ class EntityPlatform:
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
-    ) -> List[Entity]:
+    ) -> list[Entity]:
         """Extract all known and available entities from a service call.
 
         Will return an empty list if entities specified but unknown.
@@ -621,7 +621,7 @@ class EntityPlatform:
                 await asyncio.gather(*tasks)
 
 
-current_platform: ContextVar[Optional[EntityPlatform]] = ContextVar(
+current_platform: ContextVar[EntityPlatform | None] = ContextVar(
     "current_platform", default=None
 )
 
@@ -629,7 +629,7 @@ current_platform: ContextVar[Optional[EntityPlatform]] = ContextVar(
 @callback
 def async_get_platforms(
     hass: HomeAssistantType, integration_name: str
-) -> List[EntityPlatform]:
+) -> list[EntityPlatform]:
     """Find existing platforms."""
     if (
         DATA_ENTITY_PLATFORM not in hass.data
@@ -637,6 +637,6 @@ def async_get_platforms(
     ):
         return []
 
-    platforms: List[EntityPlatform] = hass.data[DATA_ENTITY_PLATFORM][integration_name]
+    platforms: list[EntityPlatform] = hass.data[DATA_ENTITY_PLATFORM][integration_name]
 
     return platforms

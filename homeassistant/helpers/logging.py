@@ -1,7 +1,9 @@
 """Helpers for logging allowing more advanced logging styles to be used."""
+from __future__ import annotations
+
 import inspect
 import logging
-from typing import Any, Mapping, MutableMapping, Optional, Tuple
+from typing import Any, Mapping, MutableMapping
 
 
 class KeywordMessage:
@@ -26,7 +28,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
     """Represents an adapter wrapping the logger allowing KeywordMessages."""
 
     def __init__(
-        self, logger: logging.Logger, extra: Optional[Mapping[str, Any]] = None
+        self, logger: logging.Logger, extra: Mapping[str, Any] | None = None
     ) -> None:
         """Initialize a new StyleAdapter for the provided logger."""
         super().__init__(logger, extra or {})
@@ -41,7 +43,7 @@ class KeywordStyleAdapter(logging.LoggerAdapter):
 
     def process(
         self, msg: Any, kwargs: MutableMapping[str, Any]
-    ) -> Tuple[Any, MutableMapping[str, Any]]:
+    ) -> tuple[Any, MutableMapping[str, Any]]:
         """Process the keyword args in preparation for logging."""
         return (
             msg,

@@ -1,10 +1,12 @@
 """Helpers that help with state related things."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import datetime as dt
 import logging
 from types import ModuleType, TracebackType
-from typing import Any, Dict, Iterable, List, Optional, Type, Union
+from typing import Any, Iterable
 
 from homeassistant.components.sun import STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON
 from homeassistant.const import (
@@ -44,19 +46,19 @@ class AsyncTrackStates:
     def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize a TrackStates block."""
         self.hass = hass
-        self.states: List[State] = []
+        self.states: list[State] = []
 
     # pylint: disable=attribute-defined-outside-init
-    def __enter__(self) -> List[State]:
+    def __enter__(self) -> list[State]:
         """Record time from which to track changes."""
         self.now = dt_util.utcnow()
         return self.states
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
-        exc_value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """Add changes states to changes list."""
         self.states.extend(get_changed_since(self.hass.states.async_all(), self.now))
@@ -64,7 +66,7 @@ class AsyncTrackStates:
 
 def get_changed_since(
     states: Iterable[State], utc_point_in_time: dt.datetime
-) -> List[State]:
+) -> list[State]:
     """Return list of states that have been changed since utc_point_in_time.
 
     Deprecated. Remove after June 2021.
@@ -76,21 +78,21 @@ def get_changed_since(
 @bind_hass
 async def async_reproduce_state(
     hass: HomeAssistantType,
-    states: Union[State, Iterable[State]],
+    states: State | Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a list of states on multiple domains."""
     if isinstance(states, State):
         states = [states]
 
-    to_call: Dict[str, List[State]] = defaultdict(list)
+    to_call: dict[str, list[State]] = defaultdict(list)
 
     for state in states:
         to_call[state.domain].append(state)
 
-    async def worker(domain: str, states_by_domain: List[State]) -> None:
+    async def worker(domain: str, states_by_domain: list[State]) -> None:
         try:
             integration = await async_get_integration(hass, domain)
         except IntegrationNotFound:
@@ -100,7 +102,7 @@ async def async_reproduce_state(
             return
 
         try:
-            platform: Optional[ModuleType] = integration.get_platform("reproduce_state")
+            platform: ModuleType | None = integration.get_platform("reproduce_state")
         except ImportError:
             _LOGGER.warning("Integration %s does not support reproduce state", domain)
             return

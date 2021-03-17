@@ -5,7 +5,9 @@ There are two different types of discoveries that can be fired/listened for.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
-from typing import Any, Callable, Dict, Optional, TypedDict
+from __future__ import annotations
+
+from typing import Any, Callable, TypedDict
 
 from homeassistant import core, setup
 from homeassistant.core import CALLBACK_TYPE
@@ -26,8 +28,8 @@ class DiscoveryDict(TypedDict):
     """Discovery data."""
 
     service: str
-    platform: Optional[str]
-    discovered: Optional[DiscoveryInfoType]
+    platform: str | None
+    discovered: DiscoveryInfoType | None
 
 
 @core.callback
@@ -76,8 +78,8 @@ def discover(
 async def async_discover(
     hass: core.HomeAssistant,
     service: str,
-    discovered: Optional[DiscoveryInfoType],
-    component: Optional[str],
+    discovered: DiscoveryInfoType | None,
+    component: str | None,
     hass_config: ConfigType,
 ) -> None:
     """Fire discovery event. Can ensure a component is loaded."""
@@ -97,7 +99,7 @@ async def async_discover(
 def async_listen_platform(
     hass: core.HomeAssistant,
     component: str,
-    callback: Callable[[str, Optional[Dict[str, Any]]], Any],
+    callback: Callable[[str, dict[str, Any] | None], Any],
 ) -> None:
     """Register a platform loader listener.
 

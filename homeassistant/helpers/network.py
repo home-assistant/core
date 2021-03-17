@@ -1,6 +1,8 @@
 """Network helpers."""
+from __future__ import annotations
+
 from ipaddress import ip_address
-from typing import Optional, cast
+from typing import cast
 
 import yarl
 
@@ -117,7 +119,7 @@ def get_url(
     raise NoURLAvailableError
 
 
-def _get_request_host() -> Optional[str]:
+def _get_request_host() -> str | None:
     """Get the host address of the current request."""
     request = http.current_request.get()
     if request is None:

@@ -1,8 +1,10 @@
 """Helper for aiohttp webclient stuff."""
+from __future__ import annotations
+
 import asyncio
 from ssl import SSLContext
 import sys
-from typing import Any, Awaitable, Optional, Union, cast
+from typing import Any, Awaitable, cast
 
 import aiohttp
 from aiohttp import web
@@ -87,7 +89,7 @@ async def async_aiohttp_proxy_web(
     web_coro: Awaitable[aiohttp.ClientResponse],
     buffer_size: int = 102400,
     timeout: int = 10,
-) -> Optional[web.StreamResponse]:
+) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
         with async_timeout.timeout(timeout):
@@ -118,7 +120,7 @@ async def async_aiohttp_proxy_stream(
     hass: HomeAssistantType,
     request: web.BaseRequest,
     stream: aiohttp.StreamReader,
-    content_type: Optional[str],
+    content_type: str | None,
     buffer_size: int = 102400,
     timeout: int = 10,
 ) -> web.StreamResponse:
@@ -175,7 +177,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: Union[bool, SSLContext] = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.client_context()
     else:
         ssl_context = False
 

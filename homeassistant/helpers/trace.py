@@ -1,8 +1,10 @@
 """Helpers for script and condition tracing."""
+from __future__ import annotations
+
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, Deque, Dict, Generator, List, Optional, Tuple, Union, cast
+from typing import Any, Deque, Generator, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -13,9 +15,9 @@ class TraceElement:
 
     def __init__(self, variables: TemplateVarsType, path: str):
         """Container for trace data."""
-        self._error: Optional[Exception] = None
+        self._error: Exception | None = None
         self.path: str = path
-        self._result: Optional[dict] = None
+        self._result: dict | None = None
         self._timestamp = dt_util.utcnow()
 
         if variables is None:
@@ -41,9 +43,9 @@ class TraceElement:
         """Set result."""
         self._result = {**kwargs}
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this TraceElement."""
-        result: Dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
+        result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
         if self._variables:
             result["changed_variables"] = self._variables
         if self._error is not None:
@@ -55,31 +57,31 @@ class TraceElement:
 
 # Context variables for tracing
 # Current trace
-trace_cv: ContextVar[Optional[Dict[str, Deque[TraceElement]]]] = ContextVar(
+trace_cv: ContextVar[dict[str, Deque[TraceElement]] | None] = ContextVar(
     "trace_cv", default=None
 )
 # Stack of TraceElements
-trace_stack_cv: ContextVar[Optional[List[TraceElement]]] = ContextVar(
+trace_stack_cv: ContextVar[list[TraceElement] | None] = ContextVar(
     "trace_stack_cv", default=None
 )
 # Current location in config tree
-trace_path_stack_cv: ContextVar[Optional[List[str]]] = ContextVar(
+trace_path_stack_cv: ContextVar[list[str] | None] = ContextVar(
     "trace_path_stack_cv", default=None
 )
 # Copy of last variables
-variables_cv: ContextVar[Optional[Any]] = ContextVar("variables_cv", default=None)
+variables_cv: ContextVar[Any | None] = ContextVar("variables_cv", default=None)
 # Automation ID + Run ID
-trace_id_cv: ContextVar[Optional[Tuple[str, str]]] = ContextVar(
+trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "trace_id_cv", default=None
 )
 
 
-def trace_id_set(trace_id: Tuple[str, str]) -> None:
+def trace_id_set(trace_id: tuple[str, str]) -> None:
     """Set id of the current trace."""
     trace_id_cv.set(trace_id)
 
 
-def trace_id_get() -> Optional[Tuple[str, str]]:
+def trace_id_get() -> tuple[str, str] | None:
     """Get id if the current trace."""
     return trace_id_cv.get()
 
@@ -99,13 +101,13 @@ def trace_stack_pop(trace_stack_var: ContextVar) -> None:
     trace_stack.pop()
 
 
-def trace_stack_top(trace_stack_var: ContextVar) -> Optional[Any]:
+def trace_stack_top(trace_stack_var: ContextVar) -> Any | None:
     """Return the element at the top of a trace stack."""
     trace_stack = trace_stack_var.get()
     return trace_stack[-1] if trace_stack else None
 
 
-def trace_path_push(suffix: Union[str, List[str]]) -> int:
+def trace_path_push(suffix: str | list[str]) -> int:
     """Go deeper in the config tree."""
     if isinstance(suffix, str):
         suffix = [suffix]
@@ -130,7 +132,7 @@ def trace_path_get() -> str:
 
 def trace_append_element(
     trace_element: TraceElement,
-    maxlen: Optional[int] = None,
+    maxlen: int | None = None,
 ) -> None:
     """Append a TraceElement to trace[path]."""
     path = trace_element.path
@@ -143,7 +145,7 @@ def trace_append_element(
     trace[path].append(trace_element)
 
 
-def trace_get(clear: bool = True) -> Optional[Dict[str, Deque[TraceElement]]]:
+def trace_get(clear: bool = True) -> dict[str, Deque[TraceElement]] | None:
     """Return the current trace."""
     if clear:
         trace_clear()
@@ -165,7 +167,7 @@ def trace_set_result(**kwargs: Any) -> None:
 
 
 @contextmanager
-def trace_path(suffix: Union[str, List[str]]) -> Generator:
+def trace_path(suffix: str | list[str]) -> Generator:
     """Go deeper in the config tree."""
     count = trace_path_push(suffix)
     try:

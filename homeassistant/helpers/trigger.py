@@ -1,8 +1,10 @@
 """Triggers."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable
 
 import voluptuous as vol
 
@@ -39,8 +41,8 @@ async def _async_get_trigger_platform(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistantType, trigger_config: List[ConfigType]
-) -> List[ConfigType]:
+    hass: HomeAssistantType, trigger_config: list[ConfigType]
+) -> list[ConfigType]:
     """Validate triggers."""
     config = []
     for conf in trigger_config:
@@ -55,14 +57,14 @@ async def async_validate_trigger_config(
 
 async def async_initialize_triggers(
     hass: HomeAssistantType,
-    trigger_config: List[ConfigType],
+    trigger_config: list[ConfigType],
     action: Callable,
     domain: str,
     name: str,
     log_cb: Callable,
     home_assistant_start: bool = False,
-    variables: Optional[Union[Dict[str, Any], MappingProxyType]] = None,
-) -> Optional[CALLBACK_TYPE]:
+    variables: dict[str, Any] | MappingProxyType | None = None,
+) -> CALLBACK_TYPE | None:
     """Initialize triggers."""
     info = {
         "domain": domain,

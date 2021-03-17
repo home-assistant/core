@@ -1,5 +1,7 @@
 """Helpers for data entry flows for config entries."""
-from typing import Any, Awaitable, Callable, Dict, Optional, Union
+from __future__ import annotations
+
+from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
 
@@ -27,8 +29,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -38,8 +40,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return await self.async_step_confirm()
 
     async def async_step_confirm(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Confirm setup."""
         if user_input is None:
             self._set_confirm_only()
@@ -68,8 +70,8 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         return self.async_create_entry(title=self._title, data={})
 
     async def async_step_discovery(
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, discovery_info: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -84,7 +86,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
     async_step_homekit = async_step_discovery
     async_step_dhcp = async_step_discovery
 
-    async def async_step_import(self, _: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    async def async_step_import(self, _: dict[str, Any] | None) -> dict[str, Any]:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -133,8 +135,8 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         self._allow_multiple = allow_multiple
 
     async def async_step_user(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
