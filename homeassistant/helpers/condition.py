@@ -1,4 +1,6 @@
 """Offer reusable conditions."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from contextlib import contextmanager
@@ -7,7 +9,7 @@ import functools as ft
 import logging
 import re
 import sys
-from typing import Any, Callable, Container, Generator, List, Optional, Set, Union, cast
+from typing import Any, Callable, Container, Generator, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
@@ -124,7 +126,7 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
 
 async def async_from_config(
     hass: HomeAssistant,
-    config: Union[ConfigType, Template],
+    config: ConfigType | Template,
     config_validation: bool = True,
 ) -> ConditionCheckerType:
     """Turn a condition configuration into a method.
@@ -267,10 +269,10 @@ async def async_not_from_config(
 
 def numeric_state(
     hass: HomeAssistant,
-    entity: Union[None, str, State],
-    below: Optional[Union[float, str]] = None,
-    above: Optional[Union[float, str]] = None,
-    value_template: Optional[Template] = None,
+    entity: None | str | State,
+    below: float | str | None = None,
+    above: float | str | None = None,
+    value_template: Template | None = None,
     variables: TemplateVarsType = None,
 ) -> bool:
     """Test a numeric state condition."""
@@ -288,12 +290,12 @@ def numeric_state(
 
 def async_numeric_state(
     hass: HomeAssistant,
-    entity: Union[None, str, State],
-    below: Optional[Union[float, str]] = None,
-    above: Optional[Union[float, str]] = None,
-    value_template: Optional[Template] = None,
+    entity: None | str | State,
+    below: float | str | None = None,
+    above: float | str | None = None,
+    value_template: Template | None = None,
     variables: TemplateVarsType = None,
-    attribute: Optional[str] = None,
+    attribute: str | None = None,
 ) -> bool:
     """Test a numeric state condition."""
     if entity is None:
@@ -456,10 +458,10 @@ def async_numeric_state_from_config(
 
 def state(
     hass: HomeAssistant,
-    entity: Union[None, str, State],
+    entity: None | str | State,
     req_state: Any,
-    for_period: Optional[timedelta] = None,
-    attribute: Optional[str] = None,
+    for_period: timedelta | None = None,
+    attribute: str | None = None,
 ) -> bool:
     """Test if state matches requirements.
 
@@ -526,7 +528,7 @@ def state_from_config(
     if config_validation:
         config = cv.STATE_CONDITION_SCHEMA(config)
     entity_ids = config.get(CONF_ENTITY_ID, [])
-    req_states: Union[str, List[str]] = config.get(CONF_STATE, [])
+    req_states: str | list[str] = config.get(CONF_STATE, [])
     for_period = config.get("for")
     attribute = config.get(CONF_ATTRIBUTE)
 
@@ -560,10 +562,10 @@ def state_from_config(
 
 def sun(
     hass: HomeAssistant,
-    before: Optional[str] = None,
-    after: Optional[str] = None,
-    before_offset: Optional[timedelta] = None,
-    after_offset: Optional[timedelta] = None,
+    before: str | None = None,
+    after: str | None = None,
+    before_offset: timedelta | None = None,
+    after_offset: timedelta | None = None,
 ) -> bool:
     """Test if current time matches sun requirements."""
     utcnow = dt_util.utcnow()
@@ -673,9 +675,9 @@ def async_template_from_config(
 
 def time(
     hass: HomeAssistant,
-    before: Optional[Union[dt_util.dt.time, str]] = None,
-    after: Optional[Union[dt_util.dt.time, str]] = None,
-    weekday: Union[None, str, Container[str]] = None,
+    before: dt_util.dt.time | str | None = None,
+    after: dt_util.dt.time | str | None = None,
+    weekday: None | str | Container[str] = None,
 ) -> bool:
     """Test if local time condition matches.
 
@@ -752,8 +754,8 @@ def time_from_config(
 
 def zone(
     hass: HomeAssistant,
-    zone_ent: Union[None, str, State],
-    entity: Union[None, str, State],
+    zone_ent: None | str | State,
+    entity: None | str | State,
 ) -> bool:
     """Test if zone-condition matches.
 
@@ -858,8 +860,8 @@ async def async_device_from_config(
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: Union[ConfigType, Template]
-) -> Union[ConfigType, Template]:
+    hass: HomeAssistant, config: ConfigType | Template
+) -> ConfigType | Template:
     """Validate config."""
     if isinstance(config, Template):
         return config
@@ -884,9 +886,9 @@ async def async_validate_condition_config(
 
 
 @callback
-def async_extract_entities(config: Union[ConfigType, Template]) -> Set[str]:
+def async_extract_entities(config: ConfigType | Template) -> set[str]:
     """Extract entities from a condition."""
-    referenced: Set[str] = set()
+    referenced: set[str] = set()
     to_process = deque([config])
 
     while to_process:
@@ -912,7 +914,7 @@ def async_extract_entities(config: Union[ConfigType, Template]) -> Set[str]:
 
 
 @callback
-def async_extract_devices(config: Union[ConfigType, Template]) -> Set[str]:
+def async_extract_devices(config: ConfigType | Template) -> set[str]:
     """Extract devices from a condition."""
     referenced = set()
     to_process = deque([config])

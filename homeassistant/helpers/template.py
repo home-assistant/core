@@ -13,7 +13,7 @@ import math
 from operator import attrgetter
 import random
 import re
-from typing import Any, Dict, Generator, Iterable, Optional, Type, Union, cast
+from typing import Any, Generator, Iterable, cast
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -125,7 +125,7 @@ def is_template_string(maybe_template: str) -> bool:
 class ResultWrapper:
     """Result wrapper class to store render result."""
 
-    render_result: Optional[str]
+    render_result: str | None
 
 
 def gen_result_wrapper(kls):
@@ -134,7 +134,7 @@ def gen_result_wrapper(kls):
     class Wrapper(kls, ResultWrapper):
         """Wrapper of a kls that can store render_result."""
 
-        def __init__(self, *args: tuple, render_result: Optional[str] = None) -> None:
+        def __init__(self, *args: tuple, render_result: str | None = None) -> None:
             super().__init__(*args)
             self.render_result = render_result
 
@@ -156,15 +156,13 @@ class TupleWrapper(tuple, ResultWrapper):
 
     # This is all magic to be allowed to subclass a tuple.
 
-    def __new__(
-        cls, value: tuple, *, render_result: Optional[str] = None
-    ) -> TupleWrapper:
+    def __new__(cls, value: tuple, *, render_result: str | None = None) -> TupleWrapper:
         """Create a new tuple class."""
         return super().__new__(cls, tuple(value))
 
     # pylint: disable=super-init-not-called
 
-    def __init__(self, value: tuple, *, render_result: Optional[str] = None):
+    def __init__(self, value: tuple, *, render_result: str | None = None):
         """Initialize a new tuple class."""
         self.render_result = render_result
 
@@ -176,7 +174,7 @@ class TupleWrapper(tuple, ResultWrapper):
         return self.render_result
 
 
-RESULT_WRAPPERS: Dict[Type, Type] = {
+RESULT_WRAPPERS: dict[type, type] = {
     kls: gen_result_wrapper(kls)  # type: ignore[no-untyped-call]
     for kls in (list, dict, set)
 }
@@ -200,15 +198,15 @@ class RenderInfo:
         # Will be set sensibly once frozen.
         self.filter_lifecycle = _true
         self.filter = _true
-        self._result: Optional[str] = None
+        self._result: str | None = None
         self.is_static = False
-        self.exception: Optional[TemplateError] = None
+        self.exception: TemplateError | None = None
         self.all_states = False
         self.all_states_lifecycle = False
         self.domains = set()
         self.domains_lifecycle = set()
         self.entities = set()
-        self.rate_limit: Optional[timedelta] = None
+        self.rate_limit: timedelta | None = None
         self.has_time = False
 
     def __repr__(self) -> str:
@@ -294,7 +292,7 @@ class Template:
 
         self.template: str = template.strip()
         self._compiled_code = None
-        self._compiled: Optional[Template] = None
+        self._compiled: Template | None = None
         self.hass = hass
         self.is_static = not is_template_string(template)
         self._limited = None
@@ -304,7 +302,7 @@ class Template:
         if self.hass is None:
             return _NO_HASS_ENV
         wanted_env = _ENVIRONMENT_LIMITED if self._limited else _ENVIRONMENT
-        ret: Optional[TemplateEnvironment] = self.hass.data.get(wanted_env)
+        ret: TemplateEnvironment | None = self.hass.data.get(wanted_env)
         if ret is None:
             ret = self.hass.data[wanted_env] = TemplateEnvironment(self.hass, self._limited)  # type: ignore[no-untyped-call]
         return ret
@@ -776,7 +774,7 @@ def _collect_state(hass: HomeAssistantType, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generator:
+def _state_generator(hass: HomeAssistantType, domain: str | None) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
         yield TemplateState(hass, state, collect=False)
@@ -784,20 +782,20 @@ def _state_generator(hass: HomeAssistantType, domain: Optional[str]) -> Generato
 
 def _get_state_if_valid(
     hass: HomeAssistantType, entity_id: str
-) -> Optional[TemplateState]:
+) -> TemplateState | None:
     state = hass.states.get(entity_id)
     if state is None and not valid_entity_id(entity_id):
         raise TemplateError(f"Invalid entity ID '{entity_id}'")  # type: ignore
     return _get_template_state_from_state(hass, entity_id, state)
 
 
-def _get_state(hass: HomeAssistantType, entity_id: str) -> Optional[TemplateState]:
+def _get_state(hass: HomeAssistantType, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
 def _get_template_state_from_state(
-    hass: HomeAssistantType, entity_id: str, state: Optional[State]
-) -> Optional[TemplateState]:
+    hass: HomeAssistantType, entity_id: str, state: State | None
+) -> TemplateState | None:
     if state is None:
         # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.
@@ -808,7 +806,7 @@ def _get_template_state_from_state(
 
 def _resolve_state(
     hass: HomeAssistantType, entity_id_or_state: Any
-) -> Union[State, TemplateState, None]:
+) -> State | TemplateState | None:
     """Return state or entity_id if given."""
     if isinstance(entity_id_or_state, State):
         return entity_id_or_state
@@ -817,7 +815,7 @@ def _resolve_state(
     return None
 
 
-def result_as_boolean(template_result: Optional[str]) -> bool:
+def result_as_boolean(template_result: str | None) -> bool:
     """Convert the template result to a boolean.
 
     True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
