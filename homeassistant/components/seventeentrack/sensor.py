@@ -287,7 +287,13 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-        self, client, async_add_entities, scan_interval, show_archived, show_delivered, timezone
+        self,
+        client,
+        async_add_entities,
+        scan_interval,
+        show_archived,
+        show_delivered,
+        timezone
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -308,8 +314,7 @@ class SeventeenTrackData:
 
         try:
             packages = await self._client.profile.packages(
-                show_archived=self._show_archived,
-                tz=self.timezone
+                show_archived=self._show_archived, tz=self.timezone
             )
             _LOGGER.debug("New package data received: %s", packages)
 
