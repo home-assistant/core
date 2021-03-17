@@ -1,5 +1,7 @@
 """Example auth module."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -28,7 +30,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     DEFAULT_TITLE = "Insecure Personal Identify Number"
 
-    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._data = config["data"]
@@ -80,7 +82,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
                 return True
         return False
 
-    async def async_validate(self, user_id: str, user_input: Dict[str, Any]) -> bool:
+    async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
         for data in self._data:
             if data["user_id"] == user_id:
