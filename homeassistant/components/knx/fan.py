@@ -1,11 +1,18 @@
 """Support for KNX/IP fans."""
+from __future__ import annotations
+
 import math
-from typing import Any, Optional
+from typing import Any, Callable
 
 from xknx.devices import Fan as XknxFan
 from xknx.devices.fan import FanSpeedMode
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    HomeAssistantType,
+)
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -18,7 +25,12 @@ from .knx_entity import KnxEntity
 DEFAULT_PERCENTAGE = 50
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities: Callable,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up fans for KNX platform."""
     entities = []
     for device in hass.data[DOMAIN].xknx.devices:
@@ -32,16 +44,19 @@ class KNXFan(KnxEntity, FanEntity):
 
     def __init__(self, device: XknxFan):
         """Initialize of KNX fan."""
+        self._device: XknxFan
         super().__init__(device)
 
+        self._step_range: tuple[int, int] | None
         if self._device.mode == FanSpeedMode.STEP:
+            assert device.max_step is not None
             self._step_range = (1, device.max_step)
         else:
             self._step_range = None
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if self._device.mode == FanSpeedMode.STEP:
+        if self._step_range:  # FanSpeedMode.STEP
             step = math.ceil(percentage_to_ranged_value(self._step_range, percentage))
             await self._device.set_speed(step)
         else:
@@ -58,12 +73,12 @@ class KNXFan(KnxEntity, FanEntity):
         return flags
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if self._device.current_speed is None:
             return None
 
-        if self._device.mode == FanSpeedMode.STEP:
+        if self._step_range:  # FanSpeedMode.STEP
             return ranged_value_to_percentage(
                 self._step_range, self._device.current_speed
             )
@@ -78,10 +93,10 @@ class KNXFan(KnxEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
-        **kwargs,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         if percentage is None:
@@ -98,6 +113,6 @@ class KNXFan(KnxEntity, FanEntity):
         await self._device.set_oscillation(oscillating)
 
     @property
-    def oscillating(self):
+    def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._device.current_oscillation
