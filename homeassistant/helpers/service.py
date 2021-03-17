@@ -10,14 +10,9 @@ from typing import (
     Any,
     Awaitable,
     Callable,
-    Dict,
     Iterable,
-    List,
-    Optional,
-    Set,
     Tuple,
     TypedDict,
-    Union,
     cast,
 )
 
@@ -79,8 +74,8 @@ class ServiceParams(TypedDict):
 
     domain: str
     service: str
-    service_data: Dict[str, Any]
-    target: Optional[Dict]
+    service_data: dict[str, Any]
+    target: dict | None
 
 
 @dataclasses.dataclass
@@ -88,17 +83,17 @@ class SelectedEntities:
     """Class to hold the selected entities."""
 
     # Entities that were explicitly mentioned.
-    referenced: Set[str] = dataclasses.field(default_factory=set)
+    referenced: set[str] = dataclasses.field(default_factory=set)
 
     # Entities that were referenced via device/area ID.
     # Should not trigger a warning when they don't exist.
-    indirectly_referenced: Set[str] = dataclasses.field(default_factory=set)
+    indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
     # Referenced items that could not be found.
-    missing_devices: Set[str] = dataclasses.field(default_factory=set)
-    missing_areas: Set[str] = dataclasses.field(default_factory=set)
+    missing_devices: set[str] = dataclasses.field(default_factory=set)
+    missing_areas: set[str] = dataclasses.field(default_factory=set)
 
-    def log_missing(self, missing_entities: Set[str]) -> None:
+    def log_missing(self, missing_entities: set[str]) -> None:
         """Log about missing items."""
         parts = []
         for label, items in (
@@ -137,7 +132,7 @@ async def async_call_from_config(
     blocking: bool = False,
     variables: TemplateVarsType = None,
     validate_config: bool = True,
-    context: Optional[ha.Context] = None,
+    context: ha.Context | None = None,
 ) -> None:
     """Call a service based on a config hash."""
     try:
@@ -235,7 +230,7 @@ def async_prepare_call_from_config(
 @bind_hass
 def extract_entity_ids(
     hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
-) -> Set[str]:
+) -> set[str]:
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -251,7 +246,7 @@ async def async_extract_entities(
     entities: Iterable[Entity],
     service_call: ha.ServiceCall,
     expand_group: bool = True,
-) -> List[Entity]:
+) -> list[Entity]:
     """Extract a list of entity objects from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -287,7 +282,7 @@ async def async_extract_entities(
 @bind_hass
 async def async_extract_entity_ids(
     hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
-) -> Set[str]:
+) -> set[str]:
     """Extract a set of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
@@ -408,7 +403,7 @@ def _load_services_file(hass: HomeAssistantType, integration: Integration) -> JS
 
 def _load_services_files(
     hass: HomeAssistantType, integrations: Iterable[Integration]
-) -> List[JSON_TYPE]:
+) -> list[JSON_TYPE]:
     """Load service files for multiple intergrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
 
@@ -416,7 +411,7 @@ def _load_services_files(
 @bind_hass
 async def async_get_all_descriptions(
     hass: HomeAssistantType,
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
     format_cache_key = "{}.{}".format
@@ -448,7 +443,7 @@ async def async_get_all_descriptions(
             loaded[domain] = content
 
     # Build response
-    descriptions: Dict[str, Dict[str, Any]] = {}
+    descriptions: dict[str, dict[str, Any]] = {}
     for domain in services:
         descriptions[domain] = {}
 
@@ -483,7 +478,7 @@ async def async_get_all_descriptions(
 @ha.callback
 @bind_hass
 def async_set_service_schema(
-    hass: HomeAssistantType, domain: str, service: str, schema: Dict[str, Any]
+    hass: HomeAssistantType, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
@@ -504,9 +499,9 @@ def async_set_service_schema(
 async def entity_service_call(
     hass: HomeAssistantType,
     platforms: Iterable["EntityPlatform"],
-    func: Union[str, Callable[..., Any]],
+    func: str | Callable[..., Any],
     call: ha.ServiceCall,
-    required_features: Optional[Iterable[int]] = None,
+    required_features: Iterable[int] | None = None,
 ) -> None:
     """Handle an entity service call.
 
@@ -516,17 +511,17 @@ async def entity_service_call(
         user = await hass.auth.async_get_user(call.context.user_id)
         if user is None:
             raise UnknownUser(context=call.context)
-        entity_perms: Optional[
+        entity_perms: None | (
             Callable[[str, str], bool]
-        ] = user.permissions.check_entity
+        ) = user.permissions.check_entity
     else:
         entity_perms = None
 
     target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
     if target_all_entities:
-        referenced: Optional[SelectedEntities] = None
-        all_referenced: Optional[Set[str]] = None
+        referenced: SelectedEntities | None = None
+        all_referenced: set[str] | None = None
     else:
         # A set of entities we're trying to target.
         referenced = await async_extract_referenced_entity_ids(hass, call, True)
@@ -534,7 +529,7 @@ async def entity_service_call(
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data: Union[Dict, ha.ServiceCall] = {
+        data: dict | ha.ServiceCall = {
             key: val
             for key, val in call.data.items()
             if key not in cv.ENTITY_SERVICE_FIELDS
@@ -546,7 +541,7 @@ async def entity_service_call(
     # Check the permissions
 
     # A list with entities to call the service on.
-    entity_candidates: List["Entity"] = []
+    entity_candidates: list["Entity"] = []
 
     if entity_perms is None:
         for platform in platforms:
@@ -662,8 +657,8 @@ async def entity_service_call(
 async def _handle_entity_call(
     hass: HomeAssistantType,
     entity: Entity,
-    func: Union[str, Callable[..., Any]],
-    data: Union[Dict, ha.ServiceCall],
+    func: str | Callable[..., Any],
+    data: dict | ha.ServiceCall,
     context: ha.Context,
 ) -> None:
     """Handle calling service method."""
@@ -693,7 +688,7 @@ def async_register_admin_service(
     hass: HomeAssistantType,
     domain: str,
     service: str,
-    service_func: Callable[[ha.ServiceCall], Optional[Awaitable]],
+    service_func: Callable[[ha.ServiceCall], Awaitable | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
