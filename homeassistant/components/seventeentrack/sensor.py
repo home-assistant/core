@@ -291,7 +291,7 @@ class SeventeenTrackData:
         scan_interval,
         show_archived,
         show_delivered,
-        timezone
+        timezone,
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
