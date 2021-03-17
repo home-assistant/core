@@ -409,7 +409,7 @@ async def test_utc_timestamp(hass):
     assert (
         str(
             hass.states.get("sensor.seventeentrack_package_456").attributes.get(
-                'timestamp'
+                "timestamp"
             )
         )
         == "2020-08-10 03:32:00+00:00"
