@@ -9,7 +9,6 @@ set_primary_filtration:
     duration:
       name: Duration
       description: The desired duration of the primary filtration cycle
-      required: true
       default: 8
       selector:
         number:
@@ -20,7 +19,6 @@ set_primary_filtration:
       example: 8
     start_hour:
       description: The hour of the day at which to begin the primary filtration cycle
-      required: true
       default: 0
       example: 2
       selector:
