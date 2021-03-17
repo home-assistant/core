@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 from py17track.package import Package
 import pytest
-from pytz import timezone
 
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
@@ -400,7 +399,7 @@ async def test_utc_timestamp(hass):
         "2020-08-10 10:32",
         206,
         2,
-        tz = "Asia/Jakarta",
+        tz="Asia/Jakarta",
     )
     ProfileMock.package_list = [package]
 
