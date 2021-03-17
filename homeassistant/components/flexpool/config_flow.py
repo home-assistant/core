@@ -43,15 +43,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-          try:
-              info = await validate_input(self.hass, user_input)
-          except InvalidAddress:
-              errors["base"] = "invalid_address"
-          except Exception as error:  # pylint: disable=broad-except
-              _LOGGER.exception("Unexpected exception: %s", error)
-              errors["base"] = "unknown"
-          if not errors:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            try:
+                info = await validate_input(self.hass, user_input)
+            except InvalidAddress:
+                errors["base"] = "invalid_address"
+            except Exception as error:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception: %s", error)
+                errors["base"] = "unknown"
+            if not errors:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
