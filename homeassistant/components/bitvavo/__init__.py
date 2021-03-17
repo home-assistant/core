@@ -1,5 +1,6 @@
 """Gather the market details from Bitvavo."""
 import logging
+import asyncio
 from typing import Dict, List, Optional
 
 from bitvavo.BitvavoClient import BitvavoClient
@@ -17,6 +18,7 @@ from .const import (
     CONF_API_SECRET,
     CONF_MARKETS,
     DOMAIN,
+    PLATFORMS,
     SCAN_INTERVAL,
 )
 
@@ -48,6 +50,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload Bitvavo config entry."""
+
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+
+    if unload_ok:
+        del hass.data[DOMAIN][entry.entry_id]
+
+    return unload_ok
 
 
 class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):

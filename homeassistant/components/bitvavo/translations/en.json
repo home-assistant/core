@@ -22,7 +22,7 @@
                     "api_key": "API Key",
                     "api_secret": "API Secret"
                 },
-                "description": "This integration requires an API Key from Bitvavo with 'Read Info' permissions.",
+                "description": "This integration requires an API Key from Bitvavo with at least 'Read' permissions.",
                 "title": "Connect to Bitvavo"
             }
         }

@@ -3,7 +3,7 @@
       "step": {
           "user": {
               "title": "Connect to Bitvavo",
-              "description": "This integration requires an API Key from Bitvavo with 'Read Only' permissions.",
+              "description": "This integration requires an API Key from Bitvavo with at least 'Read' permissions.",
               "data": {
                   "api_key": "[%key:common::config_flow::data::api_key%]",
                   "api_secret": "API Secret"

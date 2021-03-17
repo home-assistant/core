@@ -11,6 +11,8 @@ CONF_OPEN_ORDERS = "open_orders"
 CONF_TICKERS = "tickers"
 CONF_ASSET_TICKERS = "asset_tickers"
 
+PLATFORMS = ["sensor"]
+
 # Currency
 CURRENCY_ICONS = {
     "BTC": "mdi:currency-btc",
