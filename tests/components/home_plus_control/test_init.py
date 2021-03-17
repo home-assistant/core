@@ -41,7 +41,7 @@ async def entity_assertions(
         num_exp_devices = num_exp_entities
 
     assert (
-        len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].keys())
+        len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS])
         == num_exp_entities
     )
     assert len(entity_reg.entities.keys()) == num_exp_entities
@@ -56,13 +56,20 @@ async def entity_assertions(
             assert bool(device_reg.async_get(exp_device)) == present
 
 
-async def one_entity_assertion(hass, entity_id, availability):
+async def one_entity_assertion(hass, device_uid, availability):
     """Assert the presence of an entity and its specified availability."""
     entity_reg = hass.helpers.entity_registry.async_get(hass)
-    one_entity = entity_reg.async_get(entity_id)
-    assert one_entity
+    device_reg = hass.helpers.device_registry.async_get(hass)
+
+    device_id = device_reg.async_get_device({(DOMAIN, device_uid)}).id
+    device_entities = hass.helpers.entity_registry.async_entries_for_device(
+        entity_reg, device_id
+    )
+
+    assert len(device_entities) == 1
+    one_entity = device_entities[0]
     assert (
-        hass.data["entity_platform"][DOMAIN][0].entities[entity_id].available
+        hass.data["entity_platform"][DOMAIN][0].entities[one_entity.entity_id].available
         == availability
     )
 
@@ -414,10 +421,11 @@ async def test_module_status_reduction_change(
     )
 
     # Confirm the availability of this particular entity
-    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
-        "0000000987654321fedcba"
+    test_entity_uid = "0000000987654321fedcba"
+    assert (
+        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
     )
-    await one_entity_assertion(hass, test_entity_id, True)
+    await one_entity_assertion(hass, test_entity_uid, True)
 
     # Now we refresh the topology with one module status less
     aioclient_mock.clear_requests()
@@ -455,10 +463,11 @@ async def test_module_status_reduction_change(
     )
 
     # This entity is present, but not available
-    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
-        "0000000987654321fedcba"
+    test_entity_uid = "0000000987654321fedcba"
+    assert (
+        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
     )
-    await one_entity_assertion(hass, test_entity_id, False)
+    await one_entity_assertion(hass, test_entity_uid, False)
 
 
 async def test_module_status_increase_change(
@@ -516,10 +525,11 @@ async def test_module_status_increase_change(
     )
 
     # This particular entity is not available
-    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
-        "0000000987654321fedcba"
+    test_entity_uid = "0000000987654321fedcba"
+    assert (
+        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
     )
-    await one_entity_assertion(hass, test_entity_id, False)
+    await one_entity_assertion(hass, test_entity_uid, False)
 
     # Now we refresh the topology with one module status more
     aioclient_mock.clear_requests()
@@ -557,10 +567,11 @@ async def test_module_status_increase_change(
     )
 
     # Now the entity is available
-    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
-        "0000000987654321fedcba"
+    test_entity_uid = "0000000987654321fedcba"
+    assert (
+        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
     )
-    await one_entity_assertion(hass, test_entity_id, True)
+    await one_entity_assertion(hass, test_entity_uid, True)
 
 
 async def test_plant_api_timeout(
@@ -721,10 +732,8 @@ async def test_plant_status_api_timeout(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
-        ENTITY_UIDS
-    ].values():
-        await one_entity_assertion(hass, test_entity_id, False)
+    for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
+        await one_entity_assertion(hass, test_entity_uid, False)
 
 
 async def test_update_with_plant_topology_api_timeout(
@@ -791,10 +800,8 @@ async def test_update_with_plant_topology_api_timeout(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
-        ENTITY_UIDS
-    ].values():
-        await one_entity_assertion(hass, test_entity_id, True)
+    for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
+        await one_entity_assertion(hass, test_entity_uid, True)
 
     # Attempt to update the data, but plant topology update fails
 
@@ -836,10 +843,11 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     # This entity has not returned a status, so appears as unavailable
-    test_entity_id = hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].get(
-        "0000000987654321fedcba"
+    test_entity_uid = "0000000987654321fedcba"
+    assert (
+        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
     )
-    await one_entity_assertion(hass, test_entity_id, False)
+    await one_entity_assertion(hass, test_entity_uid, False)
 
 
 async def test_update_with_plant_module_status_api_timeout(
@@ -900,11 +908,9 @@ async def test_update_with_plant_module_status_api_timeout(
     # Check the entities and devices - all entities should be there
     entity_reg = hass.helpers.entity_registry.async_get(hass)
     device_reg = hass.helpers.device_registry.async_get(hass)
-    assert len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS].keys()) == 4
-    for test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
-        ENTITY_UIDS
-    ].values():
-        await one_entity_assertion(hass, test_entity_id, True)
+    assert len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]) == 4
+    for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
+        await one_entity_assertion(hass, test_entity_uid, True)
     assert len(entity_reg.entities.keys()) == 4
     assert len(device_reg.devices.keys()) == 4
 
@@ -949,10 +955,8 @@ async def test_update_with_plant_module_status_api_timeout(
 
     # One entity has no status data, so appears as unavailable
     # The rest of the entities remain available
-    for test_uid, test_entity_id in hass.data[DOMAIN]["home_plus_control_entry_id"][
-        ENTITY_UIDS
-    ].items():
+    for test_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
         if test_uid == "0000000987654321fedcba":
-            await one_entity_assertion(hass, test_entity_id, False)
+            await one_entity_assertion(hass, test_uid, False)
         else:
-            await one_entity_assertion(hass, test_entity_id, True)
+            await one_entity_assertion(hass, test_uid, True)

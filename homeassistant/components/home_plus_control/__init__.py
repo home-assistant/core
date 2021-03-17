@@ -3,6 +3,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
+import async_timeout
+from homepluscontrol.homeplusapi import HomePlusControlApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +15,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     dispatcher,
 )
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import api, config_flow, helpers
 from .const import (
@@ -24,7 +26,6 @@ from .const import (
     DOMAIN,
     ENTITY_UIDS,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_REMOVE_ENTITIES,
 )
 
 # Configuration schema for component in configuration.yaml
@@ -88,25 +89,56 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass, config_entry, implementation
     )
 
-    # Dict of entity unique identifiers of this integration
-    hass_entry_data[ENTITY_UIDS] = {}
+    # Set of entity unique identifiers of this integration
+    hass_entry_data[ENTITY_UIDS] = set()
 
     # Integration dispatchers
-    hass_entry_data[DISPATCHER_REMOVERS] = [
-        dispatcher.async_dispatcher_connect(
-            hass, SIGNAL_ADD_ENTITIES, helpers.async_add_entities
-        ),
-        dispatcher.async_dispatcher_connect(
-            hass, SIGNAL_REMOVE_ENTITIES, helpers.async_remove_entities
-        ),
-    ]
+    hass_entry_data[DISPATCHER_REMOVERS] = []
 
     # Register the Data Coordinator with the integration
+    async def async_update_data():
+        """Fetch data from API endpoint.
+
+        This is the place to pre-process the data to lookup tables
+        so entities can quickly look up their data.
+        """
+        try:
+            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # handled by the data update coordinator.
+            async with async_timeout.timeout(10):
+                module_data = await hass_entry_data[API].fetch_data()
+        except HomePlusControlApiError as err:
+            raise UpdateFailed(
+                f"Error communicating with API: {err} [{type(err)}]"
+            ) from err
+
+        # Remove obsolete entities from Home Assistant
+        entity_uids_to_remove = hass_entry_data[ENTITY_UIDS] - set(module_data)
+        device_registry = hass.helpers.device_registry.async_get(hass)
+        for uid in entity_uids_to_remove:
+            hass_entry_data[ENTITY_UIDS].remove(uid)
+            device = device_registry.async_get_device({(DOMAIN, uid)})
+            device_registry.async_remove_device(device.id)
+
+        # Send out signal for new entity addition to Home Assistant
+        new_entity_uids = set(module_data) - hass_entry_data[ENTITY_UIDS]
+        hass_entry_data[ENTITY_UIDS].update(new_entity_uids)
+        if len(new_entity_uids) > 0:
+            dispatcher.async_dispatcher_send(
+                hass,
+                SIGNAL_ADD_ENTITIES,
+                new_entity_uids,
+                coordinator,
+            )
+
+        return module_data
+
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
         name="home_plus_control_module",
+        update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=60),
     )

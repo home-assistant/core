@@ -1,40 +1,9 @@
 """Helper classes and functions for the Legrand Home+ Control integration."""
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CONF_SUBSCRIPTION_KEY, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-
-
-@callback
-def async_add_entities(new_unique_ids, entity_klass, coordinator, add_entities):
-    """Add the entities to the platform.
-
-    Args:
-        new_unique_ids (set): Unique identifiers of entities to be added to Home Assistant.
-        coordinator (DataUpdateCoordinator): Data coordinator of this platform.
-        add_entities (function): Method called to add entities to Home Assistant.
-    """
-    new_entities = []
-    for uid in new_unique_ids:
-        new_ent = entity_klass(coordinator, uid)
-        new_entities.append(new_ent)
-    add_entities(new_entities)
-
-
-@callback
-def async_remove_entities(remove_uids, entity_uid_map, device_reg):
-    """Remove the entities from the platform.
-
-    Args:
-        remove_uids (set): Unique identifiers of entities to be removed to Home Assistant.
-        entity_uid_map (dict): Lookup dictionary of unique_ids (key) and entity_ids (value).
-        device_reg(DeviceRegistry): Home Assistant Device Registry.
-    """
-    for uid in remove_uids:
-        entity_uid_map.pop(uid)
-        device = device_reg.async_get_device({(DOMAIN, uid)})
-        device_reg.async_remove_device(device.id)
 
 
 class HomePlusControlOAuth2Implementation(

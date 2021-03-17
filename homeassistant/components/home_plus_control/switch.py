@@ -1,28 +1,38 @@
 """Legrand Home+ Control Switch Entity Module that uses the HomeAssistant DataUpdateCoordinator."""
-import logging
-
-import async_timeout
-from homepluscontrol.homeplusapi import HomePlusControlApiError
+from functools import partial
 
 from homeassistant.components.switch import (
     DEVICE_CLASS_OUTLET,
     DEVICE_CLASS_SWITCH,
     SwitchEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import dispatcher
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, UpdateFailed
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    API,
     DATA_COORDINATOR,
+    DISPATCHER_REMOVERS,
     DOMAIN,
-    ENTITY_UIDS,
     HW_TYPE,
     SIGNAL_ADD_ENTITIES,
-    SIGNAL_REMOVE_ENTITIES,
 )
 
-_LOGGER = logging.getLogger(__name__)
+
+@callback
+def add_switch_entities(new_unique_ids, coordinator, add_entities):
+    """Add switch entities to the platform.
+
+    Args:
+        new_unique_ids (set): Unique identifiers of entities to be added to Home Assistant.
+        coordinator (DataUpdateCoordinator): Data coordinator of this platform.
+        add_entities (function): Method called to add entities to Home Assistant.
+    """
+    new_entities = []
+    for uid in new_unique_ids:
+        new_ent = HomeControlSwitchEntity(coordinator, uid)
+        new_entities.append(new_ent)
+    add_entities(new_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -33,58 +43,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         config_entry (ConfigEntry): ConfigEntry object that configures this platform.
         async_add_entities (function): Function called to add entities of this platform.
     """
-    # API object stored here by __init__.py
-    api = hass.data[DOMAIN][config_entry.entry_id][API]
-
-    async def async_update_data():
-        """Fetch data from API endpoint.
-
-        This is the place to pre-process the data to lookup tables
-        so entities can quickly look up their data.
-        """
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
-                module_data = await api.fetch_data()
-        except HomePlusControlApiError as err:
-            raise UpdateFailed(
-                f"Error communicating with API: {err} [{type(err)}]"
-            ) from err
-
-        current_entity_uids = set(hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS])
-
-        # Send out signal for removal of obsolete entities from Home Assistant
-        entity_uids_to_remove = current_entity_uids - set(module_data)
-        if entity_uids_to_remove:
-            device_registry = hass.helpers.device_registry.async_get(hass)
-            dispatcher.async_dispatcher_send(
-                hass,
-                SIGNAL_REMOVE_ENTITIES,
-                entity_uids_to_remove,
-                hass.data[DOMAIN][config_entry.entry_id][ENTITY_UIDS],
-                device_registry,
-            )
-
-        # Send out signal for new entity addition to Home Assistant
-        new_entity_uids = set(module_data) - current_entity_uids
-        if len(new_entity_uids) > 0:
-            dispatcher.async_dispatcher_send(
-                hass,
-                SIGNAL_ADD_ENTITIES,
-                new_entity_uids,
-                HomeControlSwitchEntity,
-                coordinator,
-                async_add_entities,
-            )
-
-        return module_data
-
-    # Register the Data Coordinator with the integration
-    coordinator = hass.data[DOMAIN][config_entry.entry_id].get(DATA_COORDINATOR)
-    coordinator.update_method = async_update_data
+    partial_add_switch_entities = partial(
+        add_switch_entities, add_entities=async_add_entities
+    )
+    # Connect the dispatcher for the switch platform
+    hass.data[DOMAIN][config_entry.entry_id].get(DISPATCHER_REMOVERS).append(
+        dispatcher.async_dispatcher_connect(
+            hass, SIGNAL_ADD_ENTITIES, partial_add_switch_entities
+        )
+    )
 
     # Fetch initial data so we have data when entities subscribe
+    coordinator = hass.data[DOMAIN][config_entry.entry_id].get(DATA_COORDINATOR)
     await coordinator.async_refresh()
 
 
@@ -167,13 +137,3 @@ class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
         await self.module.turn_off()
         # Update the data
         await self.coordinator.async_request_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-
-        # Register with the integration's entity map
-        domain = self.registry_entry.platform
-        config_entry_id = self.registry_entry.config_entry_id
-        entity_id = self.registry_entry.entity_id
-        self.hass.data[domain][config_entry_id][ENTITY_UIDS][self.unique_id] = entity_id

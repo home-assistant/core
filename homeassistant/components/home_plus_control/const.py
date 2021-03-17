@@ -43,4 +43,3 @@ DEFAULT_UPDATE_INTERVALS = {
 }
 
 SIGNAL_ADD_ENTITIES = "home_plus_control_add_entities_signal"
-SIGNAL_REMOVE_ENTITIES = "home_plus_control_remove_entities_signal"
