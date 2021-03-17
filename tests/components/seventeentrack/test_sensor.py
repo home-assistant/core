@@ -71,7 +71,7 @@ NEW_SUMMARY_DATA = {
 class ClientMock:
     """Mock the py17track client to inject the ProfileMock."""
 
-    def __init__(self, websession) -> None:
+    def __init__(self, session) -> None:
         """Mock the profile."""
         self.profile = ProfileMock()
 
