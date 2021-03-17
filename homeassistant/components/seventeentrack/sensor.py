@@ -34,6 +34,7 @@ ATTR_TRACKING_NUMBER = "tracking_number"
 
 CONF_SHOW_ARCHIVED = "show_archived"
 CONF_SHOW_DELIVERED = "show_delivered"
+CONF_TIMEZONE = "timezone"
 
 DATA_PACKAGES = "package_data"
 DATA_SUMMARY = "summary_data"
@@ -59,6 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SHOW_ARCHIVED, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_DELIVERED, default=False): cv.boolean,
+        vol.Optional(CONF_TIMEZONE, default="UTC"): cv.string,
     }
 )
 
@@ -90,6 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scan_interval,
         config[CONF_SHOW_ARCHIVED],
         config[CONF_SHOW_DELIVERED],
+        config[CONF_TIMEZONE],
     )
     await data.async_update()
 
@@ -284,7 +287,7 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-        self, client, async_add_entities, scan_interval, show_archived, show_delivered
+        self, client, async_add_entities, scan_interval, show_archived, show_delivered, timezone
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -294,6 +297,7 @@ class SeventeenTrackData:
         self.account_id = client.profile.account_id
         self.packages = {}
         self.show_delivered = show_delivered
+        self.timezone = timezone
         self.summary = {}
 
         self.async_update = Throttle(self._scan_interval)(self._async_update)
@@ -304,7 +308,8 @@ class SeventeenTrackData:
 
         try:
             packages = await self._client.profile.packages(
-                show_archived=self._show_archived
+                show_archived=self._show_archived,
+                tz=self.timezone
             )
             _LOGGER.debug("New package data received: %s", packages)
 
