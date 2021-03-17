@@ -95,34 +95,27 @@ class FreedomproDataUpdateCoordinator(DataUpdateCoordinator):
             else:
                 raise UpdateFailed()
 
-        result = await get_states(
-            aiohttp_client.async_get_clientsession(self._hass), self._api_key
-        )
-
-        devices = []
-        for device in self._devices:
-            dev = next(
-                (dev for dev in result if dev["uid"] == device["uid"]),
-                None,
+            result = await get_states(
+                aiohttp_client.async_get_clientsession(self._hass), self._api_key
             )
-            if dev is not None:
-                if "state" in dev:
-                    devices.append(
-                        {
-                            "uid": device["uid"],
-                            "name": device["name"],
-                            "type": device["type"],
-                            "characteristics": device["characteristics"],
-                            "state": dev["state"],
-                        }
-                    )
-                else:
-                    devices.append(
-                        {
-                            "uid": device["uid"],
-                            "name": device["name"],
-                            "type": device["type"],
-                            "characteristics": device["characteristics"],
-                        }
-                    )
-        return devices
+
+            for device in self._devices:
+                dev = next(
+                    (dev for dev in result if dev["uid"] == device["uid"]),
+                    None,
+                )
+                if dev is not None and "state" in dev:
+                    device["state"] = dev["state"]
+        else:
+            result = await get_states(
+                aiohttp_client.async_get_clientsession(self._hass), self._api_key
+            )
+
+            for device in self._devices:
+                dev = next(
+                    (dev for dev in result if dev["uid"] == device["uid"]),
+                    None,
+                )
+                if dev is not None and "state" in dev:
+                    device["state"] = dev["state"]
+        return self._devices

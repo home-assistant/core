@@ -75,7 +75,7 @@ DEVICES = [
     },
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*3-QURR5Q6ADA8ML1TBRG59RRGM1F9LVUZLKPYKFJQHC",
-        "name": "Bedroom light",
+        "name": "bedroomlight",
         "type": "lightbulb",
         "characteristics": ["on"],
     },
@@ -155,7 +155,7 @@ DEVICES_STATE = [
     {
         "uid": "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*JHJZIZ9ORJNHB7DZNBNAOSEDECVTTZ48SABTCA3WA3M",
         "type": "lightbulb",
-        "state": {"on": False, "brightness": 0, "saturation": 0, "hue": 0},
+        "state": {"on": True, "brightness": 0, "saturation": 0, "hue": 0},
         "online": True,
     },
     {

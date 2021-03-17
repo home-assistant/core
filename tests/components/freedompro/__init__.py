@@ -33,3 +33,31 @@ async def init_integration(hass) -> MockConfigEntry:
         await hass.async_block_till_done()
 
     return entry
+
+
+async def init_integration_no_state(hass) -> MockConfigEntry:
+    """Set up the Freedompro integration in Home Assistant without state."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Feedompro",
+        unique_id="0123456",
+        data={
+            "api_key": "gdhsksjdhcncjdkdjndjdkdmndjdjdkd",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.freedompro.get_list",
+        return_value={
+            "state": True,
+            "devices": DEVICES,
+        },
+    ), patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=[],
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
