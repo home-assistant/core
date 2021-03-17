@@ -77,6 +77,7 @@ async def _async_process_config(hass, config) -> bool:
 
     refresh_tasks = []
     load_tasks = []
+    platform_idxs = {}
     for rest_idx, conf in enumerate(config[DOMAIN]):
         scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
@@ -91,7 +92,13 @@ async def _async_process_config(hass, config) -> bool:
             if platform_domain not in conf:
                 continue
 
-            for platform_idx, platform_conf in enumerate(conf[platform_domain]):
+            for platform_conf in conf[platform_domain]:
+                if platform_domain not in platform_idxs:
+                    platform_idxs[platform_domain] = 0
+                else:
+                    platform_idxs[platform_domain] += 1
+                platform_idx = platform_idxs[platform_domain]
+
                 hass.data[DOMAIN][platform_domain][platform_idx] = platform_conf
 
                 load = discovery.async_load_platform(
