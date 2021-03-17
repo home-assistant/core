@@ -1,0 +1,17 @@
+next_down_pos:
+  description: Moves a blind group down to the next defined intermediate position
+  fields:
+    entity_id:
+      description: Name(s) of entities to move down to the next position.
+      example: "cover.master"
+      default: "cover.master"
+      required: true
+
+next_up_pos:
+  description: Moves a blind group down to the next defined intermediate position
+  fields:
+    entity_id:
+      description: Name(s) of entities to move up to the next position.
+      example: "cover.master"
+      default: "cover.master"
+      required: true

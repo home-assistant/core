@@ -1,0 +1,26 @@
+{
+  "title": "Leviosa Motor Shades Zone",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Leviosa Motor Shades Zone HUB",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::ip%]"
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
+    },
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_new_devs": "No unconfigured Leviosa Zone HUBs found"
+    }
+  }
+}

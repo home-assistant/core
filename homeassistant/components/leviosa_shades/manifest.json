@@ -1,0 +1,12 @@
+{
+  "domain": "leviosa_shades",
+  "name": "Leviosa Motor Shades",
+  "documentation": "https://www.home-assistant.io/integrations/leviosa_shades",
+  "requirements": [
+    "async-upnp-client==0.14.13",
+    "aioleviosa==0.1"
+  ],
+  "codeowners": ["@altersis"],
+  "dependencies": ["cover"],
+  "config_flow": true
+}

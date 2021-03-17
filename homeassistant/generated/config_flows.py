@@ -121,6 +121,7 @@ FLOWS = [
     "kodi",
     "konnected",
     "kulersky",
+    "leviosa_shades",
     "life360",
     "lifx",
     "litejet",

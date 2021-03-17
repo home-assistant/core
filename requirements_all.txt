@@ -187,6 +187,9 @@ aiokafka==0.6.0
 # homeassistant.components.kef
 aiokef==0.2.16
 
+# homeassistant.components.leviosa_shades
+aioleviosa==0.1
+
 # homeassistant.components.lifx
 aiolifx==0.6.9
 
@@ -284,6 +287,7 @@ asmog==0.0.6
 asterisk_mbox==0.5.0
 
 # homeassistant.components.dlna_dmr
+# homeassistant.components.leviosa_shades
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 async-upnp-client==0.14.13
