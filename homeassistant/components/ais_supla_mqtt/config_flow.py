@@ -1,9 +1,9 @@
 """Config flow to configure the AIS SUPLA MQTT component."""
 
-from collections import OrderedDict
 import logging
 
 import aiohttp
+import voluptuous as vol
 import yarl
 
 from homeassistant import config_entries
@@ -126,47 +126,44 @@ class SuplaMqttFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title="SUPLA MQTT BRIDGE", data=self.bridge_config
         )
 
-    # options step
-    async def async_step_broker(self, user_input=None):
-        """Manage the MQTT options."""
-        errors = {}
-        current_config = self.config_entry.data
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a option flow for SUPLA MQTT."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        mqtt_settings = self.config_entry.data
+        mqtt_options = self.config_entry.options
+        username = mqtt_settings["username"]
+        password = mqtt_settings["password"]
+        hostname = mqtt_settings["host"]
+        port = mqtt_settings["port"]
+        discovery = mqtt_options.get("discovery", 1)
         if user_input is not None:
-            # can_connect = await self.hass.async_add_executor_job(
-            #     try_connection,
-            #     user_input[CONF_BROKER],
-            #     user_input[CONF_PORT],
-            #     user_input.get(CONF_USERNAME),
-            #     user_input.get(CONF_PASSWORD),
-            # )
-            #
-            # if can_connect:
-            #     self.broker_config.update(user_input)
-            #     return await self.async_step_options()
-
-            errors["base"] = "cannot_connect"
-
-        fields = OrderedDict()
-        # current_broker = current_config.get(CONF_BROKER, yaml_config.get(CONF_BROKER))
-        # current_port = current_config.get(CONF_PORT, yaml_config.get(CONF_PORT))
-        # current_user = current_config.get(CONF_USERNAME, yaml_config.get(CONF_USERNAME))
-        # current_pass = current_config.get(CONF_PASSWORD, yaml_config.get(CONF_PASSWORD))
-        # fields[vol.Required(CONF_BROKER, default=current_broker)] = str
-        # fields[vol.Required(CONF_PORT, default=current_port)] = vol.Coerce(int)
-        # fields[
-        #     vol.Optional(
-        #         CONF_USERNAME,
-        #         description={"suggested_value": current_user},
-        #     )
-        # ] = str
-        # fields[
-        #     vol.Optional(
-        #         CONF_PASSWORD,
-        #         description={"suggested_value": current_pass},
-        #     )
-        # ] = str
+            return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="broker",
-            errors=errors,
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "discovery", default=discovery, description="Discovery"
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=24))
+                }
+            ),
+            description_placeholders={
+                "username": username,
+                "password": password,
+                "hostname": hostname,
+                "port": port,
+            },
         )

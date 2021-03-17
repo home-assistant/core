@@ -17,14 +17,9 @@
     },
     "options": {
         "step": {
-            "broker": {
-            "description": "Please enter the connection information of your MQTT broker.",
-            "data": {
-              "broker": "Broker",
-              "port": "[%key:common::config_flow::data::port%]",
-              "username": "[%key:common::config_flow::data::username%]",
-              "password": "[%key:common::config_flow::data::password%]"
-            }
+            "init": {
+              "title": "SUPLA MQTT Broker Settings",
+              "description": "**User:** {username}\n**Password:** {password}\n**Host:** {hostname}\n**Port:** {port}\n\n**Discovery ask (per day):**\n"
           }
         }
     }
