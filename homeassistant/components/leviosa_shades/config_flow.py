@@ -111,9 +111,6 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             idx_of_ip = vals.index(self._host)
             keys = list(self._devices.keys())
             self._host_uid = keys[idx_of_ip]
-            # self._host_uid = self._devices.keys()[
-            #     self._devices.values().index(self._host)
-            # ]
             return await self.async_step_connect()
 
         select_schema = vol.Schema(
