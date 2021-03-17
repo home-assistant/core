@@ -75,7 +75,17 @@ INPUTS_EVENTS_SUBTYPES = {
     "button3": 3,
 }
 
-SHBTN_MODELS = ["SHBTN-1", "SHBTN-2"]
+RGB_EFFECTS = {
+    0: "Off",
+    1: "Meteor shower",
+    2: "Gradual change",
+    3: "Breath",
+    4: "Flash",
+    5: "On/off gradual",
+    6: "Red/green change",
+}
+
+RGB_EFFECTS_INDEX = {"DEFAULT": 6, "SHRGBW2": 3, "SHRGBWW-01": 3}
 
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE = 6500
