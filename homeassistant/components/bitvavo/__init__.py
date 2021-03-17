@@ -85,6 +85,92 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
+    @staticmethod
+    def _markets(marketscfg, markets, tickers, orderbook_tickers):
+
+        tickers_dict = {}
+
+        for market in marketscfg:
+            if market not in tickers_dict:
+                tickers_dict[market] = {}
+                ticker_details = next(
+                    item for item in tickers if item["market"] == market
+                )
+                market_details = next(
+                    item for item in markets if item["market"] == market
+                )
+                orderbook_ticker_details = next(
+                    item for item in orderbook_tickers if item["market"] == market
+                )
+                combined_details_dict = {
+                    **ticker_details,
+                    **market_details,
+                    **orderbook_ticker_details,
+                }
+                tickers_dict[market].update(combined_details_dict)
+
+        return tickers_dict
+
+    @staticmethod
+    def _tickers(asset_currencies, tickers):
+
+        asset_tickers_dict = {}
+
+        for asset in asset_currencies:
+            # Skip the ASSET_VALUE_BASE as we calculate it differently
+            if asset != ASSET_VALUE_BASE:
+                currency = f"{asset}-{ASSET_VALUE_BASE}"
+
+                if currency not in asset_tickers_dict:
+                    asset_tickers_dict[currency] = {}
+                    ticker_details = next(
+                        item for item in tickers if item["market"] == currency
+                    )
+                    asset_tickers_dict[currency].update(ticker_details)
+
+        return asset_tickers_dict
+
+    @staticmethod
+    def _balances(balances, tickers):
+
+        balances_dict = {}
+
+        for balance in balances:
+            if balance["symbol"] not in balances_dict:
+                balances_dict[balance["symbol"]] = {}
+                balances_dict[balance["symbol"]].update(balance)
+                base_asset_ticker_details = None
+
+                total_balance = float(balance["available"]) + float(balance["inOrder"])
+
+                if ASSET_VALUE_BASE not in balance["symbol"]:
+                    # Prevent that we try to search ASSET_VALUE_BASE+ASSET_VALUE_BASE (e.g. BTCBTC)
+                    base_asset_symbol = str(balance["symbol"] + "-" + ASSET_VALUE_BASE)
+                    try:
+                        base_asset_ticker_details = next(
+                            item
+                            for item in tickers
+                            if item["market"] == base_asset_symbol
+                        )
+                    except StopIteration:
+                        continue
+                else:
+                    balances_dict[balance["symbol"]][
+                        "asset_value_in_base_asset"
+                    ] = total_balance
+
+                if base_asset_ticker_details:
+                    # If we can find a pair with ASSET_VALUE_BASE, include it in the dict
+                    balances_dict[balance["symbol"]][ASSET_VALUE_BASE] = {}
+                    balances_dict[balance["symbol"]][ASSET_VALUE_BASE].update(
+                        base_asset_ticker_details
+                    )
+                    balances_dict[balance["symbol"]][
+                        "asset_value_in_base_asset"
+                    ] = total_balance * float(base_asset_ticker_details["price"])
+
+        return balances_dict
+
     async def _async_update_data(self):
         """Fetch Bitvavo data."""
         try:
@@ -96,86 +182,13 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
             balances = await client.get_balance()
             open_orders = await client.get_open_orders()
 
-            tickers_dict = {}
-
-            for market in self.markets:
-                if market not in tickers_dict:
-                    tickers_dict[market] = {}
-                    ticker_details = next(
-                        item for item in tickers if item["market"] == market
-                    )
-                    market_details = next(
-                        item for item in markets if item["market"] == market
-                    )
-                    orderbook_ticker_details = next(
-                        item for item in orderbook_tickers if item["market"] == market
-                    )
-                    combined_details_dict = {
-                        **ticker_details,
-                        **market_details,
-                        **orderbook_ticker_details,
-                    }
-                    tickers_dict[market].update(combined_details_dict)
-
-            result_dict = {"tickers": tickers_dict}
-
-            asset_tickers_dict = {}
-
-            for asset in self.asset_currencies:
-                # Skip the ASSET_VALUE_BASE as we calculate it differently
-                if asset != ASSET_VALUE_BASE:
-                    currency = f"{asset}-{ASSET_VALUE_BASE}"
-
-                    if currency not in asset_tickers_dict:
-                        asset_tickers_dict[currency] = {}
-                        ticker_details = next(
-                            item for item in tickers if item["market"] == currency
-                        )
-                        asset_tickers_dict[currency].update(ticker_details)
-
-            result_dict["asset_tickers"] = asset_tickers_dict
-
-            balances_dict = {}
-
-            for balance in balances:
-                if balance["symbol"] not in balances_dict:
-                    balances_dict[balance["symbol"]] = {}
-                    balances_dict[balance["symbol"]].update(balance)
-                    base_asset_ticker_details = None
-
-                    total_balance = float(balance["available"]) + float(
-                        balance["inOrder"]
-                    )
-
-                    if ASSET_VALUE_BASE not in balance["symbol"]:
-                        # Prevent that we try to search ASSET_VALUE_BASE+ASSET_VALUE_BASE (e.g. BTCBTC)
-                        base_asset_symbol = str(
-                            balance["symbol"] + "-" + ASSET_VALUE_BASE
-                        )
-                        try:
-                            base_asset_ticker_details = next(
-                                item
-                                for item in tickers
-                                if item["market"] == base_asset_symbol
-                            )
-                        except StopIteration:
-                            continue
-                    else:
-                        balances_dict[balance["symbol"]][
-                            "asset_value_in_base_asset"
-                        ] = total_balance
-
-                    if base_asset_ticker_details:
-                        # If we can find a pair with ASSET_VALUE_BASE, include it in the dict
-                        balances_dict[balance["symbol"]][ASSET_VALUE_BASE] = {}
-                        balances_dict[balance["symbol"]][ASSET_VALUE_BASE].update(
-                            base_asset_ticker_details
-                        )
-                        balances_dict[balance["symbol"]][
-                            "asset_value_in_base_asset"
-                        ] = total_balance * float(base_asset_ticker_details["price"])
-
-            result_dict["balances"] = balances_dict
+            result_dict = {
+                "tickers": self._markets(
+                    self.markets, tickers, markets, orderbook_tickers
+                )
+            }
+            result_dict["asset_tickers"] = self._tickers(self.asset_currencies, tickers)
+            result_dict["balances"] = self._balances(balances, tickers)
 
             if open_orders:
                 result_dict["open_orders"] = open_orders
