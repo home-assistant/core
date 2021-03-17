@@ -4,6 +4,8 @@ from __future__ import annotations
 import datetime
 from unittest.mock import MagicMock, patch
 
+from pytz import timezone
+
 from py17track.package import Package
 import pytest
 
@@ -386,3 +388,24 @@ async def test_summary_correctly_updated(hass):
     assert len(hass.states.async_entity_ids()) == 7
     for state in hass.states.async_all():
         assert state.state == "1"
+
+
+async def test_utc_timestamp(hass):
+    """Ensure package timestamp is converted correctly from HA-defined time zone to UTC."""
+    package = Package(
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        tz = "Asia/Jakarta"
+    )
+    ProfileMock.package_list = [package]
+    
+    await _setup_seventeentrack(hass)
+    assert hass.states.get("sensor.seventeentrack_package_456") is not None
+    assert len(hass.states.async_entity_ids()) == 1
+    assert str(hass.states.get("sensor.seventeentrack_package_456").attributes.get('timestamp')) == "2020-08-10 03:32:00+00:00"
