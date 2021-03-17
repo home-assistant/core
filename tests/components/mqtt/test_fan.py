@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import fan
+from homeassistant.components.fan import NotValidPresetModeError, NotValidSpeedError
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -190,6 +191,11 @@ async def test_percentage_controlling_state_via_topic(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.attributes.get("percentage") == 100
 
+    with pytest.raises(ValueError):
+        async_fire_mqtt_message(hass, "percentage-state-topic", "200")
+        state = hass.states.get("fan.test")
+        assert state.attributes.get("percentage") == 200
+
 
 async def test_preset_mode_controlling_state_via_topic(hass, mqtt_mock):
     """Test the controlling state via topic (preset mode mode)."""
@@ -248,6 +254,11 @@ async def test_preset_mode_controlling_state_via_topic(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "Mode3")
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "Mode3"
+
+    with pytest.raises(NotValidPresetModeError):
+        async_fire_mqtt_message(hass, "preset-mode-state-topic", "Mode4")
+        state = hass.states.get("fan.test")
+        assert state.attributes.get("percentage") == "Mode4"
 
 
 async def test_legacy_controlling_state_via_topic(hass, mqtt_mock):
@@ -316,6 +327,9 @@ async def test_legacy_controlling_state_via_topic(hass, mqtt_mock):
     async_fire_mqtt_message(hass, "speed-state-topic", "speed_OfF")
     state = hass.states.get("fan.test")
     assert state.attributes.get("speed") == fan.SPEED_OFF
+
+    with pytest.raises(NotValidSpeedError):
+        async_fire_mqtt_message(hass, "speed-state-topic", "speed_very_high")
 
 
 async def test_percentage_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
@@ -554,6 +568,12 @@ async def test_sending_percentage_mqtt_commands_and_optimistic(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    with pytest.raises(Exception):
+        await common.async_set_percentage(hass, "fan.test", -1)
+
+    with pytest.raises(Exception):
+        await common.async_set_percentage(hass, "fan.test", 101)
 
     await common.async_set_percentage(hass, "fan.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
