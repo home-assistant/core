@@ -1,10 +1,9 @@
 """deCONZ fan platform tests."""
 
-from copy import deepcopy
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.fan import (
     ATTR_SPEED,
     DOMAIN as FAN_DOMAIN,
@@ -24,26 +23,6 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
-FANS = {
-    "1": {
-        "etag": "432f3de28965052961a99e3c5494daf4",
-        "hascolor": False,
-        "manufacturername": "King Of Fans,  Inc.",
-        "modelid": "HDC52EastwindFan",
-        "name": "Ceiling fan",
-        "state": {
-            "alert": "none",
-            "bri": 254,
-            "on": False,
-            "reachable": True,
-            "speed": 4,
-        },
-        "swversion": "0000000F",
-        "type": "Fan",
-        "uniqueid": "00:22:a3:00:00:27:8b:81-01",
-    }
-}
-
 
 async def test_no_fans(hass, aioclient_mock):
     """Test that no fan entities are created."""
@@ -51,35 +30,51 @@ async def test_no_fans(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_fans(hass, aioclient_mock):
+async def test_fans(hass, aioclient_mock, mock_deconz_websocket):
     """Test that all supported fan entities are created."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["lights"] = deepcopy(FANS)
-    config_entry = await setup_deconz_integration(
-        hass, aioclient_mock, get_state_response=data
-    )
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    data = {
+        "lights": {
+            "1": {
+                "etag": "432f3de28965052961a99e3c5494daf4",
+                "hascolor": False,
+                "manufacturername": "King Of Fans,  Inc.",
+                "modelid": "HDC52EastwindFan",
+                "name": "Ceiling fan",
+                "state": {
+                    "alert": "none",
+                    "bri": 254,
+                    "on": False,
+                    "reachable": True,
+                    "speed": 4,
+                },
+                "swversion": "0000000F",
+                "type": "Fan",
+                "uniqueid": "00:22:a3:00:00:27:8b:81-01",
+            }
+        }
+    }
+
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 2  # Light and fan
-    assert hass.states.get("fan.ceiling_fan")
+    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
+    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_HIGH
 
     # Test states
 
-    assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == SPEED_HIGH
-
-    state_changed_event = {
+    event_changed_light = {
         "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"speed": 0},
     }
-    gateway.api.event_handler(state_changed_event)
+    await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_OFF
-    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == SPEED_OFF
+    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_OFF
 
     # Test service calls
 
@@ -157,23 +152,23 @@ async def test_fans(hass, aioclient_mock):
 
     # Events with an unsupported speed gets converted to default speed "medium"
 
-    state_changed_event = {
+    event_changed_light = {
         "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"speed": 3},
     }
-    gateway.api.event_handler(state_changed_event)
+    await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("fan.ceiling_fan").state == STATE_ON
-    assert hass.states.get("fan.ceiling_fan").attributes["speed"] == SPEED_MEDIUM
+    assert hass.states.get("fan.ceiling_fan").attributes[ATTR_SPEED] == SPEED_MEDIUM
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 2
+    assert len(states) == 2
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
