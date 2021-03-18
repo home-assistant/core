@@ -19,6 +19,8 @@ ATTR_CH_OVRD = "ch_override"
 CONF_CLIMATE = "climate"
 CONF_FLOOR_TEMP = "floor_temperature"
 CONF_PRECISION = "precision"
+CONF_READ_PRECISION = "read_precision"
+CONF_SET_PRECISION = "set_precision"
 
 DATA_GATEWAYS = "gateways"
 DATA_OPENTHERM_GW = "opentherm_gw"
