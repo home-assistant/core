@@ -1,4 +1,4 @@
-"""The tests for the Netatmo climate platform."""
+"""The tests for the Netatmo oauth2 api."""
 from unittest.mock import patch
 
 from homeassistant.components.netatmo import api
