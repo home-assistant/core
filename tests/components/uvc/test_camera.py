@@ -1,5 +1,5 @@
 """The tests for UVC camera module."""
-from datetime import datetime
+from datetime import datetime, timedelta
 import socket
 from unittest.mock import MagicMock, call, patch
 
@@ -12,6 +12,9 @@ from homeassistant.components.uvc import camera as uvc
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.fixture(name="mock_remote")
@@ -208,21 +211,35 @@ async def test_setup_incomplete_config(hass, mock_remote, config):
     assert not camera_states
 
 
-@patch.object(uvc, "UnifiVideoCamera")
-@patch("uvcclient.nvr.UVCRemote")
 @pytest.mark.parametrize(
-    "error", [nvr.NotAuthorized, nvr.NvrError, requests.exceptions.ConnectionError]
+    "error, ready_states",
+    [
+        (nvr.NotAuthorized, 0),
+        (nvr.NvrError, 2),
+        (requests.exceptions.ConnectionError, 2),
+    ],
 )
-async def test_setup_nvr_errors_during_indexing(mock_remote, mock_uvc, hass, error):
+async def test_setup_nvr_errors_during_indexing(hass, mock_remote, error, ready_states):
     """Set up test for NVR errors during indexing."""
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    now = utcnow()
     mock_remote.return_value.index.side_effect = error
     assert await async_setup_component(hass, "camera", {"camera": config})
     await hass.async_block_till_done()
 
-    assert not mock_uvc.called
-    if error in [nvr.NvrError, requests.exceptions.ConnectionError]:
-        pytest.raises(PlatformNotReady)
+    camera_states = hass.states.async_all("camera")
+
+    assert not camera_states
+
+    # resolve the error
+    mock_remote.return_value.index.side_effect = None
+
+    async_fire_time_changed(hass, now + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == ready_states
 
 
 @patch.object(uvc, "UnifiVideoCamera")
