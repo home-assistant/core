@@ -19,6 +19,12 @@ def mock_remote_fixture(camera_info):
     """Mock the nvr.UVCRemote class."""
     with patch("homeassistant.components.uvc.camera.nvr.UVCRemote") as mock_remote:
         mock_remote.return_value.get_camera.return_value = camera_info
+        mock_cameras = [
+            {"uuid": "one", "name": "Front", "id": "id1"},
+            {"uuid": "two", "name": "Back", "id": "id2"},
+        ]
+        mock_remote.return_value.index.return_value = mock_cameras
+        mock_remote.return_value.server_version = (3, 2, 0)
         yield mock_remote
 
 
@@ -72,11 +78,6 @@ async def test_setup_full_config(hass, mock_remote, camera_info):
         "port": 123,
         "key": "secret",
     }
-    mock_cameras = [
-        {"uuid": "one", "name": "Front", "id": "id1"},
-        {"uuid": "two", "name": "Back", "id": "id2"},
-        {"uuid": "three", "name": "Old AirCam", "id": "id3"},
-    ]
 
     def mock_get_camera(uuid):
         """Create a mock camera."""
@@ -85,9 +86,10 @@ async def test_setup_full_config(hass, mock_remote, camera_info):
 
         return camera_info
 
-    mock_remote.return_value.index.return_value = mock_cameras
+    mock_remote.return_value.index.return_value.append(
+        {"uuid": "three", "name": "Old AirCam", "id": "id3"}
+    )
     mock_remote.return_value.get_camera.side_effect = mock_get_camera
-    mock_remote.return_value.server_version = (3, 2, 0)
 
     assert await async_setup_component(hass, "camera", {"camera": config})
     await hass.async_block_till_done()
@@ -122,12 +124,6 @@ async def test_setup_full_config(hass, mock_remote, camera_info):
 async def test_setup_partial_config(hass, mock_remote):
     """Test the setup with partial configuration."""
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
-    mock_cameras = [
-        {"uuid": "one", "name": "Front", "id": "id1"},
-        {"uuid": "two", "name": "Back", "id": "id2"},
-    ]
-    mock_remote.return_value.index.return_value = mock_cameras
-    mock_remote.return_value.server_version = (3, 2, 0)
 
     assert await async_setup_component(hass, "camera", {"camera": config})
     await hass.async_block_till_done()
