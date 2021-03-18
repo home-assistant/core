@@ -68,3 +68,23 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-motion"
+
+    # Test First MyZone Sensor
+    entity_id = "binary_sensor.zone_open_with_sensor_myzone"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "uniqueid-ac1-z01-myzone"
+
+    # Test Second Motion Sensor
+    entity_id = "binary_sensor.zone_closed_with_sensor_myzone"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    entry = registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "uniqueid-ac1-z02-myzone"
