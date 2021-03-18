@@ -36,6 +36,7 @@ from .const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_EFFECT_HIDE_LIST,
+    CONF_EFFECT_SHOW_LIST,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
     DEFAULT_PRIORITY,
@@ -453,8 +454,6 @@ class HyperionOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
 
         effects = {source: source for source in const.KEY_COMPONENTID_EXTERNAL_SOURCES}
         async with self._create_client() as hyperion_client:
@@ -463,6 +462,23 @@ class HyperionOptionsFlow(OptionsFlow):
             for effect in hyperion_client.effects or []:
                 if const.KEY_NAME in effect:
                     effects[effect[const.KEY_NAME]] = effect[const.KEY_NAME]
+
+        # If a new effect is added to Hyperion, we always want it to show by default. So
+        # rather than store a 'show list' in the config entry, we store a 'hide list'.
+        # However, it's more intuitive to ask the user to select which effects to show,
+        # so we inverse the meaning prior to storage.
+
+        if user_input is not None:
+            effect_show_list = user_input.pop(CONF_EFFECT_SHOW_LIST)
+            user_input[CONF_EFFECT_HIDE_LIST] = list(
+                set(effects) - set(effect_show_list)
+            )
+            return self.async_create_entry(title="", data=user_input)
+
+        default_effect_show_list = list(
+            set(effects)
+            - set(self._config_entry.options.get(CONF_EFFECT_HIDE_LIST, []))
+        )
 
         return self.async_show_form(
             step_id="init",
@@ -475,10 +491,8 @@ class HyperionOptionsFlow(OptionsFlow):
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
                     vol.Optional(
-                        CONF_EFFECT_HIDE_LIST,
-                        default=self._config_entry.options.get(
-                            CONF_EFFECT_HIDE_LIST, []
-                        ),
+                        CONF_EFFECT_SHOW_LIST,
+                        default=default_effect_show_list,
                     ): cv.multi_select(effects),
                 }
             ),

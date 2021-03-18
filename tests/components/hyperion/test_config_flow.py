@@ -12,6 +12,7 @@ from homeassistant.components.hyperion.const import (
     CONF_AUTH_ID,
     CONF_CREATE_TOKEN,
     CONF_EFFECT_HIDE_LIST,
+    CONF_EFFECT_SHOW_LIST,
     CONF_PRIORITY,
     DOMAIN,
 )
@@ -759,8 +760,8 @@ async def test_options_priority(hass: HomeAssistantType) -> None:
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 
-async def test_options_effect_hide_list(hass: HomeAssistantType) -> None:
-    """Check an options flow effect hide list."""
+async def test_options_effect_show_list(hass: HomeAssistantType) -> None:
+    """Check an options flow effect show list."""
 
     config_entry = add_test_config_entry(hass)
 
@@ -781,7 +782,8 @@ async def test_options_effect_hide_list(hass: HomeAssistantType) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_EFFECT_HIDE_LIST: ["effect2"]}
+            result["flow_id"],
+            user_input={CONF_EFFECT_SHOW_LIST: ["effect1", "effect3"]},
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
