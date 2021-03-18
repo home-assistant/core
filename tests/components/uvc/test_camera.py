@@ -155,17 +155,9 @@ async def test_setup_partial_config(hass, mock_remote):
     assert entity_entry.unique_id == "id2"
 
 
-@patch("uvcclient.nvr.UVCRemote")
-@patch.object(uvc, "UnifiVideoCamera")
-async def test_setup_partial_config_v31x(mock_uvc, mock_remote, hass):
+async def test_setup_partial_config_v31x(hass, mock_remote):
     """Test the setup with a v3.1.x server."""
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
-    mock_cameras = [
-        {"uuid": "one", "name": "Front", "id": "id1"},
-        {"uuid": "two", "name": "Back", "id": "id2"},
-    ]
-    mock_remote.return_value.index.return_value = mock_cameras
-    mock_remote.return_value.get_camera.return_value = {"model": "UVC"}
     mock_remote.return_value.server_version = (3, 1, 3)
 
     assert await async_setup_component(hass, "camera", {"camera": config})
@@ -173,12 +165,29 @@ async def test_setup_partial_config_v31x(mock_uvc, mock_remote, hass):
 
     assert mock_remote.call_count == 1
     assert mock_remote.call_args == call("foo", 7080, "secret", ssl=False)
-    mock_uvc.assert_has_calls(
-        [
-            call(mock_remote.return_value, "one", "Front", "ubnt"),
-            call(mock_remote.return_value, "two", "Back", "ubnt"),
-        ]
-    )
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == 2
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.name == "Front"
+
+    state = hass.states.get("camera.back")
+
+    assert state
+    assert state.name == "Back"
+
+    entity_registry = async_get_entity_registry(hass)
+    entity_entry = entity_registry.async_get("camera.front")
+
+    assert entity_entry.unique_id == "one"
+
+    entity_entry = entity_registry.async_get("camera.back")
+
+    assert entity_entry.unique_id == "two"
 
 
 @patch.object(uvc, "UnifiVideoCamera")
