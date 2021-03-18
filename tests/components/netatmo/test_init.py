@@ -52,8 +52,12 @@ async def test_setup_component(hass):
     assert config_entry.state == config_entries.ENTRY_STATE_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
+    assert hass.states.get("climate.netatmo_livingroom").state == "auto"
+
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert hass.states.get("climate.netatmo_livingroom").state == "unavailable"
 
 
 async def test_setup_component_with_config(hass, config_entry):
@@ -98,10 +102,13 @@ async def test_setup_component_with_webhook(hass, entry):
         {"type": None, "data": webhook_data},
     )
     await hass.async_block_till_done()
-    assert hass.data["netatmo"][entry.entry_id]["netatmo_data_handler"].webhook is True
+
+    assert hass.states.get("climate.netatmo_livingroom").state == "auto"
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
+
+    assert hass.states.get("climate.netatmo_livingroom").state == "unavailable"
 
 
 async def test_setup_without_https(hass, config_entry):
@@ -129,9 +136,11 @@ async def test_setup_without_https(hass, config_entry):
         is False
     )
 
+    assert hass.states.get("climate.netatmo_livingroom").state == "auto"
+
 
 async def test_setup_with_cloud(hass, config_entry):
-    """Test if setup with cloud and without https."""
+    """Test if set up with cloud link and without https."""
     await mock_cloud(hass)
     hass.data["cloud"].id_token = jwt.encode(
         {
