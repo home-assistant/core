@@ -22,7 +22,7 @@ async def run_sensor_test(
     setup_callback: Callable[[pv.VeraController], None] = None,
 ) -> None:
     """Test generic sensor."""
-    vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
+    vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
     vera_device.comm_failure = False
@@ -178,7 +178,7 @@ async def test_scene_controller_sensor(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraSensor)  # type: pv.VeraSensor
+    vera_device: pv.VeraSensor = MagicMock(spec=pv.VeraSensor)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
     vera_device.comm_failure = False

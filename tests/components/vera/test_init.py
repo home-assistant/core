@@ -24,7 +24,7 @@ async def test_init(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
@@ -51,7 +51,7 @@ async def test_init_from_file(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
@@ -78,14 +78,14 @@ async def test_multiple_controllers_with_legacy_one(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test multiple controllers with one legacy controller."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
     vera_device1.is_tripped = False
     entity1_id = "binary_sensor.first_dev_1"
 
-    vera_device2 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device2: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device2.device_id = 2
     vera_device2.vera_device_id = vera_device2.device_id
     vera_device2.name = "second_dev"
@@ -133,7 +133,7 @@ async def test_unload(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = vera_device1.device_id
     vera_device1.name = "first_dev"
@@ -187,21 +187,21 @@ async def test_exclude_and_light_ids(
     hass: HomeAssistant, vera_component_factory: ComponentFactory, options
 ) -> None:
     """Test device exclusion, marking switches as lights and fixing the data type."""
-    vera_device1 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device1: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device1.device_id = 1
     vera_device1.vera_device_id = 1
     vera_device1.name = "dev1"
     vera_device1.is_tripped = False
     entity_id1 = "binary_sensor.dev1_1"
 
-    vera_device2 = MagicMock(spec=pv.VeraBinarySensor)  # type: pv.VeraBinarySensor
+    vera_device2: pv.VeraBinarySensor = MagicMock(spec=pv.VeraBinarySensor)
     vera_device2.device_id = 2
     vera_device2.vera_device_id = 2
     vera_device2.name = "dev2"
     vera_device2.is_tripped = False
     entity_id2 = "binary_sensor.dev2_2"
 
-    vera_device3 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
+    vera_device3: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device3.device_id = 3
     vera_device3.vera_device_id = 3
     vera_device3.name = "dev3"
@@ -210,7 +210,7 @@ async def test_exclude_and_light_ids(
 
     entity_id3 = "switch.dev3_3"
 
-    vera_device4 = MagicMock(spec=pv.VeraSwitch)  # type: pv.VeraSwitch
+    vera_device4: pv.VeraSwitch = MagicMock(spec=pv.VeraSwitch)
     vera_device4.device_id = 4
     vera_device4.vera_device_id = 4
     vera_device4.name = "dev4"
