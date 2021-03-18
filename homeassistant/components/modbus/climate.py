@@ -1,8 +1,10 @@
 """Support for Generic Modbus Thermostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 import struct
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -57,7 +59,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Read configuration and create Modbus climate."""
     if discovery_info is None:
@@ -108,7 +110,7 @@ class ModbusThermostat(ClimateEntity):
     def __init__(
         self,
         hub: ModbusHub,
-        config: Dict[str, Any],
+        config: dict[str, Any],
     ):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
@@ -232,7 +234,7 @@ class ModbusThermostat(ClimateEntity):
 
         self.schedule_update_ha_state()
 
-    def _read_register(self, register_type, register) -> Optional[float]:
+    def _read_register(self, register_type, register) -> float | None:
         """Read register using the Modbus hub slave."""
         try:
             if register_type == CALL_TYPE_REGISTER_INPUT:
