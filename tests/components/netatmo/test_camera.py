@@ -8,7 +8,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .common import simulate_webhook
+from .common import COMMON_RESPONSE, simulate_webhook
 
 
 async def test_setup_component_with_webhook(hass, camera_entry):
@@ -19,52 +19,75 @@ async def test_setup_component_with_webhook(hass, camera_entry):
     camera_entity_indoor = "camera.netatmo_hall"
     camera_entity_outdoor = "camera.netatmo_garden"
     assert hass.states.get(camera_entity_indoor).state == "streaming"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "off",'
-        b'"device_id": "12:34:56:00:f1:62","home_id": "91763b24c43d3e344f424e8b",'
-        b'"home_name": "LXMBRG","camera_id": "12:34:56:00:f1:62",'
-        b'"event_id": "601dce1560abca1ebad9b723","push_type": "NACamera-off"}'
-    )
+    response = {
+        **COMMON_RESPONSE,
+        **{
+            "event_type": "off",
+            "device_id": "12:34:56:00:f1:62",
+            "camera_id": "12:34:56:00:f1:62",
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": "NACamera-off",
+        },
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "idle"
 
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "on",'
-        b'"device_id": "12:34:56:00:f1:62","home_id": "91763b24c43d3e344f424e8b",'
-        b'"home_name": "LXMBRG","camera_id": "12:34:56:00:f1:62",'
-        b'"event_id": "646227f1dc0dfa000ec5f350","push_type": "NACamera-on"}'
-    )
+    response = {
+        **COMMON_RESPONSE,
+        **{
+            "event_type": "on",
+            "device_id": "12:34:56:00:f1:62",
+            "camera_id": "12:34:56:00:f1:62",
+            "event_id": "646227f1dc0dfa000ec5f350",
+            "push_type": "NACamera-on",
+        },
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
 
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8d", "event_type": "light_mode",'
-        b'"device_id": "12:34:56:00:a5:a4", "home_id": "91763b24c43d3e344f424e8b",'
-        b'"home_name": "LXMBRG", "camera_id": "12:34:56:00:a5:a4",'
-        b'"event_id": "601dce1560abca1ebad9b723", "push_type": "NOC-light_mode", "sub_type": "on"}'
-    )
+    response = {
+        **COMMON_RESPONSE,
+        **{
+            "event_type": "light_mode",
+            "device_id": "12:34:56:00:a5:a4",
+            "camera_id": "12:34:56:00:a5:a4",
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": "NOC-light_mode",
+            "sub_type": "on",
+        },
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "on"
 
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "light_mode",'
-        b'"device_id": "12:34:56:00:a5:a4","home_id": "91763b24c43d3e344f424e8b",'
-        b'"home_name": "LXMBRG","camera_id": "12:34:56:00:a5:a4",'
-        b'"event_id": "601dce1560abca1ebad9b723","push_type": "NOC-light_mode","sub_type": "auto"}'
-    )
+    response = {
+        **COMMON_RESPONSE,
+        **{
+            "event_type": "light_mode",
+            "device_id": "12:34:56:00:a5:a4",
+            "camera_id": "12:34:56:00:a5:a4",
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": "NOC-light_mode",
+            "sub_type": "auto",
+        },
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
 
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8d","event_type": "light_mode",'
-        b'"device_id": "12:34:56:00:a5:a4","home_id": "91763b24c43d3e344f424e8b",'
-        b'"home_name":"LXMBRG","event_id":"601dce1560abca1ebad9b723","push_type":"NOC-light_mode"}'
-    )
+    response = {
+        **COMMON_RESPONSE,
+        **{
+            "event_type": "light_mode",
+            "device_id": "12:34:56:00:a5:a4",
+            "home_name": "LXMBRG",
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": "NOC-light_mode",
+        },
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
