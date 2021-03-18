@@ -21,7 +21,7 @@ async def test_switch(hass, hank_binary_switch, integration, client):
         "switch", "turn_on", {"entity_id": SWITCH_ENTITY}, blocking=True
     )
 
-    args = client.async_send_command_no_wait.call_args[0][0]
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
@@ -68,7 +68,7 @@ async def test_switch(hass, hank_binary_switch, integration, client):
         "switch", "turn_off", {"entity_id": SWITCH_ENTITY}, blocking=True
     )
 
-    args = client.async_send_command_no_wait.call_args[0][0]
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 32
     assert args["valueId"] == {
@@ -102,8 +102,8 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
         DOMAIN, SERVICE_TURN_OFF, {"entity_id": entity}, blocking=True
     )
 
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 12
     assert args["value"] == 0
@@ -134,7 +134,7 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
     state = hass.states.get(entity)
     assert state.state == STATE_OFF
 
-    client.async_send_command_no_wait.reset_mock()
+    client.async_send_command.reset_mock()
 
     # Test turning on
     await hass.services.async_call(
@@ -143,8 +143,8 @@ async def test_barrier_signaling_switch(hass, gdc_zw062, integration, client):
 
     # Note: the valueId's value is still 255 because we never
     # received an updated value
-    assert len(client.async_send_command_no_wait.call_args_list) == 1
-    args = client.async_send_command_no_wait.call_args[0][0]
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 12
     assert args["value"] == 255
