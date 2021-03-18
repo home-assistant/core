@@ -1,6 +1,7 @@
 """Support for Onkyo Receivers."""
+from __future__ import annotations
+
 import logging
-from typing import List
 
 import eiscp
 from eiscp import eISCP
@@ -56,7 +57,7 @@ SUPPORT_ONKYO_WO_VOLUME = (
     | SUPPORT_PLAY_MEDIA
 )
 
-KNOWN_HOSTS: List[str] = []
+KNOWN_HOSTS: list[str] = []
 DEFAULT_SOURCES = {
     "tv": "TV",
     "bd": "Bluray",

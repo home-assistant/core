@@ -1,8 +1,9 @@
 """ONVIF device abstraction."""
+from __future__ import annotations
+
 import asyncio
 import datetime as dt
 import os
-from typing import List
 
 from httpx import RequestError
 import onvif
@@ -50,7 +51,7 @@ class ONVIFDevice:
 
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
-        self.profiles: List[Profile] = []
+        self.profiles: list[Profile] = []
         self.max_resolution: int = 0
 
         self._dt_diff_seconds: int = 0
@@ -262,7 +263,7 @@ class ONVIFDevice:
 
         return Capabilities(snapshot, pullpoint, ptz)
 
-    async def async_get_profiles(self) -> List[Profile]:
+    async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()

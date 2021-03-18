@@ -1,7 +1,7 @@
 """Support for Google Nest SDM sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
@@ -67,7 +67,7 @@ class SensorBase(Entity):
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-{self.device_class}"
@@ -113,7 +113,7 @@ class HumiditySensor(SensorBase):
     """Representation of a Humidity Sensor."""
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API returns the identifier under the name field.
         return f"{self._device.name}-humidity"

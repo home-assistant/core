@@ -1,6 +1,7 @@
 """Config flow for ONVIF."""
+from __future__ import annotations
+
 from pprint import pformat
-from typing import List
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -36,7 +37,7 @@ from .device import get_device
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 
-def wsdiscovery() -> List[Service]:
+def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
     discovery = WSDiscovery(ttl=4)
     discovery.start()

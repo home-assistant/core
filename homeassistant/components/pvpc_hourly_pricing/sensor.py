@@ -1,7 +1,8 @@
 """Sensor to collect the reference daily prices of electricity ('PVPC') in Spain."""
+from __future__ import annotations
+
 import logging
 from random import randint
-from typing import Optional
 
 from aiopvpc import PVPCData
 
@@ -92,7 +93,7 @@ class ElecPriceSensor(RestoreEntity):
         self.update_current_price(dt_util.utcnow())
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
 

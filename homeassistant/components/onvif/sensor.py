@@ -1,5 +1,5 @@
 """Support for ONVIF binary sensors."""
-from typing import Optional, Union
+from __future__ import annotations
 
 from homeassistant.core import callback
 
@@ -43,7 +43,7 @@ class ONVIFSensor(ONVIFBaseEntity):
         super().__init__(device)
 
     @property
-    def state(self) -> Union[None, str, int, float]:
+    def state(self) -> None | str | int | float:
         """Return the state of the entity."""
         return self.device.events.get_uid(self.uid).value
 
@@ -53,12 +53,12 @@ class ONVIFSensor(ONVIFBaseEntity):
         return self.device.events.get_uid(self.uid).name
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self.device.events.get_uid(self.uid).device_class
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         return self.device.events.get_uid(self.uid).unit_of_measurement
 

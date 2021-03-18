@@ -1,7 +1,9 @@
 """ONVIF event abstraction."""
+from __future__ import annotations
+
 import asyncio
 import datetime as dt
-from typing import Callable, Dict, List, Optional, Set
+from typing import Callable
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
@@ -34,14 +36,14 @@ class EventManager:
         self.started: bool = False
 
         self._subscription: ONVIFService = None
-        self._events: Dict[str, Event] = {}
-        self._listeners: List[CALLBACK_TYPE] = []
-        self._unsub_refresh: Optional[CALLBACK_TYPE] = None
+        self._events: dict[str, Event] = {}
+        self._listeners: list[CALLBACK_TYPE] = []
+        self._unsub_refresh: CALLBACK_TYPE | None = None
 
         super().__init__()
 
     @property
-    def platforms(self) -> Set[str]:
+    def platforms(self) -> set[str]:
         """Return platforms to setup."""
         return {event.platform for event in self._events.values()}
 
@@ -229,6 +231,6 @@ class EventManager:
         """Retrieve event for given id."""
         return self._events[uid]
 
-    def get_platform(self, platform) -> List[Event]:
+    def get_platform(self, platform) -> list[Event]:
         """Retrieve events for given platform."""
         return [event for event in self._events.values() if event.platform == platform]

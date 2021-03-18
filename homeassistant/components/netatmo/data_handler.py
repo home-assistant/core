@@ -1,11 +1,13 @@
 """The Netatmo data handler."""
+from __future__ import annotations
+
 from collections import deque
 from datetime import timedelta
 from functools import partial
 from itertools import islice
 import logging
 from time import time
-from typing import Deque, Dict, List
+from typing import Deque
 
 import pyatmo
 
@@ -55,8 +57,8 @@ class NetatmoDataHandler:
         """Initialize self."""
         self.hass = hass
         self._auth = hass.data[DOMAIN][entry.entry_id][AUTH]
-        self.listeners: List[CALLBACK_TYPE] = []
-        self._data_classes: Dict = {}
+        self.listeners: list[CALLBACK_TYPE] = []
+        self._data_classes: dict = {}
         self.data = {}
         self._queue: Deque = deque()
         self._webhook: bool = False

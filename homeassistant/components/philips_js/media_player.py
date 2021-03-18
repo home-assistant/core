@@ -1,5 +1,7 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from haphilipsjs import ConnectionFailure
 import voluptuous as vol
@@ -125,7 +127,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
-        system: Dict[str, Any],
+        system: dict[str, Any],
         unique_id: str,
     ):
         """Initialize the Philips TV."""
@@ -137,10 +139,10 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._system = system
         self._unique_id = unique_id
         self._state = STATE_OFF
-        self._media_content_type: Optional[str] = None
-        self._media_content_id: Optional[str] = None
-        self._media_title: Optional[str] = None
-        self._media_channel: Optional[str] = None
+        self._media_content_type: str | None = None
+        self._media_content_id: str | None = None
+        self._media_title: str | None = None
+        self._media_channel: str | None = None
 
         super().__init__(coordinator)
         self._update_from_coordinator()
