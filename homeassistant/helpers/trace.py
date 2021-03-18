@@ -1,12 +1,10 @@
 """Helpers for script and condition tracing."""
-import asyncio
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from functools import partial, wraps
+from functools import wraps
 from typing import (
     Any,
-    Awaitable,
     Callable,
     Deque,
     Dict,
@@ -191,39 +189,21 @@ def trace_path(suffix: Union[str, List[str]]) -> Generator:
         trace_path_pop(count)
 
 
-def trace_path_decorator(suffix: Union[str, List[str]]) -> Callable:
+def async_trace_path(suffix: Union[str, List[str]]) -> Callable:
     """Go deeper in the config tree.
 
-    Can be used as a decorator both on normal and coroutine functions.
+    To be used as a decorator on coroutine functions.
     """
 
     def _trace_path_decorator(func: Callable) -> Callable:
-        """Decorate a callback to catch and log exceptions."""
-        # Check for partials to properly determine if coroutine function
-        check_func = func
-        while isinstance(check_func, partial):
-            check_func = check_func.func
+        """Decorate a coroutine function."""
 
-        wrapper_func: Union[Callable[..., None], Callable[..., Awaitable[None]]]
-        if asyncio.iscoroutinefunction(check_func):
-            async_func = cast(Callable[..., Awaitable[None]], func)
+        @wraps(func)
+        async def async_wrapper(*args: Any) -> None:
+            """Catch and log exception."""
+            with trace_path(suffix):
+                await func(*args)
 
-            @wraps(async_func)
-            async def async_wrapper(*args: Any) -> None:
-                """Catch and log exception."""
-                with trace_path(suffix):
-                    await async_func(*args)
-
-            wrapper_func = async_wrapper
-        else:
-
-            @wraps(func)
-            def wrapper(*args: Any) -> None:
-                """Catch and log exception."""
-                with trace_path(suffix):
-                    func(*args)
-
-            wrapper_func = wrapper
-        return wrapper_func
+        return async_wrapper
 
     return _trace_path_decorator

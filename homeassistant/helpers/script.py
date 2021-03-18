@@ -81,10 +81,10 @@ from homeassistant.util.dt import utcnow
 
 from .trace import (
     TraceElement,
+    async_trace_path,
     trace_append_element,
     trace_id_get,
     trace_path,
-    trace_path_decorator,
     trace_path_get,
     trace_set_result,
     trace_stack_cv,
@@ -644,7 +644,7 @@ class _ScriptRun:
         result = traced_test_conditions(self._hass, self._variables)
         return result
 
-    @trace_path_decorator("repeat")
+    @async_trace_path("repeat")
     async def _async_repeat_step(self):
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
