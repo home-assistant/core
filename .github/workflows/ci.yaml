@@ -613,7 +613,7 @@ jobs:
       - name: Run pylint
         run: |
           . venv/bin/activate
-          pylint --init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; print(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins"))' homeassistant
+          pylint --init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins"))' homeassistant
 
   mypy:
     name: Check mypy
