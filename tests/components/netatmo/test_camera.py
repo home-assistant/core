@@ -1,4 +1,4 @@
-"""The tests for Netatmo device triggers."""
+"""The tests for Netatmo camera."""
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
 from homeassistant.components.netatmo.const import (
