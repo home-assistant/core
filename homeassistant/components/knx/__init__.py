@@ -367,9 +367,7 @@ class KNXModule:
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
             ConnectionSchema.CONF_KNX_LOCAL_IP
         )
-        route_back = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
-            ConnectionSchema.CONF_KNX_ROUTE_BACK
-        )
+        route_back = self.config[DOMAIN][CONF_KNX_TUNNELING][ConnectionSchema.CONF_KNX_ROUTE_BACK]
         return ConnectionConfig(
             connection_type=ConnectionType.TUNNELING,
             gateway_ip=gateway_ip,
