@@ -1,6 +1,8 @@
 """Support for KNX/IP fans."""
+from __future__ import annotations
+
 import math
-from typing import Any, Optional
+from typing import Any
 
 from xknx.devices import Fan as XknxFan
 from xknx.devices.fan import FanSpeedMode
@@ -58,7 +60,7 @@ class KNXFan(KnxEntity, FanEntity):
         return flags
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if self._device.current_speed is None:
             return None
@@ -78,9 +80,9 @@ class KNXFan(KnxEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""

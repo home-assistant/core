@@ -1,6 +1,7 @@
 """Provides an HTTP API for mobile_app."""
+from __future__ import annotations
+
 import secrets
-from typing import Dict
 
 from aiohttp.web import Request, Response
 import emoji
@@ -58,7 +59,7 @@ class RegistrationsView(HomeAssistantView):
             extra=vol.REMOVE_EXTRA,
         )
     )
-    async def post(self, request: Request, data: Dict) -> Response:
+    async def post(self, request: Request, data: dict) -> Response:
         """Handle the POST request for registration."""
         hass = request.app["hass"]
 
