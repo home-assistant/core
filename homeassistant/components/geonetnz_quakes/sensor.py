@@ -1,6 +1,7 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Quakes Feeds."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -115,7 +116,7 @@ class GeonetnzQuakesSensor(Entity):
         return self._config_unique_id
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return f"GeoNet NZ Quakes ({self._config_title})"
 
