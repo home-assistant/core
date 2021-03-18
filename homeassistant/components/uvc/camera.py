@@ -12,6 +12,7 @@ from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Cam
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -258,5 +259,5 @@ class UnifiVideoCamera(Camera):
 def timestamp_ms_to_date(epoch_ms: int) -> Optional[datetime]:
     """Convert millisecond timestamp to datetime."""
     if epoch_ms:
-        return datetime.fromtimestamp(epoch_ms / 1000)
+        return utc_from_timestamp(epoch_ms / 1000)
     return None
