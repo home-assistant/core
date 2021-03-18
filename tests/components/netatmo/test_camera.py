@@ -98,7 +98,7 @@ async def test_camera_image_local(hass, camera_entry, requests_mock):
 
 
 async def test_camera_image_vpn(hass, camera_entry, requests_mock):
-    """Test retrieval or remote camera image."""
+    """Test retrieval of remote camera image."""
     await hass.async_block_till_done()
 
     uri = (
