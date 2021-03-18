@@ -1,6 +1,7 @@
 """Implement the Google Smart Home traits."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 from homeassistant.components import (
     alarm_control_panel,
@@ -153,7 +154,7 @@ def _google_temp_unit(units):
     return "C"
 
 
-def _next_selected(items: List[str], selected: Optional[str]) -> Optional[str]:
+def _next_selected(items: list[str], selected: str | None) -> str | None:
     """Return the next item in a item list starting at given value.
 
     If selected is missing in items, None is returned
