@@ -505,7 +505,7 @@ def async_set_service_schema(
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistantType,
-    platforms: Iterable["EntityPlatform"],
+    platforms: Iterable[EntityPlatform],
     func: str | Callable[..., Any],
     call: ha.ServiceCall,
     required_features: Iterable[int] | None = None,
@@ -548,7 +548,7 @@ async def entity_service_call(
     # Check the permissions
 
     # A list with entities to call the service on.
-    entity_candidates: list["Entity"] = []
+    entity_candidates: list[Entity] = []
 
     if entity_perms is None:
         for platform in platforms:

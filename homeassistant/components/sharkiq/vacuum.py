@@ -69,7 +69,7 @@ ATTR_RSSI = "rssi"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Shark IQ vacuum cleaner."""
     coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    devices: Iterable["SharkIqVacuum"] = coordinator.shark_vacs.values()
+    devices: Iterable[SharkIqVacuum] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
     _LOGGER.debug(
         "Found %d Shark IQ device(s): %s",
