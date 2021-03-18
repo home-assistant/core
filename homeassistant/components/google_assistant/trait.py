@@ -763,7 +763,7 @@ class TemperatureSettingTrait(_Trait):
                 mode in modes for mode in ("heatcool", "heat", "cool")
             ):
                 modes.append("on")
-            response["availableThermostatModes"] = ",".join(modes)
+            response["availableThermostatModes"] = modes
 
         return response
 
