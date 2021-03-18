@@ -1,8 +1,9 @@
 """Support for device tracking of Huawei LTE routers."""
+from __future__ import annotations
 
 import logging
 import re
-from typing import Any, Callable, Dict, List, Optional, Set, cast
+from typing import Any, Callable, cast
 
 import attr
 from stringcase import snakecase
@@ -31,7 +32,7 @@ _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up from config entry."""
 
@@ -46,9 +47,9 @@ async def async_setup_entry(
         return
 
     # Initialize already tracked entities
-    tracked: Set[str] = set()
+    tracked: set[str] = set()
     registry = await entity_registry.async_get_registry(hass)
-    known_entities: List[Entity] = []
+    known_entities: list[Entity] = []
     for entity in registry.entities.values():
         if (
             entity.domain == DEVICE_TRACKER_DOMAIN
@@ -82,8 +83,8 @@ async def async_setup_entry(
 def async_add_new_entities(
     hass: HomeAssistantType,
     router_url: str,
-    async_add_entities: Callable[[List[Entity], bool], None],
-    tracked: Set[str],
+    async_add_entities: Callable[[list[Entity], bool], None],
+    tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
     router = hass.data[DOMAIN].routers[router_url]
@@ -93,7 +94,7 @@ def async_add_new_entities(
         _LOGGER.debug("%s[%s][%s] not in data", KEY_WLAN_HOST_LIST, "Hosts", "Host")
         return
 
-    new_entities: List[Entity] = []
+    new_entities: list[Entity] = []
     for host in (x for x in hosts if x.get("MacAddress")):
         entity = HuaweiLteScannerEntity(router, host["MacAddress"])
         if entity.unique_id in tracked:
@@ -125,8 +126,8 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     mac: str = attr.ib()
 
     _is_connected: bool = attr.ib(init=False, default=False)
-    _hostname: Optional[str] = attr.ib(init=False, default=None)
-    _extra_state_attributes: Dict[str, Any] = attr.ib(init=False, factory=dict)
+    _hostname: str | None = attr.ib(init=False, default=None)
+    _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self) -> None:
         """Initialize internal state."""
@@ -151,7 +152,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         return self._is_connected
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attributes related to entity state."""
         return self._extra_state_attributes
 
