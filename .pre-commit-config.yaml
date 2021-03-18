@@ -67,6 +67,19 @@ repos:
     hooks:
       - id: prettier
         stages: [manual]
+  - repo: https://github.com/cdce8p/python-typing-update
+    rev: v0.3.0
+    hooks:
+      # Run `python-typing-update` hook manually from time to time
+      # to update python typing syntax.
+      # Will require manual work, before submitting changes!
+      - id: python-typing-update
+        stages: [manual]
+        args:
+          - --py38-plus
+          - --force
+          - --keep-updates
+        files: ^(homeassistant|tests|script)/.+\.py$
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible
