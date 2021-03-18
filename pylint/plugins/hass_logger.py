@@ -70,7 +70,7 @@ class HassLoggerFormatChecker(BaseChecker):
             self.add_message("hass-logger-period", args=node.args, node=node)
 
         if (
-            isinstance(node.func.attrname,str) and 
+            isinstance(node.func.attrname, str) and 
             node.func.attrname not in LOG_LEVEL_ALLOWED_LOWER_START and
             log_message[0].upper() != log_message[0]
         ):
