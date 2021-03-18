@@ -73,7 +73,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Optional(ATTR_DATA): {
-            vol.Optional[ATTR_IMAGES]: vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
         },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     }
