@@ -1,4 +1,6 @@
 """The tests for Netatmo camera."""
+from unittest.mock import patch
+
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
 from homeassistant.components.netatmo.const import (
@@ -155,23 +157,23 @@ async def test_service_set_person_away(hass, camera_entry, caplog):
         "person": "Richard Doe",
     }
 
-    await hass.services.async_call(
-        "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
-    )
-    await hass.async_block_till_done()
-
-    assert "Set Richard Doe as away" in caplog.text
+    with patch("pyatmo.camera.CameraData.set_persons_away") as mock_post_request:
+        await hass.services.async_call(
+            "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
+        )
+        await hass.async_block_till_done()
+        mock_post_request.assert_called_once()
 
     data = {
         "entity_id": "camera.netatmo_hall",
     }
 
-    await hass.services.async_call(
-        "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
-    )
-    await hass.async_block_till_done()
-
-    assert "Set home as empty" in caplog.text
+    with patch("pyatmo.camera.CameraData.set_persons_away") as mock_post_request:
+        await hass.services.async_call(
+            "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
+        )
+        await hass.async_block_till_done()
+        mock_post_request.assert_called_once()
 
 
 async def test_service_set_persons_home(hass, camera_entry, caplog):
@@ -183,12 +185,12 @@ async def test_service_set_persons_home(hass, camera_entry, caplog):
         "persons": "John Doe",
     }
 
-    await hass.services.async_call(
-        "netatmo", SERVICE_SET_PERSONS_HOME, service_data=data
-    )
-    await hass.async_block_till_done()
-
-    assert "Set ['John Doe'] as at home" in caplog.text
+    with patch("pyatmo.camera.CameraData.set_persons_home") as mock_post_request:
+        await hass.services.async_call(
+            "netatmo", SERVICE_SET_PERSONS_HOME, service_data=data
+        )
+        await hass.async_block_till_done()
+        mock_post_request.assert_called_once()
 
 
 async def test_service_set_camera_light(hass, camera_entry, caplog):
@@ -200,9 +202,9 @@ async def test_service_set_camera_light(hass, camera_entry, caplog):
         "camera_light_mode": "on",
     }
 
-    await hass.services.async_call(
-        "netatmo", SERVICE_SET_CAMERA_LIGHT, service_data=data
-    )
-    await hass.async_block_till_done()
-
-    assert "Turn on camera light for 'Netatmo Garden'" in caplog.text
+    with patch("pyatmo.camera.CameraData.set_state") as mock_post_request:
+        await hass.services.async_call(
+            "netatmo", SERVICE_SET_CAMERA_LIGHT, service_data=data
+        )
+        await hass.async_block_till_done()
+        mock_post_request.assert_called_once()
