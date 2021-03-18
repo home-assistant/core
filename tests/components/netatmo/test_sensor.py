@@ -16,10 +16,10 @@ async def test_weather_sensor(hass, sensor_entry):
     """Test weather sensor setup."""
     prefix = "sensor.netatmo_mystation_"
 
-    assert hass.states.get(prefix + "temperature").state == "24.6"
-    assert hass.states.get(prefix + "humidity").state == "36"
-    assert hass.states.get(prefix + "co2").state == "749"
-    assert hass.states.get(prefix + "pressure").state == "1017.3"
+    assert hass.states.get(f"{prefix}temperature").state == "24.6"
+    assert hass.states.get(f"{prefix}humidity").state == "36"
+    assert hass.states.get(f"{prefix}co2").state == "749"
+    assert hass.states.get(f"{prefix}pressure").state == "1017.3"
 
 
 async def test_public_weather_sensor(hass, sensor_entry):
@@ -28,15 +28,15 @@ async def test_public_weather_sensor(hass, sensor_entry):
 
     prefix = "sensor.netatmo_home_max_"
 
-    assert hass.states.get(prefix + "temperature").state == "27.4"
-    assert hass.states.get(prefix + "humidity").state == "76"
-    assert hass.states.get(prefix + "pressure").state == "1014.4"
+    assert hass.states.get(f"{prefix}temperature").state == "27.4"
+    assert hass.states.get(f"{prefix}humidity").state == "76"
+    assert hass.states.get(f"{prefix}pressure").state == "1014.4"
 
     prefix = "sensor.netatmo_home_avg_"
 
-    assert hass.states.get(prefix + "temperature").state == "22.7"
-    assert hass.states.get(prefix + "humidity").state == "63.2"
-    assert hass.states.get(prefix + "pressure").state == "1010.3"
+    assert hass.states.get(f"{prefix}temperature").state == "22.7"
+    assert hass.states.get(f"{prefix}humidity").state == "63.2"
+    assert hass.states.get(f"{prefix}pressure").state == "1010.3"
 
     # Test adding new public area
     area_a = NetatmoArea(
@@ -72,9 +72,9 @@ async def test_public_weather_sensor(hass, sensor_entry):
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get(prefix + "temperature").state == "22.7"
-    assert hass.states.get(prefix + "humidity").state == "63.2"
-    assert hass.states.get(prefix + "pressure").state == "1010.3"
+    assert hass.states.get(f"{prefix}temperature").state == "22.7"
+    assert hass.states.get(f"{prefix}humidity").state == "63.2"
+    assert hass.states.get(f"{prefix}pressure").state == "1010.3"
 
 
 @pytest.mark.parametrize(
