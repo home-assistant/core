@@ -5,16 +5,7 @@ import asyncio
 import dataclasses
 from functools import partial, wraps
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Awaitable,
-    Callable,
-    Iterable,
-    Optional,
-    TypedDict,
-    Union,
-)
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Iterable, TypedDict
 
 import voluptuous as vol
 
@@ -83,9 +74,9 @@ class ServiceTargetSelector:
 
     def __init__(self, service_call: ha.ServiceCall):
         """Extract ids from service call data."""
-        entity_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_ENTITY_ID)
-        device_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_DEVICE_ID)
-        area_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_AREA_ID)
+        entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
+        device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
+        area_ids: str | list | None = service_call.data.get(ATTR_AREA_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -319,7 +310,7 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-def _has_match(ids: Optional[Union[str, list]]) -> bool:
+def _has_match(ids: str | list | None) -> bool:
     """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
 
@@ -514,7 +505,7 @@ def async_set_service_schema(
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistantType,
-    platforms: Iterable["EntityPlatform"],
+    platforms: Iterable[EntityPlatform],
     func: str | Callable[..., Any],
     call: ha.ServiceCall,
     required_features: Iterable[int] | None = None,
@@ -557,7 +548,7 @@ async def entity_service_call(
     # Check the permissions
 
     # A list with entities to call the service on.
-    entity_candidates: list["Entity"] = []
+    entity_candidates: list[Entity] = []
 
     if entity_perms is None:
         for platform in platforms:

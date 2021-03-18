@@ -214,9 +214,9 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
-    auth: "AuthManager"
-    http: "HomeAssistantHTTP" = None  # type: ignore
-    config_entries: "ConfigEntries" = None  # type: ignore
+    auth: AuthManager
+    http: HomeAssistantHTTP = None  # type: ignore
+    config_entries: ConfigEntries = None  # type: ignore
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""

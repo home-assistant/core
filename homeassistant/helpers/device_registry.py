@@ -658,7 +658,7 @@ def async_entries_for_config_entry(
 
 @callback
 def async_config_entry_disabled_by_changed(
-    registry: DeviceRegistry, config_entry: "ConfigEntry"
+    registry: DeviceRegistry, config_entry: ConfigEntry
 ) -> None:
     """Handle a config entry being disabled or enabled.
 

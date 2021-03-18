@@ -1,4 +1,6 @@
 """Support for exposing Home Assistant via Zeroconf."""
+from __future__ import annotations
+
 import fnmatch
 from functools import partial
 import ipaddress
@@ -107,7 +109,7 @@ async def _async_get_instance(hass, **zcargs):
 class HaServiceBrowser(ServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
 
-    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+    def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter update_record to DNSPointers for the configured type."""
 
         #

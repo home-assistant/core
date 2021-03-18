@@ -78,7 +78,7 @@ async def async_setup_entry(
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
-        conf = hass.data.get(DATA_CONFIG)  # type: ConfigType
+        conf: ConfigType = hass.data.get(DATA_CONFIG)
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:

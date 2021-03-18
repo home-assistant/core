@@ -225,7 +225,7 @@ class HERETravelTimeSensor(Entity):
         destination: str,
         origin_entity_id: str,
         destination_entity_id: str,
-        here_data: "HERETravelTimeData",
+        here_data: HERETravelTimeData,
     ) -> None:
         """Initialize the sensor."""
         self._name = name
