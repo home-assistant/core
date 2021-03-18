@@ -601,7 +601,7 @@ jobs:
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}
+            needs.prepare-tests.outputs.python-key }}-${{ hashFiles('pyproject.toml') }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
