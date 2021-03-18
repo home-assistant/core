@@ -1,5 +1,6 @@
 """Test function in __init__.py."""
-from typing import Dict
+from __future__ import annotations
+
 from unittest.mock import patch
 
 import pytest
@@ -229,7 +230,7 @@ async def test_import(
     config: ConfigType,
     expected_calls: int,
     expected_to_succeed: bool,
-    expected_config_flow_user_input: Dict[str, any],
+    expected_config_flow_user_input: dict[str, any],
 ):
     """Test importing a gateway."""
     with patch("sys.platform", "win32"), patch(

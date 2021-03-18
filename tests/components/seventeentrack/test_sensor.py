@@ -1,6 +1,7 @@
 """Tests for the seventeentrack sensor."""
+from __future__ import annotations
+
 import datetime
-from typing import Union
 from unittest.mock import MagicMock, patch
 
 from py17track.package import Package
@@ -100,7 +101,7 @@ class ProfileMock:
         return self.__class__.login_result
 
     async def packages(
-        self, package_state: Union[int, str] = "", show_archived: bool = False
+        self, package_state: int | str = "", show_archived: bool = False
     ) -> list:
         """Packages mock."""
         return self.__class__.package_list[:]

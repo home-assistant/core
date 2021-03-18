@@ -1,7 +1,8 @@
 """The tests for the Cast Media player platform."""
 # pylint: disable=protected-access
+from __future__ import annotations
+
 import json
-from typing import Optional
 from unittest.mock import ANY, MagicMock, Mock, patch
 from uuid import UUID
 
@@ -50,14 +51,14 @@ def get_fake_chromecast(info: ChromecastInfo):
 
 
 def get_fake_chromecast_info(
-    host="192.168.178.42", port=8009, uuid: Optional[UUID] = FakeUUID
+    host="192.168.178.42", port=8009, uuid: UUID | None = FakeUUID
 ):
     """Generate a Fake ChromecastInfo with the specified arguments."""
 
     @attr.s(slots=True, frozen=True, eq=False)
     class ExtendedChromecastInfo(ChromecastInfo):
-        host: Optional[str] = attr.ib(default=None)
-        port: Optional[int] = attr.ib(default=0)
+        host: str | None = attr.ib(default=None)
+        port: int | None = attr.ib(default=0)
 
         def __eq__(self, other):
             if isinstance(other, ChromecastInfo):

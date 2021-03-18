@@ -1,5 +1,7 @@
 """Test the Bond config flow."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -334,8 +336,8 @@ async def _help_test_form_unexpected_error(
     hass: core.HomeAssistant,
     *,
     source: str,
-    initial_input: Dict[str, Any] = None,
-    user_input: Dict[str, Any],
+    initial_input: dict[str, Any] = None,
+    user_input: dict[str, Any],
     error: Exception,
 ):
     """Test we handle unexpected error gracefully."""

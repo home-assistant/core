@@ -1,7 +1,8 @@
 """The tests for the InfluxDB sensor."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Dict, List, Type
 from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
@@ -55,14 +56,14 @@ BASE_V2_QUERY = {"queries_flux": [{"name": "test", "query": "query"}]}
 class Record:
     """Record in a Table."""
 
-    values: Dict
+    values: dict
 
 
 @dataclass
 class Table:
     """Table in an Influx 2 resultset."""
 
-    records: List[Type[Record]]
+    records: list[type[Record]]
 
 
 @pytest.fixture(name="mock_client")

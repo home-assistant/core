@@ -1,6 +1,7 @@
 """The tests for the DirecTV Media player platform."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Optional
 from unittest.mock import patch
 
 from pytest import fixture
@@ -77,24 +78,20 @@ def mock_now() -> datetime:
     return dt_util.utcnow()
 
 
-async def async_turn_on(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
+async def async_turn_on(hass: HomeAssistantType, entity_id: str | None = None) -> None:
     """Turn on specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_ON, data)
 
 
-async def async_turn_off(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
-) -> None:
+async def async_turn_off(hass: HomeAssistantType, entity_id: str | None = None) -> None:
     """Turn off specified media player or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data)
 
 
 async def async_media_pause(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
+    hass: HomeAssistantType, entity_id: str | None = None
 ) -> None:
     """Send the media player the command for pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -102,7 +99,7 @@ async def async_media_pause(
 
 
 async def async_media_play(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
+    hass: HomeAssistantType, entity_id: str | None = None
 ) -> None:
     """Send the media player the command for play/pause."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -110,7 +107,7 @@ async def async_media_play(
 
 
 async def async_media_stop(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
+    hass: HomeAssistantType, entity_id: str | None = None
 ) -> None:
     """Send the media player the command for stop."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -118,7 +115,7 @@ async def async_media_stop(
 
 
 async def async_media_next_track(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
+    hass: HomeAssistantType, entity_id: str | None = None
 ) -> None:
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -126,7 +123,7 @@ async def async_media_next_track(
 
 
 async def async_media_previous_track(
-    hass: HomeAssistantType, entity_id: Optional[str] = None
+    hass: HomeAssistantType, entity_id: str | None = None
 ) -> None:
     """Send the media player the command for prev track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -137,8 +134,8 @@ async def async_play_media(
     hass: HomeAssistantType,
     media_type: str,
     media_id: str,
-    entity_id: Optional[str] = None,
-    enqueue: Optional[str] = None,
+    entity_id: str | None = None,
+    enqueue: str | None = None,
 ) -> None:
     """Send the media player the command for playing media."""
     data = {ATTR_MEDIA_CONTENT_TYPE: media_type, ATTR_MEDIA_CONTENT_ID: media_id}

@@ -1,5 +1,7 @@
 """Tests for the Hyperion config flow."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from hyperion import const
@@ -40,7 +42,7 @@ from . import (
 from tests.common import MockConfigEntry
 
 TEST_IP_ADDRESS = "192.168.0.1"
-TEST_HOST_PORT: Dict[str, Any] = {
+TEST_HOST_PORT: dict[str, Any] = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
 }
@@ -122,7 +124,7 @@ async def _create_mock_entry(hass: HomeAssistantType) -> MockConfigEntry:
 async def _init_flow(
     hass: HomeAssistantType,
     source: str = SOURCE_USER,
-    data: Optional[Dict[str, Any]] = None,
+    data: dict[str, Any] | None = None,
 ) -> Any:
     """Initialize a flow."""
     data = data or {}
@@ -133,7 +135,7 @@ async def _init_flow(
 
 
 async def _configure_flow(
-    hass: HomeAssistantType, result: Dict, user_input: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType, result: dict, user_input: dict[str, Any] | None = None
 ) -> Any:
     """Provide input to a flow."""
     user_input = user_input or {}
@@ -528,7 +530,7 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistantType) -> None:
     """Check an SSDP flow with bad json port."""
 
     client = create_mock_client()
-    bad_data: Dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
+    bad_data: dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
     bad_data["ports"]["jsonServer"] = "not_a_port"
 
     with patch(

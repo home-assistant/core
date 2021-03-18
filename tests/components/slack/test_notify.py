@@ -1,7 +1,8 @@
 """Test slack notifications."""
+from __future__ import annotations
+
 import copy
 import logging
-from typing import List
 from unittest.mock import AsyncMock, Mock, patch
 
 from _pytest.logging import LogCaptureFixture
@@ -39,7 +40,7 @@ DEFAULT_CONFIG = {
 }
 
 
-def filter_log_records(caplog: LogCaptureFixture) -> List[logging.LogRecord]:
+def filter_log_records(caplog: LogCaptureFixture) -> list[logging.LogRecord]:
     """Filter all unrelated log records."""
     return [
         rec for rec in caplog.records if rec.name.endswith(f"{DOMAIN}.{notify.DOMAIN}")

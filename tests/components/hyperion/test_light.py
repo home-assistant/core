@@ -1,5 +1,6 @@
 """Tests for the Hyperion integration."""
-from typing import Optional
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
@@ -56,7 +57,7 @@ COLOR_BLACK = color_util.COLORS["black"]
 
 def _get_config_entry_from_unique_id(
     hass: HomeAssistantType, unique_id: str
-) -> Optional[ConfigEntry]:
+) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
         if TEST_SYSINFO_ID == entry.unique_id:
             return entry
