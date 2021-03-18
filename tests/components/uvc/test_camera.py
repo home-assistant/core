@@ -190,27 +190,22 @@ async def test_setup_partial_config_v31x(hass, mock_remote):
     assert entity_entry.unique_id == "two"
 
 
-@patch.object(uvc, "UnifiVideoCamera")
-async def test_setup_incomplete_config(mock_uvc, hass):
-    """Test the setup with incomplete configuration."""
-    assert await async_setup_component(
-        hass, "camera", {"platform": "uvc", "nvr": "foo"}
-    )
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"platform": "uvc", "nvr": "foo"},
+        {"platform": "uvc", "key": "secret"},
+        {"platform": "uvc", "nvr": "foo", "key": "secret", "port": "invalid"},
+    ],
+)
+async def test_setup_incomplete_config(hass, mock_remote, config):
+    """Test the setup with incomplete or invalid configuration."""
+    assert await async_setup_component(hass, "camera", config)
     await hass.async_block_till_done()
 
-    assert not mock_uvc.called
-    assert await async_setup_component(
-        hass, "camera", {"platform": "uvc", "key": "secret"}
-    )
-    await hass.async_block_till_done()
+    camera_states = hass.states.async_all("camera")
 
-    assert not mock_uvc.called
-    assert await async_setup_component(
-        hass, "camera", {"platform": "uvc", "port": "invalid"}
-    )
-    await hass.async_block_till_done()
-
-    assert not mock_uvc.called
+    assert not camera_states
 
 
 @patch.object(uvc, "UnifiVideoCamera")
