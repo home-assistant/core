@@ -98,6 +98,16 @@ def camera_v320_fixture():
         yield camera
 
 
+@pytest.fixture(name="camera_v313")
+def camera_v313_fixture():
+    """Mock the v320 camera."""
+    with patch(
+        "homeassistant.components.uvc.camera.uvc_camera.UVCCameraClient"
+    ) as camera:
+        camera.return_value.get_snapshot.return_value = "test_image"
+        yield camera
+
+
 async def test_setup_full_config(hass, mock_remote, camera_info):
     """Test the setup with full configuration."""
     config = {
@@ -462,16 +472,20 @@ async def test_login(hass, mock_remote, camera_v320):
     assert image.content == "test_image"
 
 
-@patch("uvcclient.store.get_info_store")
-@patch("uvcclient.camera.UVCCameraClient")
-async def test_login_v31x(mock_camera, mock_store, uvc_fixture):
+async def test_login_v31x(hass, mock_remote, camera_v313):
     """Test login with v3.1.x server."""
-    uvc_fixture._nvr.server_version = (3, 1, 3)
-    uvc_fixture._login()
-    assert mock_camera.call_count == 1
-    assert mock_camera.call_args == call("host-a", "admin", "seekret")
-    assert mock_camera.return_value.login.call_count == 1
-    assert mock_camera.return_value.login.call_args == call()
+    mock_remote.return_value.server_version = (3, 1, 3)
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v313.call_count == 1
+    assert camera_v313.call_args == call("host-a", "admin", "ubnt")
+    assert camera_v313.return_value.login.call_count == 1
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
 
 
 @patch("uvcclient.store.get_info_store")
