@@ -174,9 +174,9 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm",
-            description_placeholders={"serial": self.unique_id},
             data_schema=discovered_camera_schema,
             errors=errors,
+            description_placeholders={"serial": self.unique_id},
         )
 
     async def async_step_import(self, import_config):
