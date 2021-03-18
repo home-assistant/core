@@ -63,7 +63,7 @@ class HassLoggerFormatChecker(BaseChecker):
 
         log_message = first_arg.value
 
-        if not len(log_message) < 2:
+        if len(log_message) < 2:
             return
 
         if log_message[-1] == "." and log_message[-2] != ".":
