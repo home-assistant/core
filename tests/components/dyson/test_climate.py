@@ -1,6 +1,5 @@
 """Test the Dyson fan component."""
-
-from typing import Type
+from __future__ import annotations
 
 from libpurecool.const import (
     AutoMode,
@@ -74,7 +73,7 @@ ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
-def async_get_device(spec: Type[DysonDevice]) -> DysonDevice:
+def async_get_device(spec: type[DysonDevice]) -> DysonDevice:
     """Return a Dyson climate device."""
     device = async_get_basic_device(spec)
     device.state.heat_target = 2900
