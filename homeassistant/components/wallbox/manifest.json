@@ -1,0 +1,17 @@
+{
+  "domain": "wallbox",
+  "name": "Wallbox",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/wallbox",
+  "requirements": [
+    "wallbox==0.4.4"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@hesselonline"
+  ],
+  "version": "1.0.0"
+}
