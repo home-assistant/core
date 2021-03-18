@@ -1,6 +1,4 @@
 """The NEW_NAME integration."""
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant.config_entries import ConfigEntry

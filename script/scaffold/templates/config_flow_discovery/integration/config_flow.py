@@ -1,6 +1,4 @@
 """Config flow for NEW_NAME."""
-from __future__ import annotations
-
 import my_pypi_dependency
 
 from homeassistant import config_entries
