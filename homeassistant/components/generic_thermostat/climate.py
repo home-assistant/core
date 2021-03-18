@@ -262,7 +262,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         # Prevent the device from keep running if HVAC_MODE_OFF
         if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
             await self._async_heater_turn_off()
-            _LOGGER.warning("The climate mode is OFF, but the switch device is ON. Turning off device %s", self.heater_entity_id)
+            _LOGGER.warning(
+                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                self.heater_entity_id
+            )
 
     @property
     def should_poll(self):
