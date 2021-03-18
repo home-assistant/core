@@ -43,7 +43,7 @@ async def async_setup_platform(
 class KNXFan(KnxEntity, FanEntity):
     """Representation of a KNX fan."""
 
-    def __init__(self, device: XknxFan):
+    def __init__(self, device: XknxFan) -> None:
         """Initialize of KNX fan."""
         self._device: XknxFan
         super().__init__(device)
