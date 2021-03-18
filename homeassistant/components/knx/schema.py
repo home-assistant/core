@@ -66,7 +66,7 @@ class ConnectionSchema:
             vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): cv.port,
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
-            vol.Optional(CONF_KNX_ROUTE_BACK): cv.boolean,
+            vol.Optional(CONF_KNX_ROUTE_BACK, default=False): cv.boolean,
         }
     )
 
