@@ -68,7 +68,7 @@ class KNXExposeSensor:
         attribute: str | None,
         default: StateType,
         address: str,
-    ):
+    ) -> None:
         """Initialize of Expose class."""
         self.hass = hass
         self.xknx = xknx
@@ -148,7 +148,7 @@ class KNXExposeSensor:
 class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, xknx: XKNX, expose_type: str, address: str):
+    def __init__(self, xknx: XKNX, expose_type: str, address: str) -> None:
         """Initialize of Expose class."""
         self.xknx = xknx
         self.expose_type = expose_type
