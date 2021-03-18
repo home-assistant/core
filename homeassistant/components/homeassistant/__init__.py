@@ -26,6 +26,8 @@ from homeassistant.helpers.service import (
     async_extract_referenced_entity_ids,
 )
 
+ATTR_ENTRY_ID = "entry_id"
+
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = ha.DOMAIN
 SERVICE_RELOAD_CORE_CONFIG = "reload_core_config"
@@ -34,6 +36,15 @@ SERVICE_CHECK_CONFIG = "check_config"
 SERVICE_UPDATE_ENTITY = "update_entity"
 SERVICE_SET_LOCATION = "set_location"
 SCHEMA_UPDATE_ENTITY = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+SCHEMA_RELOAD_CONFIG_ENTRY = vol.All(
+    vol.Schema(
+        {
+            vol.Optional(ATTR_ENTRY_ID): str,
+            **cv.ENTITY_SERVICE_FIELDS,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_ENTRY_ID, *cv.ENTITY_SERVICE_FIELDS),
+)
 
 
 async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
@@ -209,7 +220,10 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
 
     async def async_handle_reload_config_entry(call):
         """Service handler for reloading a config entry."""
-        reload_entries = await async_extract_config_entry_ids(hass, call)
+        reload_entries = set()
+        if ATTR_ENTRY_ID in call.data:
+            reload_entries.add(call.data[ATTR_ENTRY_ID])
+        reload_entries.update(await async_extract_config_entry_ids(hass, call))
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
@@ -223,7 +237,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         ha.DOMAIN,
         SERVICE_RELOAD_CONFIG_ENTRY,
         async_handle_reload_config_entry,
-        schema=cv.make_entity_service_schema({}),
+        schema=SCHEMA_RELOAD_CONFIG_ENTRY,
     )
 
     return True

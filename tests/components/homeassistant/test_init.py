@@ -11,6 +11,7 @@ import yaml
 from homeassistant import config
 import homeassistant.components as comps
 from homeassistant.components.homeassistant import (
+    ATTR_ENTRY_ID,
     SERVICE_CHECK_CONFIG,
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_SET_LOCATION,
@@ -427,3 +428,22 @@ async def test_reload_config_entry_by_entity_id(hass):
             {"entity_id": "unknown.entity_id"},
             blocking=True,
         )
+
+
+async def test_reload_config_entry_by_entry_id(hass):
+    """Test being able to reload a config entry by config entry id."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        await hass.services.async_call(
+            "homeassistant",
+            "reload_config_entry",
+            {ATTR_ENTRY_ID: "8955375327824e14ba89e4b29cc3ec9a"},
+            blocking=True,
+        )
+
+    assert len(mock_reload.mock_calls) == 1
+    assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"

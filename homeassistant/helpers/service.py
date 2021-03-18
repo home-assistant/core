@@ -12,7 +12,6 @@ from typing import (
     Callable,
     Iterable,
     Optional,
-    Set,
     TypedDict,
     Union,
 )
@@ -385,7 +384,7 @@ async def async_extract_config_entry_ids(
     )
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
-    config_entry_ids: Set[str] = set()
+    config_entry_ids: set[str] = set()
 
     # Some devices may have no entities
     for device_id in referenced.referenced_devices:
