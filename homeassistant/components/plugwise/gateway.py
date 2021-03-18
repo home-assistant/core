@@ -1,9 +1,9 @@
 """Plugwise platform for Home Assistant Core."""
+from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 import async_timeout
 from plugwise.exceptions import (
@@ -201,7 +201,7 @@ class SmileGateway(CoordinatorEntity):
         return self._name
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         device_information = {
             "identifiers": {(DOMAIN, self._dev_id)},

@@ -1,5 +1,7 @@
 """Support for Homekit device discovery."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 import aiohomekit
 from aiohomekit.model import Accessory
@@ -77,7 +79,7 @@ class HomeKitEntity(Entity):
             signal_remove()
         self._signals.clear()
 
-    async def async_put_characteristics(self, characteristics: Dict[str, Any]):
+    async def async_put_characteristics(self, characteristics: dict[str, Any]):
         """
         Write characteristics to the device.
 

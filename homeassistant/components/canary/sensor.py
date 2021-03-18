@@ -1,5 +1,7 @@
 """Support for Canary sensors."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from canary.api import SensorType
 
@@ -54,7 +56,7 @@ STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Canary sensors based on a config entry."""
     coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][

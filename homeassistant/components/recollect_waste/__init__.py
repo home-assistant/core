@@ -1,7 +1,8 @@
 """The ReCollect Waste integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import date, timedelta
-from typing import List
 
 from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
@@ -35,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PLACE_ID], entry.data[CONF_SERVICE_ID], session=session
     )
 
-    async def async_get_pickup_events() -> List[PickupEvent]:
+    async def async_get_pickup_events() -> list[PickupEvent]:
         """Get the next pickup."""
         try:
             return await client.async_get_pickup_events(

@@ -1,9 +1,10 @@
 """Support for UpCloud."""
+from __future__ import annotations
 
 import dataclasses
 from datetime import timedelta
 import logging
-from typing import Dict, List
+from typing import Dict
 
 import requests.exceptions
 import upcloud_api
@@ -91,7 +92,7 @@ class UpCloudDataUpdateCoordinator(
             hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
         )
         self.cloud_manager = cloud_manager
-        self.unsub_handlers: List[CALLBACK_TYPE] = []
+        self.unsub_handlers: list[CALLBACK_TYPE] = []
 
     async def async_update_config(self, config_entry: ConfigEntry) -> None:
         """Handle config update."""
@@ -99,7 +100,7 @@ class UpCloudDataUpdateCoordinator(
             seconds=config_entry.options[CONF_SCAN_INTERVAL]
         )
 
-    async def _async_update_data(self) -> Dict[str, upcloud_api.Server]:
+    async def _async_update_data(self) -> dict[str, upcloud_api.Server]:
         return {
             x.uuid: x
             for x in await self.hass.async_add_executor_job(
@@ -112,10 +113,10 @@ class UpCloudDataUpdateCoordinator(
 class UpCloudHassData:
     """Home Assistant UpCloud runtime data."""
 
-    coordinators: Dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
+    coordinators: dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
         default_factory=dict
     )
-    scan_interval_migrations: Dict[str, int] = dataclasses.field(default_factory=dict)
+    scan_interval_migrations: dict[str, int] = dataclasses.field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistantType, config) -> bool:

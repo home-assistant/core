@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "ScreenLogic {name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "Adre\u00e7a IP",
+                    "port": "Port"
+                },
+                "description": "Introdueix la informaci\u00f3 de la passarel\u00b7la ScreenLogic.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "Passarel\u00b7la"
+                },
+                "description": "S'han descobert les seg\u00fcents passarel\u00b7les ScreenLogic. Tria'n una per configurar-la o escull configurar manualment una passarel\u00b7la ScreenLogic.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Segons entre escanejos"
+                },
+                "description": "Especifica la configuraci\u00f3 de {gateway_name}",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

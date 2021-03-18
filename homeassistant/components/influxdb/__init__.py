@@ -1,11 +1,13 @@
 """Support for sending data to an Influx database."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 import logging
 import math
 import queue
 import threading
 import time
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -100,7 +102,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def create_influx_url(conf: Dict) -> Dict:
+def create_influx_url(conf: dict) -> dict:
     """Build URL used from config inputs and default when necessary."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_SSL not in conf:
@@ -125,7 +127,7 @@ def create_influx_url(conf: Dict) -> Dict:
     return conf
 
 
-def validate_version_specific_config(conf: Dict) -> Dict:
+def validate_version_specific_config(conf: dict) -> dict:
     """Ensure correct config fields are provided based on API version used."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_TOKEN not in conf:
@@ -193,7 +195,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
+def _generate_event_to_json(conf: dict) -> Callable[[dict], str]:
     """Build event to json converter and add to config."""
     entity_filter = convert_include_exclude_filter(conf)
     tags = conf.get(CONF_TAGS)
@@ -208,7 +210,7 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
-    def event_to_json(event: Dict) -> str:
+    def event_to_json(event: dict) -> str:
         """Convert event into json in format Influx expects."""
         state = event.data.get(EVENT_NEW_STATE)
         if (
@@ -319,9 +321,9 @@ def _generate_event_to_json(conf: Dict) -> Callable[[Dict], str]:
 class InfluxClient:
     """An InfluxDB client wrapper for V1 or V2."""
 
-    data_repositories: List[str]
+    data_repositories: list[str]
     write: Callable[[str], None]
-    query: Callable[[str, str], List[Any]]
+    query: Callable[[str, str], list[Any]]
     close: Callable[[], None]
 
 
