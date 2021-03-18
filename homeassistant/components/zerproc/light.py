@@ -1,7 +1,9 @@
 """Zerproc light platform."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Callable, List, Optional
+from typing import Callable
 
 import pyzerproc
 
@@ -29,7 +31,7 @@ SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
 
-async def discover_entities(hass: HomeAssistant) -> List[Entity]:
+async def discover_entities(hass: HomeAssistant) -> list[Entity]:
     """Attempt to discover new lights."""
     lights = await pyzerproc.discover()
 
@@ -49,7 +51,7 @@ async def discover_entities(hass: HomeAssistant) -> List[Entity]:
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Zerproc light devices."""
     warned = False
@@ -122,7 +124,7 @@ class ZerprocLight(LightEntity):
         }
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:string-lights"
 
