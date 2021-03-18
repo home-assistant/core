@@ -67,7 +67,7 @@ class HassLoggerFormatChecker(BaseChecker):
             return
 
         if log_message[-1] == "." and log_message[-2] != ".":
-            # Trailing ... is permitted
+            # Trailing ... is permitted but a single trailing . is not
             self.add_message("hass-logger-period", args=node.args, node=node)
 
         if (
