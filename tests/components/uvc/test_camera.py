@@ -552,21 +552,6 @@ async def test_login_fails_both_properly(hass, mock_remote, camera_v320):
     assert camera_v320.return_value.get_snapshot.call_count == 0
 
 
-async def test_camera_image_tries_login_bails_on_failure(uvc_fixture):
-    """Test retrieving failure."""
-    with patch.object(uvc_fixture, "_login") as mock_login:
-        mock_login.return_value = False
-        assert uvc_fixture.camera_image() is None
-        assert mock_login.call_count == 1
-        assert mock_login.call_args == call()
-
-
-async def test_camera_image_logged_in(uvc_fixture):
-    """Test the login state."""
-    uvc_fixture._camera = MagicMock()
-    assert uvc_fixture._camera.get_snapshot.return_value == uvc_fixture.camera_image()
-
-
 async def test_camera_image_error(uvc_fixture):
     """Test the camera image error."""
     uvc_fixture._camera = MagicMock()
