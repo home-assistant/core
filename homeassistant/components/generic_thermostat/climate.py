@@ -264,7 +264,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             await self._async_heater_turn_off()
             _LOGGER.warning(
                 "The climate mode is OFF, but the switch device is ON. Turning off device %s",
-                self.heater_entity_id
+                self.heater_entity_id,
             )
 
     @property
