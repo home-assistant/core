@@ -552,11 +552,17 @@ async def test_login_fails_both_properly(hass, mock_remote, camera_v320):
     assert camera_v320.return_value.get_snapshot.call_count == 0
 
 
-async def test_camera_image_error(uvc_fixture):
+async def test_camera_image_error(hass, mock_remote, camera_v320):
     """Test the camera image error."""
-    uvc_fixture._camera = MagicMock()
-    uvc_fixture._camera.get_snapshot.side_effect = camera.CameraConnectError
-    assert uvc_fixture.camera_image() is None
+    camera_v320.return_value.get_snapshot.side_effect = camera.CameraConnectError
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.front")
+
+    assert camera_v320.return_value.get_snapshot.call_count == 1
 
 
 async def test_camera_image_reauths(uvc_fixture):
