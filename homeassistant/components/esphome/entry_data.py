@@ -52,7 +52,7 @@ class RuntimeEntryData:
     """Store runtime data for esphome config entries."""
 
     entry_id: str = attr.ib()
-    client: "APIClient" = attr.ib()
+    client: APIClient = attr.ib()
     store: Store = attr.ib()
     reconnect_task: asyncio.Task | None = attr.ib(default=None)
     state: dict[str, dict[str, Any]] = attr.ib(factory=dict)
