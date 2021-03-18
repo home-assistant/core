@@ -54,7 +54,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set(
-        "alarm_control_panel.test_5678", "attributes", {"supported_features": 63}
+        "alarm_control_panel.test_5678", "attributes", {"supported_features": 47}
     )
     expected_triggers = [
         {
@@ -284,11 +284,10 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
     # Fake that the entity is armed vacation.
-    hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_PENDING)
     hass.states.async_set("alarm_control_panel.entity", STATE_ALARM_ARMED_VACATION)
     await hass.async_block_till_done()
     assert len(calls) == 6
     assert (
         calls[5].data["some"]
-        == "armed_vacation - device - alarm_control_panel.entity - pending - armed_vacation - None"
+        == "armed_vacation - device - alarm_control_panel.entity - armed_night - armed_vacation - None"
     )
