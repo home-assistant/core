@@ -1,7 +1,9 @@
 """Module that groups code required to handle state restore for component."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Iterable
 
 from homeassistant.const import (
     ATTR_MODE,
@@ -22,8 +24,8 @@ async def _async_reproduce_states(
     hass: HomeAssistantType,
     state: State,
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
     cur_state = hass.states.get(state.entity_id)
@@ -82,8 +84,8 @@ async def async_reproduce_states(
     hass: HomeAssistantType,
     states: Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce component states."""
     await asyncio.gather(

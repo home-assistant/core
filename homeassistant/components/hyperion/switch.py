@@ -1,7 +1,8 @@
 """Switch platform for Hyperion."""
+from __future__ import annotations
 
 import functools
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from hyperion import client
 from hyperion.const import (
@@ -187,7 +188,7 @@ class HyperionComponentSwitch(SwitchEntity):
         await self._async_send_set_component(False)
 
     @callback
-    def _update_components(self, _: Optional[Dict[str, Any]] = None) -> None:
+    def _update_components(self, _: dict[str, Any] | None = None) -> None:
         """Update Hyperion components."""
         self.async_write_ha_state()
 

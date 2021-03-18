@@ -1,9 +1,11 @@
 """Provide the functionality to group entities."""
+from __future__ import annotations
+
 from abc import abstractmethod
 import asyncio
 from contextvars import ContextVar
 import logging
-from typing import Any, Dict, Iterable, List, Optional, Set, cast
+from typing import Any, Iterable, List, cast
 
 import voluptuous as vol
 
@@ -91,16 +93,16 @@ CONFIG_SCHEMA = vol.Schema(
 class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
-    on_off_mapping: Dict[str, str] = {STATE_ON: STATE_OFF}
-    off_on_mapping: Dict[str, str] = {STATE_OFF: STATE_ON}
-    on_states_by_domain: Dict[str, Set] = {}
-    exclude_domains: Set = set()
+    on_off_mapping: dict[str, str] = {STATE_ON: STATE_OFF}
+    off_on_mapping: dict[str, str] = {STATE_OFF: STATE_ON}
+    on_states_by_domain: dict[str, set] = {}
+    exclude_domains: set = set()
 
     def exclude_domain(self) -> None:
         """Exclude the current domain."""
         self.exclude_domains.add(current_domain.get())
 
-    def on_off_states(self, on_states: Set, off_state: str) -> None:
+    def on_off_states(self, on_states: set, off_state: str) -> None:
         """Register on and off states for the current domain."""
         for on_state in on_states:
             if on_state not in self.on_off_mapping:
@@ -128,12 +130,12 @@ def is_on(hass, entity_id):
 
 
 @bind_hass
-def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> List[str]:
+def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> list[str]:
     """Return entity_ids with group entity ids replaced by their members.
 
     Async friendly.
     """
-    found_ids: List[str] = []
+    found_ids: list[str] = []
     for entity_id in entity_ids:
         if not isinstance(entity_id, str) or entity_id in (
             ENTITY_MATCH_NONE,
@@ -171,8 +173,8 @@ def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> Lis
 
 @bind_hass
 def get_entity_ids(
-    hass: HomeAssistantType, entity_id: str, domain_filter: Optional[str] = None
-) -> List[str]:
+    hass: HomeAssistantType, entity_id: str, domain_filter: str | None = None
+) -> list[str]:
     """Get members of this group.
 
     Async friendly.
@@ -192,7 +194,7 @@ def get_entity_ids(
 
 
 @bind_hass
-def groups_with_entity(hass: HomeAssistantType, entity_id: str) -> List[str]:
+def groups_with_entity(hass: HomeAssistantType, entity_id: str) -> list[str]:
     """Get all groups that contain this entity.
 
     Async friendly.

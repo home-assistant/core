@@ -1,5 +1,7 @@
 """Vera tests."""
-from typing import Any, Callable, Tuple
+from __future__ import annotations
+
+from typing import Any, Callable
 from unittest.mock import MagicMock
 
 import pyvera as pv
@@ -15,7 +17,7 @@ async def run_sensor_test(
     vera_component_factory: ComponentFactory,
     category: int,
     class_property: str,
-    assert_states: Tuple[Tuple[Any, Any]],
+    assert_states: tuple[tuple[Any, Any]],
     assert_unit_of_measurement: str = None,
     setup_callback: Callable[[pv.VeraController], None] = None,
 ) -> None:

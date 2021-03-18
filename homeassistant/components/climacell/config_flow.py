@@ -1,6 +1,8 @@
 """Config flow for ClimaCell integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from pyclimacell import ClimaCell
 from pyclimacell.const import REALTIME
@@ -25,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _get_config_schema(
-    hass: core.HomeAssistant, input_dict: Dict[str, Any] = None
+    hass: core.HomeAssistant, input_dict: dict[str, Any] = None
 ) -> vol.Schema:
     """
     Return schema defaults for init step based on user input/config dict.
@@ -57,7 +59,7 @@ def _get_config_schema(
     )
 
 
-def _get_unique_id(hass: HomeAssistantType, input_dict: Dict[str, Any]):
+def _get_unique_id(hass: HomeAssistantType, input_dict: dict[str, Any]):
     """Return unique ID from config data."""
     return (
         f"{input_dict[CONF_API_KEY]}"
@@ -74,8 +76,8 @@ class ClimaCellOptionsConfigFlow(config_entries.OptionsFlow):
         self._config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Manage the ClimaCell options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -107,8 +109,8 @@ class ClimaCellConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return ClimaCellOptionsConfigFlow(config_entry)
 
     async def async_step_user(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

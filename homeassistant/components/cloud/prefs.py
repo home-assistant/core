@@ -1,6 +1,7 @@
 """Preference management for cloud."""
+from __future__ import annotations
+
 from ipaddress import ip_address
-from typing import List, Optional
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
@@ -234,7 +235,7 @@ class CloudPreferences:
         return self._prefs.get(PREF_ALEXA_REPORT_STATE, DEFAULT_ALEXA_REPORT_STATE)
 
     @property
-    def alexa_default_expose(self) -> Optional[List[str]]:
+    def alexa_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Alexa.
 
         Can return None, in which case for backwards should be interpreted as allow all domains.
@@ -272,7 +273,7 @@ class CloudPreferences:
         return self._prefs[PREF_GOOGLE_LOCAL_WEBHOOK_ID]
 
     @property
-    def google_default_expose(self) -> Optional[List[str]]:
+    def google_default_expose(self) -> list[str] | None:
         """Return array of entity domains that are exposed by default to Google.
 
         Can return None, in which case for backwards should be interpreted as allow all domains.
@@ -302,7 +303,7 @@ class CloudPreferences:
         await self.async_update(cloud_user=user.id)
         return user.id
 
-    async def _load_cloud_user(self) -> Optional[User]:
+    async def _load_cloud_user(self) -> User | None:
         """Load cloud user if available."""
         user_id = self._prefs.get(PREF_CLOUD_USER)
 

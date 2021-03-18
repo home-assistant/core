@@ -1,6 +1,7 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -139,7 +140,7 @@ class GeonetnzVolcanoSensor(Entity):
         return DEFAULT_ICON
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return f"Volcano {self._title}"
 
