@@ -17,7 +17,7 @@ class HassLoggerFormatChecker(BaseChecker):
     priority = -1
     msgs = {
         "W0001": (
-            "logger messages must not end with a period",
+            "User visible logger messages must not end with a period",
             "hass-logger-period",
             "Periods are not permitted at the end of logger messages",
         ),
