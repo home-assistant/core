@@ -42,6 +42,7 @@ def camera_info_fixture():
         "host": "host-a",
         "internalHost": "host-b",
         "username": "admin",
+        "lastRecordingStartTime": 1610070992367,
         "channels": [
             {
                 "id": "0",
@@ -344,29 +345,69 @@ async def test_properties(hass, mock_remote):
     assert state.attributes["supported_features"] == SUPPORT_STREAM
 
 
-@patch("uvcclient.camera.UVCCameraClientV320")
-async def test_motion_recording_mode_properties(mock_camera, uvc_fixture):
+async def test_motion_recording_mode_properties(hass, mock_remote):
     """Test the properties."""
-    mock_camera.get_camera.return_value["recordingSettings"][
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    now = utcnow()
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state == STATE_RECORDING
+
+    mock_remote.return_value.get_camera.return_value["recordingSettings"][
         "fullTimeRecordEnabled"
     ] = False
-    mock_camera.get_camera.return_value["recordingSettings"][
+    mock_remote.return_value.get_camera.return_value["recordingSettings"][
         "motionRecordEnabled"
     ] = True
-    assert not uvc_fixture.is_recording
-    assert (
-        datetime(2021, 1, 8, 1, 56, 32, 367000)
-        == uvc_fixture.extra_state_attributes["last_recording_start_time"]
+
+    async_fire_time_changed(hass, now + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state != STATE_RECORDING
+    assert state.attributes["last_recording_start_time"] == datetime(
+        2021, 1, 8, 2, 56, 32, 367000
     )
 
-    mock_camera.get_camera.return_value["recordingIndicator"] = "DISABLED"
-    assert not uvc_fixture.is_recording
+    mock_remote.return_value.get_camera.return_value["recordingIndicator"] = "DISABLED"
 
-    mock_camera.get_camera.return_value["recordingIndicator"] = "MOTION_INPROGRESS"
-    assert uvc_fixture.is_recording
+    async_fire_time_changed(hass, now + timedelta(seconds=61))
+    await hass.async_block_till_done()
 
-    mock_camera.get_camera.return_value["recordingIndicator"] = "MOTION_FINISHED"
-    assert uvc_fixture.is_recording
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state != STATE_RECORDING
+
+    mock_remote.return_value.get_camera.return_value[
+        "recordingIndicator"
+    ] = "MOTION_INPROGRESS"
+
+    async_fire_time_changed(hass, now + timedelta(seconds=91))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state == STATE_RECORDING
+
+    mock_remote.return_value.get_camera.return_value[
+        "recordingIndicator"
+    ] = "MOTION_FINISHED"
+
+    async_fire_time_changed(hass, now + timedelta(seconds=121))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.state == STATE_RECORDING
 
 
 async def test_stream(uvc_fixture):
