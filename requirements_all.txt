@@ -355,7 +355,7 @@ bellows==0.24.0
 bimmer_connected==0.7.15
 
 # homeassistant.components.bitvavo
-bitvavo-aio==1.0.1
+bitvavo-aio==1.0.2
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
