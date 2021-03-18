@@ -8,8 +8,10 @@ import requests
 from uvcclient import camera as camera, nvr
 
 from homeassistant.components.camera import (
+    DEFAULT_CONTENT_TYPE,
     STATE_RECORDING,
     SUPPORT_STREAM,
+    async_get_image,
     async_get_stream_source,
 )
 from homeassistant.components.uvc import camera as uvc
@@ -84,6 +86,16 @@ def camera_info_fixture():
             },
         ],
     }
+
+
+@pytest.fixture(name="camera_v320")
+def camera_v320_fixture():
+    """Mock the v320 camera."""
+    with patch(
+        "homeassistant.components.uvc.camera.uvc_camera.UVCCameraClientV320"
+    ) as camera:
+        camera.return_value.get_snapshot.return_value = "test_image"
+        yield camera
 
 
 async def test_setup_full_config(hass, mock_remote, camera_info):
@@ -435,15 +447,19 @@ async def test_stream(hass, mock_remote):
     assert stream_source == "rtsp://foo:7447/uuid_rtspchannel_0"
 
 
-@patch("uvcclient.store.get_info_store")
-@patch("uvcclient.camera.UVCCameraClientV320")
-async def test_login(mock_camera, mock_store, uvc_fixture):
+async def test_login(hass, mock_remote, camera_v320):
     """Test the login."""
-    uvc_fixture._login()
-    assert mock_camera.call_count == 1
-    assert mock_camera.call_args == call("host-a", "admin", "seekret")
-    assert mock_camera.return_value.login.call_count == 1
-    assert mock_camera.return_value.login.call_args == call()
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v320.call_count == 1
+    assert camera_v320.call_args == call("host-a", "admin", "ubnt")
+    assert camera_v320.return_value.login.call_count == 1
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
 
 
 @patch("uvcclient.store.get_info_store")
