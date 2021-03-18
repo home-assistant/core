@@ -1,8 +1,9 @@
 """MQTT component mixins and helpers."""
+from __future__ import annotations
+
 from abc import abstractmethod
 import json
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -502,7 +503,7 @@ def device_info_from_config(config):
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
-    def __init__(self, device_config: Optional[ConfigType], config_entry=None) -> None:
+    def __init__(self, device_config: ConfigType | None, config_entry=None) -> None:
         """Initialize the device mixin."""
         self._device_config = device_config
         self._config_entry = config_entry

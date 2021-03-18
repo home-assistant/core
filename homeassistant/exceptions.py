@@ -1,5 +1,7 @@
 """The exceptions used by Home Assistant."""
-from typing import TYPE_CHECKING, Generator, Optional, Sequence
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Generator, Sequence
 
 import attr
 
@@ -113,12 +115,12 @@ class Unauthorized(HomeAssistantError):
 
     def __init__(
         self,
-        context: Optional["Context"] = None,
-        user_id: Optional[str] = None,
-        entity_id: Optional[str] = None,
-        config_entry_id: Optional[str] = None,
-        perm_category: Optional[str] = None,
-        permission: Optional[str] = None,
+        context: "Context" | None = None,
+        user_id: str | None = None,
+        entity_id: str | None = None,
+        config_entry_id: str | None = None,
+        perm_category: str | None = None,
+        permission: str | None = None,
     ) -> None:
         """Unauthorized error."""
         super().__init__(self.__class__.__name__)

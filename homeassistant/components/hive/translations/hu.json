@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt",
+            "unknown_entry": "Nem tal\u00e1lhat\u00f3 megl\u00e9v\u0151 bejegyz\u00e9s."
+        },
+        "error": {
+            "invalid_code": "Nem siker\u00fclt bejelentkezni a Hive-ba. A k\u00e9tfaktoros hiteles\u00edt\u00e9si k\u00f3d helytelen volt.",
+            "invalid_password": "Nem siker\u00fclt bejelentkezni a Hive-ba. Helytelen jelsz\u00f3, pr\u00f3b\u00e1lkozz \u00fajra.",
+            "invalid_username": "Nem siker\u00fclt bejelentkezni a Hive-ba. Az email c\u00edmedet nem siker\u00fclt felismerni.",
+            "no_internet_available": "A Hive-hoz val\u00f3 csatlakoz\u00e1shoz internetkapcsolat sz\u00fcks\u00e9ges.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "K\u00e9tfaktoros k\u00f3d"
+                },
+                "description": "Add meg a Hive hiteles\u00edt\u00e9si k\u00f3dj\u00e1t. \n \n\u00cdrd be a 0000 k\u00f3dot m\u00e1sik k\u00f3d k\u00e9r\u00e9s\u00e9hez.",
+                "title": "Hive k\u00e9tfaktoros hiteles\u00edt\u00e9s."
+            },
+            "reauth": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Add meg \u00fajra a Hive bejelentkez\u00e9si adatait.",
+                "title": "Hive Bejelentkez\u00e9s"
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Add meg a Hive bejelentkez\u00e9si adatait \u00e9s konfigur\u00e1ci\u00f3j\u00e1t.",
+                "title": "Hive Bejelentkez\u00e9s"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "title": "Hive be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
+    }
+}

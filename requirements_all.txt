@@ -154,7 +154,7 @@ aiodns==2.0.0
 aioeafm==0.1.2
 
 # homeassistant.components.esphome
-aioesphomeapi==2.6.5
+aioesphomeapi==2.6.6
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -215,7 +215,7 @@ aiopvapi==1.6.14
 aiopvpc==2.0.2
 
 # homeassistant.components.webostv
-aiopylgtv==0.3.3
+aiopylgtv==0.4.0
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.1
@@ -340,7 +340,7 @@ beautifulsoup4==4.9.3
 # beewi_smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.23.0
+bellows==0.23.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.7.15
@@ -718,7 +718,7 @@ guppy3==3.1.0
 ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
-ha-philipsjs==2.3.1
+ha-philipsjs==2.3.2
 
 # homeassistant.components.habitica
 habitipy==0.2.0
@@ -760,7 +760,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210314.0
+home-assistant-frontend==20210316.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1216,7 +1216,7 @@ py-zabbix==1.1.7
 py17track==2.2.2
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.4.14
+pyCEC==0.5.1
 
 # homeassistant.components.control4
 pyControl4==0.0.6
@@ -2008,6 +2008,9 @@ scapy==2.4.4
 # homeassistant.components.deutsche_bahn
 schiene==0.23
 
+# homeassistant.components.screenlogic
+screenlogicpy==0.1.2
+
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
@@ -2311,7 +2314,7 @@ wiffi==1.0.1
 wirelesstagpy==0.4.1
 
 # homeassistant.components.withings
-withings-api==2.1.6
+withings-api==2.3.2
 
 # homeassistant.components.wled
 wled==0.4.4
@@ -2329,7 +2332,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.17.2
+xknx==0.17.3
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest
@@ -2351,7 +2354,7 @@ yeelight==0.5.4
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2021.02.22
+youtube_dl==2021.03.14
 
 # homeassistant.components.onvif
 zeep[async]==4.0.0

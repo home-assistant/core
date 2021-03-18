@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import callback
@@ -44,8 +44,8 @@ def get_astral_location(hass: HomeAssistantType) -> astral.Location:
 def get_astral_event_next(
     hass: HomeAssistantType,
     event: str,
-    utc_point_in_time: Optional[datetime.datetime] = None,
-    offset: Optional[datetime.timedelta] = None,
+    utc_point_in_time: datetime.datetime | None = None,
+    offset: datetime.timedelta | None = None,
 ) -> datetime.datetime:
     """Calculate the next specified solar event."""
     location = get_astral_location(hass)
@@ -56,8 +56,8 @@ def get_astral_event_next(
 def get_location_astral_event_next(
     location: "astral.Location",
     event: str,
-    utc_point_in_time: Optional[datetime.datetime] = None,
-    offset: Optional[datetime.timedelta] = None,
+    utc_point_in_time: datetime.datetime | None = None,
+    offset: datetime.timedelta | None = None,
 ) -> datetime.datetime:
     """Calculate the next specified solar event."""
     from astral import AstralError  # pylint: disable=import-outside-toplevel
@@ -91,8 +91,8 @@ def get_location_astral_event_next(
 def get_astral_event_date(
     hass: HomeAssistantType,
     event: str,
-    date: Union[datetime.date, datetime.datetime, None] = None,
-) -> Optional[datetime.datetime]:
+    date: datetime.date | datetime.datetime | None = None,
+) -> datetime.datetime | None:
     """Calculate the astral event time for the specified date."""
     from astral import AstralError  # pylint: disable=import-outside-toplevel
 
@@ -114,7 +114,7 @@ def get_astral_event_date(
 @callback
 @bind_hass
 def is_up(
-    hass: HomeAssistantType, utc_point_in_time: Optional[datetime.datetime] = None
+    hass: HomeAssistantType, utc_point_in_time: datetime.datetime | None = None
 ) -> bool:
     """Calculate if the sun is currently up."""
     if utc_point_in_time is None:

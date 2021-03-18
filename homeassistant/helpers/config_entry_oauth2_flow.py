@@ -5,12 +5,14 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+from __future__ import annotations
+
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 import logging
 import secrets
 import time
-from typing import Any, Awaitable, Callable, Dict, Optional, cast
+from typing import Any, Awaitable, Callable, Dict, cast
 
 from aiohttp import client, web
 import async_timeout
@@ -231,7 +233,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return {}
 
     async def async_step_pick_implementation(
-        self, user_input: Optional[dict] = None
+        self, user_input: dict | None = None
     ) -> dict:
         """Handle a flow start."""
         implementations = await async_get_implementations(self.hass, self.DOMAIN)
@@ -260,8 +262,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         )
 
     async def async_step_auth(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Create an entry for auth."""
         # Flow has been triggered by external data
         if user_input:
@@ -286,8 +288,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return self.async_external_step(step_id="auth", url=url)
 
     async def async_step_creation(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Create config entry from external data."""
         token = await self.flow_impl.async_resolve_external_data(self.external_data)
         # Force int for non-compliant oauth2 providers
@@ -312,8 +314,8 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
     async def async_step_discovery(
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, discovery_info: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(self.DOMAIN)
 
@@ -354,7 +356,7 @@ def async_register_implementation(
 
 async def async_get_implementations(
     hass: HomeAssistant, domain: str
-) -> Dict[str, AbstractOAuth2Implementation]:
+) -> dict[str, AbstractOAuth2Implementation]:
     """Return OAuth2 implementations for specified domain."""
     registered = cast(
         Dict[str, AbstractOAuth2Implementation],
@@ -392,7 +394,7 @@ def async_add_implementation_provider(
     hass: HomeAssistant,
     provider_domain: str,
     async_provide_implementation: Callable[
-        [HomeAssistant, str], Awaitable[Optional[AbstractOAuth2Implementation]]
+        [HomeAssistant, str], Awaitable[AbstractOAuth2Implementation | None]
     ],
 ) -> None:
     """Add an implementation provider.
@@ -516,7 +518,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
 
 
 @callback
-def _decode_jwt(hass: HomeAssistant, encoded: str) -> Optional[dict]:
+def _decode_jwt(hass: HomeAssistant, encoded: str) -> dict | None:
     """JWT encode data."""
     secret = cast(str, hass.data.get(DATA_JWT_SECRET))
 

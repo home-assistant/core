@@ -1,5 +1,7 @@
 """Support for Vera locks."""
-from typing import Any, Callable, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 import pyvera as veraApi
 
@@ -23,7 +25,7 @@ ATTR_LOW_BATTERY = "low_battery"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
     controller_data = get_controller_data(hass, entry)
@@ -56,12 +58,12 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         self._state = STATE_UNLOCKED
 
     @property
-    def is_locked(self) -> Optional[bool]:
+    def is_locked(self) -> bool | None:
         """Return true if device is on."""
         return self._state == STATE_LOCKED
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Who unlocked the lock and did a low battery alert fire.
 
         Reports on the previous poll cycle.
@@ -78,7 +80,7 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         return data
 
     @property
-    def changed_by(self) -> Optional[str]:
+    def changed_by(self) -> str | None:
         """Who unlocked the lock.
 
         Reports on the previous poll cycle.
