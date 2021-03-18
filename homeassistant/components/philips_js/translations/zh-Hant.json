@@ -10,6 +10,13 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN \u78bc"
+                },
+                "description": "\u8f38\u5165\u96fb\u8996\u986f\u793a\u4e4b PIN \u78bc",
+                "title": "\u914d\u5c0d"
+            },
             "user": {
                 "data": {
                     "api_version": "API \u7248\u672c",

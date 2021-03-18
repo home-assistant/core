@@ -28,7 +28,8 @@
             "manual": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "title": "Handmatig een Hue bridge configureren"
             }
         }
     },
@@ -51,6 +52,15 @@
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_double_button_long_press": "Beide \"{subtype}\" losgelaten na lang indrukken",
             "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden"
+                }
+            }
         }
     }
 }

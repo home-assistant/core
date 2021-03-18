@@ -14,7 +14,9 @@
                     "password": "Wachtwoord",
                     "server": "Server",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Voer Dexcom Share-gegevens in",
+                "title": "Dexcom integratie instellen"
             }
         }
     },

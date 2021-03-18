@@ -8,6 +8,7 @@
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "Glimlach: {name}",
         "step": {
             "user": {
                 "data": {

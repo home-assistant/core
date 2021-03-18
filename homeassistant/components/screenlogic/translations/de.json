@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "ScreenLogic {name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP-Adresse",
+                    "port": "Port"
+                },
+                "description": "Gib deine ScreenLogic Gateway-Informationen ein.",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": ""
+                },
+                "description": "Die folgenden ScreenLogic-Gateways wurden erkannt. Bitte w\u00e4hle eines aus, um es zu konfigurieren oder w\u00e4hle ein ScreenLogic-Gateway zum manuellen Konfigurieren.",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunden zwischen den Scans"
+                },
+                "description": "Einstellungen f\u00fcr {gateway_name} angeben",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

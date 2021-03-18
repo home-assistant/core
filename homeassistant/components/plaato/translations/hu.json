@@ -10,6 +10,10 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "device_name": "Eszk\u00f6z neve",
+                    "device_type": "A Plaato eszk\u00f6z t\u00edpusa"
+                },
                 "description": "El szeretn\u00e9d kezdeni a be\u00e1ll\u00edt\u00e1st?",
                 "title": "A Plaato eszk\u00f6z\u00f6k be\u00e1ll\u00edt\u00e1sa"
             }

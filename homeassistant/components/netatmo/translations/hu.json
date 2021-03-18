@@ -20,8 +20,19 @@
             "away": "t\u00e1vol"
         },
         "trigger_type": {
+            "alarm_started": "{entity_name} riaszt\u00e1st \u00e9szlelt",
+            "animal": "{entity_name} \u00e9szlelt egy \u00e1llatot",
+            "cancel_set_point": "{entity_name} folytatta \u00fctemez\u00e9s\u00e9t",
+            "human": "{entity_name} embert \u00e9szlelt",
+            "movement": "{entity_name} mozg\u00e1st \u00e9szlelt",
+            "outdoor": "{entity_name} k\u00fclt\u00e9ri esem\u00e9nyt \u00e9szlelt",
+            "person": "{entity_name} szem\u00e9lyt \u00e9szlelt",
+            "person_away": "{entity_name} \u00e9szlelte, hogy egy szem\u00e9ly t\u00e1vozott",
+            "set_point": "A(z) {entity_name} c\u00e9lh\u0151m\u00e9rs\u00e9klet manu\u00e1lisan lett be\u00e1ll\u00edtva",
+            "therm_mode": "{entity_name} \u00e1tv\u00e1ltott erre: \"{subtype}\"",
             "turned_off": "{entity_name} ki lett kapcsolva",
-            "turned_on": "{entity_name} be lett kapcsolva"
+            "turned_on": "{entity_name} be lett kapcsolva",
+            "vehicle": "{entity_name} j\u00e1rm\u0171vet \u00e9szlelt"
         }
     },
     "options": {

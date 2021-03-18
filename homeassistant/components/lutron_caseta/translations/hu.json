@@ -23,7 +23,8 @@
             "button_3": "Harmadik gomb",
             "button_4": "Negyedik gomb",
             "off": "Ki",
-            "on": "Be"
+            "on": "Be",
+            "stop_all": "Az \u00f6sszes le\u00e1ll\u00edt\u00e1sa"
         }
     }
 }
