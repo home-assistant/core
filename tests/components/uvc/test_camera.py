@@ -13,9 +13,55 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import async_setup_component
 
 
-@patch("uvcclient.nvr.UVCRemote")
-@patch.object(uvc, "UnifiVideoCamera")
-async def test_setup_full_config(mock_uvc, mock_remote, hass):
+@pytest.fixture(name="mock_remote")
+def mock_remote_fixture():
+    """Mock the nvr.UVCRemote class."""
+    with patch("homeassistant.components.uvc.camera.nvr.UVCRemote") as mock_remote:
+        yield mock_remote
+
+
+@pytest.fixture(name="camera_info")
+def camera_info_fixture():
+    """Mock the camera info of a camera."""
+    return {
+        "model": "UVC Fake",
+        "recordingSettings": {
+            "fullTimeRecordEnabled": True,
+            "motionRecordEnabled": False,
+        },
+        "host": "host-a",
+        "internalHost": "host-b",
+        "username": "admin",
+        "channels": [
+            {
+                "id": "0",
+                "width": 1920,
+                "height": 1080,
+                "fps": 25,
+                "bitrate": 6000000,
+                "isRtspEnabled": True,
+                "rtspUris": [
+                    "rtsp://host-a:7447/uuid_rtspchannel_0",
+                    "rtsp://foo:7447/uuid_rtspchannel_0",
+                ],
+            },
+            {
+                "id": "1",
+                "width": 1024,
+                "height": 576,
+                "fps": 15,
+                "bitrate": 1200000,
+                "isRtspEnabled": False,
+                "rtspUris": [
+                    "rtsp://host-a:7447/uuid_rtspchannel_1",
+                    "rtsp://foo:7447/uuid_rtspchannel_1",
+                ],
+            },
+        ],
+    }
+
+
+async def test_setup_full_config(hass, mock_remote, camera_info):
     """Test the setup with full configuration."""
     config = {
         "platform": "uvc",
@@ -33,8 +79,10 @@ async def test_setup_full_config(mock_uvc, mock_remote, hass):
     def mock_get_camera(uuid):
         """Create a mock camera."""
         if uuid == "id3":
-            return {"model": "airCam"}
-        return {"model": "UVC"}
+            camera_info["model"] = "airCam"
+        else:
+            camera_info["model"] = "UVC"
+        return camera_info
 
     mock_remote.return_value.index.return_value = mock_cameras
     mock_remote.return_value.get_camera.side_effect = mock_get_camera
@@ -45,12 +93,18 @@ async def test_setup_full_config(mock_uvc, mock_remote, hass):
 
     assert mock_remote.call_count == 1
     assert mock_remote.call_args == call("foo", 123, "secret", ssl=False)
-    mock_uvc.assert_has_calls(
-        [
-            call(mock_remote.return_value, "id1", "Front", "bar"),
-            call(mock_remote.return_value, "id2", "Back", "bar"),
-        ],
-    )
+    camera_states = hass.states.async_all("camera")
+    assert len(camera_states) == 2
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.name == "Front"
+
+    state = hass.states.get("camera.back")
+
+    assert state
+    assert state.name == "Back"
 
 
 @patch("uvcclient.nvr.UVCRemote")
