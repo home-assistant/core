@@ -254,16 +254,30 @@ class ExposeSchema:
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_DEFAULT = "default"
+    EXPOSE_TIME_TYPES = [
+        "time",
+        "date",
+        "datetime",
+    ]
 
-    SCHEMA = vol.Schema(
+    EXPOSE_TIME_SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_KNX_EXPOSE_TYPE): vol.All(
+                cv.string, str.lower, vol.In(EXPOSE_TIME_TYPES)
+            ),
+            vol.Required(KNX_ADDRESS): ga_validator,
+        }
+    )
+    EXPOSE_SENSOR_SCHEMA = vol.Schema(
         {
             vol.Required(CONF_KNX_EXPOSE_TYPE): sensor_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
         }
     )
+    SCHEMA = vol.Any(EXPOSE_TIME_SCHEMA, EXPOSE_SENSOR_SCHEMA)
 
 
 class FanSchema:

@@ -195,7 +195,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
 )
 
 SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
-    ExposeSchema.SCHEMA.extend(
+    ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
         {
             vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
         }

@@ -34,18 +34,16 @@ def create_knx_exposure(
     address = config[KNX_ADDRESS]
     expose_type = config[ExposeSchema.CONF_KNX_EXPOSE_TYPE]
     attribute = config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
-    entity_id = config.get(CONF_ENTITY_ID)
     default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
 
     exposure: KNXExposeSensor | KNXExposeTime
-    if isinstance(expose_type, str) and expose_type.lower() in [
-        "time",
-        "date",
-        "datetime",
-    ]:
+    if (
+        isinstance(expose_type, str)
+        and expose_type.lower() in ExposeSchema.EXPOSE_TIME_TYPES
+    ):
         exposure = KNXExposeTime(xknx, expose_type, address)
     else:
-        assert entity_id is not None
+        entity_id = config[CONF_ENTITY_ID]
         exposure = KNXExposeSensor(
             hass,
             xknx,
