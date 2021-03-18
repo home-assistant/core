@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from xknx.devices import Cover as XknxCover, Device as XknxDevice
 
@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import (
     ConfigType,
@@ -36,7 +37,7 @@ from .knx_entity import KnxEntity
 async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up cover(s) for KNX platform."""
@@ -55,7 +56,7 @@ class KNXCover(KnxEntity, CoverEntity):
         self._device: XknxCover
         super().__init__(device)
 
-        self._unsubscribe_auto_updater: Callable | None = None
+        self._unsubscribe_auto_updater: Callable[[], None] | None = None
 
     @callback
     async def after_update_callback(self, device: XknxDevice) -> None:
