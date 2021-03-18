@@ -12,10 +12,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_PORT,
+    CONF_SSL,
     CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    CONF_SSL,
     CONF_VERIFY_SSL,
 )
 from homeassistant.exceptions import TemplateError
