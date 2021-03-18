@@ -3,18 +3,13 @@
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
+
 from datetime import timedelta
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_NAME
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 from homeassistant.helpers.entity import Entity
-from wallbox import Wallbox
 
 from .const import DOMAIN, SENSOR_TYPES, CONF_CONNECTIONS
 
@@ -51,7 +46,7 @@ async def async_setup_entry(hass, config, async_add_entities):
         try:
             return await hass.async_add_executor_job(wallbox_updater, wallbox, station)
 
-        except:
+        except ConnectionError:
             _LOGGER.error("Error getting data from wallbox API")
             return
 

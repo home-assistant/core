@@ -3,18 +3,12 @@
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from datetime import timedelta
 from homeassistant.components.number import NumberEntity
-from homeassistant.components.number import PLATFORM_SCHEMA
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_NAME
-from wallbox import Wallbox
 
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
 
 from .const import DOMAIN, CONF_STATION, CONF_CONNECTIONS
@@ -43,7 +37,7 @@ async def async_setup_entry(hass, config, async_add_entities):
         try:
             return await hass.async_add_executor_job(wallbox_updater, wallbox, station)
 
-        except:
+        except ConnectionError:
             _LOGGER.error("Error getting data from wallbox API")
             return
 
@@ -86,7 +80,7 @@ class WallboxMaxChargingCurrent(CoordinatorEntity, NumberEntity):
             _LOGGER.debug("Unlocking Wallbox")
             w.setMaxChargingCurrent(self.station, max_charging_current)
 
-        except Exception as exception:
+        except ConnectionError as exception:
             _LOGGER.error("Unable to pause/resume Wallbox. %s", exception)
 
     @property

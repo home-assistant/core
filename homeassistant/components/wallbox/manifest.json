@@ -12,6 +12,5 @@
   "dependencies": [],
   "codeowners": [
     "@hesselonline"
-  ],
-  "version": "1.0.0"
+  ]
 }

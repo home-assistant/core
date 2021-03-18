@@ -3,19 +3,12 @@
 
 import logging
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from datetime import timedelta
-from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_NAME
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
-    UpdateFailed,
 )
-
-from wallbox import Wallbox
 
 from .const import DOMAIN, CONF_STATION, CONF_CONNECTIONS
 

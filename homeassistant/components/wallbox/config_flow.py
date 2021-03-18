@@ -36,7 +36,7 @@ class PlaceholderHub:
             w = Wallbox(username, password)
             w.authenticate()
             return True
-        except:
+        except Exception:
             raise InvalidAuth
 
     def getData(self, username, password) -> bool:
@@ -45,7 +45,7 @@ class PlaceholderHub:
             w.authenticate()
             w.getChargerStatus(self.station)
             return True
-        except:
+        except ConnectionError:
             raise CannotConnect
 
 
