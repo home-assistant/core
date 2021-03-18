@@ -488,9 +488,10 @@ async def test_login_v31x(hass, mock_remote, camera_v313):
     assert image.content == "test_image"
 
 
-@patch("uvcclient.store.get_info_store")
-@patch("uvcclient.camera.UVCCameraClientV320")
-async def test_login_tries_both_addrs_and_caches(mock_camera, mock_store, uvc_fixture):
+@pytest.mark.parametrize(
+    "error", [OSError, camera.CameraConnectError, camera.CameraAuthError]
+)
+async def test_login_tries_both_addrs_and_caches(hass, mock_remote, camera_v320, error):
     """Test the login tries."""
     responses = [0]
 
@@ -498,22 +499,44 @@ async def test_login_tries_both_addrs_and_caches(mock_camera, mock_store, uvc_fi
         """Mock login."""
         try:
             responses.pop(0)
-            raise OSError
+            raise error
         except IndexError:
             pass
 
-    mock_store.return_value.get_camera_password.return_value = None
-    mock_camera.return_value.login.side_effect = mock_login
-    uvc_fixture._login()
-    assert 2 == mock_camera.call_count
-    assert "host-b" == uvc_fixture._connect_addr
+    snapshots = [0]
 
-    mock_camera.reset_mock()
-    uvc_fixture._login()
-    assert mock_camera.call_count == 1
-    assert mock_camera.call_args == call("host-b", "admin", "seekret")
-    assert mock_camera.return_value.login.call_count == 1
-    assert mock_camera.return_value.login.call_args == call()
+    def mock_snapshots(*a):
+        """Mock get snapshots."""
+        try:
+            snapshots.pop(0)
+            raise camera.CameraAuthError()
+        except IndexError:
+            pass
+        return "test_image"
+
+    camera_v320.return_value.login.side_effect = mock_login
+
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v320.call_count == 2
+    assert camera_v320.call_args == call("host-b", "admin", "ubnt")
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
+
+    camera_v320.reset_mock()
+    camera_v320.return_value.get_snapshot.side_effect = mock_snapshots
+
+    image = await async_get_image(hass, "camera.front")
+
+    assert camera_v320.call_count == 1
+    assert camera_v320.call_args == call("host-b", "admin", "ubnt")
+    assert camera_v320.return_value.login.call_count == 1
+    assert image.content_type == DEFAULT_CONTENT_TYPE
+    assert image.content == "test_image"
 
 
 @patch("uvcclient.store.get_info_store")
