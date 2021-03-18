@@ -1,5 +1,5 @@
 """Support for Genius Hub climate devices."""
-from typing import List, Optional
+from __future__ import annotations
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -67,12 +67,12 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         return GH_HVAC_TO_HA.get(self._zone.data["mode"], HVAC_MODE_HEAT)
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return list(HA_HVAC_TO_GH)
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if "_state" in self._zone.data:  # only for v3 API
             if not self._zone.data["_state"].get("bIsActive"):
@@ -83,12 +83,12 @@ class GeniusClimateZone(GeniusHeatingZone, ClimateEntity):
         return None
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return GH_PRESET_TO_HA.get(self._zone.data["mode"])
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         if "occupied" in self._zone.data:  # if has a movement sensor
             return [PRESET_ACTIVITY, PRESET_BOOST]

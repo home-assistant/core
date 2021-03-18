@@ -1,6 +1,8 @@
 """Support for Gogogate2 garage Doors."""
+from __future__ import annotations
+
 from itertools import chain
-from typing import Callable, List, Optional
+from typing import Callable
 
 from gogogate2_api.common import AbstractDoor, get_configured_doors
 
@@ -26,7 +28,7 @@ SENSOR_ID_WIRED = "WIRE"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+    async_add_entities: Callable[[list[Entity], bool | None], None],
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)

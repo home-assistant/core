@@ -1,8 +1,9 @@
 """The GeoNet NZ Volcano integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
 import voluptuous as vol
@@ -172,11 +173,11 @@ class GeonetnzVolcanoFeedEntityManager:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def last_update(self) -> Optional[datetime]:
+    def last_update(self) -> datetime | None:
         """Return the last update of this feed."""
         return self._feed_manager.last_update
 
-    def last_update_successful(self) -> Optional[datetime]:
+    def last_update_successful(self) -> datetime | None:
         """Return the last successful update of this feed."""
         return self._feed_manager.last_update_successful
 

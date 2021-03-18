@@ -1,5 +1,7 @@
 """Sensors for the Elexa Guardian integration."""
-from typing import Callable, Dict, Optional
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -117,9 +119,9 @@ class PairedSensorSensor(PairedSensorEntity):
         coordinator: DataUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: Optional[str],
-        icon: Optional[str],
-        unit: Optional[str],
+        device_class: str | None,
+        icon: str | None,
+        unit: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinator, kind, name, device_class, icon)
@@ -157,12 +159,12 @@ class ValveControllerSensor(ValveControllerEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
-        device_class: Optional[str],
-        icon: Optional[str],
-        unit: Optional[str],
+        device_class: str | None,
+        icon: str | None,
+        unit: str | None,
     ) -> None:
         """Initialize."""
         super().__init__(entry, coordinators, kind, name, device_class, icon)

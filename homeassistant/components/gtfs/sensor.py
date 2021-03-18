@@ -1,9 +1,11 @@
 """Support for GTFS (Google/General Transport Format Schema)."""
+from __future__ import annotations
+
 import datetime
 import logging
 import os
 import threading
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import pygtfs
 from sqlalchemy.sql import text
@@ -484,7 +486,7 @@ def setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     add_entities: Callable[[list], None],
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the GTFS sensor."""
     gtfs_dir = hass.config.path(DEFAULT_PATH)
@@ -523,7 +525,7 @@ class GTFSDepartureSensor(Entity):
     def __init__(
         self,
         gtfs: Any,
-        name: Optional[Any],
+        name: Any | None,
         origin: Any,
         destination: Any,
         offset: cv.time_period,
@@ -540,7 +542,7 @@ class GTFSDepartureSensor(Entity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state: Optional[str] = None
+        self._state: str | None = None
         self._attributes = {}
 
         self._agency = None
@@ -559,7 +561,7 @@ class GTFSDepartureSensor(Entity):
         return self._name
 
     @property
-    def state(self) -> Optional[str]:  # type: ignore
+    def state(self) -> str | None:  # type: ignore
         """Return the state of the sensor."""
         return self._state
 
@@ -811,7 +813,7 @@ class GTFSDepartureSensor(Entity):
             col: getattr(resource, col) for col in resource.__table__.columns.keys()
         }
 
-    def append_keys(self, resource: dict, prefix: Optional[str] = None) -> None:
+    def append_keys(self, resource: dict, prefix: str | None = None) -> None:
         """Properly format key val pairs to append to attributes."""
         for attr, val in resource.items():
             if val == "" or val is None or attr == "feed_id":

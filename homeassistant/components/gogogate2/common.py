@@ -1,7 +1,9 @@
 """Common code for GogoGate2 component."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Awaitable, Callable, NamedTuple, Optional
+from typing import Awaitable, Callable, NamedTuple
 
 from gogogate2_api import AbstractGateApi, GogoGate2Api, ISmartGateApi
 from gogogate2_api.common import AbstractDoor, get_door_by_id
@@ -30,8 +32,8 @@ class StateData(NamedTuple):
     """State data for a cover entity."""
 
     config_unique_id: str
-    unique_id: Optional[str]
-    door: Optional[AbstractDoor]
+    unique_id: str | None
+    door: AbstractDoor | None
 
 
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
@@ -45,8 +47,8 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         update_interval: timedelta,
-        update_method: Optional[Callable[[], Awaitable]] = None,
-        request_refresh_debouncer: Optional[Debouncer] = None,
+        update_method: Callable[[], Awaitable] | None = None,
+        request_refresh_debouncer: Debouncer | None = None,
     ):
         """Initialize the data update coordinator."""
         DataUpdateCoordinator.__init__(
@@ -78,7 +80,7 @@ class GoGoGate2Entity(CoordinatorEntity):
         self._unique_id = unique_id
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
 

@@ -1,6 +1,7 @@
 """Feed Entity Manager Sensor support for GDACS Feed."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -109,12 +110,12 @@ class GdacsSensor(Entity):
         return self._total
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID containing latitude/longitude."""
         return self._config_unique_id
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         return f"GDACS ({self._config_title})"
 

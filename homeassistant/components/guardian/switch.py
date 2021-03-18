@@ -1,5 +1,7 @@
 """Switches for the Elexa Guardian integration."""
-from typing import Callable, Dict
+from __future__ import annotations
+
+from typing import Callable
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -84,7 +86,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
         self,
         entry: ConfigEntry,
         client: Client,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
     ):
         """Initialize."""
         super().__init__(
