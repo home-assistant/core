@@ -1,6 +1,5 @@
 """The tests for UVC camera module."""
 from datetime import datetime, timedelta
-import socket
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -15,6 +14,7 @@ from homeassistant.components.camera import (
     async_get_stream_source,
 )
 from homeassistant.components.uvc import camera as uvc
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -539,13 +539,17 @@ async def test_login_tries_both_addrs_and_caches(hass, mock_remote, camera_v320,
     assert image.content == "test_image"
 
 
-@patch("uvcclient.store.get_info_store")
-@patch("uvcclient.camera.UVCCameraClientV320")
-async def test_login_fails_both_properly(mock_camera, mock_store, uvc_fixture):
+async def test_login_fails_both_properly(hass, mock_remote, camera_v320):
     """Test if login fails properly."""
-    mock_camera.return_value.login.side_effect = socket.error
-    assert uvc_fixture._login() is None
-    assert uvc_fixture._connect_addr is None
+    camera_v320.return_value.login.side_effect = OSError
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await async_get_image(hass, "camera.front")
+
+    assert camera_v320.return_value.get_snapshot.call_count == 0
 
 
 async def test_camera_image_tries_login_bails_on_failure(uvc_fixture):
