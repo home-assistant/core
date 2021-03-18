@@ -253,6 +253,7 @@ FLOWS = [
     "vilfo",
     "vizio",
     "volumio",
+    "wallbox",
     "wemo",
     "wiffi",
     "wilight",

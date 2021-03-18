@@ -2292,6 +2292,9 @@ vultr==0.1.2
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 
+# homeassistant.components.wallbox
+wallbox==0.4.4
+
 # homeassistant.components.waqi
 waqiasync==1.0.0
 
