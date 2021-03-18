@@ -151,6 +151,13 @@ class AppleTVEntity(Entity):
         """No polling needed for Apple TV."""
         return False
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._identifier)},
+        }
+
 
 class AppleTVManager:
     """Connection and power manager for an Apple TV.
@@ -181,7 +188,7 @@ class AppleTVManager:
         This is a callback function from pyatv.interface.DeviceListener.
         """
         _LOGGER.warning(
-            'Connection lost to Apple TV "%s"', self.config_entry.data.get(CONF_NAME)
+            'Connection lost to Apple TV "%s"', self.config_entry.data[CONF_NAME]
         )
         self._connection_was_lost = True
         self._handle_disconnect()
@@ -268,7 +275,7 @@ class AppleTVManager:
         """Problem to authenticate occurred that needs intervention."""
         _LOGGER.debug("Authentication error, reconfigure integration")
 
-        name = self.config_entry.data.get(CONF_NAME)
+        name = self.config_entry.data[CONF_NAME]
         identifier = self.config_entry.unique_id
 
         self.hass.components.persistent_notification.create(
@@ -337,7 +344,8 @@ class AppleTVManager:
         self._connection_attempts = 0
         if self._connection_was_lost:
             _LOGGER.info(
-                'Connection was re-established to Apple TV "%s"', self.atv.service.name
+                'Connection was re-established to Apple TV "%s"',
+                self.config_entry.data[CONF_NAME],
             )
             self._connection_was_lost = False
 

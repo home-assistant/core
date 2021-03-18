@@ -187,9 +187,9 @@ class WinkLockDevice(WinkDevice, LockEntity):
         self.wink.set_alarm_mode(mode)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        super_attrs = super().device_state_attributes
+        super_attrs = super().extra_state_attributes
         sensitivity = dict_value_to_key(
             ALARM_SENSITIVITY_MAP, self.wink.alarm_sensitivity()
         )

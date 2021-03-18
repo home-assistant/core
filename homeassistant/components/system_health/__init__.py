@@ -1,9 +1,11 @@
 """Support for System health ."""
+from __future__ import annotations
+
 import asyncio
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Awaitable, Callable, Dict, Optional
+from typing import Awaitable, Callable
 
 import aiohttp
 import async_timeout
@@ -27,7 +29,7 @@ INFO_CALLBACK_TIMEOUT = 5
 def async_register_info(
     hass: HomeAssistant,
     domain: str,
-    info_callback: Callable[[HomeAssistant], Dict],
+    info_callback: Callable[[HomeAssistant], dict],
 ):
     """Register an info callback.
 
@@ -89,10 +91,10 @@ def _format_value(val):
 @websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "system_health/info"})
 async def handle_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: Dict
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ):
     """Handle an info request via a subscription."""
-    registrations: Dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
+    registrations: dict[str, SystemHealthRegistration] = hass.data[DOMAIN]
     data = {}
     pending_info = {}
 
@@ -187,14 +189,14 @@ class SystemHealthRegistration:
 
     hass: HomeAssistant
     domain: str
-    info_callback: Optional[Callable[[HomeAssistant], Awaitable[Dict]]] = None
-    manage_url: Optional[str] = None
+    info_callback: Callable[[HomeAssistant], Awaitable[dict]] | None = None
+    manage_url: str | None = None
 
     @callback
     def async_register_info(
         self,
-        info_callback: Callable[[HomeAssistant], Awaitable[Dict]],
-        manage_url: Optional[str] = None,
+        info_callback: Callable[[HomeAssistant], Awaitable[dict]],
+        manage_url: str | None = None,
     ):
         """Register an info callback."""
         self.info_callback = info_callback
@@ -203,7 +205,7 @@ class SystemHealthRegistration:
 
 
 async def async_check_can_reach_url(
-    hass: HomeAssistant, url: str, more_info: Optional[str] = None
+    hass: HomeAssistant, url: str, more_info: str | None = None
 ) -> str:
     """Test if the url can be reached."""
     session = aiohttp_client.async_get_clientsession(hass)

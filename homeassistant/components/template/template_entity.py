@@ -1,7 +1,8 @@
 """TemplateEntity utility class."""
+from __future__ import annotations
 
 import logging
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable
 
 import voluptuous as vol
 
@@ -30,8 +31,8 @@ class _TemplateAttribute:
         attribute: str,
         template: Template,
         validator: Callable[[Any], Any] = None,
-        on_update: Optional[Callable[[Any], None]] = None,
-        none_on_template_error: Optional[bool] = False,
+        on_update: Callable[[Any], None] | None = None,
+        none_on_template_error: bool | None = False,
     ):
         """Template attribute."""
         self._entity = entity
@@ -61,10 +62,10 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: Optional[Event],
+        event: Event | None,
         template: Template,
-        last_result: Union[str, None, TemplateError],
-        result: Union[str, TemplateError],
+        last_result: str | None | TemplateError,
+        result: str | TemplateError,
     ) -> None:
         """Handle a template result event callback."""
         if isinstance(result, TemplateError):
@@ -168,7 +169,7 @@ class TemplateEntity(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -189,7 +190,7 @@ class TemplateEntity(Entity):
         attribute: str,
         template: Template,
         validator: Callable[[Any], Any] = None,
-        on_update: Optional[Callable[[Any], None]] = None,
+        on_update: Callable[[Any], None] | None = None,
         none_on_template_error: bool = False,
     ) -> None:
         """
@@ -219,8 +220,8 @@ class TemplateEntity(Entity):
     @callback
     def _handle_results(
         self,
-        event: Optional[Event],
-        updates: List[TrackTemplateResult],
+        event: Event | None,
+        updates: list[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
         if event:

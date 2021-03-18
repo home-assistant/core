@@ -1,8 +1,10 @@
 """Component to embed Aqualink devices."""
+from __future__ import annotations
+
 import asyncio
 from functools import wraps
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import aiohttp.client_exceptions
 from iaqualink import (
@@ -234,7 +236,7 @@ class AqualinkEntity(Entity):
         return self.dev.system.online
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device info."""
         return {
             "identifiers": {(DOMAIN, self.unique_id)},

@@ -33,6 +33,10 @@
                     "entity_id": "Configureer een specifieke entiteit."
                 },
                 "title": "Configureer MyLink-opties"
+            },
+            "target_config": {
+                "description": "Configureer opties voor ' {target_name} '",
+                "title": "Configureer MyLink Cover"
             }
         }
     },

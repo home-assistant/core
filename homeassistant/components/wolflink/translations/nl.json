@@ -4,10 +4,16 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "device": {
+                "data": {
+                    "device_name": "Apparaat"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",

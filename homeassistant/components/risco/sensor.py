@@ -94,7 +94,7 @@ class RiscoSensor(CoordinatorEntity):
         return self._event.time
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """State attributes."""
         if self._event is None:
             return None

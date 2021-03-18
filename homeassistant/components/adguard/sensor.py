@@ -232,4 +232,4 @@ class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
 
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
-        self._state = await self.adguard.filtering.rules_count()
+        self._state = await self.adguard.filtering.rules_count(allowlist=False)

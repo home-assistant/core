@@ -1,6 +1,7 @@
 """The media_source integration."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 import voluptuous as vol
 
@@ -54,7 +55,7 @@ async def _process_media_source_platform(hass, domain, platform):
 
 @callback
 def _get_media_item(
-    hass: HomeAssistant, media_content_id: Optional[str]
+    hass: HomeAssistant, media_content_id: str | None
 ) -> models.MediaSourceItem:
     """Return media item."""
     if media_content_id:

@@ -30,7 +30,7 @@
                 "data": {
                     "code": "Codi PIN"
                 },
-                "description": "Per enlla\u00e7ar el teu compte de Nest, [autoritza el teu compte]({url}). \n\nDespr\u00e9s de l'autoritzaci\u00f3, copia i enganxa el codi pin que es mostra a sota.",
+                "description": "Per enlla\u00e7ar el teu compte de Nest, [autoritza el teu compte]({url}). \n\nDespr\u00e9s de l'autoritzaci\u00f3, copia i enganxa el codi PIN que es mostra a sota.",
                 "title": "Enlla\u00e7 amb el compte de Nest"
             },
             "pick_implementation": {

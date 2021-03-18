@@ -1,7 +1,7 @@
 """Support for Firmata light output."""
+from __future__ import annotations
 
 import logging
-from typing import Type
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -55,7 +55,7 @@ class FirmataLight(FirmataPinEntity, LightEntity):
 
     def __init__(
         self,
-        api: Type[FirmataBoardPin],
+        api: type[FirmataBoardPin],
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,

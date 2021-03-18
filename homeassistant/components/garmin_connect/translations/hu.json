@@ -4,10 +4,10 @@
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "cannot_connect": "Nem siker\u00fclt csatlakozni, pr\u00f3b\u00e1lkozzon \u00fajra.",
-            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s.",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "too_many_requests": "T\u00fal sok k\u00e9r\u00e9s, pr\u00f3b\u00e1lkozzon k\u00e9s\u0151bb \u00fajra.",
-            "unknown": "V\u00e1ratlan hiba."
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
             "user": {

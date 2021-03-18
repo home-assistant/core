@@ -12,6 +12,7 @@
         "step": {
             "user": {
                 "data": {
+                    "id": "Account ID",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }

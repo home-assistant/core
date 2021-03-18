@@ -1,13 +1,32 @@
 {
     "mfa_setup": {
-        "totp": {
+        "notify": {
+            "abort": {
+                "no_available_service": "Tidak ada layanan notifikasi yang tersedia."
+            },
             "error": {
-                "invalid_code": "Kode salah, coba lagi. Jika Anda mendapatkan kesalahan ini secara konsisten, pastikan jam pada sistem Home Assistant anda akurat."
+                "invalid_code": "Kode tifak valid, coba lagi."
             },
             "step": {
                 "init": {
-                    "description": "Untuk mengaktifkan otentikasi dua faktor menggunakan password satu kali berbasis waktu, pindai kode QR dengan aplikasi otentikasi Anda. Jika Anda tidak memilikinya, kami menyarankan [Google Authenticator] (https://support.google.com/accounts/answer/1066447) atau [Authy] (https://authy.com/). \n\n {qr_code} \n \n Setelah memindai kode, masukkan kode enam digit dari aplikasi Anda untuk memverifikasi pengaturan. Jika Anda mengalami masalah saat memindai kode QR, lakukan pengaturan manual dengan kode ** ` {code} ` **.",
-                    "title": "Siapkan otentikasi dua faktor menggunakan TOTP"
+                    "description": "Pilih salah satu layanan notifikasi:",
+                    "title": "Siapkan kata sandi sekali pakai yang dikirimkan oleh komponen notify"
+                },
+                "setup": {
+                    "description": "Kata sandi sekali pakai telah dikirim melalui **notify.{notify_service}**. Masukkan di bawah ini:",
+                    "title": "Verifikasi penyiapan"
+                }
+            },
+            "title": "Kata Sandi Sekali Pakai Notifikasi"
+        },
+        "totp": {
+            "error": {
+                "invalid_code": "Kode tidak valid, coba lagi. Jika Anda terus mendapatkan kesalahan yang sama, pastikan jam pada sistem Home Assistant Anda sudah akurat."
+            },
+            "step": {
+                "init": {
+                    "description": "Untuk mengaktifkan autentikasi dua faktor menggunakan kata sandi sekali pakai berbasis waktu, pindai kode QR dengan aplikasi autentikasi Anda. Jika tidak punya, kami menyarankan aplikasi [Google Authenticator] (https://support.google.com/accounts/answer/1066447) atau [Authy] (https://authy.com/). \n\n {qr_code} \n \nSetelah memindai kode, masukkan kode enam digit dari aplikasi Anda untuk memverifikasi penyiapan. Jika mengalami masalah saat memindai kode QR, lakukan penyiapan manual dengan kode **`{code}`**.",
+                    "title": "Siapkan autentikasi dua faktor menggunakan TOTP"
                 }
             },
             "title": "TOTP"

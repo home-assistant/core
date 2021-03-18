@@ -1,5 +1,5 @@
 """Support for deCONZ climate devices."""
-from typing import Optional
+from __future__ import annotations
 
 from pydeconz.sensor import Thermostat
 
@@ -195,7 +195,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
     # Preset control
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return preset mode."""
         return DECONZ_TO_PRESET_MODE.get(self._device.preset)
 
@@ -244,7 +244,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 

@@ -1,8 +1,9 @@
 """Support for the Swedish weather institute weather service."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict, List
 
 import aiohttp
 import async_timeout
@@ -210,7 +211,7 @@ class SmhiWeather(WeatherEntity):
         return "Swedish weather institute (SMHI)"
 
     @property
-    def forecast(self) -> List:
+    def forecast(self) -> list:
         """Return the forecast."""
         if self._forecasts is None or len(self._forecasts) < 2:
             return None
@@ -235,7 +236,7 @@ class SmhiWeather(WeatherEntity):
         return data
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return SMHI specific attributes."""
         if self.cloudiness:
             return {ATTR_SMHI_CLOUDINESS: self.cloudiness}
