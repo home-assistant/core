@@ -8,6 +8,7 @@ from serial import SerialException
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.opentherm_gw.const import (
     CONF_FLOOR_TEMP,
+    CONF_PRECISION,
     CONF_READ_PRECISION,
     CONF_SET_PRECISION,
     DOMAIN,
@@ -174,6 +175,48 @@ async def test_form_connection_error(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
+async def test_options_migration(hass):
+    """Test migration of precision option after update."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock Gateway",
+        data={
+            CONF_NAME: "Test Entry 1",
+            CONF_DEVICE: "/dev/ttyUSB0",
+            CONF_ID: "test_entry_1",
+        },
+        options={
+            CONF_FLOOR_TEMP: True,
+            CONF_PRECISION: PRECISION_TENTHS,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
+        return_value=True,
+    ), patch("homeassistant.components.opentherm_gw.async_setup", return_value=True):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(
+            entry.entry_id, context={"source": config_entries.SOURCE_USER}, data=None
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_READ_PRECISION] == PRECISION_TENTHS
+        assert result["data"][CONF_SET_PRECISION] == PRECISION_TENTHS
+        assert result["data"][CONF_FLOOR_TEMP] is True
+
+
 async def test_options_form(hass):
     """Test the options form."""
     entry = MockConfigEntry(
@@ -188,8 +231,10 @@ async def test_options_form(hass):
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.opentherm_gw.async_setup"), patch(
-        "homeassistant.components.opentherm_gw.async_setup_entry"
+    with patch(
+        "homeassistant.components.opentherm_gw.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.opentherm_gw.async_setup_entry", return_value=True
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
