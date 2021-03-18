@@ -46,7 +46,7 @@ async def async_setup_platform(
 class KNXClimate(KnxEntity, ClimateEntity):
     """Representation of a KNX climate device."""
 
-    def __init__(self, device: XknxClimate):
+    def __init__(self, device: XknxClimate) -> None:
         """Initialize of a KNX climate device."""
         self._device: XknxClimate
         super().__init__(device)
