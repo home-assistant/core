@@ -1,8 +1,9 @@
 """Support for Ubiquiti's UVC cameras."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
 import re
-from typing import Optional
 
 import requests
 from uvcclient import camera as uvc_camera, nvr
@@ -255,7 +256,7 @@ class UnifiVideoCamera(Camera):
         self._caminfo = self._nvr.get_camera(self._uuid)
 
 
-def timestamp_ms_to_date(epoch_ms: int) -> Optional[datetime]:
+def timestamp_ms_to_date(epoch_ms: int) -> datetime | None:
     """Convert millisecond timestamp to datetime."""
     if epoch_ms:
         return datetime.fromtimestamp(epoch_ms / 1000)

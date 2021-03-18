@@ -1,5 +1,5 @@
 """Support for Tasmota sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from hatasmota import const as hc, status_sensor
 
@@ -163,7 +163,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}

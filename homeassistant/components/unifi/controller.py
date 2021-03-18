@@ -1,8 +1,9 @@
 """UniFi Controller abstraction."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 import ssl
-from typing import Optional
 
 from aiohttp import CookieJar
 import aiounifi
@@ -385,7 +386,7 @@ class UniFiController:
 
     @callback
     def async_heartbeat(
-        self, unique_id: str, heartbeat_expire_time: Optional[datetime] = None
+        self, unique_id: str, heartbeat_expire_time: datetime | None = None
     ) -> None:
         """Signal when a device has fresh home state."""
         if heartbeat_expire_time is not None:

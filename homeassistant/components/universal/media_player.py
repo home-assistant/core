@@ -1,6 +1,7 @@
 """Combination of multiple media players for a universal controller."""
+from __future__ import annotations
+
 from copy import copy
-from typing import Optional
 
 import voluptuous as vol
 
@@ -270,7 +271,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return False
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         return self._device_class
 

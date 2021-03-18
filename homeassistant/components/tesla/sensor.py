@@ -1,5 +1,5 @@
 """Support for the Tesla sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.const import (
@@ -39,7 +39,7 @@ class TeslaSensor(TeslaDevice, Entity):
             self._unique_id = f"{super().unique_id}_{self.type}"
 
     @property
-    def state(self) -> Optional[float]:
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         if self.tesla_device.type == "temperature sensor":
             if self.type == "outside":
@@ -58,7 +58,7 @@ class TeslaSensor(TeslaDevice, Entity):
         return self.tesla_device.get_value()
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the device."""
         units = self.tesla_device.measurement
         if units == "F":
@@ -72,7 +72,7 @@ class TeslaSensor(TeslaDevice, Entity):
         return units
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device_class of the device."""
         return (
             self.tesla_device.device_class
