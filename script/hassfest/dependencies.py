@@ -1,7 +1,8 @@
 """Validate dependencies."""
+from __future__ import annotations
+
 import ast
 from pathlib import Path
-from typing import Dict, Set
 
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
@@ -14,7 +15,7 @@ class ImportCollector(ast.NodeVisitor):
     def __init__(self, integration: Integration):
         """Initialize the import collector."""
         self.integration = integration
-        self.referenced: Dict[Path, Set[str]] = {}
+        self.referenced: dict[Path, set[str]] = {}
 
         # Current file or dir we're inspecting
         self._cur_fil_dir = None
@@ -156,7 +157,7 @@ IGNORE_VIOLATIONS = {
 }
 
 
-def calc_allowed_references(integration: Integration) -> Set[str]:
+def calc_allowed_references(integration: Integration) -> set[str]:
     """Return a set of allowed references."""
     allowed_references = (
         ALLOWED_USED_COMPONENTS
@@ -173,9 +174,9 @@ def calc_allowed_references(integration: Integration) -> Set[str]:
 
 
 def find_non_referenced_integrations(
-    integrations: Dict[str, Integration],
+    integrations: dict[str, Integration],
     integration: Integration,
-    references: Dict[Path, Set[str]],
+    references: dict[Path, set[str]],
 ):
     """Find intergrations that are not allowed to be referenced."""
     allowed_references = calc_allowed_references(integration)
@@ -221,7 +222,7 @@ def find_non_referenced_integrations(
 
 
 def validate_dependencies(
-    integrations: Dict[str, Integration], integration: Integration
+    integrations: dict[str, Integration], integration: Integration
 ):
     """Validate all dependencies."""
     # Some integrations are allowed to have violations.
@@ -244,7 +245,7 @@ def validate_dependencies(
         )
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle dependencies for integrations."""
     # check for non-existing dependencies
     for integration in integrations.values():
