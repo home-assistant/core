@@ -1,6 +1,6 @@
 """The tests for UVC camera module."""
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 import requests
@@ -13,7 +13,6 @@ from homeassistant.components.camera import (
     async_get_image,
     async_get_stream_source,
 )
-from homeassistant.components.uvc import camera as uvc
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
@@ -311,54 +310,6 @@ async def test_setup_nvr_errors_during_initialization(
     camera_states = hass.states.async_all("camera")
 
     assert len(camera_states) == ready_states
-
-
-@pytest.fixture
-def uvc_fixture():
-    """Set up the mock camera."""
-    nvr = MagicMock()
-    uuid = "uuid"
-    name = "name"
-    password = "seekret"
-    _uvc = uvc.UnifiVideoCamera(nvr, uuid, name, password)
-    nvr.get_camera.return_value = {
-        "model": "UVC Fake",
-        "recordingSettings": {"fullTimeRecordEnabled": True},
-        "host": "host-a",
-        "internalHost": "host-b",
-        "username": "admin",
-        "channels": [
-            {
-                "id": "0",
-                "width": 1920,
-                "height": 1080,
-                "fps": 25,
-                "bitrate": 6000000,
-                "isRtspEnabled": True,
-                "rtspUris": [
-                    "rtsp://host-a:7447/uuid_rtspchannel_0",
-                    "rtsp://foo:7447/uuid_rtspchannel_0",
-                ],
-            },
-            {
-                "id": "1",
-                "width": 1024,
-                "height": 576,
-                "fps": 15,
-                "bitrate": 1200000,
-                "isRtspEnabled": False,
-                "rtspUris": [
-                    "rtsp://host-a:7447/uuid_rtspchannel_1",
-                    "rtsp://foo:7447/uuid_rtspchannel_1",
-                ],
-            },
-        ],
-    }
-    nvr.server_version = (3, 2, 0)
-    nvr._host = "foo"
-
-    _uvc.update()
-    return _uvc
 
 
 async def test_properties(hass, mock_remote):
