@@ -148,7 +148,7 @@ async def test_camera_image_vpn(hass, camera_entry, requests_mock):
     assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
-async def test_service_set_person_away(hass, camera_entry, caplog):
+async def test_service_set_person_away(hass, camera_entry):
     """Test service to set person as away."""
     await hass.async_block_till_done()
 
@@ -176,7 +176,7 @@ async def test_service_set_person_away(hass, camera_entry, caplog):
         mock_post_request.assert_called_once()
 
 
-async def test_service_set_persons_home(hass, camera_entry, caplog):
+async def test_service_set_persons_home(hass, camera_entry):
     """Test service to set persons as home."""
     await hass.async_block_till_done()
 
@@ -193,7 +193,7 @@ async def test_service_set_persons_home(hass, camera_entry, caplog):
         mock_post_request.assert_called_once()
 
 
-async def test_service_set_camera_light(hass, camera_entry, caplog):
+async def test_service_set_camera_light(hass, camera_entry):
     """Test service to set the outdoor camera light mode."""
     await hass.async_block_till_done()
 
