@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
-from typing import Any, Deque, Generator, cast
+from functools import wraps
+from typing import Any, Callable, Deque, Generator, cast
 
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
@@ -168,9 +169,32 @@ def trace_set_result(**kwargs: Any) -> None:
 
 @contextmanager
 def trace_path(suffix: str | list[str]) -> Generator:
-    """Go deeper in the config tree."""
+    """Go deeper in the config tree.
+
+    Can not be used as a decorator on couroutine functions.
+    """
     count = trace_path_push(suffix)
     try:
         yield
     finally:
         trace_path_pop(count)
+
+
+def async_trace_path(suffix: str | list[str]) -> Callable:
+    """Go deeper in the config tree.
+
+    To be used as a decorator on coroutine functions.
+    """
+
+    def _trace_path_decorator(func: Callable) -> Callable:
+        """Decorate a coroutine function."""
+
+        @wraps(func)
+        async def async_wrapper(*args: Any) -> None:
+            """Catch and log exception."""
+            with trace_path(suffix):
+                await func(*args)
+
+        return async_wrapper
+
+    return _trace_path_decorator

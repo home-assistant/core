@@ -1,6 +1,8 @@
 """Support for Genius Hub sensor devices."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -106,7 +108,7 @@ class GeniusIssue(GeniusEntity):
         return len(self._issues)
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {f"{self._level}_list": self._issues}
 

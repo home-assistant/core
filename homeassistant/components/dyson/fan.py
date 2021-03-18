@@ -1,7 +1,8 @@
 """Support for Dyson Pure Cool link fan."""
+from __future__ import annotations
+
 import logging
 import math
-from typing import Optional
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool
@@ -243,9 +244,9 @@ class DysonFanEntity(DysonEntity, FanEntity):
 
     def turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""
@@ -325,9 +326,9 @@ class DysonPureCoolEntity(DysonFanEntity):
 
     def turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs,
     ) -> None:
         """Turn on the fan."""

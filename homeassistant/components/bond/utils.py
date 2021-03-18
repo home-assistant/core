@@ -1,7 +1,9 @@
 """Reusable utilities for the Bond component."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict, List, Optional, Set, cast
+from typing import Any, cast
 
 from aiohttp import ClientResponseError
 from bond_api import Action, Bond
@@ -15,7 +17,7 @@ class BondDevice:
     """Helper device class to hold ID and attributes together."""
 
     def __init__(
-        self, device_id: str, attrs: Dict[str, Any], props: Dict[str, Any]
+        self, device_id: str, attrs: dict[str, Any], props: dict[str, Any]
     ) -> None:
         """Create a helper device from ID and attributes returned by API."""
         self.device_id = device_id
@@ -41,17 +43,17 @@ class BondDevice:
         return cast(str, self._attrs["type"])
 
     @property
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         """Get the location of this device."""
         return self._attrs.get("location")
 
     @property
-    def template(self) -> Optional[str]:
+    def template(self) -> str | None:
         """Return this model template."""
         return self._attrs.get("template")
 
     @property
-    def branding_profile(self) -> Optional[str]:
+    def branding_profile(self) -> str | None:
         """Return this branding profile."""
         return self.props.get("branding_profile")
 
@@ -60,9 +62,9 @@ class BondDevice:
         """Check if Trust State is turned on."""
         return self.props.get("trust_state", False)
 
-    def _has_any_action(self, actions: Set[str]) -> bool:
+    def _has_any_action(self, actions: set[str]) -> bool:
         """Check to see if the device supports any of the actions."""
-        supported_actions: List[str] = self._attrs["actions"]
+        supported_actions: list[str] = self._attrs["actions"]
         for action in supported_actions:
             if action in actions:
                 return True
@@ -101,11 +103,11 @@ class BondHub:
     def __init__(self, bond: Bond):
         """Initialize Bond Hub."""
         self.bond: Bond = bond
-        self._bridge: Dict[str, Any] = {}
-        self._version: Dict[str, Any] = {}
-        self._devices: List[BondDevice] = []
+        self._bridge: dict[str, Any] = {}
+        self._version: dict[str, Any] = {}
+        self._devices: list[BondDevice] = []
 
-    async def setup(self, max_devices: Optional[int] = None) -> None:
+    async def setup(self, max_devices: int | None = None) -> None:
         """Read hub version information."""
         self._version = await self.bond.version()
         _LOGGER.debug("Bond reported the following version info: %s", self._version)
@@ -131,18 +133,18 @@ class BondHub:
         _LOGGER.debug("Bond reported the following bridge info: %s", self._bridge)
 
     @property
-    def bond_id(self) -> Optional[str]:
+    def bond_id(self) -> str | None:
         """Return unique Bond ID for this hub."""
         # Old firmwares are missing the bondid
         return self._version.get("bondid")
 
     @property
-    def target(self) -> Optional[str]:
+    def target(self) -> str | None:
         """Return this hub target."""
         return self._version.get("target")
 
     @property
-    def model(self) -> Optional[str]:
+    def model(self) -> str | None:
         """Return this hub model."""
         return self._version.get("model")
 
@@ -159,19 +161,19 @@ class BondHub:
         return cast(str, self._bridge["name"])
 
     @property
-    def location(self) -> Optional[str]:
+    def location(self) -> str | None:
         """Get the location of this bridge."""
         if not self.is_bridge and self._devices:
             return self._devices[0].location
         return self._bridge.get("location")
 
     @property
-    def fw_ver(self) -> Optional[str]:
+    def fw_ver(self) -> str | None:
         """Return this hub firmware version."""
         return self._version.get("fw_ver")
 
     @property
-    def devices(self) -> List[BondDevice]:
+    def devices(self) -> list[BondDevice]:
         """Return a list of all devices controlled by this hub."""
         return self._devices
 

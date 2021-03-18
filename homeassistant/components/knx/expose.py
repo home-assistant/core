@@ -1,5 +1,5 @@
 """Exposures to KNX bus."""
-from typing import Union
+from __future__ import annotations
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
@@ -22,7 +22,7 @@ from .schema import ExposeSchema
 @callback
 def create_knx_exposure(
     hass: HomeAssistant, xknx: XKNX, config: ConfigType
-) -> Union["KNXExposeSensor", "KNXExposeTime"]:
+) -> KNXExposeSensor | KNXExposeTime:
     """Create exposures from config."""
     address = config[KNX_ADDRESS]
     attribute = config.get(ExposeSchema.CONF_KNX_EXPOSE_ATTRIBUTE)
@@ -30,7 +30,7 @@ def create_knx_exposure(
     expose_type = config.get(ExposeSchema.CONF_KNX_EXPOSE_TYPE)
     default = config.get(ExposeSchema.CONF_KNX_EXPOSE_DEFAULT)
 
-    exposure: Union["KNXExposeSensor", "KNXExposeTime"]
+    exposure: KNXExposeSensor | KNXExposeTime
     if expose_type.lower() in ["time", "date", "datetime"]:
         exposure = KNXExposeTime(xknx, expose_type, address)
     else:

@@ -1,6 +1,8 @@
 """General channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Coroutine, List, Optional
+from typing import Any, Coroutine
 
 import zigpy.exceptions
 import zigpy.zcl.clusters.general as general
@@ -44,42 +46,42 @@ class AnalogOutput(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
 
     @property
-    def present_value(self) -> Optional[float]:
+    def present_value(self) -> float | None:
         """Return cached value of present_value."""
         return self.cluster.get("present_value")
 
     @property
-    def min_present_value(self) -> Optional[float]:
+    def min_present_value(self) -> float | None:
         """Return cached value of min_present_value."""
         return self.cluster.get("min_present_value")
 
     @property
-    def max_present_value(self) -> Optional[float]:
+    def max_present_value(self) -> float | None:
         """Return cached value of max_present_value."""
         return self.cluster.get("max_present_value")
 
     @property
-    def resolution(self) -> Optional[float]:
+    def resolution(self) -> float | None:
         """Return cached value of resolution."""
         return self.cluster.get("resolution")
 
     @property
-    def relinquish_default(self) -> Optional[float]:
+    def relinquish_default(self) -> float | None:
         """Return cached value of relinquish_default."""
         return self.cluster.get("relinquish_default")
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """Return cached value of description."""
         return self.cluster.get("description")
 
     @property
-    def engineering_units(self) -> Optional[int]:
+    def engineering_units(self) -> int | None:
         """Return cached value of engineering_units."""
         return self.cluster.get("engineering_units")
 
     @property
-    def application_type(self) -> Optional[int]:
+    def application_type(self) -> int | None:
         """Return cached value of application_type."""
         return self.cluster.get("application_type")
 
@@ -215,7 +217,7 @@ class LevelControlChannel(ZigbeeChannel):
     REPORT_CONFIG = ({"attr": "current_level", "config": REPORT_CONFIG_ASAP},)
 
     @property
-    def current_level(self) -> Optional[int]:
+    def current_level(self) -> int | None:
         """Return cached value of the current_level attribute."""
         return self.cluster.get("current_level")
 
@@ -293,7 +295,7 @@ class OnOffChannel(ZigbeeChannel):
         self._off_listener = None
 
     @property
-    def on_off(self) -> Optional[bool]:
+    def on_off(self) -> bool | None:
         """Return cached value of on/off attribute."""
         return self.cluster.get("on_off")
 
@@ -367,7 +369,7 @@ class Ota(ZigbeeChannel):
 
     @callback
     def cluster_command(
-        self, tsn: int, command_id: int, args: Optional[List[Any]]
+        self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
         cmd_name = self.cluster.server_commands.get(command_id, [command_id])[0]
@@ -402,7 +404,7 @@ class PollControl(ZigbeeChannel):
 
     @callback
     def cluster_command(
-        self, tsn: int, command_id: int, args: Optional[List[Any]]
+        self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle commands received to this cluster."""
         cmd_name = self.cluster.client_commands.get(command_id, [command_id])[0]

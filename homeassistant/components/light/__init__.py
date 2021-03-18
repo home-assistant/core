@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import Dict, List, Optional, Set, Tuple, cast
+from typing import cast
 
 import voluptuous as vol
 
@@ -364,11 +364,11 @@ class Profile:
     """Representation of a profile."""
 
     name: str
-    color_x: Optional[float] = dataclasses.field(repr=False)
-    color_y: Optional[float] = dataclasses.field(repr=False)
-    brightness: Optional[int]
-    transition: Optional[int] = None
-    hs_color: Optional[Tuple[float, float]] = dataclasses.field(init=False)
+    color_x: float | None = dataclasses.field(repr=False)
+    color_y: float | None = dataclasses.field(repr=False)
+    brightness: int | None
+    transition: int | None = None
+    hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
     SCHEMA = vol.Schema(  # pylint: disable=invalid-name
         vol.Any(
@@ -403,7 +403,7 @@ class Profile:
         )
 
     @classmethod
-    def from_csv_row(cls, csv_row: List[str]) -> Profile:
+    def from_csv_row(cls, csv_row: list[str]) -> Profile:
         """Create profile from a CSV row tuple."""
         return cls(*cls.SCHEMA(csv_row))
 
@@ -414,9 +414,9 @@ class Profiles:
     def __init__(self, hass: HomeAssistantType):
         """Initialize profiles."""
         self.hass = hass
-        self.data: Dict[str, Profile] = {}
+        self.data: dict[str, Profile] = {}
 
-    def _load_profile_data(self) -> Dict[str, Profile]:
+    def _load_profile_data(self) -> dict[str, Profile]:
         """Load built-in profiles and custom profiles."""
         profile_paths = [
             os.path.join(os.path.dirname(__file__), LIGHT_PROFILES_FILE),
@@ -453,7 +453,7 @@ class Profiles:
         self.data = await self.hass.async_add_executor_job(self._load_profile_data)
 
     @callback
-    def apply_default(self, entity_id: str, params: Dict) -> None:
+    def apply_default(self, entity_id: str, params: dict) -> None:
         """Return the default turn-on profile for the given light."""
         for _entity_id in (entity_id, "group.all_lights"):
             name = f"{_entity_id}.default"
@@ -462,7 +462,7 @@ class Profiles:
                 return
 
     @callback
-    def apply_profile(self, name: str, params: Dict) -> None:
+    def apply_profile(self, name: str, params: dict) -> None:
         """Apply a profile."""
         profile = self.data.get(name)
 
@@ -481,12 +481,12 @@ class LightEntity(ToggleEntity):
     """Representation of a light."""
 
     @property
-    def brightness(self) -> Optional[int]:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return None
 
     @property
-    def color_mode(self) -> Optional[str]:
+    def color_mode(self) -> str | None:
         """Return the color mode of the light."""
         return None
 
@@ -519,27 +519,27 @@ class LightEntity(ToggleEntity):
         return color_mode
 
     @property
-    def hs_color(self) -> Optional[Tuple[float, float]]:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return None
 
     @property
-    def xy_color(self) -> Optional[Tuple[float, float]]:
+    def xy_color(self) -> tuple[float, float] | None:
         """Return the xy color value [float, float]."""
         return None
 
     @property
-    def rgb_color(self) -> Optional[Tuple[int, int, int]]:
+    def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value [int, int, int]."""
         return None
 
     @property
-    def rgbw_color(self) -> Optional[Tuple[int, int, int, int]]:
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
         return None
 
     @property
-    def _light_internal_rgbw_color(self) -> Optional[Tuple[int, int, int, int]]:
+    def _light_internal_rgbw_color(self) -> tuple[int, int, int, int] | None:
         """Return the rgbw color value [int, int, int, int]."""
         rgbw_color = self.rgbw_color
         if (
@@ -558,12 +558,12 @@ class LightEntity(ToggleEntity):
         return rgbw_color
 
     @property
-    def rgbww_color(self) -> Optional[Tuple[int, int, int, int, int]]:
+    def rgbww_color(self) -> tuple[int, int, int, int, int] | None:
         """Return the rgbww color value [int, int, int, int, int]."""
         return None
 
     @property
-    def color_temp(self) -> Optional[int]:
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         return None
 
@@ -582,17 +582,17 @@ class LightEntity(ToggleEntity):
         return 500
 
     @property
-    def white_value(self) -> Optional[int]:
+    def white_value(self) -> int | None:
         """Return the white value of this light between 0..255."""
         return None
 
     @property
-    def effect_list(self) -> Optional[List[str]]:
+    def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return None
 
     @property
-    def effect(self) -> Optional[str]:
+    def effect(self) -> str | None:
         """Return the current effect."""
         return None
 
@@ -616,7 +616,7 @@ class LightEntity(ToggleEntity):
         return data
 
     def _light_internal_convert_color(self, color_mode: str) -> dict:
-        data: Dict[str, Tuple] = {}
+        data: dict[str, tuple] = {}
         if color_mode == COLOR_MODE_HS and self.hs_color:
             hs_color = self.hs_color
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
@@ -692,7 +692,7 @@ class LightEntity(ToggleEntity):
         return {key: val for key, val in data.items() if val is not None}
 
     @property
-    def _light_internal_supported_color_modes(self) -> Set:
+    def _light_internal_supported_color_modes(self) -> set:
         """Calculate supported color modes with backwards compatibility."""
         supported_color_modes = self.supported_color_modes
 
@@ -717,7 +717,7 @@ class LightEntity(ToggleEntity):
         return supported_color_modes
 
     @property
-    def supported_color_modes(self) -> Optional[Set]:
+    def supported_color_modes(self) -> set | None:
         """Flag supported color modes."""
         return None
 

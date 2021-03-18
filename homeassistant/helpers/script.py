@@ -72,6 +72,7 @@ from homeassistant.util.dt import utcnow
 
 from .trace import (
     TraceElement,
+    async_trace_path,
     trace_append_element,
     trace_id_get,
     trace_path,
@@ -613,11 +614,14 @@ class _ScriptRun:
         if not check:
             raise _StopScript
 
-    def _test_conditions(self, conditions, name):
+    def _test_conditions(self, conditions, name, condition_path=None):
+        if condition_path is None:
+            condition_path = name
+
         @trace_condition_function
         def traced_test_conditions(hass, variables):
             try:
-                with trace_path("conditions"):
+                with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
                             if not cond(hass, variables):
@@ -631,7 +635,7 @@ class _ScriptRun:
         result = traced_test_conditions(self._hass, self._variables)
         return result
 
-    @trace_path("repeat")
+    @async_trace_path("repeat")
     async def _async_repeat_step(self):
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
@@ -720,7 +724,7 @@ class _ScriptRun:
             for idx, (conditions, script) in enumerate(choose_data["choices"]):
                 with trace_path(str(idx)):
                     try:
-                        if self._test_conditions(conditions, "choose"):
+                        if self._test_conditions(conditions, "choose", "conditions"):
                             trace_set_result(choice=idx)
                             with trace_path("sequence"):
                                 await self._async_run_script(script)

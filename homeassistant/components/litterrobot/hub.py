@@ -1,8 +1,10 @@
 """A wrapper 'hub' for the Litter-Robot API and base entity for common attributes."""
+from __future__ import annotations
+
 from datetime import time, timedelta
 import logging
 from types import MethodType
-from typing import Any, Optional
+from typing import Any
 
 import pylitterbot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
@@ -106,7 +108,7 @@ class LitterRobotEntity(CoordinatorEntity):
         async_call_later(self.hass, REFRESH_WAIT_TIME, async_call_later_callback)
 
     @staticmethod
-    def parse_time_at_default_timezone(time_str: str) -> Optional[time]:
+    def parse_time_at_default_timezone(time_str: str) -> time | None:
         """Parse a time string and add default timezone."""
         parsed_time = dt_util.parse_time(time_str)
 

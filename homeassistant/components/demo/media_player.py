@@ -6,6 +6,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
     REPEAT_MODE_OFF,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -40,6 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Bedroom", "kxopViU98Xo", "Epic sax guy 10 hours", 360000
             ),
             DemoMusicPlayer(),
+            DemoMusicPlayer("Kitchen"),
             DemoTVShowPlayer(),
         ]
     )
@@ -73,6 +75,7 @@ MUSIC_PLAYER_SUPPORT = (
     | SUPPORT_TURN_ON
     | SUPPORT_TURN_OFF
     | SUPPORT_CLEAR_PLAYLIST
+    | SUPPORT_GROUPING
     | SUPPORT_PLAY
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_REPEAT_SET
@@ -291,7 +294,7 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
 
 
 class DemoMusicPlayer(AbstractDemoPlayer):
-    """A Demo media player that only supports YouTube."""
+    """A Demo media player."""
 
     # We only implement the methods that we support
 
@@ -318,11 +321,17 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         ),
     ]
 
-    def __init__(self):
+    def __init__(self, name="Walkman"):
         """Initialize the demo device."""
-        super().__init__("Walkman")
+        super().__init__(name)
         self._cur_track = 0
+        self._group_members = []
         self._repeat = REPEAT_MODE_OFF
+
+    @property
+    def group_members(self):
+        """List of players which are currently grouped together."""
+        return self._group_members
 
     @property
     def media_content_id(self):
@@ -396,6 +405,18 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     def set_repeat(self, repeat):
         """Enable/disable repeat mode."""
         self._repeat = repeat
+        self.schedule_update_ha_state()
+
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        self._group_members = [
+            self.entity_id,
+        ] + group_members
+        self.schedule_update_ha_state()
+
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        self._group_members = []
         self.schedule_update_ha_state()
 
 

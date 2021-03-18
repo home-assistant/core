@@ -1,7 +1,9 @@
 """Support for HERE travel time sensors."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, Dict, Optional, Union
+from typing import Callable
 
 import herepy
 import voluptuous as vol
@@ -143,9 +145,9 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Dict[str, Union[str, bool]],
+    config: dict[str, str | bool],
     async_add_entities: Callable,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the HERE travel time platform."""
     api_key = config[CONF_API_KEY]
@@ -255,7 +257,7 @@ class HERETravelTimeSensor(Entity):
         )
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         if self._here_data.traffic_mode:
             if self._here_data.traffic_time is not None:
@@ -273,7 +275,7 @@ class HERETravelTimeSensor(Entity):
     @property
     def extra_state_attributes(
         self,
-    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
+    ) -> dict[str, None | float | str | bool] | None:
         """Return the state attributes."""
         if self._here_data.base_time is None:
             return None
@@ -324,7 +326,7 @@ class HERETravelTimeSensor(Entity):
 
         await self.hass.async_add_executor_job(self._here_data.update)
 
-    async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
+    async def _get_location_from_entity(self, entity_id: str) -> str | None:
         """Get the location from the entity state or attributes."""
         entity = self.hass.states.get(entity_id)
 
@@ -480,7 +482,7 @@ class HERETravelTimeData:
             self.destination_name = waypoint[1]["mappedRoadName"]
 
     @staticmethod
-    def _build_hass_attribution(source_attribution: Dict) -> Optional[str]:
+    def _build_hass_attribution(source_attribution: dict) -> str | None:
         """Build a hass frontend ready string out of the sourceAttribution."""
         suppliers = source_attribution.get("supplier")
         if suppliers is not None:
