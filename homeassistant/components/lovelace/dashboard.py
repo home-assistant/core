@@ -1,4 +1,6 @@
 """Lovelace dashboard support."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import logging
 import os
@@ -231,7 +233,7 @@ class DashboardsCollection(collection.StorageCollection):
             _LOGGER,
         )
 
-    async def _async_load_data(self) -> Optional[dict]:
+    async def _async_load_data(self) -> dict | None:
         """Load the data."""
         data = await self.store.async_load()
 
