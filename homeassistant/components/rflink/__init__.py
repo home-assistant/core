@@ -67,6 +67,7 @@ SERVICE_SEND_COMMAND = "send_command"
 
 SIGNAL_AVAILABILITY = "rflink_device_available"
 SIGNAL_HANDLE_EVENT = "rflink_handle_event_{}"
+SIGNAL_EVENT = "rflink_event"
 
 TMP_ENTITY = "tmp.{}"
 
@@ -140,6 +141,15 @@ async def async_setup(hass, config):
             )
         ):
             _LOGGER.error("Failed Rflink command for %s", str(call.data))
+        else:
+            async_dispatcher_send(
+                hass,
+                SIGNAL_EVENT,
+                {
+                    EVENT_KEY_ID: call.data.get(CONF_DEVICE_ID),
+                    EVENT_KEY_COMMAND: call.data.get(CONF_COMMAND),
+                },
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command, schema=SEND_COMMAND_SCHEMA
@@ -293,6 +303,7 @@ async def async_setup(hass, config):
         _LOGGER.info("Connected to Rflink")
 
     hass.async_create_task(connect())
+    async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
     return True
 
 

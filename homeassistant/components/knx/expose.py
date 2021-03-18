@@ -79,7 +79,7 @@ class KNXExposeSensor:
         self.expose_attribute = attribute
         self.expose_default = default
         self.address = address
-        self._remove_listener: Callable | None = None
+        self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = self.async_register()
 
     @callback

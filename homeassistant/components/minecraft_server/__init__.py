@@ -1,9 +1,10 @@
 """The Minecraft Server integration."""
+from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from mcstatus.server import MinecraftServer as MCStatus
 
@@ -260,7 +261,7 @@ class MinecraftServerEntity(Entity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information."""
         return self._device_info
 

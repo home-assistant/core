@@ -1,6 +1,7 @@
 """Support for Netatmo Smart thermostats."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 import pyatmo
 import voluptuous as vol
@@ -320,7 +321,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return self._target_temperature
 
     @property
-    def target_temperature_step(self) -> Optional[float]:
+    def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         return PRECISION_HALVES
 
@@ -335,7 +336,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return self._operation_list
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if self._model == NA_THERM and self._boilerstatus is not None:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
@@ -400,12 +401,12 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return self._preset
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
@@ -631,7 +632,7 @@ def interpolate(batterylevel: int, module_type: str) -> int:
     return int(pct)
 
 
-def get_all_home_ids(home_data: pyatmo.HomeData) -> List[str]:
+def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
         return []

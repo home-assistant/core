@@ -1,9 +1,11 @@
 """Support for esphome devices."""
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
 import math
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from aioesphomeapi import (
     APIClient,
@@ -22,6 +24,7 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -35,6 +38,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -153,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await cli.send_home_assistant_state(entity_id, new_state.state)
 
     async def _send_home_assistant_state(
-        entity_id: str, new_state: Optional[State]
+        entity_id: str, new_state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
         await cli.send_home_assistant_state(entity_id, new_state.state)
@@ -308,17 +312,63 @@ async def _register_service(
 ):
     service_name = f"{entry_data.device_info.name}_{service.name}"
     schema = {}
+    fields = {}
+
     for arg in service.args:
-        schema[vol.Required(arg.name)] = {
-            UserServiceArgType.BOOL: cv.boolean,
-            UserServiceArgType.INT: vol.Coerce(int),
-            UserServiceArgType.FLOAT: vol.Coerce(float),
-            UserServiceArgType.STRING: cv.string,
-            UserServiceArgType.BOOL_ARRAY: [cv.boolean],
-            UserServiceArgType.INT_ARRAY: [vol.Coerce(int)],
-            UserServiceArgType.FLOAT_ARRAY: [vol.Coerce(float)],
-            UserServiceArgType.STRING_ARRAY: [cv.string],
+        metadata = {
+            UserServiceArgType.BOOL: {
+                "validator": cv.boolean,
+                "example": "False",
+                "selector": {"boolean": None},
+            },
+            UserServiceArgType.INT: {
+                "validator": vol.Coerce(int),
+                "example": "42",
+                "selector": {"number": {CONF_MODE: "box"}},
+            },
+            UserServiceArgType.FLOAT: {
+                "validator": vol.Coerce(float),
+                "example": "12.3",
+                "selector": {"number": {CONF_MODE: "box", "step": 1e-3}},
+            },
+            UserServiceArgType.STRING: {
+                "validator": cv.string,
+                "example": "Example text",
+                "selector": {"text": None},
+            },
+            UserServiceArgType.BOOL_ARRAY: {
+                "validator": [cv.boolean],
+                "description": "A list of boolean values.",
+                "example": "[True, False]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.INT_ARRAY: {
+                "validator": [vol.Coerce(int)],
+                "description": "A list of integer values.",
+                "example": "[42, 34]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.FLOAT_ARRAY: {
+                "validator": [vol.Coerce(float)],
+                "description": "A list of floating point numbers.",
+                "example": "[ 12.3, 34.5 ]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.STRING_ARRAY: {
+                "validator": [cv.string],
+                "description": "A list of strings.",
+                "example": "['Example text', 'Another example']",
+                "selector": {"object": {}},
+            },
         }[arg.type_]
+        schema[vol.Required(arg.name)] = metadata["validator"]
+        fields[arg.name] = {
+            "name": arg.name,
+            "required": True,
+            "description": metadata.get("description"),
+            "example": metadata["example"],
+            "selector": metadata["selector"],
+        }
 
     async def execute_service(call):
         await entry_data.client.execute_service(service, call.data)
@@ -327,9 +377,16 @@ async def _register_service(
         DOMAIN, service_name, execute_service, vol.Schema(schema)
     )
 
+    service_desc = {
+        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "fields": fields,
+    }
+
+    async_set_service_schema(hass, DOMAIN, service_name, service_desc)
+
 
 async def _setup_services(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: List[UserService]
+    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: list[UserService]
 ):
     old_services = entry_data.services.copy()
     to_unregister = []
@@ -406,7 +463,7 @@ async def platform_async_setup_entry(
     entry_data.state[component_key] = {}
 
     @callback
-    def async_list_entities(infos: List[EntityInfo]):
+    def async_list_entities(infos: list[EntityInfo]):
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos = {}
@@ -480,7 +537,7 @@ def esphome_state_property(func):
 class EsphomeEnumMapper:
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], Dict[int, str]]):
+    def __init__(self, func: Callable[[], dict[int, str]]):
         """Construct a EsphomeEnumMapper."""
         self._func = func
 
@@ -494,7 +551,7 @@ class EsphomeEnumMapper:
         return inverse[value]
 
 
-def esphome_map_enum(func: Callable[[], Dict[int, str]]):
+def esphome_map_enum(func: Callable[[], dict[int, str]]):
     """Map esphome int enum values to hass string constants.
 
     This class has to be used as a decorator. This ensures the aioesphomeapi
@@ -566,7 +623,7 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.client
 
     @property
-    def _state(self) -> Optional[EntityState]:
+    def _state(self) -> EntityState | None:
         try:
             return self._entry_data.state[self._component_key][self._key]
         except KeyError:
@@ -585,14 +642,14 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.available
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique id identifying the entity."""
         if not self._static_info.unique_id:
             return None
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}

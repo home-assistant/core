@@ -1,5 +1,5 @@
 """Support for Toon sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -132,7 +132,7 @@ class ToonSensor(ToonEntity):
         return f"{DOMAIN}_{agreement_id}_sensor_{self.key}"
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(
             self.coordinator.data, SENSOR_ENTITIES[self.key][ATTR_SECTION]
@@ -140,12 +140,12 @@ class ToonSensor(ToonEntity):
         return getattr(section, SENSOR_ENTITIES[self.key][ATTR_MEASUREMENT])
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return SENSOR_ENTITIES[self.key][ATTR_UNIT_OF_MEASUREMENT]
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class."""
         return SENSOR_ENTITIES[self.key][ATTR_DEVICE_CLASS]
 
