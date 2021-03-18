@@ -348,7 +348,7 @@ class MatrixBot:
         _LOGGER.debug("Uploading file from path, %s", img)
 
         if not self.hass.config.is_allowed_path(img):
-            _LOGGER.error("Error reading file %s", img)
+            _LOGGER.error("Path not allowed: %s", img)
             return
         with open(img, "rb") as upfile:
             imgfile = upfile.read()
