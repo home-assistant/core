@@ -90,25 +90,20 @@ class UnknownSmartDevice(SmartDevice):
     @property
     def has_emeter(self) -> bool:
         """Do nothing."""
-        pass
 
     def turn_off(self) -> None:
         """Do nothing."""
-        pass
 
     def turn_on(self) -> None:
         """Do nothing."""
-        pass
 
     @property
     def is_on(self) -> bool:
         """Do nothing."""
-        pass
 
     @property
     def state_information(self) -> dict[str, Any]:
         """Do nothing."""
-        pass
 
 
 async def test_configuring_devices_from_multiple_sources(hass):
