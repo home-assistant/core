@@ -152,7 +152,9 @@ async def test_setup_minimum_headers_template(hass):
             "sensor": {
                 "platform": "rest",
                 "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
-                "headers_template": "{% set token = '123456789' %}Authorization: Bearer {{ header }}",
+                "headers_template": {
+                    "Authorization": "{% set token = '123456789' %}Authorization: Bearer {{ token }}"
+                },
             }
         },
     )
