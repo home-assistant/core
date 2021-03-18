@@ -1,8 +1,9 @@
 """Home Assistant Switcher Component."""
+from __future__ import annotations
+
 from asyncio import QueueEmpty, TimeoutError as Asyncio_TimeoutError, wait_for
 from datetime import datetime, timedelta
 import logging
-from typing import Dict, Optional
 
 from aioswitcher.bridge import SwitcherV2Bridge
 import voluptuous as vol
@@ -45,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistantType, config: dict) -> bool:
     """Set up the switcher component."""
     phone_id = config[DOMAIN][CONF_PHONE_ID]
     device_id = config[DOMAIN][CONF_DEVICE_ID]
@@ -72,7 +73,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     hass.async_create_task(async_load_platform(hass, SWITCH_DOMAIN, DOMAIN, {}, config))
 
     @callback
-    def device_updates(timestamp: Optional[datetime]) -> None:
+    def device_updates(timestamp: datetime | None) -> None:
         """Use for updating the device data from the queue."""
         if v2bridge.running:
             try:

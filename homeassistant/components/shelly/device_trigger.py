@@ -1,5 +1,5 @@
 """Provides device triggers for Shelly."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -60,7 +60,7 @@ async def async_validate_trigger_config(hass, config):
     )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Shelly devices."""
     triggers = []
 

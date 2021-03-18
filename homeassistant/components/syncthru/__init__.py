@@ -1,7 +1,7 @@
 """The syncthru component."""
+from __future__ import annotations
 
 import logging
-from typing import Set, Tuple
 
 from pysyncthru import SyncThru
 
@@ -65,12 +65,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     return True
 
 
-def device_identifiers(printer: SyncThru) -> Set[Tuple[str, str]]:
+def device_identifiers(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device identifiers for device registry."""
     return {(DOMAIN, printer.serial_number())}
 
 
-def device_connections(printer: SyncThru) -> Set[Tuple[str, str]]:
+def device_connections(printer: SyncThru) -> set[tuple[str, str]]:
     """Get device connections for device registry."""
     connections = set()
     try:

@@ -1,5 +1,7 @@
 """Support for ReCollect Waste sensors."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from aiorecollect.client import PickupType
 import voluptuous as vol
@@ -36,8 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 @callback
 def async_get_pickup_type_names(
-    entry: ConfigEntry, pickup_types: List[PickupType]
-) -> List[str]:
+    entry: ConfigEntry, pickup_types: list[PickupType]
+) -> list[str]:
     """Return proper pickup type names from their associated objects."""
     return [
         t.friendly_name

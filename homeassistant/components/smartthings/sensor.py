@@ -1,6 +1,8 @@
 """Support for sensors through the SmartThings cloud API."""
+from __future__ import annotations
+
 from collections import namedtuple
-from typing import Optional, Sequence
+from typing import Sequence
 
 from pysmartthings import Attribute, Capability
 
@@ -297,7 +299,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     return [
         capability for capability in CAPABILITY_TO_SENSORS if capability in capabilities

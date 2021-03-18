@@ -1,7 +1,9 @@
 """Support for Sonarr sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from sonarr import Sonarr, SonarrConnectionError, SonarrError
 
@@ -20,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Sonarr sensors based on a config entry."""
     options = entry.options
@@ -75,7 +77,7 @@ class SonarrSensor(SonarrEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize Sonarr sensor."""
         self._unit_of_measurement = unit_of_measurement
@@ -131,7 +133,7 @@ class SonarrCommandsSensor(SonarrSensor):
         self._commands = await self.sonarr.commands()
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -172,7 +174,7 @@ class SonarrDiskspaceSensor(SonarrSensor):
         self._total_free = sum([disk.free for disk in self._disks])
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -217,7 +219,7 @@ class SonarrQueueSensor(SonarrSensor):
         self._queue = await self.sonarr.queue()
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -258,7 +260,7 @@ class SonarrSeriesSensor(SonarrSensor):
         self._items = await self.sonarr.series()
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -301,7 +303,7 @@ class SonarrUpcomingSensor(SonarrSensor):
         )
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -323,7 +325,7 @@ class SonarrWantedSensor(SonarrSensor):
         """Initialize Sonarr Wanted sensor."""
         self._max_items = max_items
         self._results = None
-        self._total: Optional[int] = None
+        self._total: int | None = None
 
         super().__init__(
             sonarr=sonarr,
@@ -342,7 +344,7 @@ class SonarrWantedSensor(SonarrSensor):
         self._total = self._results.total
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         attrs = {}
 
@@ -354,6 +356,6 @@ class SonarrWantedSensor(SonarrSensor):
         return attrs
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
         return self._total

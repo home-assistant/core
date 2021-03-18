@@ -1,5 +1,5 @@
 """Light for Shelly."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from aioshelly import Block
 
@@ -96,7 +96,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return self.block.output
 
     @property
-    def mode(self) -> Optional[str]:
+    def mode(self) -> str | None:
         """Return the color mode of the light."""
         if self.mode_result:
             return self.mode_result["mode"]
@@ -138,7 +138,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return int(white)
 
     @property
-    def hs_color(self) -> Tuple[float, float]:
+    def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value of light."""
         if self.mode == "white":
             return color_RGB_to_hs(255, 255, 255)
@@ -154,7 +154,7 @@ class ShellyLight(ShellyBlockEntity, LightEntity):
         return color_RGB_to_hs(red, green, blue)
 
     @property
-    def color_temp(self) -> Optional[int]:
+    def color_temp(self) -> int | None:
         """Return the CT color value in mireds."""
         if self.mode == "color":
             return None

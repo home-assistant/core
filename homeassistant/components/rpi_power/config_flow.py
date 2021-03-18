@@ -1,5 +1,7 @@
 """Config flow for Raspberry Pi Power Supply Checker."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from rpi_bad_power import new_under_voltage
 
@@ -31,8 +33,8 @@ class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
         )
 
     async def async_step_onboarding(
-        self, data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle a flow initialized by onboarding."""
         has_devices = await self._discovery_function(self.hass)
 

@@ -1,6 +1,8 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from surepy import SureLockStateID, SurepyProduct
 
@@ -62,8 +64,8 @@ class SurePetcareSensor(Entity):
         self._sure_type = sure_type
 
         self._spc = spc
-        self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
-        self._state: Dict[str, Any] = {}
+        self._spc_data: dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
+        self._state: dict[str, Any] = {}
 
         self._name = (
             f"{self._sure_type.name.capitalize()} "
@@ -120,12 +122,12 @@ class Flap(SurePetcareSensor):
     """Sure Petcare Flap."""
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return battery level in percent."""
         return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -143,9 +145,9 @@ class SureBattery(SurePetcareSensor):
         return f"{self._name} Battery Level"
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return battery level in percent."""
-        battery_percent: Optional[int]
+        battery_percent: int | None
         try:
             per_battery_voltage = self._state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
@@ -166,7 +168,7 @@ class SureBattery(SurePetcareSensor):
         return DEVICE_CLASS_BATTERY
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         attributes = None
         if self._state:

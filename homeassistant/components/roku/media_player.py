@@ -1,6 +1,7 @@
 """Support for the Roku media player."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 import voluptuous as vol
 
@@ -100,7 +101,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
             return DEVICE_CLASS_TV
@@ -230,7 +231,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
         return None
 
     @property
-    def source_list(self) -> List:
+    def source_list(self) -> list:
         """List of available input sources."""
         return ["Home"] + sorted(app.name for app in self.coordinator.data.apps)
 

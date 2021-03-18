@@ -1,6 +1,7 @@
 """Support for Synology DSM sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -145,7 +146,7 @@ class SynoDSMInfoSensor(SynologyDSMBaseEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: dict[str, str],
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize the Synology SynoDSMInfoSensor entity."""

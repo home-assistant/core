@@ -1,8 +1,10 @@
 """Provides core stream functionality."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 import io
-from typing import Any, Callable, List
+from typing import Any, Callable
 
 from aiohttp import web
 import attr
@@ -104,7 +106,7 @@ class StreamOutput:
         return self._idle_timer.idle
 
     @property
-    def segments(self) -> List[int]:
+    def segments(self) -> list[int]:
         """Return current sequence from segments."""
         return [s.sequence for s in self._segments]
 

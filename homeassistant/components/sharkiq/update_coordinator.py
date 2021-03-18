@@ -1,7 +1,7 @@
 """Data update coordinator for shark iq vacuums."""
+from __future__ import annotations
 
 import asyncio
-from typing import Dict, List, Set
 
 from async_timeout import timeout
 from sharkiqpy import (
@@ -27,11 +27,11 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         ayla_api: AylaApi,
-        shark_vacs: List[SharkIqVacuum],
+        shark_vacs: list[SharkIqVacuum],
     ) -> None:
         """Set up the SharkIqUpdateCoordinator class."""
         self.ayla_api = ayla_api
-        self.shark_vacs: Dict[str, SharkIqVacuum] = {
+        self.shark_vacs: dict[str, SharkIqVacuum] = {
             sharkiq.serial_number: sharkiq for sharkiq in shark_vacs
         }
         self._config_entry = config_entry
@@ -40,7 +40,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     @property
-    def online_dsns(self) -> Set[str]:
+    def online_dsns(self) -> set[str]:
         """Get the set of all online DSNs."""
         return self._online_dsns
 
