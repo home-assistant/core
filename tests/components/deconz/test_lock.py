@@ -1,8 +1,7 @@
 """deCONZ lock platform tests."""
 
-from copy import deepcopy
+from unittest.mock import patch
 
-from homeassistant.components.deconz.gateway import get_gateway_from_config_entry
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -21,22 +20,6 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
-LOCKS = {
-    "1": {
-        "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
-        "hascolor": False,
-        "lastannounced": None,
-        "lastseen": "2020-08-22T15:29:03Z",
-        "manufacturername": "Danalock",
-        "modelid": "V3-BTZB",
-        "name": "Door lock",
-        "state": {"alert": "none", "on": False, "reachable": True},
-        "swversion": "19042019",
-        "type": "Door Lock",
-        "uniqueid": "00:00:00:00:00:00:00:00-00",
-    }
-}
-
 
 async def test_no_locks(hass, aioclient_mock):
     """Test that no lock entities are created."""
@@ -44,29 +27,39 @@ async def test_no_locks(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_locks(hass, aioclient_mock):
+async def test_locks(hass, aioclient_mock, mock_deconz_websocket):
     """Test that all supported lock entities are created."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    data["lights"] = deepcopy(LOCKS)
-    config_entry = await setup_deconz_integration(
-        hass, aioclient_mock, get_state_response=data
-    )
-    gateway = get_gateway_from_config_entry(hass, config_entry)
+    data = {
+        "lights": {
+            "1": {
+                "etag": "5c2ec06cde4bd654aef3a555fcd8ad12",
+                "hascolor": False,
+                "lastannounced": None,
+                "lastseen": "2020-08-22T15:29:03Z",
+                "manufacturername": "Danalock",
+                "modelid": "V3-BTZB",
+                "name": "Door lock",
+                "state": {"alert": "none", "on": False, "reachable": True},
+                "swversion": "19042019",
+                "type": "Door Lock",
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        config_entry = await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("lock.door_lock").state == STATE_UNLOCKED
 
-    door_lock = hass.states.get("lock.door_lock")
-    assert door_lock.state == STATE_UNLOCKED
-
-    state_changed_event = {
+    event_changed_light = {
         "t": "event",
         "e": "changed",
         "r": "lights",
         "id": "1",
         "state": {"on": True},
     }
-    gateway.api.event_handler(state_changed_event)
+    await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.door_lock").state == STATE_LOCKED
@@ -98,7 +91,7 @@ async def test_locks(hass, aioclient_mock):
     await hass.config_entries.async_unload(config_entry.entry_id)
 
     states = hass.states.async_all()
-    assert len(hass.states.async_all()) == 1
+    assert len(states) == 1
     for state in states:
         assert state.state == STATE_UNAVAILABLE
 
