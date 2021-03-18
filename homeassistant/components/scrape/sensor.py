@@ -10,6 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
+    CONF_HEADERS_TEMPLATE,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
@@ -42,6 +43,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
+        vol.Exclusive(CONF_HEADERS_TEMPLATE, CONF_HEADERS): vol.Schema(
+            {cv.string: cv.template_complex}
+        ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -60,6 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     method = "GET"
     payload = None
     headers = config.get(CONF_HEADERS)
+    headers_template = config.get(CONF_HEADERS_TEMPLATE)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
     attr = config.get(CONF_ATTR)
@@ -78,7 +83,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             auth = HTTPBasicAuth(username, password)
     else:
         auth = None
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
+    rest = RestData(
+        hass,
+        method,
+        resource,
+        auth,
+        headers,
+        headers_template,
+        None,
+        payload,
+        verify_ssl,
+    )
     await rest.async_update()
 
     if rest.data is None:

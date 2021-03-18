@@ -18,5 +18,3 @@ COORDINATOR = "coordinator"
 REST = "rest"
 
 METHODS = ["POST", "GET"]
-
-CONF_HEADERS_TEMPLATE = "headers_template"

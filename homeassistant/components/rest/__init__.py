@@ -11,6 +11,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
+    CONF_HEADERS_TEMPLATE,
     CONF_METHOD,
     CONF_PARAMS,
     CONF_PASSWORD,
@@ -41,7 +42,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["binary_sensor", "notify", "sensor", "switch"]
 COORDINATOR_AWARE_PLATFORMS = [SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN]
-CONF_HEADERS_TEMPLATE = "headers_template"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

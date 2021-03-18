@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
+    CONF_HEADERS_TEMPLATE,
     CONF_METHOD,
     CONF_NAME,
     CONF_PARAMS,
@@ -45,8 +46,6 @@ from .const import (
     METHODS,
 )
 from .data import DEFAULT_TIMEOUT
-
-CONF_HEADERS_TEMPLATE = "headers_template"
 
 RESOURCE_SCHEMA = {
     vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
