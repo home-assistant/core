@@ -613,7 +613,7 @@ jobs:
       - name: Run pylint
         run: |
           . venv/bin/activate
-          pylint --init-hook='from pathlib import Path; import sys; sys.path.append(Path("pylint/plugins"))' homeassistant
+          pylint --init-hook='import sys; sys.path.append("pylint/plugins")' homeassistant
 
   mypy:
     name: Check mypy
