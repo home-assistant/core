@@ -90,6 +90,7 @@ ENTITY_IDS_BY_NUMBER = {
     "21": "humidifier.hygrostat",
     "22": "scene.light_on",
     "23": "scene.light_off",
+    "24": "media_player.kitchen",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}

@@ -64,6 +64,7 @@ from homeassistant.loader import bind_hass
 from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
+    ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_ALBUM_ARTIST,
@@ -94,11 +95,14 @@ from .const import (
     MEDIA_CLASS_DIRECTORY,
     REPEAT_MODES,
     SERVICE_CLEAR_PLAYLIST,
+    SERVICE_JOIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
+    SERVICE_UNJOIN,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_GROUPING,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -300,6 +304,12 @@ async def async_setup(hass, config):
         [SUPPORT_SEEK],
     )
     component.async_register_entity_service(
+        SERVICE_JOIN,
+        {vol.Required(ATTR_GROUP_MEMBERS): list},
+        "async_join_players",
+        [SUPPORT_GROUPING],
+    )
+    component.async_register_entity_service(
         SERVICE_SELECT_SOURCE,
         {vol.Required(ATTR_INPUT_SOURCE): cv.string},
         "async_select_source",
@@ -329,6 +339,9 @@ async def async_setup(hass, config):
         {vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean},
         "async_set_shuffle",
         [SUPPORT_SHUFFLE_SET],
+    )
+    component.async_register_entity_service(
+        SERVICE_UNJOIN, {}, "async_unjoin_player", [SUPPORT_GROUPING]
     )
 
     component.async_register_entity_service(
@@ -538,6 +551,11 @@ class MediaPlayerEntity(Entity):
         return None
 
     @property
+    def group_members(self):
+        """List of members which are currently grouped together."""
+        return None
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return 0
@@ -738,6 +756,11 @@ class MediaPlayerEntity(Entity):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
+    @property
+    def support_grouping(self):
+        """Boolean if player grouping is supported."""
+        return bool(self.supported_features & SUPPORT_GROUPING)
+
     async def async_toggle(self):
         """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
@@ -846,6 +869,9 @@ class MediaPlayerEntity(Entity):
         if self.media_image_remotely_accessible:
             state_attr["entity_picture_local"] = self.media_image_local
 
+        if self.support_grouping:
+            state_attr[ATTR_GROUP_MEMBERS] = self.group_members
+
         return state_attr
 
     async def async_browse_media(
@@ -859,6 +885,22 @@ class MediaPlayerEntity(Entity):
         "media_player/browse_media" websocket command.
         """
         raise NotImplementedError()
+
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        raise NotImplementedError()
+
+    async def async_join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        await self.hass.async_add_executor_job(self.join_players, group_members)
+
+    def unjoin_player(self):
+        """Remove this player from any group."""
+        raise NotImplementedError()
+
+    async def async_unjoin_player(self):
+        """Remove this player from any group."""
+        await self.hass.async_add_executor_job(self.unjoin_player)
 
     async def _async_fetch_image_from_cache(self, url):
         """Fetch image.

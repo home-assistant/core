@@ -118,8 +118,8 @@ play_media:
     media_content_type:
       name: Content type
       description:
-        The type of the content to play. Like image, music, tvshow,
-        video, episode, channel or playlist.
+        The type of the content to play. Like image, music, tvshow, video,
+        episode, channel or playlist.
       required: true
       example: "music"
       selector:
@@ -184,3 +184,24 @@ repeat_set:
             - "off"
             - "all"
             - "one"
+
+join:
+  description:
+    Group players together. Only works on platforms with support for player
+    groups.
+  name: Join
+  target:
+  fields:
+    group_members:
+      description:
+        The players which will be synced with the target player.
+      example:
+        - "media_player.multiroom_player2"
+        - "media_player.multiroom_player3"
+
+unjoin:
+  description:
+    Unjoin the player from a group. Only works on platforms with support for
+    player groups.
+  name: Unjoin
+  target:
