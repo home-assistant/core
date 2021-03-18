@@ -1,4 +1,4 @@
-"""The tests for Netatmo device triggers."""
+"""The tests for Netatmo component."""
 from time import time
 from unittest.mock import Mock, patch
 
