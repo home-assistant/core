@@ -1,4 +1,5 @@
 """Support for Huawei LTE routers."""
+from __future__ import annotations
 
 from collections import defaultdict
 from datetime import timedelta
@@ -6,7 +7,7 @@ from functools import partial
 import ipaddress
 import logging
 import time
-from typing import Any, Callable, Dict, List, Set, Tuple, cast
+from typing import Any, Callable, cast
 from urllib.parse import urlparse
 
 import attr
@@ -138,13 +139,13 @@ class Router:
     mac: str = attr.ib()
     signal_update: CALLBACK_TYPE = attr.ib()
 
-    data: Dict[str, Any] = attr.ib(init=False, factory=dict)
-    subscriptions: Dict[str, Set[str]] = attr.ib(
+    data: dict[str, Any] = attr.ib(init=False, factory=dict)
+    subscriptions: dict[str, set[str]] = attr.ib(
         init=False,
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
-    inflight_gets: Set[str] = attr.ib(init=False, factory=set)
-    unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
+    inflight_gets: set[str] = attr.ib(init=False, factory=set)
+    unload_handlers: list[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
     suspended = attr.ib(init=False, default=False)
     notify_last_attempt: float = attr.ib(init=False, default=-1)
@@ -167,7 +168,7 @@ class Router:
         return DEFAULT_DEVICE_NAME
 
     @property
-    def device_identifiers(self) -> Set[Tuple[str, str]]:
+    def device_identifiers(self) -> set[tuple[str, str]]:
         """Get router identifiers for device registry."""
         try:
             return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
@@ -175,7 +176,7 @@ class Router:
             return set()
 
     @property
-    def device_connections(self) -> Set[Tuple[str, str]]:
+    def device_connections(self) -> set[tuple[str, str]]:
         """Get router connections for device registry."""
         return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
 
@@ -304,8 +305,8 @@ class HuaweiLteData:
 
     hass_config: dict = attr.ib()
     # Our YAML config, keyed by router URL
-    config: Dict[str, Dict[str, Any]] = attr.ib()
-    routers: Dict[str, Router] = attr.ib(init=False, factory=dict)
+    config: dict[str, dict[str, Any]] = attr.ib()
+    routers: dict[str, Router] = attr.ib(init=False, factory=dict)
 
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
@@ -484,7 +485,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     logging.getLogger("dicttoxml").setLevel(logging.WARNING)
 
     # Arrange our YAML config to dict with normalized URLs as keys
-    domain_config: Dict[str, Dict[str, Any]] = {}
+    domain_config: dict[str, dict[str, Any]] = {}
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
     for router_config in config.get(DOMAIN, []):
@@ -588,7 +589,7 @@ class HuaweiLteBaseEntity(Entity):
     router: Router = attr.ib()
 
     _available: bool = attr.ib(init=False, default=True)
-    _unsub_handlers: List[Callable] = attr.ib(init=False, factory=list)
+    _unsub_handlers: list[Callable] = attr.ib(init=False, factory=list)
 
     @property
     def _entity_name(self) -> str:
@@ -620,7 +621,7 @@ class HuaweiLteBaseEntity(Entity):
         return False
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Get info for matching with parent router."""
         return {
             "identifiers": self.router.device_identifiers,

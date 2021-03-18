@@ -1,5 +1,7 @@
 """Support for HomematicIP Cloud sensors."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
@@ -222,7 +224,7 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity):
         return TEMP_CELSIUS
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the windspeed sensor."""
         state_attr = super().extra_state_attributes
 
@@ -259,7 +261,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity):
         return LIGHT_LUX
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
         state_attr = super().extra_state_attributes
 
@@ -312,7 +314,7 @@ class HomematicipWindspeedSensor(HomematicipGenericEntity):
         return SPEED_KILOMETERS_PER_HOUR
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
         state_attr = super().extra_state_attributes
 
@@ -354,7 +356,7 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity):
         return self._device.leftRightCounterDelta
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the delta counter."""
         state_attr = super().extra_state_attributes
 

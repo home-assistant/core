@@ -1,9 +1,11 @@
 """Support for Hass.io."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -236,7 +238,7 @@ async def async_set_addon_options(
 @bind_hass
 async def async_get_addon_discovery_info(
     hass: HomeAssistantType, slug: str
-) -> Optional[dict]:
+) -> dict | None:
     """Return discovery data for an add-on."""
     hassio = hass.data[DOMAIN]
     data = await hassio.retrieve_discovery_messages()
@@ -545,7 +547,7 @@ async def async_unload_entry(
 
 @callback
 def async_register_addons_in_dev_reg(
-    entry_id: str, dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
+    entry_id: str, dev_reg: DeviceRegistry, addons: list[dict[str, Any]]
 ) -> None:
     """Register addons in the device registry."""
     for addon in addons:
@@ -564,7 +566,7 @@ def async_register_addons_in_dev_reg(
 
 @callback
 def async_register_os_in_dev_reg(
-    entry_id: str, dev_reg: DeviceRegistry, os_dict: Dict[str, Any]
+    entry_id: str, dev_reg: DeviceRegistry, os_dict: dict[str, Any]
 ) -> None:
     """Register OS in the device registry."""
     params = {
@@ -581,7 +583,7 @@ def async_register_os_in_dev_reg(
 
 @callback
 def async_remove_addons_from_dev_reg(
-    dev_reg: DeviceRegistry, addons: List[Dict[str, Any]]
+    dev_reg: DeviceRegistry, addons: list[dict[str, Any]]
 ) -> None:
     """Remove addons from the device registry."""
     for addon_slug in addons:
@@ -607,7 +609,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self.dev_reg = dev_reg
         self.is_hass_os = "hassos" in get_info(self.hass)
 
-    async def _async_update_data(self) -> Dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         new_data = {}
         addon_data = get_supervisor_info(self.hass)

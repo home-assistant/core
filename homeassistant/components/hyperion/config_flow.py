@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 from hyperion import client, const
@@ -111,9 +111,9 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Instantiate config flow."""
-        self._data: Dict[str, Any] = {}
-        self._request_token_task: Optional[asyncio.Task] = None
-        self._auth_id: Optional[str] = None
+        self._data: dict[str, Any] = {}
+        self._request_token_task: asyncio.Task | None = None
+        self._auth_id: str | None = None
         self._require_confirm: bool = False
         self._port_ui: int = const.DEFAULT_PORT_UI
 
@@ -128,7 +128,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _advance_to_auth_step_if_necessary(
         self, hyperion_client: client.HyperionClient
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Determine if auth is required."""
         auth_resp = await hyperion_client.async_is_auth_required()
 
@@ -143,7 +143,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self,
         config_data: ConfigType,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Handle a reauthentication flow."""
         self._data = dict(config_data)
         async with self._create_client(raw_connection=True) as hyperion_client:
@@ -152,8 +152,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
     async def async_step_ssdp(  # type: ignore[override]
-        self, discovery_info: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, discovery_info: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle a flow initiated by SSDP."""
         # Sample data provided by SSDP: {
         #   'ssdp_location': 'http://192.168.0.1:8090/description.xml',
@@ -223,8 +223,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self,
-        user_input: Optional[ConfigType] = None,
-    ) -> Dict[str, Any]:
+        user_input: ConfigType | None = None,
+    ) -> dict[str, Any]:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input:
@@ -262,7 +262,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _request_token_task_func(self, auth_id: str) -> None:
         """Send an async_request_token request."""
-        auth_resp: Optional[Dict[str, Any]] = None
+        auth_resp: dict[str, Any] | None = None
         async with self._create_client(raw_connection=True) as hyperion_client:
             if hyperion_client:
                 # The Hyperion-py client has a default timeout of 3 minutes on this request.
@@ -283,7 +283,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         # used to open a URL, that the user already knows the address of).
         return f"http://{self._data[CONF_HOST]}:{self._port_ui}"
 
-    async def _can_login(self) -> Optional[bool]:
+    async def _can_login(self) -> bool | None:
         """Verify login details."""
         async with self._create_client(raw_connection=True) as hyperion_client:
             if not hyperion_client:
@@ -296,8 +296,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(
         self,
-        user_input: Optional[ConfigType] = None,
-    ) -> Dict[str, Any]:
+        user_input: ConfigType | None = None,
+    ) -> dict[str, Any]:
         """Handle the auth step of a flow."""
         errors = {}
         if user_input:
@@ -325,8 +325,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Send a request for a new token."""
         if user_input is None:
             self._auth_id = client.generate_random_auth_id()
@@ -351,8 +351,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_create_token_external(
-        self, auth_resp: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, auth_resp: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Handle completion of the request for a new token."""
         if auth_resp is not None and client.ResponseOK(auth_resp):
             token = auth_resp.get(const.KEY_INFO, {}).get(const.KEY_TOKEN)
@@ -364,8 +364,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_external_step_done(next_step_id="create_token_fail")
 
     async def async_step_create_token_success(
-        self, _: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, _: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Create an entry after successful token creation."""
         # Clean-up the request task.
         await self._cancel_request_token_task()
@@ -380,16 +380,16 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_create_token_fail(
-        self, _: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, _: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Show an error on the auth form."""
         # Clean-up the request task.
         await self._cancel_request_token_task()
         return self.async_abort(reason="auth_new_token_not_granted_error")
 
     async def async_step_confirm(
-        self, user_input: Optional[ConfigType] = None
-    ) -> Dict[str, Any]:
+        self, user_input: ConfigType | None = None
+    ) -> dict[str, Any]:
         """Get final confirmation before entry creation."""
         if user_input is None and self._require_confirm:
             return self.async_show_form(
@@ -440,8 +440,8 @@ class HyperionOptionsFlow(OptionsFlow):
         self._config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

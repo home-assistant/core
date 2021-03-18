@@ -1,6 +1,7 @@
 """Config flow for habitica integration."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from aiohttp import ClientResponseError
 from habitipy.aio import HabitipyAsync
@@ -25,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def validate_input(
-    hass: core.HomeAssistant, data: Dict[str, str]
-) -> Dict[str, str]:
+    hass: core.HomeAssistant, data: dict[str, str]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     websession = async_get_clientsession(hass)

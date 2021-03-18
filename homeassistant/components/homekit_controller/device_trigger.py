@@ -1,5 +1,5 @@
 """Provides device automations for homekit devices."""
-from typing import List
+from __future__ import annotations
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
@@ -226,7 +226,7 @@ def async_fire_triggers(conn, events):
                 source.fire(iid, ev)
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for homekit devices."""
 
     if device_id not in hass.data.get(TRIGGERS, {}):

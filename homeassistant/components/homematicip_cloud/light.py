@@ -1,5 +1,7 @@
 """Support for HomematicIP Cloud lights."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandDimmer,
@@ -90,7 +92,7 @@ class HomematicipLightMeasuring(HomematicipLight):
     """Representation of the HomematicIP measuring light."""
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the light."""
         state_attr = super().extra_state_attributes
 
@@ -206,7 +208,7 @@ class HomematicipNotificationLight(HomematicipGenericEntity, LightEntity):
         return self._color_switcher.get(simple_rgb_color, [0.0, 0.0])
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
         state_attr = super().extra_state_attributes
 

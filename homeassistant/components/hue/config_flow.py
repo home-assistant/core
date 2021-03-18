@@ -1,6 +1,8 @@
 """Config flow to configure Philips Hue."""
+from __future__ import annotations
+
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import aiohue
@@ -44,8 +46,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the Hue flow."""
-        self.bridge: Optional[aiohue.Bridge] = None
-        self.discovered_bridges: Optional[Dict[str, aiohue.Bridge]] = None
+        self.bridge: aiohue.Bridge | None = None
+        self.discovered_bridges: dict[str, aiohue.Bridge] | None = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -53,7 +55,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_init(user_input)
 
     @core.callback
-    def _async_get_bridge(self, host: str, bridge_id: Optional[str] = None):
+    def _async_get_bridge(self, host: str, bridge_id: str | None = None):
         """Return a bridge object."""
         if bridge_id is not None:
             bridge_id = normalize_bridge_id(bridge_id)
@@ -114,8 +116,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Handle manual bridge setup."""
         if user_input is None:
             return self.async_show_form(
@@ -249,8 +251,8 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
 
     async def async_step_init(
-        self, user_input: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, user_input: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
