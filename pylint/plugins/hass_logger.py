@@ -1,7 +1,6 @@
 import astroid
-from pylint.interfaces import IAstroidChecker
-
 from pylint.checkers import BaseChecker
+from pylint.interfaces import IAstroidChecker
 
 LOGGER_NAMES = ("LOGGER", "_LOGGER")
 LOG_LEVEL_ALLOWED_LOWER_START = "debug"
