@@ -11,9 +11,9 @@ from typing import (
     Awaitable,
     Callable,
     Iterable,
-    Tuple,
+    Optional,
     TypedDict,
-    cast,
+    Union,
 )
 
 import voluptuous as vol
@@ -78,6 +78,29 @@ class ServiceParams(TypedDict):
     target: dict | None
 
 
+class ServiceTargetSelector:
+    """Class to hold a target selector for a service."""
+
+    def __init__(self, service_call: ha.ServiceCall):
+        """Extract ids from service call data."""
+        entity_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_ENTITY_ID)
+        device_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_DEVICE_ID)
+        area_ids: Optional[Union[str, list]] = service_call.data.get(ATTR_AREA_ID)
+
+        self.entity_ids = (
+            set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
+        )
+        self.device_ids = (
+            set(cv.ensure_list(device_ids)) if _has_match(device_ids) else set()
+        )
+        self.area_ids = set(cv.ensure_list(area_ids)) if _has_match(area_ids) else set()
+
+    @property
+    def has_any_selector(self) -> bool:
+        """Determine if any selectors are present."""
+        return bool(self.entity_ids or self.device_ids or self.area_ids)
+
+
 @dataclasses.dataclass
 class SelectedEntities:
     """Class to hold the selected entities."""
@@ -92,6 +115,9 @@ class SelectedEntities:
     # Referenced items that could not be found.
     missing_devices: set[str] = dataclasses.field(default_factory=set)
     missing_areas: set[str] = dataclasses.field(default_factory=set)
+
+    # Referenced devices
+    referenced_devices: set[str] = dataclasses.field(default_factory=set)
 
     def log_missing(self, missing_entities: set[str]) -> None:
         """Log about missing items."""
@@ -293,96 +319,86 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
+def _has_match(ids: Optional[Union[str, list]]) -> bool:
+    """Check if ids can match anything."""
+    return ids not in (None, ENTITY_MATCH_NONE)
+
+
 @bind_hass
 async def async_extract_referenced_entity_ids(
     hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
-    entity_ids = service_call.data.get(ATTR_ENTITY_ID)
-    device_ids = service_call.data.get(ATTR_DEVICE_ID)
-    area_ids = service_call.data.get(ATTR_AREA_ID)
-
-    selects_entity_ids = entity_ids not in (None, ENTITY_MATCH_NONE)
-    selects_device_ids = device_ids not in (None, ENTITY_MATCH_NONE)
-    selects_area_ids = area_ids not in (None, ENTITY_MATCH_NONE)
-
+    selector = ServiceTargetSelector(service_call)
     selected = SelectedEntities()
 
-    if not selects_entity_ids and not selects_device_ids and not selects_area_ids:
+    if not selector.has_any_selector:
         return selected
 
-    if selects_entity_ids:
-        assert entity_ids is not None
+    entity_ids = selector.entity_ids
+    if expand_group:
+        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
 
-        # Entity ID attr can be a list or a string
-        if isinstance(entity_ids, str):
-            entity_ids = [entity_ids]
+    selected.referenced.update(entity_ids)
 
-        if expand_group:
-            entity_ids = hass.components.group.expand_entity_ids(entity_ids)
-
-        selected.referenced.update(entity_ids)
-
-    if not selects_device_ids and not selects_area_ids:
+    if not selector.device_ids and not selector.area_ids:
         return selected
 
-    area_reg, dev_reg, ent_reg = cast(
-        Tuple[
-            area_registry.AreaRegistry,
-            device_registry.DeviceRegistry,
-            entity_registry.EntityRegistry,
-        ],
-        await asyncio.gather(
-            area_registry.async_get_registry(hass),
-            device_registry.async_get_registry(hass),
-            entity_registry.async_get_registry(hass),
-        ),
-    )
+    ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
+    area_reg = area_registry.async_get(hass)
 
-    picked_devices = set()
+    for device_id in selector.device_ids:
+        if device_id not in dev_reg.devices:
+            selected.missing_devices.add(device_id)
 
-    if selects_device_ids:
-        if isinstance(device_ids, str):
-            picked_devices = {device_ids}
-        else:
-            assert isinstance(device_ids, list)
-            picked_devices = set(device_ids)
+    for area_id in selector.area_ids:
+        if area_id not in area_reg.areas:
+            selected.missing_areas.add(area_id)
 
-        for device_id in picked_devices:
-            if device_id not in dev_reg.devices:
-                selected.missing_devices.add(device_id)
+    # Find devices for this area
+    selected.referenced_devices.update(selector.device_ids)
+    for device_entry in dev_reg.devices.values():
+        if device_entry.area_id in selector.area_ids:
+            selected.referenced_devices.add(device_entry.id)
 
-    if selects_area_ids:
-        assert area_ids is not None
-
-        if isinstance(area_ids, str):
-            area_lookup = {area_ids}
-        else:
-            area_lookup = set(area_ids)
-
-        for area_id in area_lookup:
-            if area_id not in area_reg.areas:
-                selected.missing_areas.add(area_id)
-                continue
-
-        # Find entities tied to an area
-        for entity_entry in ent_reg.entities.values():
-            if entity_entry.area_id in area_lookup:
-                selected.indirectly_referenced.add(entity_entry.entity_id)
-
-        # Find devices for this area
-        for device_entry in dev_reg.devices.values():
-            if device_entry.area_id in area_lookup:
-                picked_devices.add(device_entry.id)
-
-    if not picked_devices:
+    if not selector.area_ids and not selected.referenced_devices:
         return selected
 
-    for entity_entry in ent_reg.entities.values():
-        if not entity_entry.area_id and entity_entry.device_id in picked_devices:
-            selected.indirectly_referenced.add(entity_entry.entity_id)
+    for ent_entry in ent_reg.entities.values():
+        if ent_entry.area_id in selector.area_ids or (
+            not ent_entry.area_id and ent_entry.device_id in selected.referenced_devices
+        ):
+            selected.indirectly_referenced.add(ent_entry.entity_id)
 
     return selected
+
+
+@bind_hass
+async def async_extract_config_entry_ids(
+    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+) -> set:
+    """Extract referenced config entry ids from a service call."""
+    referenced = await async_extract_referenced_entity_ids(
+        hass, service_call, expand_group
+    )
+    ent_reg = entity_registry.async_get(hass)
+    dev_reg = device_registry.async_get(hass)
+    config_entry_ids: set[str] = set()
+
+    # Some devices may have no entities
+    for device_id in referenced.referenced_devices:
+        if device_id in dev_reg.devices:
+            device = dev_reg.async_get(device_id)
+            if device is not None:
+                config_entry_ids.update(device.config_entries)
+
+    for entity_id in referenced.referenced | referenced.indirectly_referenced:
+        entry = ent_reg.async_get(entity_id)
+        if entry is not None and entry.config_entry_id is not None:
+            config_entry_ids.add(entry.config_entry_id)
+
+    return config_entry_ids
 
 
 def _load_services_file(hass: HomeAssistantType, integration: Integration) -> JSON_TYPE:
