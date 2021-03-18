@@ -1,5 +1,7 @@
 """Script variables."""
-from typing import Any, Dict, Mapping, Optional
+from __future__ import annotations
+
+from typing import Any, Mapping
 
 from homeassistant.core import HomeAssistant, callback
 
@@ -9,20 +11,20 @@ from . import template
 class ScriptVariables:
     """Class to hold and render script variables."""
 
-    def __init__(self, variables: Dict[str, Any]):
+    def __init__(self, variables: dict[str, Any]):
         """Initialize script variables."""
         self.variables = variables
-        self._has_template: Optional[bool] = None
+        self._has_template: bool | None = None
 
     @callback
     def async_render(
         self,
         hass: HomeAssistant,
-        run_variables: Optional[Mapping[str, Any]],
+        run_variables: Mapping[str, Any] | None,
         *,
         render_as_defaults: bool = True,
         limited: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Render script variables.
 
         The run variables are used to compute the static variables.

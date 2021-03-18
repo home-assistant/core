@@ -1,24 +1,52 @@
 {
     "config": {
         "abort": {
+            "addon_info_failed": "Fehler beim Abrufen von Z-Wave JS Add-on Informationen.",
+            "addon_install_failed": "Installation des Z-Wave JS Add-Ons fehlgeschlagen.",
+            "addon_set_config_failed": "Setzen der Z-Wave JS Konfiguration fehlgeschlagen",
+            "addon_start_failed": "Starten des Z-Wave JS Add-ons fehlgeschlagen.",
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "error": {
+            "addon_start_failed": "Fehler beim Starten des Z-Wave JS Add-Ons. \u00dcberpr\u00fcfe die Konfiguration.",
             "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_ws_url": "Ung\u00fcltige Websocket-URL",
             "unknown": "Unerwarteter Fehler"
+        },
+        "progress": {
+            "install_addon": "Bitte warte, w\u00e4hrend die Installation des Z-Wave JS Add-ons abgeschlossen wird. Dies kann einige Minuten dauern.",
+            "start_addon": "Bitte warte, w\u00e4hrend der Start des Z-Wave JS Add-ons abgeschlossen wird. Dies kann einige Sekunden dauern."
         },
         "step": {
             "configure_addon": {
                 "data": {
+                    "network_key": "Netzwerk-Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
-                }
+                },
+                "title": "Gib die Konfiguration des Z-Wave JS Add-ons ein"
+            },
+            "hassio_confirm": {
+                "title": "Einrichten der Z-Wave JS Integration mit dem Z-Wave JS Add-on"
+            },
+            "install_addon": {
+                "title": "Die Installation des Z-Wave-JS-Add-ons hat begonnen"
             },
             "manual": {
                 "data": {
                     "url": "URL"
                 }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Verwende das Z-Wave JS Supervisor Add-on"
+                },
+                "description": "M\u00f6chtest du das Z-Wave JS Supervisor Add-on verwenden?",
+                "title": "Verbindungstyp ausw\u00e4hlen"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS Add-on wird gestartet."
             },
             "user": {
                 "data": {
@@ -26,5 +54,6 @@
                 }
             }
         }
-    }
+    },
+    "title": ""
 }

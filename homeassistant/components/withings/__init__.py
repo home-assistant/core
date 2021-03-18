@@ -4,12 +4,12 @@ Support for the Withings API.
 For more details about this platform, please refer to the documentation at
 """
 import asyncio
-from typing import Optional, cast
+from typing import Optional
 
 from aiohttp.web import Request, Response
 import voluptuous as vol
 from withings_api import WithingsAuth
-from withings_api.common import NotifyAppli, enum_or_raise
+from withings_api.common import NotifyAppli
 
 from homeassistant.components import webhook
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -195,9 +195,7 @@ async def async_webhook_handler(
         return json_message_response("Parameter appli not provided", message_code=20)
 
     try:
-        appli = cast(
-            NotifyAppli, enum_or_raise(int(params.getone("appli")), NotifyAppli)
-        )
+        appli = NotifyAppli(int(params.getone("appli")))
     except ValueError:
         return json_message_response("Invalid appli provided", message_code=21)
 
