@@ -3,7 +3,7 @@ from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
 
 LOGGER_NAMES = ("LOGGER", "_LOGGER")
-LOG_LEVEL_ALLOWED_LOWER_START = "debug"
+LOG_LEVEL_ALLOWED_LOWER_START = ("debug", )
 
 # This is our checker class.
 # Checkers should always inherit from `BaseChecker`.
@@ -70,10 +70,9 @@ class HassLoggerFormatChecker(BaseChecker):
             self.add_message("hass-logger-period", args=node.args, node=node)
 
         if (
-            node.func.attrname
-            in LOG_LEVEL_ALLOWED_LOWER_START
-            not in log_message[0].upper()
-            != log_message[0]
+            isinstance(node.func.attrname,str) and 
+            node.func.attrname not in LOG_LEVEL_ALLOWED_LOWER_START and
+            log_message[0].upper() != log_message[0]
         ):
             self.add_message("hass-logger-capital", args=node.args, node=node)
 
