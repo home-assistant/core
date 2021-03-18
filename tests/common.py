@@ -202,9 +202,9 @@ async def async_test_home_assistant(loop, load_registries=True):
         start_time: float | None = None
 
         while len(self._pending_tasks) > max_remaining_tasks:
-            pending = [
+            pending: Collection[Awaitable[Any]] = [
                 task for task in self._pending_tasks if not task.done()
-            ]  # type: Collection[Awaitable[Any]]
+            ]
             self._pending_tasks.clear()
             if len(pending) > max_remaining_tasks:
                 remaining_pending = await self._await_count_and_log_pending(

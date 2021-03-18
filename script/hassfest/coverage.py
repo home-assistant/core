@@ -1,6 +1,7 @@
 """Validate coverage files."""
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Dict
 
 from .model import Config, Integration
 
@@ -69,7 +70,7 @@ ALLOWED_IGNORE_VIOLATIONS = {
 }
 
 
-def validate(integrations: Dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config):
     """Validate coverage."""
     coverage_path = config.root / ".coveragerc"
 
