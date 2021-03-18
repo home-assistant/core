@@ -1,4 +1,4 @@
-"""The tests for Netatmo device triggers."""
+"""The tests for Netatmo light."""
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
