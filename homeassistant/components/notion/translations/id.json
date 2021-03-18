@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "no_devices": "Tidak ada perangkat yang ditemukan di akun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "title": "Isi informasi Anda"
+            }
+        }
+    }
+}

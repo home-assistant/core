@@ -14,7 +14,12 @@ from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -83,11 +88,12 @@ class ZwaveSensorBase(ZWaveBaseEntity):
             if self.info.primary_value.metadata.unit == "kWh":
                 return DEVICE_CLASS_ENERGY
             return DEVICE_CLASS_POWER
-        if (
-            isinstance(self.info.primary_value.property_, str)
-            and "temperature" in self.info.primary_value.property_.lower()
-        ):
-            return DEVICE_CLASS_TEMPERATURE
+        if isinstance(self.info.primary_value.property_, str):
+            property_lower = self.info.primary_value.property_.lower()
+            if "humidity" in property_lower:
+                return DEVICE_CLASS_HUMIDITY
+            if "temperature" in property_lower:
+                return DEVICE_CLASS_TEMPERATURE
         if self.info.primary_value.metadata.unit == "W":
             return DEVICE_CLASS_POWER
         if self.info.primary_value.metadata.unit == "Lux":
@@ -199,7 +205,7 @@ class ZWaveListSensor(ZwaveSensorBase):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, str]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
         """Return the device specific state attributes."""
         # add the value's int value as property for multi-value (list) items
         return {"value": self.info.primary_value.value}

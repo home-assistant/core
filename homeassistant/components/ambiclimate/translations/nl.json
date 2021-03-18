@@ -6,7 +6,7 @@
             "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen."
         },
         "create_entry": {
-            "default": "Succesvol geverifieerd met Ambiclimate"
+            "default": "Succesvol geauthenticeerd"
         },
         "error": {
             "follow_link": "Gelieve de link te volgen en te verifi\u00ebren voordat u op Verzenden drukt.",

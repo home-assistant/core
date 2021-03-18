@@ -1,7 +1,7 @@
 """Config flow for Shark IQ integration."""
+from __future__ import annotations
 
 import asyncio
-from typing import Dict, Optional
 
 import aiohttp
 import async_timeout
@@ -62,7 +62,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return info, errors
 
-    async def async_step_user(self, user_input: Optional[Dict] = None):
+    async def async_step_user(self, user_input: dict | None = None):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -76,7 +76,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=SHARKIQ_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: Optional[dict] = None):
+    async def async_step_reauth(self, user_input: dict | None = None):
         """Handle re-auth if login is invalid."""
         errors = {}
 

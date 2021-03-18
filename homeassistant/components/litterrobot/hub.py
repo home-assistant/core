@@ -1,10 +1,12 @@
 """A wrapper 'hub' for the Litter-Robot API and base entity for common attributes."""
+from __future__ import annotations
+
 from datetime import time, timedelta
 import logging
 from types import MethodType
-from typing import Any, Optional
+from typing import Any
 
-from pylitterbot import Account, Robot
+import pylitterbot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -49,7 +51,7 @@ class LitterRobotHub:
     async def login(self, load_robots: bool = False):
         """Login to Litter-Robot."""
         self.logged_in = False
-        self.account = Account()
+        self.account = pylitterbot.Account()
         try:
             await self.account.connect(
                 username=self._data[CONF_USERNAME],
@@ -69,11 +71,11 @@ class LitterRobotHub:
 class LitterRobotEntity(CoordinatorEntity):
     """Generic Litter-Robot entity representing common data and methods."""
 
-    def __init__(self, robot: Robot, entity_type: str, hub: LitterRobotHub):
+    def __init__(self, robot: pylitterbot.Robot, entity_type: str, hub: LitterRobotHub):
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(hub.coordinator)
         self.robot = robot
-        self.entity_type = entity_type if entity_type else ""
+        self.entity_type = entity_type
         self.hub = hub
 
     @property
@@ -89,34 +91,36 @@ class LitterRobotEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return the device information for a Litter-Robot."""
-        model = "Litter-Robot 3 Connect"
-        if not self.robot.serial.startswith("LR3C"):
-            model = "Other Litter-Robot Connected Device"
         return {
             "identifiers": {(DOMAIN, self.robot.serial)},
             "name": self.robot.name,
             "manufacturer": "Litter-Robot",
-            "model": model,
+            "model": self.robot.model,
         }
 
     async def perform_action_and_refresh(self, action: MethodType, *args: Any):
         """Perform an action and initiates a refresh of the robot data after a few seconds."""
+
+        async def async_call_later_callback(*_) -> None:
+            await self.hub.coordinator.async_request_refresh()
+
         await action(*args)
-        async_call_later(
-            self.hass, REFRESH_WAIT_TIME, self.hub.coordinator.async_request_refresh
-        )
+        async_call_later(self.hass, REFRESH_WAIT_TIME, async_call_later_callback)
 
     @staticmethod
-    def parse_time_at_default_timezone(time_str: str) -> Optional[time]:
+    def parse_time_at_default_timezone(time_str: str) -> time | None:
         """Parse a time string and add default timezone."""
         parsed_time = dt_util.parse_time(time_str)
 
         if parsed_time is None:
             return None
 
-        return time(
-            hour=parsed_time.hour,
-            minute=parsed_time.minute,
-            second=parsed_time.second,
-            tzinfo=dt_util.DEFAULT_TIME_ZONE,
+        return (
+            dt_util.start_of_local_day()
+            .replace(
+                hour=parsed_time.hour,
+                minute=parsed_time.minute,
+                second=parsed_time.second,
+            )
+            .timetz()
         )

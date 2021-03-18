@@ -70,7 +70,7 @@ class WUSensorConfig:
         unit_of_measurement: Optional[str] = None,
         entity_picture=None,
         icon: str = "mdi:gauge",
-        device_state_attributes=None,
+        extra_state_attributes=None,
         device_class=None,
     ):
         """Initialize sensor configuration.
@@ -82,7 +82,7 @@ class WUSensorConfig:
         :param unit_of_measurement: unit of measurement
         :param entity_picture: value or callback returning URL of entity picture
         :param icon: icon name or URL
-        :param device_state_attributes: dictionary of attributes, or callable that returns it
+        :param extra_state_attributes: dictionary of attributes, or callable that returns it
         """
         self.friendly_name = friendly_name
         self.unit_of_measurement = unit_of_measurement
@@ -90,7 +90,7 @@ class WUSensorConfig:
         self.value = value
         self.entity_picture = entity_picture
         self.icon = icon
-        self.device_state_attributes = device_state_attributes or {}
+        self.extra_state_attributes = extra_state_attributes or {}
         self.device_class = device_class
 
 
@@ -121,7 +121,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
             entity_picture=lambda wu: wu.data["current_observation"]["icon_url"]
             if icon is None
             else None,
-            device_state_attributes={
+            extra_state_attributes={
                 "date": lambda wu: wu.data["current_observation"]["observation_time"]
             },
             device_class=device_class,
@@ -152,7 +152,7 @@ class WUDailyTextForecastSensorConfig(WUSensorConfig):
                 "forecastday"
             ][period]["icon_url"],
             unit_of_measurement=unit_of_measurement,
-            device_state_attributes={
+            extra_state_attributes={
                 "date": lambda wu: wu.data["forecast"]["txt_forecast"]["date"]
             },
         )
@@ -201,7 +201,7 @@ class WUDailySimpleForecastSensorConfig(WUSensorConfig):
             if not icon
             else None,
             icon=icon,
-            device_state_attributes={
+            extra_state_attributes={
                 "date": lambda wu: wu.data["forecast"]["simpleforecast"]["forecastday"][
                     period
                 ]["date"]["pretty"]
@@ -227,7 +227,7 @@ class WUHourlyForecastSensorConfig(WUSensorConfig):
             feature="hourly",
             value=lambda wu: wu.data["hourly_forecast"][period][field],
             entity_picture=lambda wu: wu.data["hourly_forecast"][period]["icon_url"],
-            device_state_attributes={
+            extra_state_attributes={
                 "temp_c": lambda wu: wu.data["hourly_forecast"][period]["temp"][
                     "metric"
                 ],
@@ -315,7 +315,7 @@ class WUAlertsSensorConfig(WUSensorConfig):
             icon=lambda wu: "mdi:alert-circle-outline"
             if wu.data["alerts"]
             else "mdi:check-circle-outline",
-            device_state_attributes=self._get_attributes,
+            extra_state_attributes=self._get_attributes,
         )
 
     @staticmethod
@@ -1157,7 +1157,7 @@ class WUndergroundSensor(Entity):
 
     def _update_attrs(self):
         """Parse and update device state attributes."""
-        attrs = self._cfg_expand("device_state_attributes", {})
+        attrs = self._cfg_expand("extra_state_attributes", {})
 
         for (attr, callback) in attrs.items():
             if callable(callback):
@@ -1185,7 +1185,7 @@ class WUndergroundSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

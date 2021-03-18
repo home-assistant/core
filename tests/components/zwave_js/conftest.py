@@ -228,6 +228,12 @@ def climate_danfoss_lc_13_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z_state", scope="session")
+def climate_eurotronic_spirit_z_state_fixture():
+    """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -292,6 +298,12 @@ def aeotec_radiator_thermostat_state_fixture():
 def inovelli_lzw36_state_fixture():
     """Load the Inovelli LZW36 node state fixture data."""
     return json.loads(load_fixture("zwave_js/inovelli_lzw36_state.json"))
+
+
+@pytest.fixture(name="null_name_check_state", scope="session")
+def null_name_check_state_fixture():
+    """Load the null name check node state fixture data."""
+    return json.loads(load_fixture("zwave_js/null_name_check_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -413,6 +425,14 @@ def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
     return node
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z")
+def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
+    """Mock a climate radio danfoss LC-13 node."""
+    node = Node(client, climate_eurotronic_spirit_z_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm3")
 def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
     """Mock a climate radio HEATIT Z-TRM3 node."""
@@ -486,6 +506,14 @@ def window_cover_fixture(client, chain_actuator_zws12_state):
 def in_wall_smart_fan_control_fixture(client, in_wall_smart_fan_control_state):
     """Mock a fan node."""
     node = Node(client, copy.deepcopy(in_wall_smart_fan_control_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="null_name_check")
+def null_name_check_fixture(client, null_name_check_state):
+    """Mock a node with no name."""
+    node = Node(client, copy.deepcopy(null_name_check_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

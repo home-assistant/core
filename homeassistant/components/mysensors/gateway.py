@@ -1,10 +1,12 @@
 """Handle MySensors gateways."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
 import socket
 import sys
-from typing import Any, Callable, Coroutine, Dict, Optional
+from typing import Any, Callable, Coroutine
 
 import async_timeout
 from mysensors import BaseAsyncGateway, Message, Sensor, mysensors
@@ -31,7 +33,12 @@ from .const import (
     GatewayId,
 )
 from .handler import HANDLERS
-from .helpers import discover_mysensors_platform, validate_child, validate_node
+from .helpers import (
+    discover_mysensors_platform,
+    on_unload,
+    validate_child,
+    validate_node,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +65,7 @@ def is_socket_address(value):
         raise vol.Invalid("Device is not a valid domain name or ip address") from err
 
 
-async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bool:
+async def try_connect(hass: HomeAssistantType, user_input: dict[str, str]) -> bool:
     """Try to connect to a gateway and report if it worked."""
     if user_input[CONF_DEVICE] == MQTT_COMPONENT:
         return True  # dont validate mqtt. mqtt gateways dont send ready messages :(
@@ -68,7 +75,7 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
         def on_conn_made(_: BaseAsyncGateway) -> None:
             gateway_ready.set()
 
-        gateway: Optional[BaseAsyncGateway] = await _get_gateway(
+        gateway: BaseAsyncGateway | None = await _get_gateway(
             hass,
             device=user_input[CONF_DEVICE],
             version=user_input[CONF_VERSION],
@@ -105,7 +112,7 @@ async def try_connect(hass: HomeAssistantType, user_input: Dict[str, str]) -> bo
 
 def get_mysensors_gateway(
     hass: HomeAssistantType, gateway_id: GatewayId
-) -> Optional[BaseAsyncGateway]:
+) -> BaseAsyncGateway | None:
     """Return the Gateway for a given GatewayId."""
     if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
         hass.data[DOMAIN][MYSENSORS_GATEWAYS] = {}
@@ -115,7 +122,7 @@ def get_mysensors_gateway(
 
 async def setup_gateway(
     hass: HomeAssistantType, entry: ConfigEntry
-) -> Optional[BaseAsyncGateway]:
+) -> BaseAsyncGateway | None:
     """Set up the Gateway for the given ConfigEntry."""
 
     ready_gateway = await _get_gateway(
@@ -140,14 +147,14 @@ async def _get_gateway(
     device: str,
     version: str,
     event_callback: Callable[[Message], None],
-    persistence_file: Optional[str] = None,
-    baud_rate: Optional[int] = None,
-    tcp_port: Optional[int] = None,
-    topic_in_prefix: Optional[str] = None,
-    topic_out_prefix: Optional[str] = None,
+    persistence_file: str | None = None,
+    baud_rate: int | None = None,
+    tcp_port: int | None = None,
+    topic_in_prefix: str | None = None,
+    topic_out_prefix: str | None = None,
     retain: bool = False,
     persistence: bool = True,  # old persistence option has been deprecated. kwarg is here so we can run try_connect() without persistence
-) -> Optional[BaseAsyncGateway]:
+) -> BaseAsyncGateway | None:
     """Return gateway after setup of the gateway."""
 
     if persistence_file is not None:
@@ -260,8 +267,8 @@ async def _discover_persistent_devices(
 
 async def gw_stop(hass, entry: ConfigEntry, gateway: BaseAsyncGateway):
     """Stop the gateway."""
-    connect_task = hass.data[DOMAIN].get(
-        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id)
+    connect_task = hass.data[DOMAIN].pop(
+        MYSENSORS_GATEWAY_START_TASK.format(entry.entry_id), None
     )
     if connect_task is not None and not connect_task.done():
         connect_task.cancel()
@@ -288,7 +295,12 @@ async def _gw_start(
     async def stop_this_gw(_: Event):
         await gw_stop(hass, entry, gateway)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw)
+    await on_unload(
+        hass,
+        entry.entry_id,
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_this_gw),
+    )
+
     if entry.data[CONF_DEVICE] == MQTT_COMPONENT:
         # Gatways connected via mqtt doesn't send gateway ready message.
         return

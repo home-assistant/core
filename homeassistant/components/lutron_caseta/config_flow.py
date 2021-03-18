@@ -171,7 +171,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by `async_setup`.
         """
-
         host = import_info[CONF_HOST]
         # Store the imported config for other steps in this flow to access.
         self.data[CONF_HOST] = host
@@ -213,7 +212,6 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_validate_connectable_bridge_config(self):
         """Check if we can connect to the bridge with the current config."""
-
         bridge = None
 
         try:

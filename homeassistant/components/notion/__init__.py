@@ -180,7 +180,7 @@ class NotionEntity(CoordinatorEntity):
         return self._device_class
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
 

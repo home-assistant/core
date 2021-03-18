@@ -46,7 +46,6 @@ class ZWaveBaseEntity(Entity):
 
     async def async_poll_value(self, refresh_all_values: bool) -> None:
         """Poll a value."""
-        assert self.hass
         if not refresh_all_values:
             self.hass.async_create_task(
                 self.info.node.async_poll_value(self.info.primary_value)
@@ -75,7 +74,6 @@ class ZWaveBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        assert self.hass  # typing
         # Add value_changed callbacks.
         self.async_on_remove(
             self.info.node.on(EVENT_VALUE_UPDATED, self._value_changed)
@@ -105,7 +103,11 @@ class ZWaveBaseEntity(Entity):
         """Generate entity name."""
         if additional_info is None:
             additional_info = []
-        name: str = self.info.node.name or self.info.node.device_config.description
+        name: str = (
+            self.info.node.name
+            or self.info.node.device_config.description
+            or f"Node {self.info.node.node_id}"
+        )
         if include_value_name:
             value_name = (
                 alternate_value_name

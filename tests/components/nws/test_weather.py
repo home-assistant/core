@@ -12,6 +12,7 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -40,7 +41,7 @@ async def test_imperial_metric(
 ):
     """Test with imperial and metric units."""
     # enable the hourly entity
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         WEATHER_DOMAIN,
         nws.DOMAIN,
@@ -284,7 +285,7 @@ async def test_error_forecast_hourly(hass, mock_simple_nws):
     instance.update_forecast_hourly.side_effect = aiohttp.ClientError
 
     # enable the hourly entity
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     registry.async_get_or_create(
         WEATHER_DOMAIN,
         nws.DOMAIN,
@@ -330,7 +331,7 @@ async def test_forecast_hourly_disable_enable(hass, mock_simple_nws):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get_or_create(
         WEATHER_DOMAIN,
         nws.DOMAIN,

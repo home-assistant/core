@@ -31,17 +31,34 @@ async def async_setup(hass: HomeAssistant, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Atag integration from a config entry."""
-    session = async_get_clientsession(hass)
 
-    coordinator = AtagDataUpdateCoordinator(hass, session, entry)
+    async def _async_update_data():
+        """Update data via library."""
+        with async_timeout.timeout(20):
+            try:
+                await atag.update()
+            except AtagException as err:
+                raise UpdateFailed(err) from err
+        return atag
+
+    atag = AtagOne(
+        session=async_get_clientsession(hass), **entry.data, device=entry.unique_id
+    )
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=DOMAIN.title(),
+        update_method=_async_update_data,
+        update_interval=timedelta(seconds=60),
+    )
+
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     if entry.unique_id is None:
-        hass.config_entries.async_update_entry(entry, unique_id=coordinator.atag.id)
+        hass.config_entries.async_update_entry(entry, unique_id=atag.id)
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -49,28 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     return True
-
-
-class AtagDataUpdateCoordinator(DataUpdateCoordinator):
-    """Define an object to hold Atag data."""
-
-    def __init__(self, hass, session, entry):
-        """Initialize."""
-        self.atag = AtagOne(session=session, **entry.data)
-
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
-        )
-
-    async def _async_update_data(self):
-        """Update data via library."""
-        with async_timeout.timeout(20):
-            try:
-                if not await self.atag.update():
-                    raise UpdateFailed("No data received")
-            except AtagException as error:
-                raise UpdateFailed(error) from error
-        return self.atag.report
 
 
 async def async_unload_entry(hass, entry):
@@ -91,7 +86,7 @@ async def async_unload_entry(hass, entry):
 class AtagEntity(CoordinatorEntity):
     """Defines a base Atag entity."""
 
-    def __init__(self, coordinator: AtagDataUpdateCoordinator, atag_id: str) -> None:
+    def __init__(self, coordinator: DataUpdateCoordinator, atag_id: str) -> None:
         """Initialize the Atag entity."""
         super().__init__(coordinator)
 
@@ -101,8 +96,8 @@ class AtagEntity(CoordinatorEntity):
     @property
     def device_info(self) -> dict:
         """Return info for device registry."""
-        device = self.coordinator.atag.id
-        version = self.coordinator.atag.apiversion
+        device = self.coordinator.data.id
+        version = self.coordinator.data.apiversion
         return {
             "identifiers": {(DOMAIN, device)},
             "name": "Atag Thermostat",
@@ -119,4 +114,4 @@ class AtagEntity(CoordinatorEntity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this entity."""
-        return f"{self.coordinator.atag.id}-{self._id}"
+        return f"{self.coordinator.data.id}-{self._id}"

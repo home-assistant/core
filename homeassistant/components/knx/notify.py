@@ -1,5 +1,5 @@
 """Support for KNX/IP notification services."""
-from typing import List
+from __future__ import annotations
 
 from xknx.devices import Notification as XknxNotification
 
@@ -22,7 +22,7 @@ async def async_get_service(hass, config, discovery_info=None):
 class KNXNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 
-    def __init__(self, devices: List[XknxNotification]):
+    def __init__(self, devices: list[XknxNotification]):
         """Initialize the service."""
         self.devices = devices
 

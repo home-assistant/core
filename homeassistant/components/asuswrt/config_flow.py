@@ -127,7 +127,7 @@ class AsusWrtFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         conf_protocol = user_input[CONF_PROTOCOL]
         if conf_protocol == PROTOCOL_TELNET:
-            await api.connection.disconnect()
+            api.connection.disconnect()
         return RESULT_SUCCESS
 
     async def async_step_user(self, user_input=None):

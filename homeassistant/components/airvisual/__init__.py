@@ -80,9 +80,9 @@ def async_get_cloud_api_update_interval(hass, api_key, num_consumers):
     This will shift based on the number of active consumers, thus keeping the user
     under the monthly API limit.
     """
-    # Assuming 10,000 calls per month and a "smallest possible month" of 28 days; note
+    # Assuming 10,000 calls per month and a "largest possible month" of 31 days; note
     # that we give a buffer of 1500 API calls for any drift, restarts, etc.:
-    minutes_between_api_calls = ceil(1 / (8500 / 28 / 24 / 60 / num_consumers))
+    minutes_between_api_calls = ceil(num_consumers * 31 * 24 * 60 / 8500)
 
     LOGGER.debug(
         "Leveling API key usage (%s): %s consumers, %s minutes between updates",
@@ -372,7 +372,7 @@ class AirVisualEntity(CoordinatorEntity):
         self._unit = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 

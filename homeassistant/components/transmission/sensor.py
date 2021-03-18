@@ -1,5 +1,5 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-from typing import List
+from __future__ import annotations
 
 from transmissionrpc.torrent import Torrent
 
@@ -148,7 +148,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         return "Torrents"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes, if any."""
         info = _torrents_info(
             torrents=self._tm_client.api.torrents,
@@ -168,7 +168,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         self._state = len(torrents)
 
 
-def _filter_torrents(torrents: List[Torrent], statuses=None) -> List[Torrent]:
+def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
     return [
         torrent
         for torrent in torrents

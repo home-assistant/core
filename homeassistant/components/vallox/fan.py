@@ -83,7 +83,7 @@ class ValloxFan(FanEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_PROFILE_FAN_SPEED_HOME["description"]: self._fan_speed_home,

@@ -1,5 +1,5 @@
 """Support for KNX/IP climate devices."""
-from typing import List, Optional
+from __future__ import annotations
 
 from xknx.devices import Climate as XknxClimate
 from xknx.dpt.dpt_hvac_mode import HVACControllerMode, HVACOperationMode
@@ -88,7 +88,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         if self._device.supports_on_off and not self._device.is_on:
             return HVAC_MODE_OFF
@@ -100,7 +100,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> Optional[List[str]]:
+    def hvac_modes(self) -> list[str] | None:
         """Return the list of available operation/controller modes."""
         _controller_modes = [
             CONTROLLER_MODES.get(controller_mode.value)
@@ -131,7 +131,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
         Requires SUPPORT_PRESET_MODE.
@@ -141,7 +141,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
         return None
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
         Requires SUPPORT_PRESET_MODE.
