@@ -1,6 +1,7 @@
 """Config flow for Volumio integration."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from pyvolumio import CannotConnectError, Volumio
 import voluptuous as vol
@@ -39,10 +40,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._host: Optional[str] = None
-        self._port: Optional[int] = None
-        self._name: Optional[str] = None
-        self._uuid: Optional[str] = None
+        self._host: str | None = None
+        self._port: int | None = None
+        self._name: str | None = None
+        self._uuid: str | None = None
 
     @callback
     def _async_get_entry(self):

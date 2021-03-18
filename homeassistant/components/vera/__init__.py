@@ -1,8 +1,10 @@
 """Support for Vera devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Generic, TypeVar
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -172,7 +174,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return True
 
 
-def map_vera_device(vera_device: veraApi.VeraDevice, remap: List[int]) -> str:
+def map_vera_device(vera_device: veraApi.VeraDevice, remap: list[int]) -> str:
     """Map vera classes to Home Assistant types."""
 
     type_map = {
@@ -187,7 +189,7 @@ def map_vera_device(vera_device: veraApi.VeraDevice, remap: List[int]) -> str:
         veraApi.VeraSwitch: "switch",
     }
 
-    def map_special_case(instance_class: Type, entity_type: str) -> str:
+    def map_special_case(instance_class: type, entity_type: str) -> str:
         if instance_class is veraApi.VeraSwitch and vera_device.device_id in remap:
             return "light"
         return entity_type
@@ -248,7 +250,7 @@ class VeraDevice(Generic[DeviceType], Entity):
         return self.vera_device.should_poll
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attr = {}
 
