@@ -1,22 +1,21 @@
-""""Home Assistant component for accessing the Wallbox Portal API, the switch component allows pausing/resuming and lock/unlock.
-    """
-
-import logging
+"""Home Assistant component for accessing the Wallbox Portal API, the lock component allows locking and unlocking of device."""
 
 from datetime import timedelta
+import logging
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, CONF_STATION, CONF_CONNECTIONS
-
+from .const import CONF_CONNECTIONS, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def wallbox_updater(wallbox, station):
+    """Get new data for Wallbox component."""
 
     w = wallbox
     data = w.getChargerStatus(station)
@@ -25,6 +24,7 @@ def wallbox_updater(wallbox, station):
 
 
 async def async_setup_entry(hass, config, async_add_entities):
+    """Create wallbox switch entities in HASS."""
 
     wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
     station = config.data[CONF_STATION]
@@ -67,13 +67,14 @@ class WallboxLock(CoordinatorEntity, LockEntity):
     """Representation of the Wallbox portal."""
 
     def __init__(self, name, config, coordinator, wallbox):
+        """Initialize a Wallbox lock."""
         super().__init__(coordinator)
         self._wallbox = wallbox
         self._name = name
         self.station = config.data[CONF_STATION]
 
     async def lock_charger(self, lock):
-        """Lock / Unlock charger using API"""
+        """Lock / Unlock charger using API."""
 
         try:
             station = self.station
@@ -99,6 +100,7 @@ class WallboxLock(CoordinatorEntity, LockEntity):
 
     @property
     def icon(self):
+        """Return the icon of the lock."""
         if self.coordinator.data:
             return "mdi:lock"
         else:
@@ -106,13 +108,16 @@ class WallboxLock(CoordinatorEntity, LockEntity):
 
     @property
     def is_locked(self):
+        """Return the status of the lock."""
         return self.coordinator.data
 
     async def async_lock(self, **kwargs):
+        """Lock charger."""
         await self.lock_charger(True)
         self.coordinator.async_set_updated_data(True)
 
     async def async_unlock(self, **kwargs):
+        """Unlock charger."""
         self.coordinator.data = False
         await self.lock_charger(False)
         self.coordinator.async_set_updated_data(False)

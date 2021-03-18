@@ -1,17 +1,15 @@
-""""Home Assistant component for accessing the Wallbox Portal API.
-    """
-
-import logging
-
+"""Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
 
 from datetime import timedelta
+import logging
+
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, SENSOR_TYPES, CONF_CONNECTIONS
+from .const import CONF_CONNECTIONS, DOMAIN, SENSOR_TYPES
 
 CONF_STATION = "station"
 
@@ -20,10 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def wallbox_updater(wallbox, station):
+    """Get new sensor data for Wallbox component."""
 
     w = wallbox
     data = w.getChargerStatus(station)
-    filtered_data = dict((k, data[k]) for k in SENSOR_TYPES if k in data)
+    filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
     for k, v in filtered_data.items():
         sensor_round = SENSOR_TYPES[k]["ATTR_ROUND"]
@@ -37,6 +36,7 @@ def wallbox_updater(wallbox, station):
 
 
 async def async_setup_entry(hass, config, async_add_entities):
+    """Create wallbox sensor entities in HASS."""
 
     wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
     station = config.data[CONF_STATION]
@@ -87,12 +87,15 @@ class WallboxSensor(CoordinatorEntity, Entity):
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self.coordinator.data[self._ent]
 
     @property
     def unit_of_measurement(self):
+        """Return the unit of the sensor."""
         return self._unit
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         return self._icon

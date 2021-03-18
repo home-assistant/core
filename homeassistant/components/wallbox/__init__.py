@@ -1,18 +1,14 @@
 """The Wallbox integration."""
 import asyncio
-
 import logging
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
 
 from wallbox import Wallbox
 
-from .const import DOMAIN, CONF_CONNECTIONS
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from .const import CONF_CONNECTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,12 +1,11 @@
 """Constants for the Wallbox integration."""
 from homeassistant.const import (
-    POWER_KILO_WATT,
-    ENERGY_KILO_WATT_HOUR,
     ELECTRICAL_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
     LENGTH_KILOMETERS,
     PERCENTAGE,
+    POWER_KILO_WATT,
 )
-
 
 DOMAIN = "wallbox"
 

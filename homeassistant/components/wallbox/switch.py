@@ -1,22 +1,21 @@
-""""Home Assistant component for accessing the Wallbox Portal API, the switch component allows pausing/resuming and lock/unlock.
-    """
-
-import logging
+"""Home Assistant component for accessing the Wallbox Portal API, the switch component allows pausing/resuming and lock/unlock."""
 
 from datetime import timedelta
+import logging
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, CONF_STATION, CONF_CONNECTIONS
-
+from .const import CONF_CONNECTIONS, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def wallbox_updater(wallbox, station):
+    """Get new data for Wallbox component."""
 
     w = wallbox
     data = w.getChargerStatus(station)
@@ -25,6 +24,7 @@ def wallbox_updater(wallbox, station):
 
 
 async def async_setup_entry(hass, config, async_add_entities):
+    """Create wallbox switch entities in HASS."""
 
     wallbox = hass.data[DOMAIN][CONF_CONNECTIONS][config.entry_id]
     name = config.title
@@ -68,14 +68,14 @@ class WallboxPause(CoordinatorEntity, SwitchEntity):
     """Representation of the Wallbox Pause Switch."""
 
     def __init__(self, name, config, coordinator, wallbox):
+        """Initialize a Wallbox switch."""
         super().__init__(coordinator)
         self._wallbox = wallbox
         self._name = name
         self.station = config.data[CONF_STATION]
 
     def pause_charger(self, pause):
-        """Pause / Resume Charger using API"""
-
+        """Pause / Resume Charger using API."""
         try:
 
             station = self.station
@@ -101,6 +101,7 @@ class WallboxPause(CoordinatorEntity, SwitchEntity):
 
     @property
     def icon(self):
+        """Return the icon of the switch."""
         if self.coordinator.data == "charging":
             return "mdi:motion-play-outline"
         elif self.coordinator.data == "connected":
@@ -110,6 +111,7 @@ class WallboxPause(CoordinatorEntity, SwitchEntity):
 
     @property
     def is_on(self):
+        """Return the status of the switch."""
         return self.coordinator.data.lower() not in [
             "offline",
             "error",
@@ -119,15 +121,18 @@ class WallboxPause(CoordinatorEntity, SwitchEntity):
 
     @property
     def available(self):
+        """Return the availability of the switch."""
         return self.coordinator.data.lower() not in ["offline", "error", "ready"]
 
     def turn_on(self, **kwargs):
+        """Turn switch on."""
         if self.coordinator.data.lower() == "charging":
             self.pause_charger(True)
         else:
             _LOGGER.debug("Not charging, cannot pause, doing nothing")
 
     def turn_off(self, **kwargs):
+        """Turn switch off."""
         if self.coordinator.data.lower() not in [
             "offline",
             "error",

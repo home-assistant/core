@@ -2,12 +2,11 @@
 import logging
 
 import voluptuous as vol
+from wallbox import Wallbox
 
 from homeassistant import config_entries, core, exceptions
 
 from .const import DOMAIN  # pylint:disable=unused-import
-
-from wallbox import Wallbox
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +31,7 @@ class PlaceholderHub:
         self.station = station
 
     def authenticate(self, username, password) -> bool:
+        """Authenticate using Wallbox API."""
         try:
             w = Wallbox(username, password)
             w.authenticate()
@@ -40,6 +40,8 @@ class PlaceholderHub:
             raise InvalidAuth
 
     def getData(self, username, password) -> bool:
+        """Get new sensor data for Wallbox component."""
+
         try:
             w = Wallbox(username, password)
             w.authenticate()
