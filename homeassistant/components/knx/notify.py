@@ -33,7 +33,7 @@ async def async_get_service(
 class KNXNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 
-    def __init__(self, devices: list[XknxNotification]):
+    def __init__(self, devices: list[XknxNotification]) -> None:
         """Initialize the service."""
         self.devices = devices
 

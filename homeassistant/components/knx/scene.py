@@ -34,7 +34,7 @@ async def async_setup_platform(
 class KNXScene(KnxEntity, Scene):
     """Representation of a KNX scene."""
 
-    def __init__(self, device: XknxScene):
+    def __init__(self, device: XknxScene) -> None:
         """Init KNX scene."""
         self._device: XknxScene
         super().__init__(device)
