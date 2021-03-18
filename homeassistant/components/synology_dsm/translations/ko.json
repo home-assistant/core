@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\ud638\uc2a4\ud2b8\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "connection": "\ub85c\uadf8\uc778 \uc624\ub958: \ud638\uc2a4\ud2b8\ub098 \ud3ec\ud2b8 \ub610\ub294 \uc778\uc99d\uc11c\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694",
-            "login": "\ub85c\uadf8\uc778 \uc624\ub958: \uc0ac\uc6a9\uc790 \uc774\ub984 \ubc0f \ube44\ubc00\ubc88\ud638\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
             "missing_data": "\ub204\ub77d\ub41c \ub370\uc774\ud130: \ub098\uc911\uc5d0 \ub2e4\uc2dc \uc2dc\ub3c4\ud558\uac70\ub098 \ub2e4\ub978 \uad6c\uc131\uc744 \uc2dc\ub3c4\ud574\ubcf4\uc138\uc694",
             "otp_failed": "2\ub2e8\uacc4 \uc778\uc99d\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4. \uc0c8\ub85c\uc6b4 \ud328\uc2a4 \ucf54\ub4dc\ub85c \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694",
-            "unknown": "\uc54c \uc218 \uc5c6\ub294 \uc624\ub958\uc785\ub2c8\ub2e4. \uc790\uc138\ud55c \uc815\ubcf4\ub294 \ub85c\uadf8\ub97c \ucc38\uc870\ud574\uc8fc\uc138\uc694"
+            "unknown": "\uc608\uc0c1\uce58 \ubabb\ud55c \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4"
         },
         "flow_title": "Synology DSM: {name} ({host})",
         "step": {
@@ -22,8 +22,9 @@
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
-                    "ssl": "SSL/TLS \ub97c \uc0ac\uc6a9\ud558\uc5ec NAS \uc5d0 \uc5f0\uacb0",
-                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "description": "{name} ({host}) \uc744(\ub97c) \uc124\uc815\ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "Synology DSM"
@@ -33,8 +34,9 @@
                     "host": "\ud638\uc2a4\ud2b8",
                     "password": "\ube44\ubc00\ubc88\ud638",
                     "port": "\ud3ec\ud2b8",
-                    "ssl": "SSL/TLS \ub97c \uc0ac\uc6a9\ud558\uc5ec NAS \uc5d0 \uc5f0\uacb0",
-                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                    "ssl": "SSL \uc778\uc99d\uc11c \uc0ac\uc6a9",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984",
+                    "verify_ssl": "SSL \uc778\uc99d\uc11c \ud655\uc778"
                 },
                 "title": "Synology DSM"
             }

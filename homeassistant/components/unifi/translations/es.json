@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El sitio del controlador ya est\u00e1 configurado"
+            "already_configured": "El sitio del controlador ya est\u00e1 configurado",
+            "configuration_updated": "Configuraci\u00f3n actualizada.",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "faulty_credentials": "Autenticaci\u00f3n no v\u00e1lida",
             "service_unavailable": "Error al conectar",
             "unknown_client_mac": "Ning\u00fan cliente disponible en esa direcci\u00f3n MAC"
         },
+        "flow_title": "Red UniFi {site} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -27,6 +30,7 @@
             "client_control": {
                 "data": {
                     "block_client": "Clientes con acceso controlado a la red",
+                    "dpi_restrictions": "Permitir el control de los grupos de restricci\u00f3n de DPI",
                     "poe_clients": "Permitir control PoE de clientes"
                 },
                 "description": "Configurar controles de cliente\n\nCrea conmutadores para los n\u00fameros de serie para los que deseas controlar el acceso a la red.",

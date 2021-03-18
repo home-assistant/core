@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "flow_title": "Somfy MyLink {mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
+        "step": {
+            "entity_config": {
+                "title": "Entit\u00e1s konfigur\u00e1l\u00e1sa"
+            },
+            "init": {
+                "data": {
+                    "target_id": "Az \u00e1rny\u00e9kol\u00f3 be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa."
+                },
+                "title": "Mylink be\u00e1ll\u00edt\u00e1sok konfigur\u00e1l\u00e1sa"
+            },
+            "target_config": {
+                "description": "A(z) `{target_name}` be\u00e1ll\u00edt\u00e1sainak konfigur\u00e1l\u00e1sa",
+                "title": "MyLink \u00e1rny\u00e9kol\u00f3 konfigur\u00e1l\u00e1sa"
+            }
+        }
+    },
+    "title": "Somfy MyLink"
+}

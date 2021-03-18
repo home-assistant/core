@@ -4,13 +4,10 @@
             "existing_instance_updated": "Posodobljena obstoje\u010da konfiguracija.",
             "single_instance_allowed": "Dovoljena je samo ena konfiguracija AdGuard Home."
         },
-        "error": {
-            "connection_error": "Povezava ni uspela."
-        },
         "step": {
             "hassio_confirm": {
-                "description": "\u017delite konfigurirati Home Assistant-a za povezavo z AdGuard Home, ki ga ponuja Hass.io add-on {addon} ?",
-                "title": "AdGuard Home preko dodatka Hass.io"
+                "description": "\u017delite konfigurirati Home Assistant-a za povezavo z AdGuard Home, ki ga ponuja Supervisor add-on {addon} ?",
+                "title": "AdGuard Home preko dodatka Supervisor"
             },
             "user": {
                 "data": {

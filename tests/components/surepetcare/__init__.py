@@ -1,8 +1,8 @@
 """Tests for Sure Petcare integration."""
+from unittest.mock import patch
+
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.async_mock import patch
 
 HOUSEHOLD_ID = "household-id"
 HUB_ID = "hub-id"

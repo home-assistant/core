@@ -1,6 +1,5 @@
 """Support for Modbus covers."""
 from datetime import timedelta
-import logging
 from typing import Any, Dict, Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -22,7 +21,6 @@ from homeassistant.helpers.typing import (
     HomeAssistantType,
 )
 
-from . import ModbusHub
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
@@ -36,8 +34,7 @@ from .const import (
     CONF_STATUS_REGISTER_TYPE,
     MODBUS_DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
+from .modbus import ModbusHub
 
 
 async def async_setup_platform(
@@ -151,7 +148,6 @@ class ModbusCover(CoverEntity, RestoreEntity):
 
         False if entity pushes its state to HA.
         """
-
         # Handle polling directly in this entity
         return False
 
@@ -228,7 +224,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
             self._available = False
             return
 
-        value = bool(result.bits[0])
+        value = bool(result.bits[0] & 1)
         self._available = True
 
         return value

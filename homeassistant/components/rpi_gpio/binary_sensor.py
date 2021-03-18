@@ -1,6 +1,4 @@
 """Support for binary sensor using RPi GPIO."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
@@ -10,8 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
@@ -36,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
-
     setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     pull_mode = config.get(CONF_PULL_MODE)

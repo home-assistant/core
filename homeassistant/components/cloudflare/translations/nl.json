@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_zone": "Ongeldige zone"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Records"
+                },
+                "title": "Kies de records die u wilt bijwerken"
+            },
+            "user": {
+                "data": {
+                    "api_token": "API-token"
+                },
+                "description": "Voor deze integratie is een API-token vereist dat is gemaakt met Zone:Zone:Lezen en Zone:DNS:Bewerk machtigingen voor alle zones in uw account.",
+                "title": "Verbinden met Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zone"
+                },
+                "title": "Kies de zone die u wilt bijwerken"
+            }
+        }
+    }
+}

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Conectado con \u00e9xito a AlarmDecoder."
+        },
+        "step": {
+            "protocol": {
+                "data": {
+                    "device_baudrate": "Tasa de baudios del dispositivo",
+                    "device_path": "Ruta del dispositivo"
+                },
+                "title": "Configurar los ajustes de conexi\u00f3n"
+            },
+            "user": {
+                "data": {
+                    "protocol": "Protocolo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arm_settings": {
+                "data": {
+                    "alt_night_mode": "Modo nocturno alternativo"
+                }
+            },
+            "init": {
+                "data": {
+                    "edit_select": "Editar"
+                }
+            }
+        }
+    }
+}

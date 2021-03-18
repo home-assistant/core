@@ -1,5 +1,5 @@
 """Provides device automations for Alarm control panel."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -49,7 +48,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Alarm control panel devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -133,23 +132,18 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     config = TRIGGER_SCHEMA(config)
-    from_state = None
 
     if config[CONF_TYPE] == "triggered":
         to_state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == "disarmed":
         to_state = STATE_ALARM_DISARMED
     elif config[CONF_TYPE] == "arming":
-        from_state = STATE_ALARM_DISARMED
         to_state = STATE_ALARM_ARMING
     elif config[CONF_TYPE] == "armed_home":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_HOME
     elif config[CONF_TYPE] == "armed_away":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == "armed_night":
-        from_state = STATE_ALARM_PENDING or STATE_ALARM_ARMING
         to_state = STATE_ALARM_ARMED_NIGHT
 
     state_config = {
@@ -157,8 +151,6 @@ async def async_attach_trigger(
         CONF_ENTITY_ID: config[CONF_ENTITY_ID],
         state_trigger.CONF_TO: to_state,
     }
-    if from_state:
-        state_config[state_trigger.CONF_FROM] = from_state
     state_config = state_trigger.TRIGGER_SCHEMA(state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"

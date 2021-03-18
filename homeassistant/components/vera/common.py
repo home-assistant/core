@@ -1,5 +1,4 @@
 """Common vera code."""
-import logging
 from typing import DefaultDict, List, NamedTuple, Set
 
 import pyvera as pv
@@ -10,8 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import call_later
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ControllerData(NamedTuple):

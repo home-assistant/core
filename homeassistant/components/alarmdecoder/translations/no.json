@@ -7,7 +7,7 @@
             "default": "Vellykket koblet til AlarmDecoder."
         },
         "error": {
-            "service_unavailable": "Tilkobling mislyktes."
+            "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
             "protocol": {

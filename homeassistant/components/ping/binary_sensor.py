@@ -105,7 +105,7 @@ class PingBinarySensor(BinarySensorEntity):
         return self._ping.available
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the ICMP checo request."""
         if self._ping.data is not False:
             return {
@@ -143,6 +143,7 @@ class PingDataICMPLib(PingData):
                 icmp_ping,
                 self._ip_address,
                 count=self._count,
+                timeout=1,
                 id=async_get_next_ping_id(self.hass),
             )
         )

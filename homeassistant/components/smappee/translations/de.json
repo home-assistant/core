@@ -1,11 +1,26 @@
 {
     "config": {
+        "abort": {
+            "already_configured_device": "Ger\u00e4t ist bereits konfiguriert",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
+        },
         "flow_title": "Smappee: {name}",
         "step": {
             "environment": {
                 "data": {
                     "environment": "Umgebung"
                 }
+            },
+            "local": {
+                "data": {
+                    "host": "Host"
+                }
+            },
+            "pick_implementation": {
+                "title": "W\u00e4hle die Authentifizierungsmethode"
             }
         }
     }

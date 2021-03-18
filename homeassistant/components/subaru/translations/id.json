@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "cannot_connect": "Gagal terhubung"
+        },
+        "error": {
+            "bad_pin_format": "PIN harus terdiri dari 4 angka",
+            "cannot_connect": "Gagal terhubung",
+            "incorrect_pin": "PIN salah",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Masukkan PIN MySubaru Anda\nCATATAN: Semua kendaraan dalam akun harus memiliki PIN yang sama",
+                "title": "Konfigurasi Subaru Starlink"
+            },
+            "user": {
+                "data": {
+                    "country": "Pilih negara",
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan kredensial MySubaru Anda\nCATATAN: Penyiapan awal mungkin memerlukan waktu hingga 30 detik",
+                "title": "Konfigurasi Subaru Starlink"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_enabled": "Aktifkan polling kendaraan"
+                },
+                "description": "Ketika diaktifkan, polling kendaraan akan mengirim perintah jarak jauh ke kendaraan Anda setiap 2 jam untuk mendapatkan data sensor baru. Tanpa polling kendaraan, data sensor baru hanya diterima ketika kendaraan mengirimkan data secara otomatis (umumnya setelah mesin dimatikan).",
+                "title": "Opsi Subaru Starlink"
+            }
+        }
+    }
+}

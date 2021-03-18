@@ -1,5 +1,8 @@
 """Tests for light platform."""
+from datetime import timedelta
+import logging
 from typing import Callable, NamedTuple
+from unittest.mock import Mock, PropertyMock, patch
 
 from pyHS100 import SmartDeviceException
 import pytest
@@ -20,6 +23,7 @@ from homeassistant.components.tplink.common import (
     CONF_DISCOVERY,
     CONF_LIGHT,
 )
+from homeassistant.components.tplink.light import SLEEP_TIME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -28,8 +32,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.async_mock import Mock, PropertyMock, patch
+from tests.common import async_fire_time_changed
 
 
 class LightMockData(NamedTuple):
@@ -474,20 +479,6 @@ async def test_get_light_state_retry(
 
     light_mock_data.get_sysinfo_mock.side_effect = get_sysinfo_side_effect
 
-    # Setup test for retries of getting state information.
-    get_state_call_count = 0
-
-    def get_light_state_side_effect():
-        nonlocal get_state_call_count
-        get_state_call_count += 1
-
-        if get_state_call_count == 1:
-            raise SmartDeviceException()
-
-        return light_mock_data.light_state
-
-    light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
-
     # Setup test for retries of setting state information.
     set_state_call_count = 0
 
@@ -534,3 +525,92 @@ async def test_get_light_state_retry(
     assert light_mock_data.get_sysinfo_mock.call_count < 40
     assert light_mock_data.get_light_state_mock.call_count < 40
     assert light_mock_data.set_light_state_mock.call_count < 10
+
+
+async def test_update_failure(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test that update failures are logged."""
+
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        tplink.DOMAIN,
+        {
+            tplink.DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+    await hass.helpers.entity_component.async_update_entity("light.light1")
+    assert caplog.text == ""
+
+    with patch("homeassistant.components.tplink.light.MAX_ATTEMPTS", 0):
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+        await hass.helpers.entity_component.async_update_entity("light.light1")
+        assert "Could not read state for 123.123.123.123|light1" in caplog.text
+
+    get_state_call_count = 0
+
+    def get_light_state_side_effect():
+        nonlocal get_state_call_count
+        get_state_call_count += 1
+
+        if get_state_call_count == 1:
+            raise SmartDeviceException()
+
+        return light_mock_data.light_state
+
+    light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
+
+    with patch("homeassistant.components.tplink.light", MAX_ATTEMPTS=2, SLEEP_TIME=0):
+        caplog.clear()
+        caplog.set_level(logging.DEBUG)
+
+        await update_entity(hass, "light.light1")
+        assert (
+            f"Retrying in {SLEEP_TIME} seconds for 123.123.123.123|light1"
+            in caplog.text
+        )
+        assert "Device 123.123.123.123|light1 responded after " in caplog.text
+
+
+async def test_async_setup_entry_unavailable(
+    hass: HomeAssistant, light_mock_data: LightMockData, caplog
+):
+    """Test unavailable devices trigger a later retry."""
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    with patch(
+        "homeassistant.components.tplink.common.SmartDevice.get_sysinfo",
+        side_effect=SmartDeviceException,
+    ):
+        await async_setup_component(hass, HA_DOMAIN, {})
+        await hass.async_block_till_done()
+
+        await async_setup_component(
+            hass,
+            tplink.DOMAIN,
+            {
+                tplink.DOMAIN: {
+                    CONF_DISCOVERY: False,
+                    CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+                }
+            },
+        )
+
+        await hass.async_block_till_done()
+        assert not hass.states.get("light.light1")
+
+    future = utcnow() + timedelta(seconds=30)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert hass.states.get("light.light1")

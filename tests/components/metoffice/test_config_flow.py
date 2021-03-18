@@ -1,5 +1,6 @@
 """Test the National Weather Service (NWS) config flow."""
 import json
+from unittest.mock import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.metoffice.const import DOMAIN
@@ -12,7 +13,6 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 
@@ -42,6 +42,7 @@ async def test_form(hass, requests_mock):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"api_key": TEST_API_KEY}
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == TEST_SITE_NAME_WAVERTREE
@@ -51,7 +52,6 @@ async def test_form(hass, requests_mock):
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

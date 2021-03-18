@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Feeler beim verbannen",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwuert",
+                    "username": "Benotzernumm"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Aktualis\u00e9ierungs Intervall a Sekonnen, minimum 30"
+                }
+            }
+        }
+    }
+}

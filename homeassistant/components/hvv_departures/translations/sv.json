@@ -1,0 +1,11 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "real_time": "Anv\u00e4nd realtidsdata"
+                }
+            }
+        }
+    }
+}

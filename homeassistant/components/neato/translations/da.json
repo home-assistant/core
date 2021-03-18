@@ -1,15 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Allerede konfigureret",
-            "invalid_credentials": "Ugyldige legitimationsoplysninger"
+            "already_configured": "Allerede konfigureret"
         },
         "create_entry": {
             "default": "Se [Neato-dokumentation]({docs_url})."
-        },
-        "error": {
-            "invalid_credentials": "Ugyldige legitimationsoplysninger",
-            "unexpected_error": "Uventet fejl"
         },
         "step": {
             "user": {

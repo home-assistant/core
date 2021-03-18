@@ -123,7 +123,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         self._offset_reached = False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return {"offset_reached": self._offset_reached}
 
@@ -167,12 +167,14 @@ class WebDavCalendarData:
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        vevent_list = await hass.async_add_job(
+        vevent_list = await hass.async_add_executor_job(
             self.calendar.date_search, start_date, end_date
         )
         event_list = []
         for event in vevent_list:
             vevent = event.instance.vevent
+            if not self.is_matching(vevent, self.search):
+                continue
             uid = None
             if hasattr(vevent, "uid"):
                 uid = vevent.uid.value

@@ -10,17 +10,15 @@
         },
         "step": {
             "link": {
-                "description": "Du m\u00e5 autorisere home assistant i Roon. N\u00e5r du klikker send inn, g\u00e5r du til Roon Core-programmet, \u00e5pner Innstillinger og aktiverer HomeAssistant p\u00e5 Utvidelser-fanen.",
-                "title": "Autoriser HomeAssistant i Roon"
+                "description": "Du m\u00e5 godkjenne Home Assistant i Roon. N\u00e5r du klikker send inn, g\u00e5r du til Roon Core-programmet, \u00e5pner innstillingene og aktiverer Home Assistant p\u00e5 utvidelser-fanen.",
+                "title": "Autoriser Home Assistant i Roon"
             },
             "user": {
                 "data": {
                     "host": "Vert"
                 },
-                "description": "Vennligst skriv inn Roon-serverens vertsnavn eller IP.",
-                "title": "Konfigurer Roon Server"
+                "description": "Kunne ikke oppdage Roon-serveren. Angi vertsnavnet eller IP-adressen."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

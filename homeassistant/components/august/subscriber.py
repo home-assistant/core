@@ -18,12 +18,20 @@ class AugustSubscriberMixin:
 
     @callback
     def async_subscribe_device_id(self, device_id, update_callback):
-        """Add an callback subscriber."""
+        """Add an callback subscriber.
+
+        Returns a callable that can be used to unsubscribe.
+        """
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self._async_refresh, self._update_interval
             )
         self._subscriptions.setdefault(device_id, []).append(update_callback)
+
+        def _unsubscribe():
+            self.async_unsubscribe_device_id(device_id, update_callback)
+
+        return _unsubscribe
 
     @callback
     def async_unsubscribe_device_id(self, device_id, update_callback):

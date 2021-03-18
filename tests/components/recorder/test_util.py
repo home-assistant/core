@@ -2,17 +2,22 @@
 from datetime import timedelta
 import os
 import sqlite3
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import corrupt_db_file
 
-from tests.async_mock import MagicMock, patch
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    async_init_recorder_component,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 
 @pytest.fixture
@@ -90,7 +95,7 @@ def test_validate_or_move_away_sqlite_database_with_integrity_check(
         util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
     )
 
-    _corrupt_db_file(test_db_file)
+    corrupt_db_file(test_db_file)
 
     assert util.validate_sqlite_database(dburl, db_integrity_check) is False
 
@@ -127,7 +132,7 @@ def test_validate_or_move_away_sqlite_database_without_integrity_check(
         util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is False
     )
 
-    _corrupt_db_file(test_db_file)
+    corrupt_db_file(test_db_file)
 
     assert util.validate_sqlite_database(dburl, db_integrity_check) is False
 
@@ -142,18 +147,25 @@ def test_validate_or_move_away_sqlite_database_without_integrity_check(
     assert util.validate_or_move_away_sqlite_database(dburl, db_integrity_check) is True
 
 
-def test_last_run_was_recently_clean(hass_recorder):
+async def test_last_run_was_recently_clean(hass):
     """Test we can check if the last recorder run was recently clean."""
-    hass = hass_recorder()
+    await async_init_recorder_component(hass)
+    await hass.async_block_till_done()
 
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
-    assert util.last_run_was_recently_clean(cursor) is False
+    assert (
+        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
+        is False
+    )
 
-    hass.data[DATA_INSTANCE]._close_run()
-    wait_recording_done(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
-    assert util.last_run_was_recently_clean(cursor) is True
+    assert (
+        await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
+        is True
+    )
 
     thirty_min_future_time = dt_util.utcnow() + timedelta(minutes=30)
 
@@ -161,7 +173,10 @@ def test_last_run_was_recently_clean(hass_recorder):
         "homeassistant.components.recorder.dt_util.utcnow",
         return_value=thirty_min_future_time,
     ):
-        assert util.last_run_was_recently_clean(cursor) is False
+        assert (
+            await hass.async_add_executor_job(util.last_run_was_recently_clean, cursor)
+            is False
+        )
 
 
 def test_basic_sanity_check(hass_recorder):
@@ -178,40 +193,69 @@ def test_basic_sanity_check(hass_recorder):
         util.basic_sanity_check(cursor)
 
 
-def test_combined_checks(hass_recorder):
+def test_combined_checks(hass_recorder, caplog):
     """Run Checks on the open database."""
     hass = hass_recorder()
 
-    db_integrity_check = False
-
     cursor = hass.data[DATA_INSTANCE].engine.raw_connection().cursor()
 
-    assert (
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check) is None
-    )
+    assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
+    assert "skipped because db_integrity_check was disabled" in caplog.text
+
+    caplog.clear()
+    assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+    assert "could not validate that the sqlite3 database" in caplog.text
+
+    # We are patching recorder.util here in order
+    # to avoid creating the full database on disk
+    with patch(
+        "homeassistant.components.recorder.util.basic_sanity_check", return_value=False
+    ):
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
+        assert "skipped because db_integrity_check was disabled" in caplog.text
+
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+        assert "could not validate that the sqlite3 database" in caplog.text
 
     # We are patching recorder.util here in order
     # to avoid creating the full database on disk
     with patch("homeassistant.components.recorder.util.last_run_was_recently_clean"):
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, False) is None
         assert (
-            util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
-            is None
+            "system was restarted cleanly and passed the basic sanity check"
+            in caplog.text
         )
 
+        caplog.clear()
+        assert util.run_checks_on_open_db("fake_db_path", cursor, True) is None
+        assert (
+            "system was restarted cleanly and passed the basic sanity check"
+            in caplog.text
+        )
+
+    caplog.clear()
     with patch(
         "homeassistant.components.recorder.util.last_run_was_recently_clean",
         side_effect=sqlite3.DatabaseError,
     ), pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor, False)
+
+    caplog.clear()
+    with patch(
+        "homeassistant.components.recorder.util.last_run_was_recently_clean",
+        side_effect=sqlite3.DatabaseError,
+    ), pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor, True)
 
     cursor.execute("DROP TABLE events;")
 
+    caplog.clear()
     with pytest.raises(sqlite3.DatabaseError):
-        util.run_checks_on_open_db("fake_db_path", cursor, db_integrity_check)
+        util.run_checks_on_open_db("fake_db_path", cursor, False)
 
-
-def _corrupt_db_file(test_db_file):
-    """Corrupt an sqlite3 database file."""
-    f = open(test_db_file, "a")
-    f.write("I am a corrupt db")
-    f.close()
+    caplog.clear()
+    with pytest.raises(sqlite3.DatabaseError):
+        util.run_checks_on_open_db("fake_db_path", cursor, True)

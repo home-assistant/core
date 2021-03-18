@@ -1,9 +1,9 @@
 """Fixtures for component testing."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import zeroconf
-
-from tests.async_mock import patch
 
 zeroconf.orig_install_multiple_zeroconf_catcher = (
     zeroconf.install_multiple_zeroconf_catcher

@@ -5,8 +5,7 @@
         },
         "error": {
             "cannot_connect": "No se puede conectar al host",
-            "name_exists": "El nombre ya existe",
-            "wrong_credentials": "Nombre de usuario o contrase\u00f1a incorrectos"
+            "name_exists": "El nombre ya existe"
         },
         "step": {
             "user": {

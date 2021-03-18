@@ -1,0 +1,9 @@
+set_lock_state:
+  description: Sets lock state
+  fields:
+    flap_id:
+      description: Flap ID to lock/unlock
+      example: "123456"
+    lock_state:
+      description: New lock state - unlocked, locked_in, locked_out or locked_all
+      example: "unlocked"

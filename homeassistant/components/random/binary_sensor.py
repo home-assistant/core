@@ -1,5 +1,4 @@
 """Support for showing random states."""
-import logging
 from random import getrandbits
 
 import voluptuous as vol
@@ -11,8 +10,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Random Binary Sensor"
 

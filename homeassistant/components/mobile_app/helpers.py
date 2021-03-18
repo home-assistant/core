@@ -7,7 +7,12 @@ from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_BAD_REQUEST, HTTP_OK
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONTENT_TYPE_JSON,
+    HTTP_BAD_REQUEST,
+    HTTP_OK,
+)
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -17,7 +22,6 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -25,9 +29,7 @@ from .const import (
     ATTR_SUPPORTS_ENCRYPTION,
     CONF_SECRET,
     CONF_USER_ID,
-    DATA_BINARY_SENSOR,
     DATA_DELETED_IDS,
-    DATA_SENSOR,
     DOMAIN,
 )
 
@@ -138,9 +140,7 @@ def safe_registration(registration: Dict) -> Dict:
 def savable_state(hass: HomeAssistantType) -> Dict:
     """Return a clean object containing things that should be saved."""
     return {
-        DATA_BINARY_SENSOR: hass.data[DOMAIN][DATA_BINARY_SENSOR],
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
-        DATA_SENSOR: hass.data[DOMAIN][DATA_SENSOR],
     }
 
 

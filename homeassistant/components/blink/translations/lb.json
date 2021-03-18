@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "2-Faktor Code"
                 },
-                "description": "G\u00ebff de PIn un dee per E-Mail versch\u00e9ckt gouf. Falls an der E-Mail kee PIN steht, einfach eidel loossen",
+                "description": "G\u00ebff de PIN un dee per E-Mail versch\u00e9ckt gouf",
                 "title": "2-Faktor-Authentifikatioun"
             },
             "user": {

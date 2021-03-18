@@ -59,8 +59,9 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the scenes."""
-    logger = logging.getLogger(__name__)
-    component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent(
+        logging.getLogger(__name__), DOMAIN, hass
+    )
 
     await component.async_setup(config)
     # Ensure Home Assistant platform always loaded.
@@ -103,7 +104,6 @@ class Scene(Entity):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
-        assert self.hass
         task = self.hass.async_add_job(ft.partial(self.activate, **kwargs))
         if task:
             await task

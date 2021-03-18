@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Verten er allerede konfigurert."
+            "already_configured": "Tjenesten er allerede konfigurert"
         },
         "error": {
             "cannot_connect": "Kan ikke koble til serveren. Kontroller verten og porten, og pr\u00f8v p\u00e5 nytt. S\u00f8rg ogs\u00e5 for at du kj\u00f8rer minst Minecraft versjon 1.7 p\u00e5 serveren din.",

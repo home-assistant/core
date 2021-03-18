@@ -1,5 +1,6 @@
 """Support for Broadlink switches."""
 from abc import ABC, abstractmethod
+from functools import partial
 import logging
 
 from broadlink.exceptions import BroadlinkException
@@ -108,7 +109,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
 
-    if device.api.type in {"RM2", "RM4"}:
+    if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
         platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
         switches = [
@@ -118,8 +119,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif device.api.type == "SP1":
         switches = [BroadlinkSP1Switch(device)]
 
-    elif device.api.type == "SP2":
+    elif device.api.type in {"SP2", "SP2S", "SP3", "SP3S", "SP4", "SP4B"}:
         switches = [BroadlinkSP2Switch(device)]
+
+    elif device.api.type == "BG1":
+        switches = [BroadlinkBG1Slot(device, slot) for slot in range(1, 3)]
 
     elif device.api.type == "MP1":
         switches = [BroadlinkMP1Slot(device, slot) for slot in range(1, 5)]
@@ -136,7 +140,6 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
         self._command_on = command_on
         self._command_off = command_off
         self._coordinator = device.update_manager.coordinator
-        self._device_class = None
         self._state = None
 
     @property
@@ -167,7 +170,7 @@ class BroadlinkSwitch(SwitchEntity, RestoreEntity, ABC):
     @property
     def device_class(self):
         """Return device class."""
-        return self._device_class
+        return DEVICE_CLASS_SWITCH
 
     @property
     def device_info(self):
@@ -247,7 +250,6 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
     def __init__(self, device):
         """Initialize the switch."""
         super().__init__(device, 1, 0)
-        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
@@ -270,10 +272,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def __init__(self, device, *args, **kwargs):
         """Initialize the switch."""
         super().__init__(device, *args, **kwargs)
-        self._state = self._coordinator.data["state"]
-        self._load_power = self._coordinator.data["load_power"]
-        if device.api.model == "SC1":
-            self._device_class = DEVICE_CLASS_SWITCH
+        self._state = self._coordinator.data["pwr"]
+        self._load_power = self._coordinator.data.get("power")
 
     @property
     def assumed_state(self):
@@ -289,8 +289,8 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
     def update_data(self):
         """Update data."""
         if self._coordinator.last_update_success:
-            self._state = self._coordinator.data["state"]
-            self._load_power = self._coordinator.data["load_power"]
+            self._state = self._coordinator.data["pwr"]
+            self._load_power = self._coordinator.data.get("power")
         self.async_write_ha_state()
 
 
@@ -302,7 +302,6 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
         super().__init__(device, 1, 0)
         self._slot = slot
         self._state = self._coordinator.data[f"s{slot}"]
-        self._device_class = DEVICE_CLASS_OUTLET
 
     @property
     def unique_id(self):
@@ -332,6 +331,53 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
             await self._device.async_request(
                 self._device.api.set_power, self._slot, packet
             )
+        except (BroadlinkException, OSError) as err:
+            _LOGGER.error("Failed to send packet: %s", err)
+            return False
+        return True
+
+
+class BroadlinkBG1Slot(BroadlinkSwitch):
+    """Representation of a Broadlink BG1 slot."""
+
+    def __init__(self, device, slot):
+        """Initialize the switch."""
+        super().__init__(device, 1, 0)
+        self._slot = slot
+        self._state = self._coordinator.data[f"pwr{slot}"]
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the slot."""
+        return f"{self._device.unique_id}-s{self._slot}"
+
+    @property
+    def name(self):
+        """Return the name of the switch."""
+        return f"{self._device.name} S{self._slot}"
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the switch."""
+        return False
+
+    @property
+    def device_class(self):
+        """Return device class."""
+        return DEVICE_CLASS_OUTLET
+
+    @callback
+    def update_data(self):
+        """Update data."""
+        if self._coordinator.last_update_success:
+            self._state = self._coordinator.data[f"pwr{self._slot}"]
+        self.async_write_ha_state()
+
+    async def _async_send_packet(self, packet):
+        """Send a packet to the device."""
+        set_state = partial(self._device.api.set_state, **{f"pwr{self._slot}": packet})
+        try:
+            await self._device.async_request(set_state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False

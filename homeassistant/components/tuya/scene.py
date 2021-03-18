@@ -10,8 +10,6 @@ from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
 
 ENTITY_ID_FORMAT = SENSOR_DOMAIN + ".{}"
 
-PARALLEL_UPDATES = 0
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up tuya sensors dynamically through tuya discovery."""

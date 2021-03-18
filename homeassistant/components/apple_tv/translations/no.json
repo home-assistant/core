@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Enheten er allerede konfigurert",
+            "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "backoff": "Enheten godtar ikke parringsanmodninger for \u00f8yeblikket (du har kanskje angitt en ugyldig PIN-kode for mange ganger), pr\u00f8v igjen senere.",
+            "device_did_not_pair": "Ingen fors\u00f8k p\u00e5 \u00e5 fullf\u00f8re paringsprosessen ble gjort fra enheten",
+            "invalid_config": "Konfigurasjonen for denne enheten er ufullstendig. Pr\u00f8v \u00e5 legge den til p\u00e5 nytt.",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "invalid_auth": "Ugyldig godkjenning",
+            "no_devices_found": "Ingen enheter funnet p\u00e5 nettverket",
+            "no_usable_service": "En enhet ble funnet, men kunne ikke identifisere noen m\u00e5te \u00e5 etablere en tilkobling til den. Hvis du fortsetter \u00e5 se denne meldingen, kan du pr\u00f8ve \u00e5 angi IP-adressen eller starte Apple TV p\u00e5 nytt.",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "",
+        "step": {
+            "confirm": {
+                "description": "Du er i ferd med \u00e5 legge til Apple TV med navnet {name} i Home Assistant.\n\n**For \u00e5 fullf\u00f8re prosessen m\u00e5 du kanskje angi flere PIN-koder.**\n\nV\u00e6r oppmerksom p\u00e5 at du *ikke* kan sl\u00e5 av Apple TV med denne integreringen. Bare mediespilleren i Home Assistant sl\u00e5r seg av!",
+                "title": "Bekreft at du legger til Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "Paring kreves for tjenesten {protocol}. Skriv inn PIN-koden {pin} p\u00e5 Apple TV for \u00e5 fortsette.",
+                "title": "Sammenkobling"
+            },
+            "pair_with_pin": {
+                "data": {
+                    "pin": "PIN kode"
+                },
+                "description": "Paring kreves for protokollen {protocol}. Skriv inn PIN-koden som vises p\u00e5 skjermen. Ledende nuller utelates, det vil si angi 123 hvis den viste koden er 0123.",
+                "title": "Sammenkobling"
+            },
+            "reconfigure": {
+                "description": "Denne Apple TVen har noen tilkoblingsvansker og m\u00e5 konfigureres p\u00e5 nytt",
+                "title": "Omkonfigurering av enheter"
+            },
+            "service_problem": {
+                "description": "Det oppstod et problem under sammenkobling av protokollen \"{protocol}\". Det vil bli ignorert.",
+                "title": "Kunne ikke legge til tjenesten"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Enhet"
+                },
+                "description": "Start med \u00e5 skrive inn enhetsnavnet (f.eks. kj\u00f8kken eller soverom) eller IP-adressen til Apple TV-en du vil legge til. Hvis noen enheter ble funnet automatisk p\u00e5 nettverket ditt, vises de nedenfor.\n\nHvis du ikke kan se enheten eller oppleve problemer, kan du pr\u00f8ve \u00e5 angi enhetens IP-adresse.\n\n{devices}",
+                "title": "Konfigurere en ny Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "Ikke sl\u00e5 p\u00e5 enheten n\u00e5r du starter Home Assistant"
+                },
+                "description": "Konfigurer generelle enhetsinnstillinger"
+            }
+        }
+    },
+    "title": ""
+}

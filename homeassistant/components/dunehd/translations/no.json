@@ -5,8 +5,8 @@
         },
         "error": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes.",
-            "invalid_host": "Ugyldig vertsnavn eller IP-adresse."
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse"
         },
         "step": {
             "user": {

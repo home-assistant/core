@@ -21,7 +21,7 @@
                     "port": "Vrata",
                     "ssl": "Uporaba SSL",
                     "token": "\u017deton (izbirno)",
-                    "verify_ssl": "Preverite SSL potrdilo"
+                    "verify_ssl": "Preverite SSL certifikat"
                 },
                 "title": "Ro\u010dna konfiguracija Plex"
             },

@@ -1,11 +1,7 @@
 """Support for Volvo heater."""
-import logging
-
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import DATA_KEY, VolvoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

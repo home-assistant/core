@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_path": "Verzeichnis nicht gefunden."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "type": "Verbindungstyp"
+                }
+            }
+        }
+    }
+}

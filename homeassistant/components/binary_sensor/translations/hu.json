@@ -98,6 +98,10 @@
             "off": "Norm\u00e1l",
             "on": "Alacsony"
         },
+        "battery_charging": {
+            "off": "Nem t\u00f6lt\u0151dik",
+            "on": "T\u00f6lt\u0151dik"
+        },
         "cold": {
             "off": "Norm\u00e1l",
             "on": "Hideg"
@@ -122,6 +126,10 @@
             "off": "Norm\u00e1l",
             "on": "Meleg"
         },
+        "light": {
+            "off": "Nincs f\u00e9ny",
+            "on": "F\u00e9ny \u00e9szlelve"
+        },
         "lock": {
             "off": "Bez\u00e1rva",
             "on": "Kinyitva"
@@ -134,6 +142,10 @@
             "off": "Norm\u00e1l",
             "on": "\u00c9szlelve"
         },
+        "moving": {
+            "off": "Nincs mozg\u00e1sban",
+            "on": "Mozg\u00e1sban"
+        },
         "occupancy": {
             "off": "Norm\u00e1l",
             "on": "\u00c9szlelve"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Z\u00e1rva",
             "on": "Nyitva"
+        },
+        "plug": {
+            "off": "Kih\u00fazva",
+            "on": "Bedugva"
         },
         "presence": {
             "off": "T\u00e1vol",

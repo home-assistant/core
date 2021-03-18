@@ -17,5 +17,12 @@
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
             "turned_on": "{entity_name} l\u00fclitus sisse"
         }
-    }
+    },
+    "state": {
+        "_": {
+            "off": "V\u00e4ljas",
+            "on": "Sees"
+        }
+    },
+    "title": "\u00d5huniisutaja"
 }

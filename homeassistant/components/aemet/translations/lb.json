@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Numm vun der Integratioun"
+                },
+                "title": "AEMET OpenData"
+            }
+        }
+    }
+}

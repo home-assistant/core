@@ -1,6 +1,5 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
 from datetime import timedelta
-import logging
 
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
@@ -9,7 +8,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
-_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(hours=12)
 
 CONF_ZIP = "zip"

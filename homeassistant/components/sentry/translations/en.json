@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry is already configured",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {

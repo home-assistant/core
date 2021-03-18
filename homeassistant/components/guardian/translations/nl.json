@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dit Guardian-apparaat is al geconfigureerd.",
-            "already_in_progress": "De configuratie van het Guardian-apparaat is al bezig.",
-            "connection_error": "Kan geen verbinding maken met het Guardian-apparaat."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "user": {
@@ -17,6 +17,5 @@
                 "description": "Wilt u dit Guardian-apparaat instellen?"
             }
         }
-    },
-    "title": "Elexa Guardian"
+    }
 }

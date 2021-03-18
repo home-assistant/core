@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "type": "Vrsta povezave"
+                },
+                "title": "Nastavite 1-Wire"
+            }
+        }
+    }
+}

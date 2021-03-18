@@ -105,14 +105,14 @@ class GaradgetCover(CoverEntity):
                     self._name = doorconfig["nme"]
             self.update()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
@@ -130,17 +130,12 @@ class GaradgetCover(CoverEntity):
         return self._name
 
     @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         data = {}
 
@@ -235,12 +230,12 @@ class GaradgetCover(CoverEntity):
             self.sensor = status["sensor"]
             self._available = True
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error("Unable to connect to server: %(reason)s", dict(reason=ex))
+            _LOGGER.error("Unable to connect to server: %(reason)s", {"reason": ex})
             self._state = STATE_OFFLINE
         except KeyError:
             _LOGGER.warning(
                 "Garadget device %(device)s seems to be offline",
-                dict(device=self.device_id),
+                {"device": self.device_id},
             )
             self._state = STATE_OFFLINE
 

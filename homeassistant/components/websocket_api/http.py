@@ -27,6 +27,7 @@ from .error import Disconnect
 from .messages import message_to_json
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
+_WS_LOGGER = logging.getLogger(f"{__name__}.connection")
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -41,6 +42,14 @@ class WebsocketAPIView(HomeAssistantView):
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
+class WebSocketAdapter(logging.LoggerAdapter):
+    """Add connection id to websocket messages."""
+
+    def process(self, msg, kwargs):
+        """Add connid to websocket log messages."""
+        return f'[{self.extra["connid"]}] {msg}', kwargs
+
+
 class WebSocketHandler:
     """Handle an active websocket client connection."""
 
@@ -52,7 +61,7 @@ class WebSocketHandler:
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
-        self._logger = logging.getLogger("{}.connection.{}".format(__name__, id(self)))
+        self._logger = WebSocketAdapter(_WS_LOGGER, {"connid": id(self)})
         self._peak_checker_unsub = None
 
     async def _writer(self):
@@ -222,20 +231,20 @@ class WebSocketHandler:
                 self._to_write.put_nowait(None)
                 # Make sure all error messages are written before closing
                 await self._writer_task
-            except asyncio.QueueFull:
+                await wsock.close()
+            except asyncio.QueueFull:  # can be raised by put_nowait
                 self._writer_task.cancel()
 
-            await wsock.close()
+            finally:
+                if disconnect_warn is None:
+                    self._logger.debug("Disconnected")
+                else:
+                    self._logger.warning("Disconnected: %s", disconnect_warn)
 
-            if disconnect_warn is None:
-                self._logger.debug("Disconnected")
-            else:
-                self._logger.warning("Disconnected: %s", disconnect_warn)
-
-            if connection is not None:
-                self.hass.data[DATA_CONNECTIONS] -= 1
-            self.hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_WEBSOCKET_DISCONNECTED
-            )
+                if connection is not None:
+                    self.hass.data[DATA_CONNECTIONS] -= 1
+                self.hass.helpers.dispatcher.async_dispatcher_send(
+                    SIGNAL_WEBSOCKET_DISCONNECTED
+                )
 
         return wsock

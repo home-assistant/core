@@ -1,10 +1,11 @@
 """
 Regression tests for Aqara Gateway V3.
 
-https://github.com/home-assistant/home-assistant/issues/20957
+https://github.com/home-assistant/core/issues/20957
 """
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -18,7 +19,7 @@ async def test_aqara_gateway_setup(hass):
     accessories = await setup_accessories_from_file(hass, "aqara_gateway.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Check that the light is correctly found and set up
     alarm_id = "alarm_control_panel.aqara_hub_1563"
@@ -48,7 +49,7 @@ async def test_aqara_gateway_setup(hass):
         SUPPORT_BRIGHTNESS | SUPPORT_COLOR
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     # All the entities are services of the same accessory
     # So it looks at the protocol like a single physical device

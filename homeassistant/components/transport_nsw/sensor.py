@@ -1,6 +1,5 @@
 """Support for Transport NSW (AU) to query next leave event."""
 from datetime import timedelta
-import logging
 
 from TransportNSW import TransportNSW
 import voluptuous as vol
@@ -15,8 +14,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_STOP_ID = "stop_id"
 ATTR_ROUTE = "route"
@@ -90,7 +87,7 @@ class TransportNSWSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
             return {

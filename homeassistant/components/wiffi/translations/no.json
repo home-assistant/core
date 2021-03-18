@@ -7,7 +7,7 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Serverport"
+                    "port": "Port"
                 },
                 "title": "Sett opp TCP-server for WIFFI-enheter"
             }

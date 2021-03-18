@@ -9,30 +9,29 @@ import urllib.parse
 import async_timeout
 import pysonos
 from pysonos import alarms
+from pysonos.core import (
+    MUSIC_SRC_LINE_IN,
+    MUSIC_SRC_RADIO,
+    MUSIC_SRC_TV,
+    PLAY_MODE_BY_MEANING,
+    PLAY_MODES,
+)
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.music_library
 import pysonos.snapshot
 import voluptuous as vol
 
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_COMPOSER,
-    MEDIA_CLASS_CONTRIBUTING_ARTIST,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_GENRE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_TRACK,
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_COMPOSER,
-    MEDIA_TYPE_CONTRIBUTING_ARTIST,
-    MEDIA_TYPE_GENRE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -40,6 +39,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -48,6 +48,8 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.plex.const import PLEX_URI_SCHEME
+from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.const import (
     ATTR_TIME,
     EVENT_HOMEASSISTANT_STOP,
@@ -58,20 +60,17 @@ from homeassistant.const import (
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.network import is_internal_request
 from homeassistant.util.dt import utcnow
 
 from . import CONF_ADVERTISE_ADDR, CONF_HOSTS, CONF_INTERFACE_ADDR
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
-    SONOS_ALBUM,
-    SONOS_ALBUM_ARTIST,
-    SONOS_ARTIST,
-    SONOS_COMPOSER,
-    SONOS_GENRE,
-    SONOS_PLAYLISTS,
-    SONOS_TRACKS,
+    MEDIA_TYPES_TO_SONOS,
+    PLAYABLE_MEDIA_TYPES,
 )
+from .media_browser import build_item_response, get_media, library_payload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +85,7 @@ SUPPORT_SONOS = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_REPEAT_SET
     | SUPPORT_SEEK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
@@ -97,100 +97,13 @@ SUPPORT_SONOS = (
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
 
-EXPANDABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_COMPOSER,
-    MEDIA_TYPE_GENRE,
-    MEDIA_TYPE_PLAYLIST,
-    SONOS_ALBUM,
-    SONOS_ALBUM_ARTIST,
-    SONOS_ARTIST,
-    SONOS_GENRE,
-    SONOS_COMPOSER,
-    SONOS_PLAYLISTS,
-]
-
-SONOS_TO_MEDIA_CLASSES = {
-    SONOS_ALBUM: MEDIA_CLASS_ALBUM,
-    SONOS_ALBUM_ARTIST: MEDIA_CLASS_ARTIST,
-    SONOS_ARTIST: MEDIA_CLASS_CONTRIBUTING_ARTIST,
-    SONOS_COMPOSER: MEDIA_CLASS_COMPOSER,
-    SONOS_GENRE: MEDIA_CLASS_GENRE,
-    SONOS_PLAYLISTS: MEDIA_CLASS_PLAYLIST,
-    SONOS_TRACKS: MEDIA_CLASS_TRACK,
-    "object.container.album.musicAlbum": MEDIA_CLASS_ALBUM,
-    "object.container.genre.musicGenre": MEDIA_CLASS_PLAYLIST,
-    "object.container.person.composer": MEDIA_CLASS_PLAYLIST,
-    "object.container.person.musicArtist": MEDIA_CLASS_ARTIST,
-    "object.container.playlistContainer.sameArtist": MEDIA_CLASS_ARTIST,
-    "object.container.playlistContainer": MEDIA_CLASS_PLAYLIST,
-    "object.item.audioItem.musicTrack": MEDIA_CLASS_TRACK,
+REPEAT_TO_SONOS = {
+    REPEAT_MODE_OFF: False,
+    REPEAT_MODE_ALL: True,
+    REPEAT_MODE_ONE: "ONE",
 }
 
-SONOS_TO_MEDIA_TYPES = {
-    SONOS_ALBUM: MEDIA_TYPE_ALBUM,
-    SONOS_ALBUM_ARTIST: MEDIA_TYPE_ARTIST,
-    SONOS_ARTIST: MEDIA_TYPE_CONTRIBUTING_ARTIST,
-    SONOS_COMPOSER: MEDIA_TYPE_COMPOSER,
-    SONOS_GENRE: MEDIA_TYPE_GENRE,
-    SONOS_PLAYLISTS: MEDIA_TYPE_PLAYLIST,
-    SONOS_TRACKS: MEDIA_TYPE_TRACK,
-    "object.container.album.musicAlbum": MEDIA_TYPE_ALBUM,
-    "object.container.genre.musicGenre": MEDIA_TYPE_PLAYLIST,
-    "object.container.person.composer": MEDIA_TYPE_PLAYLIST,
-    "object.container.person.musicArtist": MEDIA_TYPE_ARTIST,
-    "object.container.playlistContainer.sameArtist": MEDIA_TYPE_ARTIST,
-    "object.container.playlistContainer": MEDIA_TYPE_PLAYLIST,
-    "object.item.audioItem.musicTrack": MEDIA_TYPE_TRACK,
-}
-
-MEDIA_TYPES_TO_SONOS = {
-    MEDIA_TYPE_ALBUM: SONOS_ALBUM,
-    MEDIA_TYPE_ARTIST: SONOS_ALBUM_ARTIST,
-    MEDIA_TYPE_CONTRIBUTING_ARTIST: SONOS_ARTIST,
-    MEDIA_TYPE_COMPOSER: SONOS_COMPOSER,
-    MEDIA_TYPE_GENRE: SONOS_GENRE,
-    MEDIA_TYPE_PLAYLIST: SONOS_PLAYLISTS,
-    MEDIA_TYPE_TRACK: SONOS_TRACKS,
-}
-
-SONOS_TYPES_MAPPING = {
-    "A:ALBUM": SONOS_ALBUM,
-    "A:ALBUMARTIST": SONOS_ALBUM_ARTIST,
-    "A:ARTIST": SONOS_ARTIST,
-    "A:COMPOSER": SONOS_COMPOSER,
-    "A:GENRE": SONOS_GENRE,
-    "A:PLAYLISTS": SONOS_PLAYLISTS,
-    "A:TRACKS": SONOS_TRACKS,
-    "object.container.album.musicAlbum": SONOS_ALBUM,
-    "object.container.genre.musicGenre": SONOS_GENRE,
-    "object.container.person.composer": SONOS_COMPOSER,
-    "object.container.person.musicArtist": SONOS_ALBUM_ARTIST,
-    "object.container.playlistContainer.sameArtist": SONOS_ARTIST,
-    "object.container.playlistContainer": SONOS_PLAYLISTS,
-    "object.item.audioItem.musicTrack": SONOS_TRACKS,
-}
-
-LIBRARY_TITLES_MAPPING = {
-    "A:ALBUM": "Albums",
-    "A:ALBUMARTIST": "Artists",
-    "A:ARTIST": "Contributing Artists",
-    "A:COMPOSER": "Composers",
-    "A:GENRE": "Genres",
-    "A:PLAYLISTS": "Playlists",
-    "A:TRACKS": "Tracks",
-}
-
-PLAYABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_COMPOSER,
-    MEDIA_TYPE_CONTRIBUTING_ARTIST,
-    MEDIA_TYPE_GENRE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_TRACK,
-]
+SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 ATTR_SONOS_GROUP = "sonos_group"
 
@@ -220,10 +133,6 @@ ATTR_QUEUE_POSITION = "queue_position"
 ATTR_STATUS_LIGHT = "status_light"
 
 UNAVAILABLE_VALUES = {"", "NOT_IMPLEMENTED", None}
-
-
-class UnknownMediaType(BrowseError):
-    """Unknown media type."""
 
 
 class SonosData:
@@ -501,7 +410,7 @@ class SonosEntity(MediaPlayerEntity):
         self._player = player
         self._player_volume = None
         self._player_muted = None
-        self._shuffle = None
+        self._play_mode = None
         self._coordinator = None
         self._sonos_group = [self]
         self._status = None
@@ -515,7 +424,6 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
-        self._is_playing_local_queue = None
         self._queue_position = None
         self._night_sound = None
         self._speech_enhance = None
@@ -568,6 +476,7 @@ class SonosEntity(MediaPlayerEntity):
             "sw_version": self._sw_version,
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
             "manufacturer": "Sonos",
+            "suggested_area": self._name,
         }
 
     @property
@@ -673,7 +582,7 @@ class SonosEntity(MediaPlayerEntity):
     def _attach_player(self):
         """Get basic information and add event subscriptions."""
         try:
-            self._shuffle = self.soco.shuffle
+            self._play_mode = self.soco.play_mode
             self.update_volume()
             self._set_favorites()
 
@@ -711,14 +620,19 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
-        transport_info = self.soco.get_current_transport_info()
-        new_status = transport_info.get("current_transport_state")
+        variables = event and event.variables
+
+        if variables:
+            new_status = variables["transport_state"]
+        else:
+            transport_info = self.soco.get_current_transport_info()
+            new_status = transport_info["current_transport_state"]
 
         # Ignore transitions, we should get the target state soon
         if new_status == "TRANSITIONING":
             return
 
-        self._shuffle = self.soco.shuffle
+        self._play_mode = event.current_play_mode if event else self.soco.play_mode
         self._uri = None
         self._media_duration = None
         self._media_image_url = None
@@ -726,16 +640,22 @@ class SonosEntity(MediaPlayerEntity):
         self._media_artist = None
         self._media_album_name = None
         self._media_title = None
+        self._queue_position = None
         self._source_name = None
 
         update_position = new_status != self._status
         self._status = new_status
 
-        self._is_playing_local_queue = self.soco.is_playing_local_queue
+        if variables:
+            track_uri = variables["current_track_uri"]
+            music_source = self.soco.music_source_from_uri(track_uri)
+        else:
+            # This causes a network round-trip so we avoid it when possible
+            music_source = self.soco.music_source
 
-        if self.soco.is_playing_tv:
+        if music_source == MUSIC_SRC_TV:
             self.update_media_linein(SOURCE_TV)
-        elif self.soco.is_playing_line_in:
+        elif music_source == MUSIC_SRC_LINE_IN:
             self.update_media_linein(SOURCE_LINEIN)
         else:
             track_info = self.soco.get_current_track_info()
@@ -747,8 +667,7 @@ class SonosEntity(MediaPlayerEntity):
                 self._media_album_name = track_info.get("album")
                 self._media_title = track_info.get("title")
 
-                if self.soco.is_radio_uri(track_info["uri"]):
-                    variables = event and event.variables
+                if music_source == MUSIC_SRC_RADIO:
                     self.update_media_radio(variables, track_info)
                 else:
                     self.update_media_music(update_position, track_info)
@@ -789,7 +708,7 @@ class SonosEntity(MediaPlayerEntity):
                 uri_meta_data, pysonos.data_structures.DidlAudioBroadcast
             ) and (
                 self.state != STATE_PLAYING
-                or self.soco.is_radio_uri(self._media_title)
+                or self.soco.music_source_from_uri(self._media_title) == MUSIC_SRC_RADIO
                 or self._media_title in self._uri
             ):
                 self._media_title = uri_meta_data.title
@@ -835,7 +754,9 @@ class SonosEntity(MediaPlayerEntity):
 
         self._media_image_url = track_info.get("album_art")
 
-        self._queue_position = int(track_info.get("playlist_position")) - 1
+        playlist_position = int(track_info.get("playlist_position"))
+        if playlist_position > 0:
+            self._queue_position = playlist_position - 1
 
     def update_volume(self, event=None):
         """Update information about currently volume settings."""
@@ -933,8 +854,9 @@ class SonosEntity(MediaPlayerEntity):
 
     def update_content(self, event=None):
         """Update information about available content."""
-        self._set_favorites()
-        self.schedule_update_ha_state()
+        if event and "favorites_update_id" in event.variables:
+            self._set_favorites()
+            self.schedule_update_ha_state()
 
     @property
     def volume_level(self):
@@ -952,7 +874,14 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def shuffle(self):
         """Shuffling state."""
-        return self._shuffle
+        return PLAY_MODES[self._play_mode][0]
+
+    @property
+    @soco_coordinator
+    def repeat(self):
+        """Return current repeat mode."""
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        return SONOS_TO_REPEAT[sonos_repeat]
 
     @property
     @soco_coordinator
@@ -1017,10 +946,7 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def queue_position(self):
         """If playing local queue return the position in the queue else None."""
-        if self._is_playing_local_queue:
-            return self._queue_position
-
-        return None
+        return self._queue_position
 
     @property
     @soco_coordinator
@@ -1053,7 +979,17 @@ class SonosEntity(MediaPlayerEntity):
     @soco_coordinator
     def set_shuffle(self, shuffle):
         """Enable/Disable shuffle mode."""
-        self.soco.shuffle = shuffle
+        sonos_shuffle = shuffle
+        sonos_repeat = PLAY_MODES[self._play_mode][1]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
+
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
+    @soco_coordinator
+    def set_repeat(self, repeat):
+        """Set repeat mode."""
+        sonos_shuffle = PLAY_MODES[self._play_mode][0]
+        sonos_repeat = REPEAT_TO_SONOS[repeat]
+        self.soco.play_mode = PLAY_MODE_BY_MEANING[(sonos_shuffle, sonos_repeat)]
 
     @soco_error()
     def mute_volume(self, mute):
@@ -1073,7 +1009,7 @@ class SonosEntity(MediaPlayerEntity):
             if len(fav) == 1:
                 src = fav.pop()
                 uri = src.reference.get_uri()
-                if self.soco.is_radio_uri(uri):
+                if self.soco.music_source_from_uri(uri) == MUSIC_SRC_RADIO:
                     self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()
@@ -1144,15 +1080,23 @@ class SonosEntity(MediaPlayerEntity):
         """
         Send the play_media command to the media player.
 
+        If media_id is a Plex payload, attempt Plex->Sonos playback.
+
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
+        if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            media_id = media_id[len(PLEX_URI_SCHEME) :]
+            play_on_sonos(self.hass, media_type, media_id, self.name)
+        elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             if kwargs.get(ATTR_MEDIA_ENQUEUE):
                 try:
-                    self.soco.add_uri_to_queue(media_id)
+                    if self.soco.is_service_uri(media_id):
+                        self.soco.add_service_uri_to_queue(media_id)
+                    else:
+                        self.soco.add_uri_to_queue(media_id)
                 except SoCoUPnPException:
                     _LOGGER.error(
                         'Error parsing media uri "%s", '
@@ -1161,7 +1105,12 @@ class SonosEntity(MediaPlayerEntity):
                         media_id,
                     )
             else:
-                self.soco.play_uri(media_id)
+                if self.soco.is_service_uri(media_id):
+                    self.soco.clear_queue()
+                    self.soco.add_service_uri_to_queue(media_id)
+                    self.soco.play_from_queue(0)
+                else:
+                    self.soco.play_uri(media_id)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
                 item = get_media(self._media_library, media_id, media_type)
@@ -1417,7 +1366,7 @@ class SonosEntity(MediaPlayerEntity):
         self.soco.remove_from_queue(queue_position)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return entity specific state attributes."""
         attributes = {ATTR_SONOS_GROUP: [e.entity_id for e in self._sonos_group]}
 
@@ -1432,11 +1381,51 @@ class SonosEntity(MediaPlayerEntity):
 
         return attributes
 
+    async def async_get_browse_image(
+        self, media_content_type, media_content_id, media_image_id=None
+    ):
+        """Fetch media browser image to serve via proxy."""
+        if (
+            media_content_type in [MEDIA_TYPE_ALBUM, MEDIA_TYPE_ARTIST]
+            and media_content_id
+        ):
+            item = await self.hass.async_add_executor_job(
+                get_media,
+                self._media_library,
+                media_content_id,
+                MEDIA_TYPES_TO_SONOS[media_content_type],
+            )
+            image_url = getattr(item, "album_art_uri", None)
+            if image_url:
+                result = await self._async_fetch_image(image_url)
+                return result
+
+        return (None, None)
+
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""
+        is_internal = is_internal_request(self.hass)
+
+        def _get_thumbnail_url(
+            media_content_type, media_content_id, media_image_id=None
+        ):
+            if is_internal:
+                item = get_media(
+                    self._media_library,
+                    media_content_id,
+                    media_content_type,
+                )
+                return getattr(item, "album_art_uri", None)
+
+            return self.get_browse_image_url(
+                media_content_type,
+                urllib.parse.quote_plus(media_content_id),
+                media_image_id,
+            )
+
         if media_content_type in [None, "library"]:
             return await self.hass.async_add_executor_job(
-                library_payload, self._media_library
+                library_payload, self._media_library, _get_thumbnail_url
             )
 
         payload = {
@@ -1444,195 +1433,10 @@ class SonosEntity(MediaPlayerEntity):
             "idstring": media_content_id,
         }
         response = await self.hass.async_add_executor_job(
-            build_item_response, self._media_library, payload
+            build_item_response, self._media_library, payload, _get_thumbnail_url
         )
         if response is None:
             raise BrowseError(
                 f"Media not found: {media_content_type} / {media_content_id}"
             )
         return response
-
-
-def build_item_response(media_library, payload):
-    """Create response payload for the provided media query."""
-    if payload["search_type"] == MEDIA_TYPE_ALBUM and payload["idstring"].startswith(
-        ("A:GENRE", "A:COMPOSER")
-    ):
-        payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
-            payload["idstring"].split("/")[2:]
-        )
-
-    media = media_library.browse_by_idstring(
-        MEDIA_TYPES_TO_SONOS[payload["search_type"]],
-        payload["idstring"],
-        full_album_art_uri=True,
-        max_items=0,
-    )
-
-    if media is None:
-        return
-
-    thumbnail = None
-    title = None
-
-    # Fetch album info for titles and thumbnails
-    # Can't be extracted from track info
-    if (
-        payload["search_type"] == MEDIA_TYPE_ALBUM
-        and media[0].item_class == "object.item.audioItem.musicTrack"
-    ):
-        item = get_media(media_library, payload["idstring"], SONOS_ALBUM_ARTIST)
-        title = getattr(item, "title", None)
-        thumbnail = getattr(item, "album_art_uri", media[0].album_art_uri)
-
-    if not title:
-        try:
-            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
-        except IndexError:
-            title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
-
-    try:
-        media_class = SONOS_TO_MEDIA_CLASSES[
-            MEDIA_TYPES_TO_SONOS[payload["search_type"]]
-        ]
-    except KeyError:
-        _LOGGER.debug("Unknown media type received %s", payload["search_type"])
-        return None
-
-    children = []
-    for item in media:
-        try:
-            children.append(item_payload(item))
-        except UnknownMediaType:
-            pass
-
-    return BrowseMedia(
-        title=title,
-        thumbnail=thumbnail,
-        media_class=media_class,
-        media_content_id=payload["idstring"],
-        media_content_type=payload["search_type"],
-        children=children,
-        can_play=can_play(payload["search_type"]),
-        can_expand=can_expand(payload["search_type"]),
-    )
-
-
-def item_payload(item):
-    """
-    Create response payload for a single media item.
-
-    Used by async_browse_media.
-    """
-    media_type = get_media_type(item)
-    try:
-        media_class = SONOS_TO_MEDIA_CLASSES[media_type]
-    except KeyError as err:
-        _LOGGER.debug("Unknown media type received %s", media_type)
-        raise UnknownMediaType from err
-    return BrowseMedia(
-        title=item.title,
-        thumbnail=getattr(item, "album_art_uri", None),
-        media_class=media_class,
-        media_content_id=get_content_id(item),
-        media_content_type=SONOS_TO_MEDIA_TYPES[media_type],
-        can_play=can_play(item.item_class),
-        can_expand=can_expand(item),
-    )
-
-
-def library_payload(media_library):
-    """
-    Create response payload to describe contents of a specific library.
-
-    Used by async_browse_media.
-    """
-    if not media_library.browse_by_idstring(
-        "tracks",
-        "",
-        max_items=1,
-    ):
-        raise BrowseError("Local library not found")
-
-    children = []
-    for item in media_library.browse():
-        try:
-            children.append(item_payload(item))
-        except UnknownMediaType:
-            pass
-
-    return BrowseMedia(
-        title="Music Library",
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id="library",
-        media_content_type="library",
-        can_play=False,
-        can_expand=True,
-        children=children,
-    )
-
-
-def get_media_type(item):
-    """Extract media type of item."""
-    if item.item_class == "object.item.audioItem.musicTrack":
-        return SONOS_TRACKS
-
-    if (
-        item.item_class == "object.container.album.musicAlbum"
-        and SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0])
-        in [
-            SONOS_ALBUM_ARTIST,
-            SONOS_GENRE,
-        ]
-    ):
-        return SONOS_TYPES_MAPPING[item.item_class]
-
-    return SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
-
-
-def can_play(item):
-    """
-    Test if playable.
-
-    Used by async_browse_media.
-    """
-    return SONOS_TO_MEDIA_TYPES.get(item) in PLAYABLE_MEDIA_TYPES
-
-
-def can_expand(item):
-    """
-    Test if expandable.
-
-    Used by async_browse_media.
-    """
-    if isinstance(item, str):
-        return SONOS_TYPES_MAPPING.get(item) in EXPANDABLE_MEDIA_TYPES
-
-    if SONOS_TO_MEDIA_TYPES.get(item.item_class) in EXPANDABLE_MEDIA_TYPES:
-        return True
-
-    return SONOS_TYPES_MAPPING.get(item.item_id) in EXPANDABLE_MEDIA_TYPES
-
-
-def get_content_id(item):
-    """Extract content id or uri."""
-    if item.item_class == "object.item.audioItem.musicTrack":
-        return item.get_uri()
-    return item.item_id
-
-
-def get_media(media_library, item_id, search_type):
-    """Fetch media/album."""
-    search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
-
-    if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
-        item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
-
-    for item in media_library.browse_by_idstring(
-        search_type,
-        "/".join(item_id.split("/")[:-1]),
-        full_album_art_uri=True,
-        max_items=0,
-    ):
-        if item.item_id == item_id:
-            return item

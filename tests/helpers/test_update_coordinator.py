@@ -2,19 +2,21 @@
 import asyncio
 from datetime import timedelta
 import logging
+from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
 
 import aiohttp
 import pytest
 import requests
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CoreState
 from homeassistant.helpers import update_coordinator
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import async_fire_time_changed
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def get_crd(hass, update_interval):
@@ -28,7 +30,7 @@ def get_crd(hass, update_interval):
 
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
-        LOGGER,
+        _LOGGER,
         name="test",
         update_method=refresh,
         update_interval=update_interval,
@@ -250,3 +252,61 @@ async def test_coordinator_entity(crd):
     with patch("homeassistant.helpers.entity.Entity.enabled", False):
         await entity.async_update()
     assert entity.available is False
+
+
+async def test_async_set_updated_data(crd):
+    """Test async_set_updated_data for update coordinator."""
+    assert crd.data is None
+
+    with patch.object(crd._debounced_refresh, "async_cancel") as mock_cancel:
+        crd.async_set_updated_data(100)
+
+        # Test we cancel any pending refresh
+        assert len(mock_cancel.mock_calls) == 1
+
+    # Test data got updated
+    assert crd.data == 100
+    assert crd.last_update_success is True
+
+    # Make sure we didn't schedule a refresh because we have 0 listeners
+    assert crd._unsub_refresh is None
+
+    updates = []
+
+    def update_callback():
+        updates.append(crd.data)
+
+    crd.async_add_listener(update_callback)
+    crd.async_set_updated_data(200)
+    assert updates == [200]
+    assert crd._unsub_refresh is not None
+
+    old_refresh = crd._unsub_refresh
+
+    crd.async_set_updated_data(300)
+    # We have created a new refresh listener
+    assert crd._unsub_refresh is not old_refresh
+
+
+async def test_stop_refresh_on_ha_stop(hass, crd):
+    """Test no update interval refresh when Home Assistant is stopping."""
+    # Add subscriber
+    update_callback = Mock()
+    crd.async_add_listener(update_callback)
+
+    update_interval = crd.update_interval
+
+    # Test we update with subscriber
+    async_fire_time_changed(hass, utcnow() + update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 1
+
+    # Fire Home Assistant stop event
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    hass.state = CoreState.stopping
+    await hass.async_block_till_done()
+
+    # Make sure no update with subscriber after stop event
+    async_fire_time_changed(hass, utcnow() + update_interval)
+    await hass.async_block_till_done()
+    assert crd.data == 1

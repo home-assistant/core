@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "start_server_failed": "A szerver ind\u00edt\u00e1sa nem siker\u00fclt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Id\u0151t\u00fall\u00e9p\u00e9s (perc)"
+                }
+            }
+        }
+    }
+}

@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "Tutti i server collegati sono gi\u00e0 configurati",
             "already_configured": "Questo server Plex \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Plex \u00e8 in fase di configurazione",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
             "token_request_timeout": "Timeout per l'ottenimento del token",
-            "unknown": "Non riuscito per motivo sconosciuto"
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "faulty_credentials": "Autorizzazione non riuscita, verificare il Token",
@@ -20,7 +21,7 @@
                 "data": {
                     "host": "Host",
                     "port": "Porta",
-                    "ssl": "Utilizzare SSL",
+                    "ssl": "Utilizza un certificato SSL",
                     "token": "Token (opzionale)",
                     "verify_ssl": "Verificare il certificato SSL"
                 },

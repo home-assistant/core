@@ -1,0 +1,19 @@
+{
+    "device_automation": {
+        "action_type": {
+            "turn_off": "wy\u0142\u0105cz {entity_name}",
+            "turn_on": "w\u0142\u0105cz {entity_name}"
+        }
+    },
+    "state": {
+        "_": {
+            "eco": "ekonomiczny",
+            "electric": "elektryczny",
+            "gas": "gaz",
+            "heat_pump": "pompa ciep\u0142a",
+            "high_demand": "du\u017ce zapotrzebowanie",
+            "off": "wy\u0142.",
+            "performance": "wydajno\u015b\u0107"
+        }
+    }
+}

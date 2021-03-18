@@ -1,5 +1,4 @@
 """Support for WLED switches."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 from homeassistant.components.switch import SwitchEntity
@@ -15,8 +14,6 @@ from .const import (
     ATTR_UDP_PORT,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -75,7 +72,7 @@ class WLEDNightlightSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {
             ATTR_DURATION: self.coordinator.data.state.nightlight.duration,
@@ -113,7 +110,7 @@ class WLEDSyncSendSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 
@@ -147,7 +144,7 @@ class WLEDSyncReceiveSwitch(WLEDSwitch):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the entity."""
         return {ATTR_UDP_PORT: self.coordinator.data.info.udp_port}
 

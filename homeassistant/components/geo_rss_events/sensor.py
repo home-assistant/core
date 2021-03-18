@@ -9,7 +9,7 @@ from datetime import timedelta
 import logging
 
 from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
-from georss_client.generic_feed import GenericFeed
+from georss_generic_client import GenericFeed
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -137,7 +137,7 @@ class GeoRssServiceSensor(Entity):
         return DEFAULT_ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._state_attributes
 

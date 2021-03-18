@@ -1,10 +1,11 @@
 """Tests for EnOcean config flow."""
+from unittest.mock import Mock, patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.enocean.config_flow import EnOceanFlowHandler
 from homeassistant.components.enocean.const import DOMAIN
 from homeassistant.const import CONF_DEVICE
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 DONGLE_VALIDATE_PATH_METHOD = "homeassistant.components.enocean.dongle.validate_path"

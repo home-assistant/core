@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_path": "\u672a\u627e\u5230\u88dd\u7f6e\u3002"
+        },
+        "step": {
+            "owserver": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "title": "\u8a2d\u5b9a owserver \u8a73\u7d30\u8cc7\u6599"
+            },
+            "user": {
+                "data": {
+                    "type": "\u9023\u7dda\u985e\u578b"
+                },
+                "title": "\u8a2d\u5b9a 1-Wire"
+            }
+        }
+    }
+}

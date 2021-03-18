@@ -1,5 +1,6 @@
 """Test the wiffi integration config flow."""
 import errno
+from unittest.mock import patch
 
 import pytest
 
@@ -12,7 +13,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {CONF_PORT: 8765}

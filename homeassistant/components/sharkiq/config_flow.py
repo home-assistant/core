@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN, LOGGER  # pylint:disable=unused-import
+from .const import _LOGGER, DOMAIN  # pylint:disable=unused-import
 
 SHARKIQ_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
@@ -28,7 +28,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         with async_timeout.timeout(10):
-            LOGGER.debug("Initialize connection to Ayla networks API")
+            _LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
     except (asyncio.TimeoutError, aiohttp.ClientError) as errors:
         raise CannotConnect from errors
@@ -58,7 +58,7 @@ class SharkIqConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception("Unexpected exception")
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return info, errors
 

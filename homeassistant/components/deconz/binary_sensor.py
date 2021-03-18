@@ -33,17 +33,13 @@ DEVICE_CLASS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Add binary sensor from deCONZ."""
         entities = []
 
@@ -59,7 +55,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzBinarySensor(sensor, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -78,19 +75,16 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
-        if ignore_update:
-            return
-
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._device.is_tripped
+        return self._device.state
 
     @property
     def device_class(self):
@@ -98,7 +92,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
         return DEVICE_CLASS.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 

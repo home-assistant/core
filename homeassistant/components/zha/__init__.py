@@ -16,7 +16,6 @@ from . import api
 from .core import ZHAGateway
 from .core.const import (
     BAUD_RATES,
-    COMPONENTS,
     CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_DEVICE_CONFIG,
@@ -30,6 +29,7 @@ from .core.const import (
     DATA_ZHA_GATEWAY,
     DATA_ZHA_PLATFORM_LOADED,
     DOMAIN,
+    PLATFORMS,
     SIGNAL_ADD_ENTITIES,
     RadioType,
 )
@@ -88,21 +88,21 @@ async def async_setup_entry(hass, config_entry):
     zha_data = hass.data.setdefault(DATA_ZHA, {})
     config = zha_data.get(DATA_ZHA_CONFIG, {})
 
-    for component in COMPONENTS:
-        zha_data.setdefault(component, [])
+    for platform in PLATFORMS:
+        zha_data.setdefault(platform, [])
 
     if config.get(CONF_ENABLE_QUIRKS, True):
         # needs to be done here so that the ZHA module is finished loading
         # before zhaquirks is imported
-        import zhaquirks  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel, import-error
+        import zhaquirks  # noqa: F401 pylint: disable=unused-import, import-outside-toplevel
 
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
     zha_data[DATA_ZHA_DISPATCHERS] = []
     zha_data[DATA_ZHA_PLATFORM_LOADED] = []
-    for component in COMPONENTS:
-        coro = hass.config_entries.async_forward_entry_setup(config_entry, component)
+    for platform in PLATFORMS:
+        coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
         zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
 
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -138,8 +138,8 @@ async def async_unload_entry(hass, config_entry):
     for unsub_dispatcher in dispatchers:
         unsub_dispatcher()
 
-    for component in COMPONENTS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    for platform in PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
 
     return True
 

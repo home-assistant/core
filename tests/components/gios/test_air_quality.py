@@ -1,6 +1,7 @@
 """Test air_quality of GIOS integration."""
 from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from gios import ApiError
 
@@ -22,9 +23,9 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed, load_fixture
 from tests.components.gios import init_integration
 
@@ -32,7 +33,7 @@ from tests.components.gios import init_integration
 async def test_air_quality(hass):
     """Test states of the air_quality."""
     await init_integration(hass)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("air_quality.home")
     assert state
@@ -60,7 +61,7 @@ async def test_air_quality(hass):
 async def test_air_quality_with_incomplete_data(hass):
     """Test states of the air_quality with incomplete data from measuring station."""
     await init_integration(hass, incomplete_data=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     state = hass.states.get("air_quality.home")
     assert state

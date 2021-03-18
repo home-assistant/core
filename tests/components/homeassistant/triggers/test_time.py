@@ -1,14 +1,16 @@
 """The tests for the time automation."""
 from datetime import timedelta
+from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
-import homeassistant.components.automation as automation
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
+from homeassistant.components import automation, sensor
+from homeassistant.components.homeassistant.triggers import time
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -74,7 +76,6 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
         "input_datetime",
         {"input_datetime": {"trigger": {"has_date": has_date, "has_time": has_time}}},
     )
-
     now = dt_util.now()
 
     trigger_dt = now.replace(
@@ -93,7 +94,7 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
 
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}"
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
     with patch(
         "homeassistant.util.dt.utcnow",
         return_value=dt_util.as_utc(time_that_will_not_match_right_away),
@@ -117,7 +118,10 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+    assert (
+        calls[0].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-input_datetime.trigger"
+    )
 
     if has_date:
         trigger_dt += timedelta(days=1)
@@ -138,7 +142,10 @@ async def test_if_fires_using_at_input_datetime(hass, calls, has_date, has_time)
     await hass.async_block_till_done()
 
     assert len(calls) == 2
-    assert calls[1].data["some"] == f"time-{trigger_dt.day}-{trigger_dt.hour}"
+    assert (
+        calls[1].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-input_datetime.trigger"
+    )
 
 
 async def test_if_fires_using_multiple_at(hass, calls):
@@ -386,3 +393,194 @@ async def test_untrack_time_change(hass):
     )
 
     assert len(mock_track_time_change.mock_calls) == 3
+
+
+async def test_if_fires_using_at_sensor(hass, calls):
+    """Test for firing at sensor time."""
+    now = dt_util.now()
+
+    trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+    )
+
+    time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
+
+    some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {"platform": "time", "at": "sensor.next_alarm"},
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": some_data},
+                    },
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert (
+        calls[0].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-sensor.next_alarm"
+    )
+
+    trigger_dt += timedelta(days=1, hours=1)
+
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert (
+        calls[1].data["some"]
+        == f"time-{trigger_dt.day}-{trigger_dt.hour}-sensor.next_alarm"
+    )
+
+    for broken in ("unknown", "unavailable", "invalid-ts"):
+        hass.states.async_set(
+            "sensor.next_alarm",
+            trigger_dt.isoformat(),
+            {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        )
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "sensor.next_alarm",
+            broken,
+            {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+        )
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+        await hass.async_block_till_done()
+
+        # We should not have listened to anything
+        assert len(calls) == 2
+
+    # Now without device class
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+        {ATTR_DEVICE_CLASS: sensor.DEVICE_CLASS_TIMESTAMP},
+    )
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        "sensor.next_alarm",
+        trigger_dt.isoformat(),
+    )
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    # We should not have listened to anything
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    "conf",
+    [
+        {"platform": "time", "at": "input_datetime.bla"},
+        {"platform": "time", "at": "sensor.bla"},
+        {"platform": "time", "at": "12:34"},
+    ],
+)
+def test_schema_valid(conf):
+    """Make sure we don't accept number for 'at' value."""
+    time.TRIGGER_SCHEMA(conf)
+
+
+@pytest.mark.parametrize(
+    "conf",
+    [
+        {"platform": "time", "at": "binary_sensor.bla"},
+        {"platform": "time", "at": 745},
+        {"platform": "time", "at": "25:00"},
+    ],
+)
+def test_schema_invalid(conf):
+    """Make sure we don't accept number for 'at' value."""
+    with pytest.raises(vol.Invalid):
+        time.TRIGGER_SCHEMA(conf)
+
+
+async def test_datetime_in_past_on_load(hass, calls):
+    """Test time trigger works if input_datetime is in past."""
+    await async_setup_component(
+        hass,
+        "input_datetime",
+        {"input_datetime": {"my_trigger": {"has_date": True, "has_time": True}}},
+    )
+
+    now = dt_util.now()
+    past = now - timedelta(days=2)
+    future = now + timedelta(days=1)
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.my_trigger",
+            "datetime": str(past.replace(tzinfo=None)),
+        },
+        blocking=True,
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": "input_datetime.my_trigger"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
+                    },
+                },
+            }
+        },
+    )
+
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    await hass.services.async_call(
+        "input_datetime",
+        "set_datetime",
+        {
+            ATTR_ENTITY_ID: "input_datetime.my_trigger",
+            "datetime": str(future.replace(tzinfo=None)),
+        },
+        blocking=True,
+    )
+
+    async_fire_time_changed(hass, future + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert (
+        calls[0].data["some"]
+        == f"time-{future.day}-{future.hour}-input_datetime.my_trigger"
+    )

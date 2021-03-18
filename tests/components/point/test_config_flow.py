@@ -1,13 +1,12 @@
 """Tests for the Point config flow."""
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-
-from tests.async_mock import AsyncMock, patch
 
 
 def init_config_flow(hass, side_effect=None):
@@ -33,11 +32,13 @@ def mock_pypoint(is_authorized):  # pylint: disable=redefined-outer-name
     with patch(
         "homeassistant.components.point.config_flow.PointSession"
     ) as PointSession:
-        PointSession.return_value.get_access_token.return_value = {
-            "access_token": "boo"
-        }
+        PointSession.return_value.get_access_token = AsyncMock(
+            return_value={"access_token": "boo"}
+        )
         PointSession.return_value.is_authorized = is_authorized
-        PointSession.return_value.user.return_value = {"email": "john.doe@example.com"}
+        PointSession.return_value.user = AsyncMock(
+            return_value={"email": "john.doe@example.com"}
+        )
         yield PointSession
 
 
@@ -139,7 +140,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_abort_no_code(hass):

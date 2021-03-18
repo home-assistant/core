@@ -1,11 +1,10 @@
 """The test for the ping binary_sensor platform."""
 from os import path
+from unittest.mock import patch
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.ping import DOMAIN
 from homeassistant.const import SERVICE_RELOAD
-
-from tests.async_mock import patch
 
 
 async def test_reload(hass):

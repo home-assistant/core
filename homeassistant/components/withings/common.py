@@ -402,8 +402,8 @@ WITHINGS_ATTRIBUTES = [
         Measurement.SLEEP_SCORE,
         GetSleepSummaryField.SLEEP_SCORE,
         "Sleep score",
-        "",
-        None,
+        const.SCORE_POINTS,
+        "mdi:medal",
         SENSOR_DOMAIN,
         False,
         UpdateType.POLL,
@@ -681,7 +681,7 @@ class DataManager:
         )
 
         # Determine what subscriptions need to be created.
-        ignored_applis = frozenset({NotifyAppli.USER})
+        ignored_applis = frozenset({NotifyAppli.USER, NotifyAppli.UNKNOWN})
         to_add_applis = frozenset(
             [
                 appli
@@ -811,7 +811,28 @@ class DataManager:
         )
 
         def get_sleep_summary() -> SleepGetSummaryResponse:
-            return self._api.sleep_get_summary(lastupdate=yesterday_noon)
+            return self._api.sleep_get_summary(
+                lastupdate=yesterday_noon,
+                data_fields=[
+                    GetSleepSummaryField.BREATHING_DISTURBANCES_INTENSITY,
+                    GetSleepSummaryField.DEEP_SLEEP_DURATION,
+                    GetSleepSummaryField.DURATION_TO_SLEEP,
+                    GetSleepSummaryField.DURATION_TO_WAKEUP,
+                    GetSleepSummaryField.HR_AVERAGE,
+                    GetSleepSummaryField.HR_MAX,
+                    GetSleepSummaryField.HR_MIN,
+                    GetSleepSummaryField.LIGHT_SLEEP_DURATION,
+                    GetSleepSummaryField.REM_SLEEP_DURATION,
+                    GetSleepSummaryField.RR_AVERAGE,
+                    GetSleepSummaryField.RR_MAX,
+                    GetSleepSummaryField.RR_MIN,
+                    GetSleepSummaryField.SLEEP_SCORE,
+                    GetSleepSummaryField.SNORING,
+                    GetSleepSummaryField.SNORING_EPISODE_COUNT,
+                    GetSleepSummaryField.WAKEUP_COUNT,
+                    GetSleepSummaryField.WAKEUP_DURATION,
+                ],
+            )
 
         response = await self._hass.async_add_executor_job(get_sleep_summary)
 
@@ -825,7 +846,7 @@ class DataManager:
             data = serie.data
 
             for field in GetSleepSummaryField:
-                raw_values[field].append(data._asdict()[field.value])
+                raw_values[field].append(dict(data)[field.value])
 
         values: Dict[GetSleepSummaryField, float] = {}
 
@@ -1049,11 +1070,9 @@ def get_data_manager_by_webhook_id(
 def get_all_data_managers(hass: HomeAssistant) -> Tuple[DataManager, ...]:
     """Get all configured data managers."""
     return tuple(
-        [
-            config_entry_data[const.DATA_MANAGER]
-            for config_entry_data in hass.data[const.DOMAIN].values()
-            if const.DATA_MANAGER in config_entry_data
-        ]
+        config_entry_data[const.DATA_MANAGER]
+        for config_entry_data in hass.data[const.DOMAIN].values()
+        if const.DATA_MANAGER in config_entry_data
     )
 
 
@@ -1080,11 +1099,7 @@ async def async_create_entities(
 def get_platform_attributes(platform: str) -> Tuple[WithingsAttribute, ...]:
     """Get withings attributes used for a specific platform."""
     return tuple(
-        [
-            attribute
-            for attribute in WITHINGS_ATTRIBUTES
-            if attribute.platform == platform
-        ]
+        attribute for attribute in WITHINGS_ATTRIBUTES if attribute.platform == platform
     )
 
 

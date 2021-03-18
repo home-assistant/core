@@ -1,6 +1,7 @@
 """Test config entries API."""
 
 from collections import OrderedDict
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import voluptuous as vol
@@ -12,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.generated import config_flows
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -68,6 +68,12 @@ async def test_get_entries(hass, client):
             state=core_ce.ENTRY_STATE_LOADED,
             connection_class=core_ce.CONN_CLASS_ASSUMED,
         ).add_to_hass(hass)
+        MockConfigEntry(
+            domain="comp3",
+            title="Test 3",
+            source="bla3",
+            disabled_by="user",
+        ).add_to_hass(hass)
 
         resp = await client.get("/api/config/config_entries/entry")
         assert resp.status == 200
@@ -83,6 +89,7 @@ async def test_get_entries(hass, client):
                 "connection_class": "local_poll",
                 "supports_options": True,
                 "supports_unload": True,
+                "disabled_by": None,
             },
             {
                 "domain": "comp2",
@@ -92,6 +99,17 @@ async def test_get_entries(hass, client):
                 "connection_class": "assumed",
                 "supports_options": False,
                 "supports_unload": False,
+                "disabled_by": None,
+            },
+            {
+                "domain": "comp3",
+                "title": "Test 3",
+                "source": "bla3",
+                "state": "not_loaded",
+                "connection_class": "unknown",
+                "supports_options": False,
+                "supports_unload": False,
+                "disabled_by": "user",
             },
         ]
 
@@ -680,6 +698,25 @@ async def test_update_system_options(hass, hass_ws_client):
     assert entry.system_options.disable_new_entities
 
 
+async def test_update_system_options_nonexisting(hass, hass_ws_client):
+    """Test that we can update entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/system_options/update",
+            "entry_id": "non_existing",
+            "disable_new_entities": True,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
 async def test_update_entry(hass, hass_ws_client):
     """Test that we can update entry."""
     assert await async_setup_component(hass, "config", {})
@@ -722,6 +759,83 @@ async def test_update_entry_nonexisting(hass, hass_ws_client):
     assert response["error"]["code"] == "not_found"
 
 
+async def test_disable_entry(hass, hass_ws_client):
+    """Test that we can disable entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="demo", state="loaded")
+    entry.add_to_hass(hass)
+    assert entry.disabled_by is None
+
+    # Disable
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/disable",
+            "entry_id": entry.entry_id,
+            "disabled_by": "user",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by == "user"
+    assert entry.state == "failed_unload"
+
+    # Enable
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config_entries/disable",
+            "entry_id": entry.entry_id,
+            "disabled_by": None,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by is None
+    assert entry.state == "failed_unload"
+
+    # Enable again -> no op
+    await ws_client.send_json(
+        {
+            "id": 7,
+            "type": "config_entries/disable",
+            "entry_id": entry.entry_id,
+            "disabled_by": None,
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": False}
+    assert entry.disabled_by is None
+    assert entry.state == "failed_unload"
+
+
+async def test_disable_entry_nonexisting(hass, hass_ws_client):
+    """Test that we can disable entry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/disable",
+            "entry_id": "non_existing",
+            "disabled_by": "user",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
 async def test_ignore_flow(hass, hass_ws_client):
     """Test we can ignore a flow."""
     assert await async_setup_component(hass, "config", {})
@@ -750,6 +864,7 @@ async def test_ignore_flow(hass, hass_ws_client):
                 "id": 5,
                 "type": "config_entries/ignore_flow",
                 "flow_id": result["flow_id"],
+                "title": "Test Integration",
             }
         )
         response = await ws_client.receive_json()
@@ -761,3 +876,23 @@ async def test_ignore_flow(hass, hass_ws_client):
     entry = hass.config_entries.async_entries("test")[0]
     assert entry.source == "ignore"
     assert entry.unique_id == "mock-unique-id"
+    assert entry.title == "Test Integration"
+
+
+async def test_ignore_flow_nonexisting(hass, hass_ws_client):
+    """Test we can ignore a flow."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config_entries/ignore_flow",
+            "flow_id": "non_existing",
+            "title": "Test Integration",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"

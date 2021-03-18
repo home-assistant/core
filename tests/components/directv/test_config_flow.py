@@ -1,9 +1,11 @@
 """Test the DirecTV config flow."""
+from unittest.mock import patch
+
 from aiohttp import ClientError as HTTPClientError
 
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.components.ssdp import ATTR_UPNP_SERIAL
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SOURCE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -12,7 +14,6 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.directv import (
     HOST,
     MOCK_SSDP_DISCOVERY_INFO,
@@ -211,30 +212,6 @@ async def test_ssdp_confirm_unknown_error(
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
-
-
-async def test_full_import_flow_implementation(
-    hass: HomeAssistantType, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test the full manual user flow from start to finish."""
-    mock_connection(aioclient_mock)
-
-    user_input = MOCK_USER_INPUT.copy()
-    with patch(
-        "homeassistant.components.directv.async_setup_entry", return_value=True
-    ), patch("homeassistant.components.directv.async_setup", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_IMPORT},
-            data=user_input,
-        )
-
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-
-    assert result["data"]
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
 
 
 async def test_full_user_flow_implementation(

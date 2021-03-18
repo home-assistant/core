@@ -24,10 +24,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "title": "Logitech Media Server ariichten"
+                }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

@@ -1,22 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ez az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "Ez az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van.",
             "not_huawei_lte": "Nem Huawei LTE eszk\u00f6z"
         },
         "error": {
-            "connection_failed": "Kapcsol\u00f3d\u00e1s sikertelen",
             "connection_timeout": "Kapcsolat id\u0151t\u00fall\u00e9p\u00e9se",
             "incorrect_password": "Hib\u00e1s jelsz\u00f3",
             "incorrect_username": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v",
-            "incorrect_username_or_password": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3",
-            "invalid_url": "\u00c9rv\u00e9nytelen URL"
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_url": "\u00c9rv\u00e9nytelen URL",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "Huawei LTE: {name}",
         "step": {
             "user": {
                 "data": {
                     "password": "Jelsz\u00f3",
+                    "url": "URL",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
                 },
                 "title": "Huawei LTE konfigur\u00e1l\u00e1sa"

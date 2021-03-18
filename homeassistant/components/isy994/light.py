@@ -1,5 +1,7 @@
 """Support for ISY994 lights."""
-from typing import Callable, Dict
+from __future__ import annotations
+
+from typing import Callable
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -17,6 +19,7 @@ from .const import (
     CONF_RESTORE_LIGHT_STATE,
     DOMAIN as ISY994_DOMAIN,
     ISY994_NODES,
+    UOM_PERCENTAGE,
 )
 from .entity import ISYNodeEntity
 from .helpers import migrate_old_unique_ids
@@ -65,6 +68,9 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         """Get the brightness of the ISY994 light."""
         if self._node.status == ISY_VALUE_UNKNOWN:
             return None
+        # Special Case for ISY Z-Wave Devices using % instead of 0-255:
+        if self._node.uom == UOM_PERCENTAGE:
+            return round(self._node.status * 255.0 / 100.0)
         return int(self._node.status)
 
     def turn_off(self, **kwargs) -> None:
@@ -76,7 +82,10 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
     def on_update(self, event: object) -> None:
         """Save brightness in the update event from the ISY994 Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
-            self._last_brightness = self._node.status
+            if self._node.uom == UOM_PERCENTAGE:
+                self._last_brightness = round(self._node.status * 255.0 / 100.0)
+            else:
+                self._last_brightness = self._node.status
         super().on_update(event)
 
     # pylint: disable=arguments-differ
@@ -84,13 +93,16 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         """Send the turn on command to the ISY994 light device."""
         if self._restore_light_state and brightness is None and self._last_brightness:
             brightness = self._last_brightness
+        # Special Case for ISY Z-Wave Devices using % instead of 0-255:
+        if brightness is not None and self._node.uom == UOM_PERCENTAGE:
+            brightness = round(brightness * 100.0 / 255.0)
         if not self._node.turn_on(val=brightness):
             _LOGGER.debug("Unable to turn on light")
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return the light attributes."""
-        attribs = super().device_state_attributes
+        attribs = super().extra_state_attributes
         attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
         return attribs
 

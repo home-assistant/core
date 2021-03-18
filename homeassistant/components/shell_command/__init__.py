@@ -45,7 +45,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         if args_compiled:
             try:
-                rendered_args = args_compiled.async_render(service.data)
+                rendered_args = args_compiled.async_render(
+                    variables=service.data, parse_result=False
+                )
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
                 return
@@ -112,6 +114,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 "Error running command: `%s`, return code: %s", cmd, process.returncode
             )
 
-    for name in conf.keys():
+    for name in conf:
         hass.services.async_register(DOMAIN, name, async_service_handler)
     return True

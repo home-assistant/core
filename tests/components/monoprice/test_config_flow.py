@@ -1,4 +1,6 @@
 """Test the Monoprice 6-Zone Amplifier config flow."""
+from unittest.mock import patch
+
 from serial import SerialException
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -11,7 +13,6 @@ from homeassistant.components.monoprice.const import (
 )
 from homeassistant.const import CONF_PORT
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CONFIG = {
@@ -43,6 +44,7 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], CONFIG
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == CONFIG[CONF_PORT]
@@ -50,7 +52,6 @@ async def test_form(hass):
         CONF_PORT: CONFIG[CONF_PORT],
         CONF_SOURCES: {"1": CONFIG[CONF_SOURCE_1], "4": CONFIG[CONF_SOURCE_4]},
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

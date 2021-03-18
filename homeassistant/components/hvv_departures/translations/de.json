@@ -4,7 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung fehlgeschlagen, bitte erneut versuchen",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "no_results": "Keine Ergebnisse. Versuch es mit einer anderen Station/Adresse"
         },
@@ -43,6 +43,5 @@
                 "title": "Optionen"
             }
         }
-    },
-    "title": "HVV Abfahrten"
+    }
 }

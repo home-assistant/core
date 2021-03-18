@@ -1,4 +1,7 @@
 """The tests for the Geofency device tracker platform."""
+# pylint: disable=redefined-outer-name
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -13,11 +16,9 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
-
-# pylint: disable=redefined-outer-name
-from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -223,10 +224,10 @@ async def test_gps_enter_and_exit_home(hass, geofency_client, webhook_id):
     ]
     assert NOT_HOME_LONGITUDE == current_longitude
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
 
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
 
 

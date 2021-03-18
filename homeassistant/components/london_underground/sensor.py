@@ -1,6 +1,5 @@
 """Sensor for checking the status of London Underground tube lines."""
 from datetime import timedelta
-import logging
 
 from london_tube_status import TubeData
 import voluptuous as vol
@@ -9,8 +8,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by TfL Open Data"
 
@@ -81,7 +78,7 @@ class LondonTubeSensor(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         self.attrs["Description"] = self._description
         return self.attrs

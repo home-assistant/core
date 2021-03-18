@@ -45,6 +45,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             + (f" - {p.manufacturer}" if p.manufacturer else "")
             for p in ports
         ]
+
+        if not list_of_ports:
+            return await self.async_step_pick_radio()
+
         list_of_ports.append(CONF_MANUAL_PATH)
 
         if user_input is not None:

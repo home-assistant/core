@@ -1,4 +1,6 @@
 """The config flow tests for the forked_daapd media player platform."""
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -16,7 +18,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 SAMPLE_CONFIG = {

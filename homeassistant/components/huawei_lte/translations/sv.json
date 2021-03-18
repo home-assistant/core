@@ -6,15 +6,12 @@
             "not_huawei_lte": "Inte en Huawei LTE-enhet"
         },
         "error": {
-            "connection_failed": "Anslutningen misslyckades",
             "connection_timeout": "Timeout f\u00f6r anslutning",
             "incorrect_password": "Felaktigt l\u00f6senord",
             "incorrect_username": "Felaktigt anv\u00e4ndarnamn",
-            "incorrect_username_or_password": "Felaktigt anv\u00e4ndarnamn eller l\u00f6senord",
             "invalid_url": "Ogiltig URL",
             "login_attempts_exceeded": "Maximala inloggningsf\u00f6rs\u00f6k har \u00f6verskridits, f\u00f6rs\u00f6k igen senare",
-            "response_error": "Ok\u00e4nt fel fr\u00e5n enheten",
-            "unknown_connection_error": "Ok\u00e4nt fel vid anslutning till enheten"
+            "response_error": "Ok\u00e4nt fel fr\u00e5n enheten"
         },
         "step": {
             "user": {

@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from hass_nabucasa import cloud_api
+from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.helpers import AbstractConfig
@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     HTTP_OK,
 )
-from homeassistant.core import CoreState, callback, split_entity_id
+from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry
 
 from .const import (
@@ -28,7 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, cloud_user, prefs: CloudPreferences, cloud):
+    def __init__(
+        self, hass, config, cloud_user: str, prefs: CloudPreferences, cloud: Cloud
+    ):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
@@ -43,7 +45,11 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def enabled(self):
         """Return if Google is enabled."""
-        return self._cloud.is_logged_in and self._prefs.google_enabled
+        return (
+            self._cloud.is_logged_in
+            and not self._cloud.subscription_expired
+            and self._prefs.google_enabled
+        )
 
     @property
     def entity_config(self):
@@ -201,7 +207,6 @@ class CloudGoogleConfig(AbstractConfig):
 
         self._sync_on_started = True
 
-        @callback
         async def sync_google(_):
             """Sync entities to Google."""
             await self.async_sync_entities_all()

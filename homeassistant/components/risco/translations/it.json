@@ -32,8 +32,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Richiedi codice PIN per armare",
-                    "code_disarm_required": "Richiedi codice PIN per disarmare",
+                    "code_arm_required": "Richiedi il Codice PIN per armare",
+                    "code_disarm_required": "Richiedi il Codice PIN per disarmare",
                     "scan_interval": "Con che frequenza interrogare Risco (in secondi)"
                 },
                 "title": "Configura le opzioni"

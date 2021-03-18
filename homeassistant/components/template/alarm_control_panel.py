@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -42,6 +43,7 @@ _VALID_STATES = [
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
@@ -79,7 +81,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def _async_create_entities(hass, config):
     """Create Template Alarm Control Panels."""
-
     alarm_control_panels = []
 
     for device, device_config in config[CONF_ALARM_CONTROL_PANELS].items():
@@ -112,7 +113,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Template Alarm Control Panels."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 

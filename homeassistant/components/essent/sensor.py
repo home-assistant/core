@@ -1,6 +1,7 @@
 """Support for Essent API."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Optional
 
 from pyessent import PyEssent
 import voluptuous as vol
@@ -27,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     meters = []
     for meter in essent.retrieve_meters():
         data = essent.retrieve_meter_data(meter)
-        for tariff in data["values"]["LVR"].keys():
+        for tariff in data["values"]["LVR"]:
             meters.append(
                 EssentMeter(
                     essent,
@@ -94,7 +95,7 @@ class EssentMeter(Entity):
         self._unit = unit
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return f"{self._meter}-{self._type}-{self._tariff}"
 

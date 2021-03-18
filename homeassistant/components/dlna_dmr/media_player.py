@@ -1,9 +1,10 @@
 """Support for DLNA DMR (Device Media Renderer)."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import functools
 import logging
-from typing import Optional
 
 import aiohttp
 from async_upnp_client import UpnpFactory
@@ -116,7 +117,7 @@ async def async_start_event_handler(
     server_host: str,
     server_port: int,
     requester,
-    callback_url_override: Optional[str] = None,
+    callback_url_override: str | None = None,
 ):
     """Register notify view."""
     hass_data = hass.data[DLNA_DMR_DATA]
@@ -168,7 +169,7 @@ async def async_setup_platform(
     requester = AiohttpSessionRequester(session, True)
 
     # ensure event handler has been started
-    with await hass.data[DLNA_DMR_DATA]["lock"]:
+    async with hass.data[DLNA_DMR_DATA]["lock"]:
         server_host = config.get(CONF_LISTEN_IP)
         if server_host is None:
             server_host = get_local_ip()
@@ -220,7 +221,7 @@ class DlnaDmrDevice(MediaPlayerEntity):
 
     async def _async_on_hass_stop(self, event):
         """Event handler on Home Assistant stop."""
-        with await self.hass.data[DLNA_DMR_DATA]["lock"]:
+        async with self.hass.data[DLNA_DMR_DATA]["lock"]:
             await self._device.async_unsubscribe_services()
 
     async def async_update(self):
@@ -281,7 +282,9 @@ class DlnaDmrDevice(MediaPlayerEntity):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._device.volume_level
+        if self._device.has_volume_level:
+            return self._device.volume_level
+        return 0
 
     @catch_request_errors()
     async def async_set_volume_level(self, volume):

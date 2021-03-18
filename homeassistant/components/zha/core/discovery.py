@@ -22,6 +22,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     fan,
     light,
     lock,
+    number,
     sensor,
     switch,
 )
@@ -39,12 +40,13 @@ async def async_add_entities(
             Tuple[str, zha_typing.ZhaDeviceType, List[zha_typing.ChannelType]],
         ]
     ],
+    update_before_add: bool = True,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
     to_add = [ent_cls(*args) for ent_cls, args in entities]
-    _async_add_entities(to_add, update_before_add=True)
+    _async_add_entities(to_add, update_before_add=update_before_add)
     entities.clear()
 
 
@@ -73,7 +75,7 @@ class ProbeEndpoint:
             ep_device_type = channel_pool.endpoint.device_type
             component = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
-        if component and component in zha_const.COMPONENTS:
+        if component and component in zha_const.PLATFORMS:
             channels = channel_pool.unclaimed_channels()
             entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
                 component, channel_pool.manufacturer, channel_pool.model, channels
@@ -120,7 +122,7 @@ class ProbeEndpoint:
         ep_channels: zha_typing.ChannelPoolType,
     ) -> None:
         """Probe specified cluster for specific component."""
-        if component is None or component not in zha_const.COMPONENTS:
+        if component is None or component not in zha_const.PLATFORMS:
             return
         channel_list = [channel]
         unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
@@ -242,7 +244,9 @@ class GroupProbe:
             if member.device.is_coordinator:
                 continue
             entities = async_entries_for_device(
-                zha_gateway.ha_entity_registry, member.device.device_id
+                zha_gateway.ha_entity_registry,
+                member.device.device_id,
+                include_disabled_entities=True,
             )
             all_domain_occurrences.extend(
                 [

@@ -1,5 +1,4 @@
 """The jewish_calendar component."""
-import logging
 from typing import Optional
 
 import hdate
@@ -8,8 +7,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-
-_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "jewish_calendar"
 
@@ -29,8 +26,8 @@ SENSOR_TYPES = {
         "talit": ["Talit and Tefillin", "mdi:calendar-clock"],
         "gra_end_shma": ['Latest time for Shma Gr"a', "mdi:calendar-clock"],
         "mga_end_shma": ['Latest time for Shma MG"A', "mdi:calendar-clock"],
-        "gra_end_tfila": ['Latest time for Tefilla MG"A', "mdi:calendar-clock"],
-        "mga_end_tfila": ['Latest time for Tefilla Gr"a', "mdi:calendar-clock"],
+        "gra_end_tfila": ['Latest time for Tefilla Gr"a', "mdi:calendar-clock"],
+        "mga_end_tfila": ['Latest time for Tefilla MG"A', "mdi:calendar-clock"],
         "big_mincha": ["Mincha Gedola", "mdi:calendar-clock"],
         "small_mincha": ["Mincha Ketana", "mdi:calendar-clock"],
         "plag_mincha": ["Plag Hamincha", "mdi:weather-sunset-down"],

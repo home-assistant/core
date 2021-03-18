@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vale hostinimi v\u00f5i IP aadress",
+            "unknown": "Tundmatu viga"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Nimi"
+                },
+                "description": "Alustuseks pead alla laadima rakenduse Goal Zero: https://www.goalzero.com/product-features/yeti-app/\n\n Yeti Wifi-v\u00f5rguga \u00fchendamiseks j\u00e4rgi juhiseid. Seej\u00e4rel hangi oma ruuterilt host IP. DHCP peab olema ruuteri seadetes seadistatud, et tagada, et host-IP ei muutuks. Vaata ruuteri kasutusjuhendit.",
+                "title": ""
+            }
+        }
+    }
+}

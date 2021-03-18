@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "City already configured",
-            "unknown": "Unknown error: please retry later"
+            "already_configured": "Location is already configured",
+            "unknown": "Unexpected error"
         },
         "error": {
             "empty": "No result in city search: please check the city field"

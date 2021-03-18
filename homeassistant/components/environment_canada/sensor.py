@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import logging
 import re
 
-from env_canada import ECData  # pylint: disable=import-error
+from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         lon = config.get(CONF_LONGITUDE, hass.config.longitude)
         ec_data = ECData(coordinates=(lat, lon), language=config.get(CONF_LANGUAGE))
 
-    sensor_list = list(ec_data.conditions.keys()) + list(ec_data.alerts.keys())
+    sensor_list = list(ec_data.conditions) + list(ec_data.alerts)
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
 
 
@@ -95,7 +95,7 @@ class ECSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attr
 

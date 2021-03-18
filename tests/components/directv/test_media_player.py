@@ -1,6 +1,7 @@
 """The tests for the DirecTV Media player platform."""
 from datetime import datetime, timedelta
 from typing import Optional
+from unittest.mock import patch
 
 from pytest import fixture
 
@@ -52,10 +53,10 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.components.directv import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -167,7 +168,7 @@ async def test_unique_id(
     """Test unique id."""
     await setup_integration(hass, aioclient_mock)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
     assert main.device_class == DEVICE_CLASS_RECEIVER

@@ -1,5 +1,6 @@
 """Tests for SpeedTest config flow."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from speedtest import NoMatchedServers
@@ -17,7 +18,6 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL
 
 from . import MOCK_SERVERS
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -135,4 +135,4 @@ async def test_integration_already_configured(hass):
         speedtestdotnet.DOMAIN, context={"source": "user"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"

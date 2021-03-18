@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "El dispositiu ja est\u00e0 configurat",
-            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "not_konn_panel": "No s'ha reconegut com a un dispositiu Konnected.io",
-            "unknown": "S'ha produ\u00eft un error desconegut"
+            "unknown": "Error inesperat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar amb el panell Konnected a {host}:{port}"
+            "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
             "confirm": {

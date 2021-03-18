@@ -1,23 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uc774\ub7ec\ud55c \uc88c\ud45c\uc5d0 \ub300\ud55c OpenWeatherMap \ud1b5\ud569\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uc704\uce58\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "auth": "API \ud0a4\uac00 \uc62c\ubc14\ub974\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
-            "connection": "OWM API\uc5d0 \uc5f0\uacb0\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4."
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_api_key": "API \ud0a4\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "OpenWeatherMap API \ud0a4",
+                    "api_key": "API \ud0a4",
                     "language": "\uc5b8\uc5b4",
                     "latitude": "\uc704\ub3c4",
                     "longitude": "\uacbd\ub3c4",
                     "mode": "\ubaa8\ub4dc",
-                    "name": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uba85"
+                    "name": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc774\ub984"
                 },
-                "description": "OpenWeatherMap \ud1b5\ud569\uc744 \uc124\uc815\ud558\uc138\uc694. API \ud0a4\ub97c \uc0dd\uc131\ud558\ub824\uba74 https://openweathermap.org/appid\ub85c \uc774\ub3d9\ud558\uc2ed\uc2dc\uc624.",
+                "description": "OpenWeatherMap \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub97c \uc124\uc815\ud569\ub2c8\ub2e4. API \ud0a4\ub97c \uc0dd\uc131\ud558\ub824\uba74 https://openweathermap.org/appid \ub85c \uc774\ub3d9\ud574\uc8fc\uc138\uc694",
                 "title": "OpenWeatherMap"
             }
         }

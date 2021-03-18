@@ -1,9 +1,18 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "user": {
                 "data": {
-                    "pin": "Pincode",
+                    "password": "Wachtwoord",
+                    "pin": "PIN-code",
                     "username": "Gebruikersnaam"
                 }
             }
@@ -21,8 +30,8 @@
             },
             "init": {
                 "data": {
-                    "code_arm_required": "Pincode vereist om in te schakelen",
-                    "code_disarm_required": "Pincode vereist om uit te schakelen"
+                    "code_arm_required": "PIN-code vereist om in te schakelen",
+                    "code_disarm_required": "PIN-code vereist om uit te schakelen"
                 },
                 "title": "Configureer opties"
             },

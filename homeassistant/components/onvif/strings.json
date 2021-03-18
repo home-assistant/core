@@ -1,14 +1,14 @@
 {
   "config": {
     "abort": {
-      "already_configured": "ONVIF device is already configured.",
-      "already_in_progress": "Config flow for ONVIF device is already in progress.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "onvif_error": "Error setting up ONVIF device.  Check logs for more information.",
       "no_h264": "There were no H264 streams available.  Check the profile configuration on your device.",
       "no_mac": "Could not configure unique ID for ONVIF device."
     },
     "error": {
-      "connection_failed": "Could not connect to ONVIF service with provided credentials."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "user": {
@@ -23,7 +23,7 @@
       },
       "manual_input": {
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },

@@ -1,5 +1,5 @@
 """Config flow to configure zone component."""
-from typing import Optional
+from __future__ import annotations
 
 from iaqualink import AqualinkClient, AqualinkLoginException
 import voluptuous as vol
@@ -18,12 +18,12 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input: Optional[ConfigType] = None):
+    async def async_step_user(self, user_input: ConfigType | None = None):
         """Handle a flow start."""
         # Supporting a single account.
         entries = self.hass.config_entries.async_entries(DOMAIN)
         if entries:
-            return self.async_abort(reason="already_setup")
+            return self.async_abort(reason="single_instance_allowed")
 
         errors = {}
 
@@ -36,7 +36,7 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
                 await aqualink.login()
                 return self.async_create_entry(title=username, data=user_input)
             except AqualinkLoginException:
-                errors["base"] = "connection_failure"
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -46,6 +46,6 @@ class AqualinkFlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: Optional[ConfigType] = None):
+    async def async_step_import(self, user_input: ConfigType | None = None):
         """Occurs when an entry is setup through config."""
         return await self.async_step_user(user_input)

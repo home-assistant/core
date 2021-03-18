@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Questa chiave dell'app \u00e8 gi\u00e0 in uso."
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "invalid_key": "API Key e/o Application Key non valida",
+            "invalid_key": "Chiave API non valida",
             "no_devices": "Nessun dispositivo trovato nell'account"
         },
         "step": {

@@ -76,14 +76,13 @@ class Filesize(Entity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
-        attr = {
+        return {
             "path": self._path,
             "last_updated": self._last_updated,
             "bytes": self._size,
         }
-        return attr
 
     @property
     def unit_of_measurement(self):

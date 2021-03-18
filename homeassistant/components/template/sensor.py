@@ -1,5 +1,4 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
-import logging
 from typing import Optional
 
 import voluptuous as vol
@@ -32,8 +31,6 @@ from .template_entity import TemplateEntity
 
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
-_LOGGER = logging.getLogger(__name__)
-
 SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
     vol.Schema(
@@ -62,7 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def _async_create_entities(hass, config):
     """Create the template sensors."""
-
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -99,7 +95,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -143,7 +138,6 @@ class SensorTemplate(TemplateEntity, Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         self.add_template_attribute("_state", self._template, None, self._update_state)
         if self._friendly_name_template is not None:
             self.add_template_attribute("_name", self._friendly_name_template)

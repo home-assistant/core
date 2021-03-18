@@ -1,6 +1,5 @@
 """Support for the ZHA platform."""
 import functools
-import logging
 import time
 
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
@@ -21,7 +20,6 @@ from .entity import ZhaEntity
 from .sensor import Battery
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

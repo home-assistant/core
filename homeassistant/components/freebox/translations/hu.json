@@ -1,5 +1,13 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
         "step": {
             "user": {
                 "data": {

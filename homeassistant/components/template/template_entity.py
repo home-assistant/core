@@ -168,7 +168,7 @@ class TemplateEntity(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 
@@ -223,7 +223,6 @@ class TemplateEntity(Entity):
         updates: List[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
-
         if event:
             self.async_set_context(event.context)
 
@@ -234,9 +233,7 @@ class TemplateEntity(Entity):
         else:
             self._self_ref_update_count = 0
 
-        # If we need to make this less sensitive in the future,
-        # change the '>=' to a '>' here.
-        if self._self_ref_update_count >= len(self._template_attrs):
+        if self._self_ref_update_count > len(self._template_attrs):
             for update in updates:
                 _LOGGER.warning(
                     "Template loop detected while processing event: %s, skipping template render for Template[%s]",

@@ -11,8 +11,6 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, SPOTIFY_SCOPES
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class SpotifyFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -65,7 +63,6 @@ class SpotifyFlowHandler(
         if entry:
             self.entry = entry
 
-        assert self.hass
         persistent_notification.async_create(
             self.hass,
             f"Spotify integration for account {entry['id']} needs to be re-authenticated. Please go to the integrations page to re-configure it.",
@@ -87,7 +84,6 @@ class SpotifyFlowHandler(
                 errors={},
             )
 
-        assert self.hass
         persistent_notification.async_dismiss(self.hass, "spotify_reauth")
 
         return await self.async_step_pick_implementation(

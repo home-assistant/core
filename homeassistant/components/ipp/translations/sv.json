@@ -2,14 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Den h\u00e4r skrivaren \u00e4r redan konfigurerad.",
-            "connection_error": "Kunde inte ansluta till skrivaren",
             "connection_upgrade": "Misslyckades att ansluta till skrivaren d\u00e5 anslutningen beh\u00f6ver uppgraderas.",
             "ipp_error": "IPP-fel p\u00e5tr\u00e4ffades.",
             "ipp_version_error": "IPP versionen st\u00f6ds inte av skrivaren",
             "parse_error": "Det gick inte att f\u00f6rst\u00e5 responsen fr\u00e5n skrivaren"
         },
         "error": {
-            "connection_error": "Kunde inte ansluta till skrivaren",
             "connection_upgrade": "Kunde inte ansluta till skrivaren. F\u00f6rs\u00f6k igen med SSL/TLS alternativet ifyllt."
         },
         "flow_title": "Skrivare: {name}",

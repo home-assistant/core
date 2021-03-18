@@ -89,11 +89,6 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._pianobar = None
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the media player."""
         return self._name

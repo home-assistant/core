@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kontoen er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn"
+                },
+                "title": "Sett opp Keenetic NDMS2 Router"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "Vurder hjemmeintervall",
+                    "include_arp": "Bruk ARP-data (ignorert hvis hotspot-data brukes)",
+                    "include_associated": "Bruk WiFi AP-tilknytningsdata (ignoreres hvis hotspot-data brukes)",
+                    "interfaces": "Velg grensesnitt for \u00e5 skanne",
+                    "scan_interval": "Skanneintervall",
+                    "try_hotspot": "Bruk 'ip hotspot'-data (mest n\u00f8yaktig)"
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Support for the Tuya climate devices."""
+from datetime import timedelta
+
 from homeassistant.components.climate import (
     DOMAIN as SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
@@ -19,18 +21,30 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_PLATFORM,
-    PRECISION_WHOLE,
+    CONF_UNIT_OF_MEASUREMENT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import TuyaDevice
-from .const import DOMAIN, TUYA_DATA, TUYA_DISCOVERY_NEW
+from .const import (
+    CONF_CURR_TEMP_DIVIDER,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_SET_TEMP_DIVIDED,
+    CONF_TEMP_DIVIDER,
+    CONF_TEMP_STEP_OVERRIDE,
+    DOMAIN,
+    SIGNAL_CONFIG_ENTITY,
+    TUYA_DATA,
+    TUYA_DISCOVERY_NEW,
+)
 
 DEVICE_TYPE = "climate"
 
-PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 HA_STATE_TO_TUYA = {
     HVAC_MODE_AUTO: "auto",
@@ -89,22 +103,57 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         super().__init__(tuya, platform)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
         self.operations = [HVAC_MODE_OFF]
+        self._has_operation = False
+        self._def_hvac_mode = HVAC_MODE_AUTO
+        self._set_temp_divided = True
+        self._temp_step_override = None
+        self._min_temp = None
+        self._max_temp = None
+
+    @callback
+    def _process_config(self):
+        """Set device config parameter."""
+        config = self._get_device_config()
+        if not config:
+            return
+        unit = config.get(CONF_UNIT_OF_MEASUREMENT)
+        if unit:
+            self._tuya.set_unit("FAHRENHEIT" if unit == TEMP_FAHRENHEIT else "CELSIUS")
+        self._tuya.temp_divider = config.get(CONF_TEMP_DIVIDER, 0)
+        self._tuya.curr_temp_divider = config.get(CONF_CURR_TEMP_DIVIDER, 0)
+        self._set_temp_divided = config.get(CONF_SET_TEMP_DIVIDED, True)
+        self._temp_step_override = config.get(CONF_TEMP_STEP_OVERRIDE)
+        min_temp = config.get(CONF_MIN_TEMP, 0)
+        max_temp = config.get(CONF_MAX_TEMP, 0)
+        if min_temp >= max_temp:
+            self._min_temp = self._max_temp = None
+        else:
+            self._min_temp = min_temp
+            self._max_temp = max_temp
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
         await super().async_added_to_hass()
+        self._process_config()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_CONFIG_ENTITY, self._process_config
+            )
+        )
+
         modes = self._tuya.operation_list()
         if modes is None:
+            if self._def_hvac_mode not in self.operations:
+                self.operations.append(self._def_hvac_mode)
             return
 
         for mode in modes:
-            if mode in TUYA_STATE_TO_HA:
-                self.operations.append(TUYA_STATE_TO_HA[mode])
-
-    @property
-    def precision(self):
-        """Return the precision of the system."""
-        return PRECISION_WHOLE
+            if mode not in TUYA_STATE_TO_HA:
+                continue
+            ha_mode = TUYA_STATE_TO_HA[mode]
+            if ha_mode not in self.operations:
+                self.operations.append(ha_mode)
+            self._has_operation = True
 
     @property
     def temperature_unit(self):
@@ -119,6 +168,9 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if not self._tuya.state():
             return HVAC_MODE_OFF
+
+        if not self._has_operation:
+            return self._def_hvac_mode
 
         mode = self._tuya.current_operation()
         if mode is None:
@@ -143,6 +195,8 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
+        if self._temp_step_override:
+            return self._temp_step_override
         return self._tuya.target_temperature_step()
 
     @property
@@ -158,7 +212,7 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
-            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE])
+            self._tuya.set_temperature(kwargs[ATTR_TEMPERATURE], self._set_temp_divided)
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
@@ -168,11 +222,13 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
         """Set new target operation mode."""
         if hvac_mode == HVAC_MODE_OFF:
             self._tuya.turn_off()
+            return
 
         if not self._tuya.state():
             self._tuya.turn_on()
 
-        self._tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
+        if self._has_operation:
+            self._tuya.set_operation_mode(HA_STATE_TO_TUYA.get(hvac_mode))
 
     @property
     def supported_features(self):
@@ -187,9 +243,19 @@ class TuyaClimateEntity(TuyaDevice, ClimateEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._tuya.min_temp()
+        min_temp = (
+            self._min_temp if self._min_temp is not None else self._tuya.min_temp()
+        )
+        if min_temp is not None:
+            return min_temp
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._tuya.max_temp()
+        max_temp = (
+            self._max_temp if self._max_temp is not None else self._tuya.max_temp()
+        )
+        if max_temp is not None:
+            return max_temp
+        return super().max_temp

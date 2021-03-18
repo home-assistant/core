@@ -1,6 +1,4 @@
 """Support for powerwall binary sensors."""
-import logging
-
 from tesla_powerwall import GridStatus
 
 from homeassistant.components.binary_sensor import (
@@ -19,12 +17,9 @@ from .const import (
     POWERWALL_API_SITE_INFO,
     POWERWALL_API_SITEMASTER,
     POWERWALL_API_STATUS,
-    POWERWALL_BATTERY_METER,
     POWERWALL_COORDINATOR,
 )
 from .entity import PowerWallEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -74,7 +69,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Get the powerwall running state."""
-        return self.coordinator.data[POWERWALL_API_SITEMASTER].running
+        return self.coordinator.data[POWERWALL_API_SITEMASTER].is_running
 
 
 class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
@@ -98,7 +93,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Get the powerwall connected to tesla state."""
-        return self.coordinator.data[POWERWALL_API_SITEMASTER].connected_to_tesla
+        return self.coordinator.data[POWERWALL_API_SITEMASTER].is_connected_to_tesla
 
 
 class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
@@ -147,6 +142,4 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     def is_on(self):
         """Powerwall is charging."""
         # is_sending_to returns true for values greater than 100 watts
-        return self.coordinator.data[POWERWALL_API_METERS][
-            POWERWALL_BATTERY_METER
-        ].is_sending_to()
+        return self.coordinator.data[POWERWALL_API_METERS].battery.is_sending_to()

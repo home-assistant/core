@@ -2,22 +2,21 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "already_in_progress": "Konfiguracja dla tej bramki jest ju\u017c w toku",
-            "not_xiaomi_aqara": "To nie jest bramka Xiaomi Aqara, wykryte urz\u0105dzenie nie pasuje do znanych bramek."
+            "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "not_xiaomi_aqara": "To nie jest bramka Xiaomi Aqara, wykryte urz\u0105dzenie nie pasuje do znanych bramek"
         },
         "error": {
-            "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki Xiaomi Aqara, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu.",
-            "invalid_host": "Adres IP jest nieprawid\u0142owy, po pomoc w rozwi\u0105zaniu problemu wejd\u017a tutaj: https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem",
-            "invalid_interface": "Nieprawid\u0142owy interfejs sieciowy.",
-            "invalid_key": "Nieprawid\u0142owy klucz bramki.",
-            "invalid_mac": "Nieprawid\u0142owy adres MAC",
-            "not_found_error": "Nie mo\u017cna odnale\u017a\u0107 wykrytej bramki, aby uzyska\u0107 niezb\u0119dne informacje, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu."
+            "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 bramki Xiaomi Aqara, spr\u00f3buj u\u017cy\u0107 adresu IP urz\u0105dzenia, na kt\u00f3rym pracuje Home Assistant jako interfejsu",
+            "invalid_host": "Nieprawid\u0142owa nazwa hosta lub adres IP, po pomoc w rozwi\u0105zaniu problemu kliknij [tutaj]({https://www.home-assistant.io/integrations/xiaomi_aqara/#connection-problem)}",
+            "invalid_interface": "Nieprawid\u0142owy interfejs sieciowy",
+            "invalid_key": "Nieprawid\u0142owy klucz bramki",
+            "invalid_mac": "Nieprawid\u0142owy adres MAC"
         },
         "flow_title": "Bramka Xiaomi Aqara: {name}",
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP bramki"
+                    "select_ip": "Adres IP"
                 },
                 "description": "Uruchom konfiguracj\u0119 ponownie, je\u015bli chcesz pod\u0142\u0105czy\u0107 dodatkowe bramki",
                 "title": "Wybierz bramk\u0119 Xiaomi Aqara, z kt\u00f3r\u0105 chcesz si\u0119 po\u0142\u0105czy\u0107"

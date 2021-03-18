@@ -351,10 +351,10 @@ async def test_light(hass, light_data, light_msg, light_rgb_msg, sent_messages):
 
 
 async def test_pure_rgb_dimmer_light(
-    hass, light_pure_rgb_dimmer_data, light_msg, light_pure_rgb_msg, sent_messages
+    hass, light_data, light_pure_rgb_msg, sent_messages
 ):
     """Test light with no color channels command class."""
-    receive_message = await setup_ozw(hass, fixture=light_pure_rgb_dimmer_data)
+    receive_message = await setup_ozw(hass, fixture=light_data)
 
     # Test loaded
     state = hass.states.get("light.kitchen_rgb_strip_level")
@@ -392,9 +392,9 @@ async def test_pure_rgb_dimmer_light(
     assert state.attributes["hs_color"] == (300.0, 70.196)
 
 
-async def test_no_rgb_light(hass, light_no_rgb_data, light_no_rgb_msg, sent_messages):
+async def test_no_rgb_light(hass, light_data, light_no_rgb_msg, sent_messages):
     """Test setting up config entry."""
-    receive_message = await setup_ozw(hass, fixture=light_no_rgb_data)
+    receive_message = await setup_ozw(hass, fixture=light_data)
 
     # Test loaded no RGBW support (dimmer only)
     state = hass.states.get("light.master_bedroom_l_level")

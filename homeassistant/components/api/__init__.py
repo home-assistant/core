@@ -37,7 +37,6 @@ from homeassistant.helpers import template
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
-from homeassistant.helpers.state import AsyncTrackStates
 from homeassistant.helpers.system_info import async_get_system_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +55,7 @@ STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Register the API with the HTTP interface."""
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)
@@ -367,20 +366,27 @@ class APIDomainServicesView(HomeAssistantView):
 
         Returns a list of changed states.
         """
-        hass = request.app["hass"]
+        hass: ha.HomeAssistant = request.app["hass"]
         body = await request.text()
         try:
             data = json.loads(body) if body else None
         except ValueError:
             return self.json_message("Data should be valid JSON.", HTTP_BAD_REQUEST)
 
-        with AsyncTrackStates(hass) as changed_states:
-            try:
-                await hass.services.async_call(
-                    domain, service, data, True, self.context(request)
-                )
-            except (vol.Invalid, ServiceNotFound) as ex:
-                raise HTTPBadRequest() from ex
+        context = self.context(request)
+
+        try:
+            await hass.services.async_call(
+                domain, service, data, blocking=True, context=context
+            )
+        except (vol.Invalid, ServiceNotFound) as ex:
+            raise HTTPBadRequest() from ex
+
+        changed_states = []
+
+        for state in hass.states.async_all():
+            if state.context is context:
+                changed_states.append(state)
 
         return self.json(changed_states)
 
@@ -410,7 +416,7 @@ class APITemplateView(HomeAssistantView):
         try:
             data = await request.json()
             tpl = template.Template(data["template"], request.app["hass"])
-            return tpl.async_render(data.get("variables"))
+            return tpl.async_render(variables=data.get("variables"), parse_result=False)
         except (ValueError, TemplateError) as ex:
             return self.json_message(
                 f"Error rendering template: {ex}", HTTP_BAD_REQUEST

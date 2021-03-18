@@ -5,10 +5,10 @@
             "already_in_progress": "\u6b64\u5c0f\u7c73\u8bbe\u5907\u7684\u914d\u7f6e\u6d41\u7a0b\u5df2\u5728\u8fdb\u884c\u4e2d\u3002"
         },
         "error": {
-            "connect_error": "\u8fde\u63a5\u5931\u8d25\uff0c\u8bf7\u91cd\u8bd5",
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
             "no_device_selected": "\u672a\u9009\u62e9\u8bbe\u5907\uff0c\u8bf7\u9009\u62e9\u4e00\u4e2a\u8bbe\u5907\u3002"
         },
-        "flow_title": "\u5c0f\u7c73 Miio: {name}",
+        "flow_title": "Xiaomi Miio: {name}",
         "step": {
             "gateway": {
                 "data": {
@@ -24,7 +24,7 @@
                     "gateway": "\u8fde\u63a5\u5230\u5c0f\u7c73\u7f51\u5173"
                 },
                 "description": "\u8bf7\u9009\u62e9\u8981\u8fde\u63a5\u7684\u8bbe\u5907\u3002",
-                "title": "\u5c0f\u7c73 Miio"
+                "title": "Xiaomi Miio"
             }
         }
     }

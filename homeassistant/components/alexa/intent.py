@@ -18,6 +18,7 @@ INTENTS_API_ENDPOINT = "/api/alexa"
 
 
 class SpeechType(enum.Enum):
+    # pylint: disable=invalid-name
     """The Alexa speech types."""
 
     plaintext = "PlainText"
@@ -28,6 +29,7 @@ SPEECH_MAPPINGS = {"plain": SpeechType.plaintext, "ssml": SpeechType.ssml}
 
 
 class CardType(enum.Enum):
+    # pylint: disable=invalid-name
     """The Alexa card types."""
 
     simple = "Simple"
@@ -271,7 +273,7 @@ class AlexaResponse:
 
         self.reprompt = {
             "type": speech_type.value,
-            key: text.async_render(self.variables),
+            key: text.async_render(self.variables, parse_result=False),
         }
 
     def as_dict(self):

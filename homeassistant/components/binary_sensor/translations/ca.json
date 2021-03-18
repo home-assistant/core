@@ -98,6 +98,10 @@
             "off": "Normal",
             "on": "Baixa"
         },
+        "battery_charging": {
+            "off": "No carregant",
+            "on": "Carregant"
+        },
         "cold": {
             "off": "Normal",
             "on": "Fred"
@@ -122,6 +126,10 @@
             "off": "Normal",
             "on": "Calent"
         },
+        "light": {
+            "off": "No s'ha detectat llum",
+            "on": "Llum detectada"
+        },
         "lock": {
             "off": "Bloquejat",
             "on": "Desbloquejat"
@@ -134,6 +142,10 @@
             "off": "Lliure",
             "on": "Detectat"
         },
+        "moving": {
+            "off": "Parat",
+            "on": "En moviment"
+        },
         "occupancy": {
             "off": "Lliure",
             "on": "Detectat"
@@ -141,6 +153,10 @@
         "opening": {
             "off": "Tancat/ada",
             "on": "Obert/a"
+        },
+        "plug": {
+            "off": "Desendollat",
+            "on": "Endollat"
         },
         "presence": {
             "off": "Fora",

@@ -5,12 +5,27 @@
             "unknown": "Onbekende fout: probeer het later nog eens"
         },
         "step": {
+            "cities": {
+                "data": {
+                    "city": "Stad"
+                },
+                "title": "M\u00e9t\u00e9o-France"
+            },
             "user": {
                 "data": {
                     "city": "Stad"
                 },
                 "description": "Vul de postcode (alleen voor Frankrijk, aanbevolen) of de plaatsnaam in",
                 "title": "M\u00e9t\u00e9o-France"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "mode": "Voorspellingsmodus"
+                }
             }
         }
     }

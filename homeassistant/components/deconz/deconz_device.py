@@ -81,14 +81,13 @@ class DeconzDevice(DeconzBase, Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.remove_callback(self.async_update_callback)
-        if self.entity_id in self.gateway.deconz_ids:
-            del self.gateway.deconz_ids[self.entity_id]
+        del self.gateway.deconz_ids[self.entity_id]
         self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the device's state."""
-        if ignore_update:
+        if not force_update and self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()

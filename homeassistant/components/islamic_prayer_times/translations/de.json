@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "one_instance_allowed": "Es ist nur eine einzige Instanz erforderlich."
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         }
     },
     "title": "Islamische Gebetszeiten"

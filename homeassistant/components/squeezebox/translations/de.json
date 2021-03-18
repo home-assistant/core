@@ -1,8 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "edit": {
                 "data": {
+                    "host": "Host",
                     "password": "Passwort",
                     "port": "Port",
                     "username": "Benutzername"
@@ -14,6 +23,5 @@
                 }
             }
         }
-    },
-    "title": "Logitech Squeezebox"
+    }
 }

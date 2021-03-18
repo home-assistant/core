@@ -1,3 +1,21 @@
 {
-    "title": "Home Assistant"
+    "system_health": {
+        "info": {
+            "arch": "Architettura della CPU",
+            "chassis": "Telaio",
+            "dev": "Sviluppo",
+            "docker": "Docker",
+            "docker_version": "Docker",
+            "hassio": "Supervisor",
+            "host_os": "Sistema Operativo di Home Assistant",
+            "installation_type": "Tipo di installazione",
+            "os_name": "Famiglia del Sistema Operativo",
+            "os_version": "Versione del Sistema Operativo",
+            "python_version": "Versione Python",
+            "supervisor": "Supervisor",
+            "timezone": "Fuso orario",
+            "version": "Versione",
+            "virtualenv": "Ambiente virtuale"
+        }
+    }
 }

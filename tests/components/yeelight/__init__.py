@@ -1,5 +1,7 @@
 """Tests for the Yeelight integration."""
-from yeelight import BulbType
+from unittest.mock import MagicMock, patch
+
+from yeelight import BulbException, BulbType
 from yeelight.main import _MODEL_SPECS
 
 from homeassistant.components.yeelight import (
@@ -8,10 +10,9 @@ from homeassistant.components.yeelight import (
     CONF_SAVE_ON_CHANGE,
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    YeelightScanner,
 )
 from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
-
-from tests.async_mock import MagicMock, patch
 
 IP_ADDRESS = "192.168.1.239"
 MODEL = "color"
@@ -27,7 +28,8 @@ CAPABILITIES = {
     "name": "",
 }
 
-NAME = f"yeelight_{MODEL}_{ID}"
+NAME = "name"
+UNIQUE_NAME = f"yeelight_{MODEL}_{ID}"
 
 MODULE = "homeassistant.components.yeelight"
 MODULE_CONFIG_FLOW = f"{MODULE}.config_flow"
@@ -53,9 +55,11 @@ PROPERTIES = {
     "current_brightness": "30",
 }
 
-ENTITY_BINARY_SENSOR = f"binary_sensor.{NAME}_nightlight"
-ENTITY_LIGHT = f"light.{NAME}"
-ENTITY_NIGHTLIGHT = f"light.{NAME}_nightlight"
+ENTITY_BINARY_SENSOR_TEMPLATE = "binary_sensor.{}_nightlight"
+ENTITY_BINARY_SENSOR = ENTITY_BINARY_SENSOR_TEMPLATE.format(UNIQUE_NAME)
+ENTITY_LIGHT = f"light.{UNIQUE_NAME}"
+ENTITY_NIGHTLIGHT = f"light.{UNIQUE_NAME}_nightlight"
+ENTITY_AMBILIGHT = f"light.{UNIQUE_NAME}_ambilight"
 
 YAML_CONFIGURATION = {
     DOMAIN: {
@@ -80,6 +84,9 @@ def _mocked_bulb(cannot_connect=False):
     type(bulb).get_capabilities = MagicMock(
         return_value=None if cannot_connect else CAPABILITIES
     )
+    type(bulb).get_properties = MagicMock(
+        side_effect=BulbException if cannot_connect else None
+    )
     type(bulb).get_model_specs = MagicMock(return_value=_MODEL_SPECS[MODEL])
 
     bulb.capabilities = CAPABILITIES
@@ -92,6 +99,8 @@ def _mocked_bulb(cannot_connect=False):
 
 
 def _patch_discovery(prefix, no_device=False):
+    YeelightScanner._scanner = None  # Clear class scanner to reset hass
+
     def _mocked_discovery(timeout=2, interface=False):
         if no_device:
             return []

@@ -9,7 +9,6 @@ ZEROCONF_GATEWAY = "lumi-gateway"
 ZEROCONF_ACPARTNER = "lumi-acpartner"
 
 CONF_INTERFACE = "interface"
-CONF_PROTOCOL = "protocol"
 CONF_KEY = "key"
 CONF_SID = "sid"
 
@@ -36,10 +35,12 @@ BATTERY_MODELS = [
     "sensor_86sw1",
     "sensor_86sw1.aq1",
     "remote.b186acn01",
+    "remote.b186acn02",
     "86sw2",
     "sensor_86sw2",
     "sensor_86sw2.aq1",
     "remote.b286acn01",
+    "remote.b286acn02",
     "cube",
     "sensor_cube",
     "sensor_cube.aqgl01",

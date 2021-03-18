@@ -5,11 +5,26 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
 DOMAIN = "broadlink"
 
-DOMAINS_AND_TYPES = (
-    (REMOTE_DOMAIN, ("RM2", "RM4")),
-    (SENSOR_DOMAIN, ("A1", "RM2", "RM4")),
-    (SWITCH_DOMAIN, ("MP1", "RM2", "RM4", "SP1", "SP2")),
-)
+DOMAINS_AND_TYPES = {
+    REMOTE_DOMAIN: {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"},
+    SENSOR_DOMAIN: {"A1", "RM4MINI", "RM4PRO", "RMPRO"},
+    SWITCH_DOMAIN: {
+        "BG1",
+        "MP1",
+        "RM4MINI",
+        "RM4PRO",
+        "RMMINI",
+        "RMMINIB",
+        "RMPRO",
+        "SP1",
+        "SP2",
+        "SP2S",
+        "SP3",
+        "SP3S",
+        "SP4",
+        "SP4B",
+    },
+}
 
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 5

@@ -2,11 +2,10 @@
 from collections import namedtuple
 from contextlib import contextmanager
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant.components import jewish_calendar
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])
 

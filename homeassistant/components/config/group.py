@@ -1,8 +1,14 @@
 """Provide configuration end points for Groups."""
-from homeassistant.components.group import DOMAIN, GROUP_SCHEMA
+from homeassistant.components.group import (
+    DOMAIN,
+    GROUP_SCHEMA,
+    GroupIntegrationRegistry,
+)
 from homeassistant.config import GROUP_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EditKeyBasedConfigView
 
@@ -25,3 +31,11 @@ async def async_setup(hass):
         )
     )
     return True
+
+
+@callback
+def async_describe_on_off_states(
+    hass: HomeAssistantType, registry: GroupIntegrationRegistry
+) -> None:
+    """Describe group on off states."""
+    return

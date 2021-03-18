@@ -1,6 +1,4 @@
 """Support for tracking the moon phases."""
-import logging
-
 from astral import Astral
 import voluptuous as vol
 
@@ -9,8 +7,6 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Moon"
 
@@ -53,6 +49,7 @@ class MoonSensor(Entity):
         """Initialize the moon sensor."""
         self._name = name
         self._state = None
+        self._astral = Astral()
 
     @property
     def name(self):
@@ -91,4 +88,4 @@ class MoonSensor(Entity):
     async def async_update(self):
         """Get the time and updates the states."""
         today = dt_util.as_local(dt_util.utcnow()).date()
-        self._state = Astral().moon_phase(today)
+        self._state = self._astral.moon_phase(today)

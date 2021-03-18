@@ -1,6 +1,4 @@
 """Support for KWB Easyfire."""
-import logging
-
 from pykwb import kwb
 import voluptuous as vol
 
@@ -14,8 +12,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_RAW = False
 DEFAULT_NAME = "KWB"

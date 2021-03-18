@@ -53,6 +53,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -120,6 +121,7 @@ async def test_updates_from_signals(hass, config_entry, config, controller, favo
         const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
+
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_PLAYING
 
@@ -227,6 +229,7 @@ async def test_updates_from_players_changed(
         const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
     await event.wait()
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_PLAYING
 
 
@@ -235,13 +238,13 @@ async def test_updates_from_players_changed_new_ids(
 ):
     """Test player updates from changes to available players."""
     await setup_platform(hass, config_entry, config)
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     player = controller.players[1]
     event = asyncio.Event()
 
     # Assert device registry matches current id
-    assert device_registry.async_get_device({(DOMAIN, 1)}, [])
+    assert device_registry.async_get_device({(DOMAIN, 1)})
     # Assert entity registry matches current id
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
@@ -262,7 +265,7 @@ async def test_updates_from_players_changed_new_ids(
 
     # Assert device registry identifiers were updated
     assert len(device_registry.devices) == 1
-    assert device_registry.async_get_device({(DOMAIN, 101)}, [])
+    assert device_registry.async_get_device({(DOMAIN, 101)})
     # Assert entity registry unique id was updated
     assert len(entity_registry.entities) == 1
     assert (
@@ -585,10 +588,10 @@ async def test_select_input_command_error(
 
 
 async def test_unload_config_entry(hass, config_entry, config, controller):
-    """Test the player is removed when the config entry is unloaded."""
+    """Test the player is set unavailable when the config entry is unloaded."""
     await setup_platform(hass, config_entry, config)
     await config_entry.async_unload(hass)
-    assert not hass.states.get("media_player.test_player")
+    assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
 
 async def test_play_media_url(hass, config_entry, config, controller, caplog):

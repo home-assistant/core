@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "{entity_name} Batteriestand",
+            "is_carbon_dioxide": "Aktuelle {entity_name} Kohlenstoffdioxid-Konzentration",
+            "is_carbon_monoxide": "Aktuelle {entity_name} Kohlenstoffmonoxid-Konzentration",
             "is_humidity": "{entity_name} Feuchtigkeit",
             "is_illuminance": "Aktuelle {entity_name} Helligkeit",
             "is_power": "Aktuelle {entity_name} Leistung",
@@ -13,6 +15,8 @@
         },
         "trigger_type": {
             "battery_level": "{entity_name} Batteriestatus\u00e4nderungen",
+            "carbon_dioxide": "{entity_name} Kohlenstoffdioxid-Konzentrations\u00e4nderung",
+            "carbon_monoxide": "{entity_name} Kohlenstoffmonoxid-Konzentrations\u00e4nderung",
             "humidity": "{entity_name} Feuchtigkeits\u00e4nderungen",
             "illuminance": "{entity_name} Helligkeits\u00e4nderungen",
             "power": "{entity_name} Leistungs\u00e4nderungen",

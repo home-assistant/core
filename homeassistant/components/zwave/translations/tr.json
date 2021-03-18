@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
         "step": {
             "user": {
                 "data": {
@@ -16,8 +20,8 @@
             "sleeping": "Uyuyor"
         },
         "query_stage": {
-            "dead": "\u00d6l\u00fc ({query_stage})",
-            "initializing": "Ba\u015flat\u0131l\u0131yor ( {query_stage} )"
+            "dead": "\u00d6l\u00fc",
+            "initializing": "Ba\u015flat\u0131l\u0131yor"
         }
     }
 }

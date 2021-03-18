@@ -13,8 +13,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_ELGATO_CLIENT, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Elgato Key Light components."""
@@ -34,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await elgato.info()
     except ElgatoConnectionError as exception:
+        logging.getLogger(__name__).debug("Unable to connect: %s", exception)
         raise ConfigEntryNotReady from exception
 
     hass.data.setdefault(DOMAIN, {})

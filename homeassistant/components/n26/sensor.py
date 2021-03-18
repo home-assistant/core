@@ -1,12 +1,8 @@
 """Support for N26 bank account sensors."""
-import logging
-
 from homeassistant.helpers.entity import Entity
 
 from . import DEFAULT_SCAN_INTERVAL, DOMAIN, timestamp_ms_to_date
 from .const import DATA
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
@@ -90,7 +86,7 @@ class N26Account(Entity):
         return self._data.balance.get("currency")
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {
             ATTR_IBAN: self._data.balance.get("iban"),
@@ -151,7 +147,7 @@ class N26Card(Entity):
         return self._card["status"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         attributes = {
             "apple_pay_eligible": self._card.get("applePayEligible"),
@@ -224,7 +220,7 @@ class N26Space(Entity):
         return self._space["balance"]["currency"]
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Additional attributes of the sensor."""
         goal_value = ""
         if "goal" in self._space:

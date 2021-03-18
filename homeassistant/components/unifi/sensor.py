@@ -1,5 +1,10 @@
-"""Support for bandwidth sensors with UniFi clients."""
-import logging
+"""Sensor platform for UniFi integration.
+
+Support for bandwidth sensors of network clients.
+Support for uptime sensors of network clients.
+"""
+
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN
 from homeassistant.const import DATA_MEGABYTES
@@ -10,15 +15,9 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as UNIFI_DOMAIN
 from .unifi_client import UniFiClient
 
-LOGGER = logging.getLogger(__name__)
-
 RX_SENSOR = "rx"
 TX_SENSOR = "tx"
 UPTIME_SENSOR = "uptime"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Sensor platform doesn't support configuration through configuration.yaml."""
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -144,8 +143,10 @@ class UniFiUpTimeSensor(UniFiClient):
         return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def state(self) -> int:
+    def state(self) -> datetime:
         """Return the uptime of the client."""
+        if self.client.uptime < 1000000000:
+            return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()
         return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
 
     async def options_updated(self) -> None:

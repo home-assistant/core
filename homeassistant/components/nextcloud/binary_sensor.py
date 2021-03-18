@@ -1,11 +1,7 @@
 """Summary binary data from Nextcoud."""
-import logging
-
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from . import BINARY_SENSORS, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

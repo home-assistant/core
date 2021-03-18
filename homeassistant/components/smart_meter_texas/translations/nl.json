@@ -1,8 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kon niet verbinden",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
         "step": {
             "user": {
                 "data": {
+                    "password": "Wachtwoord",
                     "username": "Benutzername"
                 }
             }

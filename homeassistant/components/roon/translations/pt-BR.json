@@ -17,10 +17,8 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Por favor, digite seu hostname ou IP do servidor Roon.",
-                "title": "Configurar Servidor Roon"
+                "description": "Por favor, digite seu hostname ou IP do servidor Roon."
             }
         }
-    },
-    "title": "Roon"
+    }
 }

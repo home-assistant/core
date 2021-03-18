@@ -1,6 +1,4 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-import logging
-
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import (
     ATTR_SOURCE_TYPE,
@@ -18,8 +16,6 @@ from homeassistant.helpers import device_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as OT_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -78,7 +74,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return self._data.get("battery")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific attributes."""
         return self._data.get("attributes")
 

@@ -1,12 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4."
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
         },
         "error": {
-            "login": "\ub85c\uadf8\uc778 \uc624\ub958: \uc0ac\uc6a9\uc790 \uc774\ub984 \ubc0f \ube44\ubc00\ubc88\ud638\ub97c \ud655\uc778\ud574\uc8fc\uc138\uc694"
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "usercode": "\uc774 \uc704\uce58\uc758 \ud574\ub2f9 \uc0ac\uc6a9\uc790\uc5d0 \ub300\ud55c \uc0ac\uc6a9\uc790 \ucf54\ub4dc\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
         },
         "step": {
+            "locations": {
+                "data": {
+                    "location": "\uc704\uce58"
+                },
+                "description": "\uc774 \uc704\uce58\uc758 \ud574\ub2f9 \uc0ac\uc6a9\uc790\uc5d0 \ub300\ud55c \uc0ac\uc6a9\uc790 \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
+                "title": "\uc704\uce58 \uc0ac\uc6a9\uc790 \ucf54\ub4dc"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect\ub294 \uacc4\uc815\uc744 \ub2e4\uc2dc \uc778\uc99d\ud574\uc57c \ud569\ub2c8\ub2e4",
+                "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d\ud558\uae30"
+            },
             "user": {
                 "data": {
                     "password": "\ube44\ubc00\ubc88\ud638",

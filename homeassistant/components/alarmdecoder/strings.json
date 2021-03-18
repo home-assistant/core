@@ -18,7 +18,7 @@
       }
     },
     "error": {
-      "service_unavailable": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "create_entry": { "default": "Successfully connected to AlarmDecoder." },
     "abort": {

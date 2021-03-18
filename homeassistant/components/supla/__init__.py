@@ -126,7 +126,7 @@ async def discover_devices(hass, hass_config):
 
             if channel_function == SUPLA_FUNCTION_NONE:
                 _LOGGER.debug(
-                    "Ignored function: %s, channel id: %s",
+                    "Ignored function: %s, channel ID: %s",
                     channel_function,
                     channel["id"],
                 )
@@ -136,7 +136,7 @@ async def discover_devices(hass, hass_config):
 
             if component_name is None:
                 _LOGGER.warning(
-                    "Unsupported function: %s, channel id: %s",
+                    "Unsupported function: %s, channel ID: %s",
                     channel_function,
                     channel["id"],
                 )

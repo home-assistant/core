@@ -160,6 +160,8 @@ class EVSensor(Entity):
         """Update state."""
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
+            if self._unit_of_measurement == "miles":
+                self._state = round(self._state)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
             self.async_write_ha_state()
@@ -170,7 +172,7 @@ class EVSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self._state_attributes
 

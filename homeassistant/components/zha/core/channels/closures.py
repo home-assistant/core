@@ -1,6 +1,4 @@
 """Closures channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.closures as closures
 
 from homeassistant.core import callback
@@ -8,8 +6,6 @@ from homeassistant.core import callback
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 from .base import ClientChannel, ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.DoorLock.cluster_id)
@@ -38,11 +34,6 @@ class DoorLockChannel(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
-        await super().async_initialize(from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(closures.Shade.cluster_id)
@@ -89,8 +80,3 @@ class WindowCovering(ZigbeeChannel):
             self.async_send_signal(
                 f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
             )
-
-    async def async_initialize(self, from_cache):
-        """Initialize channel."""
-        await self.get_attribute_value(self._value_attribute, from_cache=from_cache)
-        await super().async_initialize(from_cache)

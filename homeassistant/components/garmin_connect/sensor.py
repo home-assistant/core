@@ -1,6 +1,8 @@
 """Platform for Garmin Connect integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from garminconnect import (
     GarminConnectAuthenticationError,
@@ -13,6 +15,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
+from .alarm_util import calculate_next_active_alarms
 from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST
 
 _LOGGER = logging.getLogger(__name__)
@@ -119,19 +122,23 @@ class GarminConnectSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for sensor."""
-        attributes = {}
-        if self._data.data:
-            attributes = {
-                "source": self._data.data["source"],
-                "last_synced": self._data.data["lastSyncTimestampGMT"],
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-            }
+        if not self._data.data:
+            return {}
+        attributes = {
+            "source": self._data.data["source"],
+            "last_synced": self._data.data["lastSyncTimestampGMT"],
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+        if self._type == "nextAlarm":
+            attributes["next_alarms"] = calculate_next_active_alarms(
+                self._data.data[self._type]
+            )
         return attributes
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},
@@ -178,6 +185,12 @@ class GarminConnectSensor(Entity):
             self._type == "bodyFat" or self._type == "bodyWater" or self._type == "bmi"
         ):
             self._state = round(data[self._type], 2)
+        elif self._type == "nextAlarm":
+            active_alarms = calculate_next_active_alarms(data[self._type])
+            if active_alarms:
+                self._state = active_alarms[0]
+            else:
+                self._available = False
         else:
             self._state = data[self._type]
 

@@ -1,5 +1,4 @@
 """Support for showing random numbers."""
-import logging
 from random import randrange
 
 import voluptuous as vol
@@ -13,8 +12,6 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_MAXIMUM = "maximum"
 ATTR_MINIMUM = "minimum"
@@ -77,7 +74,7 @@ class RandomSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         return {ATTR_MAXIMUM: self._maximum, ATTR_MINIMUM: self._minimum}
 

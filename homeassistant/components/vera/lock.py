@@ -1,5 +1,4 @@
 """Support for Vera locks."""
-import logging
 from typing import Any, Callable, Dict, List, Optional
 
 import pyvera as veraApi
@@ -17,8 +16,6 @@ from homeassistant.helpers.entity import Entity
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
-_LOGGER = logging.getLogger(__name__)
-
 ATTR_LAST_USER_NAME = "changed_by_name"
 ATTR_LOW_BATTERY = "low_battery"
 
@@ -34,7 +31,8 @@ async def async_setup_entry(
         [
             VeraLock(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -63,14 +61,14 @@ class VeraLock(VeraDevice[veraApi.VeraLock], LockEntity):
         return self._state == STATE_LOCKED
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Who unlocked the lock and did a low battery alert fire.
 
         Reports on the previous poll cycle.
         changed_by_name is a string like 'Bob'.
         low_battery is 1 if an alert fired, 0 otherwise.
         """
-        data = super().device_state_attributes
+        data = super().extra_state_attributes
 
         last_user = self.vera_device.get_last_user_alert()
         if last_user is not None:

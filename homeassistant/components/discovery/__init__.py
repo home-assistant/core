@@ -1,11 +1,4 @@
-"""
-Starts a service to scan in intervals for new devices.
-
-Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
-
-Knows which components handle certain types, will make sure they are
-loaded before the EVENT_PLATFORM_DISCOVERED is fired.
-"""
+"""Starts a service to scan in intervals for new devices."""
 from datetime import timedelta
 import json
 import logging
@@ -29,7 +22,6 @@ SERVICE_APPLE_TV = "apple_tv"
 SERVICE_DAIKIN = "daikin"
 SERVICE_DLNA_DMR = "dlna_dmr"
 SERVICE_ENIGMA2 = "enigma2"
-SERVICE_FREEBOX = "freebox"
 SERVICE_HASS_IOS_APP = "hass_ios"
 SERVICE_HASSIO = "hassio"
 SERVICE_HEOS = "heos"
@@ -45,25 +37,17 @@ SERVICE_WEMO = "belkin_wemo"
 SERVICE_WINK = "wink"
 SERVICE_XIAOMI_GW = "xiaomi_gw"
 
+# These have custom protocols
 CONFIG_ENTRY_HANDLERS = {
-    SERVICE_DAIKIN: "daikin",
     SERVICE_TELLDUSLIVE: "tellduslive",
     "logitech_mediaserver": "squeezebox",
 }
 
+# These have no config flows
 SERVICE_HANDLERS = {
-    SERVICE_MOBILE_APP: ("mobile_app", None),
-    SERVICE_HASS_IOS_APP: ("ios", None),
     SERVICE_NETGEAR: ("device_tracker", None),
-    SERVICE_HASSIO: ("hassio", None),
-    SERVICE_APPLE_TV: ("apple_tv", None),
     SERVICE_ENIGMA2: ("media_player", "enigma2"),
-    SERVICE_WINK: ("wink", None),
     SERVICE_SABNZBD: ("sabnzbd", None),
-    SERVICE_SAMSUNG_PRINTER: ("sensor", None),
-    SERVICE_KONNECTED: ("konnected", None),
-    SERVICE_OCTOPRINT: ("octoprint", None),
-    SERVICE_FREEBOX: ("freebox", None),
     "yamaha": ("media_player", "yamaha"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
@@ -76,20 +60,29 @@ SERVICE_HANDLERS = {
 OPTIONAL_SERVICE_HANDLERS = {SERVICE_DLNA_DMR: ("media_player", "dlna_dmr")}
 
 MIGRATED_SERVICE_HANDLERS = [
+    SERVICE_APPLE_TV,
     "axis",
     "deconz",
+    SERVICE_DAIKIN,
     "denonavr",
     "esphome",
     "google_cast",
+    SERVICE_HASS_IOS_APP,
+    SERVICE_HASSIO,
     SERVICE_HEOS,
     "harmony",
     "homekit",
     "ikea_tradfri",
     "kodi",
+    SERVICE_KONNECTED,
+    SERVICE_MOBILE_APP,
+    SERVICE_OCTOPRINT,
     "philips_hue",
+    SERVICE_SAMSUNG_PRINTER,
     "sonos",
     "songpal",
     SERVICE_WEMO,
+    SERVICE_WINK,
     SERVICE_XIAOMI_GW,
     "volumio",
     SERVICE_YEELIGHT,
@@ -193,7 +186,9 @@ async def async_setup(hass, config):
     async def scan_devices(now):
         """Scan for devices."""
         try:
-            results = await hass.async_add_job(_discover, netdisco, zeroconf_instance)
+            results = await hass.async_add_executor_job(
+                _discover, netdisco, zeroconf_instance
+            )
 
             for result in results:
                 hass.async_create_task(new_service_found(*result))

@@ -1,6 +1,7 @@
 """The tests device sun light trigger component."""
 # pylint: disable=protected-access
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -24,7 +25,6 @@ from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 
@@ -176,6 +176,8 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
             {"person": [{"id": "me", "name": "Me", "device_trackers": [device_1]}]},
         )
 
+        assert await async_setup_component(hass, "group", {})
+        await hass.async_block_till_done()
         await group.Group.async_create_group(hass, "person_me", ["person.me"])
 
         assert await async_setup_component(

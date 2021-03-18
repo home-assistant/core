@@ -1,12 +1,8 @@
 """Protocol channels module for Zigbee Home Automation."""
-import logging
-
 import zigpy.zcl.clusters.protocol as protocol
 
 from .. import registries
 from .base import ZigbeeChannel
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(protocol.AnalogInputExtended.cluster_id)

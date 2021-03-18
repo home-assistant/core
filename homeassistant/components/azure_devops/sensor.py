@@ -1,7 +1,8 @@
 """Support for Azure DevOps sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List
 
 from aioazuredevops.builds import DevOpsBuild
 from aioazuredevops.client import DevOpsClient
@@ -39,7 +40,7 @@ async def async_setup_entry(
     sensors = []
 
     try:
-        builds: List[DevOpsBuild] = await client.get_builds(
+        builds: list[DevOpsBuild] = await client.get_builds(
             organization, project, BUILDS_QUERY
         )
     except aiohttp.ClientError as exception:
@@ -92,7 +93,7 @@ class AzureDevOpsSensor(AzureDevOpsDeviceEntity):
         return self._state
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         return self._attributes
 

@@ -1,13 +1,10 @@
 """Support for tracking Tesla cars."""
-import logging
 from typing import Optional
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -45,9 +42,9 @@ class TeslaDeviceEntity(TeslaDevice, TrackerEntity):
         return SOURCE_TYPE_GPS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = super().device_state_attributes.copy()
+        attr = super().extra_state_attributes.copy()
         location = self.tesla_device.get_location()
         if location:
             attr.update(

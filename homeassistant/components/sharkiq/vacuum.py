@@ -28,7 +28,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, SHARK
 from .update_coordinator import SharkIqUpdateCoordinator
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 # Supported features
 SUPPORT_SHARKIQ = (
@@ -71,7 +71,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     coordinator: SharkIqUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     devices: Iterable["SharkIqVacuum"] = coordinator.shark_vacs.values()
     device_names = [d.name for d in devices]
-    LOGGER.debug(
+    _LOGGER.debug(
         "Found %d Shark IQ device(s): %s",
         len(device_names),
         ", ".join([d.name for d in devices]),
@@ -255,7 +255,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         return self.sharkiq.get_property_value(Properties.LOW_LIGHT_MISSION)
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> Dict:
         """Return a dictionary of device state attributes specific to sharkiq."""
         data = {
             ATTR_ERROR_CODE: self.error_code,

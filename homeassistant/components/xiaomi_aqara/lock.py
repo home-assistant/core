@@ -1,6 +1,4 @@
 """Support for Xiaomi Aqara locks."""
-import logging
-
 from homeassistant.components.lock import LockEntity
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import callback
@@ -8,8 +6,6 @@ from homeassistant.helpers.event import async_call_later
 
 from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
-
-_LOGGER = logging.getLogger(__name__)
 
 FINGER_KEY = "fing_verified"
 PASSWORD_KEY = "psw_verified"
@@ -54,7 +50,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         return self._changed_by
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         attributes = {ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times}
         return attributes

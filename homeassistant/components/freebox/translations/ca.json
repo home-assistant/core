@@ -4,7 +4,7 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "connection_failed": "Ha fallat la connexi\u00f3",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
             "register_failed": "No s'ha pogut registrar, torna-ho a provar",
             "unknown": "Error inesperat"
         },

@@ -12,7 +12,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
-from . import config_flow  # noqa: F401
 from .const import (
     CONF_HOST,
     DOMAIN,
@@ -124,8 +123,8 @@ async def async_unload_entry(hass, config_entry):
     interval_tracker()
     await asyncio.wait(
         [
-            hass.config_entries.async_forward_entry_unload(config_entry, component)
-            for component in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in hass.data.pop(CONFIG_ENTRY_IS_SETUP)
         ]
     )
     del hass.data[DOMAIN]

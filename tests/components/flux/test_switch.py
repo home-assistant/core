@@ -1,4 +1,6 @@
 """The tests for the Flux switch platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import light, switch
@@ -13,14 +15,12 @@ from homeassistant.core import State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
 )
-from tests.components.switch import common
 
 
 async def test_valid_config(hass):
@@ -224,8 +224,12 @@ async def test_flux_before_sunrise(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        await common.async_turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -278,8 +282,12 @@ async def test_flux_before_sunrise_known_location(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        await common.async_turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -333,8 +341,12 @@ async def test_flux_after_sunrise_before_sunset(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        await common.async_turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -389,8 +401,12 @@ async def test_flux_after_sunset_before_stop(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -444,8 +460,12 @@ async def test_flux_after_stop_before_sunrise(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -501,8 +521,12 @@ async def test_flux_with_custom_start_stop_times(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -559,8 +583,12 @@ async def test_flux_before_sunrise_stop_next_day(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -621,8 +649,12 @@ async def test_flux_after_sunrise_before_sunset_stop_next_day(
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -683,8 +715,12 @@ async def test_flux_after_sunset_before_midnight_stop_next_day(
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -744,8 +780,12 @@ async def test_flux_after_sunset_after_midnight_stop_next_day(
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -805,8 +845,12 @@ async def test_flux_after_stop_before_sunrise_stop_next_day(
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -863,8 +907,12 @@ async def test_flux_with_custom_colortemps(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -920,8 +968,12 @@ async def test_flux_with_custom_brightness(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -993,8 +1045,12 @@ async def test_flux_with_multiple_lights(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -1053,8 +1109,12 @@ async def test_flux_with_mired(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        common.turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
@@ -1106,8 +1166,12 @@ async def test_flux_with_rgb(hass, legacy_patchable_time):
         )
         await hass.async_block_till_done()
         turn_on_calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
-        await common.async_turn_on(hass, "switch.flux")
-        await hass.async_block_till_done()
+        await hass.services.async_call(
+            switch.DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.flux"},
+            blocking=True,
+        )
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]

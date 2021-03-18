@@ -33,16 +33,27 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             DemoLight(
-                "light_1",
-                "Bed Light",
-                False,
-                True,
+                unique_id="light_1",
+                name="Bed Light",
+                state=False,
+                available=True,
                 effect_list=LIGHT_EFFECT_LIST,
                 effect=LIGHT_EFFECT_LIST[0],
             ),
-            DemoLight("light_2", "Ceiling Lights", True, True, ct=LIGHT_TEMPS[1]),
             DemoLight(
-                "light_3", "Kitchen Lights", True, True, LIGHT_COLORS[1], LIGHT_TEMPS[0]
+                unique_id="light_2",
+                name="Ceiling Lights",
+                state=True,
+                available=True,
+                ct=LIGHT_TEMPS[1],
+            ),
+            DemoLight(
+                unique_id="light_3",
+                name="Kitchen Lights",
+                state=True,
+                available=True,
+                hs_color=LIGHT_COLORS[1],
+                ct=LIGHT_TEMPS[0],
             ),
         ]
     )

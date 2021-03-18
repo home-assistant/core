@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "D\u00ebs Postleitzuel ass scho konfigur\u00e9iert."
+            "already_configured": "Service ass scho konfigur\u00e9iert."
         },
         "error": {
             "invalid_zip_code": "Postleitzuel ass ong\u00eblteg"

@@ -2,7 +2,6 @@
 
 from collections import defaultdict
 from datetime import timedelta
-import logging
 
 import spotcrime
 import voluptuous as vol
@@ -23,8 +22,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_DAYS = "days"
 DEFAULT_DAYS = 1
@@ -106,7 +103,7 @@ class SpotCrimeSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

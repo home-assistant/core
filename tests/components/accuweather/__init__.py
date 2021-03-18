@@ -1,9 +1,9 @@
 """Tests for AccuWeather."""
 import json
+from unittest.mock import patch
 
 from homeassistant.components.accuweather.const import DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, load_fixture
 
 

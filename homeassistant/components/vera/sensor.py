@@ -1,6 +1,5 @@
 """Support for Vera sensors."""
 from datetime import timedelta
-import logging
 from typing import Callable, List, Optional, cast
 
 import pyvera as veraApi
@@ -14,8 +13,6 @@ from homeassistant.util import convert
 
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
-
-_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -31,7 +28,8 @@ async def async_setup_entry(
         [
             VeraSensor(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -70,7 +68,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
 
     def update(self) -> None:
         """Update the state."""
-
+        super().update()
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             self.current_value = self.vera_device.temperature
 

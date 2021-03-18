@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "auth_failed": "Anv\u00e4ndarnamn och/eller l\u00f6senord \u00e4r fel."
-        },
         "step": {
             "confirm": {
                 "data": {

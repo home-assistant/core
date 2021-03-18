@@ -7,6 +7,11 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Clau API"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Clau API",
@@ -14,7 +19,8 @@
                     "location": "Ubicaci\u00f3",
                     "name": "Nom",
                     "port": "Port",
-                    "ssl": "Utilitza SSL",
+                    "ssl": "Utilitza un certificat SSL",
+                    "statistics_only": "Nom\u00e9s les estad\u00edstiques",
                     "verify_ssl": "Verifica el certificat SSL"
                 }
             }

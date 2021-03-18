@@ -1,6 +1,7 @@
 """The tests for the Met Office sensor component."""
 from datetime import timedelta
 import json
+from unittest.mock import patch
 
 from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
@@ -13,7 +14,6 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 

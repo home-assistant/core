@@ -1,9 +1,9 @@
 """Test component/platform setup."""
 # pylint: disable=protected-access
 import asyncio
-import logging
 import os
 import threading
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -19,7 +19,6 @@ from homeassistant.helpers.config_validation import (
 )
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     MockConfigEntry,
     MockModule,
@@ -33,8 +32,6 @@ from tests.common import (
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
@@ -444,10 +441,14 @@ class TestSetup:
         """Test all init work done till start."""
         call_order = []
 
-        def component1_setup(hass, config):
+        async def component1_setup(hass, config):
             """Set up mock component."""
-            discovery.discover(hass, "test_component2", {}, "test_component2", {})
-            discovery.discover(hass, "test_component3", {}, "test_component3", {})
+            await discovery.async_discover(
+                hass, "test_component2", {}, "test_component2", {}
+            )
+            await discovery.async_discover(
+                hass, "test_component3", {}, "test_component3", {}
+            )
             return True
 
         def component_track_setup(hass, config):
@@ -456,7 +457,7 @@ class TestSetup:
             return True
 
         mock_integration(
-            self.hass, MockModule("test_component1", setup=component1_setup)
+            self.hass, MockModule("test_component1", async_setup=component1_setup)
         )
 
         mock_integration(

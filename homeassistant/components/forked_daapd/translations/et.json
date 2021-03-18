@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "not_forked_daapd": "Seade ei ole forked-daapd server."
+        },
+        "error": {
+            "forbidden": "Ei saa \u00fchendust. Kontrolli oma forked-daapd sidumise v\u00f5rgu\u00f5igusi.",
+            "unknown_error": "Tundmatu viga",
+            "websocket_not_enabled": "forked- daapd serveri veebisoklit pole lubatud.",
+            "wrong_host_or_port": "\u00dchendust ei saa luua. Palun kontrolli hosti ja porti.",
+            "wrong_password": "Vale salas\u00f5na.",
+            "wrong_server_type": "Forked-daapd sidumine n\u00f5uab forked-daapd serveri versioon >= 27.0."
+        },
+        "flow_title": "forked-daapd server: {name} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "S\u00f5bralik nimi",
+                    "password": "API salas\u00f5na (j\u00e4ta t\u00fchjaks kui salas\u00f5na puudub)",
+                    "port": ""
+                },
+                "title": "Seadista forked-daapd seade"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "Librespot-java pipe juhtimise port (kui seda kasutatakse)",
+                    "max_playlists": "Allikatena kasutatud esitusloendite maksimaalne arv",
+                    "tts_pause_time": "Paus sekundites enne ja p\u00e4rast TTS teavitust",
+                    "tts_volume": "TTS helitugevus (ujukoma vahemikus [0-1])"
+                },
+                "description": "M\u00e4\u00e4rake forked-daapd-i sidumise erinevad valikud.",
+                "title": "Forked- daapd valikute seadistamine"
+            }
+        }
+    }
+}

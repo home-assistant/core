@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 DOMAIN = "smarthab"
 DATA_HUB = "hub"
-COMPONENTS = ["light", "cover"]
+PLATFORMS = ["light", "cover"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,15 +34,18 @@ async def async_setup(hass, config) -> bool:
     """Set up the SmartHab platform."""
 
     hass.data.setdefault(DOMAIN, {})
-    sh_conf = config.get(DOMAIN)
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=sh_conf,
+    if DOMAIN not in config:
+        return True
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
         )
-    )
 
     return True
 
@@ -66,9 +69,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     # Pass hub object to child platforms
     hass.data[DOMAIN][entry.entry_id] = {DATA_HUB: hub}
 
-    for component in COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -80,8 +83,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     result = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in COMPONENTS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

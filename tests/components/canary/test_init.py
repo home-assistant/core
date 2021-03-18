@@ -1,4 +1,6 @@
 """The tests for the Canary component."""
+from unittest.mock import patch
+
 from requests import ConnectTimeout
 
 from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
@@ -12,8 +14,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
 from . import YAML_CONFIG, init_integration
-
-from tests.async_mock import patch
 
 
 async def test_import_from_yaml(hass, canary) -> None:

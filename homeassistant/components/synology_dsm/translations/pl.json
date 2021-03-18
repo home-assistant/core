@@ -1,14 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host jest ju\u017c skonfigurowany."
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
         },
         "error": {
-            "connection": "B\u0142\u0105d po\u0142\u0105czenia: sprawd\u017a host, port i SSL",
-            "login": "B\u0142\u0105d logowania: sprawd\u017a nazw\u0119 u\u017cytkownika i has\u0142o",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
             "missing_data": "Brakuj\u0105ce dane: spr\u00f3buj ponownie p\u00f3\u017aniej lub skorzystaj z innej konfiguracji",
             "otp_failed": "Uwierzytelnianie dwuetapowe nie powiod\u0142o si\u0119, spr\u00f3buj ponownie z nowym kodem dost\u0119pu",
-            "unknown": "Nieznany b\u0142\u0105d, sprawd\u017a logi, aby uzyska\u0107 wi\u0119cej szczeg\u00f3\u0142\u00f3w"
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "flow_title": "Synology DSM {name} ({host})",
         "step": {
@@ -22,8 +22,9 @@
                 "data": {
                     "password": "Has\u0142o",
                     "port": "Port",
-                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
-                    "username": "Nazwa u\u017cytkownika"
+                    "ssl": "Certyfikat SSL",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "description": "Czy chcesz skonfigurowa\u0107 {name} ({host})?",
                 "title": "Synology DSM"
@@ -33,8 +34,9 @@
                     "host": "Nazwa hosta lub adres IP",
                     "password": "Has\u0142o",
                     "port": "Port",
-                    "ssl": "U\u017cyj SSL/TLS, aby po\u0142\u0105czy\u0107 si\u0119 z serwerem NAS",
-                    "username": "Nazwa u\u017cytkownika"
+                    "ssl": "Certyfikat SSL",
+                    "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
                 "title": "Synology DSM"
             }
@@ -44,7 +46,8 @@
         "step": {
             "init": {
                 "data": {
-                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji [min]"
+                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji [min]",
+                    "timeout": "Limit czasu (sekundy)"
                 }
             }
         }

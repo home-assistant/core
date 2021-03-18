@@ -1,11 +1,12 @@
 """Tests for Islamic Prayer Times config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import islamic_prayer_times
 from homeassistant.components.islamic_prayer_times.const import CONF_CALC_METHOD, DOMAIN
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -83,4 +84,4 @@ async def test_integration_already_configured(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "one_instance_allowed"
+    assert result["reason"] == "single_instance_allowed"

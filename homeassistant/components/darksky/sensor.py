@@ -18,15 +18,14 @@ from homeassistant.const import (
     DEGREE,
     LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
+    PRECIPITATION_MILLIMETERS_PER_HOUR,
     PRESSURE_MBAR,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    TIME_HOURS,
     UV_INDEX,
 )
 import homeassistant.helpers.config_validation as cv
@@ -111,11 +110,11 @@ SENSOR_TYPES = {
     ],
     "precip_intensity": [
         "Precip Intensity",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "in",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:weather-rainy",
         ["currently", "minutely", "hourly", "daily"],
     ],
@@ -331,11 +330,11 @@ SENSOR_TYPES = {
     ],
     "precip_intensity_max": [
         "Daily Max Precip Intensity",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "in",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
-        f"{LENGTH_MILLIMETERS}/{TIME_HOURS}",
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
+        PRECIPITATION_MILLIMETERS_PER_HOUR,
         "mdi:thermometer",
         ["daily"],
     ],
@@ -621,7 +620,7 @@ class DarkSkySensor(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
@@ -740,7 +739,7 @@ class DarkSkyAlertSensor(Entity):
         return "mdi:alert-circle-outline"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._alerts
 

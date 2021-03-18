@@ -17,8 +17,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "Use SSL",
-          "verify_ssl": "Verify SSL certificate",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "token": "Token (Optional)"
         }
       },
@@ -40,8 +40,8 @@
     "abort": {
       "all_configured": "All linked servers already configured",
       "already_configured": "This Plex server is already configured",
-      "already_in_progress": "Plex is being configured",
-      "reauth_successful": "Successfully reauthenticated",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "token_request_timeout": "Timed out obtaining token",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }

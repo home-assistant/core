@@ -2,11 +2,23 @@
   "domain": "rachio",
   "name": "Rachio",
   "documentation": "https://www.home-assistant.io/integrations/rachio",
-  "requirements": ["rachiopy==0.1.4"],
+  "requirements": ["rachiopy==1.0.3"],
   "dependencies": ["http"],
   "after_dependencies": ["cloud"],
   "codeowners": ["@bdraco"],
   "config_flow": true,
+  "dhcp": [{
+   "hostname": "rachio-*",
+   "macaddress": "009D6B*"
+  },
+  {
+   "hostname": "rachio-*",
+   "macaddress": "F0038C*"
+  },
+  {
+   "hostname": "rachio-*",
+   "macaddress": "74C63B*"
+  }],
   "homekit": {
     "models": ["Rachio"]
   }

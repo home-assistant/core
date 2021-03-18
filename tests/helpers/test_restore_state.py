@@ -1,5 +1,6 @@
 """The tests for the Restore component."""
 from datetime import datetime
+from unittest.mock import patch
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, State
@@ -13,8 +14,6 @@ from homeassistant.helpers.restore_state import (
     StoredState,
 )
 from homeassistant.util import dt as dt_util
-
-from tests.async_mock import patch
 
 
 async def test_caching_data(hass):

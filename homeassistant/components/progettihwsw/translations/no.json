@@ -4,29 +4,28 @@
             "already_configured": "Enheten er allerede konfigurert"
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes.",
-            "unknown": "Uventet feil",
-            "wrong_info_relay_modes": "Valg av rel\u00e9modus m\u00e5 v\u00e6re monostable eller bistable."
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
         },
         "step": {
             "relay_modes": {
                 "data": {
-                    "relay_1": "Rele 1",
-                    "relay_10": "Rele 10",
-                    "relay_11": "Rele 11",
-                    "relay_12": "Rele 12",
-                    "relay_13": "Rele 13",
-                    "relay_14": "Rele 14",
-                    "relay_15": "Rele 15",
-                    "relay_16": "Rele 16",
-                    "relay_2": "Rele 2",
-                    "relay_3": "Rele 3",
-                    "relay_4": "Rele 4",
-                    "relay_5": "Rele 5",
-                    "relay_6": "Rele 6",
-                    "relay_7": "Rele 7",
-                    "relay_8": "Rele 8",
-                    "relay_9": "Rele 9 "
+                    "relay_1": "Rel\u00e9 1",
+                    "relay_10": "Rel\u00e9 10",
+                    "relay_11": "Rel\u00e9 11",
+                    "relay_12": "Rel\u00e9 12",
+                    "relay_13": "Rel\u00e9 13",
+                    "relay_14": "Rel\u00e9 14",
+                    "relay_15": "Rel\u00e9 15",
+                    "relay_16": "Rel\u00e9 16",
+                    "relay_2": "Rel\u00e9 2",
+                    "relay_3": "Rel\u00e9 3",
+                    "relay_4": "Rel\u00e9 4",
+                    "relay_5": "Rel\u00e9 5",
+                    "relay_6": "Rel\u00e9 6",
+                    "relay_7": "Rel\u00e9 7",
+                    "relay_8": "Rel\u00e9 8",
+                    "relay_9": "Rel\u00e9 9"
                 },
                 "title": "Sett opp rel\u00e9er"
             },
@@ -38,6 +37,5 @@
                 "title": "Definere tavle"
             }
         }
-    },
-    "title": "ProgettiHWSW automatisering"
+    }
 }

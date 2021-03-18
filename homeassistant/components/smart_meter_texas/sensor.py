@@ -1,6 +1,4 @@
 """Support for Smart Meter Texas sensors."""
-import logging
-
 from smart_meter_texas import Meter
 
 from homeassistant.const import CONF_ADDRESS, ENERGY_KILO_WATT_HOUR
@@ -19,8 +17,6 @@ from .const import (
     ESIID,
     METER_NUMBER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -69,7 +65,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {
             METER_NUMBER: self.meter.meter,

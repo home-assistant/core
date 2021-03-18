@@ -78,10 +78,7 @@ class TcpSensor(Entity):
     @property
     def name(self):
         """Return the name of this sensor."""
-        name = self._config[CONF_NAME]
-        if name is not None:
-            return name
-        return super().name
+        return self._config[CONF_NAME]
 
     @property
     def state(self):
@@ -136,7 +133,9 @@ class TcpSensor(Entity):
 
         if self._config[CONF_VALUE_TEMPLATE] is not None:
             try:
-                self._state = self._config[CONF_VALUE_TEMPLATE].render(value=value)
+                self._state = self._config[CONF_VALUE_TEMPLATE].render(
+                    parse_result=False, value=value
+                )
                 return
             except TemplateError:
                 _LOGGER.error(

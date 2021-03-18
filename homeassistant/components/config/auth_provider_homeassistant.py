@@ -124,7 +124,9 @@ async def websocket_change_password(hass, connection, msg):
     try:
         await provider.async_validate_login(username, msg["current_password"])
     except auth_ha.InvalidAuth:
-        connection.send_error(msg["id"], "invalid_password", "Invalid password")
+        connection.send_error(
+            msg["id"], "invalid_current_password", "Invalid current password"
+        )
         return
 
     await provider.async_change_password(username, msg["new_password"])

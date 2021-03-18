@@ -5,14 +5,18 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
         "flow_title": "Nightscout",
         "step": {
             "user": {
                 "data": {
+                    "api_key": "Clave API",
                     "url": "URL"
-                }
+                },
+                "description": "- URL: la direcci\u00f3n de tu instancia de nightscout. Por ejemplo: https://myhomeassistant.duckdns.org:5423 \n- Clave API (opcional): util\u00edzala s\u00f3lo si tu instancia est\u00e1 protegida (auth_default_roles! = readable).",
+                "title": "Introduce la informaci\u00f3n del servidor de Nightscout."
             }
         }
     }

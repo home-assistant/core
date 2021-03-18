@@ -68,10 +68,6 @@ UNIT_OF_MEASUREMENT = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up deCONZ platforms."""
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
@@ -80,7 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     battery_handler = DeconzBatteryHandler(gateway)
 
     @callback
-    def async_add_sensor(sensors):
+    def async_add_sensor(sensors=gateway.api.sensors.values()):
         """Add sensors from deCONZ.
 
         Create DeconzBattery if sensor has a battery attribute.
@@ -112,7 +108,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ):
                 entities.append(DeconzSensor(sensor, gateway))
 
-        async_add_entities(entities, True)
+        if entities:
+            async_add_entities(entities)
 
     gateway.listeners.append(
         async_dispatcher_connect(
@@ -131,14 +128,11 @@ class DeconzSensor(DeconzDevice):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the sensor's state."""
-        if ignore_update:
-            return
-
         keys = {"on", "reachable", "state"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def state(self):
@@ -161,7 +155,7 @@ class DeconzSensor(DeconzDevice):
         return UNIT_OF_MEASUREMENT.get(type(self._device))
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attr = {}
 
@@ -198,18 +192,26 @@ class DeconzBattery(DeconzDevice):
     TYPE = DOMAIN
 
     @callback
-    def async_update_callback(self, force_update=False, ignore_update=False):
+    def async_update_callback(self, force_update=False):
         """Update the battery's state, if needed."""
-        if ignore_update:
-            return
-
         keys = {"battery", "reachable"}
         if force_update or self._device.changed_keys.intersection(keys):
-            self.async_write_ha_state()
+            super().async_update_callback(force_update=force_update)
 
     @property
     def unique_id(self):
-        """Return a unique identifier for this device."""
+        """Return a unique identifier for this device.
+
+        Normally there should only be one battery sensor per device from deCONZ.
+        With specific Danfoss devices each endpoint can report its own battery state.
+        """
+        if self._device.manufacturer == "Danfoss" and self._device.modelid in [
+            "0x8030",
+            "0x8031",
+            "0x8034",
+            "0x8035",
+        ]:
+            return f"{super().unique_id}-battery"
         return f"{self.serial}-battery"
 
     @property
@@ -233,7 +235,7 @@ class DeconzBattery(DeconzDevice):
         return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the battery."""
         attr = {}
 

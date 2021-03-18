@@ -1,17 +1,21 @@
 {
     "config": {
         "abort": {
-            "auth_fail": "Brukernavn eller passord er feil.",
-            "connection_error": "Kunne ikke koble til en ZoneMinder-server."
+            "auth_fail": "Brukernavn eller passord er feil",
+            "cannot_connect": "Tilkobling mislyktes",
+            "connection_error": "Kunne ikke koble til en ZoneMinder-server.",
+            "invalid_auth": "Ugyldig godkjenning"
         },
         "create_entry": {
             "default": "ZoneMinder-serveren er lagt til."
         },
         "error": {
-            "auth_fail": "Brukernavn eller passord er feil.",
-            "connection_error": "Kunne ikke koble til en ZoneMinder-server."
+            "auth_fail": "Brukernavn eller passord er feil",
+            "cannot_connect": "Tilkobling mislyktes",
+            "connection_error": "Kunne ikke koble til en ZoneMinder-server.",
+            "invalid_auth": "Ugyldig godkjenning"
         },
-        "flow_title": "ZoneMinder",
+        "flow_title": "",
         "step": {
             "user": {
                 "data": {
@@ -19,9 +23,9 @@
                     "password": "Passord",
                     "path": "ZM-bane",
                     "path_zms": "ZMS-bane",
-                    "ssl": "Bruk SSL for tilkoblinger til ZoneMinder",
+                    "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn",
-                    "verify_ssl": "Bekreft SSL-sertifikat"
+                    "verify_ssl": "Verifisere SSL-sertifikat"
                 },
                 "title": "Legg til ZoneMinder Server."
             }

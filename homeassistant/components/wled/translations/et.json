@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "See WLED seade on juba konfigureeritud.",
-            "connection_error": "WLED-seadmega \u00fchenduse loomine nurjus."
+            "already_configured": "See WLED seade on juba h\u00e4\u00e4lestatud.",
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "error": {
-            "connection_error": "WLED-seadmega \u00fchenduse loomine nurjus."
+            "cannot_connect": "\u00dchendamine nurjus"
         },
         "flow_title": "WLED: {name}",
         "step": {
@@ -16,7 +16,7 @@
                 "description": "Seadista WLED-i sidumine Home Assistantiga."
             },
             "zeroconf_confirm": {
-                "description": "Kas soovite lisada WLED {nimi} Home Assistanti?",
+                "description": "Kas soovid lisada WLED {name} Home Assistanti?",
                 "title": "Leitud WLED seade"
             }
         }

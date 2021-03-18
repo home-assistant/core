@@ -1,9 +1,9 @@
 """Test the NEW_NAME config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
-
-from tests.async_mock import patch
 
 
 async def test_form(hass):
@@ -32,6 +32,7 @@ async def test_form(hass):
                 "password": "test-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "Name of the device"
@@ -40,7 +41,6 @@ async def test_form(hass):
         "username": "test-username",
         "password": "test-password",
     }
-    await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

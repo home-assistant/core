@@ -1,6 +1,7 @@
 """The tests for the InfluxDB component."""
 from dataclasses import dataclass
 import datetime
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pytest
 
@@ -15,8 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import MagicMock, Mock, call, patch
 
 INFLUX_PATH = "homeassistant.components.influxdb"
 INFLUX_CLIENT_PATH = f"{INFLUX_PATH}.InfluxDBClient"
@@ -61,10 +60,17 @@ def mock_client_fixture(request):
 @pytest.fixture(name="get_mock_call")
 def get_mock_call_fixture(request):
     """Get version specific lambda to make write API call mock."""
+
+    def v2_call(body, precision):
+        data = {"bucket": DEFAULT_BUCKET, "record": body}
+
+        if precision is not None:
+            data["write_precision"] = precision
+
+        return call(**data)
+
     if request.param == influxdb.API_VERSION_2:
-        return lambda body, precision=None: call(
-            bucket=DEFAULT_BUCKET, record=body, write_precision=precision
-        )
+        return lambda body, precision=None: v2_call(body, precision)
     # pylint: disable=unnecessary-lambda
     return lambda body, precision=None: call(body, time_precision=precision)
 
@@ -123,6 +129,139 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     assert hass.bus.listen.called
     assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
     assert get_write_api(mock_client).call_count == 1
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_base, config_ext, expected_client_args",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": True,
+            },
+            {
+                "ssl": True,
+                "verify_ssl": True,
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            {
+                "ssl": True,
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "ssl": True,
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": False,
+            },
+            {
+                "verify_ssl": False,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": True,
+            },
+            {
+                "verify_ssl": True,
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "verify_ssl": True,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            {
+                "api_version": influxdb.API_VERSION_2,
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+            {
+                "verify_ssl": False,
+                "ssl_ca_cert": "fake/path/ca.pem",
+            },
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_config_ssl(
+    hass, mock_client, config_base, config_ext, expected_client_args
+):
+    """Test the setup with various verify_ssl values."""
+    config = {"influxdb": config_base.copy()}
+    config["influxdb"].update(config_ext)
+
+    with patch("os.access", return_value=True):
+        with patch("os.path.isfile", return_value=True):
+            assert await async_setup_component(hass, influxdb.DOMAIN, config)
+            await hass.async_block_till_done()
+
+            assert hass.bus.listen.called
+            assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+            assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
 
 
 @pytest.mark.parametrize(
@@ -1047,6 +1186,79 @@ async def test_event_listener_component_override_measurement(
             entity_id=f"{comp['domain']}.{comp['id']}",
             object_id=comp["id"],
             attributes={},
+        )
+        event = MagicMock(data={"new_state": state}, time_fired=12345)
+        body = [
+            {
+                "measurement": comp["res"],
+                "tags": {"domain": comp["domain"], "entity_id": comp["id"]},
+                "time": 12345,
+                "fields": {"value": 1},
+            }
+        ]
+        handler_method(event)
+        hass.data[influxdb.DOMAIN].block_till_done()
+
+        write_api = get_write_api(mock_client)
+        assert write_api.call_count == 1
+        assert write_api.call_args == get_mock_call(body)
+        write_api.reset_mock()
+
+
+@pytest.mark.parametrize(
+    "mock_client, config_ext, get_write_api, get_mock_call",
+    [
+        (
+            influxdb.DEFAULT_API_VERSION,
+            BASE_V1_CONFIG,
+            _get_write_api_mock_v1,
+            influxdb.DEFAULT_API_VERSION,
+        ),
+        (
+            influxdb.API_VERSION_2,
+            BASE_V2_CONFIG,
+            _get_write_api_mock_v2,
+            influxdb.API_VERSION_2,
+        ),
+    ],
+    indirect=["mock_client", "get_mock_call"],
+)
+async def test_event_listener_component_measurement_attr(
+    hass, mock_client, config_ext, get_write_api, get_mock_call
+):
+    """Test the event listener with a different measurement_attr."""
+    config = {
+        "measurement_attr": "domain__device_class",
+        "component_config": {
+            "sensor.fake_humidity": {"override_measurement": "humidity"}
+        },
+        "component_config_glob": {
+            "binary_sensor.*motion": {"override_measurement": "motion"}
+        },
+        "component_config_domain": {"climate": {"override_measurement": "hvac"}},
+    }
+    config.update(config_ext)
+    handler_method = await _setup(hass, mock_client, config, get_write_api)
+
+    test_components = [
+        {
+            "domain": "sensor",
+            "id": "fake_temperature",
+            "attrs": {"device_class": "humidity"},
+            "res": "sensor__humidity",
+        },
+        {"domain": "sensor", "id": "fake_humidity", "attrs": {}, "res": "humidity"},
+        {"domain": "binary_sensor", "id": "fake_motion", "attrs": {}, "res": "motion"},
+        {"domain": "climate", "id": "fake_thermostat", "attrs": {}, "res": "hvac"},
+        {"domain": "other", "id": "just_fake", "attrs": {}, "res": "other"},
+    ]
+    for comp in test_components:
+        state = MagicMock(
+            state=1,
+            domain=comp["domain"],
+            entity_id=f"{comp['domain']}.{comp['id']}",
+            object_id=comp["id"],
+            attributes=comp["attrs"],
         )
         event = MagicMock(data={"new_state": state}, time_fired=12345)
         body = [

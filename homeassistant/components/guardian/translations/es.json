@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Este dispositivo Guardian ya ha sido configurado",
             "already_in_progress": "La configuraci\u00f3n del dispositivo Guardian ya est\u00e1 en proceso.",
-            "connection_error": "No se ha podido conectar con el dispositivo Guardian."
+            "cannot_connect": "No se pudo conectar"
         },
         "step": {
             "user": {
@@ -17,6 +17,5 @@
                 "description": "\u00bfQuieres configurar este dispositivo Guardian?"
             }
         }
-    },
-    "title": "Elexa Guardian"
+    }
 }

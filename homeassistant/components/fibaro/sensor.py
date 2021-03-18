@@ -1,9 +1,8 @@
 """Support for Fibaro sensors."""
-import logging
-
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
@@ -29,7 +28,13 @@ SENSOR_TYPES = {
         "mdi:fire",
         None,
     ],
-    "CO2": ["CO2", CONCENTRATION_PARTS_PER_MILLION, "mdi:cloud", None],
+    "CO2": [
+        "CO2",
+        CONCENTRATION_PARTS_PER_MILLION,
+        None,
+        None,
+        DEVICE_CLASS_CO2,
+    ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,
@@ -38,8 +43,6 @@ SENSOR_TYPES = {
     ],
     "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

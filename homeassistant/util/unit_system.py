@@ -1,8 +1,7 @@
 """Unit system helper class and methods."""
+from __future__ import annotations
 
-import logging
 from numbers import Number
-from typing import Optional
 
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -33,7 +32,7 @@ from homeassistant.util import (
     volume as volume_util,
 )
 
-_LOGGER = logging.getLogger(__name__)
+# mypy: disallow-any-generics
 
 LENGTH_UNITS = distance_util.VALID_UNITS
 
@@ -111,7 +110,7 @@ class UnitSystem:
 
         return temperature_util.convert(temperature, from_unit, self.temperature_unit)
 
-    def length(self, length: Optional[float], from_unit: str) -> float:
+    def length(self, length: float | None, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError(f"{length!s} is not a numeric value.")
@@ -121,7 +120,7 @@ class UnitSystem:
             length, from_unit, self.length_unit
         )
 
-    def pressure(self, pressure: Optional[float], from_unit: str) -> float:
+    def pressure(self, pressure: float | None, from_unit: str) -> float:
         """Convert the given pressure to this unit system."""
         if not isinstance(pressure, Number):
             raise TypeError(f"{pressure!s} is not a numeric value.")
@@ -131,7 +130,7 @@ class UnitSystem:
             pressure, from_unit, self.pressure_unit
         )
 
-    def volume(self, volume: Optional[float], from_unit: str) -> float:
+    def volume(self, volume: float | None, from_unit: str) -> float:
         """Convert the given volume to this unit system."""
         if not isinstance(volume, Number):
             raise TypeError(f"{volume!s} is not a numeric value.")
@@ -139,7 +138,7 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return volume_util.convert(volume, from_unit, self.volume_unit)  # type: ignore
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, str]:
         """Convert the unit system to a dictionary."""
         return {
             LENGTH: self.length_unit,

@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import json
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -13,7 +14,6 @@ from homeassistant.core import CoreState
 from homeassistant.helpers import storage
 from homeassistant.util import dt
 
-from tests.async_mock import Mock, patch
 from tests.common import async_fire_time_changed
 
 MOCK_VERSION = 1
@@ -184,6 +184,49 @@ async def test_writing_while_writing_delay(hass, store, hass_storage):
 
     data = await store.async_load()
     assert data == {"delay": "no"}
+
+
+async def test_multiple_delay_save_calls(hass, store, hass_storage):
+    """Test a write while a write with changing delays."""
+    store.async_delay_save(lambda: {"delay": "yes"}, 1)
+    store.async_delay_save(lambda: {"delay": "yes"}, 2)
+    store.async_delay_save(lambda: {"delay": "yes"}, 3)
+
+    assert store.key not in hass_storage
+    await store.async_save({"delay": "no"})
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "key": MOCK_KEY,
+        "data": {"delay": "no"},
+    }
+
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "key": MOCK_KEY,
+        "data": {"delay": "no"},
+    }
+
+    data = await store.async_load()
+    assert data == {"delay": "no"}
+
+
+async def test_multiple_save_calls(hass, store, hass_storage):
+    """Test multiple write tasks."""
+
+    assert store.key not in hass_storage
+
+    tasks = [store.async_save({"savecount": savecount}) for savecount in range(6)]
+    await asyncio.gather(*tasks)
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "key": MOCK_KEY,
+        "data": {"savecount": 5},
+    }
+
+    data = await store.async_load()
+    assert data == {"savecount": 5}
 
 
 async def test_migrator_no_existing_config(hass, store, hass_storage):

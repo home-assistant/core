@@ -1,6 +1,4 @@
 """Support the binary sensors of a BloomSky weather station."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -12,8 +10,6 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {"Rain": DEVICE_CLASS_MOISTURE, "Night": None}
 

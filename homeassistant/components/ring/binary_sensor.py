@@ -1,6 +1,5 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 from datetime import datetime
-import logging
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
@@ -11,8 +10,6 @@ from homeassistant.core import callback
 
 from . import DOMAIN
 from .entity import RingEntityMixin
-
-_LOGGER = logging.getLogger(__name__)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
@@ -114,9 +111,9 @@ class RingBinarySensor(RingEntityMixin, BinarySensorEntity):
         return self._unique_id
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        attrs = super().device_state_attributes
+        attrs = super().extra_state_attributes
 
         if self._active_alert is None:
             return attrs

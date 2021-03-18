@@ -15,6 +15,12 @@ homeassistant/*.py @home-assistant/core
 homeassistant/helpers/* @home-assistant/core
 homeassistant/util/* @home-assistant/core
 
+# Home Assistant Supervisor
+build.json @home-assistant/supervisor
+machine/* @home-assistant/supervisor
+rootfs/* @home-assistant/supervisor
+Dockerfile @home-assistant/supervisor
+
 # Other code
 homeassistant/scripts/check_config.py @kellerza
 

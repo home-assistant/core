@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -115,10 +114,6 @@ async def async_setup_entry(
         timeout=DEFAULT_TIMEOUT,
     )
 
-    if not await device.can_connect_with_auth_check():
-        _LOGGER.warning("Failed to connect to %s", host)
-        raise PlatformNotReady
-
     apps_coordinator = hass.data[DOMAIN].get(CONF_APPS)
 
     entity = VizioDevice(config_entry, device, name, device_class, apps_coordinator)
@@ -183,12 +178,6 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        if not self._model:
-            self._model = await self._device.get_model_name()
-
-        if not self._sw_version:
-            self._sw_version = await self._device.get_version()
-
         is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
@@ -204,6 +193,12 @@ class VizioDevice(MediaPlayerEntity):
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._available = True
+
+        if not self._model:
+            self._model = await self._device.get_model_name(log_api_exception=False)
+
+        if not self._sw_version:
+            self._sw_version = await self._device.get_version(log_api_exception=False)
 
         if not is_on:
             self._state = STATE_OFF
@@ -236,7 +231,9 @@ class VizioDevice(MediaPlayerEntity):
                 if not self._available_sound_modes:
                     self._available_sound_modes = (
                         await self._device.get_setting_options(
-                            VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
+                            VIZIO_AUDIO_SETTINGS,
+                            VIZIO_SOUND_MODE,
+                            log_api_exception=False,
                         )
                     )
             else:
@@ -289,7 +286,7 @@ class VizioDevice(MediaPlayerEntity):
     ) -> None:
         """Send update event when Vizio config entry is updated."""
         # Move this method to component level if another entity ever gets added for a single config entry.
-        # See here: https://github.com/home-assistant/home-assistant/pull/30653#discussion_r366426121
+        # See here: https://github.com/home-assistant/core/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
 
     async def _async_update_options(self, config_entry: ConfigEntry) -> None:
@@ -306,6 +303,7 @@ class VizioDevice(MediaPlayerEntity):
             setting_type,
             setting_name,
             new_value,
+            log_api_exception=False,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -453,52 +451,58 @@ class VizioDevice(MediaPlayerEntity):
         """Select sound mode."""
         if sound_mode in self._available_sound_modes:
             await self._device.set_setting(
-                VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE, sound_mode
+                VIZIO_AUDIO_SETTINGS,
+                VIZIO_SOUND_MODE,
+                sound_mode,
+                log_api_exception=False,
             )
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        await self._device.pow_on()
+        await self._device.pow_on(log_api_exception=False)
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        await self._device.pow_off()
+        await self._device.pow_off(log_api_exception=False)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
-            await self._device.mute_on()
+            await self._device.mute_on(log_api_exception=False)
             self._is_volume_muted = True
         else:
-            await self._device.mute_off()
+            await self._device.mute_off(log_api_exception=False)
             self._is_volume_muted = False
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
-        await self._device.ch_down()
+        await self._device.ch_down(log_api_exception=False)
 
     async def async_media_next_track(self) -> None:
         """Send next channel command."""
-        await self._device.ch_up()
+        await self._device.ch_up(log_api_exception=False)
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if source in self._available_inputs:
-            await self._device.set_input(source)
+            await self._device.set_input(source, log_api_exception=False)
         elif source in self._get_additional_app_names():
             await self._device.launch_app_config(
                 **next(
                     app["config"]
                     for app in self._additional_app_configs
                     if app["name"] == source
-                )
+                ),
+                log_api_exception=False,
             )
         elif source in self._available_apps:
-            await self._device.launch_app(source, self._all_apps)
+            await self._device.launch_app(
+                source, self._all_apps, log_api_exception=False
+            )
 
     async def async_volume_up(self) -> None:
         """Increase volume of the device."""
-        await self._device.vol_up(num=self._volume_step)
+        await self._device.vol_up(num=self._volume_step, log_api_exception=False)
 
         if self._volume_level is not None:
             self._volume_level = min(
@@ -507,7 +511,7 @@ class VizioDevice(MediaPlayerEntity):
 
     async def async_volume_down(self) -> None:
         """Decrease volume of the device."""
-        await self._device.vol_down(num=self._volume_step)
+        await self._device.vol_down(num=self._volume_step, log_api_exception=False)
 
         if self._volume_level is not None:
             self._volume_level = max(
@@ -519,10 +523,10 @@ class VizioDevice(MediaPlayerEntity):
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
-                await self._device.vol_up(num=num)
+                await self._device.vol_up(num=num, log_api_exception=False)
                 self._volume_level = volume
 
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
-                await self._device.vol_down(num=num)
+                await self._device.vol_down(num=num, log_api_exception=False)
                 self._volume_level = volume

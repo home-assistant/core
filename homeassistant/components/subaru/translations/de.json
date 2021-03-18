@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "error": {
+            "bad_pin_format": "Die PIN sollte 4-stellig sein",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "incorrect_pin": "Falsche PIN",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "pin": {
+                "data": {
+                    "pin": "PIN"
+                },
+                "description": "Bitte gib deinen MySubaru-PIN ein\nHINWEIS: Alle Fahrzeuge im Konto m\u00fcssen dieselbe PIN haben"
+            },
+            "user": {
+                "data": {
+                    "country": "Land ausw\u00e4hlen",
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib deine MySubaru-Anmeldedaten ein\nHINWEIS: Die Ersteinrichtung kann bis zu 30 Sekunden dauern"
+            }
+        }
+    }
+}

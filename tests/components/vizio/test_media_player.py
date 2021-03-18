@@ -1,8 +1,8 @@
 """Tests for Vizio config flow."""
 from contextlib import asynccontextmanager
 from datetime import timedelta
-import logging
 from typing import Any, Dict, List, Optional
+from unittest.mock import call, patch
 
 import pytest
 from pytest import raises
@@ -41,6 +41,7 @@ from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
     CONF_VOLUME_STEP,
+    DEFAULT_VOLUME_STEP,
     DOMAIN,
     SERVICE_UPDATE_SETTING,
     VIZIO_SCHEMA,
@@ -75,10 +76,7 @@ from .const import (
     VOLUME_STEP,
 )
 
-from tests.async_mock import call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _add_config_entry_to_hass(
@@ -241,17 +239,6 @@ def _assert_source_list_with_apps(
     assert attr["source_list"] == list_to_test
 
 
-async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
-    """Test generic Vizio entity setup failure."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
-        return_value=False,
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
-        await _add_config_entry_to_hass(hass, config_entry)
-        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
-
-
 async def _test_service(
     hass: HomeAssistantType,
     domain: str,
@@ -262,6 +249,7 @@ async def _test_service(
     **kwargs,
 ) -> None:
     """Test generic Vizio media player entity service."""
+    kwargs["log_api_exception"] = False
     service_data = {ATTR_ENTITY_ID: ENTITY_ID}
     if additional_service_data:
         service_data.update(additional_service_data)
@@ -335,18 +323,28 @@ async def test_init_tv_unavailable(
     await _test_setup_tv(hass, None)
 
 
-async def test_setup_failure_speaker(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture
+async def test_setup_unavailable_speaker(
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test speaker entity setup failure."""
-    await _test_setup_failure(hass, MOCK_SPEAKER_CONFIG)
+    """Test speaker entity sets up as unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
-async def test_setup_failure_tv(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture
+async def test_setup_unavailable_tv(
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test TV entity setup failure."""
-    await _test_setup_failure(hass, MOCK_USER_VALID_TV_CONFIG)
+    """Test TV entity sets up as unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
 async def test_services(
@@ -381,13 +379,27 @@ async def test_services(
         {ATTR_INPUT_SOURCE: "USB"},
         "USB",
     )
-    await _test_service(hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None)
-    await _test_service(hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_DOWN, None)
     await _test_service(
-        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 1}
+        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=DEFAULT_VOLUME_STEP
     )
     await _test_service(
-        hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0}
+        hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_DOWN, None, num=DEFAULT_VOLUME_STEP
+    )
+    await _test_service(
+        hass,
+        MP_DOMAIN,
+        "vol_up",
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 1},
+        num=(100 - 15),
+    )
+    await _test_service(
+        hass,
+        MP_DOMAIN,
+        "vol_down",
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0},
+        num=(15 - 0),
     )
     await _test_service(hass, MP_DOMAIN, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
     await _test_service(hass, MP_DOMAIN, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
@@ -397,6 +409,9 @@ async def test_services(
         "set_setting",
         SERVICE_SELECT_SOUND_MODE,
         {ATTR_SOUND_MODE: "Music"},
+        "audio",
+        "eq",
+        "Music",
     )
     # Test that the update_setting service does config validation/transformation correctly
     await _test_service(

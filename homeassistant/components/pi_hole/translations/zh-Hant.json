@@ -7,6 +7,11 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API \u5bc6\u9470"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API \u5bc6\u9470",
@@ -14,7 +19,8 @@
                     "location": "\u5ea7\u6a19",
                     "name": "\u540d\u7a31",
                     "port": "\u901a\u8a0a\u57e0",
-                    "ssl": "\u4f7f\u7528 SSL",
+                    "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
+                    "statistics_only": "\u50c5\u7d71\u8a08\u8cc7\u8a0a",
                     "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49"
                 }
             }

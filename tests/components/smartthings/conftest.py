@@ -1,5 +1,6 @@
 """Test configuration and mocks for the SmartThings component."""
 import secrets
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from pysmartthings import (
@@ -45,8 +46,8 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 COMPONENT_PREFIX = "homeassistant.components.smartthings."
 

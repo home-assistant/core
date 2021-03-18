@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "link_local_address": "Kohtv\u00f5rgu linke ei toetata",
+            "not_doorbird_device": "See pole DoorBird'i seade"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Tundmatu viga"
+        },
+        "flow_title": "",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "",
+                    "name": "Seadme nimi",
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Loo \u00fchendus DoorBird-ga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "events": "Komadega eraldatud s\u00fcndmuste loend."
+                },
+                "description": "Lisa komaga eraldatud s\u00fcndmuse nimi igale j\u00e4lgitavale s\u00fcndmusele. P\u00e4rast nende sisestamist kasuta rakendust DoorBird, et siduda need konkreetse s\u00fcndmusega. Vaata dokumentatsiooni aadressil https://www.home-assistant.io/integrations/doorbird/#events. N\u00e4ide: somebody_pressed_the_button, motion"
+            }
+        }
+    }
+}

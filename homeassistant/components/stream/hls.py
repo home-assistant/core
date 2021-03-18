@@ -1,13 +1,12 @@
 """Provide functionality to stream HLS."""
 import io
-from typing import Callable
 
 from aiohttp import web
 
 from homeassistant.core import callback
 
-from .const import FORMAT_CONTENT_TYPE
-from .core import PROVIDERS, StreamOutput, StreamView
+from .const import FORMAT_CONTENT_TYPE, MAX_SEGMENTS, NUM_PLAYLIST_SEGMENTS
+from .core import PROVIDERS, HomeAssistant, IdleTimer, StreamOutput, StreamView
 from .fmp4utils import get_codec_string, get_init, get_m4s
 
 
@@ -32,10 +31,11 @@ class HlsMasterPlaylistView(StreamView):
     def render(track):
         """Render M3U8 file."""
         # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
-        # Calculate file size / duration and use a multiplier to account for variation
+        # Calculate file size / duration and use a small multiplier to account for variation
+        # hls spec already allows for 25% variation
         segment = track.get_segment(track.segments[-1])
         bandwidth = round(
-            segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 3
+            segment.segment.seek(0, io.SEEK_END) * 8 / segment.duration * 1.2
         )
         codecs = get_codec_string(segment.segment)
         lines = [
@@ -51,7 +51,8 @@ class HlsMasterPlaylistView(StreamView):
         stream.start()
         # Wait for a segment to be ready
         if not track.segments:
-            await track.recv()
+            if not await track.recv():
+                return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
@@ -75,21 +76,27 @@ class HlsPlaylistView(StreamView):
     @staticmethod
     def render_playlist(track):
         """Render playlist."""
-        segments = track.segments
+        segments = list(track.get_segment())[-NUM_PLAYLIST_SEGMENTS:]
 
         if not segments:
             return []
 
-        playlist = ["#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0])]
+        playlist = [
+            "#EXT-X-MEDIA-SEQUENCE:{}".format(segments[0].sequence),
+            "#EXT-X-DISCONTINUITY-SEQUENCE:{}".format(segments[0].stream_id),
+        ]
 
-        for sequence in segments:
-            segment = track.get_segment(sequence)
+        last_stream_id = segments[0].stream_id
+        for segment in segments:
+            if last_stream_id != segment.stream_id:
+                playlist.append("#EXT-X-DISCONTINUITY")
             playlist.extend(
                 [
                     "#EXTINF:{:.04f},".format(float(segment.duration)),
                     f"./segment/{segment.sequence}.m4s",
                 ]
             )
+            last_stream_id = segment.stream_id
 
         return playlist
 
@@ -104,7 +111,8 @@ class HlsPlaylistView(StreamView):
         stream.start()
         # Wait for a segment to be ready
         if not track.segments:
-            await track.recv()
+            if not await track.recv():
+                return web.HTTPNotFound()
         headers = {"Content-Type": FORMAT_CONTENT_TYPE["hls"]}
         return web.Response(body=self.render(track).encode("utf-8"), headers=headers)
 
@@ -150,32 +158,11 @@ class HlsSegmentView(StreamView):
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
+    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+        """Initialize recorder output."""
+        super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
+
     @property
     def name(self) -> str:
         """Return provider name."""
         return "hls"
-
-    @property
-    def format(self) -> str:
-        """Return container format."""
-        return "mp4"
-
-    @property
-    def audio_codecs(self) -> str:
-        """Return desired audio codecs."""
-        return {"aac", "mp3"}
-
-    @property
-    def video_codecs(self) -> tuple:
-        """Return desired video codecs."""
-        return {"hevc", "h264"}
-
-    @property
-    def container_options(self) -> Callable[[int], dict]:
-        """Return Callable which takes a sequence number and returns container options."""
-        return lambda sequence: {
-            # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont",
-            "avoid_negative_ts": "make_non_negative",
-            "fragment_index": str(sequence),
-        }

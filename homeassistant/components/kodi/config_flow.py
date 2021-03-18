@@ -104,7 +104,10 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = discovery_info["host"]
         self._port = int(discovery_info["port"])
         self._name = discovery_info["hostname"][: -len(".local.")]
-        uuid = discovery_info["properties"]["uuid"]
+        uuid = discovery_info["properties"].get("uuid")
+        if not uuid:
+            return self.async_abort(reason="no_uuid")
+
         self._discovery_name = discovery_info["name"]
 
         await self.async_set_unique_id(uuid)
@@ -116,7 +119,6 @@ class KodiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update({"title_placeholders": {CONF_NAME: self._name}})
 
         try:

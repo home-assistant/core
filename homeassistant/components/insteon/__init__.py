@@ -17,7 +17,7 @@ from .const import (
     CONF_UNITCODE,
     CONF_X10,
     DOMAIN,
-    INSTEON_COMPONENTS,
+    INSTEON_PLATFORMS,
     ON_OFF_EVENTS,
 )
 from .schemas import convert_yaml_to_config_flow
@@ -138,9 +138,9 @@ async def async_setup_entry(hass, entry):
         )
         device = devices.add_x10_device(housecode, unitcode, x10_type, steps)
 
-    for component in INSTEON_COMPONENTS:
+    for platform in INSTEON_PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     for address in devices:
@@ -159,7 +159,7 @@ async def async_setup_entry(hass, entry):
         identifiers={(DOMAIN, str(devices.modem.address))},
         manufacturer="Smart Home",
         name=f"{devices.modem.description} {devices.modem.address}",
-        model=f"{devices.modem.model} (0x{devices.modem.cat:02x}, 0x{devices.modem.subcat:02x})",
+        model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
         sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
     )
 

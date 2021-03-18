@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user_gateway": {
+                "data": {
+                    "host": "IP address",
+                    "port": "Port"
+                },
+                "description": "V\u00e4nligen ange:"
+            }
+        }
+    }
+}

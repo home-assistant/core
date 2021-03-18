@@ -4,8 +4,9 @@ import logging
 from miio import DeviceException, gateway
 
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import ATTR_AVAILABLE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,16 +57,16 @@ class ConnectXiaomiGateway:
         return True
 
 
-class XiaomiGatewayDevice(Entity):
+class XiaomiGatewayDevice(CoordinatorEntity, Entity):
     """Representation of a base Xiaomi Gateway Device."""
 
-    def __init__(self, sub_device, entry):
+    def __init__(self, coordinator, sub_device, entry):
         """Initialize the Xiaomi Gateway Device."""
+        super().__init__(coordinator)
         self._sub_device = sub_device
         self._entry = entry
         self._unique_id = sub_device.sid
         self._name = f"{sub_device.name} ({sub_device.sid})"
-        self._available = None
 
     @property
     def unique_id(self):
@@ -91,14 +92,8 @@ class XiaomiGatewayDevice(Entity):
 
     @property
     def available(self):
-        """Return true when state is known."""
-        return self._available
+        """Return if entity is available."""
+        if self.coordinator.data is None:
+            return False
 
-    async def async_update(self):
-        """Fetch state from the sub device."""
-        try:
-            await self.hass.async_add_executor_job(self._sub_device.update)
-            self._available = True
-        except gateway.GatewayException as ex:
-            self._available = False
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
+        return self.coordinator.data[self._sub_device.sid][ATTR_AVAILABLE]

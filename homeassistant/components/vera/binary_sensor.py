@@ -1,5 +1,4 @@
 """Support for Vera binary sensors."""
-import logging
 from typing import Callable, List, Optional
 
 import pyvera as veraApi
@@ -16,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 from . import VeraDevice
 from .common import ControllerData, get_controller_data
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,7 +27,8 @@ async def async_setup_entry(
         [
             VeraBinarySensor(device, controller_data)
             for device in controller_data.devices.get(PLATFORM_DOMAIN)
-        ]
+        ],
+        True,
     )
 
 
@@ -52,4 +50,5 @@ class VeraBinarySensor(VeraDevice[veraApi.VeraBinarySensor], BinarySensorEntity)
 
     def update(self) -> None:
         """Get the latest data and update the state."""
+        super().update()
         self._state = self.vera_device.is_tripped

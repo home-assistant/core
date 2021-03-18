@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts \u00e8 gi\u00e0 configurato",
-            "unknown": "Si \u00e8 verificato un errore sconosciuto."
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato",
+            "unknown": "Errore imprevisto"
         },
         "error": {
             "invalid_2fa": "Autenticazione a 2 fattori non valida, riprovare.",
@@ -12,7 +12,7 @@
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA Pin"
+                    "2fa": "2FA PIN"
                 },
                 "description": "Vuoto",
                 "title": "Autenticazione a due fattori"

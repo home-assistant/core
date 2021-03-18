@@ -1,18 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Google Hangouts ja est\u00e0 configurat",
-            "unknown": "S'ha produ\u00eft un error desconegut."
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
         },
         "error": {
             "invalid_2fa": "La verificaci\u00f3 en dos passos no \u00e9s v\u00e0lida, torna-ho a provar.",
-            "invalid_2fa_method": "El m\u00e8tode de verificaci\u00f3 en dos passos no \u00e9s v\u00e0lid (verifica-ho al m\u00f2bil).",
+            "invalid_2fa_method": "M\u00e8tode 2FA inv\u00e0lid (verifica-ho al m\u00f2bil).",
             "invalid_login": "L'inici de sessi\u00f3 no \u00e9s v\u00e0lid, torna-ho a provar."
         },
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "Pin 2FA"
+                    "2fa": "PIN 2FA"
                 },
                 "description": "Buit",
                 "title": "Verificaci\u00f3 en dos passos"

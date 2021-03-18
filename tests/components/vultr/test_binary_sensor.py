@@ -1,6 +1,7 @@
 """Test the Vultr binary sensor platform."""
 import json
 import unittest
+from unittest.mock import patch
 
 import pytest
 import requests_mock
@@ -19,7 +20,6 @@ from homeassistant.components.vultr import (
 )
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
-from tests.async_mock import patch
 from tests.common import get_test_home_assistant, load_fixture
 from tests.components.vultr.test_init import VALID_CONFIG
 
@@ -76,7 +76,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
                 assert "Vultr {}" == device.name
 
             device.update()
-            device_attrs = device.device_state_attributes
+            device_attrs = device.extra_state_attributes
 
             if device.subscription == "555555":
                 assert "Vultr Another Server" == device.name

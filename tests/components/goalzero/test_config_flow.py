@@ -1,4 +1,6 @@
 """Test Goal Zero Yeti config flow."""
+from unittest.mock import patch
+
 from goalzero import exceptions
 
 from homeassistant.components.goalzero.const import DOMAIN
@@ -19,7 +21,6 @@ from . import (
     _patch_config_flow_yeti,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -46,11 +47,6 @@ async def test_flow_user(hass):
             DOMAIN,
             context={"source": SOURCE_USER},
         )
-        assert result["type"] == RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {}
-        _flow_next(hass, result["flow_id"])
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,

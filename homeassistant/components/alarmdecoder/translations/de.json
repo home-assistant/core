@@ -1,11 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
         "error": {
-            "service_unavailable": "Verbindung konnte nicht hergestellt werden"
+            "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
             "protocol": {
                 "data": {
+                    "device_path": "Ger\u00e4tepfad",
                     "host": "Host",
                     "port": "Port"
                 }
@@ -41,7 +45,7 @@
                 "data": {
                     "zone_number": "Zonennummer"
                 },
-                "description": "Geben Sie die Zonennummer ein, die Sie hinzuf\u00fcgen, bearbeiten oder entfernen m\u00f6chten."
+                "description": "Gib die die Zonennummer ein, die du hinzuf\u00fcgen, bearbeiten oder entfernen m\u00f6chtest."
             }
         }
     }

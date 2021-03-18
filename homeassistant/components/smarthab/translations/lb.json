@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
             "service": "Feeler beim verbanne mat SmartHab. De Service ass viellaicht net ereechbar. Iwwerpr\u00e9if deng Verbindung.",
-            "unknown_error": "Onerwaarte Feeler",
-            "wrong_login": "Ong\u00eblteg Authentifikatioun"
+            "unknown": "Onerwaarte Feeler"
         },
         "step": {
             "user": {

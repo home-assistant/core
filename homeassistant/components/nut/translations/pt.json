@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
         "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o",
             "unknown": "Erro inesperado"
         },
         "step": {
@@ -17,6 +21,12 @@
                     "username": "Utilizador"
                 }
             }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Falha na liga\u00e7\u00e3o",
+            "unknown": "Erro inesperado"
         }
     }
 }

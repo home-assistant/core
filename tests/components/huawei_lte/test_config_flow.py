@@ -1,5 +1,7 @@
 """Tests for the Huawei LTE config flow."""
 
+from unittest.mock import patch
+
 from huawei_lte_api.enums.client import ResponseCodeEnum
 from huawei_lte_api.enums.user import LoginErrorEnum, LoginStateEnum, PasswordTypeEnum
 import pytest
@@ -84,7 +86,7 @@ async def test_connection_error(hass, requests_mock):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {CONF_URL: "unknown_connection_error"}
+    assert result["errors"] == {CONF_URL: "unknown"}
 
 
 @pytest.fixture
@@ -111,7 +113,7 @@ def login_requests_mock(requests_mock):
         (LoginErrorEnum.PASSWORD_WRONG, {CONF_PASSWORD: "incorrect_password"}),
         (
             LoginErrorEnum.USERNAME_PWD_WRONG,
-            {CONF_USERNAME: "incorrect_username_or_password"},
+            {CONF_USERNAME: "invalid_auth"},
         ),
         (LoginErrorEnum.USERNAME_PWD_ORERRUN, {"base": "login_attempts_exceeded"}),
         (ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN, {"base": "response_error"}),
@@ -140,9 +142,15 @@ async def test_success(hass, login_requests_mock):
         f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
         text="<response>OK</response>",
     )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=FIXTURE_USER_INPUT
-    )
+    with patch("homeassistant.components.huawei_lte.async_setup"), patch(
+        "homeassistant.components.huawei_lte.async_setup_entry"
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_URL] == FIXTURE_USER_INPUT[CONF_URL]

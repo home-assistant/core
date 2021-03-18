@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "flow_type": "Tipo de conex\u00e3o"
+                }
+            },
+            "user_gateway": {
+                "data": {
+                    "host": "Endere\u00e7o IP"
+                }
+            }
+        }
+    }
+}

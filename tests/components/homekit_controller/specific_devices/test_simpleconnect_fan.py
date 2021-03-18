@@ -1,10 +1,11 @@
 """
 Test against characteristics captured from a SIMPLEconnect Fan.
 
-https://github.com/home-assistant/home-assistant/issues/26180
+https://github.com/home-assistant/core/issues/26180
 """
 
 from homeassistant.components.fan import SUPPORT_DIRECTION, SUPPORT_SET_SPEED
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -18,7 +19,7 @@ async def test_simpleconnect_fan_setup(hass):
     accessories = await setup_accessories_from_file(hass, "simpleconnect_fan.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     # Check that the fan is correctly found and set up
     fan_id = "fan.simpleconnect_fan_06f674"
@@ -40,7 +41,7 @@ async def test_simpleconnect_fan_setup(hass):
         SUPPORT_DIRECTION | SUPPORT_SET_SPEED
     )
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get(fan.device_id)
     assert device.manufacturer == "Hunter Fan"

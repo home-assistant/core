@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u6574\u5408\u5df2\u7d93\u8a2d\u5b9a\u4e26\u6709\u73fe\u6709\u50b3\u611f\u5668\u4f7f\u7528\u76f8\u540c\u8cbb\u7387"
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "step": {
             "user": {

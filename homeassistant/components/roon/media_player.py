@@ -1,8 +1,12 @@
 """MediaPlayer platform for Roon integration."""
 import logging
 
+from roonapi import split_media_path
+import voluptuous as vol
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -25,6 +29,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -33,9 +38,11 @@ from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN
+from .media_browser import browse_media
 
 SUPPORT_ROON = (
-    SUPPORT_PAUSE
+    SUPPORT_BROWSE_MEDIA
+    | SUPPORT_PAUSE
     | SUPPORT_VOLUME_SET
     | SUPPORT_STOP
     | SUPPORT_PREVIOUS_TRACK
@@ -52,11 +59,37 @@ SUPPORT_ROON = (
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_JOIN = "join"
+SERVICE_UNJOIN = "unjoin"
+SERVICE_TRANSFER = "transfer"
+
+ATTR_JOIN = "join_ids"
+ATTR_UNJOIN = "unjoin_ids"
+ATTR_TRANSFER = "transfer_id"
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Roon MediaPlayer from Config Entry."""
     roon_server = hass.data[DOMAIN][config_entry.entry_id]
     media_players = set()
+
+    # Register entity services
+    platform = entity_platform.current_platform.get()
+    platform.async_register_entity_service(
+        SERVICE_JOIN,
+        {vol.Required(ATTR_JOIN): vol.All(cv.ensure_list, [cv.entity_id])},
+        "join",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UNJOIN,
+        {vol.Optional(ATTR_UNJOIN): vol.All(cv.ensure_list, [cv.entity_id])},
+        "unjoin",
+    )
+    platform.async_register_entity_service(
+        SERVICE_TRANSFER,
+        {vol.Required(ATTR_TRANSFER): cv.entity_id},
+        "async_transfer",
+    )
 
     @callback
     def async_update_media_player(player_data):
@@ -88,8 +121,6 @@ class RoonDevice(MediaPlayerEntity):
         self._last_position_update = None
         self._supports_standby = False
         self._state = STATE_IDLE
-        self._last_playlist = None
-        self._last_media = None
         self._unique_id = None
         self._zone_id = None
         self._output_id = None
@@ -115,6 +146,7 @@ class RoonDevice(MediaPlayerEntity):
                 self.async_update_callback,
             )
         )
+        self._server.add_player_id(self.entity_id, self.name)
 
     @callback
     def async_update_callback(self, player_data):
@@ -143,7 +175,7 @@ class RoonDevice(MediaPlayerEntity):
             "name": self.name,
             "manufacturer": "RoonLabs",
             "model": dev_model,
-            "via_hub": (DOMAIN, self._server.host),
+            "via_device": (DOMAIN, self._server.roon_id),
         }
 
     def update_data(self, player_data=None):
@@ -322,11 +354,6 @@ class RoonDevice(MediaPlayerEntity):
         return self._media_artist
 
     @property
-    def media_playlist(self):
-        """Title of Playlist currently playing."""
-        return self._last_playlist
-
-    @property
     def media_image_url(self):
         """Image url of current playing media."""
         return self._media_image_url
@@ -448,27 +475,134 @@ class RoonDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        # Roon itself doesn't support playback of media by filename/url so this a bit of a workaround.
-        media_type = media_type.lower()
-        if media_type == "radio":
-            if self._server.roonapi.play_radio(self.zone_id, media_id):
-                self._last_playlist = media_id
-                self._last_media = media_id
-        elif media_type == "playlist":
-            if self._server.roonapi.play_playlist(
-                self.zone_id, media_id, shuffle=False
-            ):
-                self._last_playlist = media_id
-        elif media_type == "shuffleplaylist":
-            if self._server.roonapi.play_playlist(self.zone_id, media_id, shuffle=True):
-                self._last_playlist = media_id
-        elif media_type == "queueplaylist":
-            self._server.roonapi.queue_playlist(self.zone_id, media_id)
-        elif media_type == "genre":
-            self._server.roonapi.play_genre(self.zone_id, media_id)
+
+        _LOGGER.debug("Playback request for %s / %s", media_type, media_id)
+        if media_type in ("library", "track"):
+            # media_id is a roon browser id
+            self._server.roonapi.play_id(self.zone_id, media_id)
         else:
+            # media_id is a path matching the Roon menu structure
+            path_list = split_media_path(media_id)
+            if not self._server.roonapi.play_media(self.zone_id, path_list):
+                _LOGGER.error(
+                    "Playback request for %s / %s / %s was unsuccessful",
+                    media_type,
+                    media_id,
+                    path_list,
+                )
+
+    def join(self, join_ids):
+        """Add another Roon player to this player's join group."""
+
+        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
+        if zone_data is None:
+            _LOGGER.error("No zone data for %s", self.name)
+            return
+
+        sync_available = {}
+        for zone in self._server.zones.values():
+            for output in zone["outputs"]:
+                if (
+                    zone["display_name"] != self.name
+                    and output["output_id"]
+                    in self.player_data["can_group_with_output_ids"]
+                    and zone["display_name"] not in sync_available
+                ):
+                    sync_available[zone["display_name"]] = output["output_id"]
+
+        names = []
+        for entity_id in join_ids:
+            name = self._server.roon_name(entity_id)
+            if name is None:
+                _LOGGER.error("No roon player found for %s", entity_id)
+                return
+            if name not in sync_available:
+                _LOGGER.error(
+                    "Can't join player %s with %s because it's not in the join available list %s",
+                    name,
+                    self.name,
+                    list(sync_available),
+                )
+                return
+            names.append(name)
+
+        _LOGGER.debug("Joining %s to %s", names, self.name)
+        self._server.roonapi.group_outputs(
+            [self._output_id] + [sync_available[name] for name in names]
+        )
+
+    def unjoin(self, unjoin_ids=None):
+        """Remove a Roon player to this player's join group."""
+
+        zone_data = self._server.roonapi.zone_by_output_id(self._output_id)
+        if zone_data is None:
+            _LOGGER.error("No zone data for %s", self.name)
+            return
+
+        join_group = {
+            output["display_name"]: output["output_id"]
+            for output in zone_data["outputs"]
+            if output["display_name"] != self.name
+        }
+
+        if unjoin_ids is None:
+            # unjoin everything
+            names = list(join_group)
+        else:
+            names = []
+            for entity_id in unjoin_ids:
+                name = self._server.roon_name(entity_id)
+                if name is None:
+                    _LOGGER.error("No roon player found for %s", entity_id)
+                    return
+
+                if name not in join_group:
+                    _LOGGER.error(
+                        "Can't unjoin player %s from %s because it's not in the joined group %s",
+                        name,
+                        self.name,
+                        list(join_group),
+                    )
+                    return
+                names.append(name)
+
+        _LOGGER.debug("Unjoining %s from %s", names, self.name)
+        self._server.roonapi.ungroup_outputs([join_group[name] for name in names])
+
+    async def async_transfer(self, transfer_id):
+        """Transfer playback from this roon player to another."""
+
+        name = self._server.roon_name(transfer_id)
+        if name is None:
+            _LOGGER.error("No roon player found for %s", transfer_id)
+            return
+
+        zone_ids = {
+            output["display_name"]: output["zone_id"]
+            for output in self._server.zones.values()
+            if output["display_name"] != self.name
+        }
+
+        transfer_id = zone_ids.get(name)
+        if transfer_id is None:
             _LOGGER.error(
-                "Playback requested of unsupported type: %s --> %s",
-                media_type,
-                media_id,
+                "Can't transfer from %s to %s because destination is not known %s",
+                self.name,
+                transfer_id,
+                list(zone_ids),
             )
+
+        _LOGGER.debug("Transferring from %s to %s", self.name, name)
+        await self.hass.async_add_executor_job(
+            self._server.roonapi.transfer_zone, self._zone_id, transfer_id
+        )
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await self.hass.async_add_executor_job(
+            browse_media,
+            self.zone_id,
+            self._server,
+            media_content_type,
+            media_content_id,
+        )

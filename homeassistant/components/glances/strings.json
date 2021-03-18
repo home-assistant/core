@@ -4,23 +4,23 @@
       "user": {
         "title": "Setup Glances",
         "data": {
-          "name": "Name",
+          "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "version": "Glances API Version (2 or 3)",
-          "ssl": "Use SSL/TLS to connect to the Glances system",
-          "verify_ssl": "Verify the certification of the system"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "Unable to connect to host",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_version": "Version not supported (2 or 3 only)"
     },
     "abort": {
-      "already_configured": "Host is already configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "options": {

@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Access point is already configured",
-            "connection_aborted": "Could not connect to HMIP server",
-            "unknown": "Unknown error occurred."
+            "already_configured": "Device is already configured",
+            "connection_aborted": "Failed to connect",
+            "unknown": "Unexpected error"
         },
         "error": {
-            "invalid_pin": "Invalid PIN, please try again.",
-            "invalid_sgtin_or_pin": "Invalid SGTIN or PIN, please try again.",
+            "invalid_sgtin_or_pin": "Invalid SGTIN or PIN Code, please try again.",
             "press_the_button": "Please press the blue button.",
             "register_failed": "Failed to register, please try again.",
             "timeout_button": "Blue button press timeout, please try again."
@@ -17,7 +16,7 @@
                 "data": {
                     "hapid": "Access point ID (SGTIN)",
                     "name": "Name (optional, used as name prefix for all devices)",
-                    "pin": "Pin Code (optional)"
+                    "pin": "PIN Code"
                 },
                 "title": "Pick HomematicIP Access point"
             },

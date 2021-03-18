@@ -1,9 +1,9 @@
 {
     "config": {
         "error": {
+            "invalid_auth": "Authentification invalide",
             "service": "Erreur de connexion \u00e0 SmartHab. V\u00e9rifiez votre connexion. Le service peut \u00eatre indisponible.",
-            "unknown_error": "Erreur inattendue",
-            "wrong_login": "Authentification invalide"
+            "unknown": "Erreur inattendue"
         },
         "step": {
             "user": {

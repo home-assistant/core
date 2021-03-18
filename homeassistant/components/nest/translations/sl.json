@@ -1,14 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nastavite lahko samo en ra\u010dun Nest.",
             "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
-            "no_flows": "Preden lahko preverite pristnost, morate konfigurirati Nest. [Preberite navodila](https://www.home-assistant.io/components/nest/)."
+            "reauth_successful": "Ponovna overitev je uspela.",
+            "unknown_authorize_url_generation": "Neznana napaka pri ustvarjanju overitvenega url."
         },
         "error": {
             "internal_error": "Notranja napaka pri preverjanju kode",
-            "invalid_code": "Neveljavna koda",
             "timeout": "\u010casovna omejitev je potekla pri preverjanju kode",
             "unknown": "Neznana napaka pri preverjanju kode"
         },
@@ -26,7 +25,18 @@
                 },
                 "description": "\u010ce \u017eelite povezati svoj ra\u010dun Nest, [pooblastite svoj ra\u010dun]({url}). \n\n Po odobritvi kopirajte in prilepite podano kodo PIN.",
                 "title": "Pove\u017eite Nest ra\u010dun"
+            },
+            "reauth_confirm": {
+                "description": "Potrebna je ponovna overitev integracije"
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "camera_motion": "Zaznano je gibanje",
+            "camera_person": "Zaznana je oseba",
+            "camera_sound": "Zaznan je zvok",
+            "doorbell_chime": "Zvonec je pritisnjen"
         }
     }
 }

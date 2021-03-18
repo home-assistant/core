@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'encaminador Vilfo ja est\u00e0 configurat."
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
         },
         "error": {
-            "cannot_connect": "No s'ha pogut connectar. Verifica la informaci\u00f3 proporcionada i torna-ho a provar.",
-            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida. Comprova el token d'acc\u00e9s i torna-ho a provar.",
-            "unknown": "S'ha produ\u00eft un error inesperat durant la configuraci\u00f3 de la integraci\u00f3."
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
         },
         "step": {
             "user": {

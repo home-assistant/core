@@ -1,6 +1,4 @@
 """Support for INSTEON dimmers via PowerLinc Modem."""
-import logging
-
 from pyinsteon.groups import (
     CO_SENSOR,
     DOOR_SENSOR,
@@ -29,13 +27,12 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     OPEN_CLOSE_SENSOR: DEVICE_CLASS_OPENING,
@@ -55,7 +52,8 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Insteon binary sensors from a config entry."""
 
-    def add_entities(discovery_info=None):
+    @callback
+    def async_add_insteon_binary_sensor_entities(discovery_info=None):
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass,
@@ -66,8 +64,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
     signal = f"{SIGNAL_ADD_ENTITIES}_{BINARY_SENSOR_DOMAIN}"
-    async_dispatcher_connect(hass, signal, add_entities)
-    add_entities()
+    async_dispatcher_connect(hass, signal, async_add_insteon_binary_sensor_entities)
+    async_add_insteon_binary_sensor_entities()
 
 
 class InsteonBinarySensorEntity(InsteonEntity, BinarySensorEntity):

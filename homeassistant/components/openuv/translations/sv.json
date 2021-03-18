@@ -1,7 +1,6 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Koordinater \u00e4r redan registrerade",
             "invalid_api_key": "Ogiltigt API-l\u00f6senord"
         },
         "step": {

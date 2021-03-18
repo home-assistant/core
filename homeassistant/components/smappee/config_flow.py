@@ -17,8 +17,6 @@ from .const import (
     SUPPORTED_LOCAL_DEVICES,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class SmappeeFlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -58,7 +56,6 @@ class SmappeeFlowHandler(
         if self.is_cloud_device_already_added():
             return self.async_abort(reason="already_configured_device")
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_IP_ADDRESS: discovery_info["host"],
@@ -78,7 +75,6 @@ class SmappeeFlowHandler(
             return self.async_abort(reason="already_configured_device")
 
         if user_input is None:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             serialnumber = self.context.get(CONF_SERIALNUMBER)
             return self.async_show_form(
                 step_id="zeroconf_confirm",
@@ -86,7 +82,6 @@ class SmappeeFlowHandler(
                 errors=errors,
             )
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         ip_address = self.context.get(CONF_IP_ADDRESS)
         serial_number = self.context.get(CONF_SERIALNUMBER)
 
@@ -94,7 +89,7 @@ class SmappeeFlowHandler(
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=f"{DOMAIN}{serial_number}",
@@ -149,7 +144,7 @@ class SmappeeFlowHandler(
         smappee_api = api.api.SmappeeLocalApi(ip=ip_address)
         logon = await self.hass.async_add_executor_job(smappee_api.logon)
         if logon is None:
-            return self.async_abort(reason="connection_error")
+            return self.async_abort(reason="cannot_connect")
 
         advanced_config = await self.hass.async_add_executor_job(
             smappee_api.load_advanced_config

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

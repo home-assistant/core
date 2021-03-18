@@ -20,8 +20,8 @@
       "empty": "No result in city search: please check the city field"
     },
     "abort": {
-      "already_configured": "City already configured",
-      "unknown": "Unknown error: please retry later"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "options": {

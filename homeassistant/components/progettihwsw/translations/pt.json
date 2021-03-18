@@ -1,9 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado"
+        },
         "error": {
             "cannot_connect": "Falha na liga\u00e7\u00e3o",
-            "unknown": "Erro inesperado",
-            "wrong_info_relay_modes": "A sele\u00e7\u00e3o do modo de rel\u00e9 deve ser monoest\u00e1vel ou biest\u00e1vel."
+            "unknown": "Erro inesperado"
         },
         "step": {
             "relay_modes": {
@@ -35,6 +37,5 @@
                 "title": "Configurar placa"
             }
         }
-    },
-    "title": "Automa\u00e7\u00e3o ProgettiHWSW"
+    }
 }
