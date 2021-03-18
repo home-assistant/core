@@ -601,7 +601,7 @@ jobs:
         with:
           path: venv
           key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}-${{ hashFiles('pyproject.toml') }}
+            needs.prepare-tests.outputs.python-key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -610,13 +610,10 @@ jobs:
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
-      - name: Debug pylint
-        run: |
-          . venv/bin/activate
-          python3 -c 'from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; print(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins"))'
       - name: Run pylint
         run: |
           . venv/bin/activate
+          python3 -c 'from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; print(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins"))'
           pylint homeassistant
 
   mypy:
