@@ -1,5 +1,7 @@
 """Tests for the TP-Link component."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from pyHS100 import SmartBulb, SmartDevice, SmartDeviceException, SmartPlug
@@ -104,7 +106,7 @@ class UnknownSmartDevice(SmartDevice):
         pass
 
     @property
-    def state_information(self) -> Dict[str, Any]:
+    def state_information(self) -> dict[str, Any]:
         """Do nothing."""
         pass
 
