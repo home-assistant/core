@@ -27,7 +27,7 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    children: list["BrowseMediaSource"] | None
+    children: list[BrowseMediaSource] | None
 
     def __init__(self, *, domain: str | None, identifier: str | None, **kwargs):
         """Initialize media source browse media."""
