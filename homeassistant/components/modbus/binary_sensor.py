@@ -1,5 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -94,7 +94,7 @@ class ModbusBinarySensor(BinarySensorEntity):
         return self._value
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

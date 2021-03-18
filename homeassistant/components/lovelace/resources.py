@@ -1,6 +1,8 @@
 """Lovelace resources support."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional, cast
+from typing import Optional, cast
 import uuid
 
 import voluptuous as vol
@@ -38,7 +40,7 @@ class ResourceYAMLCollection:
         return {"resources": len(self.async_items() or [])}
 
     @callback
-    def async_items(self) -> List[dict]:
+    def async_items(self) -> list[dict]:
         """Return list of items in collection."""
         return self.data
 
@@ -66,7 +68,7 @@ class ResourceStorageCollection(collection.StorageCollection):
 
         return {"resources": len(self.async_items() or [])}
 
-    async def _async_load_data(self) -> Optional[dict]:
+    async def _async_load_data(self) -> dict | None:
         """Load the data."""
         data = await self.store.async_load()
 
