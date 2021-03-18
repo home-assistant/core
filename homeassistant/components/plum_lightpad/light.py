@@ -1,6 +1,8 @@
 """Support for Plum Lightpad lights."""
+from __future__ import annotations
+
 import asyncio
-from typing import Callable, List
+from typing import Callable
 
 from plumlightpad import Plum
 
@@ -23,7 +25,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity]], None],
+    async_add_entities: Callable[[list[Entity]], None],
 ) -> None:
     """Set up Plum Lightpad dimmer lights and glow rings."""
 

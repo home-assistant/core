@@ -1,8 +1,10 @@
 """The Philips TV integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
 
@@ -77,14 +79,14 @@ class PluggableAction:
     def __init__(self, update: Callable[[], None]):
         """Initialize."""
         self._update = update
-        self._actions: Dict[Any, AutomationActionType] = {}
+        self._actions: dict[Any, AutomationActionType] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
         return bool(self._actions)
 
     @callback
-    def async_attach(self, action: AutomationActionType, variables: Dict[str, Any]):
+    def async_attach(self, action: AutomationActionType, variables: dict[str, Any]):
         """Attach a device trigger for turn on."""
 
         @callback
@@ -99,9 +101,7 @@ class PluggableAction:
 
         return _remove
 
-    async def async_run(
-        self, hass: HomeAssistantType, context: Optional[Context] = None
-    ):
+    async def async_run(self, hass: HomeAssistantType, context: Context | None = None):
         """Run all turn on triggers."""
         for job, variables in self._actions.values():
             hass.async_run_hass_job(job, variables, context)
@@ -113,7 +113,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def __init__(self, hass, api: PhilipsTV) -> None:
         """Set up the coordinator."""
         self.api = api
-        self._notify_future: Optional[asyncio.Task] = None
+        self._notify_future: asyncio.Task | None = None
 
         @callback
         def _update_listeners():
