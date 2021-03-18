@@ -15,12 +15,10 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN
+from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
 from .helpers import generate_unique_id, import_lcn_config
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
-
-PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 

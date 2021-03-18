@@ -36,6 +36,7 @@ from .const import (
     CONNECTION,
     DEFAULT_NAME,
     DOMAIN,
+    PLATFORMS,
 )
 
 # Regex for address validation
@@ -64,6 +65,7 @@ def get_device_connection(hass, address, config_entry):
 
 def get_resource(domain_name, domain_data):
     """Return the resource for the specified domain_data."""
+    assert domain_name in PLATFORMS
     if domain_name in ["switch", "light"]:
         return domain_data["output"]
     if domain_name in ["binary_sensor", "sensor"]:
@@ -74,7 +76,6 @@ def get_resource(domain_name, domain_data):
         return f'{domain_data["source"]}.{domain_data["setpoint"]}'
     if domain_name == "scene":
         return f'{domain_data["register"]}.{domain_data["scene"]}'
-    raise ValueError("Unknown domain")
 
 
 def generate_unique_id(address):
@@ -219,49 +220,16 @@ def is_address(value):
         myhome.s0.g11
     """
     matcher = PATTERN_ADDRESS.match(value)
+    assert matcher
     if matcher:
         is_group = matcher.group("type") == "g"
         addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
         conn_id = matcher.group("conn_id")
         return addr, conn_id
-    raise vol.error.Invalid("Not a valid address string.")
 
 
-def is_relays_states_string(states_string):
+def is_states_string(states_string):
     """Validate the given states string and return states list."""
-    if len(states_string) == 8:
-        states = []
-        for state_string in states_string:
-            if state_string == "1":
-                state = "ON"
-            elif state_string == "0":
-                state = "OFF"
-            elif state_string == "T":
-                state = "TOGGLE"
-            elif state_string == "-":
-                state = "NOCHANGE"
-            else:
-                raise vol.error.Invalid("Not a valid relay state string.")
-            states.append(state)
-        return states
-    raise vol.error.Invalid("Wrong length of relay state string.")
-
-
-def is_key_lock_states_string(states_string):
-    """Validate the given states string and returns states list."""
-    if len(states_string) == 8:
-        states = []
-        for state_string in states_string:
-            if state_string == "1":
-                state = "ON"
-            elif state_string == "0":
-                state = "OFF"
-            elif state_string == "T":
-                state = "TOGGLE"
-            elif state_string == "-":
-                state = "NOCHANGE"
-            else:
-                raise vol.error.Invalid("Not a valid key lock state string.")
-            states.append(state)
-        return states
-    raise vol.error.Invalid("Wrong length of key lock state string.")
+    assert len(states_string) == 8
+    states = {"1": "ON", "0": "OFF", "T": "TOGGLE", "-": "NOCHANGE"}
+    return [states[state_string] for state_string in states_string]
