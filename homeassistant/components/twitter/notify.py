@@ -201,7 +201,7 @@ class TwitterNotificationService(BaseNotificationService):
             method_override="GET",
         )
         if resp.status_code != HTTP_OK:
-            _LOGGER.error("media processing error: %s", resp.json())
+            _LOGGER.error("Media processing error: %s", resp.json())
         processing_info = resp.json()["processing_info"]
 
         _LOGGER.debug("media processing %s status: %s", media_id, processing_info)
