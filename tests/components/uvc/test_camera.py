@@ -7,7 +7,7 @@ import pytest
 import requests
 from uvcclient import camera as camera, nvr
 
-from homeassistant.components.camera import SUPPORT_STREAM
+from homeassistant.components.camera import STATE_RECORDING, SUPPORT_STREAM
 from homeassistant.components.uvc import camera as uvc
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
@@ -324,13 +324,24 @@ def uvc_fixture():
     return _uvc
 
 
-async def test_properties(uvc_fixture):
+async def test_properties(hass, mock_remote):
     """Test the properties."""
-    assert "name" == uvc_fixture.name
-    assert uvc_fixture.is_recording
-    assert "Ubiquiti" == uvc_fixture.brand
-    assert "UVC Fake" == uvc_fixture.model
-    assert SUPPORT_STREAM == uvc_fixture.supported_features
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    camera_states = hass.states.async_all("camera")
+
+    assert len(camera_states) == 2
+
+    state = hass.states.get("camera.front")
+
+    assert state
+    assert state.name == "Front"
+    assert state.state == STATE_RECORDING
+    assert state.attributes["brand"] == "Ubiquiti"
+    assert state.attributes["model_name"] == "UVC"
+    assert state.attributes["supported_features"] == SUPPORT_STREAM
 
 
 @patch("uvcclient.camera.UVCCameraClientV320")
