@@ -1,5 +1,5 @@
 """The jewish_calendar component."""
-from typing import Optional
+from __future__ import annotations
 
 import hdate
 import voluptuous as vol
@@ -78,8 +78,8 @@ CONFIG_SCHEMA = vol.Schema(
 def get_unique_prefix(
     location: hdate.Location,
     language: str,
-    candle_lighting_offset: Optional[int],
-    havdalah_offset: Optional[int],
+    candle_lighting_offset: int | None,
+    havdalah_offset: int | None,
 ) -> str:
     """Create a prefix for unique ids."""
     config_properties = [

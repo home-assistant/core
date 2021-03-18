@@ -1,8 +1,10 @@
 """Reproduce an Light state."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from types import MappingProxyType
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Iterable
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -95,8 +97,8 @@ async def _async_reproduce_state(
     hass: HomeAssistantType,
     state: State,
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
     cur_state = hass.states.get(state.entity_id)
@@ -123,7 +125,7 @@ async def _async_reproduce_state(
     ):
         return
 
-    service_data: Dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+    service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
 
     if reproduce_options is not None and ATTR_TRANSITION in reproduce_options:
         service_data[ATTR_TRANSITION] = reproduce_options[ATTR_TRANSITION]
@@ -171,8 +173,8 @@ async def async_reproduce_states(
     hass: HomeAssistantType,
     states: Iterable[State],
     *,
-    context: Optional[Context] = None,
-    reproduce_options: Optional[Dict[str, Any]] = None,
+    context: Context | None = None,
+    reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce Light states."""
     await asyncio.gather(

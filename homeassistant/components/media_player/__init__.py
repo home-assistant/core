@@ -9,7 +9,6 @@ import functools as ft
 import hashlib
 import logging
 import secrets
-from typing import List, Optional, Tuple
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -355,7 +354,7 @@ async def async_unload_entry(hass, entry):
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
 
-    _access_token: Optional[str] = None
+    _access_token: str | None = None
 
     # Implement these for your media player
     @property
@@ -439,8 +438,8 @@ class MediaPlayerEntity(Entity):
         self,
         media_content_type: str,
         media_content_id: str,
-        media_image_id: Optional[str] = None,
-    ) -> Tuple[Optional[str], Optional[str]]:
+        media_image_id: str | None = None,
+    ) -> tuple[str | None, str | None]:
         """
         Optionally fetch internally accessible image for media browser.
 
@@ -851,8 +850,8 @@ class MediaPlayerEntity(Entity):
 
     async def async_browse_media(
         self,
-        media_content_type: Optional[str] = None,
-        media_content_id: Optional[str] = None,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 
@@ -914,7 +913,7 @@ class MediaPlayerEntity(Entity):
         self,
         media_content_type: str,
         media_content_id: str,
-        media_image_id: Optional[str] = None,
+        media_image_id: str | None = None,
     ) -> str:
         """Generate an url for a media browser image."""
         url_path = (
@@ -947,8 +946,8 @@ class MediaPlayerImageView(HomeAssistantView):
         self,
         request: web.Request,
         entity_id: str,
-        media_content_type: Optional[str] = None,
-        media_content_id: Optional[str] = None,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
     ) -> web.Response:
         """Start a get request."""
         player = self.component.get_entity(entity_id)
@@ -1047,7 +1046,7 @@ async def websocket_browse_media(hass, connection, msg):
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
     component = hass.data[DOMAIN]
-    player: Optional[MediaPlayerDevice] = component.get_entity(msg["entity_id"])
+    player: MediaPlayerDevice | None = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1119,9 +1118,9 @@ class BrowseMedia:
         title: str,
         can_play: bool,
         can_expand: bool,
-        children: Optional[List["BrowseMedia"]] = None,
-        children_media_class: Optional[str] = None,
-        thumbnail: Optional[str] = None,
+        children: list[BrowseMedia] | None = None,
+        children_media_class: str | None = None,
+        thumbnail: str | None = None,
     ):
         """Initialize browse media item."""
         self.media_class = media_class

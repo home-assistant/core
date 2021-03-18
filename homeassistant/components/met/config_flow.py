@@ -1,5 +1,7 @@
 """Config flow to configure Met component."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -73,9 +75,7 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_import(
-        self, user_input: Optional[Dict] = None
-    ) -> Dict[str, Any]:
+    async def async_step_import(self, user_input: dict | None = None) -> dict[str, Any]:
         """Handle configuration by yaml file."""
         return await self.async_step_user(user_input)
 

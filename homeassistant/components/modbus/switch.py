@@ -1,7 +1,9 @@
 """Support for Modbus switches."""
+from __future__ import annotations
+
 from abc import ABC
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -99,7 +101,7 @@ async def async_setup_platform(
 class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: dict[str, Any]):
         """Initialize the switch."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
@@ -133,7 +135,7 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
 class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus coil switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: dict[str, Any]):
         """Initialize the coil switch."""
         super().__init__(hub, config)
         self._coil = config[CALL_TYPE_COIL]
@@ -184,7 +186,7 @@ class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
 class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
     """Representation of a Modbus register switch."""
 
-    def __init__(self, hub: ModbusHub, config: Dict[str, Any]):
+    def __init__(self, hub: ModbusHub, config: dict[str, Any]):
         """Initialize the register switch."""
         super().__init__(hub, config)
         self._register = config[CONF_REGISTER]
@@ -238,7 +240,7 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
                 value,
             )
 
-    def _read_register(self) -> Optional[int]:
+    def _read_register(self) -> int | None:
         try:
             if self._register_type == CALL_TYPE_REGISTER_INPUT:
                 result = self._hub.read_input_registers(

@@ -1,5 +1,5 @@
 """Handle MySensors messages."""
-from typing import Dict, List
+from __future__ import annotations
 
 from mysensors import Message
 
@@ -70,16 +70,16 @@ async def handle_sketch_version(
 
 @callback
 def _handle_child_update(
-    hass: HomeAssistantType, gateway_id: GatewayId, validated: Dict[str, List[DevId]]
+    hass: HomeAssistantType, gateway_id: GatewayId, validated: dict[str, list[DevId]]
 ):
     """Handle a child update."""
-    signals: List[str] = []
+    signals: list[str] = []
 
     # Update all platforms for the device via dispatcher.
     # Add/update entity for validated children.
     for platform, dev_ids in validated.items():
         devices = get_mysensors_devices(hass, platform)
-        new_dev_ids: List[DevId] = []
+        new_dev_ids: list[DevId] = []
         for dev_id in dev_ids:
             if dev_id in devices:
                 signals.append(CHILD_CALLBACK.format(*dev_id))

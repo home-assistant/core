@@ -1,5 +1,7 @@
 """The Minecraft Server sensor platform."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MILLISECONDS
@@ -151,7 +153,7 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         self._extra_state_attributes = extra_state_attributes
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return players list in device state attributes."""
         return self._extra_state_attributes
 

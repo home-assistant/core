@@ -1,7 +1,8 @@
 """Support for MQTT sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools
-from typing import Optional
 
 import voluptuous as vol
 
@@ -166,7 +167,7 @@ class MqttSensor(MqttEntity, Entity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 

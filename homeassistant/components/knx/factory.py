@@ -1,5 +1,5 @@
 """Factory function to initialize KNX devices from config."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx import XKNX
 from xknx.devices import (
@@ -95,7 +95,7 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
 
 def _create_light_color(
     color: str, config: ConfigType
-) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None, str | None, str | None]:
     """Load color configuration from configuration structure."""
     if "individual_colors" in config and color in config["individual_colors"]:
         sub_config = config["individual_colors"][color]
