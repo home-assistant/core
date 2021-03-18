@@ -142,6 +142,25 @@ async def test_setup_minimum_resource_template(hass):
 
 
 @respx.mock
+async def test_setup_minimum_headers_template(hass):
+    """Test setup with minimum configuration (resource_template)."""
+    respx.get("http://localhost") % 200
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "platform": "rest",
+                "resource_template": "{% set url = 'http://localhost' %}{{ url }}",
+                "headers_template": "{% set token = '123456789' %}Authorization: Bearer {{ header }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+
+@respx.mock
 async def test_setup_duplicate_resource_template(hass):
     """Test setup with duplicate resources."""
     respx.get("http://localhost") % 200
