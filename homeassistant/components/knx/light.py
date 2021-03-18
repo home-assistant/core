@@ -1,7 +1,7 @@
 """Support for KNX/IP lights."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from xknx.devices import Light as XknxLight
 
@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -35,7 +36,7 @@ DEFAULT_WHITE_VALUE = 255
 async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up lights for KNX platform."""
@@ -49,21 +50,13 @@ async def async_setup_platform(
 class KNXLight(KnxEntity, LightEntity):
     """Representation of a KNX light."""
 
-    def __init__(self, device: XknxLight):
+    def __init__(self, device: XknxLight) -> None:
         """Initialize of KNX light."""
         self._device: XknxLight
         super().__init__(device)
 
-        self._min_kelvin = (
-            device.min_kelvin
-            if device.min_kelvin is not None
-            else LightSchema.DEFAULT_MIN_KELVIN
-        )
-        self._max_kelvin = (
-            device.max_kelvin
-            if device.max_kelvin is not None
-            else LightSchema.DEFAULT_MAX_KELVIN
-        )
+        self._min_kelvin = device.min_kelvin or LightSchema.DEFAULT_MIN_KELVIN
+        self._max_kelvin = device.max_kelvin or LightSchema.DEFAULT_MAX_KELVIN
         self._min_mireds = color_util.color_temperature_kelvin_to_mired(
             self._max_kelvin
         )
