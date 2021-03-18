@@ -1,4 +1,6 @@
 """Config flow for NEW_NAME."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant import config_entries

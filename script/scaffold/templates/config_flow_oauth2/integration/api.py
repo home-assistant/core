@@ -1,4 +1,6 @@
 """API for NEW_NAME bound to Home Assistant OAuth."""
+from __future__ import annotations
+
 from asyncio import run_coroutine_threadsafe
 
 from aiohttp import ClientSession

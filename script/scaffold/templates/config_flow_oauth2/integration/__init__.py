@@ -1,4 +1,6 @@
 """The NEW_NAME integration."""
+from __future__ import annotations
+
 import asyncio
 
 import voluptuous as vol

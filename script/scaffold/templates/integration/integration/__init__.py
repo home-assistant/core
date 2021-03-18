@@ -1,4 +1,6 @@
 """The NEW_NAME integration."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
