@@ -58,3 +58,19 @@ update_entity:
   description: Force one or more entities to update its data
   target:
     entity: {}
+
+reload_config_entry:
+  name: Reload config entry
+  description: Reload a config entry that matches a target.
+  target:
+    entity: {}
+    device: {}
+  fields:
+    entry_id:
+      advanced: true
+      name: Config entry id
+      description: A configuration entry id
+      required: false
+      example: 8955375327824e14ba89e4b29cc3ec9a
+      selector:
+        text:
