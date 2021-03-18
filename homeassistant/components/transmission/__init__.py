@@ -365,7 +365,7 @@ class TransmissionData:
         return f"{DATA_UPDATED}-{self.host}"
 
     @property
-    def torrents(self) -> List[transmissionrpc.Torrent]:
+    def torrents(self) -> list[transmissionrpc.Torrent]:
         """Get the list of torrents."""
         return self._torrents
 
