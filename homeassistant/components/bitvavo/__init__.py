@@ -87,7 +87,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _prep_markets(marketscfg, markets, tickers, orderbook_tickers):
-        """ Prepare markets data"""
+        """Prepare markets data."""
 
         tickers_dict = {}
 
@@ -114,7 +114,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _prep_tickers(asset_currencies, tickers):
-        """ Prepare tickers data"""
+        """Prepare tickers data."""
 
         asset_tickers_dict = {}
 
@@ -134,7 +134,7 @@ class BitvavoDataUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _prep_balances(balances, tickers):
-        """ Prepare balances data"""
+        """Prepare balances data."""
 
         balances_dict = {}
 
