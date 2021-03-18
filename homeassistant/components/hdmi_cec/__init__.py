@@ -1,6 +1,6 @@
 """Support for HDMI CEC."""
 from collections import defaultdict
-from functools import reduce
+from functools import partial, reduce
 import logging
 import multiprocessing
 
@@ -38,9 +38,10 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -162,6 +163,9 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+WATCHDOG_INTERVAL = 120
+EVENT_HDMI_CEC_UNAVAILABLE = "hdmi_cec_unavailable"
+
 
 def pad_physical_address(addr):
     """Right-pad a physical address."""
@@ -209,6 +213,18 @@ def setup(hass: HomeAssistant, base_config):
     else:
         adapter = CecAdapter(name=display_name[:12], activate_source=False)
     hdmi_network = HDMINetwork(adapter, loop=loop)
+
+    def _adapter_watchdog(now=None):
+        _LOGGER.debug("Reached _adapter_watchdog")
+        event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        if not adapter.initialized:
+            _LOGGER.info("Adapter not initialized. Trying to restart.")
+            hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
+            adapter.init()
+
+    hdmi_network.set_initialized_callback(
+        partial(event.async_call_later, hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+    )
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
@@ -327,7 +343,7 @@ def setup(hass: HomeAssistant, base_config):
     def _shutdown(call):
         hdmi_network.stop()
 
-    def _start_cec(event):
+    def _start_cec(callback_event):
         """Register services and start HDMI network to watch for devices."""
         hass.services.register(
             DOMAIN, SERVICE_SEND_COMMAND, _tx, SERVICE_SEND_COMMAND_SCHEMA
@@ -364,6 +380,12 @@ class CecEntity(Entity):
         self._logical_address = logical
         self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
 
+    def _hdmi_cec_unavailable(self, callback_event):
+        # Change state to unavailable. Without this, entity would remain in
+        # its last state, since the state changes are pushed.
+        self._state = STATE_UNAVAILABLE
+        self.schedule_update_ha_state(False)
+
     def update(self):
         """Update device status."""
         device = self._device
@@ -383,6 +405,9 @@ class CecEntity(Entity):
     async def async_added_to_hass(self):
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
+        self.hass.bus.async_listen(
+            EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable
+        )
 
     def _update(self, device=None):
         """Device status changed, schedule an update."""
