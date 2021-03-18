@@ -7,7 +7,11 @@ import pytest
 import requests
 from uvcclient import camera as camera, nvr
 
-from homeassistant.components.camera import STATE_RECORDING, SUPPORT_STREAM
+from homeassistant.components.camera import (
+    STATE_RECORDING,
+    SUPPORT_STREAM,
+    async_get_stream_source,
+)
 from homeassistant.components.uvc import camera as uvc
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
@@ -20,6 +24,16 @@ from tests.common import async_fire_time_changed
 def mock_remote_fixture(camera_info):
     """Mock the nvr.UVCRemote class."""
     with patch("homeassistant.components.uvc.camera.nvr.UVCRemote") as mock_remote:
+
+        def setup(host, port, apikey, ssl=False):
+            """Set instance attributes."""
+            mock_remote.return_value._host = host
+            mock_remote.return_value._port = port
+            mock_remote.return_value._apikey = apikey
+            mock_remote.return_value._ssl = ssl
+            return mock_remote.return_value
+
+        mock_remote.side_effect = setup
         mock_remote.return_value.get_camera.return_value = camera_info
         mock_cameras = [
             {"uuid": "one", "name": "Front", "id": "id1"},
@@ -410,9 +424,13 @@ async def test_motion_recording_mode_properties(hass, mock_remote):
     assert state.state == STATE_RECORDING
 
 
-async def test_stream(uvc_fixture):
+async def test_stream(hass, mock_remote):
     """Test the RTSP stream URI."""
-    stream_source = await uvc_fixture.stream_source()
+    config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
+    assert await async_setup_component(hass, "camera", {"camera": config})
+    await hass.async_block_till_done()
+
+    stream_source = await async_get_stream_source(hass, "camera.front")
 
     assert stream_source == "rtsp://foo:7447/uuid_rtspchannel_0"
 
