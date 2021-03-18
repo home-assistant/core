@@ -1,9 +1,8 @@
 """Percentage util functions."""
+from __future__ import annotations
 
-from typing import List, Tuple
 
-
-def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
+def ordered_list_item_to_percentage(ordered_list: list[str], item: str) -> int:
     """Determine the percentage of an item in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -26,7 +25,7 @@ def ordered_list_item_to_percentage(ordered_list: List[str], item: str) -> int:
     return (list_position * 100) // list_len
 
 
-def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) -> str:
+def percentage_to_ordered_list_item(ordered_list: list[str], percentage: int) -> str:
     """Find the item that most closely matches the percentage in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -54,7 +53,7 @@ def percentage_to_ordered_list_item(ordered_list: List[str], percentage: int) ->
 
 
 def ranged_value_to_percentage(
-    low_high_range: Tuple[float, float], value: float
+    low_high_range: tuple[float, float], value: float
 ) -> int:
     """Given a range of low and high values convert a single value to a percentage.
 
@@ -71,7 +70,7 @@ def ranged_value_to_percentage(
 
 
 def percentage_to_ranged_value(
-    low_high_range: Tuple[float, float], percentage: int
+    low_high_range: tuple[float, float], percentage: int
 ) -> float:
     """Given a range of low and high values convert a percentage to a single value.
 
@@ -87,11 +86,11 @@ def percentage_to_ranged_value(
     return states_in_range(low_high_range) * percentage / 100
 
 
-def states_in_range(low_high_range: Tuple[float, float]) -> float:
+def states_in_range(low_high_range: tuple[float, float]) -> float:
     """Given a range of low and high values return how many states exist."""
     return low_high_range[1] - low_high_range[0] + 1
 
 
-def int_states_in_range(low_high_range: Tuple[float, float]) -> int:
+def int_states_in_range(low_high_range: tuple[float, float]) -> int:
     """Given a range of low and high values return how many integer states exist."""
     return int(states_in_range(low_high_range))

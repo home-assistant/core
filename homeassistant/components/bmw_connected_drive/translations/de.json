@@ -11,6 +11,7 @@
             "user": {
                 "data": {
                     "password": "Passwort",
+                    "region": "ConnectedDrive Region",
                     "username": "Benutzername"
                 }
             }

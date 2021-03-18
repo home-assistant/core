@@ -154,7 +154,7 @@ aiodns==2.0.0
 aioeafm==0.1.2
 
 # homeassistant.components.esphome
-aioesphomeapi==2.6.5
+aioesphomeapi==2.6.6
 
 # homeassistant.components.flo
 aioflo==0.4.1
@@ -760,7 +760,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210314.0
+home-assistant-frontend==20210316.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10

@@ -13,7 +13,9 @@
                 "data": {
                     "email": "E-Mail",
                     "password": "Passwort"
-                }
+                },
+                "description": "Gib deine SmartTub E-Mail-Adresse und Passwort f\u00fcr die Anmeldung ein",
+                "title": "Anmeldung"
             }
         }
     }

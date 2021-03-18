@@ -3,11 +3,16 @@
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
             "already_in_progress": "De configuratiestroom is al aan de gang",
-            "not_denonavr_manufacturer": "Geen Denon AVR Netwerk Receiver, ontdekte fabrikant komt niet overeen"
+            "not_denonavr_manufacturer": "Geen Denon AVR Netwerk Receiver, ontdekte fabrikant komt niet overeen",
+            "not_denonavr_missing": "Geen Denon AVR netwerkontvanger, zoekinformatie niet compleet"
+        },
+        "error": {
+            "discovery_error": "Kan een Denon AVR netwerkontvanger niet vinden"
         },
         "flow_title": "Denon AVR Network Receiver: {name}",
         "step": {
             "confirm": {
+                "description": "Bevestig het toevoegen van de ontvanger",
                 "title": "Denon AVR Network Receivers"
             },
             "select": {
@@ -21,7 +26,8 @@
                 "data": {
                     "host": "IP-adres"
                 },
-                "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt"
+                "description": "Maak verbinding met uw ontvanger. Als het IP-adres niet is ingesteld, wordt automatische detectie gebruikt",
+                "title": "Denon AVR Netwerk Ontvangers"
             }
         }
     },
@@ -33,6 +39,7 @@
                     "zone2": "Stel Zone 2 in",
                     "zone3": "Stel Zone 3 in"
                 },
+                "description": "Optionele instellingen opgeven",
                 "title": "Denon AVR Network Receivers"
             }
         }

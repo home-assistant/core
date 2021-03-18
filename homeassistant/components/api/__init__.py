@@ -26,7 +26,6 @@ from homeassistant.const import (
     URL_API_ERROR_LOG,
     URL_API_EVENTS,
     URL_API_SERVICES,
-    URL_API_STAGE_CHANGED_EVENTS,
     URL_API_STATES,
     URL_API_STREAM,
     URL_API_TEMPLATE,
@@ -35,7 +34,6 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
-from homeassistant.helpers.event import async_state_changed_event_listeners
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -67,7 +65,6 @@ async def async_setup(hass, config):
     hass.http.register_view(APIEntityStateView)
     hass.http.register_view(APIEventListenersView)
     hass.http.register_view(APIEventView)
-    hass.http.register_view(APIStateChangedEventListenersView)
     hass.http.register_view(APIServicesView)
     hass.http.register_view(APIDomainServicesView)
     hass.http.register_view(APIComponentsView)
@@ -307,18 +304,6 @@ class APIEventListenersView(HomeAssistantView):
         return self.json(async_events_json(request.app["hass"]))
 
 
-class APIStateChangedEventListenersView(HomeAssistantView):
-    """View to handle EventListeners requests."""
-
-    url = URL_API_STAGE_CHANGED_EVENTS
-    name = "api:state-change-event-listeners"
-
-    @ha.callback
-    def get(self, request):
-        """Get state change event listeners."""
-        return self.json(async_state_changed_events_json(request.app["hass"]))
-
-
 class APIEventView(HomeAssistantView):
     """View to handle Event requests."""
 
@@ -460,18 +445,7 @@ async def async_services_json(hass):
 @ha.callback
 def async_events_json(hass):
     """Generate event data to JSONify."""
-    return _async_listeners_json("event", hass.bus.async_listeners())
-
-
-@ha.callback
-def async_state_changed_events_json(hass):
-    """Generate event data to JSONify."""
-    return _async_listeners_json("entity_id", async_state_changed_event_listeners(hass))
-
-
-@ha.callback
-def _async_listeners_json(key_name, listeners_dict):
     return [
-        {key_name: key, "listener_count": value}
-        for key, value in listeners_dict.items()
+        {"event": key, "listener_count": value}
+        for key, value in hass.bus.async_listeners().items()
     ]

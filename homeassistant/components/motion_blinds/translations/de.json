@@ -10,12 +10,16 @@
             "connect": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
-                }
+                },
+                "description": "Ein 16-Zeichen-API-Schl\u00fcssel wird ben\u00f6tigt, siehe https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
+                "title": "Motion Jalousien"
             },
             "select": {
                 "data": {
                     "select_ip": "IP-Adresse"
-                }
+                },
+                "description": "F\u00fchre das Setup erneut aus, wenn du weitere Motion Gateways verbinden m\u00f6chtest",
+                "title": "W\u00e4hle das Motion Gateway aus, zu dem du eine Verbindung herstellen m\u00f6chten"
             },
             "user": {
                 "data": {
