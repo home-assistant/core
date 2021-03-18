@@ -113,8 +113,10 @@ async def test_configuration_setup3(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state = hass.states.get("fan.test")
-    with pytest.raises(Exception):
-        assert state.state == STATE_OFF
+    assert state.state == STATE_OFF
+
+    with pytest.raises(NotValidSpeedError):
+        await common.async_set_preset_mode(hass, "fan.test", "Mode1")
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):

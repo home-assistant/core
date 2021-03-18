@@ -223,25 +223,18 @@ class MqttFan(MqttEntity, FanEntity):
             "SPEED_OFF": config[CONF_PAYLOAD_OFF_SPEED],
         }
         if not self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
-            self._feature_speeds = 1
+            self._feature_speeds = True
             _LOGGER.warning(
                 "Using speeds is deprecated, use preset modes or percentage instead"
             )
         else:
-            self._feature_speeds = 0
+            self._feature_speeds = False
 
-        if not self._topic[CONF_PERCENTAGE_COMMAND_TOPIC] is None:
-            self._feature_percentage = 1
-        else:
-            self._feature_percentage = 0
+        self._feature_percentage = (
+            not self._topic[CONF_PERCENTAGE_COMMAND_TOPIC] is None
+        )
 
-        if not self._topic[CONF_PRESET_MODE_COMMAND_TOPIC] is None:
-            self._feature_preset_mode = 1
-        else:
-            self._feature_preset_mode = 0
-        if not config[CONF_PRESET_MODES_LIST] and self._feature_preset_mode:
-            self._feature_preset_mode = 0
-            raise ValueError("No preset_modes configured, preset mode feature disabled")
+        self._feature_preset_mode = bool(config[CONF_PRESET_MODES_LIST])
 
         optimistic = config[CONF_OPTIMISTIC]
         self._optimistic = optimistic or self._topic[CONF_STATE_TOPIC] is None
@@ -567,6 +560,11 @@ class MqttFan(MqttEntity, FanEntity):
 
         This method is a coroutine.
         """
+        if (
+            speed not in self._config[CONF_SPEED_LIST]
+            and speed not in self._config[CONF_PRESET_MODES_LIST]
+        ):
+            raise NotValidSpeedError(f"{speed} is not a valid fan speed")
         if speed == SPEED_LOW:
             mqtt_payload = self._payload["SPEED_LOW"]
         elif speed == SPEED_MEDIUM:
@@ -575,23 +573,13 @@ class MqttFan(MqttEntity, FanEntity):
             mqtt_payload = self._payload["SPEED_HIGH"]
         elif speed == SPEED_OFF:
             mqtt_payload = self._payload["SPEED_OFF"]
-        elif (
-            self._feature_preset_mode and speed in self._config[CONF_PRESET_MODES_LIST]
-        ):
+        elif speed in self._config[CONF_PRESET_MODES_LIST]:
             percentage = ordered_list_item_to_percentage(
                 self._config[CONF_PRESET_MODES_LIST], speed
             )
             mqtt_payload = percentage_to_ordered_list_item(
                 self._speed_list_without_preset_modes, percentage
             )
-        #        elif self._feature_percentage:
-        #            percentage = int(speed)
-        #            if percentage:
-        #                mqtt_payload = percentage_to_ordered_list_item(
-        #                    self._speed_list_without_preset_modes, percentage
-        #                )
-        else:
-            raise NotValidSpeedError(f"{speed} is not a valid fan speed")
         if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
             mqtt.async_publish(
                 self.hass,
