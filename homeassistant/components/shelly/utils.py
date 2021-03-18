@@ -1,8 +1,8 @@
 """Shelly helpers functions."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import List, Optional, Tuple
 
 import aioshelly
 
@@ -67,7 +67,7 @@ def get_number_of_channels(device: aioshelly.Device, block: aioshelly.Block) -> 
 def get_entity_name(
     device: aioshelly.Device,
     block: aioshelly.Block,
-    description: Optional[str] = None,
+    description: str | None = None,
 ) -> str:
     """Naming for switch and sensors."""
     channel_name = get_device_channel_name(device, block)
@@ -143,7 +143,7 @@ def get_device_uptime(status: dict, last_uptime: str) -> str:
 
 def get_input_triggers(
     device: aioshelly.Device, block: aioshelly.Block
-) -> List[Tuple[str, str]]:
+) -> list[tuple[str, str]]:
     """Return list of input triggers for block."""
     if "inputEvent" not in block.sensor_ids or "inputEventCnt" not in block.sensor_ids:
         return []

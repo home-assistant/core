@@ -1,5 +1,5 @@
 """Support for Ruckus Unleashed devices."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -115,7 +115,7 @@ class RuckusUnleashedDevice(CoordinatorEntity, ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def device_info(self) -> Optional[dict]:
+    def device_info(self) -> dict | None:
         """Return the device information."""
         if self.is_connected:
             return {
