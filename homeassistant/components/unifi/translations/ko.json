@@ -29,11 +29,11 @@
         "step": {
             "client_control": {
                 "data": {
-                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4 \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
+                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc811\uadfc \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
                     "dpi_restrictions": "DPI \uc81c\ud55c \uadf8\ub8f9\uc758 \uc81c\uc5b4 \ud5c8\uc6a9\ud558\uae30",
                     "poe_clients": "\ud074\ub77c\uc774\uc5b8\ud2b8\uc758 POE \uc81c\uc5b4 \ud5c8\uc6a9\ud558\uae30"
                 },
-                "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \ucee8\ud2b8\ub864 \uad6c\uc131 \n\n\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4\ub97c \uc81c\uc5b4\ud558\ub824\ub294 \uc2dc\ub9ac\uc5bc \ubc88\ud638\uc5d0 \ub300\ud55c \uc2a4\uc704\uce58\ub97c \ub9cc\ub4ed\ub2c8\ub2e4.",
+                "description": "\ud074\ub77c\uc774\uc5b8\ud2b8 \ucee8\ud2b8\ub864 \uad6c\uc131 \n\n\ub124\ud2b8\uc6cc\ud06c \uc811\uadfc\uc744 \uc81c\uc5b4\ud558\ub824\ub294 \uc2dc\ub9ac\uc5bc \ubc88\ud638\uc5d0 \ub300\ud55c \uc2a4\uc704\uce58\ub97c \ub9cc\ub4ed\ub2c8\ub2e4.",
                 "title": "UniFi \uc635\uc158 2/3"
             },
             "device_tracker": {
@@ -50,7 +50,7 @@
             },
             "simple_options": {
                 "data": {
-                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc561\uc138\uc2a4 \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
+                    "block_client": "\ub124\ud2b8\uc6cc\ud06c \uc811\uadfc \uc81c\uc5b4 \ud074\ub77c\uc774\uc5b8\ud2b8",
                     "track_clients": "\ub124\ud2b8\uc6cc\ud06c \ud074\ub77c\uc774\uc5b8\ud2b8 \ucd94\uc801 \ub300\uc0c1",
                     "track_devices": "\ub124\ud2b8\uc6cc\ud06c \uae30\uae30 \ucd94\uc801 (Ubiquiti \uae30\uae30)"
                 },
