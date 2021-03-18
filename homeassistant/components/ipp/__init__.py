@@ -1,8 +1,10 @@
 """The Internet Printing Protocol (IPP) integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from pyipp import IPP, IPPError, Printer as IPPPrinter
 
@@ -39,7 +41,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the IPP component."""
     hass.data.setdefault(DOMAIN, {})
     return True
@@ -166,7 +168,7 @@ class IPPEntity(CoordinatorEntity):
         return self._enabled_default
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this IPP device."""
         if self._device_id is None:
             return None

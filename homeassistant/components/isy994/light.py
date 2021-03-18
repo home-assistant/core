@@ -1,5 +1,7 @@
 """Support for ISY994 lights."""
-from typing import Callable, Dict
+from __future__ import annotations
+
+from typing import Callable
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -98,7 +100,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             _LOGGER.debug("Unable to turn on light")
 
     @property
-    def extra_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return the light attributes."""
         attribs = super().extra_state_attributes
         attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness

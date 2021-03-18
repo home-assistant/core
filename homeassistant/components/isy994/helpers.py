@@ -1,5 +1,7 @@
 """Sorting helpers for ISY994 device classifications."""
-from typing import Any, List, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 from pyisy.constants import (
     ISY_VALUE_UNKNOWN,
@@ -56,7 +58,7 @@ BINARY_SENSOR_ISY_STATES = ["on", "off"]
 
 
 def _check_for_node_def(
-    hass_isy_data: dict, node: Union[Group, Node], single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: str = None
 ) -> bool:
     """Check if the node matches the node_def_id for any platforms.
 
@@ -79,7 +81,7 @@ def _check_for_node_def(
 
 
 def _check_for_insteon_type(
-    hass_isy_data: dict, node: Union[Group, Node], single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: str = None
 ) -> bool:
     """Check if the node matches the Insteon type for any platforms.
 
@@ -144,7 +146,7 @@ def _check_for_insteon_type(
 
 
 def _check_for_zwave_cat(
-    hass_isy_data: dict, node: Union[Group, Node], single_platform: str = None
+    hass_isy_data: dict, node: Group | Node, single_platform: str = None
 ) -> bool:
     """Check if the node matches the ISY Z-Wave Category for any platforms.
 
@@ -174,7 +176,7 @@ def _check_for_zwave_cat(
 
 def _check_for_uom_id(
     hass_isy_data: dict,
-    node: Union[Group, Node],
+    node: Group | Node,
     single_platform: str = None,
     uom_list: list = None,
 ) -> bool:
@@ -209,7 +211,7 @@ def _check_for_uom_id(
 
 def _check_for_states_in_uom(
     hass_isy_data: dict,
-    node: Union[Group, Node],
+    node: Group | Node,
     single_platform: str = None,
     states_list: list = None,
 ) -> bool:
@@ -244,7 +246,7 @@ def _check_for_states_in_uom(
     return False
 
 
-def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Union[Group, Node]) -> bool:
+def _is_sensor_a_binary_sensor(hass_isy_data: dict, node: Group | Node) -> bool:
     """Determine if the given sensor node should be a binary_sensor."""
     if _check_for_node_def(hass_isy_data, node, single_platform=BINARY_SENSOR):
         return True
@@ -364,7 +366,7 @@ def _categorize_variables(
 
 
 async def migrate_old_unique_ids(
-    hass: HomeAssistantType, platform: str, devices: Optional[List[Any]]
+    hass: HomeAssistantType, platform: str, devices: list[Any] | None
 ) -> None:
     """Migrate to new controller-specific unique ids."""
     registry = await async_get_registry(hass)
@@ -396,11 +398,11 @@ async def migrate_old_unique_ids(
 
 
 def convert_isy_value_to_hass(
-    value: Union[int, float, None],
+    value: int | float | None,
     uom: str,
-    precision: Union[int, str],
-    fallback_precision: Optional[int] = None,
-) -> Union[float, int]:
+    precision: int | str,
+    fallback_precision: int | None = None,
+) -> float | int:
     """Fix ISY Reported Values.
 
     ISY provides float values as an integer and precision component.

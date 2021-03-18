@@ -1,7 +1,7 @@
 """Support for the iZone HVAC."""
+from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
 from pizone import Controller, Zone
 import voluptuous as vol
@@ -324,7 +324,7 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error([])
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available operation modes."""
         if self._controller.free_air:
             return [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
@@ -346,7 +346,7 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error()
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._controller.mode == Controller.Mode.FREE_AIR:
             return self._controller.temp_supply
@@ -364,7 +364,7 @@ class ControllerDevice(ClimateEntity):
         return zone.name
 
     @property
-    def control_zone_setpoint(self) -> Optional[float]:
+    def control_zone_setpoint(self) -> float | None:
         """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
         if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return None
@@ -376,7 +376,7 @@ class ControllerDevice(ClimateEntity):
 
     @property
     @_return_on_connection_error()
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach (either from control zone or master unit)."""
         if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             return self._controller.temp_setpoint
@@ -388,17 +388,17 @@ class ControllerDevice(ClimateEntity):
         return self._controller.temp_supply
 
     @property
-    def target_temperature_step(self) -> Optional[float]:
+    def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         return 0.5
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return _IZONE_FAN_TO_HA[self._controller.fan]
 
     @property
-    def fan_modes(self) -> Optional[List[str]]:
+    def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         return list(self._fan_to_pizone)
 

@@ -1,6 +1,8 @@
 """Support for IPP sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, DEVICE_CLASS_TIMESTAMP, PERCENTAGE
@@ -26,7 +28,7 @@ from .const import (
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up IPP sensor based on a config entry."""
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -63,7 +65,7 @@ class IPPSensor(IPPEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize IPP sensor."""
         self._unit_of_measurement = unit_of_measurement
@@ -117,7 +119,7 @@ class IPPMarkerSensor(IPPSensor):
         )
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
             ATTR_MARKER_HIGH_LEVEL: self.coordinator.data.markers[
@@ -132,7 +134,7 @@ class IPPMarkerSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> Optional[int]:
+    def state(self) -> int | None:
         """Return the state of the sensor."""
         level = self.coordinator.data.markers[self.marker_index].level
 
@@ -160,7 +162,7 @@ class IPPPrinterSensor(IPPSensor):
         )
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
             ATTR_INFO: self.coordinator.data.info.printer_info,
@@ -202,6 +204,6 @@ class IPPUptimeSensor(IPPSensor):
         return uptime.replace(microsecond=0).isoformat()
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this sensor."""
         return DEVICE_CLASS_TIMESTAMP

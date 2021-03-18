@@ -1,5 +1,7 @@
 """Support for ISY994 sensors."""
-from typing import Callable, Dict, Union
+from __future__ import annotations
+
+from typing import Callable
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
@@ -47,7 +49,7 @@ class ISYSensorEntity(ISYNodeEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
-    def raw_unit_of_measurement(self) -> Union[dict, str]:
+    def raw_unit_of_measurement(self) -> dict | str:
         """Get the raw unit of measurement for the ISY994 sensor device."""
         uom = self._node.uom
 
@@ -117,7 +119,7 @@ class ISYSensorVariableEntity(ISYEntity):
         return convert_isy_value_to_hass(self._node.status, "", self._node.prec)
 
     @property
-    def extra_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Get the state attributes for the device."""
         return {
             "init_value": convert_isy_value_to_hass(

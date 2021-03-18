@@ -1,6 +1,8 @@
 """Support for ISY994 binary sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Callable, Union
+from typing import Callable
 
 from pyisy.constants import (
     CMD_OFF,
@@ -173,7 +175,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-def _detect_device_type_and_class(node: Union[Group, Node]) -> (str, str):
+def _detect_device_type_and_class(node: Group | Node) -> (str, str):
     try:
         device_type = node.type
     except AttributeError:
