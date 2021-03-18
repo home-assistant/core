@@ -1,6 +1,7 @@
 """Support for Lutron Caseta fans."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
@@ -42,7 +43,7 @@ class LutronCasetaFan(LutronCasetaDevice, FanEntity):
     """Representation of a Lutron Caseta fan. Including Fan Speed."""
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._device["fan_speed"] is None:
             return None

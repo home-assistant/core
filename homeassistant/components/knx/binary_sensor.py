@@ -1,5 +1,7 @@
 """Support for KNX/IP binary sensors."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from xknx.devices import BinarySensor as XknxBinarySensor
 
@@ -38,7 +40,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity):
         return self._device.is_on()
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
         if self._device.counter is not None:
             return {ATTR_COUNTER: self._device.counter}

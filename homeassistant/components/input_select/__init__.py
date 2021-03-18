@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import typing
 
 import voluptuous as vol
 
@@ -184,16 +183,16 @@ class InputSelectStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_SCHEMA(data)
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return _cv_input_select({**data, **update_data})
@@ -202,14 +201,14 @@ class InputSelectStorageCollection(collection.StorageCollection):
 class InputSelect(RestoreEntity):
     """Representation of a select input."""
 
-    def __init__(self, config: typing.Dict):
+    def __init__(self, config: dict):
         """Initialize a select input."""
         self._config = config
         self.editable = True
         self._current_option = config.get(CONF_INITIAL)
 
     @classmethod
-    def from_yaml(cls, config: typing.Dict) -> InputSelect:
+    def from_yaml(cls, config: dict) -> InputSelect:
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
@@ -244,7 +243,7 @@ class InputSelect(RestoreEntity):
         return self._config.get(CONF_ICON)
 
     @property
-    def _options(self) -> typing.List[str]:
+    def _options(self) -> list[str]:
         """Return a list of selection options."""
         return self._config[CONF_OPTIONS]
 
@@ -259,7 +258,7 @@ class InputSelect(RestoreEntity):
         return {ATTR_OPTIONS: self._config[ATTR_OPTIONS], ATTR_EDITABLE: self.editable}
 
     @property
-    def unique_id(self) -> typing.Optional[str]:
+    def unique_id(self) -> str | None:
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
@@ -315,7 +314,7 @@ class InputSelect(RestoreEntity):
         self._config[CONF_OPTIONS] = options
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: typing.Dict) -> None:
+    async def async_update_config(self, config: dict) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

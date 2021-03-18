@@ -1,10 +1,11 @@
 """Support for Ring Doorbell/Chimes."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
 from pathlib import Path
-from typing import Optional
 
 from oauthlib.oauth2 import AccessDeniedError
 import requests
@@ -187,7 +188,7 @@ class GlobalDataUpdater:
             self._unsub_interval()
             self._unsub_interval = None
 
-    async def async_refresh_all(self, _now: Optional[int] = None) -> None:
+    async def async_refresh_all(self, _now: int | None = None) -> None:
         """Time to update."""
         if not self.listeners:
             return

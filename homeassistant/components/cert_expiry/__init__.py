@@ -1,7 +1,8 @@
 """The cert_expiry component."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -71,7 +72,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime]):
             update_interval=SCAN_INTERVAL,
         )
 
-    async def _async_update_data(self) -> Optional[datetime]:
+    async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
             timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
