@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "ezviz: {name}",
+    "flow_title": "Ezviz",
     "step": {
       "user": {
         "title": "Connect to Ezviz Cloud",
@@ -20,10 +20,10 @@
       },
       "confirm": {
         "title": "Discovered Camera",
+        "description": "Enter RTSP credentials for Ezviz camera: {serial}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "serial": "Camera serial number"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
