@@ -470,7 +470,7 @@ class HyperionOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             effect_show_list = user_input.pop(CONF_EFFECT_SHOW_LIST)
-            user_input[CONF_EFFECT_HIDE_LIST] = list(
+            user_input[CONF_EFFECT_HIDE_LIST] = sorted(
                 set(effects) - set(effect_show_list)
             )
             return self.async_create_entry(title="", data=user_input)

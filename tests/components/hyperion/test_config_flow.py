@@ -787,7 +787,11 @@ async def test_options_effect_show_list(hass: HomeAssistantType) -> None:
         )
         await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["data"][CONF_EFFECT_HIDE_LIST] == ["effect2"]
+
+        # effect1 and effect3 only, so effect2 & external sources are hidden.
+        assert result["data"][CONF_EFFECT_HIDE_LIST] == sorted(
+            ["effect2"] + const.KEY_COMPONENTID_EXTERNAL_SOURCES
+        )
 
 
 async def test_options_effect_hide_list_cannot_connect(hass: HomeAssistantType) -> None:
