@@ -1,6 +1,7 @@
 """Xbox Media Source Implementation."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List, Tuple
 
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
 from xbox.webapi.api.client import XboxLiveClient
@@ -50,7 +51,7 @@ async def async_get_media_source(hass: HomeAssistantType):
 @callback
 def async_parse_identifier(
     item: MediaSourceItem,
-) -> Tuple[str, str, str]:
+) -> tuple[str, str, str]:
     """Parse identifier."""
     identifier = item.identifier or ""
     start = ["", "", ""]
@@ -87,7 +88,7 @@ class XboxSource(MediaSource):
         return PlayMedia(url, MIME_TYPE_MAP[kind])
 
     async def async_browse_media(
-        self, item: MediaSourceItem, media_types: Tuple[str] = MEDIA_MIME_TYPES
+        self, item: MediaSourceItem, media_types: tuple[str] = MEDIA_MIME_TYPES
     ) -> BrowseMediaSource:
         """Return media."""
         title, category, _ = async_parse_identifier(item)
@@ -136,7 +137,7 @@ class XboxSource(MediaSource):
         title_id, _, thumbnail = title.split("#", 2)
         owner, kind = category.split("#", 1)
 
-        items: List[XboxMediaItem] = []
+        items: list[XboxMediaItem] = []
         try:
             if kind == "gameclips":
                 if owner == "my":
@@ -206,7 +207,7 @@ class XboxSource(MediaSource):
         )
 
 
-def _build_game_item(item: InstalledPackage, images: List[Image]):
+def _build_game_item(item: InstalledPackage, images: list[Image]):
     """Build individual game."""
     thumbnail = ""
     image = _find_media_image(images.get(item.one_store_product_id, []))

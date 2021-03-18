@@ -1,7 +1,8 @@
 """Representation of Z-Wave sensors."""
+from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Optional
+from typing import Callable
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass
@@ -39,7 +40,7 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
 
         if info.platform_hint == "string_sensor":
             entities.append(ZWaveStringSensor(config_entry, client, info))
@@ -80,7 +81,7 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         self._name = self.generate_name(include_value_name=True)
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
@@ -122,14 +123,14 @@ class ZWaveStringSensor(ZwaveSensorBase):
     """Representation of a Z-Wave String sensor."""
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
         return str(self.info.primary_value.value)
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if self.info.primary_value.metadata.unit is None:
             return None
@@ -161,7 +162,7 @@ class ZWaveNumericSensor(ZwaveSensorBase):
         return round(float(self.info.primary_value.value), 2)
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         if self.info.primary_value.metadata.unit is None:
             return None
@@ -191,7 +192,7 @@ class ZWaveListSensor(ZwaveSensorBase):
         )
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return state of the sensor."""
         if self.info.primary_value.value is None:
             return None
@@ -205,7 +206,7 @@ class ZWaveListSensor(ZwaveSensorBase):
         )
 
     @property
-    def extra_state_attributes(self) -> Optional[Dict[str, str]]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
         # add the value's int value as property for multi-value (list) items
         return {"value": self.info.primary_value.value}

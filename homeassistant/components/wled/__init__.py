@@ -1,8 +1,10 @@
 """Support for WLED."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from wled import WLED, Device as WLEDDevice, WLEDConnectionError, WLEDError
 
@@ -185,7 +187,7 @@ class WLEDDeviceEntity(WLEDEntity):
     """Defines a WLED device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this WLED device."""
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self.coordinator.data.info.mac_address)},

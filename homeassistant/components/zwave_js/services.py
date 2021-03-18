@@ -1,7 +1,7 @@
 """Methods and classes related to executing Z-Wave commands and publishing these to hass."""
+from __future__ import annotations
 
 import logging
-from typing import Dict, Set, Union
 
 import voluptuous as vol
 from zwave_js_server.model.node import Node as ZwaveNode
@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def parameter_name_does_not_need_bitmask(
-    val: Dict[str, Union[int, str]]
-) -> Dict[str, Union[int, str]]:
+    val: dict[str, int | str]
+) -> dict[str, int | str]:
     """Validate that if a parameter name is provided, bitmask is not as well."""
     if isinstance(val[const.ATTR_CONFIG_PARAMETER], str) and (
         val.get(const.ATTR_CONFIG_PARAMETER_BITMASK)
@@ -88,7 +88,7 @@ class ZWaveServices:
 
     async def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config value on a node."""
-        nodes: Set[ZwaveNode] = set()
+        nodes: set[ZwaveNode] = set()
         if ATTR_ENTITY_ID in service.data:
             nodes |= {
                 async_get_node_from_entity_id(self._hass, entity_id)

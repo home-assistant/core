@@ -4,11 +4,12 @@ Climate on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import enum
 import functools
 from random import randint
-from typing import List, Optional, Tuple
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -212,7 +213,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return data
 
     @property
-    def fan_mode(self) -> Optional[str]:
+    def fan_mode(self) -> str | None:
         """Return current FAN mode."""
         if self._thrm.running_state is None:
             return FAN_AUTO
@@ -224,14 +225,14 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return FAN_AUTO
 
     @property
-    def fan_modes(self) -> Optional[List[str]]:
+    def fan_modes(self) -> list[str] | None:
         """Return supported FAN modes."""
         if not self._fan:
             return None
         return [FAN_AUTO, FAN_ON]
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current HVAC action."""
         if (
             self._thrm.pi_heating_demand is None
@@ -241,7 +242,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return self._pi_demand_action
 
     @property
-    def _rm_rs_action(self) -> Optional[str]:
+    def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
         running_mode = self._thrm.running_mode
@@ -260,7 +261,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return CURRENT_HVAC_OFF
 
     @property
-    def _pi_demand_action(self) -> Optional[str]:
+    def _pi_demand_action(self) -> str | None:
         """Return the current HVAC action based on pi_demands."""
 
         heating_demand = self._thrm.pi_heating_demand
@@ -275,12 +276,12 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return CURRENT_HVAC_OFF
 
     @property
-    def hvac_mode(self) -> Optional[str]:
+    def hvac_mode(self) -> str | None:
         """Return HVAC operation mode."""
         return SYSTEM_MODE_2_HVAC.get(self._thrm.system_mode)
 
     @property
-    def hvac_modes(self) -> Tuple[str, ...]:
+    def hvac_modes(self) -> tuple[str, ...]:
         """Return the list of available HVAC operation modes."""
         return SEQ_OF_OPERATION.get(self._thrm.ctrl_seqe_of_oper, (HVAC_MODE_OFF,))
 
@@ -290,12 +291,12 @@ class Thermostat(ZhaEntity, ClimateEntity):
         return PRECISION_TENTHS
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self._preset
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return supported preset modes."""
         return self._presets
 
@@ -566,7 +567,7 @@ class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
 
     @property
-    def _rm_rs_action(self) -> Optional[str]:
+    def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
         running_state = self._thrm.running_state

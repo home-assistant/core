@@ -1,6 +1,7 @@
 """Config flow for Withings."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, Union
 
 import voluptuous as vol
 from withings_api.common import AuthScope
@@ -19,7 +20,7 @@ class WithingsFlowHandler(
     DOMAIN = const.DOMAIN
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
     # Temporarily holds authorization data during the profile step.
-    _current_data: Dict[str, Union[None, str, int]] = {}
+    _current_data: dict[str, None | str | int] = {}
 
     @property
     def logger(self) -> logging.Logger:

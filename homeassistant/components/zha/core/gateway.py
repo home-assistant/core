@@ -1,4 +1,5 @@
 """Virtual gateway for Zigbee Home Automation."""
+from __future__ import annotations
 
 import asyncio
 import collections
@@ -9,7 +10,6 @@ import logging
 import os
 import time
 import traceback
-from typing import List, Optional
 
 from serial import SerialException
 from zigpy.config import CONF_DEVICE
@@ -378,12 +378,12 @@ class ZHAGateway:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
-    def get_group(self, group_id: str) -> Optional[ZhaGroupType]:
+    def get_group(self, group_id: str) -> ZhaGroupType | None:
         """Return Group for given group id."""
         return self.groups.get(group_id)
 
     @callback
-    def async_get_group_by_name(self, group_name: str) -> Optional[ZhaGroupType]:
+    def async_get_group_by_name(self, group_name: str) -> ZhaGroupType | None:
         """Get ZHA group by name."""
         for group in self.groups.values():
             if group.name == group_name:
@@ -620,7 +620,7 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: List[GroupMember]
+        self, name: str, members: list[GroupMember]
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with two to fill any gaps from a user removing existing groups

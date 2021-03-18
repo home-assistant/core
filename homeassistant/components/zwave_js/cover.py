@@ -1,6 +1,8 @@
 """Support for Z-Wave cover devices."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable
 
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.model.value import Value as ZwaveValue
@@ -42,7 +44,7 @@ async def async_setup_entry(
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave cover."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "motorized_barrier":
             entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
         else:
@@ -72,7 +74,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave Cover device."""
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         if self.info.primary_value.value is None:
             # guard missing value
@@ -80,7 +82,7 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
         return bool(self.info.primary_value.value == 0)
 
     @property
-    def current_cover_position(self) -> Optional[int]:
+    def current_cover_position(self) -> int | None:
         """Return the current position of cover where 0 means closed and 100 is fully open."""
         if self.info.primary_value.value is None:
             # guard missing value
@@ -130,31 +132,31 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
         )
 
     @property
-    def supported_features(self) -> Optional[int]:
+    def supported_features(self) -> int | None:
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASS_GARAGE
 
     @property
-    def is_opening(self) -> Optional[bool]:
+    def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         if self.info.primary_value.value is None:
             return None
         return bool(self.info.primary_value.value == BARRIER_STATE_OPENING)
 
     @property
-    def is_closing(self) -> Optional[bool]:
+    def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         if self.info.primary_value.value is None:
             return None
         return bool(self.info.primary_value.value == BARRIER_STATE_CLOSING)
 
     @property
-    def is_closed(self) -> Optional[bool]:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self.info.primary_value.value is None:
             return None

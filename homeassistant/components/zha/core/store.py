@@ -1,8 +1,10 @@
 """Data storage helper for ZHA."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import datetime
 import time
-from typing import MutableMapping, Optional, cast
+from typing import MutableMapping, cast
 
 import attr
 
@@ -24,9 +26,9 @@ TOMBSTONE_LIFETIME = datetime.timedelta(days=60).total_seconds()
 class ZhaDeviceEntry:
     """Zha Device storage Entry."""
 
-    name: Optional[str] = attr.ib(default=None)
-    ieee: Optional[str] = attr.ib(default=None)
-    last_seen: Optional[float] = attr.ib(default=None)
+    name: str | None = attr.ib(default=None)
+    ieee: str | None = attr.ib(default=None)
+    last_seen: float | None = attr.ib(default=None)
 
 
 class ZhaStorage:

@@ -1,5 +1,7 @@
 """Sensors flow for Withings."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_OCCUPANCY,
@@ -16,7 +18,7 @@ from .common import BaseWithingsSensor, async_create_entities
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the sensor config entry."""
     entities = await async_create_entities(

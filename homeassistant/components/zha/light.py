@@ -1,4 +1,6 @@
 """Lights on Zigbee Home Automation networks."""
+from __future__ import annotations
+
 from collections import Counter
 from datetime import timedelta
 import enum
@@ -6,7 +8,7 @@ import functools
 import itertools
 import logging
 import random
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -122,15 +124,15 @@ class BaseLight(LogMixin, light.LightEntity):
         """Initialize the light."""
         super().__init__(*args, **kwargs)
         self._available: bool = False
-        self._brightness: Optional[int] = None
-        self._off_brightness: Optional[int] = None
-        self._hs_color: Optional[Tuple[float, float]] = None
-        self._color_temp: Optional[int] = None
-        self._min_mireds: Optional[int] = 153
-        self._max_mireds: Optional[int] = 500
-        self._white_value: Optional[int] = None
-        self._effect_list: Optional[List[str]] = None
-        self._effect: Optional[str] = None
+        self._brightness: int | None = None
+        self._off_brightness: int | None = None
+        self._hs_color: tuple[float, float] | None = None
+        self._color_temp: int | None = None
+        self._min_mireds: int | None = 153
+        self._max_mireds: int | None = 500
+        self._white_value: int | None = None
+        self._effect_list: list[str] | None = None
+        self._effect: str | None = None
         self._supported_features: int = 0
         self._state: bool = False
         self._on_off_channel = None
@@ -139,7 +141,7 @@ class BaseLight(LogMixin, light.LightEntity):
         self._identify_channel = None
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
         attributes = {"off_brightness": self._off_brightness}
         return attributes
@@ -348,8 +350,8 @@ class Light(BaseLight, ZhaEntity):
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
         self._identify_channel = self.zha_device.channels.identify_ch
         if self._color_channel:
-            self._min_mireds: Optional[int] = self._color_channel.min_mireds
-            self._max_mireds: Optional[int] = self._color_channel.max_mireds
+            self._min_mireds: int | None = self._color_channel.min_mireds
+            self._max_mireds: int | None = self._color_channel.max_mireds
         self._cancel_refresh_handle = None
         effect_list = []
 
@@ -532,7 +534,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
 
     def __init__(
-        self, entity_ids: List[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
     ) -> None:
         """Initialize a light group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
@@ -569,7 +571,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
     async def async_update(self) -> None:
         """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
-        states: List[State] = list(filter(None, all_states))
+        states: list[State] = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._state = len(on_states) > 0

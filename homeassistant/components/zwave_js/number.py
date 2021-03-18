@@ -1,5 +1,7 @@
 """Support for Z-Wave controls using the number platform."""
-from typing import Callable, List, Optional
+from __future__ import annotations
+
+from typing import Callable
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -22,7 +24,7 @@ async def async_setup_entry(
     @callback
     def async_add_number(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave number entity."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
         entities.append(ZwaveNumberEntity(config_entry, client, info))
         async_add_entities(entities)
 
@@ -66,14 +68,14 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
         return float(self.info.primary_value.metadata.max)
 
     @property
-    def value(self) -> Optional[float]:  # type: ignore
+    def value(self) -> float | None:  # type: ignore
         """Return the entity value."""
         if self.info.primary_value.value is None:
             return None
         return float(self.info.primary_value.value)
 
     @property
-    def unit_of_measurement(self) -> Optional[str]:
+    def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
         if self.info.primary_value.metadata.unit is None:
             return None

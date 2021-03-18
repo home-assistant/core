@@ -1,7 +1,8 @@
 """Support for Z-Wave climate devices."""
 # Because we do not compile openzwave on CI
+from __future__ import annotations
+
 import logging
-from typing import Optional, Tuple
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -191,7 +192,7 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
         """Return thermostat mode Z-Wave value."""
         raise NotImplementedError()
 
-    def _current_mode_setpoints(self) -> Tuple:
+    def _current_mode_setpoints(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         raise NotImplementedError()
 
@@ -483,12 +484,12 @@ class ZWaveClimateBase(ZWaveDeviceEntity, ClimateEntity):
         return self._target_temperature
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._target_temperature_range[0]
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._target_temperature_range[1]
 
@@ -590,7 +591,7 @@ class ZWaveClimateSingleSetpoint(ZWaveClimateBase):
         """Return thermostat mode Z-Wave value."""
         return self.values.mode
 
-    def _current_mode_setpoints(self) -> Tuple:
+    def _current_mode_setpoints(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         return (self.values.primary,)
 
@@ -606,7 +607,7 @@ class ZWaveClimateMultipleSetpoint(ZWaveClimateBase):
         """Return thermostat mode Z-Wave value."""
         return self.values.primary
 
-    def _current_mode_setpoints(self) -> Tuple:
+    def _current_mode_setpoints(self) -> tuple:
         """Return a tuple of current setpoint Z-Wave value(s)."""
         current_mode = str(self.values.primary.data).lower()
         setpoints_names = MODE_SETPOINT_MAPPINGS.get(current_mode, ())

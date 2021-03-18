@@ -1,6 +1,8 @@
 """Support for Z-Wave fans."""
+from __future__ import annotations
+
 import math
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable
 
 from zwave_js_server.client import Client as ZwaveClient
 
@@ -36,7 +38,7 @@ async def async_setup_entry(
     @callback
     def async_add_fan(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave fan."""
-        entities: List[ZWaveBaseEntity] = []
+        entities: list[ZWaveBaseEntity] = []
         entities.append(ZwaveFan(config_entry, client, info))
         async_add_entities(entities)
 
@@ -52,7 +54,7 @@ async def async_setup_entry(
 class ZwaveFan(ZWaveBaseEntity, FanEntity):
     """Representation of a Z-Wave fan."""
 
-    async def async_set_percentage(self, percentage: Optional[int]) -> None:
+    async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percentage of the fan."""
         target_value = self.get_zwave_value("targetValue")
 
@@ -68,9 +70,9 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
@@ -82,7 +84,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         await self.info.node.async_set_value(target_value, 0)
 
     @property
-    def is_on(self) -> Optional[bool]:  # type: ignore
+    def is_on(self) -> bool | None:  # type: ignore
         """Return true if device is on (speed above 0)."""
         if self.info.primary_value.value is None:
             # guard missing value
@@ -90,7 +92,7 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         return bool(self.info.primary_value.value > 0)
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self.info.primary_value.value is None:
             # guard missing value

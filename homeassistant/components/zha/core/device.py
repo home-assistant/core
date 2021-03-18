@@ -1,11 +1,13 @@
 """Device for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
 import random
 import time
-from typing import Any, Dict
+from typing import Any
 
 from zigpy import types
 import zigpy.exceptions
@@ -275,7 +277,7 @@ class ZHADevice(LogMixin):
         self._available = new_availability
 
     @property
-    def zigbee_signature(self) -> Dict[str, Any]:
+    def zigbee_signature(self) -> dict[str, Any]:
         """Get zigbee signature for this device."""
         return {
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),
