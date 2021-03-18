@@ -552,47 +552,23 @@ async def test_login_fails_both_properly(hass, mock_remote, camera_v320):
     assert camera_v320.return_value.get_snapshot.call_count == 0
 
 
-async def test_camera_image_error(hass, mock_remote, camera_v320):
+@pytest.mark.parametrize(
+    "source_error, raised_error, snapshot_calls",
+    [
+        (camera.CameraConnectError, HomeAssistantError, 1),
+        (camera.CameraAuthError, camera.CameraAuthError, 2),
+    ],
+)
+async def test_camera_image_error(
+    hass, mock_remote, camera_v320, source_error, raised_error, snapshot_calls
+):
     """Test the camera image error."""
-    camera_v320.return_value.get_snapshot.side_effect = camera.CameraConnectError
+    camera_v320.return_value.get_snapshot.side_effect = source_error
     config = {"platform": "uvc", "nvr": "foo", "key": "secret"}
     assert await async_setup_component(hass, "camera", {"camera": config})
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(raised_error):
         await async_get_image(hass, "camera.front")
 
-    assert camera_v320.return_value.get_snapshot.call_count == 1
-
-
-async def test_camera_image_reauths(uvc_fixture):
-    """Test the re-authentication."""
-    responses = [0]
-
-    def mock_snapshot():
-        """Mock snapshot."""
-        try:
-            responses.pop()
-            raise camera.CameraAuthError()
-        except IndexError:
-            pass
-        return "image"
-
-    uvc_fixture._camera = MagicMock()
-    uvc_fixture._camera.get_snapshot.side_effect = mock_snapshot
-    with patch.object(uvc_fixture, "_login") as mock_login:
-        assert "image" == uvc_fixture.camera_image()
-        assert mock_login.call_count == 1
-        assert mock_login.call_args == call()
-        assert [] == responses
-
-
-async def test_camera_image_reauths_only_once(uvc_fixture):
-    """Test if the re-authentication only happens once."""
-    uvc_fixture._camera = MagicMock()
-    uvc_fixture._camera.get_snapshot.side_effect = camera.CameraAuthError
-    with patch.object(uvc_fixture, "_login") as mock_login:
-        with pytest.raises(camera.CameraAuthError):
-            uvc_fixture.camera_image()
-        assert mock_login.call_count == 1
-        assert mock_login.call_args == call()
+    assert camera_v320.return_value.get_snapshot.call_count == snapshot_calls
