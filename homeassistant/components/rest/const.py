@@ -17,4 +17,6 @@ PLATFORM_IDX = "platform_idx"
 COORDINATOR = "coordinator"
 REST = "rest"
 
+REST_DATA = "rest_data"
+
 METHODS = ["POST", "GET"]
