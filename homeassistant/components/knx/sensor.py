@@ -1,7 +1,7 @@
 """Support for KNX/IP sensors."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Callable, Iterable
 
 from xknx.devices import Sensor as XknxSensor
 
@@ -11,6 +11,7 @@ from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     HomeAssistantType,
+    StateType,
 )
 
 from .const import DOMAIN
@@ -20,7 +21,7 @@ from .knx_entity import KnxEntity
 async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up sensor(s) for KNX platform."""
@@ -34,13 +35,13 @@ async def async_setup_platform(
 class KNXSensor(KnxEntity, Entity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, device: XknxSensor):
+    def __init__(self, device: XknxSensor) -> None:
         """Initialize of a KNX sensor."""
         self._device: XknxSensor
         super().__init__(device)
 
     @property
-    def state(self) -> Any | None:
+    def state(self) -> StateType:
         """Return the state of the sensor."""
         return self._device.resolve_state()
 

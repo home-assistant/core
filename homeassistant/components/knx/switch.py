@@ -1,25 +1,26 @@
 """Support for KNX/IP switches."""
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from xknx.devices import Switch as XknxSwitch
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
     HomeAssistantType,
 )
 
-from . import DOMAIN
+from .const import DOMAIN
 from .knx_entity import KnxEntity
 
 
 async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
-    async_add_entities: Callable,
+    async_add_entities: Callable[[Iterable[Entity]], None],
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up switch(es) for KNX platform."""
@@ -33,7 +34,7 @@ async def async_setup_platform(
 class KNXSwitch(KnxEntity, SwitchEntity):
     """Representation of a KNX switch."""
 
-    def __init__(self, device: XknxSwitch):
+    def __init__(self, device: XknxSwitch) -> None:
         """Initialize of KNX switch."""
         self._device: XknxSwitch
         super().__init__(device)
