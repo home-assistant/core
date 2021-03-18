@@ -1,8 +1,11 @@
 """Support for LG webOS Smart TV."""
 import asyncio
+import json
 import logging
+import os
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
+from sqlitedict import SqliteDict
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
@@ -101,13 +104,41 @@ async def async_setup(hass, config):
     return True
 
 
+def convert_client_keys(config_file):
+    """In case the config file contains JSON, convert it to a Sqlite config file."""
+    # Return early if config file is non-existing
+    if not os.path.isfile(config_file):
+        return
+
+    # Try to parse the file as being JSON
+    with open(config_file) as json_file:
+        try:
+            json_conf = json.load(json_file)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            json_conf = None
+
+    # If the file contains JSON, convert it to an Sqlite DB
+    if json_conf:
+        _LOGGER.warning("LG webOS TV client-key file is being migrated to Sqlite!")
+
+        # Clean the JSON file
+        os.remove(config_file)
+
+        # Write the data to the Sqlite DB
+        with SqliteDict(config_file) as conf:
+            for host, key in json_conf.items():
+                conf[host] = key
+            conf.commit()
+
+
 async def async_setup_tv(hass, config, conf):
     """Set up a LG WebOS TV based on host parameter."""
 
     host = conf[CONF_HOST]
     config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
+    await hass.async_add_executor_job(convert_client_keys, config_file)
 
-    client = WebOsClient(host, config_file)
+    client = await WebOsClient.create(host, config_file)
     hass.data[DOMAIN][host] = {"client": client}
 
     if client.is_registered():
