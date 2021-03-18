@@ -1,7 +1,8 @@
 """A sensor platform that give you information about the next space launch."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from pylaunches import PyLaunches, PyLaunchesException
 import voluptuous as vol
@@ -64,7 +65,7 @@ class LaunchLibrarySensor(Entity):
         return self._name
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         if self.next_launch:
             return self.next_launch.name
@@ -76,7 +77,7 @@ class LaunchLibrarySensor(Entity):
         return "mdi:rocket"
 
     @property
-    def extra_state_attributes(self) -> Optional[dict]:
+    def extra_state_attributes(self) -> dict | None:
         """Return attributes for the sensor."""
         if self.next_launch:
             return {
