@@ -66,10 +66,7 @@ class HassLoggerFormatChecker(BaseChecker):
         if len(log_message) < 1:
             return
 
-        if log_message[-1] == "." and log_message[-2] != ".":
-            # Trailing ... is not permitted but there are currently too many
-            # instances remaining in the codebase to enforce this check at this
-            # time
+        if log_message[-1] == ".":
             self.add_message("hass-logger-period", args=node.args, node=node)
 
         if (
