@@ -22,13 +22,13 @@ def wallbox_updater(wallbox, station):
     data = wallbox.getChargerStatus(station)
     filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
-    for k, v in filtered_data.items():
-        sensor_round = SENSOR_TYPES[k]["ATTR_ROUND"]
+    for key, value in filtered_data.items():
+        sensor_round = SENSOR_TYPES[key]["ATTR_ROUND"]
         if sensor_round:
             try:
-                filtered_data[k] = round(v, sensor_round)
+                filtered_data[key] = round(value, sensor_round)
             except TypeError:
-                _LOGGER.debug("Cannot format %s", k)
+                _LOGGER.debug("Cannot format %s", key)
 
     return filtered_data
 
