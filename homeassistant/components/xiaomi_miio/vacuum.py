@@ -122,7 +122,7 @@ STATE_CODE_TO_STATE = {
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Import Miio configuration from YAML."""
     _LOGGER.warning(
-        "Loading Xiaomi Miio Vacuum via platform setup is deprecated. Please remove it from your configuration."
+        "Loading Xiaomi Miio Vacuum via platform setup is deprecated; Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(

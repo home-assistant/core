@@ -439,7 +439,7 @@ class ONVIFDevice:
                 await ptz_service.Stop(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
-                LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 
