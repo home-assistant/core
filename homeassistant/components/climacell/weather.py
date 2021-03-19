@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable
 
 from pyclimacell.const import CURRENT, DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
@@ -100,8 +100,8 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
 
     @staticmethod
     def _translate_condition(
-        condition: Optional[int], sun_is_up: bool = True
-    ) -> Optional[str]:
+        condition: int | None, sun_is_up: bool = True
+    ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
         raise NotImplementedError()
 
@@ -110,13 +110,13 @@ class BaseClimaCellWeatherEntity(ClimaCellEntity, WeatherEntity):
         forecast_dt: datetime,
         use_datetime: bool,
         condition: str,
-        precipitation: Optional[float],
-        precipitation_probability: Optional[float],
-        temp: Optional[float],
-        temp_low: Optional[float],
-        wind_direction: Optional[float],
-        wind_speed: Optional[float],
-    ) -> Dict[str, Any]:
+        precipitation: float | None,
+        precipitation_probability: float | None,
+        temp: float | None,
+        temp_low: float | None,
+        wind_direction: float | None,
+        wind_speed: float | None,
+    ) -> dict[str, Any]:
         """Return formatted Forecast dict from ClimaCell forecast data."""
         if use_datetime:
             translated_condition = self._translate_condition(
@@ -155,8 +155,8 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
 
     @staticmethod
     def _translate_condition(
-        condition: Optional[int], sun_is_up: bool = True
-    ) -> Optional[str]:
+        condition: int | None, sun_is_up: bool = True
+    ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
         if condition is None:
             return None
@@ -168,9 +168,7 @@ class ClimaCellWeatherEntity(BaseClimaCellWeatherEntity):
             return CLEAR_CONDITIONS["night"]
         return CONDITIONS[condition]
 
-    def _get_current_property(
-        self, property_name: str
-    ) -> Optional[Union[int, str, float]]:
+    def _get_current_property(self, property_name: str) -> int | str | float | None:
         """Get property from current conditions."""
         return self.coordinator.data.get(CURRENT, {}).get(property_name)
 
@@ -302,8 +300,8 @@ class ClimaCellV3WeatherEntity(BaseClimaCellWeatherEntity):
 
     @staticmethod
     def _translate_condition(
-        condition: Optional[str], sun_is_up: bool = True
-    ) -> Optional[str]:
+        condition: str | None, sun_is_up: bool = True
+    ) -> str | None:
         """Translate ClimaCell condition into an HA condition."""
         if not condition:
             return None
