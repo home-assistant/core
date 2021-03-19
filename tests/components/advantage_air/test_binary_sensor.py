@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
