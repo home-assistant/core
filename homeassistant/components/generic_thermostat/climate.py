@@ -266,6 +266,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         if not self._hvac_mode:
             self._hvac_mode = HVAC_MODE_OFF
 
+        # Prevent the device from keep running if HVAC_MODE_OFF
+        if self._hvac_mode == HVAC_MODE_OFF and self._is_device_active:
+            await self._async_heater_turn_off()
+            _LOGGER.warning(
+                "The climate mode is OFF, but the switch device is ON. Turning off device %s",
+                self.heater_entity_id,
+            )
+
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -418,7 +426,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     async def _async_control_heating(self, time=None, force=False):
         """Check if we need to turn heating on or off."""
         async with self._temp_lock:
-            if not self._active and None not in (self._cur_temp, self._target_temp):
+            if not self._active and None not in (
+                self._cur_temp,
+                self._target_temp,
+                self._is_device_active,
+            ):
                 self._active = True
                 _LOGGER.info(
                     "Obtained current and target temperature. "
@@ -480,6 +492,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
+        if not self.hass.states.get(self.heater_entity_id):
+            return None
+
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
     @property
