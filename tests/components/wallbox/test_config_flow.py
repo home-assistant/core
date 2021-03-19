@@ -9,7 +9,6 @@ from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 
-
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     flow = config_flow.ConfigFlow()
