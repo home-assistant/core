@@ -1,8 +1,7 @@
 """Test the Wallbox config flow."""
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.wallbox.const import DOMAIN
