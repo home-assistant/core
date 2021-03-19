@@ -247,12 +247,11 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
 
     async def _async_set_color(self, color: ColorComponent, new_value: int) -> None:
         """Set defined color to given value."""
-        property_key = color.value
         # actually set the new color value
         target_zwave_value = self.get_zwave_value(
             "targetColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=property_key.key,
+            value_property_key=color.value,
         )
         if target_zwave_value is None:
             # guard for unsupported color
@@ -315,27 +314,27 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         red_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.RED.value.key,
+            value_property_key=ColorComponent.RED.value,
         )
         green_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.GREEN.value.key,
+            value_property_key=ColorComponent.GREEN.value,
         )
         blue_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.BLUE.value.key,
+            value_property_key=ColorComponent.BLUE.value,
         )
         ww_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.WARM_WHITE.value.key,
+            value_property_key=ColorComponent.WARM_WHITE.value,
         )
         cw_val = self.get_zwave_value(
             "currentColor",
             CommandClass.SWITCH_COLOR,
-            value_property_key=ColorComponent.COLD_WHITE.value.key,
+            value_property_key=ColorComponent.COLD_WHITE.value,
         )
         # prefer the (new) combined color property
         # https://github.com/zwave-js/node-zwave-js/pull/1782
