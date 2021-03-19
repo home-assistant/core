@@ -58,6 +58,7 @@
         "step": {
             "init": {
                 "data": {
+                    "allow_hue_groups": "Sta Hue-groepen toe",
                     "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden"
                 }
             }
