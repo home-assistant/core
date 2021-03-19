@@ -5,7 +5,6 @@ from aurorapy.client import AuroraSerialClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
 from .const import (
     ATTR_DEVICE_NAME,
@@ -34,7 +33,7 @@ class AuroraDevice(Entity):
     def unique_id(self) -> str:
         """Return the unique id for this device."""
         sn = self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
-        return slugify(f"{sn}_{self.type}")
+        return f"{sn}_{self.type}"
 
     @property
     def available(self) -> bool:
