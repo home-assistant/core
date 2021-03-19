@@ -350,7 +350,7 @@ class NetatmoCamera(NetatmoBase, Camera):
     def _service_set_camera_light(self, **kwargs):
         """Service to set light mode."""
         mode = kwargs.get(ATTR_CAMERA_LIGHT_MODE)
-        _LOGGER.debug("Turn camera '%s' %s", self._name, mode)
+        _LOGGER.debug("Turn %s camera light for '%s'", mode, self._name)
         self._data.set_state(
             home_id=self._home_id,
             camera_id=self._id,
