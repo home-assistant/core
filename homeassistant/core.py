@@ -515,11 +515,13 @@ class HomeAssistant:
             if self.state == CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
-                _LOGGER.info("async_stop called twice: ignored")
+                _LOGGER.info("Additional call to async_stop was ignored")
                 return
             if self.state == CoreState.starting:
                 # This may not work
-                _LOGGER.warning("async_stop called before startup is complete")
+                _LOGGER.warning(
+                    "Stopping Home Assistant before startup has completed may fail"
+                )
 
         # stage 1
         self.state = CoreState.stopping

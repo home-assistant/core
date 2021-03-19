@@ -57,8 +57,8 @@ async def async_setup_platform(
 ):
     """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
-        "Loading ReCollect Waste via platform setup is deprecated. "
-        "Please remove it from your configuration."
+        "Loading ReCollect Waste via platform setup is deprecated; "
+        "Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(

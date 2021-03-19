@@ -179,7 +179,7 @@ class Monitor:
     def stop(self):
         """Signal runner to stop and join thread."""
         if self.scanning:
-            _LOGGER.debug("Stopping...")
+            _LOGGER.debug("Stopping")
             self.scanner.stop()
             _LOGGER.debug("Stopped")
             self.scanning = False

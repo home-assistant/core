@@ -336,7 +336,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         """Process the image."""
         model = self.hass.data[DOMAIN][CONF_MODEL]
         if not model:
-            _LOGGER.debug("Model not yet ready.")
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()

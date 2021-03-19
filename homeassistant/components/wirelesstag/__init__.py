@@ -150,7 +150,7 @@ class WirelessTagPlatform:
 
     def handle_update_tags_event(self, event):
         """Handle push event from wireless tag manager."""
-        _LOGGER.info("push notification for update arrived: %s", event)
+        _LOGGER.info("Push notification for update arrived: %s", event)
         try:
             tag_id = event.data.get("id")
             mac = event.data.get("mac")
