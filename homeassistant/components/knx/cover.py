@@ -163,7 +163,7 @@ class KNXCover(KnxEntity, CoverEntity):
 
     def start_auto_updater(self) -> None:
         """Start the autoupdater to update Home Assistant while cover is moving."""
-        if self._unsubscribe_auto_updater is None and self.hass is not None:
+        if self._unsubscribe_auto_updater is None:
             self._unsubscribe_auto_updater = async_track_utc_time_change(
                 self.hass, self.auto_updater_hook
             )
@@ -179,6 +179,5 @@ class KNXCover(KnxEntity, CoverEntity):
         """Call for the autoupdater."""
         self.async_write_ha_state()
         if self._device.position_reached():
-            assert self.hass is not None
             self.hass.async_create_task(self._device.auto_stop_if_necessary())
             self.stop_auto_updater()
