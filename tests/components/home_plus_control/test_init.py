@@ -88,10 +88,6 @@ async def test_loading(hass, mock_config_entry):
             },
         },
     )
-    assert isinstance(
-        hass.data[DOMAIN]["home_plus_control_entry_id"][API],
-        api.HomePlusControlAsyncApi,
-    )
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
 

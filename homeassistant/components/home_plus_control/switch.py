@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         add_switch_entities, add_entities=async_add_entities
     )
     # Connect the dispatcher for the switch platform
-    hass.data[DOMAIN][config_entry.entry_id].get(DISPATCHER_REMOVERS).append(
+    hass.data[DOMAIN][config_entry.entry_id][DISPATCHER_REMOVERS].append(
         dispatcher.async_dispatcher_connect(
             hass, SIGNAL_ADD_ENTITIES, partial_add_switch_entities
         )

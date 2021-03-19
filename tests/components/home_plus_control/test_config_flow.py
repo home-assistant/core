@@ -67,13 +67,19 @@ async def test_full_flow(
         },
     )
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    with patch(
+        "homeassistant.components.home_plus_control.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Home+ Control"
     config_data = result["data"]
     assert config_data["token"]["refresh_token"] == "mock-refresh-token"
     assert config_data["token"]["access_token"] == "mock-access-token"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_abort_if_entry_in_progress(hass, current_request_with_host):
