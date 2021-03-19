@@ -177,14 +177,14 @@ def test_get_age():
 
 def test_parse_time_expression():
     """Test parse_time_expression."""
-    assert [x for x in range(60)] == dt_util.parse_time_expression("*", 0, 59)
-    assert [x for x in range(60)] == dt_util.parse_time_expression(None, 0, 59)
+    assert list(range(60)) == dt_util.parse_time_expression("*", 0, 59)
+    assert list(range(60)) == dt_util.parse_time_expression(None, 0, 59)
 
-    assert [x for x in range(0, 60, 5)] == dt_util.parse_time_expression("/5", 0, 59)
+    assert list(range(0, 60, 5)) == dt_util.parse_time_expression("/5", 0, 59)
 
     assert [1, 2, 3] == dt_util.parse_time_expression([2, 1, 3], 0, 59)
 
-    assert [x for x in range(24)] == dt_util.parse_time_expression("*", 0, 23)
+    assert list(range(24)) == dt_util.parse_time_expression("*", 0, 23)
 
     assert [42] == dt_util.parse_time_expression(42, 0, 59)
     assert [42] == dt_util.parse_time_expression("42", 0, 59)

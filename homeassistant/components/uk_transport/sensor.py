@@ -32,9 +32,7 @@ CONF_DESTINATION = "destination"
 
 _QUERY_SCHEME = vol.Schema(
     {
-        vol.Required(CONF_MODE): vol.All(
-            cv.ensure_list, [vol.In(list(["bus", "train"]))]
-        ),
+        vol.Required(CONF_MODE): vol.All(cv.ensure_list, [vol.In(["bus", "train"])]),
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
     }

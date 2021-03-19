@@ -579,7 +579,7 @@ async def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes[group.ATTR_AUTO]
     assert group_state.attributes["friendly_name"] == "Test2"
     assert group_state.attributes["icon"] == "mdi:camera"
-    assert sorted(list(group_state.attributes["entity_id"])) == sorted(
+    assert sorted(group_state.attributes["entity_id"]) == sorted(
         ["test.entity_bla1", "test.entity_id2"]
     )
 

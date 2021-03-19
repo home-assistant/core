@@ -163,7 +163,7 @@ class NAD(MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return sorted(list(self._reverse_mapping))
+        return sorted(self._reverse_mapping)
 
     @property
     def available(self):

@@ -610,7 +610,7 @@ class LightEntity(ToggleEntity):
             data[ATTR_EFFECT_LIST] = self.effect_list
 
         data[ATTR_SUPPORTED_COLOR_MODES] = sorted(
-            list(self._light_internal_supported_color_modes)
+            self._light_internal_supported_color_modes
         )
 
         return data

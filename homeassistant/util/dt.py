@@ -227,7 +227,7 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     elif not hasattr(parameter, "__iter__"):
         res = [int(parameter)]
     else:
-        res = list(sorted(int(x) for x in parameter))
+        res = sorted(int(x) for x in parameter)
 
     for val in res:
         if val < min_value or val > max_value:
