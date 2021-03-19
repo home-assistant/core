@@ -4,6 +4,7 @@ from typing import List, Optional
 from aioesphomeapi import (
     ClimateAction,
     ClimateFanMode,
+    ClimatePreset,
     ClimateInfo,
     ClimateMode,
     ClimateState,
@@ -30,14 +31,20 @@ from homeassistant.components.climate.const import (
     FAN_MIDDLE,
     FAN_OFF,
     FAN_ON,
+    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
+    PRESET_ACTIVITY,
     PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
+    PRESET_SLEEP,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
@@ -81,11 +88,12 @@ async def async_setup_entry(hass, entry, async_add_entities):
 def _climate_modes():
     return {
         ClimateMode.OFF: HVAC_MODE_OFF,
-        ClimateMode.AUTO: HVAC_MODE_HEAT_COOL,
+        ClimateMode.AUTO: HVAC_MODE_AUTO,
         ClimateMode.COOL: HVAC_MODE_COOL,
         ClimateMode.HEAT: HVAC_MODE_HEAT,
         ClimateMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
         ClimateMode.DRY: HVAC_MODE_DRY,
+        ClimateMode.HEAT_COOL: HVAC_MODE_HEAT_COOL,
     }
 
 
@@ -113,6 +121,19 @@ def _fan_modes():
         ClimateFanMode.MIDDLE: FAN_MIDDLE,
         ClimateFanMode.FOCUS: FAN_FOCUS,
         ClimateFanMode.DIFFUSE: FAN_DIFFUSE,
+    }
+
+
+@esphome_map_enum
+def _presets():
+    return {
+        ClimatePreset.ECO: PRESET_ECO,
+        ClimatePreset.AWAY: PRESET_AWAY,
+        ClimatePreset.BOOST: PRESET_BOOST,
+        ClimatePreset.COMFORT: PRESET_COMFORT,
+        ClimatePreset.HOME: PRESET_HOME,
+        ClimatePreset.SLEEP: PRESET_SLEEP,
+        ClimatePreset.ACTIVITY: PRESET_ACTIVITY,
     }
 
 
@@ -166,12 +187,26 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         return [
             _fan_modes.from_esphome(mode)
             for mode in self._static_info.supported_fan_modes
+        ] + [
+            custom_fan_modes
+            for custom_fan_modes in self._static_info.supported_custom_fan_modes
         ]
 
     @property
     def preset_modes(self):
         """Return preset modes."""
-        return [PRESET_AWAY, PRESET_HOME] if self._static_info.supports_away else []
+        if self._static_info.supports_away:
+            return [PRESET_AWAY, PRESET_HOME]
+        elif self._static_info.supported_presets:
+            return [
+                _presets.from_esphome(preset)
+                for preset in self._static_info.supported_presets
+            ] + [
+                custom_preset
+                for custom_preset in self._static_info.supported_custom_presets
+            ]
+        else:
+            return []
 
     @property
     def swing_modes(self):
@@ -205,9 +240,16 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             features |= SUPPORT_TARGET_TEMPERATURE_RANGE
         else:
             features |= SUPPORT_TARGET_TEMPERATURE
-        if self._static_info.supports_away:
+        if (
+            self._static_info.supports_away
+            or self._static_info.supported_presets
+            or self._static_info.supported_custom_presets
+        ):
             features |= SUPPORT_PRESET_MODE
-        if self._static_info.supported_fan_modes:
+        if (
+            self._static_info.supported_fan_modes
+            or self._static_info.supported_custom_fan_modes
+        ):
             features |= SUPPORT_FAN_MODE
         if self._static_info.supported_swing_modes:
             features |= SUPPORT_SWING_MODE
@@ -232,12 +274,21 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
     @esphome_state_property
     def fan_mode(self):
         """Return current fan setting."""
-        return _fan_modes.from_esphome(self._state.fan_mode)
+        if self._state.custom_fan_mode:
+            return self._state.custom_fan_mode
+        else:
+            return _fan_modes.from_esphome(self._state.fan_mode)
 
     @esphome_state_property
     def preset_mode(self):
         """Return current preset mode."""
-        return PRESET_AWAY if self._state.away else PRESET_HOME
+        if self._static_info.supports_away:
+            return PRESET_AWAY if self._state.away else PRESET_HOME
+        else:
+            if self._state.custom_preset:
+                return self._state.custom_preset
+            else:
+                return _presets.from_esphome(self._state.preset)
 
     @esphome_state_property
     def swing_mode(self):
@@ -285,14 +336,29 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""
-        away = preset_mode == PRESET_AWAY
-        await self._client.climate_command(key=self._static_info.key, away=away)
+        if self._static_info.supports_away:
+            away = preset_mode == PRESET_AWAY
+            await self._client.climate_command(key=self._static_info.key, away=away)
+        else:
+            if preset_mode in self._static_info.supported_custom_presets:
+                await self._client.climate_command(
+                    key=self._static_info.key, custom_preset=preset_mode
+                )
+            else:
+                await self._client.climate_command(
+                    key=self._static_info.key, preset=_presets.from_hass(preset_mode)
+                )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
-        await self._client.climate_command(
-            key=self._static_info.key, fan_mode=_fan_modes.from_hass(fan_mode)
-        )
+        if fan_mode in self._static_info.supported_custom_fan_modes:
+            await self._client.climate_command(
+                key=self._static_info.key, custom_fan_mode=fan_mode
+            )
+        else:
+            await self._client.climate_command(
+                key=self._static_info.key, fan_mode=_fan_modes.from_hass(fan_mode)
+            )
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
