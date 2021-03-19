@@ -73,6 +73,8 @@ async def mock_entry_fixture(hass, config_entry):
     """Mock setup of all platforms."""
     with selected_platforms():
         await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.async_block_till_done()
     return config_entry
 
 
