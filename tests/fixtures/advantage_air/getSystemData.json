@@ -38,7 +38,7 @@
                     "motion": 0,
                     "motionConfig": 2,
                     "name": "Zone closed with Sensor",
-                    "number": 21,
+                    "number": 2,
                     "rssi": 10,
                     "setTemp": 24,
                     "state": "close",
