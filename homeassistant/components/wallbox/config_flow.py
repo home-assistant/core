@@ -9,6 +9,8 @@ from homeassistant import config_entries, core, exceptions
 
 from .const import DOMAIN
 
+COMPONENT_DOMAIN = DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -72,7 +74,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": "Wallbox Portal"}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
     """Handle a config flow for Wallbox."""
 
     VERSION = 1
