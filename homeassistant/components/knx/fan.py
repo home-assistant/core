@@ -5,7 +5,6 @@ import math
 from typing import Any, Callable, Iterable
 
 from xknx.devices import Fan as XknxFan
-from xknx.devices.fan import FanSpeedMode
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.helpers.entity import Entity
@@ -49,15 +48,16 @@ class KNXFan(KnxEntity, FanEntity):
         super().__init__(device)
 
         self._step_range: tuple[int, int] | None
-        if self._device.mode == FanSpeedMode.STEP:
-            assert device.max_step is not None
+        if device.max_step:
+            # FanSpeedMode.STEP:
             self._step_range = (1, device.max_step)
         else:
+            # FanSpeedMode.PERCENT
             self._step_range = None
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if self._step_range:  # FanSpeedMode.STEP
+        if self._step_range:
             step = math.ceil(percentage_to_ranged_value(self._step_range, percentage))
             await self._device.set_speed(step)
         else:
@@ -79,7 +79,7 @@ class KNXFan(KnxEntity, FanEntity):
         if self._device.current_speed is None:
             return None
 
-        if self._step_range:  # FanSpeedMode.STEP
+        if self._step_range:
             return ranged_value_to_percentage(
                 self._step_range, self._device.current_speed
             )
