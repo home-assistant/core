@@ -17,8 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 def wallbox_updater(wallbox, station):
     """Get new data for Wallbox component."""
 
-    w = wallbox
-    data = w.getChargerStatus(station)
+    wallbox = wallbox
+    data = wallbox.getChargerStatus(station)
     status_description = data["status_description"].lower()
     return status_description
 

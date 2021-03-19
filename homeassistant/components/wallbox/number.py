@@ -76,9 +76,9 @@ class WallboxMaxChargingCurrent(CoordinatorEntity, NumberEntity):
         """Set max charging current using API."""
 
         try:
-            w = wallbox
+            wallbox = wallbox
             _LOGGER.debug("Setting charging current.")
-            w.setMaxChargingCurrent(self.station, max_charging_current)
+            wallbox.setMaxChargingCurrent(self.station, max_charging_current)
 
         except ConnectionError as exception:
             _LOGGER.error("Unable to set charging current. %s", exception)

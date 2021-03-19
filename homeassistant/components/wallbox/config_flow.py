@@ -33,8 +33,8 @@ class PlaceholderHub:
     def authenticate(self, username, password) -> bool:
         """Authenticate using Wallbox API."""
         try:
-            w = Wallbox(username, password)
-            w.authenticate()
+            wallbox = Wallbox(username, password)
+            wallbox.authenticate()
             return True
         except Exception:
             raise InvalidAuth
@@ -43,9 +43,9 @@ class PlaceholderHub:
         """Get new sensor data for Wallbox component."""
 
         try:
-            w = Wallbox(username, password)
-            w.authenticate()
-            w.getChargerStatus(self.station)
+            wallbox = Wallbox(username, password)
+            wallbox.authenticate()
+            wàllbox.getChargerStatus(self.station)
             return True
         except ConnectionError:
             raise CannotConnect

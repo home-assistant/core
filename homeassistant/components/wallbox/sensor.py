@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 def wallbox_updater(wallbox, station):
     """Get new sensor data for Wallbox component."""
 
-    w = wallbox
-    data = w.getChargerStatus(station)
+    wallbox = wallbox
+    data = wallbox.getChargerStatus(station)
     filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
     for k, v in filtered_data.items():
