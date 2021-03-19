@@ -112,11 +112,11 @@ async def async_setup(hass, config):
 
     data = hass.data[DOMAIN] = SpotifyData(hass, oauth)
 
-    async def async_search(call):
+    def search(call):
         _LOGGER.info("search " + str(call))
         data.process_search(call)
 
-    async def async_get_favorites(call):
+    def get_favorites(call):
         data.process_get_favorites(call)
 
     def select_search_uri(call):
@@ -131,8 +131,8 @@ async def async_setup(hass, config):
         _LOGGER.info("change_play_queue")
         data.change_play_queue(call)
 
-    hass.services.async_register(DOMAIN, "search", async_search)
-    hass.services.async_register(DOMAIN, "get_favorites", async_get_favorites)
+    hass.services.async_register(DOMAIN, "search", search)
+    hass.services.async_register(DOMAIN, "get_favorites", get_favorites)
     hass.services.async_register(DOMAIN, "select_search_uri", select_search_uri)
     hass.services.async_register(DOMAIN, "select_track_uri", select_track_uri)
     hass.services.async_register(DOMAIN, "change_play_queue", change_play_queue)
@@ -355,6 +355,7 @@ class SpotifyData:
             # featured-playlists, playlists, artists, albums, tracks
             search_type = call.data["type"]
 
+        self.hass.states.set("sensor.ais_spotify_favorites_mode", search_type, {})
         self.refresh_spotify_instance()
 
         # Don't true search when token is expired
@@ -455,8 +456,8 @@ class SpotifyData:
             list_info[list_idx]["type"] = search_type
 
         # update lists
-        self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
-        self.hass.states.async_set("sensor.spotifylist", -1, {})
+        self.hass.states.set("sensor.spotifysearchlist", -1, list_info)
+        self.hass.states.set("sensor.spotifylist", -1, {})
 
     def process_search(self, call):
         """Search album on Spotify."""
@@ -500,8 +501,8 @@ class SpotifyData:
         # list_info = self.get_list_from_results(results, "featured-playlists", list_info)
 
         # update lists
-        self.hass.states.async_set("sensor.spotifysearchlist", -1, list_info)
-        self.hass.states.async_set("sensor.spotifylist", -1, {})
+        self.hass.states.set("sensor.spotifysearchlist", -1, list_info)
+        self.hass.states.set("sensor.spotifylist", -1, {})
 
         if len(list_info) > 0:
             text = "Znaleziono: {}, włączam utwory {}".format(
@@ -544,7 +545,7 @@ class SpotifyData:
             return
 
         # update search list
-        self.hass.states.async_set("sensor.spotifysearchlist", call_id, attr)
+        self.hass.states.set("sensor.spotifysearchlist", call_id, attr)
 
         # play the uri
         _audio_info = json.dumps(
@@ -581,7 +582,7 @@ class SpotifyData:
         track = attr.get(int(call_id))
 
         # update list
-        self.hass.states.async_set("sensor.spotifylist", call_id, attr)
+        self.hass.states.set("sensor.spotifylist", call_id, attr)
         # set stream url, image and title
         _audio_info = json.dumps(
             {
