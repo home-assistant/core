@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 def wallbox_updater(wallbox, station):
     """Get new data for Wallbox component."""
 
-    wallbox = wallbox
+    wallbox
     data = wallbox.getChargerStatus(station)
     status_description = data["status_description"].lower()
     return status_description
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config, async_add_entities):
         try:
             return await hass.async_add_executor_job(wallbox_updater, wallbox, station)
 
-        except Exception as exception:
+        except ConnectionError as exception:
             _LOGGER.error("Unable to fetch data from Wallbox Switch. %s", exception)
 
             return
@@ -79,19 +79,17 @@ class WallboxPause(CoordinatorEntity, SwitchEntity):
         try:
 
             station = self.station
-            w = self._wallbox
+            wallbox = self._wallbox
 
             if pause is False:
-                """"unlock charger"""
                 _LOGGER.debug("Unlocking Wallbox")
-                w.resumeChargingSession(station)
+                wallbox.resumeChargingSession(station)
 
             elif pause is True:
-                """"lock charger"""
                 _LOGGER.debug("Locking Wallbox")
-                w.pauseChargingSession(station)
+                wallbox.pauseChargingSession(station)
 
-        except Exception as exception:
+        except ConnectionError as exception:
             _LOGGER.error("Unable to pause/resume Wallbox. %s", exception)
 
     @property

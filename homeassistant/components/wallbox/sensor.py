@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def wallbox_updater(wallbox, station):
     """Get new sensor data for Wallbox component."""
-
-    wallbox = wallbox
     data = wallbox.getChargerStatus(station)
     filtered_data = {k: data[k] for k in SENSOR_TYPES if k in data}
 
@@ -29,8 +27,8 @@ def wallbox_updater(wallbox, station):
         if sensor_round:
             try:
                 filtered_data[k] = round(v, sensor_round)
-            except (Exception):
-                _LOGGER.debug(f"Cannot format {k}")
+            except TypeError:
+                _LOGGER.debug(f"Cannot format %s", k)
 
     return filtered_data
 

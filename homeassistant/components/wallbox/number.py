@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 def wallbox_updater(wallbox, station):
     """Get new data for Wallbox component."""
 
-    wallbox = wallbox
     data = wallbox.getChargerStatus(station)
     max_charger_current = data["config_data"]["max_charging_current"]
     return max_charger_current

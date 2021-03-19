@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 def wallbox_updater(wallbox, station):
     """Get new data for Wallbox component."""
 
-    wallbox = wallbox
     data = wallbox.getChargerStatus(station)
     charger_locked = data["config_data"]["locked"]
     return charger_locked
@@ -35,7 +34,7 @@ async def async_setup_entry(hass, config, async_add_entities):
         try:
             return await hass.async_add_executor_job(wallbox_updater, wallbox, station)
 
-        except Exception as exception:
+        except ConnectionError as exception:
             _LOGGER.error("Unable to fetch data from Wallbox Switch. %s", exception)
             return
 
@@ -88,7 +87,7 @@ class WallboxLock(CoordinatorEntity, LockEntity):
                 _LOGGER.debug("Locking Wallbox")
                 self.hass.async_add_executor_job(wallbox.lockCharger, station)
 
-        except Exception as exception:
+        except ConnectionError as exception:
             _LOGGER.error("Unable to fetch data from Wallbox. %s", exception)
 
     @property

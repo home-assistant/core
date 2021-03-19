@@ -12,8 +12,6 @@ from .const import CONF_CONNECTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS = ["sensor", "lock", "number", "switch"]
 
 
@@ -33,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await hass.async_add_executor_job(wallbox.authenticate)
 
-    except Exception as exception:
+    except ConnectionError as exception:
         _LOGGER.error("Unable to fetch data from Wallbox Switch. %s", exception)
 
         return False

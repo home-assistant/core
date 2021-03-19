@@ -10,7 +10,6 @@ from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         "station": str,
@@ -21,11 +20,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
-
     def __init__(self, station):
         """Initialize."""
         self.station = station
@@ -39,7 +33,7 @@ class PlaceholderHub:
         except Exception:
             raise InvalidAuth
 
-    def getData(self, username, password) -> bool:
+    def get_data(self, username, password) -> bool:
         """Get new sensor data for Wallbox component."""
 
         try:
@@ -63,7 +57,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         hub.authenticate, data["username"], data["password"]
     )
 
-    await hass.async_add_executor_job(hub.getData, data["username"], data["password"])
+    await hass.async_add_executor_job(hub.get_data, data["username"], data["password"])
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}
