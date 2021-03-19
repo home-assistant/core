@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
+    CONF_FOR_EACH,
     CONF_MODE,
     CONF_REPEAT,
     CONF_SCENE,
@@ -411,8 +412,7 @@ class _ScriptRun:
             )
         except (exceptions.TemplateError, vol.Invalid) as ex:
             self._log(
-                "Error rendering %s %s template: %s",
-                self._script.name,
+                "Error rendering %s template: %s",
                 key,
                 ex,
                 level=logging.ERROR,
@@ -606,7 +606,7 @@ class _ScriptRun:
             with trace_path("condition"):
                 check = cond(self._hass, self._variables)
         except exceptions.ConditionError as ex:
-            _LOGGER.warning("Error in 'condition' evaluation:\n%s", ex)
+            self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
 
         self._log("Test condition %s: %s", self._script.last_action, check)
@@ -627,7 +627,13 @@ class _ScriptRun:
                             if not cond(hass, variables):
                                 return False
             except exceptions.ConditionError as ex:
-                _LOGGER.warning("Error in '%s[%s]' evaluation: %s", name, idx, ex)
+                self._log(
+                    "Error in '%s[%s]' evaluation: %s",
+                    name,
+                    idx,
+                    ex,
+                    level=logging.WARNING,
+                )
                 return None
 
             return True
@@ -643,10 +649,12 @@ class _ScriptRun:
 
         saved_repeat_vars = self._variables.get("repeat")
 
-        def set_repeat_var(iteration, count=None):
+        def set_repeat_var(iteration, count=None, value=None):
             repeat_vars = {"first": iteration == 1, "index": iteration}
             if count:
                 repeat_vars["last"] = iteration == count
+            if value is not None:
+                repeat_vars["value"] = value
             self._variables["repeat"] = repeat_vars
 
         # pylint: disable=protected-access
@@ -664,8 +672,7 @@ class _ScriptRun:
                     count = int(count.async_render(self._variables))
                 except (exceptions.TemplateError, ValueError) as ex:
                     self._log(
-                        "Error rendering %s repeat count template: %s",
-                        self._script.name,
+                        "Error rendering repeat count template: %s",
                         ex,
                         level=logging.ERROR,
                     )
@@ -689,7 +696,9 @@ class _ScriptRun:
                     if not self._test_conditions(conditions, "while"):
                         break
                 except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
+                    self._log(
+                        "Error in 'while' evaluation:\n%s", ex, level=logging.WARNING
+                    )
                     break
 
                 await async_run_sequence(iteration)
@@ -707,7 +716,35 @@ class _ScriptRun:
                     if self._test_conditions(conditions, "until") in [True, None]:
                         break
                 except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
+                    self._log(
+                        "Error in 'until' evaluation:\n%s", ex, level=logging.WARNING
+                    )
+                    break
+
+        elif CONF_FOR_EACH in repeat:
+            try:
+                values = template.render_complex(repeat[CONF_FOR_EACH], self._variables)
+            except exceptions.TemplateError as ex:
+                self._log(
+                    "Error rendering repeat for_each template: %s",
+                    ex,
+                    level=logging.ERROR,
+                )
+                raise _StopScript from ex
+            if not isinstance(values, list):
+                self._log(
+                    "repeat for_each value must be a list, got: %r",
+                    values,
+                    level=logging.ERROR,
+                )
+                raise _StopScript
+
+            count = len(values)
+            for iteration, value in enumerate(values, 1):
+                set_repeat_var(iteration, count, value)
+                extra_msg = f" of {count} with value: {repr(value)}"
+                await async_run_sequence(iteration, extra_msg)
+                if self._stop.is_set():
                     break
 
         if saved_repeat_vars:
@@ -730,7 +767,11 @@ class _ScriptRun:
                                 await self._async_run_script(script)
                                 return
                     except exceptions.ConditionError as ex:
-                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+                        self._log(
+                            "Error in 'choose' evaluation:\n%s",
+                            ex,
+                            level=logging.WARNING,
+                        )
 
         if choose_data["default"]:
             trace_set_result(choice="default")
