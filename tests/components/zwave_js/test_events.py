@@ -1,4 +1,5 @@
 """Test Z-Wave JS (value notification) events."""
+from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
 from tests.common import async_capture_events
@@ -168,6 +169,8 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[0].data["label"] == "Access Control"
     assert events[0].data["event_label"] == "Keypad lock operation"
     assert events[0].data["parameters"]["userId"] == 1
+    assert events[0].data["command_class"] == CommandClass.NOTIFICATION
+    assert events[0].data["command_class_name"] == "Notification"
 
     # Publish fake Entry Control CC notification
     event = Event(
@@ -191,3 +194,5 @@ async def test_notifications(hass, hank_binary_switch, integration, client):
     assert events[1].data["event_type"] == 5
     assert events[1].data["data_type"] == 2
     assert events[1].data["event_data"] == "555"
+    assert events[1].data["command_class"] == CommandClass.ENTRY_CONTROL
+    assert events[1].data["command_class_name"] == "Entry Control"

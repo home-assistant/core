@@ -6,7 +6,6 @@ from typing import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
-from zwave_js_server.const import CommandClass
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
@@ -212,14 +211,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ATTR_HOME_ID: client.driver.controller.home_id,
             ATTR_DEVICE_ID: device.id,  # type: ignore
             ATTR_COMMAND_CLASS: notification.command_class,
-            ATTR_COMMAND_CLASS_NAME: CommandClass(
-                notification.command_class
-            ).name.title(),
         }
 
         if isinstance(notification, EntryControlNotification):
             event_data.update(
                 {
+                    ATTR_COMMAND_CLASS_NAME: "Entry Control",
                     ATTR_EVENT_TYPE: notification.event_type,
                     ATTR_DATA_TYPE: notification.data_type,
                     ATTR_EVENT_DATA: notification.event_data,
@@ -228,6 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         else:
             event_data.update(
                 {
+                    ATTR_COMMAND_CLASS_NAME: "Notification",
                     ATTR_LABEL: notification.label,
                     ATTR_TYPE_: notification.type_,
                     ATTR_EVENT: notification.event,
