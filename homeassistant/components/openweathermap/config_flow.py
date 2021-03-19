@@ -117,7 +117,7 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Required(
+                vol.Optional(
                     CONF_MODE,
                     default=self.config_entry.options.get(
                         CONF_MODE, DEFAULT_FORECAST_MODE
