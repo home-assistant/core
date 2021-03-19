@@ -246,7 +246,7 @@ async def async_setup(hass, config):
 
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
-            _LOGGER.warning("disconnected from Rflink, reconnecting")
+            _LOGGER.warning("Disconnected from Rflink, reconnecting")
             hass.async_create_task(connect())
 
     async def connect():

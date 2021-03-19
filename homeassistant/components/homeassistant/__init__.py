@@ -58,7 +58,8 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> bool:
         # Generic turn on/off method requires entity id
         if not all_referenced:
             _LOGGER.error(
-                "homeassistant.%s cannot be called without a target", service.service
+                "The service homeassistant.%s cannot be called without a target",
+                service.service,
             )
             return
 
