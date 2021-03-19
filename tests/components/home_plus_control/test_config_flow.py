@@ -1,4 +1,6 @@
 """Test the Legrand Home+ Control config flow."""
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.home_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
@@ -68,7 +70,8 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.home_plus_control.async_setup_entry", return_value=True
+        "homeassistant.components.home_plus_control.async_setup_entry",
+        return_value=True,
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
