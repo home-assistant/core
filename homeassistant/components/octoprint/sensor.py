@@ -157,7 +157,7 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     def state(self):
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job or not job.progress.print_time_left:
+        if not job or not job.progress.print_time_left or job.state != "Printing":
             return None
 
         read_time = self.coordinator.data["last_read_time"]
@@ -182,7 +182,7 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
 
-        if not job or not job.progress.print_time:
+        if not job or not job.progress.print_time or job.state != "Printing":
             return None
 
         read_time = self.coordinator.data["last_read_time"]

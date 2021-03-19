@@ -17,6 +17,7 @@ async def test_sensors(hass):
     job = {
         "job": {},
         "progress": {"completion": 50, "printTime": 600, "printTimeLeft": 6000},
+        "state": "Printing",
     }
     with patch(
         "homeassistant.util.dt.utcnow", return_value=datetime(2020, 2, 20, 9, 10, 0)
