@@ -101,10 +101,9 @@ class WallboxPause(CoordinatorEntity, SwitchEntity):
         """Return the icon of the switch."""
         if self.coordinator.data == "charging":
             return "mdi:motion-play-outline"
-        elif self.coordinator.data == "connected":
+        if self.coordinator.data == "connected":
             return "mdi:motion-pause-outline"
-        else:
-            return "mdi:power-plug-off-outline"
+        return "mdi:power-plug-off-outline"
 
     @property
     def is_on(self):
