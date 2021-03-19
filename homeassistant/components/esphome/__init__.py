@@ -241,10 +241,14 @@ class ReconnectLogic(RecordUpdateListener):
         self._host = host
         self._on_login = on_login
         self._zc = zc
+        # Flag to check if the device is connected
         self._connected = True
         self._connected_lock = asyncio.Lock()
+        # Event the different strategies use for issuing a reconnect attempt.
         self._reconnect_event = asyncio.Event()
+        # The task containing the infinite reconnect loop while running
         self._loop_task: asyncio.Task | None = None
+        # How many reconnect attempts have there been already, used for exponential wait time
         self._tries = 0
         self._tries_lock = asyncio.Lock()
 
@@ -253,6 +257,7 @@ class ReconnectLogic(RecordUpdateListener):
         return self._hass.data[DOMAIN].get(self._entry.entry_id)
 
     async def _on_disconnect(self):
+        """Log and issue callbacks when disconnecting."""
         if self._entry_data is None:
             return
         # This can happen often depending on WiFi signal strength.
@@ -277,6 +282,7 @@ class ReconnectLogic(RecordUpdateListener):
         self._reconnect_event.set()
 
     async def _wait_and_start_reconnect(self):
+        """Wait for exponentially increasing time to issue next reconnect event."""
         async with self._tries_lock:
             tries = self._tries
         # If not first re-try, wait and print message
@@ -322,9 +328,11 @@ class ReconnectLogic(RecordUpdateListener):
 
     async def _reconnect_loop(self):
         while True:
+            # Wait and clear reconnection event
             await self._reconnect_event.wait()
             self._reconnect_event.clear()
 
+            # If in connected state, do not try to connect again.
             async with self._connected_lock:
                 if self._connected:
                     continue
