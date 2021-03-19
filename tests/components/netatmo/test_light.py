@@ -1,4 +1,6 @@
 """The tests for Netatmo light."""
+from unittest.mock import patch
+
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
@@ -54,19 +56,23 @@ async def test_light_setup_and_services(hass, light_entry):
     await simulate_webhook(hass, webhook_id, response)
 
     # Test turning light off
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: light_entity},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("pyatmo.camera.CameraData.set_state") as mock_post_request:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: light_entity},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_post_request.assert_called_once()
 
     # Test turning light on
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: light_entity},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("pyatmo.camera.CameraData.set_state") as mock_post_request:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: light_entity},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_post_request.assert_called_once()
