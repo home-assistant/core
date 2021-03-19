@@ -17,7 +17,7 @@ async def test_data_handler(hass, config_entry):
     ) as mock_auth:
         hass.data[DOMAIN] = {config_entry.entry_id: {"netatmo_auth": mock_auth()}}
 
-    assert mock_auth.called
+    mock_auth.assert_called_once()
 
     data_handler = NetatmoDataHandler(hass, config_entry)
     await data_handler.async_setup()
