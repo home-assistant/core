@@ -71,7 +71,7 @@ NEW_SUMMARY_DATA = {
 class ClientMock:
     """Mock the py17track client to inject the ProfileMock."""
 
-    def __init__(self, websession) -> None:
+    def __init__(self, session) -> None:
         """Mock the profile."""
         self.profile = ProfileMock()
 
@@ -101,7 +101,10 @@ class ProfileMock:
         return self.__class__.login_result
 
     async def packages(
-        self, package_state: int | str = "", show_archived: bool = False
+        self,
+        package_state: int | str = "",
+        show_archived: bool = False,
+        tz: str = "UTC",
     ) -> list:
         """Packages mock."""
         return self.__class__.package_list[:]
@@ -169,7 +172,14 @@ async def test_invalid_config(hass):
 async def test_add_package(hass):
     """Ensure package is added correctly when user add a new package."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -178,7 +188,14 @@ async def test_add_package(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package2 = Package(
-        "789", 206, "friendly name 2", "info text 2", "location 2", 206, 2
+        "789",
+        206,
+        "friendly name 2",
+        "info text 2",
+        "location 2",
+        "2020-08-10 14:25",
+        206,
+        2,
     )
     ProfileMock.package_list = [package, package2]
 
@@ -191,10 +208,24 @@ async def test_add_package(hass):
 async def test_remove_package(hass):
     """Ensure entity is not there anymore if package is not there."""
     package1 = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     package2 = Package(
-        "789", 206, "friendly name 2", "info text 2", "location 2", 206, 2
+        "789",
+        206,
+        "friendly name 2",
+        "info text 2",
+        "location 2",
+        "2020-08-10 14:25",
+        206,
+        2,
     )
 
     ProfileMock.package_list = [package1, package2]
@@ -217,7 +248,14 @@ async def test_remove_package(hass):
 async def test_friendly_name_changed(hass):
     """Test friendly name change."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -227,7 +265,14 @@ async def test_friendly_name_changed(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package = Package(
-        "456", 206, "friendly name 2", "info text 1", "location 1", 206, 2
+        "456",
+        206,
+        "friendly name 2",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -244,7 +289,15 @@ async def test_friendly_name_changed(hass):
 async def test_delivered_not_shown(hass):
     """Ensure delivered packages are not shown."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2, 40
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        40,
     )
     ProfileMock.package_list = [package]
 
@@ -259,7 +312,15 @@ async def test_delivered_not_shown(hass):
 async def test_delivered_shown(hass):
     """Ensure delivered packages are show when user choose to show them."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2, 40
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        40,
     )
     ProfileMock.package_list = [package]
 
@@ -274,7 +335,14 @@ async def test_delivered_shown(hass):
 async def test_becomes_delivered_not_shown_notification(hass):
     """Ensure notification is triggered when package becomes delivered."""
     package = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
     )
     ProfileMock.package_list = [package]
 
@@ -284,7 +352,15 @@ async def test_becomes_delivered_not_shown_notification(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package_delivered = Package(
-        "456", 206, "friendly name 1", "info text 1", "location 1", 206, 2, 40
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        40,
     )
     ProfileMock.package_list = [package_delivered]
 
@@ -310,3 +386,31 @@ async def test_summary_correctly_updated(hass):
     assert len(hass.states.async_entity_ids()) == 7
     for state in hass.states.async_all():
         assert state.state == "1"
+
+
+async def test_utc_timestamp(hass):
+    """Ensure package timestamp is converted correctly from HA-defined time zone to UTC."""
+    package = Package(
+        "456",
+        206,
+        "friendly name 1",
+        "info text 1",
+        "location 1",
+        "2020-08-10 10:32",
+        206,
+        2,
+        tz="Asia/Jakarta",
+    )
+    ProfileMock.package_list = [package]
+
+    await _setup_seventeentrack(hass)
+    assert hass.states.get("sensor.seventeentrack_package_456") is not None
+    assert len(hass.states.async_entity_ids()) == 1
+    assert (
+        str(
+            hass.states.get("sensor.seventeentrack_package_456").attributes.get(
+                "timestamp"
+            )
+        )
+        == "2020-08-10 03:32:00+00:00"
+    )
