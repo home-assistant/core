@@ -23,7 +23,7 @@ ENTITY_MATCH_ALL = "all"
 DEVICE_DEFAULT_NAME = "Unnamed Device"
 
 # Max characters for an event_type
-MAX_CHARACTERS_EVENT_TYPE = 32
+MAX_LENGTH_EVENT_TYPE = 32
 
 # Sun events
 SUN_EVENT_SUNSET = "sunset"
