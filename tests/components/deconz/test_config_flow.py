@@ -442,6 +442,18 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     }
 
 
+async def test_flow_ssdp_bad_discovery(hass, aioclient_mock):
+    """Test that SSDP discovery aborts if manufacturer URL is wrong."""
+    result = await hass.config_entries.flow.async_init(
+        DECONZ_DOMAIN,
+        data={ATTR_UPNP_MANUFACTURER_URL: "other"},
+        context={"source": SOURCE_SSDP},
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "not_deconz_bridge"
+
+
 async def test_ssdp_discovery_update_configuration(hass, aioclient_mock):
     """Test if a discovered bridge is configured but updates with new attributes."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
