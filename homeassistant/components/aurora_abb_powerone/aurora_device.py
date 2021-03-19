@@ -26,19 +26,15 @@ class AuroraDevice(Entity):
     def __init__(self, client: AuroraSerialClient, config_entry: ConfigEntry):
         """Initialise the basic device."""
         self.config_entry = config_entry
-        self._id = config_entry.entry_id
         self.type = "device"
-        self.serialnum = config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
-        self._sw_version = config_entry.data.get(ATTR_FIRMWARE, "0.0.0")
-        self._model = config_entry.data.get(ATTR_MODEL, "Model unknown")
         self.client = client
-        self.device_name = config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME)
         self._available = True
 
     @property
     def unique_id(self) -> str:
         """Return the unique id for this device."""
-        return slugify(f"{self.serialnum}_{self.type}")
+        sn = self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
+        return slugify(f"{sn}_{self.type}")
 
     @property
     def available(self) -> bool:
@@ -49,10 +45,12 @@ class AuroraDevice(Entity):
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "config_entry_id": self._id,
-            "identifiers": {(DOMAIN, self.serialnum)},
+            "config_entry_id": self.config_entry.entry_id,
+            "identifiers": {
+                (DOMAIN, self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn"))
+            },
             "manufacturer": MANUFACTURER,
-            "model": self._model,
-            "name": self.device_name,
-            "sw_version": self._sw_version,
+            "model": self.config_entry.data.get(ATTR_MODEL, "Model unknown"),
+            "name": self.config_entry.data.get(ATTR_DEVICE_NAME, DEFAULT_DEVICE_NAME),
+            "sw_version": self.config_entry.data.get(ATTR_FIRMWARE, "0.0.0"),
         }
