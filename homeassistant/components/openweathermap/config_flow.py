@@ -15,9 +15,11 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    CONF_FORECAST_SENSORS_DAYS,
     CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DEFAULT_FORECAST_MODE,
+    DEFAULT_FORECAST_SENSORS_DAYS,
     DEFAULT_LANGUAGE,
     DEFAULT_NAME,
     FORECAST_MODES,
@@ -78,6 +80,9 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
                     FORECAST_MODES
                 ),
+                vol.Optional(
+                    CONF_FORECAST_SENSORS_DAYS, default=DEFAULT_FORECAST_SENSORS_DAYS
+                ): vol.Range(min_included=0, max_included=7),
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
@@ -113,6 +118,9 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                         CONF_MODE, DEFAULT_FORECAST_MODE
                     ),
                 ): vol.In(FORECAST_MODES),
+                vol.Optional(
+                    CONF_FORECAST_SENSORS_DAYS, default=DEFAULT_FORECAST_SENSORS_DAYS
+                ): vol.Range(min_included=0, max_included=7),
                 vol.Optional(
                     CONF_LANGUAGE,
                     default=self.config_entry.options.get(

@@ -5,6 +5,7 @@ from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.openweathermap.const import (
+    CONF_FORECAST_SENSORS_DAYS,
     CONF_LANGUAGE,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,
@@ -27,6 +28,7 @@ CONFIG = {
     CONF_LATITUDE: 50,
     CONF_LONGITUDE: 40,
     CONF_MODE: DEFAULT_FORECAST_MODE,
+    CONF_FORECAST_SENSORS_DAYS: 0,
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
 }
 
@@ -101,6 +103,7 @@ async def test_form_options(hass):
         assert config_entry.options == {
             CONF_MODE: "daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
+            CONF_FORECAST_SENSORS_DAYS: 0,
         }
 
         await hass.async_block_till_done()
@@ -120,6 +123,7 @@ async def test_form_options(hass):
         assert config_entry.options == {
             CONF_MODE: "onecall_daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
+            CONF_FORECAST_SENSORS_DAYS: 0,
         }
 
         await hass.async_block_till_done()
