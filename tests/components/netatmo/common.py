@@ -1,6 +1,9 @@
 """Common methods used across tests for Netatmo."""
 import json
 
+from homeassistant.components.webhook import async_handle_webhook
+from homeassistant.util.aiohttp import MockRequest
+
 from tests.common import load_fixture
 
 CLIENT_ID = "1234"
@@ -18,6 +21,13 @@ ALL_SCOPES = [
     "read_thermostat",
     "write_thermostat",
 ]
+
+COMMON_RESPONSE = {
+    "user_id": "91763b24c43d3e344f424e8d",
+    "home_id": "91763b24c43d3e344f424e8b",
+    "home_name": "MYHOME",
+    "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
+}
 
 
 def fake_post_request(**args):
@@ -42,3 +52,13 @@ def fake_post_request(**args):
 def fake_post_request_no_data(**args):
     """Fake error during requesting backend data."""
     return "{}"
+
+
+async def simulate_webhook(hass, webhook_id, response):
+    """Simulate a webhook event."""
+    request = MockRequest(
+        content=bytes(json.dumps({**COMMON_RESPONSE, **response}), "utf-8"),
+        mock_source="test",
+    )
+    await async_handle_webhook(hass, webhook_id, request)
+    await hass.async_block_till_done()
