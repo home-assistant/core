@@ -4,9 +4,9 @@ from typing import List, Optional
 from aioesphomeapi import (
     ClimateAction,
     ClimateFanMode,
-    ClimatePreset,
     ClimateInfo,
     ClimateMode,
+    ClimatePreset,
     ClimateState,
     ClimateSwingMode,
 )
@@ -187,10 +187,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         return [
             _fan_modes.from_esphome(mode)
             for mode in self._static_info.supported_fan_modes
-        ] + [
-            custom_fan_modes
-            for custom_fan_modes in self._static_info.supported_custom_fan_modes
-        ]
+        ] + list(self._static_info.supported_custom_fan_modes)
 
     @property
     def preset_modes(self):
@@ -201,10 +198,7 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
             return [
                 _presets.from_esphome(preset)
                 for preset in self._static_info.supported_presets
-            ] + [
-                custom_preset
-                for custom_preset in self._static_info.supported_custom_presets
-            ]
+            ] + list(self._static_info.supported_custom_presets)
         else:
             return []
 
