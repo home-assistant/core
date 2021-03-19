@@ -10,13 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import dispatcher
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    DATA_COORDINATOR,
-    DISPATCHER_REMOVERS,
-    DOMAIN,
-    HW_TYPE,
-    SIGNAL_ADD_ENTITIES,
-)
+from .const import DISPATCHER_REMOVERS, DOMAIN, HW_TYPE, SIGNAL_ADD_ENTITIES
 
 
 @callback

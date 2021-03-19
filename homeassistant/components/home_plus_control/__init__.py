@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Integration dispatchers
     hass_entry_data[DISPATCHER_REMOVERS] = []
-    
+
     device_registry = async_get_device_registry(hass)
 
     # Register the Data Coordinator with the integration
@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
         # Only refresh the coordinator after all platforms are loaded.
         await coordinator.async_refresh()
-        
+
     hass.async_create_task(start_platforms())
 
     return True
