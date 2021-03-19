@@ -10,7 +10,7 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.const import CONF_WEBHOOK_ID
 
-from .common import COMMON_RESPONSE, simulate_webhook
+from .common import simulate_webhook
 
 
 async def test_setup_component_with_webhook(hass, camera_entry):
@@ -22,43 +22,34 @@ async def test_setup_component_with_webhook(hass, camera_entry):
     camera_entity_outdoor = "camera.netatmo_garden"
     assert hass.states.get(camera_entity_indoor).state == "streaming"
     response = {
-        **COMMON_RESPONSE,
-        **{
-            "event_type": "off",
-            "device_id": "12:34:56:00:f1:62",
-            "camera_id": "12:34:56:00:f1:62",
-            "event_id": "601dce1560abca1ebad9b723",
-            "push_type": "NACamera-off",
-        },
+        "event_type": "off",
+        "device_id": "12:34:56:00:f1:62",
+        "camera_id": "12:34:56:00:f1:62",
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": "NACamera-off",
     }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "idle"
 
     response = {
-        **COMMON_RESPONSE,
-        **{
-            "event_type": "on",
-            "device_id": "12:34:56:00:f1:62",
-            "camera_id": "12:34:56:00:f1:62",
-            "event_id": "646227f1dc0dfa000ec5f350",
-            "push_type": "NACamera-on",
-        },
+        "event_type": "on",
+        "device_id": "12:34:56:00:f1:62",
+        "camera_id": "12:34:56:00:f1:62",
+        "event_id": "646227f1dc0dfa000ec5f350",
+        "push_type": "NACamera-on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
 
     response = {
-        **COMMON_RESPONSE,
-        **{
-            "event_type": "light_mode",
-            "device_id": "12:34:56:00:a5:a4",
-            "camera_id": "12:34:56:00:a5:a4",
-            "event_id": "601dce1560abca1ebad9b723",
-            "push_type": "NOC-light_mode",
-            "sub_type": "on",
-        },
+        "event_type": "light_mode",
+        "device_id": "12:34:56:00:a5:a4",
+        "camera_id": "12:34:56:00:a5:a4",
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": "NOC-light_mode",
+        "sub_type": "on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -66,29 +57,22 @@ async def test_setup_component_with_webhook(hass, camera_entry):
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "on"
 
     response = {
-        **COMMON_RESPONSE,
-        **{
-            "event_type": "light_mode",
-            "device_id": "12:34:56:00:a5:a4",
-            "camera_id": "12:34:56:00:a5:a4",
-            "event_id": "601dce1560abca1ebad9b723",
-            "push_type": "NOC-light_mode",
-            "sub_type": "auto",
-        },
+        "event_type": "light_mode",
+        "device_id": "12:34:56:00:a5:a4",
+        "camera_id": "12:34:56:00:a5:a4",
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": "NOC-light_mode",
+        "sub_type": "auto",
     }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
 
     response = {
-        **COMMON_RESPONSE,
-        **{
-            "event_type": "light_mode",
-            "device_id": "12:34:56:00:a5:a4",
-            "home_name": "LXMBRG",
-            "event_id": "601dce1560abca1ebad9b723",
-            "push_type": "NOC-light_mode",
-        },
+        "event_type": "light_mode",
+        "device_id": "12:34:56:00:a5:a4",
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": "NOC-light_mode",
     }
     await simulate_webhook(hass, webhook_id, response)
 
