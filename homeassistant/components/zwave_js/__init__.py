@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_on_node_ready(node)
             return
         # if node is not yet ready, register one-time callback for ready state
-        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
+        LOGGER.debug("Node added: %s - waiting for it to become ready", node.node_id)
         node.once(
             "ready",
             lambda event: async_on_node_ready(event["node"]),

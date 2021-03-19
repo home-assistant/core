@@ -123,10 +123,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
         entities = []
 
         for home_id in get_all_home_ids(home_data):
-            _LOGGER.debug("Setting up home %s ...", home_id)
+            _LOGGER.debug("Setting up home %s", home_id)
             for room_id in home_data.rooms[home_id].keys():
                 room_name = home_data.rooms[home_id][room_id]["name"]
-                _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
+                _LOGGER.debug("Setting up room %s (%s)", room_name, room_id)
                 signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
                 await data_handler.register_data_class(
                     HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id

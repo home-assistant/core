@@ -982,7 +982,7 @@ def distance(hass, *args):
         else:
             if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
-                    "distance:State does not contain valid location: %s", point_state
+                    "Distance:State does not contain valid location: %s", point_state
                 )
                 return None
 

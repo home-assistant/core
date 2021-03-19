@@ -120,7 +120,7 @@ def validate_options(value):
         and CONF_VALUE_TEMPLATE in value
     ):
         _LOGGER.warning(
-            "using 'value_template' for 'position_topic' is deprecated "
+            "Using 'value_template' for 'position_topic' is deprecated "
             "and will be removed from Home Assistant in version 2021.6, "
             "please replace it with 'position_template'"
         )

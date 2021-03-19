@@ -174,7 +174,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # If not, do not create the entity and add a warning to the log
         if resource[CONF_TYPE] == "processor_temperature":
             if SystemMonitorSensor.read_cpu_temperature() is None:
-                _LOGGER.warning("Cannot read CPU / processor temperature information.")
+                _LOGGER.warning("Cannot read CPU / processor temperature information")
                 continue
 
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))

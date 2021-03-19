@@ -132,7 +132,7 @@ class EventManager:
 
         if not restarted:
             LOGGER.warning(
-                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying...",
+                "Failed to restart ONVIF PullPoint subscription for '%s'. Retrying",
                 self.unique_id,
             )
             # Try again in a minute

@@ -81,7 +81,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def _login(self):
         """Log in to the router. This is required for subsequent api calls."""
-        _LOGGER.info("Logging in to CODA...")
+        _LOGGER.info("Logging in to CODA")
 
         try:
             data = [("user", self._username), (self._type, self._password)]
@@ -101,7 +101,7 @@ class HitronCODADeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Get ARP from router."""
-        _LOGGER.info("Fetching...")
+        _LOGGER.info("Fetching")
 
         if self._userid is None:
             if not self._login():

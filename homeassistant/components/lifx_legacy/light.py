@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LIFX platform."""
     _LOGGER.warning(
         "The LIFX Legacy platform is deprecated and will be removed in "
-        "Home Assistant Core 2021.6.0. Use the LIFX integration instead."
+        "Home Assistant Core 2021.6.0; Use the LIFX integration instead"
     )
 
     server_addr = config.get(CONF_SERVER)

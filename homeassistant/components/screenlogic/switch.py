@@ -47,10 +47,10 @@ class ScreenLogicSwitch(ScreenlogicEntity, SwitchEntity):
         if await self.hass.async_add_executor_job(
             self.gateway.set_circuit, self._data_key, circuit_value
         ):
-            _LOGGER.info("screenlogic turn %s %s", circuit_value, self._data_key)
+            _LOGGER.debug("Screenlogic turn %s %s", circuit_value, self._data_key)
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.info("screenlogic turn %s %s error", circuit_value, self._data_key)
+            _LOGGER.info("Screenlogic turn %s %s error", circuit_value, self._data_key)
 
     @property
     def circuit(self):

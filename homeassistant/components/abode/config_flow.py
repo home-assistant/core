@@ -163,7 +163,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         if self._async_current_entries():
-            LOGGER.warning("Already configured. Only a single configuration possible.")
+            LOGGER.warning("Already configured; Only a single configuration possible")
             return self.async_abort(reason="single_instance_allowed")
 
         self._polling = import_config.get(CONF_POLLING, False)

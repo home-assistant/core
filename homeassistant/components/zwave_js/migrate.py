@@ -36,8 +36,8 @@ def async_migrate_entity(
         except ValueError:
             _LOGGER.debug(
                 (
-                    "Entity %s can't be migrated because the unique ID is taken. "
-                    "Cleaning it up since it is likely no longer valid."
+                    "Entity %s can't be migrated because the unique ID is taken; "
+                    "Cleaning it up since it is likely no longer valid"
                 ),
                 entity_id,
             )

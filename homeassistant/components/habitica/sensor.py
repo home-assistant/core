@@ -96,8 +96,8 @@ class HabitipyData:
         except ClientResponseError as error:
             if error.status == HTTP_TOO_MANY_REQUESTS:
                 _LOGGER.warning(
-                    "Sensor data update for %s has too many API requests."
-                    " Skipping the update.",
+                    "Sensor data update for %s has too many API requests;"
+                    " Skipping the update",
                     DOMAIN,
                 )
             else:
@@ -113,8 +113,8 @@ class HabitipyData:
             except ClientResponseError as error:
                 if error.status == HTTP_TOO_MANY_REQUESTS:
                     _LOGGER.warning(
-                        "Sensor data update for %s has too many API requests."
-                        " Skipping the update.",
+                        "Sensor data update for %s has too many API requests;"
+                        " Skipping the update",
                         DOMAIN,
                     )
                 else:

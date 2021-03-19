@@ -125,9 +125,9 @@ class IcloudAccount:
             # Login failed which means credentials need to be updated.
             _LOGGER.error(
                 (
-                    "Your password for '%s' is no longer working. Go to the "
+                    "Your password for '%s' is no longer working; Go to the "
                     "Integrations menu and click on Configure on the discovered Apple "
-                    "iCloud card to login again."
+                    "iCloud card to login again"
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )

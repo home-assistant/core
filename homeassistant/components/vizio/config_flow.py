@@ -273,7 +273,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if errors and self.context["source"] == SOURCE_IMPORT:
             # Log an error message if import config flow fails since otherwise failure is silent
             _LOGGER.error(
-                "configuration.yaml import failure: %s", ", ".join(errors.values())
+                "Importing from configuration.yaml failed: %s",
+                ", ".join(errors.values()),
             )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

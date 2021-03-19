@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Skybeacon sensor."""
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
-    _LOGGER.debug("Setting up...")
+    _LOGGER.debug("Setting up")
 
     mon = Monitor(hass, mac, name)
     add_entities([SkybeaconTemp(name, mon)])

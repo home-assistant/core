@@ -536,7 +536,7 @@ class HomeKit:
                 "The bridge %s has entity %s. For best performance, "
                 "and to prevent unexpected unavailability, create and "
                 "pair a separate HomeKit instance in accessory mode for "
-                "this entity.",
+                "this entity",
                 self._name,
                 state.entity_id,
             )

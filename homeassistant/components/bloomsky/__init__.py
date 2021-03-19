@@ -60,7 +60,7 @@ class BloomSky:
         self._endpoint_argument = "unit=intl" if is_metric else ""
         self.devices = {}
         self.is_metric = is_metric
-        _LOGGER.debug("Initial BloomSky device load...")
+        _LOGGER.debug("Initial BloomSky device load")
         self.refresh_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

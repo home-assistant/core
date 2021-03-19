@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     path = config.get(CONF_FOLDER_PATHS)
 
     if not hass.config.is_allowed_path(path):
-        _LOGGER.error("folder %s is not valid or allowed", path)
+        _LOGGER.error("Folder %s is not valid or allowed", path)
     else:
         folder = Folder(path, config.get(CONF_FILTER))
         add_entities([folder], True)

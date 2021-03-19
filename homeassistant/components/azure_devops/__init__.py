@@ -102,7 +102,7 @@ class AzureDevOpsEntity(Entity):
         else:
             if self._available:
                 _LOGGER.debug(
-                    "An error occurred while updating Azure DevOps sensor.",
+                    "An error occurred while updating Azure DevOps sensor",
                     exc_info=True,
                 )
             self._available = False

@@ -43,7 +43,7 @@ def _report(what: str) -> None:
 
     if not integration_frame:
         _LOGGER.warning(
-            "Detected code that %s. Please report this issue.", what, stack_info=True
+            "Detected code that %s; Please report this issue", what, stack_info=True
         )
         return
 
