@@ -149,6 +149,8 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
+        self.context["title_placeholders"] = {"host": self.unique_id}
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):

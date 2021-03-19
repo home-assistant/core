@@ -46,7 +46,7 @@ MIN_TIME_BETWEEN_SESSION_RENEW = timedelta(seconds=90)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Ezviz IP Camera from platform config."""
     _LOGGER.warning(
-        "Loading ezviz via platform config is deprecated, it will be automatically imported. Please remove it afterwards."
+        "Loading ezviz via platform config is deprecated, it will be automatically imported. Please remove it afterwards"
     )
 
     # Check if entry config exists and skips import if it does.
@@ -180,6 +180,18 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         self._serial = self.coordinator.data[self._idx]["serial"]
         self._name = self.coordinator.data[self._idx]["name"]
         self._local_ip = self.coordinator.data[self._idx]["local_ip"]
+
+    @property
+    def device_state_attributes(self):
+        """Return the Ezviz-specific camera state attributes."""
+        return {
+            # Camera firmware version update available?
+            "upgrade_available": self.coordinator.data[self._idx]["upgrade_available"],
+            # camera's local ip on local network
+            "local_ip": self.coordinator.data[self._idx]["local_ip"],
+            # RTSP Stream
+            "RTSP stream": self._rtsp_stream,
+        }
 
     @property
     def available(self):

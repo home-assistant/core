@@ -1,17 +1,17 @@
 {
   "config": {
-    "flow_title": "Ezviz",
+    "flow_title": "{host}",
     "step": {
       "user": {
         "title": "Connect to Ezviz Cloud",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "Account region code (eu is for eurpose as example)"
+          "region": "Account region code (eu for European server)"
         }
       },
       "user_camera": {
-        "title": "Add Camera",
+        "title": "Add Ezviz Camera",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -19,8 +19,8 @@
         }
       },
       "confirm": {
-        "title": "Discovered Camera",
-        "description": "Enter RTSP credentials for Ezviz camera: {serial}",
+        "title": "Discovered Ezviz Camera",
+        "description": "Enter RTSP credentials for Ezviz camera {serial}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
