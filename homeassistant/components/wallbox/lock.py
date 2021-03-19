@@ -78,17 +78,15 @@ class WallboxLock(CoordinatorEntity, LockEntity):
 
         try:
             station = self.station
-            w = self._wallbox
+            wallbox = self._wallbox
 
             if lock is False:
-                """"unlock charger"""
                 _LOGGER.debug("Unlocking Wallbox")
-                self.hass.async_add_executor_job(w.unlockCharger, station)
+                self.hass.async_add_executor_job(wallbox.unlockCharger, station)
 
             elif lock is True:
-                """"lock charger"""
                 _LOGGER.debug("Locking Wallbox")
-                self.hass.async_add_executor_job(w.lockCharger, station)
+                self.hass.async_add_executor_job(wallbox.lockCharger, station)
 
         except Exception as exception:
             _LOGGER.error("Unable to fetch data from Wallbox. %s", exception)
@@ -103,8 +101,8 @@ class WallboxLock(CoordinatorEntity, LockEntity):
         """Return the icon of the lock."""
         if self.coordinator.data:
             return "mdi:lock"
-        else:
-            return "mdi:lock-open"
+
+        return "mdi:lock-open"
 
     @property
     def is_locked(self):

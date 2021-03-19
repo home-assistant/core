@@ -17,8 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 def wallbox_updater(wallbox, station):
     """Get new data for Wallbox component."""
 
-    w = wallbox
-    data = w.getChargerStatus(station)
+    wallbox = wallbox
+    data = wallbox.getChargerStatus(station)
     max_charger_current = data["config_data"]["max_charging_current"]
     return max_charger_current
 
@@ -72,11 +72,11 @@ class WallboxMaxChargingCurrent(CoordinatorEntity, NumberEntity):
         self._name = name
         self.station = config.data[CONF_STATION]
 
-    def set_max_charging_current(self, max_charging_current, wallbox):
+    def set_max_charging_current(self, max_charging_current):
         """Set max charging current using API."""
 
         try:
-            wallbox = wallbox
+            wallbox = self._wallbox
             _LOGGER.debug("Setting charging current.")
             wallbox.setMaxChargingCurrent(self.station, max_charging_current)
 
