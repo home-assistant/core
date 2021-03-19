@@ -1,7 +1,7 @@
 """Support for Modbus Coil and Discrete Input sensors."""
 from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -66,7 +66,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ):
     """Set up the Modbus binary sensors."""
     sensors = []
