@@ -53,6 +53,10 @@
                 "title": "Netatmo openbare weersensor"
             },
             "public_weather_areas": {
+                "data": {
+                    "new_area": "Naam van het gebied",
+                    "weather_areas": "Weersgebieden"
+                },
                 "description": "Configureer openbare weersensoren.",
                 "title": "Netatmo openbare weersensor"
             }
