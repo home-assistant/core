@@ -20,6 +20,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class PlaceholderHub:
+    """Wallbox Hub class."""
+
     def __init__(self, station):
         """Initialize."""
         self.station = station

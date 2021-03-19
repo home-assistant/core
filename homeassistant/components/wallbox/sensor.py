@@ -28,7 +28,7 @@ def wallbox_updater(wallbox, station):
             try:
                 filtered_data[k] = round(v, sensor_round)
             except TypeError:
-                _LOGGER.debug(f"Cannot format %s", k)
+                _LOGGER.debug("Cannot format %s", k)
 
     return filtered_data
 

@@ -99,4 +99,4 @@ class WallboxMaxChargingCurrent(CoordinatorEntity, NumberEntity):
 
     def set_value(self, value: float):
         """Set the value of the entity."""
-        self.set_max_charging_current(value, self._wallbox)
+        self.set_max_charging_current(value)
