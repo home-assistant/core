@@ -5,7 +5,6 @@
 # http://www.drhack.it/images/PDF/AuroraCommunicationProtocol_4_2.pdf
 
 import asyncio
-from collections import defaultdict
 import logging
 
 from aurorapy.client import AuroraSerialClient
@@ -14,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from .const import ATTR_SERIAL_NUMBER, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -34,19 +33,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     comport = entry.data[CONF_PORT]
     address = entry.data[CONF_ADDRESS]
     client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-    all_device_params = [
-        {"type": "sensor", "parameter": "instantaneouspower", "name": "Power Output"},
-        {"type": "sensor", "parameter": "temperature", "name": "Temperature"},
-    ]
 
-    entry_data = hass.data[DOMAIN][entry.entry_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         "client": client,
-        "devices": defaultdict(list),
+        "devices": {
+            entry.data: [
+                {  # Power output to grid
+                    "type": "sensor",
+                    "parameter": "instantaneouspower",
+                    "name": "Power Output",
+                },
+                {  # Inverter temperature
+                    "type": "sensor",
+                    "parameter": "temperature",
+                    "name": "Temperature",
+                },
+            ]
+        },
     }
-    serialnum = entry.data[ATTR_SERIAL_NUMBER]
-    entry_data["devices"][serialnum] = defaultdict(list)
-    for device_params in all_device_params:
-        entry_data["devices"][serialnum][device_params["type"]].append(device_params)
 
     for platform in PLATFORMS:
         hass.async_create_task(
