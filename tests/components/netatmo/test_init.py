@@ -112,7 +112,7 @@ async def test_setup_component_with_webhook(hass, entry):
 
 
 async def test_setup_without_https(hass, config_entry):
-    """Test if setup with cloud and without https."""
+    """Test if set up with cloud link and without https."""
     hass.data["cloud"] = Mock()
     hass.data["cloud"].is_logged_in = True
 
@@ -140,7 +140,7 @@ async def test_setup_without_https(hass, config_entry):
 
 
 async def test_setup_with_cloud(hass, config_entry):
-    """Test if set up with cloud link and without https."""
+    """Test if set up with active cloud subscription."""
     await mock_cloud(hass)
     hass.data["cloud"].id_token = jwt.encode(
         {
@@ -168,13 +168,23 @@ async def test_setup_with_cloud(hass, config_entry):
         )
         assert hass.components.cloud.async_active_subscription() is True
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    assert hass.components.cloud.async_active_subscription() is True
+    webhook_data = {
+        "user_id": "123",
+        "user": {"id": "123", "email": "foo@bar.com"},
+        "push_type": "webhook_activation",
+    }
+    async_dispatcher_send(
+        hass,
+        f"signal-{DOMAIN}-webhook-None",
+        {"type": None, "data": webhook_data},
+    )
+    await hass.async_block_till_done()
 
     assert (
         hass.data["netatmo"][config_entry.entry_id]["netatmo_data_handler"].webhook
-        is False
+        is True
     )
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
