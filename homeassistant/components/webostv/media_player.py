@@ -386,7 +386,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
         if media_type == MEDIA_TYPE_CHANNEL:
-            _LOGGER.debug("Searching channel...")
+            _LOGGER.debug("Searching channel")
             partial_match_channel_id = None
             perfect_match_channel_id = None
 
