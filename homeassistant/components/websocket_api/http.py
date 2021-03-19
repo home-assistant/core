@@ -74,10 +74,10 @@ class WebSocketHandler:
                 if message is None:
                     break
 
-                self._logger.debug("Sending %s", message)
-
                 if not isinstance(message, str):
                     message = message_to_json(message)
+
+                self._logger.debug("Sending %s", message)
 
                 await self.wsock.send_str(message)
 
