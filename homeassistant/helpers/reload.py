@@ -164,7 +164,7 @@ async def async_setup_reload_service(
     async def _reload_config(call: Event) -> None:
         """Reload the platforms."""
         await async_reload_integration_platforms(hass, domain, platforms)
-        hass.bus.async_fire(f"event_{domain}_reloaded", context=call.context)
+        hass.bus.async_fire(f"{domain}_reloaded", context=call.context)
 
     hass.helpers.service.async_register_admin_service(
         domain, SERVICE_RELOAD, _reload_config
