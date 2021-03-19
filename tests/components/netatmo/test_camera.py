@@ -141,12 +141,12 @@ async def test_service_set_person_away(hass, camera_entry):
         "person": "Richard Doe",
     }
 
-    with patch("pyatmo.camera.CameraData.set_persons_away") as mock_post_request:
+    with patch("pyatmo.camera.CameraData.set_persons_away") as mock_set_persons_away:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
         )
         await hass.async_block_till_done()
-        mock_post_request.assert_called_once_with(
+        mock_set_persons_away.assert_called_once_with(
             person_id="91827376-7e04-5298-83af-a0cb8372dff3",
             home_id="91763b24c43d3e344f424e8b",
         )
@@ -155,12 +155,12 @@ async def test_service_set_person_away(hass, camera_entry):
         "entity_id": "camera.netatmo_hall",
     }
 
-    with patch("pyatmo.camera.CameraData.set_persons_away") as mock_post_request:
+    with patch("pyatmo.camera.CameraData.set_persons_away") as mock_set_persons_away:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_PERSON_AWAY, service_data=data
         )
         await hass.async_block_till_done()
-        mock_post_request.assert_called_once_with(
+        mock_set_persons_away.assert_called_once_with(
             person_id=None,
             home_id="91763b24c43d3e344f424e8b",
         )
@@ -175,12 +175,12 @@ async def test_service_set_persons_home(hass, camera_entry):
         "persons": "John Doe",
     }
 
-    with patch("pyatmo.camera.CameraData.set_persons_home") as mock_post_request:
+    with patch("pyatmo.camera.CameraData.set_persons_home") as mock_set_persons_home:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_PERSONS_HOME, service_data=data
         )
         await hass.async_block_till_done()
-        mock_post_request.assert_called_once_with(
+        mock_set_persons_home.assert_called_once_with(
             person_ids=["91827374-7e04-5298-83ad-a0cb8372dff1"],
             home_id="91763b24c43d3e344f424e8b",
         )
@@ -195,12 +195,12 @@ async def test_service_set_camera_light(hass, camera_entry):
         "camera_light_mode": "on",
     }
 
-    with patch("pyatmo.camera.CameraData.set_state") as mock_post_request:
+    with patch("pyatmo.camera.CameraData.set_state") as mock_set_state:
         await hass.services.async_call(
             "netatmo", SERVICE_SET_CAMERA_LIGHT, service_data=data
         )
         await hass.async_block_till_done()
-        mock_post_request.assert_called_once_with(
+        mock_set_state.assert_called_once_with(
             home_id="91763b24c43d3e344f424e8b",
             camera_id="12:34:56:00:a5:a4",
             floodlight="on",
