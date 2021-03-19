@@ -1,5 +1,5 @@
 """Support for Genius Hub water_heater devices."""
-from typing import List
+from __future__ import annotations
 
 from homeassistant.components.water_heater import (
     SUPPORT_OPERATION_MODE,
@@ -61,7 +61,7 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
-    def operation_list(self) -> List[str]:
+    def operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
         return list(HA_OPMODE_TO_GH)
 

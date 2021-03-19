@@ -11,6 +11,7 @@
                 "data": {
                     "port": "Poort"
                 },
+                "description": "Verbind de RS232-2 poort van de LiteJet met uw computer en voer het pad naar het seri\u00eble poortapparaat in.\n\nDe LiteJet MCP moet worden geconfigureerd voor 19,2 K baud, 8 databits, 1 stopbit, geen pariteit, en om een 'CR' uit te zenden na elk antwoord.",
                 "title": "Maak verbinding met LiteJet"
             }
         }

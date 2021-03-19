@@ -1,9 +1,11 @@
 """Blueprint models."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import pathlib
 import shutil
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -49,8 +51,8 @@ class Blueprint:
         self,
         data: dict,
         *,
-        path: Optional[str] = None,
-        expected_domain: Optional[str] = None,
+        path: str | None = None,
+        expected_domain: str | None = None,
     ) -> None:
         """Initialize a blueprint."""
         try:
@@ -95,7 +97,7 @@ class Blueprint:
         """Return blueprint metadata."""
         return self.data[CONF_BLUEPRINT]
 
-    def update_metadata(self, *, source_url: Optional[str] = None) -> None:
+    def update_metadata(self, *, source_url: str | None = None) -> None:
         """Update metadata."""
         if source_url is not None:
             self.data[CONF_BLUEPRINT][CONF_SOURCE_URL] = source_url
@@ -105,7 +107,7 @@ class Blueprint:
         return yaml.dump(self.data)
 
     @callback
-    def validate(self) -> Optional[List[str]]:
+    def validate(self) -> list[str] | None:
         """Test if the Home Assistant installation supports this blueprint.
 
         Return list of errors if not valid.
@@ -126,7 +128,7 @@ class BlueprintInputs:
     """Inputs for a blueprint."""
 
     def __init__(
-        self, blueprint: Blueprint, config_with_inputs: Dict[str, Any]
+        self, blueprint: Blueprint, config_with_inputs: dict[str, Any]
     ) -> None:
         """Instantiate a blueprint inputs object."""
         self.blueprint = blueprint
@@ -218,7 +220,7 @@ class DomainBlueprints:
             blueprint_data, expected_domain=self.domain, path=blueprint_path
         )
 
-    def _load_blueprints(self) -> Dict[str, Union[Blueprint, BlueprintException]]:
+    def _load_blueprints(self) -> dict[str, Blueprint | BlueprintException]:
         """Load all the blueprints."""
         blueprint_folder = pathlib.Path(
             self.hass.config.path(BLUEPRINT_FOLDER, self.domain)
@@ -243,7 +245,7 @@ class DomainBlueprints:
 
     async def async_get_blueprints(
         self,
-    ) -> Dict[str, Union[Blueprint, BlueprintException]]:
+    ) -> dict[str, Blueprint | BlueprintException]:
         """Get all the blueprints."""
         async with self._load_lock:
             return await self.hass.async_add_executor_job(self._load_blueprints)

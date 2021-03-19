@@ -1,4 +1,6 @@
 """Helpers to execute scripts."""
+from __future__ import annotations
+
 import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -6,18 +8,7 @@ from functools import partial
 import itertools
 import logging
 from types import MappingProxyType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-    cast,
-)
+from typing import Any, Callable, Dict, Sequence, Union, cast
 
 import async_timeout
 import voluptuous as vol
@@ -81,6 +72,7 @@ from homeassistant.util.dt import utcnow
 
 from .trace import (
     TraceElement,
+    async_trace_path,
     trace_append_element,
     trace_id_get,
     trace_path,
@@ -137,8 +129,8 @@ SCRIPT_DEBUG_CONTINUE_ALL = "script_debug_continue_all"
 
 def action_trace_append(variables, path):
     """Append a TraceElement to trace[path]."""
-    trace_element = TraceElement(variables)
-    trace_append_element(trace_element, path, ACTION_TRACE_NODE_MAX_LEN)
+    trace_element = TraceElement(variables, path)
+    trace_append_element(trace_element, ACTION_TRACE_NODE_MAX_LEN)
     return trace_element
 
 
@@ -232,8 +224,8 @@ STATIC_VALIDATION_ACTION_TYPES = (
 
 
 async def async_validate_actions_config(
-    hass: HomeAssistant, actions: List[ConfigType]
-) -> List[ConfigType]:
+    hass: HomeAssistant, actions: list[ConfigType]
+) -> list[ConfigType]:
     """Validate a list of actions."""
     return await asyncio.gather(
         *[async_validate_action_config(hass, action) for action in actions]
@@ -299,9 +291,9 @@ class _ScriptRun:
     def __init__(
         self,
         hass: HomeAssistant,
-        script: "Script",
-        variables: Dict[str, Any],
-        context: Optional[Context],
+        script: Script,
+        variables: dict[str, Any],
+        context: Context | None,
         log_exceptions: bool,
     ) -> None:
         self._hass = hass
@@ -310,7 +302,7 @@ class _ScriptRun:
         self._context = context
         self._log_exceptions = log_exceptions
         self._step = -1
-        self._action: Optional[Dict[str, Any]] = None
+        self._action: dict[str, Any] | None = None
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
 
@@ -622,11 +614,14 @@ class _ScriptRun:
         if not check:
             raise _StopScript
 
-    def _test_conditions(self, conditions, name):
+    def _test_conditions(self, conditions, name, condition_path=None):
+        if condition_path is None:
+            condition_path = name
+
         @trace_condition_function
         def traced_test_conditions(hass, variables):
             try:
-                with trace_path("conditions"):
+                with trace_path(condition_path):
                     for idx, cond in enumerate(conditions):
                         with trace_path(str(idx)):
                             if not cond(hass, variables):
@@ -640,6 +635,7 @@ class _ScriptRun:
         result = traced_test_conditions(self._hass, self._variables)
         return result
 
+    @async_trace_path("repeat")
     async def _async_repeat_step(self):
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
@@ -658,7 +654,7 @@ class _ScriptRun:
 
         async def async_run_sequence(iteration, extra_msg=""):
             self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
-            with trace_path(str(self._step)):
+            with trace_path("sequence"):
                 await self._async_run_script(script)
 
         if CONF_COUNT in repeat:
@@ -724,19 +720,21 @@ class _ScriptRun:
         # pylint: disable=protected-access
         choose_data = await self._script._async_get_choose_data(self._step)
 
-        for idx, (conditions, script) in enumerate(choose_data["choices"]):
-            with trace_path(str(idx)):
-                try:
-                    if self._test_conditions(conditions, "choose"):
-                        trace_set_result(choice=idx)
-                        await self._async_run_script(script)
-                        return
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
+        with trace_path("choose"):
+            for idx, (conditions, script) in enumerate(choose_data["choices"]):
+                with trace_path(str(idx)):
+                    try:
+                        if self._test_conditions(conditions, "choose", "conditions"):
+                            trace_set_result(choice=idx)
+                            with trace_path("sequence"):
+                                await self._async_run_script(script)
+                                return
+                    except exceptions.ConditionError as ex:
+                        _LOGGER.warning("Error in 'choose' evaluation:\n%s", ex)
 
         if choose_data["default"]:
             trace_set_result(choice="default")
-            with trace_path("default"):
+            with trace_path(["default", "sequence"]):
                 await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):
@@ -887,7 +885,7 @@ async def _async_stop_scripts_at_shutdown(hass, event):
 _VarsType = Union[Dict[str, Any], MappingProxyType]
 
 
-def _referenced_extract_ids(data: Dict[str, Any], key: str, found: Set[str]) -> None:
+def _referenced_extract_ids(data: dict[str, Any], key: str, found: set[str]) -> None:
     """Extract referenced IDs."""
     if not data:
         return
@@ -910,20 +908,20 @@ class Script:
     def __init__(
         self,
         hass: HomeAssistant,
-        sequence: Sequence[Dict[str, Any]],
+        sequence: Sequence[dict[str, Any]],
         name: str,
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        running_description: Optional[str] = None,
-        change_listener: Optional[Callable[..., Any]] = None,
+        running_description: str | None = None,
+        change_listener: Callable[..., Any] | None = None,
         script_mode: str = DEFAULT_SCRIPT_MODE,
         max_runs: int = DEFAULT_MAX,
         max_exceeded: str = DEFAULT_MAX_EXCEEDED,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
         log_exceptions: bool = True,
         top_level: bool = True,
-        variables: Optional[ScriptVariables] = None,
+        variables: ScriptVariables | None = None,
     ) -> None:
         """Initialize the script."""
         all_scripts = hass.data.get(DATA_SCRIPTS)
@@ -956,25 +954,25 @@ class Script:
         self._log_exceptions = log_exceptions
 
         self.last_action = None
-        self.last_triggered: Optional[datetime] = None
+        self.last_triggered: datetime | None = None
 
-        self._runs: List[_ScriptRun] = []
+        self._runs: list[_ScriptRun] = []
         self.max_runs = max_runs
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
             self._queue_lck = asyncio.Lock()
-        self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
-        self._repeat_script: Dict[int, Script] = {}
-        self._choose_data: Dict[int, Dict[str, Any]] = {}
-        self._referenced_entities: Optional[Set[str]] = None
-        self._referenced_devices: Optional[Set[str]] = None
+        self._config_cache: dict[set[tuple], Callable[..., bool]] = {}
+        self._repeat_script: dict[int, Script] = {}
+        self._choose_data: dict[int, dict[str, Any]] = {}
+        self._referenced_entities: set[str] | None = None
+        self._referenced_devices: set[str] | None = None
         self.variables = variables
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
             template.attach(hass, variables)
 
     @property
-    def change_listener(self) -> Optional[Callable[..., Any]]:
+    def change_listener(self) -> Callable[..., Any] | None:
         """Return the change_listener."""
         return self._change_listener
 
@@ -988,13 +986,13 @@ class Script:
         ):
             self._change_listener_job = HassJob(change_listener)
 
-    def _set_logger(self, logger: Optional[logging.Logger] = None) -> None:
+    def _set_logger(self, logger: logging.Logger | None = None) -> None:
         if logger:
             self._logger = logger
         else:
             self._logger = logging.getLogger(f"{__name__}.{slugify(self.name)}")
 
-    def update_logger(self, logger: Optional[logging.Logger] = None) -> None:
+    def update_logger(self, logger: logging.Logger | None = None) -> None:
         """Update logger."""
         self._set_logger(logger)
         for script in self._repeat_script.values():
@@ -1035,7 +1033,7 @@ class Script:
         if self._referenced_devices is not None:
             return self._referenced_devices
 
-        referenced: Set[str] = set()
+        referenced: set[str] = set()
 
         for step in self.sequence:
             action = cv.determine_script_action(step)
@@ -1064,7 +1062,7 @@ class Script:
         if self._referenced_entities is not None:
             return self._referenced_entities
 
-        referenced: Set[str] = set()
+        referenced: set[str] = set()
 
         for step in self.sequence:
             action = cv.determine_script_action(step)
@@ -1088,7 +1086,7 @@ class Script:
         return referenced
 
     def run(
-        self, variables: Optional[_VarsType] = None, context: Optional[Context] = None
+        self, variables: _VarsType | None = None, context: Context | None = None
     ) -> None:
         """Run script."""
         asyncio.run_coroutine_threadsafe(
@@ -1097,9 +1095,9 @@ class Script:
 
     async def async_run(
         self,
-        run_variables: Optional[_VarsType] = None,
-        context: Optional[Context] = None,
-        started_action: Optional[Callable[..., Any]] = None,
+        run_variables: _VarsType | None = None,
+        context: Context | None = None,
+        started_action: Callable[..., Any] | None = None,
     ) -> None:
         """Run script."""
         if context is None:

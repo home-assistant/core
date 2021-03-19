@@ -8,7 +8,7 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til Almond levert av Hass.io-tillegg: {addon}?",
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til Almond levert av Supervisor-tillegg: {addon}?",
                 "title": "Almond via Hass.io-tillegg"
             },
             "pick_implementation": {

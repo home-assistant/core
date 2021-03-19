@@ -1,5 +1,5 @@
 """Support for monitoring the Transmission BitTorrent client API."""
-from typing import List
+from __future__ import annotations
 
 from transmissionrpc.torrent import Torrent
 
@@ -43,7 +43,7 @@ class TransmissionSensor(Entity):
 
     def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
         """Initialize the sensor."""
-        self._tm_client = tm_client  # type: TransmissionClient
+        self._tm_client: TransmissionClient = tm_client
         self._client_name = client_name
         self._name = sensor_name
         self._sub_type = sub_type
@@ -168,7 +168,7 @@ class TransmissionTorrentsSensor(TransmissionSensor):
         self._state = len(torrents)
 
 
-def _filter_torrents(torrents: List[Torrent], statuses=None) -> List[Torrent]:
+def _filter_torrents(torrents: list[Torrent], statuses=None) -> list[Torrent]:
     return [
         torrent
         for torrent in torrents

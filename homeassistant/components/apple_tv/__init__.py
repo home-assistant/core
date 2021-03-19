@@ -151,6 +151,13 @@ class AppleTVEntity(Entity):
         """No polling needed for Apple TV."""
         return False
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._identifier)},
+        }
+
 
 class AppleTVManager:
     """Connection and power manager for an Apple TV.

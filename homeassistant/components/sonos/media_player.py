@@ -1330,7 +1330,7 @@ class SonosEntity(MediaPlayerEntity):
             if one_alarm._alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("did not find alarm with id %s", alarm_id)
+            _LOGGER.warning("Did not find alarm with id %s", alarm_id)
             return
         if time is not None:
             alarm.start_time = time

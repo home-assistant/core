@@ -1,12 +1,16 @@
 """Trace support for automation."""
+from __future__ import annotations
+
 from collections import OrderedDict
 from contextlib import contextmanager
 import datetime as dt
+from datetime import timedelta
 from itertools import count
 import logging
-from typing import Any, Awaitable, Callable, Deque, Dict, Optional
+from typing import Any, Awaitable, Callable, Deque
 
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.json import JSONEncoder as HAJSONEncoder
 from homeassistant.helpers.trace import TraceElement, trace_id_set
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
@@ -28,28 +32,28 @@ class AutomationTrace:
 
     def __init__(
         self,
-        unique_id: Optional[str],
-        config: Dict[str, Any],
+        unique_id: str | None,
+        config: dict[str, Any],
         context: Context,
     ):
         """Container for automation trace."""
-        self._action_trace: Optional[Dict[str, Deque[TraceElement]]] = None
-        self._condition_trace: Optional[Dict[str, Deque[TraceElement]]] = None
-        self._config: Dict[str, Any] = config
-        self._context: Context = context
-        self._error: Optional[Exception] = None
+        self._action_trace: dict[str, Deque[TraceElement]] | None = None
+        self._condition_trace: dict[str, Deque[TraceElement]] | None = None
+        self._config: dict[str, Any] = config
+        self.context: Context = context
+        self._error: Exception | None = None
         self._state: str = "running"
         self.run_id: str = str(next(self._run_ids))
-        self._timestamp_finish: Optional[dt.datetime] = None
+        self._timestamp_finish: dt.datetime | None = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
-        self._unique_id: Optional[str] = unique_id
-        self._variables: Optional[Dict[str, Any]] = None
+        self._unique_id: str | None = unique_id
+        self._variables: dict[str, Any] | None = None
 
-    def set_action_trace(self, trace: Dict[str, Deque[TraceElement]]) -> None:
+    def set_action_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
         """Set action trace."""
         self._action_trace = trace
 
-    def set_condition_trace(self, trace: Dict[str, Deque[TraceElement]]) -> None:
+    def set_condition_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
         """Set condition trace."""
         self._condition_trace = trace
 
@@ -57,7 +61,7 @@ class AutomationTrace:
         """Set error."""
         self._error = ex
 
-    def set_variables(self, variables: Dict[str, Any]) -> None:
+    def set_variables(self, variables: dict[str, Any]) -> None:
         """Set variables."""
         self._variables = variables
 
@@ -66,7 +70,7 @@ class AutomationTrace:
         self._timestamp_finish = dt_util.utcnow()
         self._state = "stopped"
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return dictionary version of this AutomationTrace."""
 
         result = self.as_short_dict()
@@ -86,7 +90,7 @@ class AutomationTrace:
                 "action_trace": action_traces,
                 "condition_trace": condition_traces,
                 "config": self._config,
-                "context": self._context,
+                "context": self.context,
                 "variables": self._variables,
             }
         )
@@ -94,7 +98,7 @@ class AutomationTrace:
             result["error"] = str(self._error)
         return result
 
-    def as_short_dict(self) -> Dict[str, Any]:
+    def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this AutomationTrace."""
 
         last_action = None
@@ -109,6 +113,7 @@ class AutomationTrace:
             trigger = self._variables.get("trigger", {}).get("description")
 
         result = {
+            "automation_id": self._unique_id,
             "last_action": last_action,
             "last_condition": last_condition,
             "run_id": self.run_id,
@@ -196,11 +201,25 @@ def get_debug_traces_for_automation(hass, automation_id, summary=False):
 @callback
 def get_debug_traces(hass, summary=False):
     """Return a serializable list of debug traces."""
-    traces = {}
+    traces = []
 
     for automation_id in hass.data[DATA_AUTOMATION_TRACE]:
-        traces[automation_id] = get_debug_traces_for_automation(
-            hass, automation_id, summary
-        )
+        traces.extend(get_debug_traces_for_automation(hass, automation_id, summary))
 
     return traces
+
+
+class TraceJSONEncoder(HAJSONEncoder):
+    """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
+
+    def default(self, o: Any) -> Any:
+        """Convert certain objects.
+
+        Fall back to repr(o).
+        """
+        if isinstance(o, timedelta):
+            return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
+        try:
+            return super().default(o)
+        except TypeError:
+            return {"__type": str(type(o)), "repr": repr(o)}

@@ -1,27 +1,66 @@
 {
     "config": {
         "abort": {
-            "all_configured": "Semua Philips Hue bridges sudah dikonfigurasi",
-            "already_configured": "Bridge sudah dikonfigurasi",
-            "cannot_connect": "Tidak dapat terhubung ke bridge",
-            "discover_timeout": "Tidak dapat menemukan Hue Bridges.",
+            "all_configured": "Semua bridge Philips Hue sudah dikonfigurasi",
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
+            "discover_timeout": "Tidak dapat menemukan bridge Hue",
             "no_bridges": "Bridge Philips Hue tidak ditemukan",
-            "unknown": "Kesalahan tidak dikenal terjadi."
+            "not_hue_bridge": "Bukan bridge Hue",
+            "unknown": "Kesalahan yang tidak diharapkan"
         },
         "error": {
-            "linking": "Terjadi kesalahan tautan tidak dikenal.",
-            "register_failed": "Gagal mendaftar, silakan coba lagi."
+            "linking": "Kesalahan yang tidak diharapkan",
+            "register_failed": "Gagal mendaftar, coba lagi."
         },
         "step": {
             "init": {
                 "data": {
                     "host": "Host"
                 },
-                "title": "Pilih Hue bridge"
+                "title": "Pilih bridge Hue"
             },
             "link": {
-                "description": "Tekan tombol di bridge untuk mendaftar Philips Hue dengan Home Assistant.\n\n![Lokasi tombol di bridge](/static/images/config_philips_hue.jpg)",
-                "title": "Tautan Hub"
+                "description": "Tekan tombol di bridge untuk mendaftarkan Philips Hue dengan Home Assistant.\n\n![Lokasi tombol di bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Tautkan Hub"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Konfigurasi bridge Hue secara manual"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Tombol pertama",
+            "button_2": "Tombol kedua",
+            "button_3": "Tombol ketiga",
+            "button_4": "Tombol keempat",
+            "dim_down": "Redupkan",
+            "dim_up": "Terangkan",
+            "double_buttons_1_3": "Tombol Pertama dan Ketiga",
+            "double_buttons_2_4": "Tombol Kedua dan Keempat",
+            "turn_off": "Matikan",
+            "turn_on": "Nyalakan"
+        },
+        "trigger_type": {
+            "remote_button_long_release": "Tombol \"{subtype}\" dilepaskan setelah ditekan lama",
+            "remote_button_short_press": "Tombol \"{subtype}\" ditekan",
+            "remote_button_short_release": "Tombol \"{subtype}\" dilepaskan",
+            "remote_double_button_long_press": "Kedua \"{subtype}\" dilepaskan setelah ditekan lama",
+            "remote_double_button_short_press": "Kedua \"{subtype}\" dilepas"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_hue_groups": "Izinkan grup Hue",
+                    "allow_unreachable": "Izinkan bohlam yang tidak dapat dijangkau untuk melaporkan statusnya dengan benar"
+                }
             }
         }
     }

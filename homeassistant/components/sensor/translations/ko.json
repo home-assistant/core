@@ -1,26 +1,38 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_battery_level": "\ud604\uc7ac {entity_name} \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 ~ \uc774\uba74",
-            "is_humidity": "\ud604\uc7ac {entity_name} \uc2b5\ub3c4\uac00 ~ \uc774\uba74",
-            "is_illuminance": "\ud604\uc7ac {entity_name} \uc870\ub3c4\uac00 ~ \uc774\uba74",
-            "is_power": "\ud604\uc7ac {entity_name} \uc18c\ube44 \uc804\ub825\uc774 ~ \uc774\uba74",
-            "is_pressure": "\ud604\uc7ac {entity_name} \uc555\ub825\uc774 ~ \uc774\uba74",
-            "is_signal_strength": "\ud604\uc7ac {entity_name} \uc2e0\ud638 \uac15\ub3c4\uac00 ~ \uc774\uba74",
-            "is_temperature": "\ud604\uc7ac {entity_name} \uc628\ub3c4\uac00 ~ \uc774\uba74",
-            "is_timestamp": "\ud604\uc7ac {entity_name} \uc2dc\uac01\uc774 ~ \uc774\uba74",
-            "is_value": "\ud604\uc7ac {entity_name} \uac12\uc774 ~ \uc774\uba74"
+            "is_battery_level": "\ud604\uc7ac {entity_name}\uc758 \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 ~ \uc774\uba74",
+            "is_carbon_dioxide": "\ud604\uc7ac {entity_name}\uc758 \uc774\uc0b0\ud654\ud0c4\uc18c \ub18d\ub3c4 \uc218\uc900\uc774 ~ \uc774\uba74",
+            "is_carbon_monoxide": "\ud604\uc7ac {entity_name}\uc758 \uc77c\uc0b0\ud654\ud0c4\uc18c \ub18d\ub3c4 \uc218\uc900\uc774 ~ \uc774\uba74",
+            "is_current": "\ud604\uc7ac {entity_name}\uc758 \uc804\ub958\uac00 ~ \uc774\uba74",
+            "is_energy": "\ud604\uc7ac {entity_name}\uc758 \uc5d0\ub108\uc9c0\uac00 ~ \uc774\uba74",
+            "is_humidity": "\ud604\uc7ac {entity_name}\uc758 \uc2b5\ub3c4\uac00 ~ \uc774\uba74",
+            "is_illuminance": "\ud604\uc7ac {entity_name}\uc758 \uc870\ub3c4\uac00 ~ \uc774\uba74",
+            "is_power": "\ud604\uc7ac {entity_name}\uc758 \uc18c\ube44 \uc804\ub825\uc774 ~ \uc774\uba74",
+            "is_power_factor": "\ud604\uc7ac {entity_name}\uc758 \uc5ed\ub960\uc774 ~ \uc774\uba74",
+            "is_pressure": "\ud604\uc7ac {entity_name}\uc758 \uc555\ub825\uc774 ~ \uc774\uba74",
+            "is_signal_strength": "\ud604\uc7ac {entity_name}\uc758 \uc2e0\ud638 \uac15\ub3c4\uac00 ~ \uc774\uba74",
+            "is_temperature": "\ud604\uc7ac {entity_name}\uc758 \uc628\ub3c4\uac00 ~ \uc774\uba74",
+            "is_timestamp": "\ud604\uc7ac {entity_name}\uc758 \uc2dc\uac01\uc774 ~ \uc774\uba74",
+            "is_value": "\ud604\uc7ac {entity_name}\uc758 \uac12\uc774 ~ \uc774\uba74",
+            "is_voltage": "\ud604\uc7ac {entity_name}\uc758 \uc804\uc555\uc774 ~ \uc774\uba74"
         },
         "trigger_type": {
-            "battery_level": "{entity_name} \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubc14\ub014 \ub54c",
-            "humidity": "{entity_name} \uc2b5\ub3c4\uac00 \ubc14\ub014 \ub54c",
-            "illuminance": "{entity_name} \uc870\ub3c4\uac00 \ubc14\ub014 \ub54c",
-            "power": "{entity_name} \uc18c\ube44 \uc804\ub825\uc774 \ubc14\ub014 \ub54c",
-            "pressure": "{entity_name} \uc555\ub825\uc774 \ubc14\ub014 \ub54c",
-            "signal_strength": "{entity_name} \uc2e0\ud638 \uac15\ub3c4\uac00 \ubc14\ub014 \ub54c",
-            "temperature": "{entity_name} \uc628\ub3c4\uac00 \ubc14\ub014 \ub54c",
-            "timestamp": "{entity_name} \uc2dc\uac01\uc774 \ubc14\ub014 \ub54c",
-            "value": "{entity_name} \uac12\uc774 \ubc14\ub014 \ub54c"
+            "battery_level": "{entity_name}\uc758 \ubc30\ud130\ub9ac \uc794\ub7c9\uc774 \ubcc0\ud560 \ub54c",
+            "carbon_dioxide": "{entity_name}\uc758 \uc774\uc0b0\ud654\ud0c4\uc18c \ub18d\ub3c4\uac00 \ubcc0\ud560 \ub54c",
+            "carbon_monoxide": "{entity_name}\uc758 \uc77c\uc0b0\ud654\ud0c4\uc18c \ub18d\ub3c4\uac00 \ubcc0\ud560 \ub54c",
+            "current": "{entity_name}\uc758 \uc804\ub958\uac00 \ubcc0\ud560 \ub54c",
+            "energy": "{entity_name}\uc758 \uc5d0\ub108\uc9c0\uac00 \ubcc0\ud560 \ub54c",
+            "humidity": "{entity_name}\uc758 \uc2b5\ub3c4\uac00 \ubcc0\ud560 \ub54c",
+            "illuminance": "{entity_name}\uc758 \uc870\ub3c4\uac00 \ubcc0\ud560 \ub54c",
+            "power": "{entity_name}\uc758 \uc18c\ube44 \uc804\ub825\uc774 \ubcc0\ud560 \ub54c",
+            "power_factor": "{entity_name}\uc758 \uc5ed\ub960\uc774 \ubcc0\ud560 \ub54c",
+            "pressure": "{entity_name}\uc758 \uc555\ub825\uc774 \ubcc0\ud560 \ub54c",
+            "signal_strength": "{entity_name}\uc758 \uc2e0\ud638 \uac15\ub3c4\uac00 \ubcc0\ud560 \ub54c",
+            "temperature": "{entity_name}\uc758 \uc628\ub3c4\uac00 \ubcc0\ud560 \ub54c",
+            "timestamp": "{entity_name}\uc758 \uc2dc\uac01\uc774 \ubcc0\ud560 \ub54c",
+            "value": "{entity_name}\uc758 \uac12\uc774 \ubcc0\ud560 \ub54c",
+            "voltage": "{entity_name}\uc758 \uc804\uc555\uc774 \ubcc0\ud560 \ub54c"
         }
     },
     "state": {

@@ -1,8 +1,9 @@
 """Device discovery functions for Zigbee Home Automation."""
+from __future__ import annotations
 
 from collections import Counter
 import logging
-from typing import Callable, List, Tuple
+from typing import Callable
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
@@ -34,10 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 async def async_add_entities(
     _async_add_entities: Callable,
-    entities: List[
-        Tuple[
+    entities: list[
+        tuple[
             zha_typing.ZhaEntityType,
-            Tuple[str, zha_typing.ZhaDeviceType, List[zha_typing.ChannelType]],
+            tuple[str, zha_typing.ZhaDeviceType, list[zha_typing.ChannelType]],
         ]
     ],
     update_before_add: bool = True,
@@ -235,9 +236,9 @@ class GroupProbe:
     @staticmethod
     def determine_entity_domains(
         hass: HomeAssistantType, group: zha_typing.ZhaGroupType
-    ) -> List[str]:
+    ) -> list[str]:
         """Determine the entity domains for this group."""
-        entity_domains: List[str] = []
+        entity_domains: list[str] = []
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
         all_domain_occurrences = []
         for member in group.members:

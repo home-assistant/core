@@ -1,7 +1,9 @@
 """Kuler Sky light platform."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Callable, List
+from typing import Callable
 
 import pykulersky
 
@@ -34,7 +36,7 @@ DISCOVERY_INTERVAL = timedelta(seconds=60)
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Kuler sky light devices."""
     if DOMAIN not in hass.data:

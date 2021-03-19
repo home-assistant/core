@@ -1,4 +1,6 @@
 """Websocket API for automation."""
+import json
+
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -21,7 +23,13 @@ from homeassistant.helpers.script import (
     debug_stop,
 )
 
-from .trace import get_debug_trace, get_debug_traces
+from .trace import (
+    DATA_AUTOMATION_TRACE,
+    TraceJSONEncoder,
+    get_debug_trace,
+    get_debug_traces,
+    get_debug_traces_for_automation,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -31,6 +39,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, websocket_automation_trace_get)
     websocket_api.async_register_command(hass, websocket_automation_trace_list)
+    websocket_api.async_register_command(hass, websocket_automation_trace_contexts)
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_clear)
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_list)
     websocket_api.async_register_command(hass, websocket_automation_breakpoint_set)
@@ -50,23 +59,61 @@ def async_setup(hass: HomeAssistant) -> None:
     }
 )
 def websocket_automation_trace_get(hass, connection, msg):
-    """Get automation traces."""
+    """Get an automation trace."""
     automation_id = msg["automation_id"]
     run_id = msg["run_id"]
 
     trace = get_debug_trace(hass, automation_id, run_id)
+    message = websocket_api.messages.result_message(msg["id"], trace)
 
-    connection.send_result(msg["id"], trace)
+    connection.send_message(json.dumps(message, cls=TraceJSONEncoder, allow_nan=False))
 
 
 @callback
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "automation/trace/list"})
+@websocket_api.websocket_command(
+    {vol.Required("type"): "automation/trace/list", vol.Optional("automation_id"): str}
+)
 def websocket_automation_trace_list(hass, connection, msg):
     """Summarize automation traces."""
-    automation_traces = get_debug_traces(hass, summary=True)
+    automation_id = msg.get("automation_id")
+
+    if not automation_id:
+        automation_traces = get_debug_traces(hass, summary=True)
+    else:
+        automation_traces = get_debug_traces_for_automation(
+            hass, automation_id, summary=True
+        )
 
     connection.send_result(msg["id"], automation_traces)
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "automation/trace/contexts",
+        vol.Optional("automation_id"): str,
+    }
+)
+def websocket_automation_trace_contexts(hass, connection, msg):
+    """Retrieve contexts we have traces for."""
+    automation_id = msg.get("automation_id")
+
+    if automation_id is not None:
+        values = {
+            automation_id: hass.data[DATA_AUTOMATION_TRACE].get(automation_id, {})
+        }
+    else:
+        values = hass.data[DATA_AUTOMATION_TRACE]
+
+    contexts = {
+        trace.context.id: {"run_id": trace.run_id, "automation_id": automation_id}
+        for automation_id, traces in values.items()
+        for trace in traces.values()
+    }
+
+    connection.send_result(msg["id"], contexts)
 
 
 @callback

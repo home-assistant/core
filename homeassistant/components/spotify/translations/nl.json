@@ -18,5 +18,10 @@
                 "title": "Verifieer de integratie opnieuw"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API-eindpunt is bereikbaar"
+        }
     }
 }

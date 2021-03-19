@@ -14,6 +14,13 @@ DOMAIN = "lcn"
 DATA_LCN = "lcn"
 DEFAULT_NAME = "pchk"
 
+CONNECTION = "connection"
+CONF_HARDWARE_SERIAL = "hardware_serial"
+CONF_SOFTWARE_SERIAL = "software_serial"
+CONF_HARDWARE_TYPE = "hardware_type"
+CONF_RESOURCE = "resource"
+CONF_DOMAIN_DATA = "domain_data"
+
 CONF_CONNECTIONS = "connections"
 CONF_SK_NUM_TRIES = "sk_num_tries"
 CONF_OUTPUT = "output"

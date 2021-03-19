@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.7.2
+    rev: v2.10.1
     hooks:
       - id: pyupgrade
         args: [--py38-plus]
@@ -32,6 +32,7 @@ repos:
           # default yet due to https://github.com/plinss/flake8-noqa/issues/1
           # - flake8-noqa==1.1.0
           - pydocstyle==5.1.1
+          - flake8-comprehensions==3.4.0
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.0
@@ -67,6 +68,19 @@ repos:
     hooks:
       - id: prettier
         stages: [manual]
+  - repo: https://github.com/cdce8p/python-typing-update
+    rev: v0.3.0
+    hooks:
+      # Run `python-typing-update` hook manually from time to time
+      # to update python typing syntax.
+      # Will require manual work, before submitting changes!
+      - id: python-typing-update
+        stages: [manual]
+        args:
+          - --py38-plus
+          - --force
+          - --keep-updates
+        files: ^(homeassistant|tests|script)/.+\.py$
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible

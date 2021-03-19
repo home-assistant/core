@@ -30,13 +30,13 @@ from .const import (
 ##################
 
 ga_validator = vol.Any(
-    cv.matches_regex(GroupAddress.ADDRESS_RE),
+    cv.matches_regex(GroupAddress.ADDRESS_RE.pattern),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123')",
 )
 
 ia_validator = vol.Any(
-    cv.matches_regex(IndividualAddress.ADDRESS_RE),
+    cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
@@ -46,6 +46,8 @@ sync_state_validator = vol.Any(
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
+
+sensor_type_validator = vol.Any(int, str)
 
 
 ##############
@@ -94,12 +96,12 @@ class BinarySensorSchema:
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Optional(CONF_INVERT, default=False): cv.boolean,
                 vol.Required(CONF_STATE_ADDRESS): ga_validator,
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
-                vol.Optional(CONF_INVERT): cv.boolean,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
         ),
@@ -252,16 +254,30 @@ class ExposeSchema:
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_DEFAULT = "default"
+    EXPOSE_TIME_TYPES = [
+        "time",
+        "date",
+        "datetime",
+    ]
 
-    SCHEMA = vol.Schema(
+    EXPOSE_TIME_SCHEMA = vol.Schema(
         {
-            vol.Required(CONF_KNX_EXPOSE_TYPE): vol.Any(int, float, str),
+            vol.Required(CONF_KNX_EXPOSE_TYPE): vol.All(
+                cv.string, str.lower, vol.In(EXPOSE_TIME_TYPES)
+            ),
             vol.Required(KNX_ADDRESS): ga_validator,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_id,
+        }
+    )
+    EXPOSE_SENSOR_SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_KNX_EXPOSE_TYPE): sensor_type_validator,
+            vol.Required(KNX_ADDRESS): ga_validator,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
             vol.Optional(CONF_KNX_EXPOSE_ATTRIBUTE): cv.string,
             vol.Optional(CONF_KNX_EXPOSE_DEFAULT): cv.match_all,
         }
     )
+    SCHEMA = vol.Any(EXPOSE_TIME_SCHEMA, EXPOSE_SENSOR_SCHEMA)
 
 
 class FanSchema:
@@ -417,7 +433,7 @@ class SensorSchema:
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
             vol.Required(CONF_STATE_ADDRESS): ga_validator,
-            vol.Required(CONF_TYPE): vol.Any(int, float, str),
+            vol.Required(CONF_TYPE): sensor_type_validator,
         }
     )
 
@@ -432,9 +448,9 @@ class SwitchSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_INVERT, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_validator,
-            vol.Optional(CONF_INVERT): cv.boolean,
         }
     )
 
