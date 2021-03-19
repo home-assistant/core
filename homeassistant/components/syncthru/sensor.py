@@ -2,12 +2,21 @@
 
 import logging
 
-from pysyncthru import SYNCTHRU_STATE_HUMAN, SyncThru
+from pysyncthru import SyncThru, SyncthruState
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_RESOURCE,
+    CONF_URL,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_OK,
+    STATE_PROBLEM,
+    STATE_UNKNOWN,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -26,6 +35,16 @@ DEFAULT_MONITORED_CONDITIONS.extend([f"toner_{key}" for key in TONER_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"tray_{key}" for key in TRAYS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"output_tray_{key}" for key in OUTPUT_TRAYS])
+
+SYNCTHRU_STATE_HUMAN = {
+    SyncthruState.INVALID: STATE_PROBLEM,
+    SyncthruState.OFFLINE: STATE_OFF,
+    SyncthruState.NORMAL: STATE_OK,
+    SyncthruState.UNKNOWN: STATE_UNKNOWN,
+    SyncthruState.WARNING: STATE_PROBLEM,
+    SyncthruState.TESTING: STATE_OK,
+    SyncthruState.ERROR: STATE_PROBLEM,
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
