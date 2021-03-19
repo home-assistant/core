@@ -47,13 +47,10 @@ class KNXFan(KnxEntity, FanEntity):
         self._device: XknxFan
         super().__init__(device)
 
-        self._step_range: tuple[int, int] | None
+        self._step_range: tuple[int, int] | None = None
         if device.max_step:
             # FanSpeedMode.STEP:
             self._step_range = (1, device.max_step)
-        else:
-            # FanSpeedMode.PERCENT
-            self._step_range = None
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
