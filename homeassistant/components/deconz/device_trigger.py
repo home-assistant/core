@@ -453,6 +453,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         event_trigger.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
         event_trigger.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, **trigger},
     }
+
     event_config = event_trigger.TRIGGER_SCHEMA(event_config)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
