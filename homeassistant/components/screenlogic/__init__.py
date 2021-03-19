@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if mac in discovered_gateways:
         connect_info = discovered_gateways[mac]
     else:
-        _LOGGER.warning("Gateway rediscovery failed.")
+        _LOGGER.warning("Gateway rediscovery failed")
         # Static connection defined or fallback from discovery
         connect_info = {
             SL_GATEWAY_NAME: name_for_mac(mac),

@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
         account_name = account_config.get(account.iban)
@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
             _LOGGER.info(
-                "skipping holdings %s for bank %s", account.accountnumber, fints_name
+                "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue
 

@@ -41,7 +41,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the SyncThru component."""
     _LOGGER.warning(
         "Loading syncthru via platform config is deprecated and no longer "
-        "necessary as of 0.113. Please remove it from your configuration YAML."
+        "necessary as of 0.113; Please remove it from your configuration YAML"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(

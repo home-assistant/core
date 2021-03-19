@@ -105,7 +105,7 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
         ):
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.error("screenlogic set_temperature error")
+            _LOGGER.error("Screenlogic set_temperature error")
 
     async def async_set_operation_mode(self, operation_mode) -> None:
         """Set the operation mode."""
@@ -115,7 +115,7 @@ class ScreenLogicWaterHeater(ScreenlogicEntity, WaterHeaterEntity):
         ):
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.error("screenlogic set_operation_mode error")
+            _LOGGER.error("Screenlogic set_operation_mode error")
 
     @property
     def body(self):
