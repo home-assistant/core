@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
+# pylint: disable=unused-import
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +46,14 @@ class SalusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def async_step_user(self, user_input):
+    def __init__(self):
+        """Initialize SalusConfigFlow data updater."""
+        self.user_data = None
+        self.devices = []
+
+        super().__init__()
+
+    async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
 
         errors = {}
@@ -59,8 +67,8 @@ class SalusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except (ConnectTimeout, HTTPError):
                 errors["base"] = "cannot_connect"
-            except Exception as e:  # pylint: disable=broad-except
-                if e.__str__() == "Invalid credentials":
+            except Exception as error:  # pylint: disable=broad-except
+                if error.__str__() == "Invalid credentials":
                     errors["base"] = "invalid_auth"
                 else:
                     _LOGGER.exception("Unexpected exception")
