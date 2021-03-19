@@ -23,7 +23,8 @@
         "data": {
           "floor_temperature": "Floor Temperature",
           "read_precision": "Read Precision",
-          "set_precision": "Set Precision"
+          "set_precision": "Set Precision",
+          "temporary_override_mode": "Temporary Setpoint Override Mode"
         }
       }
     }
