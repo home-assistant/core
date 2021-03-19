@@ -318,7 +318,7 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
     )
     await hass.async_block_till_done()
 
-    # TFakeest webhook thermostat mode change to "Max"
+    # Test webhook thermostat mode change to "Max"
     response = {
         "room_id": "2746182631",
         "home": {
