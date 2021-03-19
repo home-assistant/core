@@ -15,21 +15,12 @@ async def test_light_setup_and_services(hass, light_entry):
     """Test setup and services."""
     webhook_id = light_entry.data[CONF_WEBHOOK_ID]
 
-    assert (
-        hass.data["netatmo"][light_entry.entry_id]["netatmo_data_handler"].webhook
-        is False
-    )
-
     # Fake webhook activation
     webhook_data = {
         "push_type": "webhook_activation",
     }
     await simulate_webhook(hass, webhook_id, webhook_data)
     await hass.async_block_till_done()
-    assert (
-        hass.data["netatmo"][light_entry.entry_id]["netatmo_data_handler"].webhook
-        is True
-    )
 
     light_entity = "light.netatmo_garden"
     assert hass.states.get(light_entity).state == "unavailable"
