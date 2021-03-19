@@ -2159,7 +2159,7 @@ async def test_deprecated_value_template_for_position_topic_warning(
     await hass.async_block_till_done()
 
     assert (
-        "using 'value_template' for 'position_topic' is deprecated "
+        "Using 'value_template' for 'position_topic' is deprecated "
         "and will be removed from Home Assistant in version 2021.6, "
         "please replace it with 'position_template'"
     ) in caplog.text

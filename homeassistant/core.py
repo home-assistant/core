@@ -214,9 +214,9 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
-    auth: "AuthManager"
-    http: "HomeAssistantHTTP" = None  # type: ignore
-    config_entries: "ConfigEntries" = None  # type: ignore
+    auth: AuthManager
+    http: HomeAssistantHTTP = None  # type: ignore
+    config_entries: ConfigEntries = None  # type: ignore
 
     def __init__(self) -> None:
         """Initialize new Home Assistant object."""
@@ -515,11 +515,13 @@ class HomeAssistant:
             if self.state == CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
-                _LOGGER.info("async_stop called twice: ignored")
+                _LOGGER.info("Additional call to async_stop was ignored")
                 return
             if self.state == CoreState.starting:
                 # This may not work
-                _LOGGER.warning("async_stop called before startup is complete")
+                _LOGGER.warning(
+                    "Stopping Home Assistant before startup has completed may fail"
+                )
 
         # stage 1
         self.state = CoreState.stopping

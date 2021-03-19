@@ -291,7 +291,7 @@ class _ScriptRun:
     def __init__(
         self,
         hass: HomeAssistant,
-        script: "Script",
+        script: Script,
         variables: dict[str, Any],
         context: Context | None,
         log_exceptions: bool,

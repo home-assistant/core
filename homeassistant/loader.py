@@ -103,7 +103,7 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
 
 
 async def _async_get_custom_components(
-    hass: "HomeAssistant",
+    hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return list of custom integrations."""
     if hass.config.safe_mode:
@@ -144,7 +144,7 @@ async def _async_get_custom_components(
 
 
 async def async_get_custom_components(
-    hass: "HomeAssistant",
+    hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
     reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
@@ -276,7 +276,7 @@ class Integration:
 
     @classmethod
     def resolve_from_root(
-        cls, hass: "HomeAssistant", root_module: ModuleType, domain: str
+        cls, hass: HomeAssistant, root_module: ModuleType, domain: str
     ) -> Integration | None:
         """Resolve an integration from a root module."""
         for base in root_module.__path__:  # type: ignore
@@ -300,7 +300,7 @@ class Integration:
         return None
 
     @classmethod
-    def resolve_legacy(cls, hass: "HomeAssistant", domain: str) -> Integration | None:
+    def resolve_legacy(cls, hass: HomeAssistant, domain: str) -> Integration | None:
         """Resolve legacy component.
 
         Will create a stub manifest.
@@ -319,7 +319,7 @@ class Integration:
 
     def __init__(
         self,
-        hass: "HomeAssistant",
+        hass: HomeAssistant,
         pkg_path: str,
         file_path: pathlib.Path,
         manifest: Manifest,
@@ -494,7 +494,7 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
-async def async_get_integration(hass: "HomeAssistant", domain: str) -> Integration:
+async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration."""
     cache = hass.data.get(DATA_INTEGRATIONS)
     if cache is None:
@@ -579,7 +579,7 @@ class CircularDependency(LoaderError):
 
 
 def _load_file(
-    hass: "HomeAssistant", comp_or_platform: str, base_paths: list[str]
+    hass: HomeAssistant, comp_or_platform: str, base_paths: list[str]
 ) -> ModuleType | None:
     """Try to load specified file.
 
@@ -640,7 +640,7 @@ def _load_file(
 class ModuleWrapper:
     """Class to wrap a Python module and auto fill in hass argument."""
 
-    def __init__(self, hass: "HomeAssistant", module: ModuleType) -> None:
+    def __init__(self, hass: HomeAssistant, module: ModuleType) -> None:
         """Initialize the module wrapper."""
         self._hass = hass
         self._module = module
@@ -704,7 +704,7 @@ def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
 
 
 async def _async_component_dependencies(
-    hass: "HomeAssistant",
+    hass: HomeAssistant,
     start_domain: str,
     integration: Integration,
     loaded: set[str],

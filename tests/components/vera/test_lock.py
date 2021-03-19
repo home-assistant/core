@@ -13,7 +13,7 @@ async def test_lock(
     hass: HomeAssistant, vera_component_factory: ComponentFactory
 ) -> None:
     """Test function."""
-    vera_device = MagicMock(spec=pv.VeraLock)  # type: pv.VeraLock
+    vera_device: pv.VeraLock = MagicMock(spec=pv.VeraLock)
     vera_device.device_id = 1
     vera_device.vera_device_id = vera_device.device_id
     vera_device.comm_failure = False
