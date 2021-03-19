@@ -82,7 +82,7 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(
                     CONF_FORECAST_SENSORS_DAYS, default=DEFAULT_FORECAST_SENSORS_DAYS
-                ): vol.Range(min_included=0, max_included=7),
+                ): vol.Range(min_included=0, max_included=6),
                 vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
@@ -120,7 +120,7 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                 ): vol.In(FORECAST_MODES),
                 vol.Optional(
                     CONF_FORECAST_SENSORS_DAYS, default=DEFAULT_FORECAST_SENSORS_DAYS
-                ): vol.Range(min_included=0, max_included=7),
+                ): vol.Range(min_included=0, max_included=6),
                 vol.Optional(
                     CONF_LANGUAGE,
                     default=self.config_entry.options.get(
