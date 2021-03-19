@@ -395,11 +395,6 @@ def websocket_get_config_parameters(
     )
 
 
-def convert_log_level_to_enum(value: str) -> LogLevel:
-    """Convert log level string to LogLevel enum."""
-    return LogLevel[value.upper()]
-
-
 def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     """Validate that filename is provided if log_to_file is True."""
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
@@ -420,8 +415,7 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
                     vol.Optional(LEVEL): vol.All(
                         cv.string,
                         vol.Lower,
-                        vol.In([log_level.name.lower() for log_level in LogLevel]),
-                        lambda val: LogLevel[val.upper()],
+                        vol.In([log_level.value for log_level in LogLevel]),
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
                     vol.Optional(FILENAME): cv.string,

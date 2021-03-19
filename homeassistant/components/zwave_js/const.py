@@ -43,6 +43,12 @@ ATTR_PROPERTY_KEY_NAME = "property_key_name"
 ATTR_PROPERTY = "property"
 ATTR_PROPERTY_KEY = "property_key"
 ATTR_PARAMETERS = "parameters"
+ATTR_EVENT = "event"
+ATTR_EVENT_LABEL = "event_label"
+ATTR_TYPE_ = "type_"
+ATTR_EVENT_TYPE = "event_type"
+ATTR_EVENT_DATA = "event_data"
+ATTR_DATA_TYPE = "data_type"
 
 # service constants
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"

@@ -8,7 +8,10 @@ from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.notification import Notification
+from zwave_js_server.model.notification import (
+    EntryControlNotification,
+    NotificationNotification,
+)
 from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +32,12 @@ from .api import async_register_api
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
+    ATTR_DATA_TYPE,
     ATTR_ENDPOINT,
+    ATTR_EVENT,
+    ATTR_EVENT_DATA,
+    ATTR_EVENT_LABEL,
+    ATTR_EVENT_TYPE,
     ATTR_HOME_ID,
     ATTR_LABEL,
     ATTR_NODE_ID,
@@ -39,6 +47,7 @@ from .const import (
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     ATTR_TYPE,
+    ATTR_TYPE_,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -190,21 +199,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     @callback
-    def async_on_notification(notification: Notification) -> None:
+    def async_on_notification(
+        notification: EntryControlNotification | NotificationNotification,
+    ) -> None:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
-        hass.bus.async_fire(
-            ZWAVE_JS_EVENT,
-            {
-                ATTR_TYPE: "notification",
-                ATTR_DOMAIN: DOMAIN,
-                ATTR_NODE_ID: notification.node.node_id,
-                ATTR_HOME_ID: client.driver.controller.home_id,
-                ATTR_DEVICE_ID: device.id,  # type: ignore
-                ATTR_LABEL: notification.notification_label,
-                ATTR_PARAMETERS: notification.parameters,
-            },
-        )
+        if isinstance(notification, EntryControlNotification):
+            hass.bus.async_fire(
+                ZWAVE_JS_EVENT,
+                {
+                    ATTR_TYPE: "notification",
+                    ATTR_DOMAIN: DOMAIN,
+                    ATTR_NODE_ID: notification.node.node_id,
+                    ATTR_HOME_ID: client.driver.controller.home_id,
+                    ATTR_DEVICE_ID: device.id,  # type: ignore
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_DATA_TYPE: notification.data_type,
+                    ATTR_EVENT_DATA: notification.event_data,
+                },
+            )
+        else:
+            hass.bus.async_fire(
+                ZWAVE_JS_EVENT,
+                {
+                    ATTR_TYPE: "notification",
+                    ATTR_DOMAIN: DOMAIN,
+                    ATTR_NODE_ID: notification.node.node_id,
+                    ATTR_HOME_ID: client.driver.controller.home_id,
+                    ATTR_DEVICE_ID: device.id,  # type: ignore
+                    ATTR_LABEL: notification.label,
+                    ATTR_TYPE_: notification.type_,
+                    ATTR_EVENT: notification.event,
+                    ATTR_EVENT_LABEL: notification.event_label,
+                    ATTR_PARAMETERS: notification.parameters,
+                },
+            )
 
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     # connect and throw error if connection failed
