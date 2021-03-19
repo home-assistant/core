@@ -6,7 +6,6 @@ from aurorapy.client import AuroraError, AuroraSerialClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config: ConfigEntry, add_entities, discovery_info=None):
+def setup_platform(hass, config: dict, add_entities, discovery_info=None):
     """Set up single sensor based on configuration.yaml (DEPRECATED)."""
     devices = []
     comport = config[CONF_DEVICE]
