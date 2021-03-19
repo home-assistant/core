@@ -5,7 +5,7 @@ from urllib.parse import urlsplit
 from pyoctoprintapi import ApiError, OctoprintClient, OctoprintException
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries, data_entry_flow, exceptions
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -45,17 +45,48 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Handle a config flow for OctoPrint."""
         self.discovery_schema = None
-        self.user_input = {}
+        self._user_input = {}
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        # When coming back from the progress steps, the user_input is stored in the
+        # instance variable instead of being passed in
+        if not user_input and len(self._user_input) > 0:
+            user_input = self._user_input
+
         if user_input is None:
             data = self.discovery_schema or _schema_with_defaults()
             return self.async_show_form(step_id="user", data_schema=data)
 
-        self.user_input = user_input
         if CONF_API_KEY in user_input:
-            return await self.async_step_finish(user_input)
+            try:
+                return await self._finish_config(user_input)
+            except data_entry_flow.AbortFlow as err:
+                raise err from None
+            except CannotConnect:
+                return self.async_show_form(
+                    step_id="user",
+                    errors={"base": "cannot_connect"},
+                    data_schema=_schema_with_defaults(
+                        user_input.get(CONF_USERNAME),
+                        user_input[CONF_HOST],
+                        user_input[CONF_PORT],
+                        user_input[CONF_PATH],
+                        user_input[CONF_PORT],
+                    ),
+                )
+            except Exception:  # pylint: disable=broad-except
+                return self.async_show_form(
+                    step_id="user",
+                    errors={"base": "unknown"},
+                    data_schema=_schema_with_defaults(
+                        user_input.get(CONF_USERNAME),
+                        user_input[CONF_HOST],
+                        user_input[CONF_PORT],
+                        user_input[CONF_PATH],
+                        user_input[CONF_PORT],
+                    ),
+                )
 
         self.api_key_task = None
         return await self.async_step_get_api_key(user_input)
@@ -63,7 +94,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_get_api_key(self, user_input=None):
         """Get an Application Api Key."""
         if not self.api_key_task:
-            self.api_key_task = self.hass.async_create_task(self._async_get_auth_key())
+            self.api_key_task = self.hass.async_create_task(
+                self._async_get_auth_key(user_input)
+            )
             return self.async_show_progress(
                 step_id="get_api_key", progress_action="get_api_key"
             )
@@ -71,17 +104,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await self.api_key_task
         except OctoprintException as err:
-            _LOGGER.error("Failed to get an application key : %s", err)
+            _LOGGER.exception("Failed to get an application key: %s", err)
             return self.async_show_progress_done(next_step_id="auth_failed")
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Failed to get an application key : %s", err)
+            _LOGGER.exception("Failed to get an application key : %s", err)
             return self.async_show_progress_done(next_step_id="auth_failed")
 
-        return self.async_show_progress_done(next_step_id="finish")
+        # store this off here to pick back up in the user step
+        self._user_input = user_input
+        return self.async_show_progress_done(next_step_id="user")
 
-    async def async_step_finish(self, user_input=None):
+    async def _finish_config(self, user_input):
         """Finish the configuration setup."""
-        user_input = user_input or self.user_input
         session = async_get_clientsession(self.hass)
         octoprint = OctoprintClient(
             user_input[CONF_HOST],
@@ -95,11 +129,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             discovery = await octoprint.get_discovery_info()
         except ApiError as err:
-            _LOGGER.exception("Failed to connect to printer: %r", err)
-            return self.async_abort(reason="cannot_connect")
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %r", err)
-            return self.async_abort(reason="unknown")
+            _LOGGER.exception("Failed to connect to printer")
+            raise CannotConnect from err
 
         await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
@@ -149,26 +180,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def _async_get_auth_key(self):
+    async def _async_get_auth_key(self, user_input: dict):
         """Get application api key."""
         session = async_get_clientsession(self.hass)
         octoprint = OctoprintClient(
-            self.user_input[CONF_HOST],
+            user_input[CONF_HOST],
             session,
-            self.user_input[CONF_PORT],
-            self.user_input[CONF_SSL],
-            self.user_input[CONF_PATH],
+            user_input[CONF_PORT],
+            user_input[CONF_SSL],
+            user_input[CONF_PATH],
         )
 
         try:
-            self.user_input[CONF_API_KEY] = await octoprint.request_app_key(
-                "Home Assistant", self.user_input[CONF_USERNAME], 30
+            user_input[CONF_API_KEY] = await octoprint.request_app_key(
+                "Home Assistant", user_input[CONF_USERNAME], 30
             )
         finally:
             # Continue the flow after show progress when the task is done.
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_configure(
-                    flow_id=self.flow_id, user_input=self.user_input
+                    flow_id=self.flow_id, user_input=user_input
                 )
             )
 

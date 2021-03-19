@@ -35,17 +35,7 @@ async def test_form(hass):
     with patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "testuser",
-                "host": "1.1.1.1",
-                "name": "Printer",
-                "port": 81,
-                "ssl": True,
-                "path": "/",
-            },
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
     assert result["type"] == "progress_done"
 
@@ -63,6 +53,15 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+            },
         )
         await hass.async_block_till_done()
 
@@ -112,10 +111,21 @@ async def test_form_cannot_connect(hass):
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=ApiError,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+            },
+        )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_form_unknown_exception(hass):
@@ -149,10 +159,21 @@ async def test_form_unknown_exception(hass):
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=Exception,
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+            },
+        )
 
-    assert result["type"] == "abort"
-    assert result["reason"] == "unknown"
+    assert result["type"] == "form"
+    assert result["errors"]["base"] == "unknown"
 
 
 async def test_show_zerconf_form(hass: HomeAssistant) -> None:
@@ -205,6 +226,15 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+            },
         )
         await hass.async_block_till_done()
 
@@ -259,6 +289,15 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+            },
         )
         await hass.async_block_till_done()
 
@@ -308,9 +347,6 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     with patch(
-        "pyoctoprintapi.OctoprintClient.get_server_info",
-        return_value=True,
-    ), patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         return_value=DiscoverySettings({"upnpUuid": "uuid"}),
     ), patch(
