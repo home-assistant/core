@@ -171,10 +171,3 @@ class MaxLengthExceeded(HomeAssistantError):
         self.value = value
         self.property_name = property_name
         self.max_length = max_length
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        return (
-            f"Value {self.value} for property {self.property_name} has a max length "
-            f"of {self.max_length} characters"
-        )
