@@ -2,14 +2,12 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.wallbox import config_flow
 from homeassistant.components.wallbox.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.wallbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
