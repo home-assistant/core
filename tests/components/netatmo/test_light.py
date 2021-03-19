@@ -46,6 +46,8 @@ async def test_light_setup_and_services(hass, light_entry):
     }
     await simulate_webhook(hass, webhook_id, response)
 
+    assert hass.states.get(light_entity).state == "on"
+
     # Test turning light off
     with patch("pyatmo.camera.CameraData.set_state") as mock_set_state:
         await hass.services.async_call(
