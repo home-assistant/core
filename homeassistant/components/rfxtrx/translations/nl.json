@@ -39,21 +39,28 @@
         "error": {
             "already_configured_device": "Apparaat is al geconfigureerd",
             "invalid_event_code": "Ongeldige gebeurteniscode",
+            "invalid_input_off_delay": "Ongeldige invoer voor uitschakelvertraging",
             "unknown": "Onverwachte fout"
         },
         "step": {
             "prompt_options": {
                 "data": {
                     "automatic_add": "Schakel automatisch toevoegen in",
-                    "debug": "Foutopsporing inschakelen"
-                }
+                    "debug": "Foutopsporing inschakelen",
+                    "device": "Selecteer het apparaat om te configureren",
+                    "event_code": "Voer de gebeurteniscode in om toe te voegen",
+                    "remove_device": "Apparaat selecteren dat u wilt verwijderen"
+                },
+                "title": "Rfxtrx-opties"
             },
             "set_device_options": {
                 "data": {
                     "data_bit": "Aantal databits",
                     "fire_event": "Schakel apparaatgebeurtenis in",
                     "off_delay": "Uitschakelvertraging",
-                    "off_delay_enabled": "Schakel uitschakelvertraging in"
+                    "off_delay_enabled": "Schakel uitschakelvertraging in",
+                    "replace_device": "Selecteer apparaat dat u wilt vervangen",
+                    "signal_repetitions": "Aantal signaalherhalingen"
                 },
                 "title": "Configureer apparaatopties"
             }

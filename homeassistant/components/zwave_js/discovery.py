@@ -1,7 +1,8 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Generator, List, Optional, Set, Union
+from typing import Generator
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.device_class import DeviceClassItem
@@ -22,7 +23,7 @@ class ZwaveDiscoveryInfo:
     # the home assistant platform for which an entity should be created
     platform: str
     # hint for the platform about this discovered entity
-    platform_hint: Optional[str] = ""
+    platform_hint: str | None = ""
 
 
 @dataclass
@@ -35,13 +36,13 @@ class ZWaveValueDiscoverySchema:
     """
 
     # [optional] the value's command class must match ANY of these values
-    command_class: Optional[Set[int]] = None
+    command_class: set[int] | None = None
     # [optional] the value's endpoint must match ANY of these values
-    endpoint: Optional[Set[int]] = None
+    endpoint: set[int] | None = None
     # [optional] the value's property must match ANY of these values
-    property: Optional[Set[Union[str, int]]] = None
+    property: set[str | int] | None = None
     # [optional] the value's metadata_type must match ANY of these values
-    type: Optional[Set[str]] = None
+    type: set[str] | None = None
 
 
 @dataclass
@@ -58,25 +59,25 @@ class ZWaveDiscoverySchema:
     # primary value belonging to this discovery scheme
     primary_value: ZWaveValueDiscoverySchema
     # [optional] hint for platform
-    hint: Optional[str] = None
+    hint: str | None = None
     # [optional] the node's manufacturer_id must match ANY of these values
-    manufacturer_id: Optional[Set[int]] = None
+    manufacturer_id: set[int] | None = None
     # [optional] the node's product_id must match ANY of these values
-    product_id: Optional[Set[int]] = None
+    product_id: set[int] | None = None
     # [optional] the node's product_type must match ANY of these values
-    product_type: Optional[Set[int]] = None
+    product_type: set[int] | None = None
     # [optional] the node's firmware_version must match ANY of these values
-    firmware_version: Optional[Set[str]] = None
+    firmware_version: set[str] | None = None
     # [optional] the node's basic device class must match ANY of these values
-    device_class_basic: Optional[Set[Union[str, int]]] = None
+    device_class_basic: set[str | int] | None = None
     # [optional] the node's generic device class must match ANY of these values
-    device_class_generic: Optional[Set[Union[str, int]]] = None
+    device_class_generic: set[str | int] | None = None
     # [optional] the node's specific device class must match ANY of these values
-    device_class_specific: Optional[Set[Union[str, int]]] = None
+    device_class_specific: set[str | int] | None = None
     # [optional] additional values that ALL need to be present on the node for this scheme to pass
-    required_values: Optional[List[ZWaveValueDiscoverySchema]] = None
+    required_values: list[ZWaveValueDiscoverySchema] | None = None
     # [optional] additional values that MAY NOT be present on the node for this scheme to pass
-    absent_values: Optional[List[ZWaveValueDiscoverySchema]] = None
+    absent_values: list[ZWaveValueDiscoverySchema] | None = None
     # [optional] bool to specify if this primary value may be discovered by multiple platforms
     allow_multi: bool = False
 
@@ -487,7 +488,7 @@ def check_value(value: ZwaveValue, schema: ZWaveValueDiscoverySchema) -> bool:
 
 @callback
 def check_device_class(
-    device_class: DeviceClassItem, required_value: Optional[Set[Union[str, int]]]
+    device_class: DeviceClassItem, required_value: set[str | int] | None
 ) -> bool:
     """Check if device class id or label matches."""
     if required_value is None:

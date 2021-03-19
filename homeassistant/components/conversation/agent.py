@@ -1,6 +1,7 @@
 """Agent foundation for conversation integration."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Optional
 
 from homeassistant.core import Context
 from homeassistant.helpers import intent
@@ -24,6 +25,6 @@ class AbstractConversationAgent(ABC):
 
     @abstractmethod
     async def async_process(
-        self, text: str, context: Context, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
         """Process a sentence."""

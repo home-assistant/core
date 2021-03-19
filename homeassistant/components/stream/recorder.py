@@ -1,8 +1,10 @@
 """Provide functionality to record stream."""
+from __future__ import annotations
+
 import logging
 import os
 import threading
-from typing import Deque, List
+from typing import Deque
 
 import av
 
@@ -115,7 +117,7 @@ class RecorderOutput(StreamOutput):
         """Return provider name."""
         return "recorder"
 
-    def prepend(self, segments: List[Segment]) -> None:
+    def prepend(self, segments: list[Segment]) -> None:
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 

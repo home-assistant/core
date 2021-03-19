@@ -90,7 +90,7 @@ def format_condition(condition: str) -> str:
     for key, value in CONDITIONS_MAP.items():
         if condition in value:
             return key
-    _LOGGER.error('condition "%s" not found in CONDITIONS_MAP', condition)
+    _LOGGER.error('Condition "%s" not found in CONDITIONS_MAP', condition)
     return condition
 
 
@@ -175,14 +175,14 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
             if self._town:
                 _LOGGER.debug(
-                    "town found for coordinates [%s, %s]: %s",
+                    "Town found for coordinates [%s, %s]: %s",
                     self._latitude,
                     self._longitude,
                     self._town,
                 )
         if not self._town:
             _LOGGER.error(
-                "town not found for coordinates [%s, %s]",
+                "Town not found for coordinates [%s, %s]",
                 self._latitude,
                 self._longitude,
             )
@@ -197,7 +197,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         daily = self._aemet.get_specific_forecast_town_daily(self._town[AEMET_ATTR_ID])
         if not daily:
             _LOGGER.error(
-                'error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
+                'Error fetching daily data for town "%s"', self._town[AEMET_ATTR_ID]
             )
 
         hourly = self._aemet.get_specific_forecast_town_hourly(
@@ -205,7 +205,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         )
         if not hourly:
             _LOGGER.error(
-                'error fetching hourly data for town "%s"', self._town[AEMET_ATTR_ID]
+                'Error fetching hourly data for town "%s"', self._town[AEMET_ATTR_ID]
             )
 
         station = None
@@ -215,7 +215,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             )
             if not station:
                 _LOGGER.error(
-                    'error fetching data for station "%s"',
+                    'Error fetching data for station "%s"',
                     self._station[AEMET_ATTR_IDEMA],
                 )
 

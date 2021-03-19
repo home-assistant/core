@@ -1,5 +1,5 @@
 """Support for interface with a Gree climate systems."""
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -38,7 +38,7 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
         return f"{self._mac}-panel-light"
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon for the device."""
         return "mdi:lightbulb"
 

@@ -207,7 +207,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await hass.async_add_executor_job(
             hass.data[DOMAIN][entry.entry_id][AUTH].dropwebhook
         )
-        _LOGGER.info("Unregister Netatmo webhook.")
+        _LOGGER.info("Unregister Netatmo webhook")
 
     await hass.data[DOMAIN][entry.entry_id][DATA_HANDLER].async_cleanup()
 

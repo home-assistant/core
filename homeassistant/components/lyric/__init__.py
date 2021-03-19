@@ -1,8 +1,10 @@
 """The Honeywell Lyric integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
@@ -147,7 +149,7 @@ class LyricEntity(CoordinatorEntity):
         device: LyricDevice,
         key: str,
         name: str,
-        icon: Optional[str],
+        icon: str | None,
     ) -> None:
         """Initialize the Honeywell Lyric entity."""
         super().__init__(coordinator)
@@ -190,7 +192,7 @@ class LyricDeviceEntity(LyricEntity):
     """Defines a Honeywell Lyric device entity."""
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this Honeywell Lyric instance."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac_id)},
