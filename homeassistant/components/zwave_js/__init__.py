@@ -47,7 +47,6 @@ from .const import (
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     ATTR_TYPE,
-    ATTR_TYPE_,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_INTEGRATION_CREATED_ADDON,
@@ -60,7 +59,8 @@ from .const import (
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
     PLATFORMS,
-    ZWAVE_JS_EVENT,
+    ZWAVE_JS_NOTIFICATION_EVENT,
+    ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
 from .discovery import async_discover_values
 from .helpers import get_device_id
@@ -178,9 +178,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if notification.metadata.states:
             value = notification.metadata.states.get(str(value), value)
         hass.bus.async_fire(
-            ZWAVE_JS_EVENT,
+            ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
             {
-                ATTR_TYPE: "value_notification",
                 ATTR_DOMAIN: DOMAIN,
                 ATTR_NODE_ID: notification.node.node_id,
                 ATTR_HOME_ID: client.driver.controller.home_id,
@@ -205,7 +204,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Relay stateless notification events from Z-Wave nodes to hass."""
         device = dev_reg.async_get_device({get_device_id(client, notification.node)})
         event_data = {
-            ATTR_TYPE: "notification",
             ATTR_DOMAIN: DOMAIN,
             ATTR_NODE_ID: notification.node.node_id,
             ATTR_HOME_ID: client.driver.controller.home_id,
@@ -227,14 +225,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 {
                     ATTR_COMMAND_CLASS_NAME: "Notification",
                     ATTR_LABEL: notification.label,
-                    ATTR_TYPE_: notification.type_,
+                    ATTR_TYPE: notification.type_,
                     ATTR_EVENT: notification.event,
                     ATTR_EVENT_LABEL: notification.event_label,
                     ATTR_PARAMETERS: notification.parameters,
                 }
             )
 
-        hass.bus.async_fire(ZWAVE_JS_EVENT, event_data)
+        hass.bus.async_fire(ZWAVE_JS_NOTIFICATION_EVENT, event_data)
 
     entry_hass_data: dict = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     # connect and throw error if connection failed
