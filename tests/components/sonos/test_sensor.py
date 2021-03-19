@@ -49,7 +49,6 @@ async def test_battery_missing_attributes(hass, config_entry, config, soco):
     assert battery_state.state == "unknown"
     assert battery_state.attributes.get("unit_of_measurement") == "%"
     assert battery_state.attributes.get("icon") == "mdi:battery-alert"
-    assert battery_state.attributes.get("battery_level") == 0
     assert not battery_state.attributes.get("charging")
     assert battery_state.attributes.get("power_source") == "unknown"
 
@@ -67,6 +66,5 @@ async def test_battery_attributes(hass, config_entry, config, soco):
     assert battery_state.state == "100"
     assert battery_state.attributes.get("unit_of_measurement") == "%"
     assert battery_state.attributes.get("icon") == "mdi:battery-charging-100"
-    assert battery_state.attributes.get("battery_level") == 100
     assert battery_state.attributes.get("charging")
     assert battery_state.attributes.get("power_source") == "SONOS_CHARGING_RING"
