@@ -3,12 +3,17 @@ import logging
 
 from screenlogicpy.const import ON_OFF
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_PROBLEM,
+    BinarySensorEntity,
+)
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {"alarm": DEVICE_CLASS_PROBLEM}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -19,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for binary_sensor in data["devices"]["binary_sensor"]:
         entities.append(ScreenLogicBinarySensor(coordinator, binary_sensor))
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
@@ -33,9 +38,9 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the device class."""
-        device_class = self.sensor.get("hass_type")
-        if device_class in DEVICE_CLASSES:
-            return device_class
+        device_class = self.sensor.get("device_type")
+        if device_class in SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS:
+            return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS[device_class]
         return None
 
     @property
@@ -46,9 +51,4 @@ class ScreenLogicBinarySensor(ScreenlogicEntity, BinarySensorEntity):
     @property
     def sensor(self):
         """Shortcut to access the sensor data."""
-        return self.sensor_data[self._data_key]
-
-    @property
-    def sensor_data(self):
-        """Shortcut to access the sensors data."""
-        return self.coordinator.data["sensors"]
+        return self.coordinator.data["sensors"][self._data_key]
