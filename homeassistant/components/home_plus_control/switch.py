@@ -53,10 +53,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    # Fetch initial data so we have data when entities subscribe
-    coordinator = hass.data[DOMAIN][config_entry.entry_id].get(DATA_COORDINATOR)
-    await coordinator.async_refresh()
-
 
 class HomeControlSwitchEntity(CoordinatorEntity, SwitchEntity):
     """Entity that represents a Legrand Home+ Control switch.

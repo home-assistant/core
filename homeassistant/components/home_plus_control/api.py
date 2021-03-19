@@ -36,17 +36,14 @@ class HomePlusControlAsyncApi(HomePlusControlAPI):
             implementation (AbstractOAuth2Implementation): OAuth2 implementation that handles AA
                                                            and token refresh.
         """
-        self.hass = hass
-        self.config_entry = config_entry
-        self.implementation = implementation
         self._oauth_session = config_entry_oauth2_flow.OAuth2Session(
             hass, config_entry, implementation
         )
 
         # Create the API authenticated client - external library
         super().__init__(
-            subscription_key=self.implementation.subscription_key,
-            oauth_client=aiohttp_client.async_get_clientsession(self.hass),
+            subscription_key=implementation.subscription_key,
+            oauth_client=aiohttp_client.async_get_clientsession(hass),
             update_intervals=DEFAULT_UPDATE_INTERVALS,
         )
 
@@ -56,11 +53,3 @@ class HomePlusControlAsyncApi(HomePlusControlAPI):
             await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token["access_token"]
-
-    async def fetch_data(self):
-        """Get the latest data from the API.
-
-        Returns:
-            dict: Dictionary of modules in their updated state.
-        """
-        return await self.async_get_modules()

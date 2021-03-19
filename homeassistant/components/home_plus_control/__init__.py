@@ -15,9 +15,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     dispatcher,
 )
+from homeassistant.helpers.device_registry import async_get as async_get_device_registry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import api, config_flow, helpers
+from . import config_flow, helpers
+from .api import HomePlusControlAsyncApi
 from .const import (
     API,
     CONF_SUBSCRIPTION_KEY,
@@ -53,15 +55,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.data[DOMAIN] = {}
 
     if DOMAIN not in config:
-        _LOGGER.debug(
-            "No config in configuration.yaml for the Legrand Home+ Control component"
-        )
         return True
-
-    # If there is a configuration section in configuration.yaml, then we add the data into
-    # the hass.data object
-    _LOGGER.debug("Configuring Legrand Home+ Control component from configuration.yaml")
-    hass.data[DOMAIN]["config"] = config[DOMAIN]
 
     # Register the implementation from the config information
     config_flow.HomePlusControlFlowHandler.async_register_implementation(
@@ -85,15 +79,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Using an aiohttp-based API lib, so rely on async framework
     # Add the API object to the domain's data in HA
-    hass_entry_data[API] = api.HomePlusControlAsyncApi(
+    api = hass_entry_data[API] = HomePlusControlAsyncApi(
         hass, config_entry, implementation
     )
 
     # Set of entity unique identifiers of this integration
-    hass_entry_data[ENTITY_UIDS] = set()
+    uids = hass_entry_data[ENTITY_UIDS] = set()
 
     # Integration dispatchers
     hass_entry_data[DISPATCHER_REMOVERS] = []
+    
+    device_registry = async_get_device_registry(hass)
 
     # Register the Data Coordinator with the integration
     async def async_update_data():
@@ -106,24 +102,23 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                module_data = await hass_entry_data[API].fetch_data()
+                module_data = await api.async_get_modules()
         except HomePlusControlApiError as err:
             raise UpdateFailed(
                 f"Error communicating with API: {err} [{type(err)}]"
             ) from err
 
         # Remove obsolete entities from Home Assistant
-        entity_uids_to_remove = hass_entry_data[ENTITY_UIDS] - set(module_data)
-        device_registry = hass.helpers.device_registry.async_get(hass)
+        entity_uids_to_remove = uids - set(module_data)
         for uid in entity_uids_to_remove:
-            hass_entry_data[ENTITY_UIDS].remove(uid)
+            uids.remove(uid)
             device = device_registry.async_get_device({(DOMAIN, uid)})
             device_registry.async_remove_device(device.id)
 
         # Send out signal for new entity addition to Home Assistant
-        new_entity_uids = set(module_data) - hass_entry_data[ENTITY_UIDS]
-        hass_entry_data[ENTITY_UIDS].update(new_entity_uids)
-        if len(new_entity_uids) > 0:
+        new_entity_uids = set(module_data) - uids
+        if new_entity_uids:
+            uids.update(new_entity_uids)
             dispatcher.async_dispatcher_send(
                 hass,
                 SIGNAL_ADD_ENTITIES,
@@ -144,11 +139,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     hass_entry_data[DATA_COORDINATOR] = coordinator
 
-    # Continue setting up the platform
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+    async def start_platforms():
+        """Continue setting up the platforms."""
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_setup(config_entry, platform)
+                for platform in PLATFORMS
+            ]
         )
+        # Only refresh the coordinator after all platforms are loaded.
+        await coordinator.async_refresh()
+        
+    hass.async_create_task(start_platforms())
 
     return True
 
