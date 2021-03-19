@@ -219,7 +219,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistantType,
         config_entry: ConfigEntry,
-        api: Union[ClimaCellV3, ClimaCellV4],
+        api: ClimaCellV3 | ClimaCellV4,
         update_interval: timedelta,
     ) -> None:
         """Initialize."""
