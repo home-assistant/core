@@ -65,7 +65,13 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        schema = vol.Schema(
+        return self.async_show_form(
+            step_id="user", data_schema=self._get_schema(), errors=errors
+        )
+
+    def _get_schema(self):
+        """Return initial schema for the integration."""
+        return vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
@@ -83,8 +89,6 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
 
 class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
@@ -107,6 +111,12 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
     def _get_options_schema(self):
         return vol.Schema(
             {
+                vol.Optional(
+                    CONF_LATITUDE, default=self.hass.config.latitude
+                ): cv.latitude,
+                vol.Optional(
+                    CONF_LONGITUDE, default=self.hass.config.longitude
+                ): cv.longitude,
                 vol.Optional(
                     CONF_MODE,
                     default=self.config_entry.options.get(

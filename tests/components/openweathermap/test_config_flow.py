@@ -101,6 +101,8 @@ async def test_form_options(hass):
         assert config_entry.options == {
             CONF_MODE: "daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
         }
 
         await hass.async_block_till_done()
@@ -120,6 +122,8 @@ async def test_form_options(hass):
         assert config_entry.options == {
             CONF_MODE: "onecall_daily",
             CONF_LANGUAGE: DEFAULT_LANGUAGE,
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
         }
 
         await hass.async_block_till_done()
