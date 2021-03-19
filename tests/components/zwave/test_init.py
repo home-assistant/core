@@ -861,7 +861,7 @@ async def test_entity_discovery(
 
     assert values.primary is value_class.primary
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, None, None], key=lambda a: id(a)
     )
 
@@ -885,7 +885,7 @@ async def test_entity_discovery(
 
     assert values.secondary is value_class.secondary
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, value_class.secondary, None], key=lambda a: id(a)
     )
 
@@ -902,7 +902,7 @@ async def test_entity_discovery(
 
     assert values.optional is value_class.optional
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, value_class.secondary, value_class.optional],
         key=lambda a: id(a),
     )
@@ -961,7 +961,7 @@ async def test_entity_existing_values(
     assert values.secondary is value_class.secondary
     assert values.optional is value_class.optional
     assert len(list(values)) == 3
-    assert sorted(list(values), key=lambda a: id(a)) == sorted(
+    assert sorted(values, key=lambda a: id(a)) == sorted(
         [value_class.primary, value_class.secondary, value_class.optional],
         key=lambda a: id(a),
     )
