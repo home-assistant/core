@@ -102,7 +102,7 @@ class ProfileMock:
 
     async def packages(
         self,
-        package_state: Union[int, str] = "",
+        package_state: int | str = "",
         show_archived: bool = False,
         tz: str = "UTC",
     ) -> list:
