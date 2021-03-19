@@ -515,7 +515,7 @@ class HomeAssistant:
             if self.state == CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
-                _LOGGER.info("Additional calls to async_stop was ignored")
+                _LOGGER.info("Additional call to async_stop was ignored")
                 return
             if self.state == CoreState.starting:
                 # This may not work
