@@ -13,12 +13,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 
-from .const import (
-    DATA_SONOS,
-    DISCOVERY_INTERVAL,
-    DOMAIN,
-    SONOS_DISCOVERY_UPDATE,
-)
+from .const import DATA_SONOS, DISCOVERY_INTERVAL, DOMAIN, SONOS_DISCOVERY_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 

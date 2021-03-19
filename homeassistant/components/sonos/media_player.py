@@ -58,12 +58,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import play_on_sonos
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TIME,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 import homeassistant.helpers.device_registry as dr
