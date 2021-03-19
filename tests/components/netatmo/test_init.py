@@ -57,7 +57,11 @@ async def test_setup_component(hass):
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
 
-    assert hass.states.get("climate.netatmo_livingroom").state == "unavailable"
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    assert hass.states.get("climate.netatmo_livingroom") is None
 
 
 async def test_setup_component_with_config(hass, config_entry):
