@@ -32,7 +32,7 @@ def test_json_encoder(hass):
 
     # Test serializing a set()
     data = {"milk", "beer"}
-    assert sorted(ha_json_enc.default(data)) == sorted(list(data))
+    assert sorted(ha_json_enc.default(data)) == sorted(data)
 
     # Test serializong object which implements as_dict
     assert ha_json_enc.default(state) == state.as_dict()
