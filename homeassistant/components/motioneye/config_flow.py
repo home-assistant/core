@@ -7,24 +7,24 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuth,
     MotionEyeClientRequestFailed,
 )
+from motioneye_client.const import DEFAULT_PORT, DEFAULT_USERNAME
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
-from .const import CONF_BASE_URL, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_BASE_URL): str,
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
     }
 )
-
-# TODO: Protocol missing off of base url?
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -42,8 +42,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         client = MotionEyeClient(
-            user_input[CONF_BASE_URL],
-            username=user_input[CONF_USERNAME],
+            user_input[CONF_HOST],
+            user_input[CONF_PORT],
+            username=user_input.get(CONF_USERNAME),
             password=user_input.get(CONF_PASSWORD),
         )
 
@@ -57,7 +58,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title=user_input[CONF_BASE_URL], data=user_input
+                title=f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                data=user_input,
             )
 
         return self.async_show_form(

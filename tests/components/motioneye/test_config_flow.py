@@ -8,8 +8,8 @@ from motioneye_client.client import (
 )
 
 from homeassistant import config_entries, setup
-from homeassistant.components.motioneye.const import CONF_BASE_URL, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.motioneye.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from . import create_mock_motioneye_client
 
@@ -39,7 +39,8 @@ async def test_user_success(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_BASE_URL: "http://localhost",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8765,
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
             },
@@ -47,9 +48,10 @@ async def test_user_success(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "http://localhost"
+    assert result["title"] == "localhost:8765"
     assert result["data"] == {
-        CONF_BASE_URL: "http://localhost",
+        CONF_HOST: "localhost",
+        CONF_PORT: 8765,
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
@@ -73,7 +75,8 @@ async def test_user_invalid_auth(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_BASE_URL: "http://localhost",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8765,
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
             },
@@ -102,7 +105,8 @@ async def test_user_cannot_connect(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_BASE_URL: "http://localhost",
+                CONF_HOST: "localhost",
+                CONF_PORT: 8765,
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
             },
