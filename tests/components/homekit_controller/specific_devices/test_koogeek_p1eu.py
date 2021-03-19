@@ -1,5 +1,7 @@
 """Make sure that existing Koogeek P1EU support isn't broken."""
 
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
 from tests.components.homekit_controller.common import (
     Helper,
     setup_accessories_from_file,
@@ -12,8 +14,8 @@ async def test_koogeek_p1eu_setup(hass):
     accessories = await setup_accessories_from_file(hass, "koogeek_p1eu.json")
     config_entry, pairing = await setup_test_accessories(hass, accessories)
 
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     # Check that the switch entity is handled correctly
 

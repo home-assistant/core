@@ -1,5 +1,5 @@
 """Provides device automations for Media player."""
-from typing import List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -34,7 +34,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for Media player entities."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []

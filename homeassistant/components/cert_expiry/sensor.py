@@ -68,7 +68,7 @@ class CertExpiryEntity(CoordinatorEntity):
         return "mdi:certificate"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
             "is_valid": self.coordinator.is_cert_valid,

@@ -2,14 +2,14 @@
     "state": {
         "_": {
             "closed": "Tertutup",
-            "home": "Rumah",
+            "home": "Di Rumah",
             "locked": "Terkunci",
             "not_home": "Keluar",
-            "off": "Off",
-            "ok": "OK",
-            "on": "On",
+            "off": "Mati",
+            "ok": "Oke",
+            "on": "Nyala",
             "open": "Terbuka",
-            "problem": "Masalah",
+            "problem": "Bermasalah",
             "unlocked": "Terbuka"
         }
     },

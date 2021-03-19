@@ -1,5 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
-from typing import Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -165,7 +165,7 @@ class SensorTemplate(TemplateEntity, Entity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

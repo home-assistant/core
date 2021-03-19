@@ -67,7 +67,6 @@ PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
 
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
-
     hass.data.setdefault(DOMAIN, {})
 
     if DOMAIN in base_config:
@@ -92,7 +91,6 @@ async def async_setup(hass, base_config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up a bridge from a config entry."""
-
     host = config_entry.data[CONF_HOST]
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
@@ -280,7 +278,6 @@ def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
 
 async def async_unload_entry(hass, config_entry):
     """Unload the bridge bridge from a config entry."""
-
     data = hass.data[DOMAIN][config_entry.entry_id]
     data[BRIDGE_LEAP].close()
     if data[BRIDGE_LIP]:
@@ -352,7 +349,7 @@ class LutronCasetaDevice(Entity):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {"device_id": self.device_id, "zone_id": self._device["zone"]}
 

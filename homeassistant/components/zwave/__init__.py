@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -103,7 +104,7 @@ PLATFORMS = [
 RENAME_NODE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_NAME): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
         vol.Optional(const.ATTR_UPDATE_IDS, default=False): cv.boolean,
     }
 )
@@ -112,7 +113,7 @@ RENAME_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
         vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_NAME): cv.string,
+        vol.Required(ATTR_NAME): cv.string,
         vol.Optional(const.ATTR_UPDATE_IDS, default=False): cv.boolean,
     }
 )
@@ -661,7 +662,7 @@ async def async_setup_entry(hass, config_entry):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
-        name = service.data.get(const.ATTR_NAME)
+        name = service.data.get(ATTR_NAME)
         node.name = name
         _LOGGER.info("Renamed Z-Wave node %d to %s", node_id, name)
         update_ids = service.data.get(const.ATTR_UPDATE_IDS)
@@ -682,7 +683,7 @@ async def async_setup_entry(hass, config_entry):
         value_id = service.data.get(const.ATTR_VALUE_ID)
         node = network.nodes[node_id]  # pylint: disable=unsubscriptable-object
         value = node.values[value_id]
-        name = service.data.get(const.ATTR_NAME)
+        name = service.data.get(ATTR_NAME)
         value.label = name
         _LOGGER.info(
             "Renamed Z-Wave value (Node %d Value %d) to %s", node_id, value_id, name
@@ -1361,7 +1362,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             const.ATTR_NODE_ID: self.node_id,

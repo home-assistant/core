@@ -5,6 +5,8 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
+            "invalid_pin": "PIN non valido",
+            "pairing_failure": "Impossibile eseguire l'associazione: {error_id}",
             "unknown": "Errore imprevisto"
         },
         "step": {

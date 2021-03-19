@@ -252,7 +252,7 @@ class HikvisionBinarySensor(BinarySensorEntity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attr = {ATTR_LAST_TRIP_TIME: self._sensor_last_update()}
 

@@ -1,7 +1,8 @@
 """Support the ISY-994 controllers."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
-from typing import Optional
 from urllib.parse import urlparse
 
 from pyisy import ISY
@@ -67,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the isy994 integration from YAML."""
-    isy_config: Optional[ConfigType] = config.get(DOMAIN)
+    isy_config: ConfigType | None = config.get(DOMAIN)
     hass.data.setdefault(DOMAIN, {})
 
     if not isy_config:

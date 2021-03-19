@@ -1,13 +1,15 @@
 """Base classes for channels."""
+from __future__ import annotations
 
 import asyncio
 from enum import Enum
 from functools import wraps
 import logging
-from typing import Any, Union
+from typing import Any
 
 import zigpy.exceptions
 
+from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 
 from .. import typing as zha_typing
@@ -16,7 +18,6 @@ from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
     ATTR_CLUSTER_ID,
-    ATTR_COMMAND,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
     CHANNEL_ZDO,
@@ -238,7 +239,7 @@ class ZigbeeChannel(LogMixin):
         """Handle ZDO commands on this cluster."""
 
     @callback
-    def zha_send_event(self, command: str, args: Union[int, dict]) -> None:
+    def zha_send_event(self, command: str, args: int | dict) -> None:
         """Relay events to hass."""
         self._ch_pool.zha_send_event(
             {

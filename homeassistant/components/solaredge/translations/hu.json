@@ -1,6 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
         "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
             "site_not_active": "Az oldal nem akt\u00edv"
         },
         "step": {

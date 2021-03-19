@@ -175,7 +175,7 @@ class EmonCmsSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the sensor."""
         return {
             ATTR_FEEDID: self._elem["id"],

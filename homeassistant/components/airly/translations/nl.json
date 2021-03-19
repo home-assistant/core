@@ -10,14 +10,21 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Airly API-sleutel",
+                    "api_key": "API-sleutel",
                     "latitude": "Breedtegraad",
                     "longitude": "Lengtegraad",
-                    "name": "Naam van de integratie"
+                    "name": "Naam"
                 },
                 "description": "Airly-integratie van luchtkwaliteit instellen. Ga naar https://developer.airly.eu/register om de API-sleutel te genereren",
                 "title": "Airly"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Kan Airly server bereiken",
+            "requests_per_day": "Toegestane verzoeken per dag",
+            "requests_remaining": "Resterende toegestane verzoeken"
         }
     }
 }

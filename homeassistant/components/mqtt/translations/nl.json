@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie van MQTT is toegestaan."
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met de broker."
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "broker": {
@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Detectie inschakelen"
                 },
-                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de hass.io add-on {addon} ?",
-                "title": "MQTTT Broker via Hass.io add-on"
+                "description": "Wilt u Home Assistant configureren om verbinding te maken met de MQTT-broker die wordt aangeboden door de Supervisor add-on {addon} ?",
+                "title": "MQTT Broker via Supervisor add-on"
             }
         }
     },
@@ -66,7 +66,8 @@
                     "birth_enable": "Geboortebericht inschakelen",
                     "birth_payload": "Birth message payload",
                     "birth_topic": "Birth message onderwerp"
-                }
+                },
+                "description": "Selecteer MQTT-opties."
             }
         }
     }

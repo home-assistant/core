@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "ScreenLogic {name}",
+        "step": {
+            "gateway_entry": {
+                "data": {
+                    "ip_address": "IP \u4f4d\u5740",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u8f38\u5165 ScreenLogic \u9598\u9053\u5668\u8cc7\u8a0a\u3002",
+                "title": "ScreenLogic"
+            },
+            "gateway_select": {
+                "data": {
+                    "selected_gateway": "\u9598\u9053\u5668"
+                },
+                "description": "\u641c\u5c0b\u5230\u4ee5\u4e0b ScreenLogic \u9598\u9053\u5668\uff0c\u8acb\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u9598\u9053\u5668\u3001\u6216\u9032\u884c\u624b\u52d5\u8a2d\u5b9a\u3002",
+                "title": "ScreenLogic"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\u6383\u63cf\u9593\u9694\u79d2\u6578"
+                },
+                "description": "{gateway_name} \u7279\u5b9a\u8a2d\u5b9a",
+                "title": "ScreenLogic"
+            }
+        }
+    }
+}

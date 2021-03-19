@@ -33,6 +33,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
@@ -497,7 +498,7 @@ async def test_first_run_with_available_zones(hass):
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get(ZONE_7_ID)
     assert not entry.disabled
@@ -510,7 +511,7 @@ async def test_first_run_with_failing_zones(hass):
     with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
         await _setup_monoprice(hass, monoprice)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get(ZONE_1_ID)
     assert not entry.disabled
@@ -527,7 +528,7 @@ async def test_not_first_run_with_failing_zone(hass):
     with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
         await _setup_monoprice_not_first_run(hass, monoprice)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     entry = registry.async_get(ZONE_1_ID)
     assert not entry.disabled

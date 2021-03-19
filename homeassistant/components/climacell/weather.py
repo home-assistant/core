@@ -1,7 +1,9 @@
 """Weather component that handles meteorological data for your location."""
+from __future__ import annotations
+
 from datetime import datetime
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from pyclimacell.const import CURRENT, DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
 
@@ -79,7 +81,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

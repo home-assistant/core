@@ -1,5 +1,5 @@
 """Provide the device automations for Climate."""
-from typing import Dict, List
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -42,7 +42,7 @@ CONDITION_SCHEMA = vol.Any(HVAC_MODE_CONDITION, PRESET_MODE_CONDITION)
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions for Climate devices."""
     registry = await entity_registry.async_get_registry(hass)
     conditions = []
