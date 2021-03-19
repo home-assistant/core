@@ -45,7 +45,7 @@ class PlaceholderHub:
         try:
             wallbox = Wallbox(username, password)
             wallbox.authenticate()
-            wàllbox.getChargerStatus(self.station)
+            wallbox.getChargerStatus(self.station)
             return True
         except ConnectionError:
             raise CannotConnect
