@@ -191,6 +191,12 @@ async def async_setup_entry(
 
     hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, async_create_entities)
 
+    # create any entities for devices that exist already
+    for uid, soco in hass.data[DATA_SONOS].discovered.items():
+        if uid not in hass.data[DATA_SONOS].media_player_entities:
+            hass.data[DATA_SONOS].media_player_entities[soco.uid] = None
+            hass.add_job(async_add_entities, [SonosMediaPlayerEntity(soco)])
+
     hass.services.async_register(
         SONOS_DOMAIN,
         SERVICE_JOIN,

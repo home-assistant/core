@@ -41,6 +41,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, _async_create_entities)
 
+    # create any entities for devices that exist already
+    for uid, soco in hass.data[DATA_SONOS].discovered.items():
+        if uid not in hass.data[DATA_SONOS].battery_entities:
+            hass.data[DATA_SONOS].battery_entities[soco.uid] = None
+            hass.async_add_executor_job(_discover_battery, hass, soco)
+
 
 class SonosBatteryEntity(Entity):
     """Representation of a Sonos Battery entity."""
@@ -49,6 +55,7 @@ class SonosBatteryEntity(Entity):
         """Initialize a SonosBatteryEntity."""
         self._soco = soco
         self._battery_info = battery_info
+        self._available = True
 
     @staticmethod
     def fetch(soco: SoCo) -> Optional[Dict[str, Any]]:
