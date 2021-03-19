@@ -36,6 +36,7 @@ import homeassistant.core as ha
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
+    MaxLengthExceeded,
     ServiceNotFound,
 )
 import homeassistant.util.dt as dt_util
@@ -522,6 +523,13 @@ async def test_eventbus_coroutine_event_listener(hass):
     hass.bus.async_fire("test_coroutine")
     await hass.async_block_till_done()
     assert len(coroutine_calls) == 1
+
+
+async def test_eventbus_max_length_exceeded(hass):
+    """Test that an exception is raised when the max character length is exceeded."""
+
+    with pytest.raises(MaxLengthExceeded):
+        hass.bus.async_fire("this_event_exceeds_the_max_character_length")
 
 
 def test_state_init():
