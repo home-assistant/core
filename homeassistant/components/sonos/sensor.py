@@ -37,9 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def _discover_battery(hass, soco):
         battery_info = SonosBatteryEntity.fetch(soco)
         if battery_info is not None:
-            hass.add_job(
-                async_add_entities, [SonosBatteryEntity(soco, battery_info)]
-            )
+            hass.add_job(async_add_entities, [SonosBatteryEntity(soco, battery_info)])
 
     hass.bus.async_listen(SONOS_DISCOVERY_UPDATE, _async_create_entities)
 
@@ -51,9 +49,6 @@ class SonosBatteryEntity(Entity):
         """Initialize a SonosBatteryEntity."""
         self._soco = soco
         self._battery_info = battery_info
-
-        self._available = True
-        self._timer = None
 
     @staticmethod
     def fetch(soco: SoCo) -> Optional[Dict[str, Any]]:
@@ -74,12 +69,11 @@ class SonosBatteryEntity(Entity):
             self.update, SCAN_INTERVAL
         )
         self.async_on_remove(cancel_timer)
-        """Record that this entity is added to hass."""
+
         self.hass.data[DATA_SONOS].battery_entities[self.unique_id] = self
 
     async def async_seen(self, soco) -> None:
         """Record that this player was seen right now."""
-        self._available = True
         self._soco = soco
 
         self.async_write_ha_state()
@@ -88,10 +82,6 @@ class SonosBatteryEntity(Entity):
     def async_unseen(self, now=None):
         """Make this player unavailable when it was not seen recently."""
         self._available = False
-
-        if self._timer is not None:
-            self._timer()
-            self._timer = None
 
         self.async_write_ha_state()
 
