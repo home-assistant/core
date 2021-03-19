@@ -30,13 +30,13 @@ from .const import (
 ##################
 
 ga_validator = vol.Any(
-    cv.matches_regex(GroupAddress.ADDRESS_RE),
+    cv.matches_regex(GroupAddress.ADDRESS_RE.pattern),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX group address '<main>/<middle>/<sub>', '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123')",
 )
 
 ia_validator = vol.Any(
-    cv.matches_regex(IndividualAddress.ADDRESS_RE),
+    cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern),
     vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
     msg="value does not match pattern for KNX individual address '<area>.<line>.<device>' (eg.'1.1.100')",
 )
@@ -96,12 +96,12 @@ class BinarySensorSchema:
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
+                vol.Optional(CONF_INVERT, default=False): cv.boolean,
                 vol.Required(CONF_STATE_ADDRESS): ga_validator,
                 vol.Optional(CONF_CONTEXT_TIMEOUT): vol.All(
                     vol.Coerce(float), vol.Range(min=0, max=10)
                 ),
                 vol.Optional(CONF_DEVICE_CLASS): cv.string,
-                vol.Optional(CONF_INVERT): cv.boolean,
                 vol.Optional(CONF_RESET_AFTER): cv.positive_float,
             }
         ),
@@ -448,9 +448,9 @@ class SwitchSchema:
     SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_INVERT, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_validator,
-            vol.Optional(CONF_INVERT): cv.boolean,
         }
     )
 
