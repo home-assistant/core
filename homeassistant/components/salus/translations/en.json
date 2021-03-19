@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "Salus: {name}",
+        "step": {
+            "device": {
+                "data": {
+                    "device": "Device"
+                },
+                "title": "Select device"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "title": "Connect to it500 Salus"
+            }
+        }
+    }
+}

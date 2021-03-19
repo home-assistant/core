@@ -1289,6 +1289,9 @@ py-melissa-climate==2.1.4
 # homeassistant.components.nightscout
 py-nightscout==1.2.2
 
+# homeassistant.components.salus
+py-salus==0.1.3
+
 # homeassistant.components.schluter
 py-schluter==0.1.7
 

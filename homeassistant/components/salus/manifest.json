@@ -1,0 +1,9 @@
+{
+  "config_flow": true,
+  "domain": "salus",
+  "name": "Salus",
+  "documentation": "https://www.home-assistant.io/integrations/salus",
+  "requirements": ["py-salus==0.1.3"],
+  "codeowners": ["@cipacda"],
+  "quality_scale": "internal"
+}
