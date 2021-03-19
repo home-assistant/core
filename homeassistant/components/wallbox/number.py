@@ -76,11 +76,11 @@ class WallboxMaxChargingCurrent(CoordinatorEntity, NumberEntity):
 
         try:
             wallbox = self._wallbox
-            _LOGGER.debug("Setting charging current.")
+            _LOGGER.debug("Setting charging current")
             wallbox.setMaxChargingCurrent(self.station, max_charging_current)
 
         except ConnectionError as exception:
-            _LOGGER.error("Unable to set charging current. %s", exception)
+            _LOGGER.error("Unable to set charging current %s", exception)
 
     @property
     def name(self):

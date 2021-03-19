@@ -93,11 +93,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=COMPONENT_DOMAIN):
         try:
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
-            _LOGGER.error("Cannot get MyWallbox data, is station serial correct?.")
+            _LOGGER.error("Cannot get MyWallbox data, is station serial correct?")
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-            _LOGGER.error("Cannot authenticate for MyWallbox.")
+            _LOGGER.error("Cannot authenticate for MyWallbox")
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"

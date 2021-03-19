@@ -1,11 +1,13 @@
 """Test for wallbox Sensor."""
 
-from homeassistant.components.wallbox.sensor import async_setup_entry
+from unittest.mock import MagicMock
+
 from homeassistant.components.wallbox.const import DOMAIN
+from homeassistant.components.wallbox.sensor import async_setup_entry
+
+from .const import MOCK_CONFIG
 
 from tests.common import MockConfigEntry
-from unittest.mock import MagicMock
-from .const import MOCK_CONFIG
 
 
 async def test_async_setup_entry(hass):
