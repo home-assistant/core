@@ -74,17 +74,17 @@ class OpenWeatherMapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
-                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                vol.Required(
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                vol.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Required(
+                vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Required(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
+                vol.Optional(CONF_MODE, default=DEFAULT_FORECAST_MODE): vol.In(
                     FORECAST_MODES
                 ),
-                vol.Required(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+                vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
                     LANGUAGES
                 ),
             }
@@ -111,10 +111,10 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
     def _get_options_schema(self):
         return vol.Schema(
             {
-                vol.Required(
+                vol.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
                 ): cv.latitude,
-                vol.Required(
+                vol.Optional(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
                 vol.Required(
@@ -123,7 +123,7 @@ class OpenWeatherMapOptionsFlow(config_entries.OptionsFlow):
                         CONF_MODE, DEFAULT_FORECAST_MODE
                     ),
                 ): vol.In(FORECAST_MODES),
-                vol.Required(
+                vol.Optional(
                     CONF_LANGUAGE,
                     default=self.config_entry.options.get(
                         CONF_LANGUAGE, DEFAULT_LANGUAGE
