@@ -5,10 +5,9 @@ import requests
 import voluptuous as vol
 from wallbox import Wallbox
 
-
 from homeassistant import config_entries, core, exceptions
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
