@@ -913,7 +913,7 @@ async def async_setup_entry(hass, config_entry):
 
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
-        _LOGGER.info("Starting Z-Wave network...")
+        _LOGGER.info("Starting Z-Wave network")
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
