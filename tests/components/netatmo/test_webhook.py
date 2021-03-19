@@ -19,7 +19,7 @@ async def test_webhook(hass):
     )
     request = MockRequest(content=response, mock_source="test")
 
-    dispatch = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass,
         "signal-netatmo-webhook-None",
         handle_event,
@@ -29,8 +29,6 @@ async def test_webhook(hass):
     await hass.async_block_till_done()
 
     assert webhook_called
-
-    dispatch()
 
 
 async def test_webhook_error_in_data(hass):
@@ -44,7 +42,7 @@ async def test_webhook_error_in_data(hass):
     response = b'""webhook_activation"}'
     request = MockRequest(content=response, mock_source="test")
 
-    dispatch = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass,
         "signal-netatmo-webhook-None",
         handle_event,
@@ -54,8 +52,6 @@ async def test_webhook_error_in_data(hass):
     await hass.async_block_till_done()
 
     assert not webhook_called
-
-    dispatch()
 
 
 async def test_webhook_climate_event(hass):
@@ -78,7 +74,7 @@ async def test_webhook_climate_event(hass):
         DATA_DEVICE_IDS: {},
     }
 
-    dispatch = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass,
         "signal-netatmo-webhook-therm_mode",
         handle_event,
@@ -88,8 +84,6 @@ async def test_webhook_climate_event(hass):
     await hass.async_block_till_done()
 
     assert webhook_called
-
-    dispatch()
 
 
 async def test_webhook_person_event(hass):
@@ -120,7 +114,7 @@ async def test_webhook_person_event(hass):
         DATA_PERSONS: {},
     }
 
-    dispatch = async_dispatcher_connect(
+    async_dispatcher_connect(
         hass,
         "signal-netatmo-webhook-person",
         handle_event,
@@ -130,5 +124,3 @@ async def test_webhook_person_event(hass):
     await hass.async_block_till_done()
 
     assert webhook_called
-
-    dispatch()
