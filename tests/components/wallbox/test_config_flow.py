@@ -62,3 +62,23 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+def test_hub_class():
+    """Test hub class."""
+
+    station = ("12345",)
+    username = ("test-username",)
+    password = "test-password"
+
+    hub = config_flow.PlaceholderHub(station, username, password)
+
+    with patch(
+        "homeassistant.components.wallbox.config_flow.Wallbox.authenticate",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.wallbox.config_flow.Wallbox.getChargerStatus",
+        return_value=True,
+    ):
+        assert hub.authenticate()
+        assert hub.get_data()
