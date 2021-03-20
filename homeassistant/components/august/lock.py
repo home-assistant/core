@@ -73,7 +73,8 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.LOCK_OPERATION]
+            self._device_id,
+            {ActivityType.LOCK_OPERATION, ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
         )
 
         if lock_activity is not None:
@@ -81,7 +82,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             update_lock_detail_from_activity(self._detail, lock_activity)
 
         bridge_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.BRIDGE_OPERATION]
+            self._device_id, {ActivityType.BRIDGE_OPERATION}
         )
 
         if bridge_activity is not None:
