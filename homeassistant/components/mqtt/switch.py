@@ -6,13 +6,10 @@ import voluptuous as vol
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_ICON,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
-    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
     STATE_ON,
 )
@@ -33,13 +30,7 @@ from . import (
 )
 from .. import mqtt
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -48,23 +39,16 @@ DEFAULT_OPTIMISTIC = False
 CONF_STATE_ON = "state_on"
 CONF_STATE_OFF = "state_off"
 
-PLATFORM_SCHEMA = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(CONF_STATE_OFF): cv.string,
-            vol.Optional(CONF_STATE_ON): cv.string,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
-)
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(CONF_STATE_OFF): cv.string,
+        vol.Optional(CONF_STATE_ON): cv.string,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -110,8 +94,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
-
         state_on = config.get(CONF_STATE_ON)
         self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
 
@@ -164,11 +146,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
                 self._state = last_state.state == STATE_ON
 
     @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._config[CONF_NAME]
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -177,11 +154,6 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return self._config.get(CONF_ICON)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on.

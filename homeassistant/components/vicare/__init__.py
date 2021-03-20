@@ -19,7 +19,7 @@ from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
-VICARE_PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
+PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
 
 DOMAIN = "vicare"
 PYVICARE_ERROR = "error"
@@ -33,6 +33,7 @@ DEFAULT_HEATING_TYPE = "generic"
 
 
 class HeatingType(enum.Enum):
+    # pylint: disable=invalid-name
     """Possible options for heating type."""
 
     generic = "generic"
@@ -90,7 +91,7 @@ def setup(hass, config):
     hass.data[DOMAIN][VICARE_NAME] = conf[CONF_NAME]
     hass.data[DOMAIN][VICARE_HEATING_TYPE] = heating_type
 
-    for platform in VICARE_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True

@@ -1,8 +1,10 @@
 """Provides functionality to notify people."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, Optional, cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -114,9 +116,13 @@ def _async_integration_has_notify_services(
 class BaseNotificationService:
     """An abstract class for notification services."""
 
-    hass: Optional[HomeAssistantType] = None
+    # While not purely typed, it makes typehinting more useful for us
+    # and removes the need for constant None checks or asserts.
+    # Ignore types: https://github.com/PyCQA/pylint/issues/3167
+    hass: HomeAssistantType = None  # type: ignore
+
     # Name => target
-    registered_targets: Dict[str, str]
+    registered_targets: dict[str, str]
 
     def send_message(self, message, **kwargs):
         """Send a message.
@@ -130,7 +136,9 @@ class BaseNotificationService:
 
         kwargs can contain ATTR_TITLE to specify a title.
         """
-        await self.hass.async_add_executor_job(partial(self.send_message, message, **kwargs))  # type: ignore
+        await self.hass.async_add_executor_job(
+            partial(self.send_message, message, **kwargs)
+        )
 
     async def _async_notify_message_service(self, service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
@@ -175,8 +183,6 @@ class BaseNotificationService:
 
     async def async_register_services(self) -> None:
         """Create or update the notify services."""
-        assert self.hass
-
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
@@ -232,8 +238,6 @@ class BaseNotificationService:
 
     async def async_unregister_services(self) -> None:
         """Unregister the notify services."""
-        assert self.hass
-
         if self.registered_targets:
             remove_targets = set(self.registered_targets)
             for remove_target_name in remove_targets:

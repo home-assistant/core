@@ -19,8 +19,7 @@ def get_cert(host, port):
     address = (host, port)
     with socket.create_connection(address, timeout=TIMEOUT) as sock:
         with ctx.wrap_socket(sock, server_hostname=address[0]) as ssock:
-            # pylint disable: https://github.com/PyCQA/pylint/issues/3166
-            cert = ssock.getpeercert()  # pylint: disable=no-member
+            cert = ssock.getpeercert()
             return cert
 
 

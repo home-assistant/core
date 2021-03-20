@@ -4,6 +4,7 @@
             "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
+            "forbidden": "Verbindung kann nicht hergestellt werden. Bitte \u00fcberpr\u00fcfen Sie Ihre forked-daapd-Netzwerkberechtigungen.",
             "unknown_error": "Unbekannter Fehler",
             "wrong_host_or_port": "Verbindung konnte nicht hergestellt werden. Bitte Host und Port pr\u00fcfen.",
             "wrong_password": "Ung\u00fcltiges Passwort",

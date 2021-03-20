@@ -1,6 +1,8 @@
 """Platform for Garmin Connect integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from garminconnect import (
     GarminConnectAuthenticationError,
@@ -120,7 +122,7 @@ class GarminConnectSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for sensor."""
         if not self._data.data:
             return {}
@@ -136,7 +138,7 @@ class GarminConnectSensor(Entity):
         return attributes
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},

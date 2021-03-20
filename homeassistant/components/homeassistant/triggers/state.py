@@ -1,7 +1,9 @@
 """Offer state listening automation rules."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import voluptuous as vol
 
@@ -79,7 +81,7 @@ async def async_attach_trigger(
     template.attach(hass, time_delta)
     match_all = from_state == MATCH_ALL and to_state == MATCH_ALL
     unsub_track_same = {}
-    period: Dict[str, timedelta] = {}
+    period: dict[str, timedelta] = {}
     match_from_state = process_state_match(from_state)
     match_to_state = process_state_match(to_state)
     attribute = config.get(CONF_ATTRIBUTE)
@@ -93,8 +95,8 @@ async def async_attach_trigger(
     def state_automation_listener(event: Event):
         """Listen for state changes and calls action."""
         entity: str = event.data["entity_id"]
-        from_s: Optional[State] = event.data.get("old_state")
-        to_s: Optional[State] = event.data.get("new_state")
+        from_s: State | None = event.data.get("old_state")
+        to_s: State | None = event.data.get("new_state")
 
         if from_s is None:
             old_value = None

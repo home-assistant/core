@@ -1,5 +1,5 @@
 """Demo fan platform that has a fake fan."""
-from typing import List, Optional
+from __future__ import annotations
 
 from homeassistant.components.fan import (
     SPEED_HIGH,
@@ -110,8 +110,8 @@ class BaseDemoFan(FanEntity):
         unique_id: str,
         name: str,
         supported_features: int,
-        preset_modes: Optional[List[str]],
-        speed_list: Optional[List[str]],
+        preset_modes: list[str] | None,
+        speed_list: list[str] | None,
     ) -> None:
         """Initialize the entity."""
         self.hass = hass
@@ -211,7 +211,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
     """A demonstration fan component that uses percentages."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
 
@@ -227,12 +227,12 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
         self.schedule_update_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return self._preset_modes
 
@@ -271,7 +271,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
     """An async demonstration fan component that uses percentages."""
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed."""
         return self._percentage
 
@@ -287,12 +287,12 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite."""
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return self._preset_modes
 

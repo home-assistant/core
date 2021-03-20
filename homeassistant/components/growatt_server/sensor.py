@@ -399,7 +399,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             sensors = STORAGE_SENSOR_TYPES
         else:
             _LOGGER.debug(
-                "Device type %s was found but is not supported right now.",
+                "Device type %s was found but is not supported right now",
                 device["deviceType"],
             )
 

@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "\uc628\ub3c4 \uc18c\uc218\uc810 \ubc84\ub9bc",
-                    "precision": "\uc815\ubc00\ub3c4"
+                    "precision": "\uc815\ubc00\ub3c4",
+                    "read_precision": "\uc77d\uae30 \uc815\ubc00\ub3c4",
+                    "set_precision": "\uc815\ubc00\ub3c4 \uc124\uc815\ud558\uae30"
                 },
                 "description": "OpenTherm Gateway \uc635\uc158"
             }

@@ -9,7 +9,7 @@ from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 def create_rfx_test_cfg(device="abcd", automatic_add=False, devices=None):

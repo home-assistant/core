@@ -1,6 +1,7 @@
 """Deal with YAML input."""
+from __future__ import annotations
 
-from typing import Any, Dict, Set
+from typing import Any
 
 from .objects import Input
 
@@ -14,14 +15,14 @@ class UndefinedSubstitution(Exception):
         self.input = input
 
 
-def extract_inputs(obj: Any) -> Set[str]:
+def extract_inputs(obj: Any) -> set[str]:
     """Extract input from a structure."""
-    found: Set[str] = set()
+    found: set[str] = set()
     _extract_inputs(obj, found)
     return found
 
 
-def _extract_inputs(obj: Any, found: Set[str]) -> None:
+def _extract_inputs(obj: Any, found: set[str]) -> None:
     """Extract input from a structure."""
     if isinstance(obj, Input):
         found.add(obj.name)
@@ -38,7 +39,7 @@ def _extract_inputs(obj: Any, found: Set[str]) -> None:
         return
 
 
-def substitute(obj: Any, substitutions: Dict[str, Any]) -> Any:
+def substitute(obj: Any, substitutions: dict[str, Any]) -> Any:
     """Substitute values."""
     if isinstance(obj, Input):
         if obj.name not in substitutions:

@@ -1,5 +1,5 @@
 """Support for Tasmota sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from hatasmota import const as hc, status_sensor
 
@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
@@ -52,7 +53,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP = {
     hc.SENSOR_APPARENT_POWERUSAGE: {DEVICE_CLASS: DEVICE_CLASS_POWER},
     hc.SENSOR_BATTERY: {DEVICE_CLASS: DEVICE_CLASS_BATTERY},
     hc.SENSOR_CCT: {ICON: "mdi:temperature-kelvin"},
-    hc.SENSOR_CO2: {ICON: "mdi:molecule-co2"},
+    hc.SENSOR_CO2: {DEVICE_CLASS: DEVICE_CLASS_CO2},
     hc.SENSOR_COLOR_BLUE: {ICON: "mdi:palette"},
     hc.SENSOR_COLOR_GREEN: {ICON: "mdi:palette"},
     hc.SENSOR_COLOR_RED: {ICON: "mdi:palette"},
@@ -162,7 +163,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         self.async_write_ha_state()
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         class_or_icon = SENSOR_DEVICE_CLASS_ICON_MAP.get(
             self._tasmota_entity.quantity, {}
@@ -191,6 +192,11 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, Entity):
         if self._state and self.device_class == DEVICE_CLASS_TIMESTAMP:
             return self._state.isoformat()
         return self._state
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return True
 
     @property
     def unit_of_measurement(self):

@@ -228,6 +228,12 @@ def climate_danfoss_lc_13_state_fixture():
     return json.loads(load_fixture("zwave_js/climate_danfoss_lc_13_state.json"))
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z_state", scope="session")
+def climate_eurotronic_spirit_z_state_fixture():
+    """Load the climate Eurotronic Spirit Z thermostat node state fixture data."""
+    return json.loads(load_fixture("zwave_js/climate_eurotronic_spirit_z_state.json"))
+
+
 @pytest.fixture(name="climate_heatit_z_trm3_state", scope="session")
 def climate_heatit_z_trm3_state_fixture():
     """Load the climate HEATIT Z-TRM3 thermostat node state fixture data."""
@@ -419,6 +425,14 @@ def climate_danfoss_lc_13_fixture(client, climate_danfoss_lc_13_state):
     return node
 
 
+@pytest.fixture(name="climate_eurotronic_spirit_z")
+def climate_eurotronic_spirit_z_fixture(client, climate_eurotronic_spirit_z_state):
+    """Mock a climate radio danfoss LC-13 node."""
+    node = Node(client, climate_eurotronic_spirit_z_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="climate_heatit_z_trm3")
 def climate_heatit_z_trm3_fixture(client, climate_heatit_z_trm3_state):
     """Mock a climate radio HEATIT Z-TRM3 node."""
@@ -544,5 +558,13 @@ def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
 def ge_12730_fixture(client, ge_12730_state):
     """Mock a GE 12730 fan controller node."""
     node = Node(client, copy.deepcopy(ge_12730_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="inovelli_lzw36")
+def inovelli_lzw36_fixture(client, inovelli_lzw36_state):
+    """Mock a Inovelli LZW36 fan controller node."""
+    node = Node(client, copy.deepcopy(inovelli_lzw36_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

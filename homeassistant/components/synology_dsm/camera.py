@@ -1,6 +1,7 @@
 """Support for Synology DSM cameras."""
+from __future__ import annotations
+
 import logging
-from typing import Dict
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.exceptions import (
@@ -79,7 +80,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         return self.coordinator.data["cameras"][self._camera_id]
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {

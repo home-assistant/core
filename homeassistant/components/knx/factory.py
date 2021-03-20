@@ -1,5 +1,5 @@
 """Factory function to initialize KNX devices from config."""
-from typing import Optional, Tuple
+from __future__ import annotations
 
 from xknx import XKNX
 from xknx.devices import (
@@ -17,10 +17,10 @@ from xknx.devices import (
     Weather as XknxWeather,
 )
 
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_TYPE
 from homeassistant.helpers.typing import ConfigType
 
-from .const import ColorTempModes, SupportedPlatforms
+from .const import KNX_ADDRESS, ColorTempModes, SupportedPlatforms
 from .schema import (
     BinarySensorSchema,
     ClimateSchema,
@@ -95,11 +95,11 @@ def _create_cover(knx_module: XKNX, config: ConfigType) -> XknxCover:
 
 def _create_light_color(
     color: str, config: ConfigType
-) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None, str | None, str | None]:
     """Load color configuration from configuration structure."""
     if "individual_colors" in config and color in config["individual_colors"]:
         sub_config = config["individual_colors"][color]
-        group_address_switch = sub_config.get(CONF_ADDRESS)
+        group_address_switch = sub_config.get(KNX_ADDRESS)
         group_address_switch_state = sub_config.get(LightSchema.CONF_STATE_ADDRESS)
         group_address_brightness = sub_config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS)
         group_address_brightness_state = sub_config.get(
@@ -160,7 +160,7 @@ def _create_light(knx_module: XKNX, config: ConfigType) -> XknxLight:
     return XknxLight(
         knx_module,
         name=config[CONF_NAME],
-        group_address_switch=config.get(CONF_ADDRESS),
+        group_address_switch=config.get(KNX_ADDRESS),
         group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
         group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
@@ -264,9 +264,9 @@ def _create_climate(knx_module: XKNX, config: ConfigType) -> XknxClimate:
         max_temp=config.get(ClimateSchema.CONF_MAX_TEMP),
         mode=climate_mode,
         on_off_invert=config[ClimateSchema.CONF_ON_OFF_INVERT],
-        create_temperature_sensors=config.get(
+        create_temperature_sensors=config[
             ClimateSchema.CONF_CREATE_TEMPERATURE_SENSORS
-        ),
+        ],
     )
 
 
@@ -275,9 +275,9 @@ def _create_switch(knx_module: XKNX, config: ConfigType) -> XknxSwitch:
     return XknxSwitch(
         knx_module,
         name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
+        group_address=config[KNX_ADDRESS],
         group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
-        invert=config.get(SwitchSchema.CONF_INVERT),
+        invert=config[SwitchSchema.CONF_INVERT],
     )
 
 
@@ -298,7 +298,7 @@ def _create_notify(knx_module: XKNX, config: ConfigType) -> XknxNotification:
     return XknxNotification(
         knx_module,
         name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
+        group_address=config[KNX_ADDRESS],
     )
 
 
@@ -307,7 +307,7 @@ def _create_scene(knx_module: XKNX, config: ConfigType) -> XknxScene:
     return XknxScene(
         knx_module,
         name=config[CONF_NAME],
-        group_address=config[CONF_ADDRESS],
+        group_address=config[KNX_ADDRESS],
         scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
     )
 
@@ -320,7 +320,7 @@ def _create_binary_sensor(knx_module: XKNX, config: ConfigType) -> XknxBinarySen
         knx_module,
         name=device_name,
         group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
-        invert=config.get(BinarySensorSchema.CONF_INVERT),
+        invert=config[BinarySensorSchema.CONF_INVERT],
         sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
         device_class=config.get(CONF_DEVICE_CLASS),
         ignore_internal_state=config[BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE],
@@ -372,7 +372,7 @@ def _create_fan(knx_module: XKNX, config: ConfigType) -> XknxFan:
     fan = XknxFan(
         knx_module,
         name=config[CONF_NAME],
-        group_address_speed=config.get(CONF_ADDRESS),
+        group_address_speed=config.get(KNX_ADDRESS),
         group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
         group_address_oscillation=config.get(FanSchema.CONF_OSCILLATION_ADDRESS),
         group_address_oscillation_state=config.get(

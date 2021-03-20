@@ -1,4 +1,6 @@
 """Test the helper method for writing tests."""
+from __future__ import annotations
+
 import asyncio
 import collections
 from collections import OrderedDict
@@ -14,11 +16,11 @@ import threading
 import time
 from time import monotonic
 import types
-from typing import Any, Awaitable, Collection, Optional
+from typing import Any, Awaitable, Collection
 from unittest.mock import AsyncMock, Mock, patch
 import uuid
 
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
+from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
@@ -36,11 +38,8 @@ from homeassistant.components.device_automation import (  # noqa: F401
 from homeassistant.components.mqtt.models import Message
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
-    ATTR_DISCOVERED,
-    ATTR_SERVICE,
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     STATE_OFF,
@@ -200,12 +199,12 @@ async def async_test_home_assistant(loop, load_registries=True):
         """
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
-        start_time: Optional[float] = None
+        start_time: float | None = None
 
         while len(self._pending_tasks) > max_remaining_tasks:
-            pending = [
+            pending: Collection[Awaitable[Any]] = [
                 task for task in self._pending_tasks if not task.done()
-            ]  # type: Collection[Awaitable[Any]]
+            ]
             self._pending_tasks.clear()
             if len(pending) > max_remaining_tasks:
                 remaining_pending = await self._await_count_and_log_pending(
@@ -385,21 +384,6 @@ def async_fire_time_changed(hass, datetime_, fire_all=False):
 
 
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
-
-
-def fire_service_discovered(hass, service, info):
-    """Fire the MQTT message."""
-    hass.bus.fire(
-        EVENT_PLATFORM_DISCOVERED, {ATTR_SERVICE: service, ATTR_DISCOVERED: info}
-    )
-
-
-@ha.callback
-def async_fire_service_discovered(hass, service, info):
-    """Fire the MQTT message."""
-    hass.bus.async_fire(
-        EVENT_PLATFORM_DISCOVERED, {ATTR_SERVICE: service, ATTR_DISCOVERED: info}
-    )
 
 
 def load_fixture(filename):
@@ -782,7 +766,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
 def patch_yaml_files(files_dict, endswith=True):
     """Patch load_yaml with a dictionary of yaml files."""
     # match using endswith, start search with longest string
-    matchlist = sorted(list(files_dict.keys()), key=len) if endswith else []
+    matchlist = sorted(files_dict.keys(), key=len) if endswith else []
 
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""

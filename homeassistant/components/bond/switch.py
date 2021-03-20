@@ -1,5 +1,7 @@
 """Support for Bond generic devices."""
-from typing import Any, Callable, List, Optional
+from __future__ import annotations
+
+from typing import Any, Callable
 
 from bond_api import Action, BPUPSubscriptions, DeviceType
 
@@ -16,14 +18,14 @@ from .utils import BondDevice, BondHub
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Bond generic devices."""
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    switches = [
+    switches: list[Entity] = [
         BondSwitch(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_generic(device.type)
@@ -39,9 +41,9 @@ class BondSwitch(BondEntity, SwitchEntity):
         """Create HA entity representing Bond generic device (switch)."""
         super().__init__(hub, device, bpup_subs)
 
-        self._power: Optional[bool] = None
+        self._power: bool | None = None
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
 
     @property

@@ -42,9 +42,9 @@
             },
             "on_supervisor": {
                 "data": {
-                    "use_addon": "Utiliser le module compl\u00e9mentaire Z-Wave JS Supervisor"
+                    "use_addon": "Utiliser le module compl\u00e9mentaire Z-Wave JS du Supervisor"
                 },
-                "description": "Voulez-vous utiliser le module compl\u00e9mentaire Z-Wave JS Supervisor?",
+                "description": "Voulez-vous utiliser le module compl\u00e9mentaire Z-Wave JS du Supervisor?",
                 "title": "S\u00e9lectionner la m\u00e9thode de connexion"
             },
             "start_addon": {

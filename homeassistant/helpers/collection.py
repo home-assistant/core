@@ -1,9 +1,11 @@
 """Helper to deal with YAML + storage."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, Awaitable, Callable, Dict, Iterable, List, Optional, cast
+from typing import Any, Awaitable, Callable, Iterable, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -72,9 +74,9 @@ class IDManager:
 
     def __init__(self) -> None:
         """Initiate the ID manager."""
-        self.collections: List[Dict[str, Any]] = []
+        self.collections: list[dict[str, Any]] = []
 
-    def add_collection(self, collection: Dict[str, Any]) -> None:
+    def add_collection(self, collection: dict[str, Any]) -> None:
         """Add a collection to check for ID usage."""
         self.collections.append(collection)
 
@@ -98,17 +100,17 @@ class IDManager:
 class ObservableCollection(ABC):
     """Base collection type that can be observed."""
 
-    def __init__(self, logger: logging.Logger, id_manager: Optional[IDManager] = None):
+    def __init__(self, logger: logging.Logger, id_manager: IDManager | None = None):
         """Initialize the base collection."""
         self.logger = logger
         self.id_manager = id_manager or IDManager()
-        self.data: Dict[str, dict] = {}
-        self.listeners: List[ChangeListener] = []
+        self.data: dict[str, dict] = {}
+        self.listeners: list[ChangeListener] = []
 
         self.id_manager.add_collection(self.data)
 
     @callback
-    def async_items(self) -> List[dict]:
+    def async_items(self) -> list[dict]:
         """Return list of items in collection."""
         return list(self.data.values())
 
@@ -134,7 +136,7 @@ class ObservableCollection(ABC):
 class YamlCollection(ObservableCollection):
     """Offer a collection based on static data."""
 
-    async def async_load(self, data: List[dict]) -> None:
+    async def async_load(self, data: list[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
         old_ids = set(self.data)
 
@@ -171,7 +173,7 @@ class StorageCollection(ObservableCollection):
         self,
         store: Store,
         logger: logging.Logger,
-        id_manager: Optional[IDManager] = None,
+        id_manager: IDManager | None = None,
     ):
         """Initialize the storage collection."""
         super().__init__(logger, id_manager)
@@ -182,7 +184,7 @@ class StorageCollection(ObservableCollection):
         """Home Assistant object."""
         return self.store.hass
 
-    async def _async_load_data(self) -> Optional[dict]:
+    async def _async_load_data(self) -> dict | None:
         """Load the data."""
         return cast(Optional[dict], await self.store.async_load())
 
@@ -274,7 +276,7 @@ class IDLessCollection(ObservableCollection):
 
     counter = 0
 
-    async def async_load(self, data: List[dict]) -> None:
+    async def async_load(self, data: list[dict]) -> None:
         """Load the collection. Overrides existing data."""
         await self.notify_changes(
             [

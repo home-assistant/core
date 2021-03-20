@@ -1,4 +1,6 @@
 """Support to interface with universal remote control devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools as ft
 import logging
@@ -8,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -29,7 +32,8 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVITY = "activity"
-ATTR_COMMAND = "command"
+ATTR_ACTIVITY_LIST = "activity_list"
+ATTR_CURRENT_ACTIVITY = "current_activity"
 ATTR_COMMAND_TYPE = "command_type"
 ATTR_DEVICE = "device"
 ATTR_NUM_REPEATS = "num_repeats"
@@ -56,6 +60,7 @@ DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
 SUPPORT_DELETE_COMMAND = 2
+SUPPORT_ACTIVITY = 4
 
 REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
@@ -143,13 +148,33 @@ class RemoteEntity(ToggleEntity):
         """Flag supported features."""
         return 0
 
+    @property
+    def current_activity(self) -> str | None:
+        """Active activity."""
+        return None
+
+    @property
+    def activity_list(self) -> list[str] | None:
+        """List of available activities."""
+        return None
+
+    @property
+    def state_attributes(self) -> dict[str, Any] | None:
+        """Return optional state attributes."""
+        if not self.supported_features & SUPPORT_ACTIVITY:
+            return None
+
+        return {
+            ATTR_ACTIVITY_LIST: self.activity_list,
+            ATTR_CURRENT_ACTIVITY: self.current_activity,
+        }
+
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
         raise NotImplementedError()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
@@ -160,7 +185,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))
 
     def delete_command(self, **kwargs: Any) -> None:
@@ -169,7 +193,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete commands from the database."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
         )

@@ -14,6 +14,7 @@
                 }
             },
             "reauth_confirm": {
+                "description": "Total Connect muss dein Konto neu authentifizieren",
                 "title": "Integration erneut authentifizieren"
             },
             "user": {

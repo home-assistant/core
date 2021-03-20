@@ -1,6 +1,5 @@
 """Support for Google Nest SDM climate devices."""
-
-from typing import Optional
+from __future__ import annotations
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
@@ -111,7 +110,7 @@ class ThermostatEntity(ClimateEntity):
         return False
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return self._device.name

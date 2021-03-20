@@ -1,4 +1,7 @@
 """SQLAlchemy util functions."""
+from __future__ import annotations
+
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import timedelta
 import logging
@@ -6,7 +9,9 @@ import os
 import time
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm.session import Session
 
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from .const import CONF_DB_INTEGRITY_CHECK, DATA_INSTANCE, SQLITE_URL_PREFIX
@@ -25,7 +30,9 @@ MAX_RESTART_TIME = timedelta(minutes=10)
 
 
 @contextmanager
-def session_scope(*, hass=None, session=None):
+def session_scope(
+    *, hass: HomeAssistantType | None = None, session: Session | None = None
+) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
         session = hass.data[DATA_INSTANCE].get_session()
@@ -168,7 +175,7 @@ def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
         run_checks_on_open_db(dbpath, conn.cursor(), db_integrity_check)
         conn.close()
     except sqlite3.DatabaseError:
-        _LOGGER.exception("The database at %s is corrupt or malformed.", dbpath)
+        _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
         return False
 
     return True
@@ -203,7 +210,7 @@ def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
 
     if not last_run_was_clean:
         _LOGGER.warning(
-            "The system could not validate that the sqlite3 database at %s was shutdown cleanly.",
+            "The system could not validate that the sqlite3 database at %s was shutdown cleanly",
             dbpath,
         )
 

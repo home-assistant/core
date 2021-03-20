@@ -1,6 +1,8 @@
 """The Z-Wave JS integration."""
+from __future__ import annotations
+
 import asyncio
-from typing import Callable, List
+from typing import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -10,7 +12,12 @@ from zwave_js_server.model.notification import Notification
 from zwave_js_server.model.value import ValueNotification
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DOMAIN, CONF_URL, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_DOMAIN,
+    CONF_URL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry, entity_registry
@@ -22,7 +29,6 @@ from .api import async_register_api
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_COMMAND_CLASS_NAME,
-    ATTR_DEVICE_ID,
     ATTR_ENDPOINT,
     ATTR_HOME_ID,
     ATTR_LABEL,
@@ -137,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_on_node_ready(node)
             return
         # if node is not yet ready, register one-time callback for ready state
-        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
+        LOGGER.debug("Node added: %s - waiting for it to become ready", node.node_id)
         node.once(
             "ready",
             lambda event: async_on_node_ready(event["node"]),
@@ -222,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
         entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
-    unsubscribe_callbacks: List[Callable] = []
+    unsubscribe_callbacks: list[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
     entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
 
@@ -237,8 +243,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # wait until all required platforms are ready
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
 
@@ -347,8 +353,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

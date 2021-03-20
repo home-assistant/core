@@ -14,6 +14,7 @@
                     "email": "E-mail",
                     "password": "Wachtwoord"
                 },
+                "description": "Voer uw SmartTub-e-mailadres en wachtwoord in om in te loggen",
                 "title": "Inloggen"
             }
         }

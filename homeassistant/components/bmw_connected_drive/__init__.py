@@ -59,7 +59,7 @@ DEFAULT_OPTIONS = {
     CONF_USE_LOCATION: False,
 }
 
-BMW_PLATFORMS = ["binary_sensor", "device_tracker", "lock", "notify", "sensor"]
+PLATFORMS = ["binary_sensor", "device_tracker", "lock", "notify", "sensor"]
 UPDATE_INTERVAL = 5  # in minutes
 
 SERVICE_UPDATE_STATE = "update_state"
@@ -138,13 +138,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await _async_update_all()
 
-    for platform in BMW_PLATFORMS:
+    for platform in PLATFORMS:
         if platform != NOTIFY_DOMAIN:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
 
-    # set up notify platform, no entry support for notify component yet,
+    # set up notify platform, no entry support for notify platform yet,
     # have to use discovery to load platform.
     hass.async_create_task(
         discovery.async_load_platform(
@@ -164,9 +164,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in BMW_PLATFORMS
-                if component != NOTIFY_DOMAIN
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+                if platform != NOTIFY_DOMAIN
             ]
         )
     )
@@ -334,7 +334,7 @@ class BMWConnectedDriveBaseEntity(Entity):
         }
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         return self._attrs
 

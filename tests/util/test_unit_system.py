@@ -171,11 +171,11 @@ def test_pressure_to_imperial():
 
 def test_properties():
     """Test the unit properties are returned as expected."""
-    assert LENGTH_KILOMETERS == METRIC_SYSTEM.length_unit
-    assert TEMP_CELSIUS == METRIC_SYSTEM.temperature_unit
-    assert MASS_GRAMS == METRIC_SYSTEM.mass_unit
-    assert VOLUME_LITERS == METRIC_SYSTEM.volume_unit
-    assert PRESSURE_PA == METRIC_SYSTEM.pressure_unit
+    assert METRIC_SYSTEM.length_unit == LENGTH_KILOMETERS
+    assert METRIC_SYSTEM.temperature_unit == TEMP_CELSIUS
+    assert METRIC_SYSTEM.mass_unit == MASS_GRAMS
+    assert METRIC_SYSTEM.volume_unit == VOLUME_LITERS
+    assert METRIC_SYSTEM.pressure_unit == PRESSURE_PA
 
 
 def test_is_metric():

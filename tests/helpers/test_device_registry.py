@@ -573,7 +573,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
     orig_kitchen_light_witout_suggested_area = registry.async_update_device(
         orig_kitchen_light.id, suggested_area=None
     )
-    orig_kitchen_light_witout_suggested_area.suggested_area is None
+    assert orig_kitchen_light_witout_suggested_area.suggested_area is None
     assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
 
 
@@ -797,7 +797,7 @@ async def test_cleanup_device_registry(hass, registry):
         identifiers={("something", "d4")}, config_entry_id="non_existing"
     )
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
     ent_reg.async_get_or_create("light", "hue", "e1", device_id=d1.id)
     ent_reg.async_get_or_create("light", "hue", "e2", device_id=d1.id)
     ent_reg.async_get_or_create("light", "hue", "e3", device_id=d3.id)
@@ -829,7 +829,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, re
     assert len(registry.devices) == 0
     assert len(registry.deleted_devices) == 3
 
-    ent_reg = await entity_registry.async_get_registry(hass)
+    ent_reg = entity_registry.async_get(hass)
     device_registry.async_cleanup(hass, registry, ent_reg)
 
     assert len(registry.devices) == 0
@@ -847,7 +847,6 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(hass, re
 async def test_cleanup_startup(hass):
     """Test we run a cleanup on startup."""
     hass.state = CoreState.not_running
-    await device_registry.async_get_registry(hass)
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_call"
