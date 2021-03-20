@@ -34,16 +34,16 @@ def entity_assertions(
     if num_exp_devices is None:
         num_exp_devices = num_exp_entities
 
-    assert len(entity_reg.entities.keys()) == num_exp_entities
-    assert len(device_reg.devices.keys()) == num_exp_devices
+    assert len(entity_reg.entities) == num_exp_entities
+    assert len(device_reg.devices) == num_exp_devices
 
     if expected_entities is not None:
-        for exp_entity, present in expected_entities.items():
-            assert bool(entity_reg.async_get(exp_entity)) == present
+        for exp_entity_id, present in expected_entities.items():
+            assert bool(entity_reg.async_get(exp_entity_id)) == present
 
     if expected_devices is not None:
-        for exp_device, present in expected_devices.items():
-            assert bool(device_reg.async_get(exp_device)) == present
+        for exp_device_id, present in expected_devices.items():
+            assert bool(device_reg.async_get(exp_device_id)) == present
 
 
 def one_entity_assertion(hass, device_uid, availability):
@@ -52,12 +52,12 @@ def one_entity_assertion(hass, device_uid, availability):
     device_reg = hass.helpers.device_registry.async_get(hass)
 
     device_id = device_reg.async_get_device({(DOMAIN, device_uid)}).id
-    device_entities = hass.helpers.entity_registry.async_entries_for_device(
+    entity_entries = hass.helpers.entity_registry.async_entries_for_device(
         entity_reg, device_id
     )
 
-    assert len(device_entities) == 1
-    one_entity = device_entities[0]
+    assert len(entity_entries) == 1
+    entity_entry = entity_entries[0]
     assert (
         hass.data["entity_platform"][DOMAIN][0].entities[one_entity.entity_id].available
         == availability
