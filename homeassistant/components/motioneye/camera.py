@@ -42,6 +42,8 @@ from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
     CONF_ON_UNLOAD,
+    CONF_PASSWORD_SURVEILLANCE,
+    CONF_USERNAME_SURVEILLANCE,
     DOMAIN,
     SIGNAL_ENTITY_REMOVE,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
@@ -83,8 +85,9 @@ async def async_setup_entry(
                 MotionEyeMjpegCamera(
                     entry.data[CONF_HOST],
                     entry.data[CONF_PORT],
-                    entry.data.get(CONF_USERNAME) or DEFAULT_USERNAME_SURVEILLANCE,
-                    entry.data.get(CONF_PASSWORD) or "",
+                    entry.data.get(CONF_USERNAME_SURVEILLANCE)
+                    or DEFAULT_USERNAME_SURVEILLANCE,
+                    entry.data.get(CONF_PASSWORD_SURVEILLANCE) or "",
                     HTTP_BASIC_AUTHENTICATION,  # TODO Add auth options.
                     camera,
                     entry_data[CONF_CLIENT],
