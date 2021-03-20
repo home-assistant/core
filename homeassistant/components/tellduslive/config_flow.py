@@ -29,7 +29,7 @@ KEY_TOKEN_SECRET = "token_secret"
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("tellduslive")
+@config_entries.HANDLERS.register(DOMAIN)
 class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 

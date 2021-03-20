@@ -15,6 +15,7 @@ from .const import (
     CONF_IDENTITY,
     CONF_IMPORT_GROUPS,
     CONF_KEY,
+    DOMAIN,
     KEY_SECURITY_CODE,
 )
 
@@ -28,7 +29,7 @@ class AuthError(Exception):
         self.code = code
 
 
-@config_entries.HANDLERS.register("tradfri")
+@config_entries.HANDLERS.register(DOMAIN)
 class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
