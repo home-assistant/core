@@ -80,6 +80,13 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             self._changed_by = lock_activity.operated_by
             update_lock_detail_from_activity(self._detail, lock_activity)
 
+        bridge_activity = self._data.activity_stream.get_latest_device_activity(
+            self._device_id, [ActivityType.BRIDGE_OPERATION]
+        )
+
+        if bridge_activity is not None:
+            update_lock_detail_from_activity(self._detail, bridge_activity)
+
         self._update_lock_status_from_detail()
 
     @property

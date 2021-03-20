@@ -133,7 +133,7 @@ class ActivityStream(AugustSubscriberMixin):
             "Completed retrieving device activities for house id %s", house_id
         )
 
-        updated_device_ids = self._process_newer_device_activities(activities)
+        updated_device_ids = self.async_process_newer_device_activities(activities)
 
         if not updated_device_ids:
             return
@@ -145,7 +145,8 @@ class ActivityStream(AugustSubscriberMixin):
             )
             self.async_signal_device_id_update(device_id)
 
-    def _process_newer_device_activities(self, activities):
+    def async_process_newer_device_activities(self, activities):
+        """Process activities if they are newer than the last one."""
         updated_device_ids = set()
         for activity in activities:
             device_id = activity.device_id

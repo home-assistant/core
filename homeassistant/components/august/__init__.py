@@ -4,15 +4,9 @@ from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
-from yalexs.doorbell import DoorbellDetail
 from yalexs.exceptions import AugustApiAIOHTTPError
-from yalexs.lock import LockDetail
+from yalexs.pubnub_activity import activities_from_pubnub_message
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
-from yalexs.util import (
-    create_activity_from_pubnub_message,
-    update_doorbell_details_from_pubnub_message,
-    update_lock_details_from_pubnub_message,
-)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, HTTP_UNAUTHORIZED
@@ -170,36 +164,9 @@ class AugustData(AugustSubscriberMixin):
     def async_pubnub_message(self, device_id, date_time, message):
         """Process a pubnub message."""
         device = self.get_device_detail(device_id)
-        # TODO: move this to pypi
-        # from yalexs.pubnub_activity import activity_from_pubnub_message
-        # then get rid of update_doorbell_details_from_pubnub_message and update_lock_details_from_pubnub_message
-        # activities = activities_from_pubnub_message(device, data_time, message)
-        # if activities:
-        #    - LockOperationActivity (users in LockDetail)
-        #    - DoorOperationActivity
-        #    - DoorbellDingActivity
-        #    - DoorbellMotionActivity
-        #    - BridgeOnlineActivity (TODO)
-        #    - BridgeOfflineActivity (TODO)
-        #    self.activity_stream.add_activities(activities)
-        #    self.async_signal_device_id_update(device.device_id)
-        # self.activity_stream.async_schedule_house_id_refresh(device.house_id)
-        if isinstance(device, LockDetail):
-            if update_lock_details_from_pubnub_message(device, date_time, message):
-                _LOGGER.debug(
-                    "async_signal_device_id_update (from pubnub): %s",
-                    device.device_id,
-                )
-                self.async_signal_device_id_update(device.device_id)
-        elif isinstance(device, DoorbellDetail):
-            update_doorbell_details_from_pubnub_message(device, date_time, message)
-            activity = create_activity_from_pubnub_message(device, date_time, message)
-            if activity is not None:
-                self.activity_stream.add_activity(activity)
-            _LOGGER.debug(
-                "async_signal_device_id_update (from pubnub): %s",
-                device.device_id,
-            )
+        activities = activities_from_pubnub_message(device, date_time, message)
+        if activities:
+            self.activity_stream.async_process_newer_device_activities(activities)
             self.async_signal_device_id_update(device.device_id)
         self.activity_stream.async_schedule_house_id_refresh(device.house_id)
 
