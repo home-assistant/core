@@ -208,7 +208,7 @@ class Counter(RestoreEntity):
         return self._state
 
     @property
-    def state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         ret = {
             ATTR_EDITABLE: self.editable,

@@ -137,7 +137,7 @@ class CalendarEventDevice(Entity):
         raise NotImplementedError()
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the entity state attributes."""
         event = self.event
         if event is None:
