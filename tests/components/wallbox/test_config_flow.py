@@ -120,15 +120,18 @@ async def test_validate_input(hass):
 
 
 def test_configflow_class():
+    """Test configFlow class."""
     configflow = config_flow.ConfigFlow
     assert configflow
 
 
 def test_cannot_connect_class():
+    """Test cannot Connect class."""
     cannot_connect = config_flow.CannotConnect
     assert cannot_connect
 
 
 def test_invalid_auth_class():
+    """Test invalid auth class."""
     invalid_auth = config_flow.InvalidAuth
     assert invalid_auth
