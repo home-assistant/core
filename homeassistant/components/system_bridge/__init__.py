@@ -91,7 +91,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                     "Error sending command. Response message was: %s", response.message
                 )
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.error("Error sending command. Error was: %s", exception)
+            _LOGGER.warning("Error sending command. Error was: %s", exception)
 
     async def handle_open(call):
         """Handle the open service call."""
@@ -110,7 +110,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             await bridge.async_open({CONF_PATH: path})
             _LOGGER.debug("Sent.")
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
-            _LOGGER.error("Error sending. Error was: %s", exception)
+            _LOGGER.warning("Error sending. Error was: %s", exception)
 
     hass.services.async_register(
         DOMAIN,
@@ -151,7 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.warning(exception)
         return False
     except BRIDGE_CONNECTION_ERRORS as exception:
-        _LOGGER.error(exception)
+        _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 
     async def async_update_data() -> Bridge:
