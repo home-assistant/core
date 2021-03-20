@@ -4,6 +4,7 @@ from aiohttp.client_exceptions import (
     ClientConnectorError,
     ClientResponseError,
 )
+from asyncio.exceptions import TimeoutError
 from systembridge.exceptions import BridgeException
 
 DOMAIN = "system_bridge"
@@ -13,4 +14,5 @@ BRIDGE_CONNECTION_ERRORS = (
     ClientConnectorError,
     ClientConnectionError,
     ClientResponseError,
+    TimeoutError,
 )
