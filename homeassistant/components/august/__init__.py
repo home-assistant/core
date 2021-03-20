@@ -129,9 +129,15 @@ class AugustData(AugustSubscriberMixin):
     async def async_setup(self):
         """Async setup of august device data and activities."""
         token = self._august_gateway.access_token
-        user_data = await self._api.async_get_user(token)
-        locks = await self._api.async_get_operable_locks(token) or []
-        doorbells = await self._api.async_get_doorbells(token) or []
+        user_data, locks, doorbells = await asyncio.gather(
+            self._api.async_get_user(token),
+            self._api.async_get_operable_locks(token),
+            self._api.async_get_doorbells(token),
+        )
+        if not doorbells:
+            doorbells = []
+        if not locks:
+            locks = []
 
         self._doorbells_by_id = {device.device_id: device for device in doorbells}
         self._locks_by_id = {device.device_id: device for device in locks}
@@ -203,27 +209,34 @@ class AugustData(AugustSubscriberMixin):
         await self._async_refresh_device_detail_by_ids(self._subscriptions.keys())
 
     async def _async_refresh_device_detail_by_ids(self, device_ids_list):
-        for device_id in device_ids_list:
-            if device_id in self._locks_by_id:
-                await self._async_update_device_detail(
-                    self._locks_by_id[device_id], self._api.async_get_lock_detail
-                )
-                # keypads are always attached to locks
-                if (
-                    device_id in self._device_detail_by_id
-                    and self._device_detail_by_id[device_id].keypad is not None
-                ):
-                    keypad = self._device_detail_by_id[device_id].keypad
-                    self._device_detail_by_id[keypad.device_id] = keypad
-            elif device_id in self._doorbells_by_id:
-                await self._async_update_device_detail(
-                    self._doorbells_by_id[device_id],
-                    self._api.async_get_doorbell_detail,
-                )
-            _LOGGER.debug(
-                "async_signal_device_id_update (from detail updates): %s", device_id
+        await asyncio.gather(
+            *[
+                self._async_refresh_device_detail_by_id(device_id)
+                for device_id in device_ids_list
+            ]
+        )
+
+    async def _async_refresh_device_detail_by_id(self, device_id):
+        if device_id in self._locks_by_id:
+            await self._async_update_device_detail(
+                self._locks_by_id[device_id], self._api.async_get_lock_detail
             )
-            self.async_signal_device_id_update(device_id)
+            # keypads are always attached to locks
+            if (
+                device_id in self._device_detail_by_id
+                and self._device_detail_by_id[device_id].keypad is not None
+            ):
+                keypad = self._device_detail_by_id[device_id].keypad
+                self._device_detail_by_id[keypad.device_id] = keypad
+        elif device_id in self._doorbells_by_id:
+            await self._async_update_device_detail(
+                self._doorbells_by_id[device_id],
+                self._api.async_get_doorbell_detail,
+            )
+        _LOGGER.debug(
+            "async_signal_device_id_update (from detail updates): %s", device_id
+        )
+        self.async_signal_device_id_update(device_id)
 
     async def _async_update_device_detail(self, device, api_call):
         _LOGGER.debug(
