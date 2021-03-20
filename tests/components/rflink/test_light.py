@@ -96,20 +96,16 @@ async def test_default_setup(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.protocol2_0_1").state == "on"
 
     # test changing state from HA propagates to RFLink
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == "off"
     assert protocol.send_command_ack.call_args_list[0][0][0] == "protocol_0_0"
     assert protocol.send_command_ack.call_args_list[0][0][1] == "off"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
     await hass.async_block_till_done()
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
@@ -118,10 +114,8 @@ async def test_default_setup(hass, monkeypatch):
     # protocols supporting dimming and on/off should create hybrid light entity
     event_callback({"id": "newkaku_0_1", "command": "off"})
     await hass.async_block_till_done()
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1"}
     )
     await hass.async_block_till_done()
 
@@ -131,23 +125,19 @@ async def test_default_setup(hass, monkeypatch):
     # and send on command for fallback
     assert protocol.send_command_ack.call_args_list[3][0][1] == "on"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1", ATTR_BRIGHTNESS: 128},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.newkaku_0_1", ATTR_BRIGHTNESS: 128},
     )
     await hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_args_list[4][0][1] == "7"
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.dim_test", ATTR_BRIGHTNESS: 128},
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: f"{DOMAIN}.dim_test", ATTR_BRIGHTNESS: 128},
     )
     await hass.async_block_till_done()
 
@@ -210,10 +200,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     )
 
     # test if signal repetition is performed according to configuration
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
 
     # wait for commands and repetitions to finish
@@ -222,10 +210,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     assert protocol.send_command_ack.call_count == 2
 
     # test if default apply to configured devices
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test1"}
     )
 
     # wait for commands and repetitions to finish
@@ -239,10 +225,8 @@ async def test_signal_repetitions(hass, monkeypatch):
     # make sure entity is created before setting state
     await hass.async_block_till_done()
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.protocol_0_2"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.protocol_0_2"}
     )
 
     # wait for commands and repetitions to finish
@@ -340,20 +324,16 @@ async def test_type_toggle(hass, monkeypatch):
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "off"
 
     # test async_turn_off, must set state = 'on' ('off' + toggle)
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
     )
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "on"
 
     # test async_turn_on, must set state = 'off' (yes, sounds crazy)
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.toggle_test"}
     )
     await hass.async_block_till_done()
 
