@@ -380,6 +380,9 @@ class ReconnectLogic(RecordUpdateListener):
         """Stop as an async callback function."""
         self._hass.async_create_task(self.stop())
 
+    async def _set_reconnect(self):
+        self._reconnect_event.set()
+
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Listen to zeroconf updated mDNS records."""
         if not isinstance(record, DNSPointer):
@@ -398,15 +401,12 @@ class ReconnectLogic(RecordUpdateListener):
             return
 
         # Tell reconnection logic to retry connection attempt now (even before reconnect timer finishes)
-        async def set_reconnect():
-            self._reconnect_event.set()
-
         _LOGGER.debug(
             "%s: Triggering reconnect because of received mDNS record %s",
             self._host,
             record,
         )
-        self._hass.add_job(set_reconnect)
+        self._hass.add_job(self._set_reconnect)
 
 
 async def _async_setup_device_registry(
