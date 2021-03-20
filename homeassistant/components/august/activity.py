@@ -36,19 +36,24 @@ class ActivityStream(AugustSubscriberMixin):
     async def async_setup(self):
         """Token refresh check and catch up the activity stream."""
         for house_id in self._house_ids:
-
-            async def _async_update_house_id():
-                await self._async_update_house_id(house_id)
-
-            self._update_debounce[house_id] = Debouncer(
-                self._hass,
-                _LOGGER,
-                cooldown=ACTIVITY_UPDATE_INTERVAL.seconds,
-                immediate=True,
-                function=_async_update_house_id,
-            )
+            self._update_debounce[house_id] = self._async_create_debouncer(house_id)
 
         await self._async_refresh(utcnow())
+
+    @callback
+    def _async_create_debouncer(self, house_id):
+        """Create a debouncer for the house id."""
+
+        async def _async_update_house_id():
+            await self._async_update_house_id(house_id)
+
+        return Debouncer(
+            self._hass,
+            _LOGGER,
+            cooldown=ACTIVITY_UPDATE_INTERVAL.seconds,
+            immediate=True,
+            function=_async_update_house_id,
+        )
 
     @callback
     def async_stop(self):
@@ -81,7 +86,7 @@ class ActivityStream(AugustSubscriberMixin):
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
         if self._pubnub.connected:
-            _LOGGER.debug("Skipping update because pubnub is connected.")
+            _LOGGER.debug("Skipping update because pubnub is connected")
             return
         await self._async_update_device_activities(time)
 

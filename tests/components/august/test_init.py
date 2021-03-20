@@ -3,8 +3,8 @@ import asyncio
 from unittest.mock import patch
 
 from aiohttp import ClientResponseError
-from august.authenticator_common import AuthenticationState
-from august.exceptions import AugustApiAIOHTTPError
+from yalexs.authenticator_common import AuthenticationState
+from yalexs.exceptions import AugustApiAIOHTTPError
 
 from homeassistant import setup
 from homeassistant.components.august.const import DOMAIN
@@ -46,7 +46,7 @@ async def test_august_is_offline(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
         side_effect=asyncio.TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -152,7 +152,7 @@ async def test_auth_fails(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
         side_effect=ClientResponseError(None, None, status=401),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -178,7 +178,7 @@ async def test_bad_password(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
         return_value=_mock_august_authentication(
             "original_token", 1234, AuthenticationState.BAD_PASSWORD
         ),
@@ -206,7 +206,7 @@ async def test_http_failure(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
         side_effect=ClientResponseError(None, None, status=500),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -230,7 +230,7 @@ async def test_unknown_auth_state(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
         return_value=_mock_august_authentication("original_token", 1234, None),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -256,7 +256,7 @@ async def test_requires_validation_state(hass):
 
     await setup.async_setup_component(hass, "persistent_notification", {})
     with patch(
-        "august.authenticator_async.AuthenticatorAsync.async_authenticate",
+        "yalexs.authenticator_async.AuthenticatorAsync.async_authenticate",
         return_value=_mock_august_authentication(
             "original_token", 1234, AuthenticationState.REQUIRES_VALIDATION
         ),
