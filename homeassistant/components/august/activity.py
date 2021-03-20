@@ -62,9 +62,9 @@ class ActivityStream(AugustSubscriberMixin):
         """Cleanup any debounces."""
         for debouncer in self._update_debounce.values():
             debouncer.async_cancel()
-        for house_id in list(self._scheduled_updates):
+        for house_id in self._scheduled_updates:
             self._scheduled_updates[house_id]()
-            del self._scheduled_updates[house_id]
+            self._scheduled_updates[house_id] = None
 
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
@@ -108,7 +108,7 @@ class ActivityStream(AugustSubscriberMixin):
     @callback
     def async_schedule_house_id_refresh(self, house_id):
         """Update for a house activities now and once in the future."""
-        if self._schedule_updates[house_id]:
+        if self._schedule_updates.get(house_id):
             self._schedule_updates[house_id]()
             self._schedule_updates[house_id] = None
 
