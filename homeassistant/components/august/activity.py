@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
+from yalexs.activity import SOURCE_LOG
 
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
@@ -152,14 +153,18 @@ class ActivityStream(AugustSubscriberMixin):
             lastest_activity = device_activities.get(activity_type)
 
             # Ignore activities that are older than the latest one
+            # unless they come from the log which we allow to override pubsub and
+            # lock operations
             if (
-                lastest_activity
-                and lastest_activity.activity_start_time >= activity.activity_start_time
+                not lastest_activity
+                or lastest_activity.activity_start_time < activity.activity_start_time
+                or (
+                    lastest_activity.source != SOURCE_LOG
+                    and activity.source == SOURCE_LOG
+                )
             ):
-                continue
 
-            device_activities[activity_type] = activity
-
-            updated_device_ids.add(device_id)
+                device_activities[activity_type] = activity
+                updated_device_ids.add(device_id)
 
         return updated_device_ids
