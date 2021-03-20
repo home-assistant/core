@@ -7,19 +7,10 @@ from .const import DOMAIN
 
 async def async_setup(hass, config):
     """Set up this integration."""
-    if DOMAIN in config:
-        for device in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=device,
-                )
-            )
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
+async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry) -> bool:
     """Load the saved entities."""
 
     hass.async_create_task(

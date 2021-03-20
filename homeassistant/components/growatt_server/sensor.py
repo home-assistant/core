@@ -367,8 +367,6 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
             )
         )
 
-    return True
-
 
 async def async_setup_entry(hass, config_entry, add_entities):
     """Set up growatt server from Config Flow."""

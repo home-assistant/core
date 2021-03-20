@@ -63,7 +63,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.api.plant_list, self.user_id
             )
 
-            if len(plant_info["data"]) == 0:
+            if not plant_info["data"]:
                 return self.async_abort(reason="no_plants")
 
             self.plants = {}
@@ -73,7 +73,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if (
                 CONF_PLANT_ID not in user_input or user_input[CONF_PLANT_ID] != "0"
             ) and len(plant_info["data"]) > 1:
-                return await self._show_plant_id_form(None)
+                return await self._show_plant_id_form()
             user_input[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
 
         user_input[CONF_NAME] = self.plants[user_input[CONF_PLANT_ID]]
