@@ -4,9 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.netatmo import sensor
-from homeassistant.components.netatmo.helper import NetatmoArea
 from homeassistant.components.netatmo.sensor import MODULE_TYPE_WIND
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import TEST_TIME
 from .conftest import selected_platforms
@@ -38,43 +36,35 @@ async def test_public_weather_sensor(hass, sensor_entry):
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
     assert hass.states.get(f"{prefix}pressure").state == "1010.3"
 
-    # Test adding new public area
-    area_a = NetatmoArea(
-        lat_ne=32.2345678,
-        lon_ne=-117.1234567,
-        lat_sw=32.1234567,
-        lon_sw=-117.2345678,
-        show_on_map=False,
-        area_name="Home avg",
-        mode="avg",
-    )
-    async_dispatcher_send(
-        hass,
-        "netatmo-config-Home avg",
-        area_a,
-    )
-    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) > 0
+    entities_before_change = len(hass.states.async_all())
 
-    # Test overwriting existing area
-    area_b = NetatmoArea(
-        lat_ne=32.2345678,
-        lon_ne=-117.1234567,
-        lat_sw=32.1234567,
-        lon_sw=-117.2345678,
-        show_on_map=True,
-        area_name="Home avg",
-        mode="avg",
+    valid_option = {
+        "lat_ne": 32.91336,
+        "lon_ne": -117.187429,
+        "lat_sw": 32.83336,
+        "lon_sw": -117.26743,
+        "show_on_map": True,
+        "area_name": "Home avg",
+        "mode": "avg",
+    }
+
+    result = await hass.config_entries.options.async_init(sensor_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"new_area": "Home avg"}
     )
-    async_dispatcher_send(
-        hass,
-        "netatmo-config-Home avg",
-        area_b,
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input=valid_option
     )
-    await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
     assert hass.states.get(f"{prefix}humidity").state == "63.2"
     assert hass.states.get(f"{prefix}pressure").state == "1010.3"
+
+    assert len(hass.states.async_all()) == entities_before_change
 
 
 @pytest.mark.parametrize(
