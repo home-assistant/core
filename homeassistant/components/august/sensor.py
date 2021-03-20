@@ -154,11 +154,11 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.LOCK_OPERATION]
+            self._device_id, {ActivityType.LOCK_OPERATION}
         )
 
         self._available = True
-        if lock_activity is not None and lock_activity.operated_by is not None:
+        if lock_activity is not None:
             self._state = lock_activity.operated_by
             self._operated_remote = lock_activity.operated_remote
             self._operated_keypad = lock_activity.operated_keypad
