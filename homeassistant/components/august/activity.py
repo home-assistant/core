@@ -25,7 +25,7 @@ class ActivityStream(AugustSubscriberMixin):
         """Init August activity stream object."""
         super().__init__(hass, ACTIVITY_UPDATE_INTERVAL)
         self._hass = hass
-        self._scheduled_updates = {}
+        self._schedule_updates = {}
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
