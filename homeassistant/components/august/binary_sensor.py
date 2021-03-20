@@ -40,14 +40,14 @@ def _retrieve_motion_state(data, detail):
     return _activity_time_based_state(
         data,
         detail.device_id,
-        [ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_DING],
+        {ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_DING},
     )
 
 
 def _retrieve_ding_state(data, detail):
 
     return _activity_time_based_state(
-        data, detail.device_id, [ActivityType.DOORBELL_DING]
+        data, detail.device_id, {ActivityType.DOORBELL_DING}
     )
 
 
@@ -144,14 +144,14 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         door_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.DOOR_OPERATION]
+            self._device_id, {ActivityType.DOOR_OPERATION}
         )
 
         if door_activity is not None:
             update_lock_detail_from_activity(self._detail, door_activity)
 
         bridge_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.BRIDGE_OPERATION]
+            self._device_id, {ActivityType.BRIDGE_OPERATION}
         )
 
         if bridge_activity is not None:
