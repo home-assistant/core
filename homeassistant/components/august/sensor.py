@@ -1,7 +1,7 @@
 """Support for August sensors."""
 import logging
 
-from august.activity import ActivityType
+from yalexs.activity import ActivityType
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE

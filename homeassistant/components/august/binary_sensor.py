@@ -2,9 +2,9 @@
 from datetime import datetime, timedelta
 import logging
 
-from august.activity import ActivityType
-from august.lock import LockDoorStatus
-from august.util import update_lock_detail_from_activity
+from yalexs.activity import ActivityType
+from yalexs.lock import LockDoorStatus
+from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,

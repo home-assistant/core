@@ -1,9 +1,9 @@
 """Support for August lock."""
 import logging
 
-from august.activity import ActivityType
-from august.lock import LockStatus
-from august.util import update_lock_detail_from_activity
+from yalexs.activity import ActivityType
+from yalexs.lock import LockStatus
+from yalexs.util import update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
 from homeassistant.const import ATTR_BATTERY_LEVEL
