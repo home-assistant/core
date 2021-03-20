@@ -45,13 +45,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Handle a config flow for OctoPrint."""
         self.discovery_schema = None
-        self._user_input = {}
+        self._user_input = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         # When coming back from the progress steps, the user_input is stored in the
         # instance variable instead of being passed in
-        if not user_input and len(self._user_input) > 0:
+        if user_input is None and self._user_input:
             user_input = self._user_input
 
         if user_input is None:
@@ -59,26 +59,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=data)
 
         if CONF_API_KEY in user_input:
+            errors = {}
             try:
                 return await self._finish_config(user_input)
             except data_entry_flow.AbortFlow as err:
                 raise err from None
             except CannotConnect:
-                return self.async_show_form(
-                    step_id="user",
-                    errors={"base": "cannot_connect"},
-                    data_schema=_schema_with_defaults(
-                        user_input.get(CONF_USERNAME),
-                        user_input[CONF_HOST],
-                        user_input[CONF_PORT],
-                        user_input[CONF_PATH],
-                        user_input[CONF_PORT],
-                    ),
-                )
+                errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
+                errors["base"] = "unknown"
+
+            if len(errors) > 0:
                 return self.async_show_form(
                     step_id="user",
-                    errors={"base": "unknown"},
+                    errors=errors,
                     data_schema=_schema_with_defaults(
                         user_input.get(CONF_USERNAME),
                         user_input[CONF_HOST],
@@ -129,7 +123,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             discovery = await octoprint.get_discovery_info()
         except ApiError as err:
-            _LOGGER.exception("Failed to connect to printer")
+            _LOGGER.error("Failed to connect to printer")
             raise CannotConnect from err
 
         await self.async_set_unique_id(discovery.upnp_uuid, raise_on_progress=False)
