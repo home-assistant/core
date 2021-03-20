@@ -40,9 +40,6 @@ class ActivityStream(AugustSubscriberMixin):
 
         await self._async_refresh(utcnow())
 
-        for house_id in self._house_ids:
-            self._update_debounce[house_id].immediate = False
-
     @callback
     def _async_create_debouncer(self, house_id):
         """Create a debouncer for the house id."""
