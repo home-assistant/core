@@ -1,6 +1,8 @@
 """Support for a ScreenLogic Sensor."""
 import logging
 
+from screenlogicpy.const import DEVICE_TYPE
+
 from homeassistant.components.sensor import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE
 
 from . import ScreenlogicEntity
@@ -11,8 +13,8 @@ _LOGGER = logging.getLogger(__name__)
 PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
-    "temperature": DEVICE_CLASS_TEMPERATURE,
-    "energy": DEVICE_CLASS_POWER,
+    DEVICE_TYPE.TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
+    DEVICE_TYPE.ENERGY: DEVICE_CLASS_POWER,
 }
 
 
@@ -49,9 +51,7 @@ class ScreenLogicSensor(ScreenlogicEntity):
     def device_class(self):
         """Device class of the sensor."""
         device_class = self.sensor.get("device_type")
-        if device_class in SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS:
-            return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS[device_class]
-        return None
+        return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_class)
 
     @property
     def state(self):
@@ -88,9 +88,7 @@ class ScreenLogicPumpSensor(ScreenlogicEntity):
     def device_class(self):
         """Return the device class."""
         device_class = self.pump_sensor.get("device_type")
-        if device_class in SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS:
-            return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS[device_class]
-        return None
+        return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_class)
 
     @property
     def state(self):

@@ -1,7 +1,7 @@
 """Support for a ScreenLogic heating device."""
 import logging
 
-from screenlogicpy.const import HEAT_MODE
+from screenlogicpy.const import EQUIPMENT, HEAT_MODE
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -52,7 +52,7 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         super().__init__(coordinator, body)
         self._configured_heat_modes = []
         # Is solar listed as available equipment?
-        if self.coordinator.data["config"]["equipment_flags"] & 0x1:
+        if self.coordinator.data["config"]["equipment_flags"] & EQUIPMENT.FLAG_SOLAR:
             self._configured_heat_modes.extend(
                 [HEAT_MODE.SOLAR, HEAT_MODE.SOLAR_PREFERRED]
             )
@@ -188,26 +188,28 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Run when entity is about to be added."""
         await super().async_added_to_hass()
+
         _LOGGER.debug("Startup last preset is %s", self._last_preset)
-        if self._last_preset is None:
-            prev_state = await self.async_get_last_state()
-            if (
-                prev_state is not None
-                and prev_state.attributes.get(ATTR_PRESET_MODE) is not None
-            ):
-                _LOGGER.debug(
-                    "Startup setting last_preset to %s from prev_state",
-                    HEAT_MODE.NUM_FOR_NAME[prev_state.attributes.get(ATTR_PRESET_MODE)],
-                )
-                self._last_preset = HEAT_MODE.NUM_FOR_NAME[
-                    prev_state.attributes.get(ATTR_PRESET_MODE)
-                ]
-            else:
-                _LOGGER.debug(
-                    "Startup setting last_preset to default (%s)",
-                    self._configured_heat_modes[0],
-                )
-                self._last_preset = self._configured_heat_modes[0]
+        if self._last_preset is not None:
+            return
+        prev_state = await self.async_get_last_state()
+        if (
+            prev_state is not None
+            and prev_state.attributes.get(ATTR_PRESET_MODE) is not None
+        ):
+            _LOGGER.debug(
+                "Startup setting last_preset to %s from prev_state",
+                HEAT_MODE.NUM_FOR_NAME[prev_state.attributes.get(ATTR_PRESET_MODE)],
+            )
+            self._last_preset = HEAT_MODE.NUM_FOR_NAME[
+                prev_state.attributes.get(ATTR_PRESET_MODE)
+            ]
+        else:
+            _LOGGER.debug(
+                "Startup setting last_preset to default (%s)",
+                self._configured_heat_modes[0],
+            )
+            self._last_preset = self._configured_heat_modes[0]
 
     @property
     def body(self):
