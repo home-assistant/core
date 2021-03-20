@@ -15,6 +15,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ScreenlogicEntity
@@ -134,16 +135,16 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the heater."""
-        temperature = kwargs[ATTR_TEMPERATURE]
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
+
         if await self.hass.async_add_executor_job(
             self.gateway.set_heat_temp, int(self._data_key), int(temperature)
         ):
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.warning(
-                "Failed to set_temperature %s on %s",
-                temperature,
-                self.body["body_type"]["value"],
+            raise HomeAssistantError(
+                f"Failed to set_temperature {temperature} on body {self.body['body_type']['value']}"
             )
 
     async def async_set_hvac_mode(self, hvac_mode) -> None:
@@ -157,10 +158,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         ):
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.warning(
-                "Failed to set_hvac_mode %s on %s",
-                mode,
-                self.body["body_type"]["value"],
+            raise HomeAssistantError(
+                f"Failed to set_hvac_mode {mode} on body {self.body['body_type']['value']}"
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -174,10 +173,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         ):
             await self.coordinator.async_request_refresh()
         else:
-            _LOGGER.warning(
-                "Failed to set_preset_mode %s on %s",
-                mode,
-                self.body["body_type"]["value"],
+            raise HomeAssistantError(
+                f"Failed to set_preset_mode {mode} on body {self.body['body_type']['value']}"
             )
 
     async def async_added_to_hass(self):
