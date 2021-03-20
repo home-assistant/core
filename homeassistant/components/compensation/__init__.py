@@ -89,13 +89,13 @@ async def async_setup(hass, config):
                     coefficients = np.polyfit(x_values, y_values, degree)
                 except FloatingPointError as error:
                     _LOGGER.error(
-                        "Setup of %s encountered an error, %s.",
+                        "Setup of %s encountered an error, %s",
                         compensation,
                         error,
                     )
                 for warning in all_warnings:
                     _LOGGER.warning(
-                        "Setup of %s encountered a warning, %s.",
+                        "Setup of %s encountered a warning, %s",
                         compensation,
                         str(warning.message).lower(),
                     )
