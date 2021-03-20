@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Optional
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, patch
 from uuid import UUID
 
 import attr
