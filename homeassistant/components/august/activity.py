@@ -115,8 +115,7 @@ class ActivityStream(AugustSubscriberMixin):
         async def _update_house_activities():
             await self._update_debounce[house_id].async_call()
 
-        asyncio.create_task(self._update_debounce[house_id].async_call())
-
+        self._hass.async_create_task(self._update_debounce[house_id].async_call())
         # Schedule an update past the debounce to ensure
         # we catch the case where the lock operator is
         # not updated or the lock failed
