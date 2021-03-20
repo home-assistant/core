@@ -150,6 +150,13 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         if door_activity is not None:
             update_lock_detail_from_activity(self._detail, door_activity)
 
+        bridge_activity = self._data.activity_stream.get_latest_device_activity(
+            self._device_id, [ActivityType.BRIDGE_OPERATION]
+        )
+
+        if bridge_activity is not None:
+            update_lock_detail_from_activity(self._detail, bridge_activity)
+
     @property
     def unique_id(self) -> str:
         """Get the unique of the door open binary sensor."""
