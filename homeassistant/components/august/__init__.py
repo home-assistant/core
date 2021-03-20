@@ -9,6 +9,7 @@ from yalexs.exceptions import AugustApiAIOHTTPError
 from yalexs.lock import LockDetail
 from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
 from yalexs.util import (
+    create_activity_from_pubnub_message,
     update_doorbell_details_from_pubnub_message,
     update_lock_details_from_pubnub_message,
 )
@@ -178,6 +179,9 @@ class AugustData(AugustSubscriberMixin):
                 self.async_signal_device_id_update(device.device_id)
         elif isinstance(device, DoorbellDetail):
             update_doorbell_details_from_pubnub_message(device, date_time, message)
+            activity = create_activity_from_pubnub_message(device, date_time, message)
+            if activity is not None:
+                self.activity_stream.add_activity(activity)
             _LOGGER.debug(
                 "async_signal_device_id_update (from pubnub): %s",
                 device.device_id,
