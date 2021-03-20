@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Temperatura del pavimento",
-                    "precision": "Precisione"
+                    "precision": "Precisione",
+                    "read_precision": "Leggi la precisione",
+                    "set_precision": "Imposta la precisione"
                 },
                 "description": "Opzioni per OpenTherm Gateway"
             }

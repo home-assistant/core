@@ -16,5 +16,17 @@
                 "title": "Sentry"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Optionele naam van de omgeving.",
+                    "event_custom_components": "Gebeurtenissen verzenden vanuit aangepaste onderdelen",
+                    "event_handled": "Stuur afgehandelde gebeurtenissen",
+                    "event_third_party_packages": "Gebeurtenissen verzenden vanuit pakketten van derden"
+                }
+            }
+        }
     }
 }

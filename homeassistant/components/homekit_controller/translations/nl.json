@@ -19,7 +19,12 @@
         },
         "flow_title": "{name} via HomeKit-accessoireprotocol",
         "step": {
+            "busy_error": {
+                "description": "Onderbreek het koppelen op alle controllers, of probeer het apparaat opnieuw op te starten, en ga dan verder om het koppelen te hervatten.",
+                "title": "Het apparaat is al aan het koppelen met een andere controller"
+            },
             "max_tries_error": {
+                "description": "Het apparaat heeft meer dan 100 mislukte verificatiepogingen ontvangen. Probeer het apparaat opnieuw op te starten en ga dan verder om het koppelen te hervatten.",
                 "title": "Maximum aantal authenticatiepogingen overschreden"
             },
             "pair": {
@@ -30,6 +35,7 @@
                 "title": "Koppel met HomeKit accessoire"
             },
             "protocol_error": {
+                "description": "Het apparaat staat mogelijk niet in de koppelingsmodus en vereist mogelijk een fysieke of virtuele druk op de knop. Zorg ervoor dat het apparaat in de koppelingsmodus staat of probeer het apparaat opnieuw op te starten en ga dan verder om het koppelen te hervatten.",
                 "title": "Fout bij het communiceren met de accessoire"
             },
             "user": {

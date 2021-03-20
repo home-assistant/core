@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
             "invalid_auth": "Ongeldige authenticatie",
             "missing_configuration": "De Netatmo-component is niet geconfigureerd. Gelieve de documentatie volgen.",
@@ -9,7 +9,7 @@
             "reauth_successful": "Herauthenticatie was succesvol"
         },
         "create_entry": {
-            "default": "Zie [Neato-documentatie] ({docs_url})."
+            "default": "Succesvol geauthenticeerd"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",

@@ -34,7 +34,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Scaninterval (seconden)"
-                }
+                },
+                "description": "Plugwise opties aanpassen"
             }
         }
     }

@@ -87,6 +87,7 @@
                 "data": {
                     "api_host": "API host-URL overschrijven (optioneel)",
                     "blink": "Led knipperen bij het verzenden van statuswijziging",
+                    "discovery": "Reageer op detectieverzoeken op uw netwerk",
                     "override_api_host": "Overschrijf standaard Home Assistant API hostpaneel-URL"
                 },
                 "description": "Selecteer het gewenste gedrag voor uw paneel",
