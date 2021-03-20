@@ -46,9 +46,12 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
+@patch("homeassistant.components.august.async_create_pubnub")
 @patch("homeassistant.components.august.gateway.ApiAsync")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
-async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
+async def _mock_setup_august(
+    hass, api_instance, authenticate_mock, api_mock, pubnub_mock
+):
     """Set up august integration."""
     authenticate_mock.side_effect = MagicMock(
         return_value=_mock_august_authentication(
