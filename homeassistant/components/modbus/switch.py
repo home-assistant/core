@@ -157,6 +157,11 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
         return self._name
 
     @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return True
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available

@@ -250,6 +250,11 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         return self._name
 
     @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return True
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
