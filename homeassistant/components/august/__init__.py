@@ -173,15 +173,15 @@ class AugustData(AugustSubscriberMixin):
         # TODO: move this to pypi
         # from yalexs.pubnub_activity import activity_from_pubnub_message
         # then get rid of update_doorbell_details_from_pubnub_message and update_lock_details_from_pubnub_message
-        # activity = activity_from_pubnub_message(device, data_time, message)
-        # if activity:
+        # activities = activities_from_pubnub_message(device, data_time, message)
+        # if activities:
         #    - LockOperationActivity (users in LockDetail)
         #    - DoorOperationActivity
         #    - DoorbellDingActivity
         #    - DoorbellMotionActivity
         #    - BridgeOnlineActivity (TODO)
         #    - BridgeOfflineActivity (TODO)
-        #    self.activity_stream.add_activity(activity)
+        #    self.activity_stream.add_activities(activities)
         #    self.async_signal_device_id_update(device.device_id)
         # self.activity_stream.async_schedule_house_id_refresh(device.house_id)
         if isinstance(device, LockDetail):
