@@ -12,7 +12,7 @@ from .const import CONF_CONNECTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "lock", "number", "switch"]
+PLATFORMS = ["sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
