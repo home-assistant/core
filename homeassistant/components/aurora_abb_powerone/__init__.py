@@ -66,11 +66,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                # hass.config_entries.async_forward_entry_unload(entry, component)
-                # for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
             ]
         )
     )
+    entry["client"].close()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
