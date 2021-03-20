@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.netatmo import sensor
 from homeassistant.components.netatmo.sensor import MODULE_TYPE_WIND
+from homeassistant.helpers import entity_registry as er
 
 from .common import TEST_TIME
 from .conftest import selected_platforms
@@ -203,12 +204,13 @@ async def test_fix_angle(angle, expected):
         ),
     ],
 )
-async def test_weather_sensor_enabled(hass, config_entry, uid, name, expected):
-    """Test by default disabled sensors."""
-
+async def test_weather_sensor_enabling(hass, config_entry, uid, name, expected):
+    """Test enabling of by default disabled sensors."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        states_before = len(hass.states.async_all())
+        assert hass.states.get(f"sensor.{name}") is None
 
+        registry = er.async_get(hass)
         registry.async_get_or_create(
             "sensor",
             "netatmo",
@@ -220,4 +222,6 @@ async def test_weather_sensor_enabled(hass, config_entry, uid, name, expected):
 
         await hass.async_block_till_done()
 
-        assert hass.states.get("sensor." + name).state == expected
+        assert hass.states.get(f"sensor.{name}").state == expected
+        assert len(hass.states.async_all()) > states_before
+        assert hass.states.get(f"sensor.{name}").state == expected
