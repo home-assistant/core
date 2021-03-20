@@ -154,6 +154,9 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
             self.hass, lambda arg: self._update(), self._scan_interval
         )
 
+    def _update(self):
+        """Please the function above (real update is in the inherited classes."""
+
     @property
     def is_on(self):
         """Return true if switch is on."""
