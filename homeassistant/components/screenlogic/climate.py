@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import ScreenlogicEntity
@@ -137,8 +137,9 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         """Supported features of the heater."""
         return SUPPORTED_FEATURES
 
-    async def async_set_temperature(self, temperature, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs) -> None:
         """Change the setpoint of the heater."""
+        temperature = kwargs[ATTR_TEMPERATURE]
         if await self.hass.async_add_executor_job(
             self.gateway.set_heat_temp, int(self._data_key), int(temperature)
         ):
