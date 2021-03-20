@@ -33,9 +33,9 @@ class DevoloNetworkOverviewEntity(DevoloDevice):
                     for device in network_overview["network"]["data_rates"]
                 }
             )
-            self._set_availablility(True)
+            self._set_availability(True)
         except DeviceUnavailable:
-            self._set_availablility(False)
+            self._set_availability(False)
 
 
 class DevoloWifiClientsEntity(DevoloDevice):
@@ -56,9 +56,9 @@ class DevoloWifiClientsEntity(DevoloDevice):
                 await self._device.device.async_get_wifi_connected_station()
             )
             self._state = len(network_overview["connected_stations"])
-            self._set_availablility(True)
+            self._set_availability(True)
         except DeviceUnavailable:
-            self._set_availablility(False)
+            self._set_availability(False)
 
 
 class DevoloWifiNetworksEntity(DevoloDevice):
@@ -80,6 +80,6 @@ class DevoloWifiNetworksEntity(DevoloDevice):
                 await self._device.device.async_get_wifi_neighbor_access_points()
             )
             self._state = len(neighbors["neighbor_aps"])
-            self._set_availablility(True)
+            self._set_availability(True)
         except DeviceUnavailable:
-            self._set_availablility(False)
+            self._set_availability(False)

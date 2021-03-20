@@ -86,8 +86,8 @@ class DevoloDevice(Entity):
         if self._dispatcher_disconnect:
             self._dispatcher_disconnect()
 
-    def _set_availablility(self, available: bool):
-        """Set availablility and log if changed."""
+    def _set_availability(self, available: bool):
+        """Set availability and log if changed."""
         if self._available and not available:
             _LOGGER.warning("Unable to connect to %s.", self._device_name)
         if not self._available and available:
