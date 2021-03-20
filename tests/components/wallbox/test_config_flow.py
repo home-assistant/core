@@ -1,5 +1,5 @@
 """Test the Wallbox config flow."""
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wallbox import config_flow
@@ -85,6 +85,7 @@ def test_hub_class():
 
 
 async def test_validate_input(hass):
+    """Test we can validate input."""
     data = {
         "station": "12345",
         "username": "test-username",
