@@ -102,6 +102,11 @@ async def test_flow_discover_error(hass):
     assert result["step_id"] == "gateway_entry"
 
     with patch(
+        "homeassistant.components.screenlogic.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.screenlogic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
         "homeassistant.components.screenlogic.config_flow.login.create_socket",
         return_value=True,
     ), patch(
@@ -123,6 +128,8 @@ async def test_flow_discover_error(hass):
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_dhcp(hass):
@@ -141,6 +148,11 @@ async def test_dhcp(hass):
     assert result["step_id"] == "gateway_entry"
 
     with patch(
+        "homeassistant.components.screenlogic.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.screenlogic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
         "homeassistant.components.screenlogic.config_flow.login.create_socket",
         return_value=True,
     ), patch(
@@ -162,6 +174,8 @@ async def test_dhcp(hass):
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_manual_entry(hass):
@@ -195,6 +209,11 @@ async def test_form_manual_entry(hass):
     assert result2["step_id"] == "gateway_entry"
 
     with patch(
+        "homeassistant.components.screenlogic.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.screenlogic.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
         "homeassistant.components.screenlogic.config_flow.login.create_socket",
         return_value=True,
     ), patch(
@@ -216,6 +235,8 @@ async def test_form_manual_entry(hass):
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_cannot_connect(hass):
@@ -245,8 +266,14 @@ async def test_option_flow(hass):
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.screenlogic.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.screenlogic.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -266,8 +293,14 @@ async def test_option_flow_defaults(hass):
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.screenlogic.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.screenlogic.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -288,8 +321,14 @@ async def test_option_flow_input_floor(hass):
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.screenlogic.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.screenlogic.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
