@@ -177,6 +177,8 @@ class AugustData(AugustSubscriberMixin):
         #    - DoorOperationActivity
         #    - DoorbellDingActivity
         #    - DoorbellMotionActivity
+        #    - BridgeOnlineActivity
+        #    - BridgeOfflineActivity
         #    self.activity_stream.add_activity(activity)
         # if schedule_update:
         #    self.async_signal_device_id_update(device.device_id)
