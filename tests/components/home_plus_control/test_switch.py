@@ -1,12 +1,8 @@
 """Test the Legrand Home+ Control switch platform."""
-import asyncio
 import datetime as dt
 from unittest.mock import patch
 
-from homepluscontrol.homeplusplant import (
-    PLANT_TOPOLOGY_BASE_URL,
-    PLANT_TOPOLOGY_RESOURCE,
-)
+from homepluscontrol.homeplusapi import HomePlusControlApiError
 
 from homeassistant import config_entries, setup
 from homeassistant.components.home_plus_control.const import (
@@ -24,7 +20,7 @@ from tests.components.home_plus_control.conftest import (
 )
 
 
-async def entity_assertions(
+def entity_assertions(
     hass,
     num_exp_entities,
     num_exp_devices=None,
@@ -50,7 +46,7 @@ async def entity_assertions(
             assert bool(device_reg.async_get(exp_device)) == present
 
 
-async def one_entity_assertion(hass, device_uid, availability):
+def one_entity_assertion(hass, device_uid, availability):
     """Assert the presence of an entity and its specified availability."""
     entity_reg = hass.helpers.entity_registry.async_get(hass)
     device_reg = hass.helpers.device_registry.async_get(hass)
@@ -70,48 +66,32 @@ async def one_entity_assertion(hass, device_uid, availability):
 
 async def test_plant_update(
     hass,
-    aioclient_mock,
     mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
+    mock_modules,
 ):
     """Test entity and device loading."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
     # Check the entities and devices
-    await entity_assertions(
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -123,49 +103,32 @@ async def test_plant_update(
 
 async def test_plant_topology_reduction_change(
     hass,
-    aioclient_mock,
     mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    plant_topology_reduced,
+    mock_modules,
 ):
     """Test an entity leaving the plant topology."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
     # Check the entities and devices - 5 mock entities
-    await entity_assertions(
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -175,35 +138,19 @@ async def test_plant_topology_reduction_change(
     )
 
     # Now we refresh the topology with one entity less
-    aioclient_mock.clear_requests()
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology_reduced,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
-    # Need to patch the API to ignore the refresh interval settings
+    mock_modules.pop("0000000987654321fedcba")
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
-        return_value=True,
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=100)
         )
         await hass.async_block_till_done()
-        assert len(mock_check.mock_calls) == 3
+    assert len(mock_check.mock_calls) == 1
 
     # Check for plant, topology and module status - this time only 4 left
-    await hass.async_block_till_done()
-    await entity_assertions(
+    entity_assertions(
         hass,
         num_exp_entities=4,
         expected_entities={
@@ -215,51 +162,35 @@ async def test_plant_topology_reduction_change(
 
 async def test_plant_topology_increase_change(
     hass,
-    aioclient_mock,
     mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    plant_topology_reduced,
-    plant_modules_reduced,
-    current_request_with_host,
+    mock_modules,
 ):
     """Test an entity entering the plant topology."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology_reduced,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules_reduced,
-    )
+    # Remove one module initially
+    new_module = mock_modules.pop("0000000987654321fedcba")
 
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
     # Check the entities and devices - we have 4 entities to start with
-    await entity_assertions(
+    entity_assertions(
         hass,
         num_exp_entities=4,
         expected_entities={
@@ -269,32 +200,18 @@ async def test_plant_topology_increase_change(
     )
 
     # Now we refresh the topology with one entity more
-    aioclient_mock.clear_requests()
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
+    mock_modules["0000000987654321fedcba"] = new_module
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
-        return_value=True,
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=100)
         )
         await hass.async_block_till_done()
-        assert len(mock_check.mock_calls) == 3
-    # Check for plant, topology and module status
-    await entity_assertions(
+    assert len(mock_check.mock_calls) == 1
+
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -304,52 +221,30 @@ async def test_plant_topology_increase_change(
     )
 
 
-async def test_module_status_reduction_change(
-    hass,
-    aioclient_mock,
-    mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    plant_modules_reduced,
-    current_request_with_host,
-):
-    """Test a missing module status in the plant topology."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
+async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
+    """Test a module becoming unreachable in the plant."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
-
-    # Check the entities and devices - 5 entities
-    await entity_assertions(
+    # Check the entities and devices - 5 mock entities
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -360,38 +255,23 @@ async def test_module_status_reduction_change(
 
     # Confirm the availability of this particular entity
     test_entity_uid = "0000000987654321fedcba"
-    assert (
-        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
-    )
-    await one_entity_assertion(hass, test_entity_uid, True)
+    one_entity_assertion(hass, test_entity_uid, True)
 
-    # Now we refresh the topology with one module status less
-    aioclient_mock.clear_requests()
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules_reduced,
-    )
+    # Now we refresh the topology with the module being unreachable
+    mock_modules["0000000987654321fedcba"].reachable = False
 
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
-        return_value=True,
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=100)
         )
         await hass.async_block_till_done()
-        assert len(mock_check.mock_calls) == 3
-    # Check for plant, topology and module status
-    await entity_assertions(
+    assert len(mock_check.mock_calls) == 1
+
+    # Assert the devices and entities
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -399,61 +279,42 @@ async def test_module_status_reduction_change(
             "switch.kitchen_wall_outlet": True,
         },
     )
-
-    # This entity is present, but not available
-    test_entity_uid = "0000000987654321fedcba"
-    assert (
-        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
-    )
-    await one_entity_assertion(hass, test_entity_uid, False)
+    await hass.async_block_till_done()
+    # The entity is present, but not available
+    one_entity_assertion(hass, test_entity_uid, False)
 
 
-async def test_module_status_increase_change(
+async def test_module_status_available(
     hass,
-    aioclient_mock,
     mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    plant_modules_reduced,
-    current_request_with_host,
+    mock_modules,
 ):
-    """Test a additional module status in the plant topology."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules_reduced,
-    )
+    """Test a module becoming reachable in the plant."""
+    # Set the module initially unreachable
+    mock_modules["0000000987654321fedcba"].reachable = False
 
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
-
-    # Check the entities and devices
-    await entity_assertions(
+    # Assert the devices and entities
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -464,38 +325,22 @@ async def test_module_status_increase_change(
 
     # This particular entity is not available
     test_entity_uid = "0000000987654321fedcba"
-    assert (
-        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
-    )
-    await one_entity_assertion(hass, test_entity_uid, False)
+    one_entity_assertion(hass, test_entity_uid, False)
 
-    # Now we refresh the topology with one module status more
-    aioclient_mock.clear_requests()
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
+    # Now we refresh the topology with the module being reachable
+    mock_modules["0000000987654321fedcba"].reachable = True
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
-        return_value=True,
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=100)
         )
         await hass.async_block_till_done()
-        assert len(mock_check.mock_calls) == 3
-    # Check for plant, topology and module status
-    await entity_assertions(
+    assert len(mock_check.mock_calls) == 1
+
+    # Assert the devices and entities remain the same
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -506,215 +351,74 @@ async def test_module_status_increase_change(
 
     # Now the entity is available
     test_entity_uid = "0000000987654321fedcba"
-    assert (
-        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
-    )
-    await one_entity_assertion(hass, test_entity_uid, True)
+    one_entity_assertion(hass, test_entity_uid, True)
 
 
-async def test_plant_api_timeout(
+async def test_initial_api_error(
     hass,
-    aioclient_mock,
     mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    current_request_with_host,
+    mock_modules,
 ):
-    """Test an API timeout when loading the plant data."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-        exc=asyncio.TimeoutError,
-    )
-
+    """Test an API error on initial call."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+        side_effect=HomePlusControlApiError,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 1 time only - fails on plant data update
-    assert aioclient_mock.call_count == 1
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
     # The component has been loaded
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - None have been configured
-    await entity_assertions(hass, num_exp_entities=0)
+    entity_assertions(hass, num_exp_entities=0)
 
 
-async def test_plant_topology_api_timeout(
+async def test_update_with_api_error(
     hass,
-    aioclient_mock,
     mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    current_request_with_host,
+    mock_modules,
 ):
-    """Test an API timeout when loading the plant topology data."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-        exc=asyncio.TimeoutError,
-    )
-
+    """Test an API timeout when updating the module data."""
     # Load the entry
     mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+    with patch(
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+    ) as mock_check:
+        await setup.async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                "home_plus_control": {
+                    CONF_CLIENT_ID: CLIENT_ID,
+                    CONF_CLIENT_SECRET: CLIENT_SECRET,
+                    CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
+                },
             },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 2 times - fails on plant topology update
-    assert aioclient_mock.call_count == 2
-
-    # The component has been loaded
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
-
-    # Check the entities and devices - None have been configured
-    await entity_assertions(hass, num_exp_entities=0)
-
-
-async def test_plant_status_api_timeout(
-    hass,
-    aioclient_mock,
-    mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    current_request_with_host,
-):
-    """Test an API timeout when loading the plant module status data."""
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-        exc=asyncio.TimeoutError,
-    )
-
-    # Load the entry
-    mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
-            },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 3 times - fails on plant status update
-    assert aioclient_mock.call_count == 3
-
-    # The component has been loaded
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
-
-    # Check the entities and devices - all entities should be there, but not available
-    await entity_assertions(
-        hass,
-        num_exp_entities=5,
-        expected_entities={
-            "switch.dining_room_wall_outlet": True,
-            "switch.kitchen_wall_outlet": True,
-        },
-    )
-    for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
-        await one_entity_assertion(hass, test_entity_uid, False)
-
-
-async def test_update_with_plant_topology_api_timeout(
-    hass,
-    aioclient_mock,
-    mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    plant_topology_reduced,
-    plant_modules_reduced,
-    current_request_with_host,
-):
-    """Test an API timeout when updating the plant topology data.
-
-    In the update the plant topology is reduced by 1 module, so we test whether this is handled gracefully.
-    """
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-    )
-
-    # Load the entry
-    mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
-            },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
+        )
+        await hass.async_block_till_done()
+    assert len(mock_check.mock_calls) == 1
 
     # The component has been loaded
     assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
 
     # Check the entities and devices - all entities should be there
-    await entity_assertions(
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -723,39 +427,22 @@ async def test_update_with_plant_topology_api_timeout(
         },
     )
     for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
-        await one_entity_assertion(hass, test_entity_uid, True)
+        one_entity_assertion(hass, test_entity_uid, True)
 
-    # Attempt to update the data, but plant topology update fails
-
-    # Reset the mock responses
-    aioclient_mock.clear_requests()
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology_reduced,
-        exc=asyncio.TimeoutError,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules_reduced,
-    )
-
+    # Attempt to update the data, but API update fails
     with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
-        return_value=True,
+        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi.async_get_modules",
+        return_value=mock_modules,
+        side_effect=HomePlusControlApiError,
     ) as mock_check:
         async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
+            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=100)
         )
         await hass.async_block_till_done()
-        assert len(mock_check.mock_calls) == 3
+    assert len(mock_check.mock_calls) == 1
 
-    # Check for plant, topology and module status
-    await entity_assertions(
+    # Assert the devices and entities - all should still be present
+    entity_assertions(
         hass,
         num_exp_entities=5,
         expected_entities={
@@ -765,116 +452,5 @@ async def test_update_with_plant_topology_api_timeout(
     )
 
     # This entity has not returned a status, so appears as unavailable
-    test_entity_uid = "0000000987654321fedcba"
-    assert (
-        test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]
-    )
-    await one_entity_assertion(hass, test_entity_uid, False)
-
-
-async def test_update_with_plant_module_status_api_timeout(
-    hass,
-    aioclient_mock,
-    mock_config_entry,
-    plant_data,
-    plant_topology,
-    plant_modules,
-    plant_topology_reduced,
-    plant_modules_reduced,
-    current_request_with_host,
-):
-    """Test an API timeout when updating the plant module status data.
-
-    In the update the plant topology is increased by 1 module, so we test whether this is handled gracefully.
-    """
-
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology_reduced,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules_reduced,
-    )
-
-    # Load the entry
-    mock_config_entry.add_to_hass(hass)
-    assert await setup.async_setup_component(
-        hass,
-        "home_plus_control",
-        {
-            "home_plus_control": {
-                CONF_CLIENT_ID: CLIENT_ID,
-                CONF_CLIENT_SECRET: CLIENT_SECRET,
-                CONF_SUBSCRIPTION_KEY: SUBSCRIPTION_KEY,
-            },
-        },
-    )
-    await hass.async_block_till_done()
-
-    # The setup of the integration calls the API 3 times
-    assert aioclient_mock.call_count == 3
-
-    # The component has been loaded
-    assert mock_config_entry.state == config_entries.ENTRY_STATE_LOADED
-
-    # Check the entities and devices - all entities should be there
-    entity_reg = hass.helpers.entity_registry.async_get(hass)
-    device_reg = hass.helpers.device_registry.async_get(hass)
-    assert len(hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]) == 4
     for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
-        await one_entity_assertion(hass, test_entity_uid, True)
-    assert len(entity_reg.entities.keys()) == 4
-    assert len(device_reg.devices.keys()) == 4
-
-    # Attempt to update the data, but plant topology update fails
-
-    # Reset the mock responses
-    aioclient_mock.clear_requests()
-    # Register the mock responses
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL,
-        text=plant_data,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210" + PLANT_TOPOLOGY_RESOURCE,
-        text=plant_topology,
-    )
-    aioclient_mock.get(
-        PLANT_TOPOLOGY_BASE_URL + "123456789009876543210",
-        text=plant_modules,
-        exc=asyncio.TimeoutError,
-    )
-
-    with patch(
-        "homeassistant.components.home_plus_control.api.HomePlusControlAsyncApi._should_check",
-        return_value=True,
-    ) as mock_check:
-        async_fire_time_changed(
-            hass, dt.datetime.now(dt.timezone.utc) + dt.timedelta(seconds=300)
-        )
-        await hass.async_block_till_done()
-        assert len(mock_check.mock_calls) == 3
-
-    # Check for plant, topology and module status
-    await entity_assertions(
-        hass,
-        num_exp_entities=5,
-        expected_entities={
-            "switch.dining_room_wall_outlet": True,
-            "switch.kitchen_wall_outlet": True,
-        },
-    )
-
-    # One entity has no status data, so appears as unavailable
-    # The rest of the entities remain available
-    for test_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
-        if test_uid == "0000000987654321fedcba":
-            await one_entity_assertion(hass, test_uid, False)
-        else:
-            await one_entity_assertion(hass, test_uid, True)
+        one_entity_assertion(hass, test_entity_uid, False)

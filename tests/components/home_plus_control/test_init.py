@@ -73,4 +73,3 @@ async def test_unloading(hass, mock_config_entry):
     # We now unload the entry
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state == config_entries.ENTRY_STATE_NOT_LOADED
-    assert hass.data[DOMAIN].get(mock_config_entry.entry_id) is None
