@@ -116,24 +116,23 @@ async def test_chain_history(hass, values, missing=False):
     with patch(
         "homeassistant.components.history.state_changes_during_period",
         return_value=fake_states,
+    ), patch(
+        "homeassistant.components.history.get_last_state_changes",
+        return_value=fake_states,
     ):
-        with patch(
-            "homeassistant.components.history.get_last_state_changes",
-            return_value=fake_states,
-        ):
-            with assert_setup_component(1, "sensor"):
-                assert await async_setup_component(hass, "sensor", config)
-                await hass.async_block_till_done()
+        with assert_setup_component(1, "sensor"):
+            assert await async_setup_component(hass, "sensor", config)
+            await hass.async_block_till_done()
 
-            for value in values:
-                hass.states.async_set(config["sensor"]["entity_id"], value.state)
-                await hass.async_block_till_done()
+        for value in values:
+            hass.states.async_set(config["sensor"]["entity_id"], value.state)
+            await hass.async_block_till_done()
 
-            state = hass.states.get("sensor.test")
-            if missing:
-                assert state.state == "18.05"
-            else:
-                assert state.state == "17.05"
+        state = hass.states.get("sensor.test")
+        if missing:
+            assert state.state == "18.05"
+        else:
+            assert state.state == "17.05"
 
 
 async def test_source_state_none(hass, values):
@@ -234,18 +233,17 @@ async def test_history_time(hass):
     with patch(
         "homeassistant.components.history.state_changes_during_period",
         return_value=fake_states,
+    ), patch(
+        "homeassistant.components.history.get_last_state_changes",
+        return_value=fake_states,
     ):
-        with patch(
-            "homeassistant.components.history.get_last_state_changes",
-            return_value=fake_states,
-        ):
-            with assert_setup_component(1, "sensor"):
-                assert await async_setup_component(hass, "sensor", config)
-                await hass.async_block_till_done()
-
+        with assert_setup_component(1, "sensor"):
+            assert await async_setup_component(hass, "sensor", config)
             await hass.async_block_till_done()
-            state = hass.states.get("sensor.test")
-            assert state.state == "18.0"
+
+        await hass.async_block_till_done()
+        state = hass.states.get("sensor.test")
+        assert state.state == "18.0"
 
 
 async def test_setup(hass):

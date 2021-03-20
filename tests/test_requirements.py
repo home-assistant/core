@@ -84,9 +84,8 @@ async def test_install_missing_package(hass):
     """Test an install attempt on an existing package."""
     with patch(
         "homeassistant.util.package.install_package", return_value=False
-    ) as mock_inst:
-        with pytest.raises(RequirementsNotFound):
-            await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
+    ) as mock_inst, pytest.raises(RequirementsNotFound):
+        await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 1
 

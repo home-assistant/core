@@ -212,17 +212,14 @@ def test_discover_by_device_type_override():
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
-    ):
-        with mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
-            disc.PROBE.discover_by_device_type(ep_channels)
-            assert get_entity_mock.call_count == 1
-            assert ep_channels.claim_channels.call_count == 1
-            assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
-            assert ep_channels.async_new_entity.call_count == 1
-            assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
-            assert (
-                ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
-            )
+    ), mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
+        disc.PROBE.discover_by_device_type(ep_channels)
+        assert get_entity_mock.call_count == 1
+        assert ep_channels.claim_channels.call_count == 1
+        assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
+        assert ep_channels.async_new_entity.call_count == 1
+        assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
+        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
 def test_discover_probe_single_cluster():

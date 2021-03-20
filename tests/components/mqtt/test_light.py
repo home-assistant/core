@@ -743,10 +743,9 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
         return_value=fake_state,
-    ):
-        with assert_setup_component(1, light.DOMAIN):
-            assert await async_setup_component(hass, light.DOMAIN, config)
-            await hass.async_block_till_done()
+    ), assert_setup_component(1, light.DOMAIN):
+        assert await async_setup_component(hass, light.DOMAIN, config)
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
