@@ -934,7 +934,7 @@ def test_socket_timeout():  # pylint: disable=invalid-name
     with pytest.raises(vol.Invalid):
         schema(-1)
 
-    assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
+    assert schema(None) == _GLOBAL_DEFAULT_TIMEOUT
 
     assert schema(1) == 1.0
 

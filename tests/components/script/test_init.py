@@ -173,7 +173,7 @@ async def test_turn_on_off_toggle(hass, toggle):
 
     assert not script.is_on(hass, ENTITY_ID)
     assert was_on
-    assert 1 == event_mock.call_count
+    assert event_mock.call_count == 1
 
 
 invalid_configs = [
@@ -190,7 +190,7 @@ async def test_setup_with_invalid_configs(hass, value):
         hass, "script", {"script": value}
     ), f"Script loaded with wrong config {value}"
 
-    assert 0 == len(hass.states.async_entity_ids("script"))
+    assert len(hass.states.async_entity_ids("script")) == 0
 
 
 @pytest.mark.parametrize("running", ["no", "same", "different"])
@@ -587,7 +587,7 @@ async def test_concurrent_script(hass, concurrently):
     await asyncio.wait_for(service_called.wait(), 1)
     service_called.clear()
 
-    assert "script2a" == service_values[-1]
+    assert service_values[-1] == "script2a"
     assert script.is_on(hass, "script.script1")
     assert script.is_on(hass, "script.script2")
 
@@ -596,13 +596,13 @@ async def test_concurrent_script(hass, concurrently):
         await asyncio.wait_for(service_called.wait(), 1)
         service_called.clear()
 
-        assert "script2b" == service_values[-1]
+        assert service_values[-1] == "script2b"
 
     hass.states.async_set("input_boolean.test1", "on")
     await asyncio.wait_for(service_called.wait(), 1)
     service_called.clear()
 
-    assert "script1" == service_values[-1]
+    assert service_values[-1] == "script1"
     assert concurrently == script.is_on(hass, "script.script2")
 
     if concurrently:
@@ -610,7 +610,7 @@ async def test_concurrent_script(hass, concurrently):
         await asyncio.wait_for(service_called.wait(), 1)
         service_called.clear()
 
-        assert "script2b" == service_values[-1]
+        assert service_values[-1] == "script2b"
 
     await hass.async_block_till_done()
 
