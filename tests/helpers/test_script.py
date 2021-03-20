@@ -1277,8 +1277,7 @@ async def test_repeat_condition_warning(hass, caplog, condition):
     hass.async_create_task(script_obj.async_run(context=Context()))
     await asyncio.wait_for(hass.async_block_till_done(), 1)
 
-    assert len(caplog.record_tuples) == 1
-    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert f"Error in '{condition}[0]' evaluation" in caplog.text
 
     assert len(events) == count
 

@@ -1318,7 +1318,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def __init__(self, hass, limited=False):
         """Initialise template environment."""
-        super().__init__()
+        super().__init__(undefined=jinja2.make_logging_undefined(logger=_LOGGER))
         self.hass = hass
         self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
