@@ -66,11 +66,6 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         return f"{self.gateway_name} {ent_name}"
 
     @property
-    def state(self) -> str:
-        """State of the heater."""
-        return self.hvac_mode
-
-    @property
     def min_temp(self) -> float:
         """Minimum allowed temperature."""
         return self.body["min_set_point"]["value"]
