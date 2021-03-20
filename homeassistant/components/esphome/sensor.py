@@ -1,10 +1,14 @@
 """Support for esphome sensors."""
+from __future__ import annotations
+
 import math
-from typing import Optional
 
 from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
+import voluptuous as vol
 
+from homeassistant.components.sensor import DEVICE_CLASSES
 from homeassistant.config_entries import ConfigEntry
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import EsphomeEntity, esphome_state_property, platform_async_setup_entry
@@ -46,7 +50,7 @@ class EsphomeSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[SensorState]:
+    def _state(self) -> SensorState | None:
         return super()._state
 
     @property
@@ -54,7 +58,7 @@ class EsphomeSensor(EsphomeEntity):
         """Return the icon."""
         if not self._static_info.icon or self._static_info.device_class:
             return None
-        return self._static_info.icon
+        return vol.Schema(cv.icon)(self._static_info.icon)
 
     @property
     def force_update(self) -> bool:
@@ -62,7 +66,7 @@ class EsphomeSensor(EsphomeEntity):
         return self._static_info.force_update
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if math.isnan(self._state.state):
             return None
@@ -80,7 +84,7 @@ class EsphomeSensor(EsphomeEntity):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        if not self._static_info.device_class:
+        if self._static_info.device_class not in DEVICE_CLASSES:
             return None
         return self._static_info.device_class
 
@@ -93,7 +97,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return super()._static_info
 
     @property
-    def _state(self) -> Optional[TextSensorState]:
+    def _state(self) -> TextSensorState | None:
         return super()._state
 
     @property
@@ -102,7 +106,7 @@ class EsphomeTextSensor(EsphomeEntity):
         return self._static_info.icon
 
     @esphome_state_property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the entity."""
         if self._state.missing_state:
             return None

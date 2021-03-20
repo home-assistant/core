@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
+    DISCOVERY_HOSTNAME,
     DISCOVERY_LOCATION,
     DISCOVERY_NAME,
     DISCOVERY_ST,
@@ -35,6 +36,7 @@ async def test_async_setup_entry_default(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device.udn,
             DISCOVERY_UNIQUE_ID: mock_device.unique_id,
             DISCOVERY_USN: mock_device.usn,
+            DISCOVERY_HOSTNAME: mock_device.hostname,
         }
     ]
     entry = MockConfigEntry(
@@ -83,6 +85,7 @@ async def test_sync_setup_entry_multiple_discoveries(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device_0.udn,
             DISCOVERY_UNIQUE_ID: mock_device_0.unique_id,
             DISCOVERY_USN: mock_device_0.usn,
+            DISCOVERY_HOSTNAME: mock_device_0.hostname,
         },
         {
             DISCOVERY_LOCATION: location_1,
@@ -91,6 +94,7 @@ async def test_sync_setup_entry_multiple_discoveries(hass: HomeAssistantType):
             DISCOVERY_UDN: mock_device_1.udn,
             DISCOVERY_UNIQUE_ID: mock_device_1.unique_id,
             DISCOVERY_USN: mock_device_1.usn,
+            DISCOVERY_HOSTNAME: mock_device_1.hostname,
         },
     ]
     entry = MockConfigEntry(

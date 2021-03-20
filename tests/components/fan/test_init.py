@@ -19,6 +19,8 @@ def test_fanentity():
     assert len(fan.speed_list) == 0
     assert len(fan.preset_modes) == 0
     assert fan.supported_features == 0
+    assert fan.percentage_step == 1
+    assert fan.speed_count == 100
     assert fan.capability_attributes == {}
     # Test set_speed not required
     with pytest.raises(NotImplementedError):
@@ -43,6 +45,8 @@ async def test_async_fanentity(hass):
     assert len(fan.speed_list) == 0
     assert len(fan.preset_modes) == 0
     assert fan.supported_features == 0
+    assert fan.percentage_step == 1
+    assert fan.speed_count == 100
     assert fan.capability_attributes == {}
     # Test set_speed not required
     with pytest.raises(NotImplementedError):
@@ -57,3 +61,7 @@ async def test_async_fanentity(hass):
         await fan.async_turn_on()
     with pytest.raises(NotImplementedError):
         await fan.async_turn_off()
+    with pytest.raises(NotImplementedError):
+        await fan.async_increase_speed()
+    with pytest.raises(NotImplementedError):
+        await fan.async_decrease_speed()

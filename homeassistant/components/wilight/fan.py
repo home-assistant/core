@@ -1,4 +1,5 @@
 """Support for WiLight Fan."""
+from __future__ import annotations
 
 from pywilight.const import (
     FAN_V1,
@@ -77,7 +78,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         return self._status.get("direction", WL_DIRECTION_OFF) != WL_DIRECTION_OFF
 
     @property
-    def percentage(self) -> str:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if "direction" in self._status:
             if self._status["direction"] == WL_DIRECTION_OFF:
@@ -86,6 +87,11 @@ class WiLightFan(WiLightDevice, FanEntity):
         if wl_speed is None:
             return None
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
     def current_direction(self) -> str:

@@ -15,13 +15,14 @@
       "install_addon": {
         "title": "The Z-Wave JS add-on installation has started"
       },
-      "start_addon": {
+      "configure_addon": {
         "title": "Enter the Z-Wave JS add-on configuration",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
           "network_key": "Network Key"
         }
       },
+      "start_addon": { "title": "The Z-Wave JS add-on is starting." },
       "hassio_confirm": {
         "title": "Set up Z-Wave JS integration with the Z-Wave JS add-on"
       }
@@ -38,12 +39,13 @@
       "addon_info_failed": "Failed to get Z-Wave JS add-on info.",
       "addon_install_failed": "Failed to install the Z-Wave JS add-on.",
       "addon_set_config_failed": "Failed to set Z-Wave JS configuration.",
+      "addon_start_failed": "Failed to start the Z-Wave JS add-on.",
       "addon_get_discovery_info_failed": "Failed to get Z-Wave JS add-on discovery info.",
-      "addon_missing_discovery_info": "Missing Z-Wave JS add-on discovery info.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "progress": {
-      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes."
+      "install_addon": "Please wait while the Z-Wave JS add-on installation finishes. This can take several minutes.",
+      "start_addon": "Please wait while the Z-Wave JS add-on start completes. This may take some seconds."
     }
   }
 }

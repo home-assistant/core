@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "Nama pengguna atau kata sandi salah.",
+            "cannot_connect": "Gagal terhubung",
+            "connection_error": "Gagal terhubung ke server ZoneMinder.",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "create_entry": {
+            "default": "Server ZoneMinder ditambahkan."
+        },
+        "error": {
+            "auth_fail": "Nama pengguna atau kata sandi salah.",
+            "cannot_connect": "Gagal terhubung",
+            "connection_error": "Gagal terhubung ke server ZoneMinder.",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host dan Port (mis. 10.10.0.4:8010)",
+                    "password": "Kata Sandi",
+                    "path": "Jalur ZM",
+                    "path_zms": "Jalur ZMS",
+                    "ssl": "Menggunakan sertifikat SSL",
+                    "username": "Nama Pengguna",
+                    "verify_ssl": "Verifikasi sertifikat SSL"
+                },
+                "title": "Tambahkan Server ZoneMinder."
+            }
+        }
+    }
+}

@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Le compte est d\u00e9ja configur\u00e9"
+            "already_configured": "Le compte est d\u00e9ja configur\u00e9",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
             "account_locked": "Compte bloqu\u00e9. Veuillez r\u00e9essayer plus tard.",

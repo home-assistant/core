@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "connection_error": "Gagal terhubung"
+        },
+        "error": {
+            "discovery_error": "Gagal menemukan Motion Gateway"
+        },
+        "flow_title": "Motion Blinds",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "Kunci API"
+                },
+                "description": "Anda akan memerlukan Kunci API 16 karakter, baca petunjuknya di https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
+                "title": "Motion Blinds"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "Alamat IP"
+                },
+                "description": "Jalankan penyiapan lagi jika ingin menghubungkan Motion Gateway lainnya",
+                "title": "Pilih Motion Gateway yang ingin dihubungkan"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "host": "Alamat IP"
+                },
+                "description": "Hubungkan ke Motion Gateway Anda, jika alamat IP tidak disetel, penemuan otomatis akan digunakan",
+                "title": "Motion Blinds"
+            }
+        }
+    }
+}

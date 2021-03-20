@@ -22,12 +22,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import async_setup_reload_service
-
-from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
 CONF_BODY_OFF = "body_off"
 CONF_BODY_ON = "body_on"
 CONF_IS_ON_TEMPLATE = "is_on_template"
@@ -65,9 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the RESTful switch."""
-
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)

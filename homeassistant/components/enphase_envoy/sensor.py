@@ -202,7 +202,7 @@ class Envoy(CoordinatorEntity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if (
             self._type == "inverters"

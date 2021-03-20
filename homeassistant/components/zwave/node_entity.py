@@ -118,7 +118,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def __init__(self, node, network):
         """Initialize node."""
-        # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -352,7 +351,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self.node_id,

@@ -138,7 +138,7 @@ async def test_receiving_remote_event_fires_hass_event(hass, mqtt_mock):
     async_fire_mqtt_message(hass, sub_topic, payload)
     await hass.async_block_till_done()
 
-    assert 1 == len(calls)
+    assert len(calls) == 1
 
 
 async def test_ignored_event_doesnt_send_over_stream(hass, mqtt_mock):

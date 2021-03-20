@@ -43,6 +43,7 @@
                     "set_temp_divided": "U\u017cyj podzielonej warto\u015bci temperatury dla polecenia ustawienia temperatury",
                     "support_color": "Wymu\u015b obs\u0142ug\u0119 kolor\u00f3w",
                     "temp_divider": "Dzielnik warto\u015bci temperatury (0 = u\u017cyj warto\u015bci domy\u015blnej)",
+                    "temp_step_override": "Krok docelowej temperatury",
                     "tuya_max_coltemp": "Maksymalna temperatura barwy raportowana przez urz\u0105dzenie",
                     "unit_of_measurement": "Jednostka temperatury u\u017cywana przez urz\u0105dzenie"
                 },

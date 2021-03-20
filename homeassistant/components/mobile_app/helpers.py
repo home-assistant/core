@@ -1,13 +1,20 @@
 """Helpers for mobile_app."""
+from __future__ import annotations
+
 import json
 import logging
-from typing import Callable, Dict, Tuple
+from typing import Callable
 
 from aiohttp.web import Response, json_response
 from nacl.encoding import Base64Encoder
 from nacl.secret import SecretBox
 
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_BAD_REQUEST, HTTP_OK
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    CONTENT_TYPE_JSON,
+    HTTP_BAD_REQUEST,
+    HTTP_OK,
+)
 from homeassistant.core import Context
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import HomeAssistantType
@@ -17,7 +24,6 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -32,7 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_decrypt() -> Tuple[int, Callable]:
+def setup_decrypt() -> tuple[int, Callable]:
     """Return decryption function and length of key.
 
     Async friendly.
@@ -45,7 +51,7 @@ def setup_decrypt() -> Tuple[int, Callable]:
     return (SecretBox.KEY_SIZE, decrypt)
 
 
-def setup_encrypt() -> Tuple[int, Callable]:
+def setup_encrypt() -> tuple[int, Callable]:
     """Return encryption function and length of key.
 
     Async friendly.
@@ -58,7 +64,7 @@ def setup_encrypt() -> Tuple[int, Callable]:
     return (SecretBox.KEY_SIZE, encrypt)
 
 
-def _decrypt_payload(key: str, ciphertext: str) -> Dict[str, str]:
+def _decrypt_payload(key: str, ciphertext: str) -> dict[str, str]:
     """Decrypt encrypted payload."""
     try:
         keylen, decrypt = setup_decrypt()
@@ -84,12 +90,12 @@ def _decrypt_payload(key: str, ciphertext: str) -> Dict[str, str]:
         return None
 
 
-def registration_context(registration: Dict) -> Context:
+def registration_context(registration: dict) -> Context:
     """Generate a context from a request."""
     return Context(user_id=registration[CONF_USER_ID])
 
 
-def empty_okay_response(headers: Dict = None, status: int = HTTP_OK) -> Response:
+def empty_okay_response(headers: dict = None, status: int = HTTP_OK) -> Response:
     """Return a Response with empty JSON object and a 200."""
     return Response(
         text="{}", status=status, content_type=CONTENT_TYPE_JSON, headers=headers
@@ -117,7 +123,7 @@ def supports_encryption() -> bool:
         return False
 
 
-def safe_registration(registration: Dict) -> Dict:
+def safe_registration(registration: dict) -> dict:
     """Return a registration without sensitive values."""
     # Sensitive values: webhook_id, secret, cloudhook_url
     return {
@@ -133,7 +139,7 @@ def safe_registration(registration: Dict) -> Dict:
     }
 
 
-def savable_state(hass: HomeAssistantType) -> Dict:
+def savable_state(hass: HomeAssistantType) -> dict:
     """Return a clean object containing things that should be saved."""
     return {
         DATA_DELETED_IDS: hass.data[DOMAIN][DATA_DELETED_IDS],
@@ -141,7 +147,7 @@ def savable_state(hass: HomeAssistantType) -> Dict:
 
 
 def webhook_response(
-    data, *, registration: Dict, status: int = HTTP_OK, headers: Dict = None
+    data, *, registration: dict, status: int = HTTP_OK, headers: dict = None
 ) -> Response:
     """Return a encrypted response if registration supports it."""
     data = json.dumps(data, cls=JSONEncoder)
@@ -161,7 +167,7 @@ def webhook_response(
     )
 
 
-def device_info(registration: Dict) -> Dict:
+def device_info(registration: dict) -> dict:
     """Return the device info for this registration."""
     return {
         "identifiers": {(DOMAIN, registration[ATTR_DEVICE_ID])},

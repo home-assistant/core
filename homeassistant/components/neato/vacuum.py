@@ -284,7 +284,7 @@ class NeatoConnectedVacuum(StateVacuumEntity):
         return self._robot_serial
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 

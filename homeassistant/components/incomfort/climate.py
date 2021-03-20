@@ -1,5 +1,7 @@
 """Support for an Intergas boiler via an InComfort/InTouch Lan2RF gateway."""
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
 from homeassistant.components.climate.const import (
@@ -39,7 +41,7 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         self._room = room
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {"status": self._room.status}
 
@@ -54,17 +56,17 @@ class InComfortClimate(IncomfortChild, ClimateEntity):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_HEAT]
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._room.room_temp
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._room.setpoint
 

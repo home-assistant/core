@@ -1,7 +1,8 @@
 """Validate dependencies."""
+from __future__ import annotations
+
 import pathlib
 import re
-from typing import Dict
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -29,6 +30,7 @@ FIELD_SCHEMA = vol.Schema(
         vol.Optional("default"): exists,
         vol.Optional("values"): exists,
         vol.Optional("required"): bool,
+        vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
     }
 )
@@ -36,6 +38,7 @@ FIELD_SCHEMA = vol.Schema(
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("description"): str,
+        vol.Optional("name"): str,
         vol.Optional("target"): vol.Any(
             selector.TargetSelector.CONFIG_SCHEMA, None  # pylint: disable=no-member
         ),
@@ -91,7 +94,7 @@ def validate_services(integration: Integration):
         )
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle dependencies for integrations."""
     # check services.yaml is cool
     for integration in integrations.values():

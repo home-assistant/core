@@ -1,7 +1,8 @@
 """Support for IGN Sismologia (Earthquakes) Feeds."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from georss_ign_sismologia_client import IgnSismologiaFeedManager
 import voluptuous as vol
@@ -207,7 +208,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         return SOURCE
 
     @property
-    def name(self) -> Optional[str]:
+    def name(self) -> str | None:
         """Return the name of the entity."""
         if self._magnitude and self._region:
             return f"M {self._magnitude:.1f} - {self._region}"
@@ -218,17 +219,17 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         return self._title
 
     @property
-    def distance(self) -> Optional[float]:
+    def distance(self) -> float | None:
         """Return distance value of this external event."""
         return self._distance
 
     @property
-    def latitude(self) -> Optional[float]:
+    def latitude(self) -> float | None:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self) -> Optional[float]:
+    def longitude(self) -> float | None:
         """Return longitude value of this external event."""
         return self._longitude
 
@@ -238,7 +239,7 @@ class IgnSismologiaLocationEvent(GeolocationEvent):
         return LENGTH_KILOMETERS
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
         for key, value in (

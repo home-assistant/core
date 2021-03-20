@@ -1,11 +1,12 @@
 """Base class for Netatmo entities."""
+from __future__ import annotations
+
 import logging
-from typing import Dict, List
 
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
+from .const import DATA_DEVICE_IDS, DOMAIN, MANUFACTURER, MODELS, SIGNAL_NAME
 from .data_handler import NetatmoDataHandler
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,8 +18,8 @@ class NetatmoBase(Entity):
     def __init__(self, data_handler: NetatmoDataHandler) -> None:
         """Set up Netatmo entity base."""
         self.data_handler = data_handler
-        self._data_classes: List[Dict] = []
-        self._listeners: List[CALLBACK_TYPE] = []
+        self._data_classes: list[dict] = []
+        self._listeners: list[CALLBACK_TYPE] = []
 
         self._device_name = None
         self._id = None
@@ -57,6 +58,10 @@ class NetatmoBase(Entity):
                 )
 
             await self.data_handler.unregister_data_class(signal_name, None)
+
+        registry = await self.hass.helpers.device_registry.async_get_registry()
+        device = registry.async_get_device({(DOMAIN, self._id)}, set())
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._id] = device.id
 
         self.async_update_callback()
 

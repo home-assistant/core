@@ -1,6 +1,7 @@
 """Provides an HTTP API for mobile_app."""
+from __future__ import annotations
+
 import secrets
-from typing import Dict
 
 from aiohttp.web import Request, Response
 import emoji
@@ -9,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import CONF_WEBHOOK_ID, HTTP_CREATED
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, HTTP_CREATED
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
@@ -18,7 +19,6 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_APP_VERSION,
-    ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -59,7 +59,7 @@ class RegistrationsView(HomeAssistantView):
             extra=vol.REMOVE_EXTRA,
         )
     )
-    async def post(self, request: Request, data: Dict) -> Response:
+    async def post(self, request: Request, data: dict) -> Response:
         """Handle the POST request for registration."""
         hass = request.app["hass"]
 

@@ -80,7 +80,7 @@ class AirSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return {
             "level": self._api.data.get("level"),

@@ -143,10 +143,10 @@ def test_nx584_zone_sensor_normal():
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
     sensor = nx584.NX584ZoneSensor(zone, "motion")
-    assert "foo" == sensor.name
+    assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
-    assert sensor.device_state_attributes["zone_number"] == 1
+    assert sensor.extra_state_attributes["zone_number"] == 1
 
     zone["state"] = False
     assert not sensor.is_on
@@ -204,7 +204,7 @@ def test_nx584_watcher_run_with_zone_events():
         assert fake_process.call_args == mock.call(fake_events[0])
 
     run()
-    assert 3 == client.get_events.call_count
+    assert client.get_events.call_count == 3
 
 
 @mock.patch("time.sleep")
@@ -224,5 +224,5 @@ def test_nx584_watcher_run_retries_failures(mock_sleep):
         mock_inner.side_effect = fake_run
         with pytest.raises(StopMe):
             watcher.run()
-        assert 3 == mock_inner.call_count
+        assert mock_inner.call_count == 3
     mock_sleep.assert_has_calls([mock.call(10), mock.call(10)])

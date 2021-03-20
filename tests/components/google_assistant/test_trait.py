@@ -31,6 +31,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
@@ -54,7 +55,7 @@ from homeassistant.util import color
 
 from . import BASIC_CONFIG, MockConfig
 
-from tests.common import async_mock_service
+from tests.common import async_capture_events, async_mock_service
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
@@ -84,8 +85,7 @@ async def test_brightness_light(hass):
 
     assert trt.query_attributes() == {"brightness": 95}
 
-    events = []
-    hass.bus.async_listen(EVENT_CALL_SERVICE, events.append)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
     await trt.execute(
@@ -713,7 +713,7 @@ async def test_temperature_setting_climate_onoff(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,heat,heatcool,on",
+        "availableThermostatModes": ["off", "cool", "heat", "heatcool", "on"],
         "thermostatTemperatureUnit": "F",
     }
     assert trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {})
@@ -752,7 +752,7 @@ async def test_temperature_setting_climate_no_modes(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "heat",
+        "availableThermostatModes": ["heat"],
         "thermostatTemperatureUnit": "C",
     }
 
@@ -788,7 +788,7 @@ async def test_temperature_setting_climate_range(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,heat,auto,on",
+        "availableThermostatModes": ["off", "cool", "heat", "auto", "on"],
         "thermostatTemperatureUnit": "F",
     }
     assert trt.query_attributes() == {
@@ -862,7 +862,7 @@ async def test_temperature_setting_climate_setpoint(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,cool,on",
+        "availableThermostatModes": ["off", "cool", "on"],
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -920,7 +920,7 @@ async def test_temperature_setting_climate_setpoint_auto(hass):
         BASIC_CONFIG,
     )
     assert trt.sync_attributes() == {
-        "availableThermostatModes": "off,heatcool,on",
+        "availableThermostatModes": ["off", "heatcool", "on"],
         "thermostatTemperatureUnit": "C",
     }
     assert trt.query_attributes() == {
@@ -1779,7 +1779,7 @@ async def test_modes_humidifier(hass):
                 humidifier.ATTR_MIN_HUMIDITY: 30,
                 humidifier.ATTR_MAX_HUMIDITY: 99,
                 humidifier.ATTR_HUMIDITY: 50,
-                humidifier.ATTR_MODE: humidifier.MODE_AUTO,
+                ATTR_MODE: humidifier.MODE_AUTO,
             },
         ),
         BASIC_CONFIG,

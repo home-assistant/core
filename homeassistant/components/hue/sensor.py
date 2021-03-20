@@ -58,9 +58,9 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         return round(float(10 ** ((self.sensor.lightlevel - 1) / 10000)), 2)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         attributes.update(
             {
                 "lightlevel": self.sensor.lightlevel,

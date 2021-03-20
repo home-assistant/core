@@ -1,5 +1,7 @@
 """Mobile app utility functions."""
-from typing import TYPE_CHECKING, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 
@@ -18,7 +20,7 @@ if TYPE_CHECKING:
 
 
 @callback
-def webhook_id_from_device_id(hass, device_id: str) -> Optional[str]:
+def webhook_id_from_device_id(hass, device_id: str) -> str | None:
     """Get webhook ID from device ID."""
     if DOMAIN not in hass.data:
         return None
@@ -39,9 +41,9 @@ def supports_push(hass, webhook_id: str) -> bool:
 
 
 @callback
-def get_notify_service(hass, webhook_id: str) -> Optional[str]:
+def get_notify_service(hass, webhook_id: str) -> str | None:
     """Return the notify service for this webhook ID."""
-    notify_service: "MobileAppNotificationService" = hass.data[DOMAIN][DATA_NOTIFY]
+    notify_service: MobileAppNotificationService = hass.data[DOMAIN][DATA_NOTIFY]
 
     for target_service, target_webhook_id in notify_service.registered_targets.items():
         if target_webhook_id == webhook_id:

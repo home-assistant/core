@@ -7,6 +7,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -36,6 +38,8 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=30)
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,  # % of battery that is left
+    DEVICE_CLASS_CO,  # ppm (parts per million) Carbon Monoxide gas concentration
+    DEVICE_CLASS_CO2,  # ppm (parts per million) Carbon Dioxide gas concentration
     DEVICE_CLASS_CURRENT,  # current (A)
     DEVICE_CLASS_ENERGY,  # energy (kWh, Wh)
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air

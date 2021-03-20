@@ -37,7 +37,9 @@ async def test_aemet_forecast_create_sensors(hass):
     assert state.state == "-4"
 
     state = hass.states.get("sensor.aemet_daily_forecast_time")
-    assert state.state == "2021-01-10 00:00:00+00:00"
+    assert (
+        state.state == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+    )
 
     state = hass.states.get("sensor.aemet_daily_forecast_wind_bearing")
     assert state.state == "45.0"

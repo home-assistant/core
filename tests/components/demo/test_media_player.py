@@ -442,3 +442,39 @@ async def test_media_image_proxy(hass, hass_client):
     req = await client.get(state.attributes.get(ATTR_ENTITY_PICTURE))
     assert req.status == 200
     assert await req.text() == fake_picture_data
+
+
+async def test_grouping(hass):
+    """Test the join/unjoin services."""
+    walkman = "media_player.walkman"
+    kitchen = "media_player.kitchen"
+
+    assert await async_setup_component(
+        hass, mp.DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(walkman)
+    assert state.attributes.get(mp.ATTR_GROUP_MEMBERS) == []
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: walkman,
+            mp.ATTR_GROUP_MEMBERS: [
+                kitchen,
+            ],
+        },
+        blocking=True,
+    )
+    state = hass.states.get(walkman)
+    assert state.attributes.get(mp.ATTR_GROUP_MEMBERS) == [walkman, kitchen]
+
+    await hass.services.async_call(
+        mp.DOMAIN,
+        mp.SERVICE_UNJOIN,
+        {ATTR_ENTITY_ID: walkman},
+        blocking=True,
+    )
+    state = hass.states.get(walkman)
+    assert state.attributes.get(mp.ATTR_GROUP_MEMBERS) == []
