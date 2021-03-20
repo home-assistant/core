@@ -333,7 +333,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_CLOSED == state.state
+    assert state.state == STATE_CLOSED
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -342,7 +342,7 @@ async def test_optimistic_state_change(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_OPEN == state.state
+    assert state.state == STATE_OPEN
 
     await hass.services.async_call(
         cover.DOMAIN, SERVICE_TOGGLE, {ATTR_ENTITY_ID: "cover.test"}, blocking=True
@@ -393,7 +393,7 @@ async def test_optimistic_state_change_with_position(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "CLOSE", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_CLOSED == state.state
+    assert state.state == STATE_CLOSED
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
     await hass.services.async_call(
@@ -403,7 +403,7 @@ async def test_optimistic_state_change_with_position(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("cover.test")
-    assert STATE_OPEN == state.state
+    assert state.state == STATE_OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
 
     await hass.services.async_call(

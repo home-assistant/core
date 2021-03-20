@@ -137,28 +137,28 @@ class TestComponentsCore(unittest.TestCase):
         calls = mock_service(self.hass, "light", SERVICE_TURN_ON)
         turn_on(self.hass)
         self.hass.block_till_done()
-        assert 0 == len(calls)
+        assert len(calls) == 0
 
     def test_turn_on(self):
         """Test turn_on method."""
         calls = mock_service(self.hass, "light", SERVICE_TURN_ON)
         turn_on(self.hass, "light.Ceiling")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_turn_off(self):
         """Test turn_off method."""
         calls = mock_service(self.hass, "light", SERVICE_TURN_OFF)
         turn_off(self.hass, "light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     def test_toggle(self):
         """Test toggle method."""
         calls = mock_service(self.hass, "light", SERVICE_TOGGLE)
         toggle(self.hass, "light.Bowl")
         self.hass.block_till_done()
-        assert 1 == len(calls)
+        assert len(calls) == 1
 
     @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
     def test_reload_core_conf(self):
