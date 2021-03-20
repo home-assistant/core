@@ -42,6 +42,7 @@ from .const import (
     CONF_VERIFY_REGISTER,
     CONF_VERIFY_STATE,
     DEFAULT_HUB,
+    DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN,
 )
 from .modbus import ModbusHub
@@ -117,6 +118,8 @@ async def async_setup_platform(
                 if CONF_REGISTER_TYPE in entry:
                     entry[CONF_INPUT_TYPE] = entry[CONF_REGISTER_TYPE]
                     del entry[CONF_REGISTER_TYPE]
+            if CONF_SCAN_INTERVAL not in entry:
+                entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         config = None
 
     for entry in discovery_info[CONF_SWITCHES]:
@@ -146,9 +149,8 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._is_on = state.state == STATE_ON
+        if state:
+            self._is_on = state.state == STATE_ON
 
         async_track_time_interval(
             self.hass, lambda arg: self._update(), self._scan_interval

@@ -54,6 +54,7 @@ from .const import (
     DATA_TYPE_STRING,
     DATA_TYPE_UINT,
     DEFAULT_HUB,
+    DEFAULT_SCAN_INTERVAL,
     DEFAULT_STRUCT_FORMAT,
     MODBUS_DOMAIN,
 )
@@ -172,6 +173,8 @@ async def async_setup_platform(
         if CONF_HUB in entry:
             # from old config!
             discovery_info[CONF_NAME] = entry[CONF_HUB]
+        if CONF_SCAN_INTERVAL not in entry:
+            entry[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         hub: ModbusHub = hass.data[MODBUS_DOMAIN][discovery_info[CONF_NAME]]
         sensors.append(
             ModbusRegisterSensor(
@@ -241,9 +244,8 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         state = await self.async_get_last_state()
-        if not state:
-            return
-        self._value = state.state
+        if state:
+            self._value = state.state
 
         async_track_time_interval(
             self.hass, lambda arg: self._update(), self._scan_interval
