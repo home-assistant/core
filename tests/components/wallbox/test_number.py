@@ -1,4 +1,4 @@
-    """Test Wallbox Number component."""
+"""Test Wallbox Number component."""
 
 from unittest.mock import MagicMock
 
