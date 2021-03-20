@@ -41,7 +41,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -227,6 +232,11 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
         ):
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
+
+    @property
+    def precision(self) -> float:
+        """Return the precision of 0.1."""
+        return PRECISION_TENTHS
 
     @property
     def hvac_mode(self) -> str:
