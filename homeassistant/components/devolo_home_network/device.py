@@ -89,7 +89,7 @@ class DevoloDevice(Entity):
     def _set_availability(self, available: bool):
         """Set availability and log if changed."""
         if self._available and not available:
-            _LOGGER.warning("Unable to connect to %s.", self._device_name)
+            _LOGGER.warning("Unable to connect to %s", self._device_name)
         if not self._available and available:
-            _LOGGER.warning("Reconnected to %s.", self._device_name)
+            _LOGGER.warning("Reconnected to %s", self._device_name)
         self._available = available

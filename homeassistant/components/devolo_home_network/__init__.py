@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         device = Device(ip=conf[CONF_IP_ADDRESS], zeroconf_instance=zeroconf_instance)
         await device.async_connect(session_instance=async_client)
     except DeviceNotFound as error:
-        _LOGGER.warning("Unable to connect to %s.", conf[CONF_IP_ADDRESS])
+        _LOGGER.warning("Unable to connect to %s", conf[CONF_IP_ADDRESS])
         raise ConfigEntryNotReady from error
 
     hass.data[DOMAIN][entry.entry_id] = {"device": device, "listener": None}
