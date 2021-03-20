@@ -6,7 +6,7 @@ from aiohttp import ClientError
 
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.events import async_call_later
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
 
 from .const import ACTIVITY_UPDATE_INTERVAL
