@@ -1,12 +1,13 @@
-"""Test Wallbox Lock Component."""
-from homeassistant.components.wallbox.const import CONF_STATION
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+"""Test Wallbox Init Component."""
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components import wallbox
+from homeassistant.components.wallbox.const import CONF_STATION
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 
 def test_wallbox_setup_entry():
+    """Test Wallbox Setup."""
 
     MOCK_CONFIG = {
         "data": {
@@ -23,6 +24,7 @@ def test_wallbox_setup_entry():
 
 
 def test_wallbox_unload_entry():
+    """Test Wallbox Unload."""
 
     MOCK_CONFIG = {
         "data": {
