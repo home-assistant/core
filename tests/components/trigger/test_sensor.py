@@ -36,3 +36,6 @@ async def test_it_works(hass):
     state = hass.states.get("sensor.hello")
     assert state.state == "2"
     assert state.context is context
+
+
+# TODO test template render failure.

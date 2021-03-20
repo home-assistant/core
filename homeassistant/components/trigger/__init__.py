@@ -73,6 +73,8 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         """Set up the trigger and create entities."""
         home_assistant_start = True
 
+        # TODO process variables in config.
+
         self._unsub_trigger = await trigger.async_initialize_triggers(
             self.hass,
             # TODO move this to trigger/config.py
