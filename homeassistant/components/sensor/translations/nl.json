@@ -26,11 +26,13 @@
             "humidity": "{entity_name} vochtigheidsgraad gewijzigd",
             "illuminance": "{entity_name} verlichtingssterkte gewijzigd",
             "power": "{entity_name} vermogen gewijzigd",
+            "power_factor": "{entity_name} power factor verandert",
             "pressure": "{entity_name} druk gewijzigd",
             "signal_strength": "{entity_name} signaalsterkte gewijzigd",
             "temperature": "{entity_name} temperatuur gewijzigd",
             "timestamp": "{entity_name} tijdstip gewijzigd",
-            "value": "{entity_name} waarde gewijzigd"
+            "value": "{entity_name} waarde gewijzigd",
+            "voltage": "{entity_name} voltage verandert"
         }
     },
     "state": {

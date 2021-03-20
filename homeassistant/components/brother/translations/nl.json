@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Printerhostnaam of IP-adres",
+                    "host": "Host",
                     "type": "Type printer"
                 },
                 "description": "Zet Brother printerintegratie op. Als u problemen heeft met de configuratie ga dan naar: https://www.home-assistant.io/integrations/brother"
