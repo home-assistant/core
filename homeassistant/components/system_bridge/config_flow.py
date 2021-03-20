@@ -43,11 +43,13 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     hostname = data[CONF_HOST]
     try:
         async with async_timeout.timeout(10):
-            os: Os = await bridge.async_get_os()
-            network: Network = await bridge.async_get_network()
-            if os.hostname is not None:
-                hostname = os.hostname
-            interface: Interface = network.interfaces[network.interfaceDefault]
+            bridge_os: Os = await bridge.async_get_os()
+            bridge_network: Network = await bridge.async_get_network()
+            if bridge_os.hostname is not None:
+                hostname = bridge_os.hostname
+            interface: Interface = bridge_network.interfaces[
+                bridge_network.interfaceDefault
+            ]
     except BridgeAuthenticationException as exception:
         _LOGGER.info(exception)
         raise InvalidAuth from exception
