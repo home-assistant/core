@@ -404,7 +404,8 @@ class ReconnectLogic(RecordUpdateListener):
         """Stop as an async callback function."""
         self._hass.async_create_task(self.stop())
 
-    async def _set_reconnect(self):
+    @callback
+    def _set_reconnect(self):
         self._reconnect_event.set()
 
     def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
