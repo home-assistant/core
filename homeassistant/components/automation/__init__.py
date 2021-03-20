@@ -1,6 +1,8 @@
 """Allow to set up simple automation rules via the config file."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Awaitable, Callable, Dict, List, Optional, Set, Union, cast
+from typing import Any, Awaitable, Callable, Dict, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -109,7 +111,7 @@ def is_on(hass, entity_id):
 
 
 @callback
-def automations_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def automations_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all automations that reference the entity."""
     if DOMAIN not in hass.data:
         return []
@@ -124,7 +126,7 @@ def automations_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in a scene."""
     if DOMAIN not in hass.data:
         return []
@@ -140,7 +142,7 @@ def entities_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def automations_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+def automations_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all automations that reference the device."""
     if DOMAIN not in hass.data:
         return []
@@ -155,7 +157,7 @@ def automations_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
 
 @callback
-def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
+def devices_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in a scene."""
     if DOMAIN not in hass.data:
         return []
@@ -249,8 +251,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self.action_script.change_listener = self.async_write_ha_state
         self._initial_state = initial_state
         self._is_enabled = False
-        self._referenced_entities: Optional[Set[str]] = None
-        self._referenced_devices: Optional[Set[str]] = None
+        self._referenced_entities: set[str] | None = None
+        self._referenced_devices: set[str] | None = None
         self._logger = LOGGER
         self._variables: ScriptVariables = variables
         self._trigger_variables: ScriptVariables = trigger_variables
@@ -281,6 +283,8 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         }
         if self.action_script.supports_max:
             attrs[ATTR_MAX] = self.action_script.max_runs
+        if self._id is not None:
+            attrs[CONF_ID] = self._id
         return attrs
 
     @property
@@ -507,7 +511,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
 
     async def _async_attach_triggers(
         self, home_assistant_start: bool
-    ) -> Optional[Callable[[], None]]:
+    ) -> Callable[[], None] | None:
         """Set up the triggers."""
 
         def log_cb(level, msg, **kwargs):
@@ -517,14 +521,14 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         if self._trigger_variables:
             try:
                 variables = self._trigger_variables.async_render(
-                    cast(HomeAssistant, self.hass), None, limited=True
+                    self.hass, None, limited=True
                 )
             except template.TemplateError as err:
                 self._logger.error("Error rendering trigger variables: %s", err)
                 return None
 
         return await async_initialize_triggers(
-            cast(HomeAssistant, self.hass),
+            self.hass,
             self._trigger_config,
             self.async_trigger,
             DOMAIN,
@@ -534,18 +538,10 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             variables,
         )
 
-    @property
-    def extra_state_attributes(self):
-        """Return automation attributes."""
-        if self._id is None:
-            return None
-
-        return {CONF_ID: self._id}
-
 
 async def _async_process_config(
     hass: HomeAssistant,
-    config: Dict[str, Any],
+    config: dict[str, Any],
     component: EntityComponent,
 ) -> bool:
     """Process config and add automations.
@@ -556,7 +552,7 @@ async def _async_process_config(
     blueprints_used = False
 
     for config_key in extract_domain_configs(config, DOMAIN):
-        conf: List[Union[Dict[str, Any], blueprint.BlueprintInputs]] = config[  # type: ignore
+        conf: list[dict[str, Any] | blueprint.BlueprintInputs] = config[  # type: ignore
             config_key
         ]
 
@@ -686,7 +682,7 @@ async def _async_process_if(hass, name, config, p_config):
 
 
 @callback
-def _trigger_extract_device(trigger_conf: dict) -> Optional[str]:
+def _trigger_extract_device(trigger_conf: dict) -> str | None:
     """Extract devices from a trigger config."""
     if trigger_conf[CONF_PLATFORM] != "device":
         return None
@@ -695,7 +691,7 @@ def _trigger_extract_device(trigger_conf: dict) -> Optional[str]:
 
 
 @callback
-def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
+def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
     """Extract entities from a trigger config."""
     if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
         return trigger_conf[CONF_ENTITY_ID]

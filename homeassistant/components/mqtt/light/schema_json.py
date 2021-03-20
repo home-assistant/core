@@ -341,6 +341,18 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         """Flag supported features."""
         return self._supported_features
 
+    def _set_flash_and_transition(self, message, **kwargs):
+        if ATTR_TRANSITION in kwargs:
+            message["transition"] = kwargs[ATTR_TRANSITION]
+
+        if ATTR_FLASH in kwargs:
+            flash = kwargs.get(ATTR_FLASH)
+
+            if flash == FLASH_LONG:
+                message["flash"] = self._flash_times[CONF_FLASH_TIME_LONG]
+            elif flash == FLASH_SHORT:
+                message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
+
     async def async_turn_on(self, **kwargs):
         """Turn the device on.
 
@@ -380,16 +392,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
-        if ATTR_FLASH in kwargs:
-            flash = kwargs.get(ATTR_FLASH)
-
-            if flash == FLASH_LONG:
-                message["flash"] = self._flash_times[CONF_FLASH_TIME_LONG]
-            elif flash == FLASH_SHORT:
-                message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
-
-        if ATTR_TRANSITION in kwargs:
-            message["transition"] = kwargs[ATTR_TRANSITION]
+        self._set_flash_and_transition(message, **kwargs)
 
         if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
             brightness_normalized = kwargs[ATTR_BRIGHTNESS] / DEFAULT_BRIGHTNESS_SCALE
@@ -449,8 +452,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         """
         message = {"state": "OFF"}
 
-        if ATTR_TRANSITION in kwargs:
-            message["transition"] = kwargs[ATTR_TRANSITION]
+        self._set_flash_and_transition(message, **kwargs)
 
         mqtt.async_publish(
             self.hass,

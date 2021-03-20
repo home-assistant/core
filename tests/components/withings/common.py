@@ -1,6 +1,7 @@
 """Common data for for the withings component tests."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Union
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
@@ -49,27 +50,21 @@ class ProfileConfig:
 
     profile: str
     user_id: int
-    api_response_user_get_device: Union[UserGetDeviceResponse, Exception]
-    api_response_measure_get_meas: Union[MeasureGetMeasResponse, Exception]
-    api_response_sleep_get_summary: Union[SleepGetSummaryResponse, Exception]
-    api_response_notify_list: Union[NotifyListResponse, Exception]
-    api_response_notify_revoke: Optional[Exception]
+    api_response_user_get_device: UserGetDeviceResponse | Exception
+    api_response_measure_get_meas: MeasureGetMeasResponse | Exception
+    api_response_sleep_get_summary: SleepGetSummaryResponse | Exception
+    api_response_notify_list: NotifyListResponse | Exception
+    api_response_notify_revoke: Exception | None
 
 
 def new_profile_config(
     profile: str,
     user_id: int,
-    api_response_user_get_device: Optional[
-        Union[UserGetDeviceResponse, Exception]
-    ] = None,
-    api_response_measure_get_meas: Optional[
-        Union[MeasureGetMeasResponse, Exception]
-    ] = None,
-    api_response_sleep_get_summary: Optional[
-        Union[SleepGetSummaryResponse, Exception]
-    ] = None,
-    api_response_notify_list: Optional[Union[NotifyListResponse, Exception]] = None,
-    api_response_notify_revoke: Optional[Exception] = None,
+    api_response_user_get_device: UserGetDeviceResponse | Exception | None = None,
+    api_response_measure_get_meas: MeasureGetMeasResponse | Exception | None = None,
+    api_response_sleep_get_summary: SleepGetSummaryResponse | Exception | None = None,
+    api_response_notify_list: NotifyListResponse | Exception | None = None,
+    api_response_notify_revoke: Exception | None = None,
 ) -> ProfileConfig:
     """Create a new profile config immutable object."""
     return ProfileConfig(
@@ -118,13 +113,13 @@ class ComponentFactory:
         self._aioclient_mock = aioclient_mock
         self._client_id = None
         self._client_secret = None
-        self._profile_configs: Tuple[ProfileConfig, ...] = ()
+        self._profile_configs: tuple[ProfileConfig, ...] = ()
 
     async def configure_component(
         self,
         client_id: str = "my_client_id",
         client_secret: str = "my_client_secret",
-        profile_configs: Tuple[ProfileConfig, ...] = (),
+        profile_configs: tuple[ProfileConfig, ...] = (),
     ) -> None:
         """Configure the wihings component."""
         self._client_id = client_id
@@ -294,7 +289,7 @@ class ComponentFactory:
 
 def get_config_entries_for_user_id(
     hass: HomeAssistant, user_id: int
-) -> Tuple[ConfigEntry]:
+) -> tuple[ConfigEntry]:
     """Get a list of config entries that apply to a specific withings user."""
     return tuple(
         [
@@ -305,7 +300,7 @@ def get_config_entries_for_user_id(
     )
 
 
-def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> List[dict]:
+def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> list[dict]:
     """Get a flow for a user id."""
     return [
         flow
@@ -316,7 +311,7 @@ def async_get_flow_for_user_id(hass: HomeAssistant, user_id: int) -> List[dict]:
 
 def get_data_manager_by_user_id(
     hass: HomeAssistant, user_id: int
-) -> Optional[DataManager]:
+) -> DataManager | None:
     """Get a data manager by the user id."""
     return next(
         iter(

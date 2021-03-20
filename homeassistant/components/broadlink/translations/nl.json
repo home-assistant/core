@@ -31,7 +31,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Host"
+                    "host": "Host",
+                    "timeout": "Time-out"
                 },
                 "title": "Verbinding maken met het apparaat"
             }

@@ -20,6 +20,7 @@ DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "name": "Beer",
     "model": "Glass",
     "sw_version": "0.1-beta",
+    "suggested_area": "default_area",
 }
 
 DEFAULT_CONFIG_DEVICE_INFO_MAC = {
@@ -28,6 +29,7 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "name": "Beer",
     "model": "Glass",
     "sw_version": "0.1-beta",
+    "suggested_area": "default_area",
 }
 
 
@@ -739,6 +741,7 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
+    assert device.suggested_area == "default_area"
 
 
 async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, config):
@@ -764,6 +767,7 @@ async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, 
     assert device.name == "Beer"
     assert device.model == "Glass"
     assert device.sw_version == "0.1-beta"
+    assert device.suggested_area == "default_area"
 
 
 async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):

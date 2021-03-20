@@ -8,10 +8,43 @@
         "create_entry": {
             "default": "Um Ereignisse an Home Assistant zu senden, muss das Webhook Feature in Plaato Airlock konfiguriert werden.\n\n F\u00fcge die folgenden Informationen ein: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n \n Weitere Informationen finden sich in der [Dokumentation]({docs_url})."
         },
+        "error": {
+            "invalid_webhook_device": "Du hast ein Ger\u00e4t gew\u00e4hlt, das das Senden von Daten an einen Webhook nicht unterst\u00fctzt. Es ist nur f\u00fcr die Airlock verf\u00fcgbar",
+            "no_api_method": "Du musst ein Authentifizierungstoken hinzuf\u00fcgen oder ein Webhook ausw\u00e4hlen",
+            "no_auth_token": "Du musst ein Authentifizierungstoken hinzuf\u00fcgen"
+        },
+        "step": {
+            "api_method": {
+                "data": {
+                    "use_webhook": "Webhook verwenden"
+                },
+                "title": "API-Methode ausw\u00e4hlen"
+            },
+            "user": {
+                "data": {
+                    "device_name": "Benenne dein Ger\u00e4t",
+                    "device_type": "Art des Plaato-Ger\u00e4ts"
+                },
+                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?",
+                "title": "Plaato Webhook einrichten"
+            },
+            "webhook": {
+                "description": "Um Ereignisse an Home Assistant zu senden, muss das Webhook Feature in Plaato Airlock konfiguriert werden.\n\n F\u00fcge die folgenden Informationen ein: \n\n - URL: ` {webhook_url} ` \n - Methode: POST \n \n Weitere Informationen finden sich in der [Dokumentation]({docs_url})."
+            }
+        }
+    },
+    "options": {
         "step": {
             "user": {
-                "description": "M\u00f6chtest du mit der Einrichtung beginnen?",
-                "title": "Plaato Webhook einrichten"
+                "data": {
+                    "update_interval": "Aktualisierungsintervall (Minuten)"
+                },
+                "description": "Aktualisierungsintervall einrichten (Minuten)",
+                "title": "Optionen f\u00fcr Plaato"
+            },
+            "webhook": {
+                "description": "Webhook-Informationen:\n\n- URL: `{webhook_url}`\n- Methode: POST\n\n",
+                "title": "Optionen f\u00fcr Plaato Airlock"
             }
         }
     }

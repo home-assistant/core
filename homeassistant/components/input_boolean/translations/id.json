@@ -1,8 +1,8 @@
 {
     "state": {
         "_": {
-            "off": "Off",
-            "on": "On"
+            "off": "Mati",
+            "on": "Nyala"
         }
     },
     "title": "Input boolean"

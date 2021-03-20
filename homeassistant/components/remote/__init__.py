@@ -1,8 +1,10 @@
 """Support to interface with universal remote control devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Dict, Iterable, List, Optional, cast
+from typing import Any, Iterable, cast
 
 import voluptuous as vol
 
@@ -147,17 +149,17 @@ class RemoteEntity(ToggleEntity):
         return 0
 
     @property
-    def current_activity(self) -> Optional[str]:
+    def current_activity(self) -> str | None:
         """Active activity."""
         return None
 
     @property
-    def activity_list(self) -> Optional[List[str]]:
+    def activity_list(self) -> list[str] | None:
         """List of available activities."""
         return None
 
     @property
-    def state_attributes(self) -> Optional[Dict[str, Any]]:
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
         if not self.supported_features & SUPPORT_ACTIVITY:
             return None
@@ -173,7 +175,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to a device."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
@@ -184,7 +185,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))
 
     def delete_command(self, **kwargs: Any) -> None:
@@ -193,7 +193,6 @@ class RemoteEntity(ToggleEntity):
 
     async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete commands from the database."""
-        assert self.hass is not None
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
         )

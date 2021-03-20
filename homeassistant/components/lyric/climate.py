@@ -1,7 +1,8 @@
 """Support for Honeywell Lyric climate platform."""
+from __future__ import annotations
+
 import logging
 from time import gmtime, strftime, time
-from typing import List, Optional
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -68,18 +69,10 @@ HVAC_MODES = {
     LYRIC_HVAC_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
 }
 
-
 HVAC_ACTIONS = {
     LYRIC_HVAC_ACTION_OFF: CURRENT_HVAC_OFF,
     LYRIC_HVAC_ACTION_HEAT: CURRENT_HVAC_HEAT,
     LYRIC_HVAC_ACTION_COOL: CURRENT_HVAC_COOL,
-}
-
-HVAC_MODES = {
-    LYRIC_HVAC_MODE_OFF: HVAC_MODE_OFF,
-    LYRIC_HVAC_MODE_HEAT: HVAC_MODE_HEAT,
-    LYRIC_HVAC_MODE_COOL: HVAC_MODE_COOL,
-    LYRIC_HVAC_MODE_HEAT_COOL: HVAC_MODE_HEAT_COOL,
 }
 
 SERVICE_HOLD_TIME = "set_hold_time"
@@ -170,7 +163,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return self._temperature_unit
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.indoorTemperature
 
@@ -188,12 +181,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return HVAC_MODES[self.device.changeableValues.mode]
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """List of available hvac modes."""
         return self._hvac_modes
 
     @property
-    def target_temperature(self) -> Optional[float]:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         device = self.device
         if not device.hasDualSetpointStatus:
@@ -201,7 +194,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_low(self) -> Optional[float]:
+    def target_temperature_low(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         device = self.device
         if device.hasDualSetpointStatus:
@@ -209,7 +202,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self) -> Optional[float]:
+    def target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         device = self.device
         if device.hasDualSetpointStatus:
@@ -217,12 +210,12 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         return None
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return current preset mode."""
         return self.device.changeableValues.thermostatSetpointStatus
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return preset modes."""
         return [
             PRESET_NO_HOLD,

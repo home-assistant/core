@@ -1,8 +1,9 @@
 """The Synology DSM component."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict
 
 import async_timeout
 from synology_dsm import SynologyDSM
@@ -191,7 +192,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     try:
         await api.async_setup()
     except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-        _LOGGER.debug("Unable to connect to DSM during setup: %s", err)
+        _LOGGER.debug(
+            "Unable to connect to DSM '%s' during setup: %s", entry.unique_id, err
+        )
         raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})
@@ -401,7 +404,8 @@ class SynoApi:
             self.dsm.apis.get(SynoSurveillanceStation.CAMERA_API_KEY)
         )
         _LOGGER.debug(
-            "State of Surveillance_station during setup:%s",
+            "State of Surveillance_station during setup of '%s': %s",
+            self._entry.unique_id,
             self._with_surveillance_station,
         )
 
@@ -413,9 +417,7 @@ class SynoApi:
     @callback
     def subscribe(self, api_key, unique_id):
         """Subscribe an entity to API fetches."""
-        _LOGGER.debug(
-            "Subscribe new entity - api_key:%s, unique_id:%s", api_key, unique_id
-        )
+        _LOGGER.debug("Subscribe new entity: %s", unique_id)
         if api_key not in self._fetching_entities:
             self._fetching_entities[api_key] = set()
         self._fetching_entities[api_key].add(unique_id)
@@ -423,9 +425,7 @@ class SynoApi:
         @callback
         def unsubscribe() -> None:
             """Unsubscribe an entity from API fetches (when disable)."""
-            _LOGGER.debug(
-                "Unsubscribe new entity - api_key:%s, unique_id:%s", api_key, unique_id
-            )
+            _LOGGER.debug("Unsubscribe entity: %s", unique_id)
             self._fetching_entities[api_key].remove(unique_id)
             if len(self._fetching_entities[api_key]) == 0:
                 self._fetching_entities.pop(api_key)
@@ -437,7 +437,9 @@ class SynoApi:
         """Determine if we should fetch each API, if one entity needs it."""
         # Entities not added yet, fetch all
         if not self._fetching_entities:
-            _LOGGER.debug("Entities not added yet, fetch all")
+            _LOGGER.debug(
+                "Entities not added yet, fetch all for '%s'", self._entry.unique_id
+            )
             return
 
         # Determine if we should fetch an API
@@ -460,32 +462,47 @@ class SynoApi:
 
         # Reset not used API, information is not reset since it's used in device_info
         if not self._with_security:
-            _LOGGER.debug("Disable security api from being updated")
+            _LOGGER.debug(
+                "Disable security api from being updated for '%s'",
+                self._entry.unique_id,
+            )
             self.dsm.reset(self.security)
             self.security = None
 
         if not self._with_storage:
-            _LOGGER.debug("Disable storage api from being updated")
+            _LOGGER.debug(
+                "Disable storage api from being updatedf or '%s'", self._entry.unique_id
+            )
             self.dsm.reset(self.storage)
             self.storage = None
 
         if not self._with_system:
-            _LOGGER.debug("Disable system api from being updated")
+            _LOGGER.debug(
+                "Disable system api from being updated for '%s'", self._entry.unique_id
+            )
             self.dsm.reset(self.system)
             self.system = None
 
         if not self._with_upgrade:
-            _LOGGER.debug("Disable upgrade api from being updated")
+            _LOGGER.debug(
+                "Disable upgrade api from being updated for '%s'", self._entry.unique_id
+            )
             self.dsm.reset(self.upgrade)
             self.upgrade = None
 
         if not self._with_utilisation:
-            _LOGGER.debug("Disable utilisation api from being updated")
+            _LOGGER.debug(
+                "Disable utilisation api from being updated for '%s'",
+                self._entry.unique_id,
+            )
             self.dsm.reset(self.utilisation)
             self.utilisation = None
 
         if not self._with_surveillance_station:
-            _LOGGER.debug("Disable surveillance_station api from being updated")
+            _LOGGER.debug(
+                "Disable surveillance_station api from being updated for '%s'",
+                self._entry.unique_id,
+            )
             self.dsm.reset(self.surveillance_station)
             self.surveillance_station = None
 
@@ -496,27 +513,32 @@ class SynoApi:
         self.network.update()
 
         if self._with_security:
-            _LOGGER.debug("Enable security api for updates")
+            _LOGGER.debug("Enable security api updates for '%s'", self._entry.unique_id)
             self.security = self.dsm.security
 
         if self._with_storage:
-            _LOGGER.debug("Enable storage api for updates")
+            _LOGGER.debug("Enable storage api updates for '%s'", self._entry.unique_id)
             self.storage = self.dsm.storage
 
         if self._with_upgrade:
-            _LOGGER.debug("Enable upgrade api for updates")
+            _LOGGER.debug("Enable upgrade api updates for '%s'", self._entry.unique_id)
             self.upgrade = self.dsm.upgrade
 
         if self._with_system:
-            _LOGGER.debug("Enable system api for updates")
+            _LOGGER.debug("Enable system api updates for '%s'", self._entry.unique_id)
             self.system = self.dsm.system
 
         if self._with_utilisation:
-            _LOGGER.debug("Enable utilisation api for updates")
+            _LOGGER.debug(
+                "Enable utilisation api updates for '%s'", self._entry.unique_id
+            )
             self.utilisation = self.dsm.utilisation
 
         if self._with_surveillance_station:
-            _LOGGER.debug("Enable surveillance_station api for updates")
+            _LOGGER.debug(
+                "Enable surveillance_station api updates for '%s'",
+                self._entry.unique_id,
+            )
             self.surveillance_station = self.dsm.surveillance_station
 
     async def async_reboot(self):
@@ -524,7 +546,10 @@ class SynoApi:
         try:
             await self._hass.async_add_executor_job(self.system.reboot)
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            _LOGGER.error("Reboot not possible, please try again later")
+            _LOGGER.error(
+                "Reboot of '%s' not possible, please try again later",
+                self._entry.unique_id,
+            )
             _LOGGER.debug("Exception:%s", err)
 
     async def async_shutdown(self):
@@ -532,7 +557,10 @@ class SynoApi:
         try:
             await self._hass.async_add_executor_job(self.system.shutdown)
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            _LOGGER.error("Shutdown not possible, please try again later")
+            _LOGGER.error(
+                "Shutdown of '%s' not possible, please try again later",
+                self._entry.unique_id,
+            )
             _LOGGER.debug("Exception:%s", err)
 
     async def async_unload(self):
@@ -540,11 +568,13 @@ class SynoApi:
         try:
             await self._hass.async_add_executor_job(self.dsm.logout)
         except (SynologyDSMAPIErrorException, SynologyDSMRequestException) as err:
-            _LOGGER.debug("Logout not possible:%s", err)
+            _LOGGER.debug(
+                "Logout from '%s' not possible:%s", self._entry.unique_id, err
+            )
 
     async def async_update(self, now=None):
         """Update function for updating API information."""
-        _LOGGER.debug("Start data update")
+        _LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._async_setup_api_requests()
         try:
             await self._hass.async_add_executor_job(
@@ -554,7 +584,11 @@ class SynoApi:
             _LOGGER.warning(
                 "Connection error during update, fallback by reloading the entry"
             )
-            _LOGGER.debug("Connection error during update with exception: %s", err)
+            _LOGGER.debug(
+                "Connection error during update of '%s' with exception: %s",
+                self._entry.unique_id,
+                err,
+            )
             await self._hass.config_entries.async_reload(self._entry.entry_id)
             return
 
@@ -566,7 +600,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: dict[str, str],
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize the Synology DSM entity."""
@@ -610,12 +644,12 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
         return self._class
 
     @property
-    def extra_state_attributes(self) -> Dict[str, any]:
+    def extra_state_attributes(self) -> dict[str, any]:
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial)},
@@ -643,7 +677,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         self,
         api: SynoApi,
         entity_type: str,
-        entity_info: Dict[str, str],
+        entity_info: dict[str, str],
         coordinator: DataUpdateCoordinator,
         device_id: str = None,
     ):
@@ -685,7 +719,7 @@ class SynologyDSMDeviceEntity(SynologyDSMBaseEntity):
         return bool(self._api.storage)
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, self._api.information.serial, self._device_id)},

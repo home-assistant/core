@@ -15,7 +15,7 @@
         "step": {
             "hassio_confirm": {
                 "description": "Kas soovid seadistada Home Assistant-i \u00fchenduse deCONZ-l\u00fc\u00fcsiga, mida pakub Hass.io lisandmoodul {addon} ?",
-                "title": "deCONZ Zigbee v\u00e4rav Hass.io pistikprogrammi kaudu"
+                "title": "deCONZ Zigbee l\u00fc\u00fcs Hass.io lisandmooduli abil"
             },
             "link": {
                 "description": "Home Assistanti registreerumiseks ava deCONZ-i l\u00fc\u00fcs.\n\n 1. Mine deCONZ Settings - > Gateway - > Advanced\n 2. Vajuta nuppu \"Authenticate app\"",

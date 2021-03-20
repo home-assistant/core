@@ -8,10 +8,15 @@ from homeassistant import setup
 from homeassistant.components.kulersky.light import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE_VALUE,
     ATTR_XY_COLOR,
+    COLOR_MODE_HS,
+    COLOR_MODE_RGBW,
     SCAN_INTERVAL,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
@@ -65,6 +70,7 @@ async def test_init(hass, mock_light):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "Bedroom",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS, COLOR_MODE_RGBW],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS
         | SUPPORT_COLOR
         | SUPPORT_WHITE_VALUE,
@@ -168,6 +174,7 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_OFF
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "Bedroom",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS, COLOR_MODE_RGBW],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS
         | SUPPORT_COLOR
         | SUPPORT_WHITE_VALUE,
@@ -183,6 +190,7 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_UNAVAILABLE
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "Bedroom",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS, COLOR_MODE_RGBW],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS
         | SUPPORT_COLOR
         | SUPPORT_WHITE_VALUE,
@@ -198,12 +206,15 @@ async def test_light_update(hass, mock_light):
     assert state.state == STATE_ON
     assert state.attributes == {
         ATTR_FRIENDLY_NAME: "Bedroom",
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_HS, COLOR_MODE_RGBW],
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS
         | SUPPORT_COLOR
         | SUPPORT_WHITE_VALUE,
+        ATTR_COLOR_MODE: COLOR_MODE_RGBW,
         ATTR_BRIGHTNESS: 200,
         ATTR_HS_COLOR: (200, 60),
         ATTR_RGB_COLOR: (102, 203, 255),
+        ATTR_RGBW_COLOR: (102, 203, 255, 240),
         ATTR_WHITE_VALUE: 240,
         ATTR_XY_COLOR: (0.184, 0.261),
     }

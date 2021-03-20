@@ -33,6 +33,10 @@
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "unknown": "Errore imprevisto"
+        },
         "step": {
             "init": {
                 "data": {
