@@ -251,6 +251,9 @@ class ReconnectLogic(RecordUpdateListener):
         # How many reconnect attempts have there been already, used for exponential wait time
         self._tries = 0
         self._tries_lock = asyncio.Lock()
+        # Track the wait task to cancel it on HA shutdown
+        self._wait_task: asyncio.Task | None = None
+        self._wait_task_lock = asyncio.Lock()
 
     @property
     def _entry_data(self) -> RuntimeEntryData | None:
@@ -296,6 +299,8 @@ class ReconnectLogic(RecordUpdateListener):
             _LOGGER.info("Trying to reconnect to %s in the background", self._host)
         _LOGGER.debug("Retrying %s in %d seconds", self._host, wait_time)
         await asyncio.sleep(wait_time)
+        async with self._wait_task_lock:
+            self._wait_task = None
         self._reconnect_event.set()
 
     async def _try_connect(self):
@@ -317,7 +322,15 @@ class ReconnectLogic(RecordUpdateListener):
             )
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
-            self._hass.loop.create_task(self._wait_and_start_reconnect())
+            async with self._wait_task_lock:
+                # Allow only one wait task at a time
+                # can happen if mDNS record received while waiting, then use existing wait task
+                if self._wait_task is not None:
+                    return
+
+                self._wait_task = self._hass.loop.create_task(
+                    self._wait_and_start_reconnect()
+                )
         else:
             _LOGGER.info("Successfully connected to %s", self._host)
             async with self._tries_lock:
@@ -341,7 +354,8 @@ class ReconnectLogic(RecordUpdateListener):
             if self._entry.entry_id not in self._hass.data[DOMAIN]:
                 # When removing/disconnecting manually
                 return
-            device_registry = self._hass.helpers.device_registry.async_get()
+            device_registry = self._hass.helpers.device_registry.async_get(self._hass)
+
             devices = dr.async_entries_for_config_entry(
                 device_registry, self._entry.entry_id
             )
@@ -372,6 +386,10 @@ class ReconnectLogic(RecordUpdateListener):
             self._loop_task.cancel()
             self._loop_task = None
         await self._hass.async_add_executor_job(self._zc.remove_listener, self)
+        async with self._wait_task_lock:
+            if self._wait_task is not None:
+                self._wait_task.cancel()
+            self._wait_task = None
 
     @callback
     def stop_callback(self):
