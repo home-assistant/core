@@ -1,6 +1,7 @@
 """Support for Modbus Register sensors."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import struct
 from typing import Any
@@ -19,11 +20,13 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_STRUCTURE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import (
     ConfigType,
@@ -186,6 +189,7 @@ async def async_setup_platform(
                 entry[CONF_PRECISION],
                 entry[CONF_DATA_TYPE],
                 entry.get(CONF_DEVICE_CLASS),
+                entry[CONF_SCAN_INTERVAL],
             )
         )
 
@@ -213,6 +217,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         precision,
         data_type,
         device_class,
+        scan_interval,
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
@@ -231,6 +236,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         self._device_class = device_class
         self._value = None
         self._available = True
+        self._scan_interval = timedelta(seconds=scan_interval)
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -238,6 +244,10 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         if not state:
             return
         self._value = state.state
+
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
 
     @property
     def state(self):
@@ -251,8 +261,13 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
 
     @property
     def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return True
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
 
     @property
     def unit_of_measurement(self):
@@ -269,7 +284,7 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    def _update(self):
         """Update the state of the sensor."""
         try:
             if self._register_type == CALL_TYPE_REGISTER_INPUT:
@@ -322,3 +337,4 @@ class ModbusRegisterSensor(RestoreEntity, SensorEntity):
                     self._value = str(val)
 
         self._available = True
+        self.schedule_update_ha_state()
