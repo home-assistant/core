@@ -242,7 +242,7 @@ class HybridRflinkLight(DimmableRflinkLight, LightEntity):
         # if the receiving device does not support dimlevel this
         # will ensure it is turned on when full brightness is set
         if self.brightness == 255:
-            await super()._async_handle_command("turn_on")
+            await self._async_handle_command("turn_on")
 
 
 class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
