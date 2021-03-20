@@ -171,16 +171,15 @@ class AugustData(AugustSubscriberMixin):
         """Process a pubnub message."""
         device = self.get_device_detail(device_id)
         # TODO: move this to pypi
-        # schedule_update, activity = update_from_pubnub_message(device, data_time, message)
+        # activity = activity_from_pubnub_message(device, data_time, message)
         # if activity:
         #    - LockOperationActivity (users in LockDetail)
         #    - DoorOperationActivity
         #    - DoorbellDingActivity
         #    - DoorbellMotionActivity
-        #    - BridgeOnlineActivity
-        #    - BridgeOfflineActivity
+        #    - BridgeOnlineActivity (TODO)
+        #    - BridgeOfflineActivity (TODO)
         #    self.activity_stream.add_activity(activity)
-        # if schedule_update:
         #    self.async_signal_device_id_update(device.device_id)
         # self.activity_stream.async_schedule_house_id_refresh(device.house_id)
         if isinstance(device, LockDetail):
