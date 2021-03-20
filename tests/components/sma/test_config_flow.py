@@ -34,44 +34,14 @@ async def test_form(hass, aioclient_mock):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    aioclient_mock.get(
-        "https://1.1.1.1/data/l10n/en-US.json",
-        json={"461": MOCK_DEVICE["manufacturer"], "9402": MOCK_DEVICE["type"]},
-    )
-    aioclient_mock.post(
-        "https://1.1.1.1/dyn/login.json", json={"result": {"sid": "ABCD"}}
-    )
-    aioclient_mock.post("https://1.1.1.1/dyn/logout.json?sid=ABCD", json={})
-    aioclient_mock.post(
-        "https://1.1.1.1/dyn/getValues.json?sid=ABCD",
-        json={
-            "result": {
-                "0199-xxxxx385": {
-                    "6800_08822B00": {
-                        "1": [{"validVals": [461], "val": [{"tag": 461}]}]
-                    },
-                    "6800_00A21E00": {
-                        "1": [{"low": 0, "high": None, "val": MOCK_DEVICE["serial"]}]
-                    },
-                    "6800_08822000": {
-                        "1": [
-                            {
-                                "validVals": [9401, 9402, 9403, 9404, 9405],
-                                "val": [{"tag": 9402}],
-                            }
-                        ]
-                    },
-                    "6800_10821E00": {"1": [{"val": MOCK_DEVICE["name"]}]},
-                }
-            }
-        },
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        MOCK_USER_INPUT,
-    )
-    await hass.async_block_till_done()
+    with patch("pysma.SMA.new_session", return_value=True), patch(
+        "pysma.SMA.device_info", return_value=MOCK_DEVICE
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            MOCK_USER_INPUT,
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "sensors"
@@ -132,8 +102,6 @@ async def test_form_cannot_connect(hass, aioclient_mock):
 
 async def test_form_invalid_auth(hass, aioclient_mock):
     """Test we handle invalid auth error."""
-    aioclient_mock.get("https://1.1.1.1/data/l10n/en-US.json", json={})
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -149,33 +117,7 @@ async def test_form_invalid_auth(hass, aioclient_mock):
 
 
 async def test_form_cannot_retrieve_device_info(hass, aioclient_mock):
-    """Test we handle invalid auth error."""
-    aioclient_mock.get("https://1.1.1.1/data/l10n/en-US.json", json={})
-    aioclient_mock.get(
-        "https://1.1.1.1/dyn/getValues.json",
-        json={
-            "result": {
-                "0199-xxxxx385": {
-                    "6800_08822B00": {
-                        "1": [{"validVals": [461], "val": [{"tag": 461}]}]
-                    },
-                    "6800_00A21E00": {
-                        "1": [{"low": 0, "high": None, "val": 3006894981}]
-                    },
-                    "6800_08822000": {
-                        "1": [
-                            {
-                                "validVals": [9401, 9402, 9403, 9404, 9405],
-                                "val": [{"tag": 9402}],
-                            }
-                        ]
-                    },
-                    "6800_10821E00": {"1": [{"val": "SMA Device Name"}]},
-                }
-            }
-        },
-    )
-
+    """Test we handle cannot retrieve device info error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

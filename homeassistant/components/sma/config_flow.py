@@ -39,45 +39,15 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
     protocol = "https" if data[CONF_SSL] else "http"
     url = f"{protocol}://{data[CONF_HOST]}"
 
-    # This will also test device connectivity. Raises ClientError on failure
-    res = await session.get(f"{url}/data/l10n/en-US.json")
-    translate_json = (await res.json()) or {}
-
     sma = pysma.SMA(session, url, data[CONF_PASSWORD], group=data[CONF_GROUP])
 
     if await sma.new_session() is False:
         raise InvalidAuth
 
-    sensors = [
-        pysma.Sensor("6800_00A21E00", "serial_number", ""),
-        pysma.Sensor("6800_10821E00", "device_name", ""),
-        pysma.Sensor(
-            "6800_08822000",
-            "device_type_id",
-            "",
-            None,
-            ('"1"[0].val[0].tag', "val[0].tag"),
-        ),
-        pysma.Sensor(
-            "6800_08822B00",
-            "device_manufacturer_id",
-            "",
-            None,
-            ('"1"[0].val[0].tag', "val[0].tag"),
-        ),
-    ]
+    device_info = await sma.device_info()
 
-    values = await sma.read(sensors)
-
-    if not values:
+    if not device_info:
         raise CannotRetrieveDeviceInfo
-
-    device_info = {
-        "serial": sensors[0].value,
-        "name": sensors[1].value,
-        "type": translate_json.get(str(sensors[2].value), ""),
-        "manufacturer": translate_json.get(str(sensors[3].value), ""),
-    }
 
     await sma.close_session()
     return device_info
