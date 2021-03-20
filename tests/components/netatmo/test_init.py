@@ -1,6 +1,6 @@
 """The tests for Netatmo component."""
 from time import time
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import jwt
 
@@ -115,10 +115,11 @@ async def test_setup_component_with_webhook(hass, entry):
 
 async def test_setup_without_https(hass, config_entry):
     """Test if set up with cloud link and without https."""
-    hass.data["cloud"] = Mock()
-    hass.data["cloud"].is_logged_in = True
-
+    hass.config.components.add("cloud")
     with patch(
+        "homeassistant.helpers.network.get_url",
+        return_value="https://example.nabu.casa",
+    ), patch(
         "homeassistant.components.netatmo.api.ConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
