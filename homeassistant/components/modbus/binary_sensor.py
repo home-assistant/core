@@ -1,6 +1,7 @@
 """Support for Modbus Coil and Discrete Input sensors."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from pymodbus.exceptions import ConnectionException, ModbusException
@@ -12,8 +13,15 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_SCAN_INTERVAL,
+    CONF_SLAVE,
+)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -95,6 +103,7 @@ async def async_setup_platform(
                 entry[CONF_ADDRESS],
                 entry.get(CONF_DEVICE_CLASS),
                 entry[CONF_INPUT_TYPE],
+                entry[CONF_SCAN_INTERVAL],
             )
         )
 
@@ -104,7 +113,9 @@ async def async_setup_platform(
 class ModbusBinarySensor(BinarySensorEntity):
     """Modbus binary sensor."""
 
-    def __init__(self, hub, name, slave, address, device_class, input_type):
+    def __init__(
+        self, hub, name, slave, address, device_class, input_type, scan_interval
+    ):
         """Initialize the Modbus binary sensor."""
         self._hub = hub
         self._name = name
@@ -114,6 +125,13 @@ class ModbusBinarySensor(BinarySensorEntity):
         self._input_type = input_type
         self._value = None
         self._available = True
+        self._scan_interval = timedelta(seconds=scan_interval)
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
 
     @property
     def name(self):
@@ -132,15 +150,20 @@ class ModbusBinarySensor(BinarySensorEntity):
 
     @property
     def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return True
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    def _update(self):
         """Update the state of the sensor."""
         try:
             if self._input_type == CALL_TYPE_COIL:
@@ -157,3 +180,4 @@ class ModbusBinarySensor(BinarySensorEntity):
 
         self._value = result.bits[0] & 1
         self._available = True
+        self.schedule_update_ha_state()
