@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -15,12 +16,14 @@ from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     CONF_SLAVE,
     CONF_SWITCHES,
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
@@ -138,6 +141,7 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
         self._slave = config.get(CONF_SLAVE)
         self._is_on = None
         self._available = True
+        self._scan_interval = timedelta(seconds=config[CONF_SCAN_INTERVAL])
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -145,6 +149,10 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
         if not state:
             return
         self._is_on = state.state == STATE_ON
+
+        async_track_time_interval(
+            self.hass, lambda arg: self._update(), self._scan_interval
+        )
 
     @property
     def is_on(self):
@@ -158,8 +166,13 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
 
     @property
     def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return True
+        """Return True if entity has to be polled for state.
+
+        False if entity pushes its state to HA.
+        """
+
+        # Handle polling directly in this entity
+        return False
 
     @property
     def available(self) -> bool:
@@ -179,15 +192,18 @@ class ModbusCoilSwitch(ModbusBaseSwitch, SwitchEntity):
         """Set switch on."""
         self._write_coil(self._coil, True)
         self._is_on = True
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Set switch off."""
         self._write_coil(self._coil, False)
         self._is_on = False
+        self.schedule_update_ha_state()
 
-    def update(self):
+    def _update(self):
         """Update the state of the switch."""
         self._is_on = self._read_coil(self._coil)
+        self.schedule_update_ha_state()
 
     def _read_coil(self, coil) -> bool:
         """Read coil using the Modbus hub slave."""
@@ -242,6 +258,7 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
             self._write_register(self._command_on)
             if not self._verify_state:
                 self._is_on = True
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Set switch off."""
@@ -250,13 +267,14 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
             self._write_register(self._command_off)
             if not self._verify_state:
                 self._is_on = False
+        self.schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
+    def _update(self):
         """Update the state of the switch."""
         if not self._verify_state:
             return
@@ -274,6 +292,7 @@ class ModbusRegisterSwitch(ModbusBaseSwitch, SwitchEntity):
                 self._register,
                 value,
             )
+        self.schedule_update_ha_state()
 
     def _read_register(self) -> int | None:
         try:
