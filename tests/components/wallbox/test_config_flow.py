@@ -103,3 +103,18 @@ async def test_validate_input(hass):
         result = await config_flow.validate_input(hass, data)
 
         assert result == {"title": "Wallbox Portal"}
+
+
+def test_configflow_class():
+    configflow = config_flow.ConfigFlow
+    assert configflow
+
+
+def test_cannot_connect_class():
+    cannot_connect = config_flow.CannotConnect
+    assert cannot_connect
+
+
+def test_invalid_auth_class():
+    invalid_auth = config_flow.InvalidAuth
+    assert invalid_auth
