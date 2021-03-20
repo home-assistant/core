@@ -4,11 +4,11 @@ from itertools import chain
 import logging
 
 from aiohttp import ClientError, ClientResponseError
-from august.doorbell import DoorbellDetail
-from august.exceptions import AugustApiAIOHTTPError
-from august.lock import LockDetail
-from august.pubnub_async import AugustPubNub, async_create_pubnub
-from august.util import (
+from yalexs.doorbell import DoorbellDetail
+from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.lock import LockDetail
+from yalexs.pubnub_async import AugustPubNub, async_create_pubnub
+from yalexs.util import (
     update_doorbell_details_from_pubnub_message,
     update_lock_details_from_pubnub_message,
 )

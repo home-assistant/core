@@ -6,7 +6,7 @@ import time
 # from unittest.mock import AsyncMock
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from august.activity import (
+from yalexs.activity import (
     ACTIVITY_ACTIONS_DOOR_OPERATION,
     ACTIVITY_ACTIONS_DOORBELL_DING,
     ACTIVITY_ACTIONS_DOORBELL_MOTION,
@@ -18,9 +18,9 @@ from august.activity import (
     DoorOperationActivity,
     LockOperationActivity,
 )
-from august.authenticator import AuthenticationState
-from august.doorbell import Doorbell, DoorbellDetail
-from august.lock import Lock, LockDetail
+from yalexs.authenticator import AuthenticationState
+from yalexs.doorbell import Doorbell, DoorbellDetail
+from yalexs.lock import Lock, LockDetail
 
 from homeassistant.components.august.const import CONF_LOGIN_METHOD, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -197,7 +197,7 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
 
 
 def _mock_august_authentication(token_text, token_timestamp, state):
-    authentication = MagicMock(name="august.authentication")
+    authentication = MagicMock(name="yalexs.authentication")
     type(authentication).state = PropertyMock(return_value=state)
     type(authentication).access_token = PropertyMock(return_value=token_text)
     type(authentication).access_token_expires = PropertyMock(

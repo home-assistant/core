@@ -1,7 +1,7 @@
 """Support for August doorbell camera."""
 
-from august.activity import ActivityType
-from august.util import update_doorbell_image_from_activity
+from yalexs.activity import ActivityType
+from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import callback
