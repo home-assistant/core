@@ -1,7 +1,7 @@
 """Tests for iAqualink config flow."""
 from unittest.mock import patch
 
-import iaqualink
+import iaqualink.exception
 import pytest
 
 from homeassistant.components.iaqualink import config_flow
@@ -52,7 +52,27 @@ async def test_with_invalid_credentials(hass, step):
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
     with patch(
-        "iaqualink.AqualinkClient.login", side_effect=iaqualink.AqualinkLoginException
+        "iaqualink.client.AqualinkClient.login",
+        side_effect=iaqualink.exception.AqualinkServiceUnauthorizedException,
+    ):
+        result = await func(DATA)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.parametrize("step", ["import", "user"])
+async def test_service_exception(hass, step):
+    """Test config flow encountering service exception."""
+    flow = config_flow.AqualinkFlowHandler()
+    flow.hass = hass
+
+    fname = f"async_step_{step}"
+    func = getattr(flow, fname)
+    with patch(
+        "iaqualink.client.AqualinkClient.login",
+        side_effect=iaqualink.exception.AqualinkServiceException,
     ):
         result = await func(DATA)
 
@@ -70,7 +90,7 @@ async def test_with_existing_config(hass, step):
 
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
-    with patch("iaqualink.AqualinkClient.login", return_value=mock_coro(None)):
+    with patch("iaqualink.client.AqualinkClient.login", return_value=mock_coro(None)):
         result = await func(DATA)
 
     assert result["type"] == "create_entry"
