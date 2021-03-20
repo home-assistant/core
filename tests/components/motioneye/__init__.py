@@ -138,6 +138,7 @@ def create_mock_motioneye_client() -> AsyncMock:
     mock_client = AsyncMock()
     mock_client.async_client_login = AsyncMock(return_value={})
     mock_client.async_get_cameras = AsyncMock(return_value=TEST_CAMERAS)
+    mock_client.async_client_close = AsyncMock(return_value=True)
     return mock_client
 
 

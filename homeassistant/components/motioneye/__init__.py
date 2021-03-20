@@ -49,13 +49,12 @@ async def async_setup(hass: HomeAssistant, config: Dict[str, Any]):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up motionEye from a config entry."""
-
-    host = entry.data[CONF_HOST]
-    port = entry.data[CONF_PORT]
-    username = entry.data[CONF_USERNAME]
-    password = entry.data.get(CONF_PASSWORD)
-
-    client = create_motioneye_client(host, port, username=username, password=password)
+    client = create_motioneye_client(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data.get(CONF_PASSWORD),
+    )
 
     try:
         await client.async_client_login()
@@ -106,6 +105,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.entry_id)
+        await config_data[CONF_CLIENT].async_client_close()
         for func in config_data[CONF_ON_UNLOAD]:
             func()
 

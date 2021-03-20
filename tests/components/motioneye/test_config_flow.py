@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from motioneye_client.client import (
     MotionEyeClientConnectionFailure,
     MotionEyeClientInvalidAuth,
+    MotionEyeClientRequestFailed,
 )
 
 from homeassistant import config_entries, setup
@@ -115,3 +116,31 @@ async def test_user_cannot_connect(hass):
 
     assert result["type"] == "form"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_request_error(hass):
+    """Test a request error is handled correctly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_client = create_mock_motioneye_client()
+    mock_client.async_client_login = AsyncMock(side_effect=MotionEyeClientRequestFailed)
+
+    with patch(
+        "homeassistant.components.motioneye.config_flow.MotionEyeClient",
+        return_value=mock_client,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "localhost",
+                CONF_PORT: 8765,
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await mock_client.async_client_close()
+
+    assert result["type"] == "form"
+    assert result["errors"] == {"base": "unknown"}

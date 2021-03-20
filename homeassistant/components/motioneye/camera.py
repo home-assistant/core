@@ -1,4 +1,6 @@
 """The motionEye integration."""
+import functools
+import logging
 from typing import Callable
 
 from motioneye_client.const import (
@@ -27,7 +29,10 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -42,6 +47,8 @@ from .const import (
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = ["camera"]
 
 
@@ -53,7 +60,7 @@ async def async_setup_entry(
     coordinator = entry_data[CONF_COORDINATOR]
     current_camera_ids = set()
 
-    async def add_camera_entities():
+    def add_camera_entities():
         if KEY_CAMERAS not in coordinator.data:
             return True
         cameras = coordinator.data[KEY_CAMERAS]
@@ -106,7 +113,7 @@ async def async_setup_entry(
                 ),
             )
 
-    await add_camera_entities()
+    add_camera_entities()
     entry_data[CONF_ON_UNLOAD].append(
         coordinator.async_add_listener(add_camera_entities)
     )
@@ -129,14 +136,15 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize a MJPEG camera."""
-        self._unique_id = get_motioneye_unique_id(host, port, camera_id, name)
+        self._unique_id = get_motioneye_unique_id(
+            host, port, camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
+        )
         still_image_url = (
             f"http://{host}:{port}/picture/{camera_id}/current/?_username={username}"
         )
-        signature = compute_signature_from_password(
+        still_image_url += "&_signature=" + compute_signature_from_password(
             "GET", still_image_url, None, password
         )
-        still_image_url += f"&_signature={signature}"
 
         MjpegCamera.__init__(
             self,
@@ -158,3 +166,15 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         return self._unique_id
 
     # TODO add state attribute.
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity added to hass."""
+        await super().async_added_to_hass()
+        assert self.hass
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_ENTITY_REMOVE.format(self.unique_id),
+                functools.partial(self.async_remove, force_remove=True),
+            )
+        )
