@@ -364,9 +364,9 @@ async def test_purge_filtered_states(
         )
         assert states_sensor_excluded.count() == 0
 
-        session.query(States).get(71).old_state_id is None
-        session.query(States).get(72).old_state_id is None
-        session.query(States).get(73).old_state_id == 62  # should have been keeped
+        assert session.query(States).get(72).old_state_id is None
+        assert session.query(States).get(73).old_state_id is None
+        assert session.query(States).get(74).old_state_id == 62  # should have been kept
 
 
 async def test_purge_filtered_events(
@@ -550,9 +550,9 @@ async def test_purge_filtered_events_state_changed(
         assert events_purge.count() == 0
         assert states.count() == 3
 
-        session.query(States).get(61).old_state_id is None
-        session.query(States).get(62).old_state_id is None
-        session.query(States).get(63).old_state_id == 62  # should have been keeped
+        assert session.query(States).get(61).old_state_id is None
+        assert session.query(States).get(62).old_state_id is None
+        assert session.query(States).get(63).old_state_id == 62  # should have been kept
 
 
 async def _add_test_states(hass: HomeAssistantType, instance: recorder.Recorder):
