@@ -1,6 +1,8 @@
 """The Z-Wave JS integration."""
+from __future__ import annotations
+
 import asyncio
-from typing import Callable, List
+from typing import Callable
 
 from async_timeout import timeout
 from zwave_js_server.client import Client as ZwaveClient
@@ -141,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async_on_node_ready(node)
             return
         # if node is not yet ready, register one-time callback for ready state
-        LOGGER.debug("Node added: %s - waiting for it to become ready.", node.node_id)
+        LOGGER.debug("Node added: %s - waiting for it to become ready", node.node_id)
         node.once(
             "ready",
             lambda event: async_on_node_ready(event["node"]),
@@ -226,7 +228,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_hass_data[DATA_CONNECT_FAILED_LOGGED] = False
         entry_hass_data[DATA_INVALID_SERVER_VERSION_LOGGED] = False
 
-    unsubscribe_callbacks: List[Callable] = []
+    unsubscribe_callbacks: list[Callable] = []
     entry_hass_data[DATA_CLIENT] = client
     entry_hass_data[DATA_UNSUBSCRIBE] = unsubscribe_callbacks
 

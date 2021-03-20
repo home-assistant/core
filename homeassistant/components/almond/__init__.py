@@ -1,9 +1,10 @@
 """Support for Almond."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Optional
 
 from aiohttp import ClientError, ClientSession
 import async_timeout
@@ -281,7 +282,7 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return True
 
     async def async_process(
-        self, text: str, context: Context, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: str | None = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)

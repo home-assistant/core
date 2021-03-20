@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     zapi = hass.data[zabbix.DOMAIN]
     if not zapi:
-        _LOGGER.error("zapi is None. Zabbix integration hasn't been loaded?")
+        _LOGGER.error("Zabbix integration hasn't been loaded? zapi is None")
         return False
 
     _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
@@ -116,7 +116,7 @@ class ZabbixTriggerCountSensor(Entity):
         self._state = len(triggers)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
 

@@ -96,8 +96,8 @@ class HabitipyData:
         except ClientResponseError as error:
             if error.status == HTTP_TOO_MANY_REQUESTS:
                 _LOGGER.warning(
-                    "Sensor data update for %s has too many API requests."
-                    " Skipping the update.",
+                    "Sensor data update for %s has too many API requests;"
+                    " Skipping the update",
                     DOMAIN,
                 )
             else:
@@ -113,8 +113,8 @@ class HabitipyData:
             except ClientResponseError as error:
                 if error.status == HTTP_TOO_MANY_REQUESTS:
                     _LOGGER.warning(
-                        "Sensor data update for %s has too many API requests."
-                        " Skipping the update.",
+                        "Sensor data update for %s has too many API requests;"
+                        " Skipping the update",
                         DOMAIN,
                     )
                 else:
@@ -200,7 +200,7 @@ class HabitipyTaskSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of all user tasks."""
         if self._updater.tasks is not None:
             all_received_tasks = self._updater.tasks

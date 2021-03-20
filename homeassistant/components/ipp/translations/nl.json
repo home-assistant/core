@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze printer is al geconfigureerd.",
+            "already_configured": "Apparaat is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "connection_upgrade": "Kan geen verbinding maken met de printer omdat een upgrade van de verbinding vereist is.",
             "ipp_error": "Er is een IPP-fout opgetreden.",
@@ -18,10 +18,10 @@
             "user": {
                 "data": {
                     "base_path": "Relatief pad naar de printer",
-                    "host": "Host- of IP-adres",
+                    "host": "Host",
                     "port": "Poort",
                     "ssl": "Printer ondersteunt communicatie via SSL / TLS",
-                    "verify_ssl": "Printer gebruikt een correct SSL-certificaat"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "description": "Stel uw printer in via Internet Printing Protocol (IPP) om te integreren met Home Assistant.",
                 "title": "Koppel uw printer"

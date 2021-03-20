@@ -80,7 +80,7 @@ class FritzBoxTempSensor(Entity):
             self._fritz.login()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         attrs = {
             ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,

@@ -21,6 +21,7 @@ DEFAULT_LIGHT_EFFECT = "purple"
 # default to 50% brightness
 DEFAULT_LIGHT_BRIGHTNESS = 128
 
-ATTR_STATUS = "status"
-ATTR_PUMPS = "pumps"
 ATTR_LIGHTS = "lights"
+ATTR_PUMPS = "pumps"
+ATTR_REMINDERS = "reminders"
+ATTR_STATUS = "status"

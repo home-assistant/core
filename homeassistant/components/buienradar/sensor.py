@@ -309,7 +309,7 @@ class BrSensor(Entity):
                 try:
                     condition = data.get(FORECAST)[fcday].get(CONDITION)
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
                 if condition:
@@ -339,7 +339,7 @@ class BrSensor(Entity):
                         self._state = round(self._state * 3.6, 1)
                     return True
                 except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                    _LOGGER.warning("No forecast for fcday=%s", fcday)
                     return False
 
             # update all other sensors
@@ -347,7 +347,7 @@ class BrSensor(Entity):
                 self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
             except IndexError:
-                _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                _LOGGER.warning("No forecast for fcday=%s", fcday)
                 return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
@@ -430,7 +430,7 @@ class BrSensor(Entity):
         return self._entity_picture
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: self._attribution}

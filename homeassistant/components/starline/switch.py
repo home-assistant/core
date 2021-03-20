@@ -53,7 +53,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
         return super().available and self._device.online
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the switch."""
         if self._key == "ign":
             return self._account.engine_attrs(self._device)

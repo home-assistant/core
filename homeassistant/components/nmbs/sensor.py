@@ -126,7 +126,7 @@ class NMBSLiveBoard(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None
@@ -202,7 +202,7 @@ class NMBSSensor(Entity):
         return "mdi:train"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return sensor attributes if data is available."""
         if self._state is None or not self._attrs:
             return None

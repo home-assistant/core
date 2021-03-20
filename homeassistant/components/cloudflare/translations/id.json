@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_zone": "Zona tidak valid"
+        },
+        "flow_title": "Cloudflare: {name}",
+        "step": {
+            "records": {
+                "data": {
+                    "records": "Catatan"
+                },
+                "title": "Pilih Catatan untuk Diperbarui"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token API"
+                },
+                "description": "Integrasi ini memerlukan Token API yang dibuat dengan izin Zone:Zone:Read and Zone:DNS:Edit untuk semua zona di akun Anda.",
+                "title": "Hubungkan ke Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zona"
+                },
+                "title": "Pilih Zona yang akan Diperbarui"
+            }
+        }
+    }
+}

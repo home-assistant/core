@@ -1,7 +1,8 @@
 """Support for scripts."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import List
 
 import voluptuous as vol
 
@@ -89,7 +90,7 @@ def is_on(hass, entity_id):
 
 
 @callback
-def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all scripts that reference the entity."""
     if DOMAIN not in hass.data:
         return []
@@ -104,7 +105,7 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in script."""
     if DOMAIN not in hass.data:
         return []
@@ -120,7 +121,7 @@ def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+def scripts_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all scripts that reference the device."""
     if DOMAIN not in hass.data:
         return []
@@ -135,7 +136,7 @@ def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
 
 @callback
-def devices_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in script."""
     if DOMAIN not in hass.data:
         return []

@@ -94,7 +94,7 @@ async def async_setup_entry(hass, config_entry):
         unique_id = config_entry.unique_id
         if device_info is None:
             _LOGGER.error(
-                "Couldn't gather device info. Please restart Home Assistant with your TV turned on and connected to your network."
+                "Couldn't gather device info; Please restart Home Assistant with your TV turned on and connected to your network"
             )
         else:
             unique_id = device_info[ATTR_UDN]

@@ -90,6 +90,7 @@ ENTITY_IDS_BY_NUMBER = {
     "21": "humidifier.hygrostat",
     "22": "scene.light_on",
     "23": "scene.light_off",
+    "24": "media_player.kitchen",
 }
 
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
@@ -362,7 +363,7 @@ async def test_light_without_brightness_can_be_turned_off(hass_hue, hue_client):
     call = turn_off_calls[-1]
 
     assert light.DOMAIN == call.domain
-    assert SERVICE_TURN_OFF == call.service
+    assert call.service == SERVICE_TURN_OFF
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
 
@@ -400,11 +401,11 @@ async def test_light_without_brightness_can_be_turned_on(hass_hue, hue_client):
 
     # Verify that SERVICE_TURN_ON has been called
     await hass_hue.async_block_till_done()
-    assert 1 == len(turn_on_calls)
+    assert len(turn_on_calls) == 1
     call = turn_on_calls[-1]
 
     assert light.DOMAIN == call.domain
-    assert SERVICE_TURN_ON == call.service
+    assert call.service == SERVICE_TURN_ON
     assert "light.no_brightness" in call.data[ATTR_ENTITY_ID]
 
 

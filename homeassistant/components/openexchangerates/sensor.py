@@ -79,7 +79,7 @@ class OpenexchangeratesSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other attributes of the sensor."""
         attr = self.rest.data
         attr[ATTR_ATTRIBUTION] = ATTRIBUTION

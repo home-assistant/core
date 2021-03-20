@@ -1,4 +1,6 @@
 """Test the helper method for writing tests."""
+from __future__ import annotations
+
 import asyncio
 import collections
 from collections import OrderedDict
@@ -14,7 +16,7 @@ import threading
 import time
 from time import monotonic
 import types
-from typing import Any, Awaitable, Collection, Optional
+from typing import Any, Awaitable, Collection
 from unittest.mock import AsyncMock, Mock, patch
 import uuid
 
@@ -197,12 +199,12 @@ async def async_test_home_assistant(loop, load_registries=True):
         """
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
-        start_time: Optional[float] = None
+        start_time: float | None = None
 
         while len(self._pending_tasks) > max_remaining_tasks:
-            pending = [
+            pending: Collection[Awaitable[Any]] = [
                 task for task in self._pending_tasks if not task.done()
-            ]  # type: Collection[Awaitable[Any]]
+            ]
             self._pending_tasks.clear()
             if len(pending) > max_remaining_tasks:
                 remaining_pending = await self._await_count_and_log_pending(
@@ -764,7 +766,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
 def patch_yaml_files(files_dict, endswith=True):
     """Patch load_yaml with a dictionary of yaml files."""
     # match using endswith, start search with longest string
-    matchlist = sorted(list(files_dict.keys()), key=len) if endswith else []
+    matchlist = sorted(files_dict.keys(), key=len) if endswith else []
 
     def mock_open_f(fname, **_):
         """Mock open() in the yaml module, used by load_yaml."""

@@ -1,7 +1,8 @@
 """Websocket API for Z-Wave JS."""
+from __future__ import annotations
+
 import dataclasses
 import json
-from typing import Dict
 
 from aiohttp import hdrs, web, web_exceptions
 import voluptuous as vol
@@ -371,6 +372,7 @@ def websocket_get_config_parameters(
         metadata = zwave_value.metadata
         result[value_id] = {
             "property": zwave_value.property_,
+            "property_key": zwave_value.property_key,
             "configuration_value_type": zwave_value.configuration_value_type.value,
             "metadata": {
                 "description": metadata.description,
@@ -398,7 +400,7 @@ def convert_log_level_to_enum(value: str) -> LogLevel:
     return LogLevel[value.upper()]
 
 
-def filename_is_present_if_logging_to_file(obj: Dict) -> Dict:
+def filename_is_present_if_logging_to_file(obj: dict) -> dict:
     """Validate that filename is provided if log_to_file is True."""
     if obj.get(LOG_TO_FILE, False) and FILENAME not in obj:
         raise vol.Invalid("`filename` must be provided if logging to file")

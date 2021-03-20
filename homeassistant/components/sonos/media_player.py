@@ -1330,7 +1330,7 @@ class SonosEntity(MediaPlayerEntity):
             if one_alarm._alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("did not find alarm with id %s", alarm_id)
+            _LOGGER.warning("Did not find alarm with id %s", alarm_id)
             return
         if time is not None:
             alarm.start_time = time
@@ -1366,7 +1366,7 @@ class SonosEntity(MediaPlayerEntity):
         self.soco.remove_from_queue(queue_position)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return entity specific state attributes."""
         attributes = {ATTR_SONOS_GROUP: [e.entity_id for e in self._sonos_group]}
 

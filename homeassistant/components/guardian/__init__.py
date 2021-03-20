@@ -1,6 +1,7 @@
 """The Elexa Guardian integration."""
+from __future__ import annotations
+
 import asyncio
-from typing import Dict
 
 from aioguardian import Client
 
@@ -246,7 +247,7 @@ class GuardianEntity(CoordinatorEntity):
         return self._device_info
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
 
@@ -314,7 +315,7 @@ class ValveControllerEntity(GuardianEntity):
     def __init__(
         self,
         entry: ConfigEntry,
-        coordinators: Dict[str, DataUpdateCoordinator],
+        coordinators: dict[str, DataUpdateCoordinator],
         kind: str,
         name: str,
         device_class: str,

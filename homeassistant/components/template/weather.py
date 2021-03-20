@@ -2,6 +2,7 @@
 import voluptuous as vol
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
     ATTR_CONDITION_FOG,
@@ -29,6 +30,7 @@ from .const import DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 CONDITION_CLASSES = {
+    ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_FOG,
     ATTR_CONDITION_HAIL,
