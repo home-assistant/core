@@ -257,10 +257,8 @@ class AqualinkEntity(Entity):
         """Execute API call while catching service exceptions."""
         try:
             await awaitable
-            return True
         except AqualinkServiceException as svc_exception:
             _LOGGER.warning("Aqualink Service Exception raised: %s", svc_exception)
-            return False
 
     @property
     def device_info(self) -> DeviceInfo:
