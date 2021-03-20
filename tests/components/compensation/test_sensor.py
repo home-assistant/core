@@ -148,7 +148,7 @@ async def test_quadratic_state(hass):
 
 
 async def test_numpy_errors(hass, caplog):
-    """Tests bad data points."""
+    """Tests bad polyfits."""
     config = {
         "compensation": {
             "test": {
@@ -180,7 +180,7 @@ async def test_numpy_errors(hass, caplog):
 
 
 async def test_datapoints_greater_than_degree(hass, caplog):
-    """Tests bad data points."""
+    """Tests 3 bad data points."""
     config = {
         "compensation": {
             "test": {
@@ -203,7 +203,7 @@ async def test_datapoints_greater_than_degree(hass, caplog):
 
 
 async def test_new_state_is_none(hass):
-    """Test compensation sensor state."""
+    """Tests catch for empty new states."""
     config = {
         "compensation": {
             "test": {

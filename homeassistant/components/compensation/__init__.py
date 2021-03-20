@@ -100,9 +100,7 @@ async def async_setup(hass, config):
                         str(warning.message).lower(),
                     )
 
-        if coefficients is None:
-            continue
-        else:
+        if coefficients is not None:
             data = {
                 k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
             }
