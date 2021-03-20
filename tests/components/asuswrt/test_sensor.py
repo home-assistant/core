@@ -43,7 +43,6 @@ MOCK_DEVICES = {
 MOCK_BYTES_TOTAL = [60000000000, 50000000000]
 MOCK_CURRENT_TRANSFER_RATES = [20000000, 10000000]
 MOCK_LOAD_AVG = [1.1, 1.2, 1.3]
-MOCK_TEMPERATURES = {"r24": 50, "r50": 60, "cpu": 70}
 
 
 @pytest.fixture(name="connect")
@@ -53,6 +52,13 @@ def mock_controller_connect():
         service_mock.return_value.connection.async_connect = AsyncMock()
         service_mock.return_value.is_connected = True
         service_mock.return_value.connection.disconnect = Mock()
+        service_mock.return_value.async_get_nvram = AsyncMock(
+            return_value={
+                "model": "abcd",
+                "firmver": "efg",
+                "buildno": "123",
+            }
+        )
         service_mock.return_value.async_get_connected_devices = AsyncMock(
             return_value=MOCK_DEVICES
         )
@@ -64,9 +70,6 @@ def mock_controller_connect():
         )
         service_mock.return_value.async_get_loadavg = AsyncMock(
             return_value=MOCK_LOAD_AVG
-        )
-        service_mock.return_value.async_get_temperature = AsyncMock(
-            return_value=MOCK_TEMPERATURES
         )
         yield service_mock
 

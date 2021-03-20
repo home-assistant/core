@@ -9,9 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
     DATA_RATE_MEGABITS_PER_SECOND,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    TEMP_CELSIUS,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
@@ -27,7 +25,7 @@ from .const import (
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
 )
-from .router import KEY_COORDINATOR, KEY_SENSORS, SENSORS_TYPE_TEMP, AsusWrtRouter
+from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
 DEFAULT_PREFIX = "Asuswrt"
 
@@ -89,12 +87,6 @@ CONNECTION_SENSORS = {
     },
 }
 
-TEMPERATURE_SENSOR_TEMPLATE = {
-    SENSOR_NAME: None,
-    SENSOR_UNIT: TEMP_CELSIUS,
-    SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -105,17 +97,11 @@ async def async_setup_entry(
     router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
     entities = []
 
-    for sensor_type, sensor_data in router.sensors_coordinator.items():
+    for sensor_data in router.sensors_coordinator.values():
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
         for sensor_key in sensors:
-            if sensor_type == SENSORS_TYPE_TEMP:
-                sensor_def = {
-                    **TEMPERATURE_SENSOR_TEMPLATE,
-                    SENSOR_NAME: f"{sensor_key} Temperature",
-                }
-            else:
-                sensor_def = CONNECTION_SENSORS.get(sensor_key)
+            sensor_def = CONNECTION_SENSORS.get(sensor_key)
             if sensor_def:
                 entities.append(
                     AsusWrtSensor(coordinator, router, sensor_key, sensor_def)

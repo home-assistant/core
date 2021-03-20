@@ -57,7 +57,6 @@ SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
 SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
-SENSORS_TYPE_TEMP = "sensors_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,10 +75,10 @@ class AsusWrtSensorDataHandler:
         ret_dict: dict[str, Any] = dict.fromkeys(keys)
         if not values:
             return ret_dict
+        if len(values) < len(keys):
+            return ret_dict
 
         for index, key in enumerate(ret_dict):
-            if index >= len(values):
-                break
             ret_dict[key] = values[index]
 
         return ret_dict
@@ -115,15 +114,6 @@ class AsusWrtSensorDataHandler:
 
         return self._get_dict(SENSORS_LOAD_AVG, avg)
 
-    async def _get_temperatures(self):
-        """Fetch temperature information from the router."""
-        try:
-            ret_dict = await self._api.async_get_temperature()
-        except (OSError, ValueError) as exc:
-            raise UpdateFailed(exc) from exc
-
-        return ret_dict
-
     def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
         if self._connected_devices == conn_devices:
@@ -141,8 +131,6 @@ class AsusWrtSensorDataHandler:
             method = self._get_load_avg
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
-        elif sensor_type == SENSORS_TYPE_TEMP:
-            method = self._get_temperatures
         else:
             raise RuntimeError(f"Invalid sensor type: {sensor_type}")
 
@@ -223,6 +211,8 @@ class AsusWrtRouter:
         self._api: AsusWrt = None
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
+        self._model = "Asus Router"
+        self._sw_v = None
 
         self._devices: dict[str, Any] = {}
         self._connected_devices = 0
@@ -251,6 +241,14 @@ class AsusWrtRouter:
 
         if not self._api.is_connected:
             raise ConfigEntryNotReady
+
+        # System
+        model = await self._get_nvram_info("MODEL")
+        if model:
+            self._model = model["model"]
+        firmware = await self._get_nvram_info("FIRMWARE")
+        if firmware:
+            self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
         # Load tracked entities from registry
         entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
@@ -365,17 +363,6 @@ class AsusWrtRouter:
             KEY_SENSORS: SENSORS_LOAD_AVG,
         }
 
-        temp_coordinator = await self._sensors_data_handler.get_coordinator(
-            SENSORS_TYPE_TEMP
-        )
-        if temp_coordinator.data:
-            self._sensors_coordinator[SENSORS_TYPE_TEMP] = {
-                KEY_COORDINATOR: temp_coordinator,
-                KEY_SENSORS: [list(temp_coordinator.data.keys())],
-            }
-        else:
-            _LOGGER.warning("Temperature sensors not available for this router")
-
     async def _update_unpolled_sensors(self) -> None:
         """Request refresh for AsusWrt unpolled sensors."""
         if not self._sensors_data_handler:
@@ -385,6 +372,18 @@ class AsusWrtRouter:
             coordinator = self._sensors_coordinator[SENSORS_TYPE_COUNT][KEY_COORDINATOR]
             if self._sensors_data_handler.update_device_count(self._connected_devices):
                 await coordinator.async_refresh()
+
+    async def _get_nvram_info(self, info_type):
+        """Get AsusWrt router info from nvram."""
+        info = {}
+        try:
+            info = await self._api.async_get_nvram(info_type)
+        except OSError as exc:
+            _LOGGER.warning(
+                "Error calling method async_get_nvram(%s): %s", info_type, exc
+            )
+
+        return info
 
     async def close(self) -> None:
         """Close the connection."""
@@ -420,8 +419,9 @@ class AsusWrtRouter:
         return {
             "identifiers": {(DOMAIN, "AsusWRT")},
             "name": self._host,
-            "model": "Asus Router",
+            "model": self._model,
             "manufacturer": "Asus",
+            "sw_version": self._sw_v,
         }
 
     @property
