@@ -1,5 +1,5 @@
 """Test the Wallbox config flow."""
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.wallbox import config_flow
@@ -82,3 +82,23 @@ def test_hub_class():
     ):
         assert hub.authenticate()
         assert hub.get_data()
+
+
+async def test_validate_input(hass):
+    data = {
+        "station": "12345",
+        "username": "test-username",
+        "password": "test-password",
+    }
+
+    with patch(
+        "homeassistant.components.wallbox.config_flow.Wallbox.authenticate",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.wallbox.config_flow.Wallbox.getChargerStatus",
+        return_value=True,
+    ):
+
+        result = await config_flow.validate_input(hass, data)
+
+        assert result == {"title": "Wallbox Portal"}
