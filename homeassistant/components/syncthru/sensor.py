@@ -12,10 +12,8 @@ from homeassistant.const import (
     CONF_RESOURCE,
     CONF_URL,
     PERCENTAGE,
-    STATE_OFF,
     STATE_OK,
     STATE_PROBLEM,
-    STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -36,14 +34,24 @@ DEFAULT_MONITORED_CONDITIONS.extend([f"drum_{key}" for key in DRUM_COLORS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"tray_{key}" for key in TRAYS])
 DEFAULT_MONITORED_CONDITIONS.extend([f"output_tray_{key}" for key in OUTPUT_TRAYS])
 
-SYNCTHRU_STATE_HUMAN = {
+SYNCTHRU_STATE_PROBLEM = {
     SyncthruState.INVALID: STATE_PROBLEM,
-    SyncthruState.OFFLINE: STATE_OFF,
+    SyncthruState.OFFLINE: None,
     SyncthruState.NORMAL: STATE_OK,
-    SyncthruState.UNKNOWN: STATE_UNKNOWN,
+    SyncthruState.UNKNOWN: STATE_PROBLEM,
     SyncthruState.WARNING: STATE_PROBLEM,
     SyncthruState.TESTING: STATE_OK,
     SyncthruState.ERROR: STATE_PROBLEM,
+}
+
+SYNCTHRU_STATE_HUMAN = {
+    SyncthruState.INVALID: "invalid",
+    SyncthruState.OFFLINE: "unreachable",
+    SyncthruState.NORMAL: "normal",
+    SyncthruState.UNKNOWN: "unknown",
+    SyncthruState.WARNING: "warning",
+    SyncthruState.TESTING: "testing",
+    SyncthruState.ERROR: "error",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -151,7 +159,12 @@ class SyncThruSensor(Entity):
 
 
 class SyncThruMainSensor(SyncThruSensor):
-    """Implementation of the main sensor, conducting the actual polling."""
+    """
+    Implementation of the main sensor, conducting the actual polling.
+
+    It also shows whether the printer is turned on/online and presents
+    the detailed current status.
+    """
 
     def __init__(self, syncthru, name):
         """Initialize the sensor."""
@@ -173,8 +186,25 @@ class SyncThruMainSensor(SyncThruSensor):
                 self.syncthru.url,
             )
             self._active = False
-        self._state = SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()]
-        self._attributes = {"display_text": self.syncthru.device_status_details()}
+        self._state = self.syncthru.is_online()
+        self._attributes = {
+            "detailed_state": SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()],
+            "display_text": self.syncthru.device_status_details(),
+        }
+
+
+class SyncThruProblemSensor(SyncThruSensor):
+    """Implementation of a sensor that checks whether the printer works correctly."""
+
+    def __init__(self, syncthru, name):
+        """Initialize the sensor."""
+        super().__init__(syncthru, name)
+        self._id_suffix = "_problem"
+        self._active = True
+
+    async def async_update(self):
+        """Get the latest data from SyncThru and update the state."""
+        self._state = SYNCTHRU_STATE_PROBLEM[self.syncthru.device_status()]
 
 
 class SyncThruTonerSensor(SyncThruSensor):
