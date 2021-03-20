@@ -5,6 +5,7 @@ import enum
 import logging
 
 import bellows.zigbee.application
+import voluptuous as vol
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
 import zigpy_cc.zigbee.application
 import zigpy_deconz.zigbee.application
@@ -22,6 +23,7 @@ from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
+import homeassistant.helpers.config_validation as cv
 
 from .typing import CALLABLE_T
 
@@ -118,12 +120,21 @@ PLATFORMS = (
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
+CONF_DEFAULT_LIGHT_TRANSITION = "default_light_transition"
 CONF_DEVICE_CONFIG = "device_config"
+CONF_ENABLE_IDENTIFY_ON_JOIN = "enable_identify_on_join"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_FLOWCONTROL = "flow_control"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
 CONF_ZIGPY = "zigpy_config"
+
+CONF_OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_DEFAULT_LIGHT_TRANSITION): cv.positive_int,
+        vol.Optional(CONF_ENABLE_IDENTIFY_ON_JOIN): cv.boolean,
+    }
+)
 
 DATA_DEVICE_CONFIG = "zha_device_config"
 DATA_ZHA = "zha"
