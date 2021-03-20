@@ -6,7 +6,13 @@ from numbers import Number
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
+from homeassistant.const import (
+    DATA_GIGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
+    DEVICE_CLASS_TEMPERATURE,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -16,13 +22,12 @@ from homeassistant.helpers.update_coordinator import (
 from .const import (
     DATA_ASUSWRT,
     DOMAIN,
-    SENSOR_CONNECTED_DEVICE,
-    SENSOR_RX_BYTES,
-    SENSOR_RX_RATES,
-    SENSOR_TX_BYTES,
-    SENSOR_TX_RATES,
+    SENSORS_BYTES,
+    SENSORS_CONNECTED_DEVICE,
+    SENSORS_LOAD_AVG,
+    SENSORS_RATES,
 )
-from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
+from .router import KEY_COORDINATOR, KEY_SENSORS, SENSORS_TYPE_TEMP, AsusWrtRouter
 
 DEFAULT_PREFIX = "Asuswrt"
 
@@ -36,42 +41,58 @@ SENSOR_DEFAULT_ENABLED = "default_enabled"
 UNIT_DEVICES = "Devices"
 
 CONNECTION_SENSORS = {
-    SENSOR_CONNECTED_DEVICE: {
+    SENSORS_CONNECTED_DEVICE[0]: {
         SENSOR_NAME: "Devices Connected",
         SENSOR_UNIT: UNIT_DEVICES,
         SENSOR_FACTOR: 0,
         SENSOR_ICON: "mdi:router-network",
-        SENSOR_DEVICE_CLASS: None,
         SENSOR_DEFAULT_ENABLED: True,
     },
-    SENSOR_RX_RATES: {
+    SENSORS_RATES[0]: {
         SENSOR_NAME: "Download Speed",
         SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
         SENSOR_FACTOR: 125000,
         SENSOR_ICON: "mdi:download-network",
-        SENSOR_DEVICE_CLASS: None,
     },
-    SENSOR_TX_RATES: {
+    SENSORS_RATES[1]: {
         SENSOR_NAME: "Upload Speed",
         SENSOR_UNIT: DATA_RATE_MEGABITS_PER_SECOND,
         SENSOR_FACTOR: 125000,
         SENSOR_ICON: "mdi:upload-network",
-        SENSOR_DEVICE_CLASS: None,
     },
-    SENSOR_RX_BYTES: {
+    SENSORS_BYTES[0]: {
         SENSOR_NAME: "Download",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:download",
-        SENSOR_DEVICE_CLASS: None,
     },
-    SENSOR_TX_BYTES: {
+    SENSORS_BYTES[1]: {
         SENSOR_NAME: "Upload",
         SENSOR_UNIT: DATA_GIGABYTES,
         SENSOR_FACTOR: 1000000000,
         SENSOR_ICON: "mdi:upload",
-        SENSOR_DEVICE_CLASS: None,
     },
+    SENSORS_LOAD_AVG[0]: {
+        SENSOR_NAME: "Load Avg (1m)",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+    SENSORS_LOAD_AVG[1]: {
+        SENSOR_NAME: "Load Avg (5m)",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+    SENSORS_LOAD_AVG[2]: {
+        SENSOR_NAME: "Load Avg (15m)",
+        SENSOR_UNIT: PERCENTAGE,
+        SENSOR_ICON: "mdi:cpu-32-bit",
+    },
+}
+
+TEMPERATURE_SENSOR_TEMPLATE = {
+    SENSOR_NAME: None,
+    SENSOR_UNIT: TEMP_CELSIUS,
+    SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,15 +105,20 @@ async def async_setup_entry(
     router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
     entities = []
 
-    for sensor_data in router.sensors_coordinator.values():
+    for sensor_type, sensor_data in router.sensors_coordinator.items():
         coordinator = sensor_data[KEY_COORDINATOR]
         sensors = sensor_data[KEY_SENSORS]
         for sensor_key in sensors:
-            if sensor_key in CONNECTION_SENSORS:
+            if sensor_type == SENSORS_TYPE_TEMP:
+                sensor_def = {
+                    **TEMPERATURE_SENSOR_TEMPLATE,
+                    SENSOR_NAME: f"{sensor_key} Temperature",
+                }
+            else:
+                sensor_def = CONNECTION_SENSORS.get(sensor_key)
+            if sensor_def:
                 entities.append(
-                    AsusWrtSensor(
-                        coordinator, router, sensor_key, CONNECTION_SENSORS[sensor_key]
-                    )
+                    AsusWrtSensor(coordinator, router, sensor_key, sensor_def)
                 )
 
     async_add_entities(entities, True)
@@ -114,10 +140,10 @@ class AsusWrtSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._name = f"{DEFAULT_PREFIX} {sensor[SENSOR_NAME]}"
         self._unique_id = f"{DOMAIN} {self._name}"
-        self._unit = sensor[SENSOR_UNIT]
-        self._factor = sensor[SENSOR_FACTOR]
-        self._icon = sensor[SENSOR_ICON]
-        self._device_class = sensor[SENSOR_DEVICE_CLASS]
+        self._unit = sensor.get(SENSOR_UNIT)
+        self._factor = sensor.get(SENSOR_FACTOR)
+        self._icon = sensor.get(SENSOR_ICON)
+        self._device_class = sensor.get(SENSOR_DEVICE_CLASS)
         self._default_enabled = sensor.get(SENSOR_DEFAULT_ENABLED, False)
 
     @property

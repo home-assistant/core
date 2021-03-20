@@ -40,11 +40,10 @@ from .const import (
     DEFAULT_TRACK_UNKNOWN,
     DOMAIN,
     PROTOCOL_TELNET,
-    SENSOR_CONNECTED_DEVICE,
-    SENSOR_RX_BYTES,
-    SENSOR_RX_RATES,
-    SENSOR_TX_BYTES,
-    SENSOR_TX_RATES,
+    SENSORS_BYTES,
+    SENSORS_CONNECTED_DEVICE,
+    SENSORS_LOAD_AVG,
+    SENSORS_RATES,
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
@@ -56,7 +55,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
+SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
+SENSORS_TYPE_TEMP = "sensors_temperature"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,33 +71,56 @@ class AsusWrtSensorDataHandler:
         self._api = api
         self._connected_devices = 0
 
-    async def _get_connected_devices(self):
-        """Return number of connected devices."""
-        return {SENSOR_CONNECTED_DEVICE: self._connected_devices}
+    def _get_dict(self, keys: list, values: list):
+        """Create a dict from a list of keys and values."""
+        ret_dict: dict[str, Any] = dict.fromkeys(keys)
+        if not values:
+            return ret_dict
 
-    async def _get_bytes(self):
-        """Fetch byte information from the router."""
-        ret_dict: dict[str, Any] = {}
-        try:
-            datas = await self._api.async_get_bytes_total()
-        except OSError as exc:
-            raise UpdateFailed from exc
-
-        ret_dict[SENSOR_RX_BYTES] = datas[0]
-        ret_dict[SENSOR_TX_BYTES] = datas[1]
+        for index, key in enumerate(ret_dict):
+            if index >= len(values):
+                break
+            ret_dict[key] = values[index]
 
         return ret_dict
 
+    async def _get_connected_devices(self):
+        """Return number of connected devices."""
+        return {SENSORS_CONNECTED_DEVICE[0]: self._connected_devices}
+
+    async def _get_bytes(self):
+        """Fetch byte information from the router."""
+        try:
+            datas = await self._api.async_get_bytes_total()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return self._get_dict(SENSORS_BYTES, datas)
+
     async def _get_rates(self):
         """Fetch rates information from the router."""
-        ret_dict: dict[str, Any] = {}
         try:
             rates = await self._api.async_get_current_transfer_rates()
-        except OSError as exc:
-            raise UpdateFailed from exc
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
 
-        ret_dict[SENSOR_RX_RATES] = rates[0]
-        ret_dict[SENSOR_TX_RATES] = rates[1]
+        return self._get_dict(SENSORS_RATES, rates)
+
+    async def _get_load_avg(self):
+        """Fetch load average information from the router."""
+        try:
+            avg = await self._api.async_get_loadavg()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return self._get_dict(SENSORS_LOAD_AVG, avg)
+
+    async def _get_temperatures(self):
+        """Fetch temperature information from the router."""
+        try:
+            ret_dict = await self._api.async_get_temperature()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
 
         return ret_dict
 
@@ -113,8 +137,12 @@ class AsusWrtSensorDataHandler:
             method = self._get_connected_devices
         elif sensor_type == SENSORS_TYPE_BYTES:
             method = self._get_bytes
+        elif sensor_type == SENSORS_TYPE_LOAD_AVG:
+            method = self._get_load_avg
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
+        elif sensor_type == SENSORS_TYPE_TEMP:
+            method = self._get_temperatures
         else:
             raise RuntimeError(f"Invalid sensor type: {sensor_type}")
 
@@ -310,7 +338,7 @@ class AsusWrtRouter:
         )
         self._sensors_coordinator[SENSORS_TYPE_COUNT] = {
             KEY_COORDINATOR: conn_dev_coordinator,
-            KEY_SENSORS: [SENSOR_CONNECTED_DEVICE],
+            KEY_SENSORS: SENSORS_CONNECTED_DEVICE,
         }
 
         bytes_coordinator = await self._sensors_data_handler.get_coordinator(
@@ -318,7 +346,7 @@ class AsusWrtRouter:
         )
         self._sensors_coordinator[SENSORS_TYPE_BYTES] = {
             KEY_COORDINATOR: bytes_coordinator,
-            KEY_SENSORS: [SENSOR_RX_BYTES, SENSOR_TX_BYTES],
+            KEY_SENSORS: SENSORS_BYTES,
         }
 
         rates_coordinator = await self._sensors_data_handler.get_coordinator(
@@ -326,8 +354,27 @@ class AsusWrtRouter:
         )
         self._sensors_coordinator[SENSORS_TYPE_RATES] = {
             KEY_COORDINATOR: rates_coordinator,
-            KEY_SENSORS: [SENSOR_RX_RATES, SENSOR_TX_RATES],
+            KEY_SENSORS: SENSORS_RATES,
         }
+
+        avg_coordinator = await self._sensors_data_handler.get_coordinator(
+            SENSORS_TYPE_LOAD_AVG
+        )
+        self._sensors_coordinator[SENSORS_TYPE_LOAD_AVG] = {
+            KEY_COORDINATOR: avg_coordinator,
+            KEY_SENSORS: SENSORS_LOAD_AVG,
+        }
+
+        temp_coordinator = await self._sensors_data_handler.get_coordinator(
+            SENSORS_TYPE_TEMP
+        )
+        if temp_coordinator.data:
+            self._sensors_coordinator[SENSORS_TYPE_TEMP] = {
+                KEY_COORDINATOR: temp_coordinator,
+                KEY_SENSORS: [list(temp_coordinator.data.keys())],
+            }
+        else:
+            _LOGGER.warning("Temperature sensors not available for this router")
 
     async def _update_unpolled_sensors(self) -> None:
         """Request refresh for AsusWrt unpolled sensors."""
