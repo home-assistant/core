@@ -6,6 +6,7 @@ from aiohttp import ClientError
 
 from homeassistant.core import callback
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.events import async_call_later
 from homeassistant.util.dt import utcnow
 
 from .const import ACTIVITY_UPDATE_INTERVAL
@@ -24,6 +25,7 @@ class ActivityStream(AugustSubscriberMixin):
         """Init August activity stream object."""
         super().__init__(hass, ACTIVITY_UPDATE_INTERVAL)
         self._hass = hass
+        self._scheduled_updates = {}
         self._august_gateway = august_gateway
         self._api = api
         self._house_ids = house_ids
@@ -60,6 +62,9 @@ class ActivityStream(AugustSubscriberMixin):
         """Cleanup any debounces."""
         for debouncer in self._update_debounce.values():
             debouncer.async_cancel()
+        for house_id in list(self._scheduled_updates):
+            self._scheduled_updates[house_id]()
+            del self._scheduled_updates[house_id]
 
     def get_latest_device_activity(self, device_id, activity_types):
         """Return latest activity that is one of the acitivty_types."""
@@ -102,8 +107,22 @@ class ActivityStream(AugustSubscriberMixin):
 
     @callback
     def async_schedule_house_id_refresh(self, house_id):
-        """Update for a house activities."""
+        """Update for a house activities now and once in the future."""
+        if self._schedule_updates[house_id]:
+            self._schedule_updates[house_id]()
+            self._schedule_updates[house_id] = None
+
+        async def _update_house_activities():
+            await self._update_debounce[house_id].async_call()
+
         asyncio.create_task(self._update_debounce[house_id].async_call())
+
+        # Schedule an update past the debounce to ensure
+        # we catch the case where the lock operator is
+        # not updated or the lock failed
+        self._schedule_updates[house_id] = async_call_later(
+            self._hass, ACTIVITY_UPDATE_INTERVAL.seconds + 1, _update_house_activities
+        )
 
     async def _async_update_house_id(self, house_id):
         """Update device activities for a house."""
