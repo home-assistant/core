@@ -10,7 +10,13 @@ from homeassistant.components.home_plus_control.const import (
     DOMAIN,
     ENTITY_UIDS,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 
 from tests.common import async_fire_time_changed
 from tests.components.home_plus_control.conftest import (
@@ -58,10 +64,11 @@ def one_entity_assertion(hass, device_uid, availability):
 
     assert len(entity_entries) == 1
     entity_entry = entity_entries[0]
-    assert (
-        hass.data["entity_platform"][DOMAIN][0].entities[one_entity.entity_id].available
-        == availability
-    )
+    entity_state = hass.states.get(entity_entry.entity_id).state
+    if availability:
+        assert entity_state in (STATE_ON, STATE_OFF)
+    else:
+        assert entity_state == STATE_UNAVAILABLE
 
 
 async def test_plant_update(
