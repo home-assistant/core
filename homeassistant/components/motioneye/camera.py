@@ -1,16 +1,10 @@
 """The motionEye integration."""
 import functools
 import logging
-from typing import Callable
+from typing import Any, Callable, Dict
 
-from motioneye_client.const import (
-    KEY_CAMERAS,
-    KEY_ID,
-    KEY_NAME,
-    KEY_STREAMING_PORT,
-    KEY_VIDEO_STREAMING,
-)
-from motioneye_client.utils import compute_signature_from_password
+from motioneye_client.client import MotionEyeClient
+from motioneye_client.const import KEY_CAMERAS, KEY_ID, KEY_NAME
 
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
@@ -40,6 +34,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_motioneye_unique_id
 from .const import (
+    CONF_CLIENT,
     CONF_COORDINATOR,
     CONF_ON_UNLOAD,
     DOMAIN,
@@ -70,14 +65,11 @@ async def async_setup_entry(
         for camera in cameras:
             if (
                 camera.get(KEY_ID) is None
-                or not camera.get(KEY_VIDEO_STREAMING, False)
-                or KEY_STREAMING_PORT not in camera
                 or KEY_NAME not in camera
+                or not MotionEyeClient.is_camera_streaming(camera)
             ):
                 continue
             camera_id = camera[KEY_ID]
-            stream_port = camera[KEY_STREAMING_PORT]
-
             refreshed_camera_ids.add(camera_id)
             if camera_id in current_camera_ids:
                 continue
@@ -86,12 +78,11 @@ async def async_setup_entry(
                 MotionEyeMjpegCamera(
                     entry.data[CONF_HOST],
                     entry.data[CONF_PORT],
-                    stream_port,
                     entry.data[CONF_USERNAME],
                     entry.data.get(CONF_PASSWORD),
                     HTTP_BASIC_AUTHENTICATION,  # TODO Add auth options.
-                    camera[KEY_NAME],
-                    camera_id,
+                    camera,
+                    entry_data[CONF_CLIENT],
                     coordinator,
                 )
             )
@@ -127,33 +118,25 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         self,
         host: str,
         port: int,
-        stream_port: int,
         username: str,
         password: str,
         auth: str,
-        name: str,
-        camera_id: int,
+        camera: Dict[str, Any],
+        client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize a MJPEG camera."""
         self._unique_id = get_motioneye_unique_id(
-            host, port, camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
+            host, port, camera[KEY_ID], TYPE_MOTIONEYE_MJPEG_CAMERA
         )
-        still_image_url = (
-            f"http://{host}:{port}/picture/{camera_id}/current/?_username={username}"
-        )
-        still_image_url += "&_signature=" + compute_signature_from_password(
-            "GET", still_image_url, None, password
-        )
-
         MjpegCamera.__init__(
             self,
             {
-                CONF_NAME: name,
+                CONF_NAME: camera[KEY_NAME],
                 CONF_USERNAME: username,
                 CONF_PASSWORD: password,
-                CONF_MJPEG_URL: f"http://{host}:{stream_port}/",
-                CONF_STILL_IMAGE_URL: still_image_url,
+                CONF_MJPEG_URL: client.get_camera_steam_url(camera),
+                CONF_STILL_IMAGE_URL: client.get_camera_snapshot_url(camera),
                 CONF_AUTHENTICATION: auth,
                 CONF_VERIFY_SSL: False,
             },

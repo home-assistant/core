@@ -136,19 +136,13 @@ async def test_get_still_image_from_camera(
 ) -> None:
     """Test getting a still image."""
 
-    async def verify_arguments(request: web.Request) -> web.Response:
-        assert request.query == {
-            "_username": TEST_USERNAME,
-            "_signature": "13c528cd3178756eaf70552ac58eb0468a93aecd",
-        }
-
-    image_handler = Mock(side_effect=verify_arguments)
+    image_handler = Mock(return_value="")
 
     app = web.Application()
     app.add_routes(
         [
             web.get(
-                "/picture/100/current/",
+                "/foo",
                 image_handler,
             )
         ]
@@ -156,6 +150,9 @@ async def test_get_still_image_from_camera(
 
     server = await aiohttp_server(app)
     client = create_mock_motioneye_client()
+    client.get_camera_snapshot_url = Mock(
+        return_value=f"http://localhost:{server.port}/foo"
+    )
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
@@ -182,12 +179,15 @@ async def test_get_stream_from_camera(
 ) -> None:
     """Test getting a stream."""
 
-    stream_handler = Mock()
+    stream_handler = Mock(return_value="")
     app = web.Application()
     app.add_routes([web.get("/", stream_handler)])
     stream_server = await aiohttp_server(app)
 
     client = create_mock_motioneye_client()
+    client.get_camera_steam_url = Mock(
+        return_value=f"http://localhost:{stream_server.port}/"
+    )
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
@@ -198,7 +198,6 @@ async def test_get_stream_from_camera(
         },
     )
     cameras = copy.deepcopy(TEST_CAMERAS)
-    cameras["cameras"][0]["streaming_port"] = stream_server.port
     client.async_get_cameras = AsyncMock(return_value=cameras)
     await setup_mock_motioneye_config_entry(
         hass, config_entry=config_entry, client=client
