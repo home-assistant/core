@@ -1,9 +1,12 @@
+"""Test Wallbox Switch component."""
+
 from unittest.mock import MagicMock
 
 from homeassistant.components.wallbox import switch
 
 
 def test_wallbox_pause_class():
+    """Test wallbox pause class."""
 
     wallbox = MagicMock()
     coordinator = MagicMock(return_value="connected")
@@ -21,6 +24,7 @@ def test_wallbox_pause_class():
 
 
 def test_wallbox_updater():
+    """Test wallbox pause updater."""
     station = "12345"
 
     wallbox = MagicMock(return_value={"key1": 5, "key2": 4})
