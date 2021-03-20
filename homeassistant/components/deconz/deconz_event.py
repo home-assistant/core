@@ -106,8 +106,11 @@ class DeconzEvent(DeconzBase):
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
 
-    async def async_update_device_registry(self):
+    async def async_update_device_registry(self) -> None:
         """Update device registry."""
+        if not self.device_info:
+            return
+
         device_registry = (
             await self.gateway.hass.helpers.device_registry.async_get_registry()
         )
