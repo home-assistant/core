@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Stad al geconfigureerd",
-            "unknown": "Onbekende fout: probeer het later nog eens"
+            "already_configured": "Locatie is al geconfigureerd.",
+            "unknown": "Onverwachte fout"
         },
         "error": {
             "empty": "Geen resultaat bij het zoeken naar een stad: controleer de invoer: stad"
