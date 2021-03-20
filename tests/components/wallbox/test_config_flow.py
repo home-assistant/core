@@ -92,15 +92,27 @@ def test_hub_class():
         assert hub.authenticate()
         assert hub.get_data()
 
-    with patch("wallbox.Wallbox.authenticate", side_effect=InvalidAuth,), patch(
-        "wallbox.Wallbox.getChargerStatus",
-        side_effect=CannotConnect,
+    with patch(
+        "wallbox.Wallbox.authenticate",
+        side_effect=InvalidAuth,
     ), raises(InvalidAuth):
         assert hub.authenticate()
+
     with patch(
-        "wallbox.Wallbox.getChargerStatus",
-        side_effect=CannotConnect,
+        "wallbox.Wallbox.authenticate",
+        side_effect=ConnectionError,
     ), raises(ConnectionError):
+        assert hub.authenticate()
+
+    with patch("wallbox.Wallbox.authenticate",), patch(
+        "wallbox.Wallbox.getChargerStatus",
+        side_effect=ConnectionError,
+    ), raises(ConnectionError):
+        assert hub.get_data()
+    with patch("wallbox.Wallbox.authenticate",), patch(
+        "wallbox.Wallbox.getChargerStatus",
+        side_effect=InvalidAuth,
+    ), raises(InvalidAuth):
         assert hub.get_data()
 
 
@@ -136,6 +148,12 @@ def test_configflow_class():
     """Test configFlow class."""
     configflow = config_flow.ConfigFlow
     assert configflow
+
+    with patch(
+        "homeassistant.components.wallbox.config_flow.validate_input",
+        side_effect=TypeError,
+    ), raises(Exception):
+        assert configflow.async_step_user(True)
 
 
 def test_cannot_connect_class():
