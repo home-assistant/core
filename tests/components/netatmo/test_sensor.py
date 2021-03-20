@@ -1,4 +1,4 @@
-"""The tests for the Netatmo climate platform."""
+"""The tests for the Netatmo sensor platform."""
 from unittest.mock import patch
 
 import pytest
