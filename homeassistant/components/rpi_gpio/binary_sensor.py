@@ -1,4 +1,8 @@
 """Support for binary sensor using RPi GPIO."""
+
+import asyncio
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components import rpi_gpio
@@ -9,6 +13,7 @@ from homeassistant.helpers.reload import setup_reload_service
 
 from . import DOMAIN, PLATFORMS
 
+_LOGGER = logging.getLogger(__name__)
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
 CONF_PORTS = "ports"
@@ -52,6 +57,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class RPiGPIOBinarySensor(BinarySensorEntity):
     """Represent a binary sensor that uses Raspberry Pi GPIO."""
 
+    async def async_read_gpio(self):
+        """Read state from GPIO."""
+        await asyncio.sleep(float(self._bouncetime) / 1000)
+        self._state = await self.hass.async_add_executor_job(
+            rpi_gpio.read_input, self._port
+        )
+        self.async_write_ha_state()
+
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
         self._name = name or DEVICE_DEFAULT_NAME
@@ -68,7 +81,12 @@ class RPiGPIOBinarySensor(BinarySensorEntity):
             self._state = rpi_gpio.read_input(self._port)
             self.schedule_update_ha_state()
 
-        rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
+        def edge_detected(port):
+            """Edge detection handler."""
+            _LOGGER.debug("Edge detected")
+            self.hass.add_job(self.async_read_gpio)
+
+        rpi_gpio.edge_detect(self._port, edge_detected, self._bouncetime)
 
     @property
     def should_poll(self):
