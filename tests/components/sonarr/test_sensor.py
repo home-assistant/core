@@ -1,5 +1,6 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -11,10 +12,10 @@ from homeassistant.const import (
     DATA_GIGABYTES,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 from tests.components.sonarr import mock_connection, setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -27,7 +28,7 @@ async def test_sensors(
 ) -> None:
     """Test the creation and values of the sensors."""
     entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     # Pre-create registry entries for disabled by default sensors
     sensors = {
@@ -107,7 +108,7 @@ async def test_disabled_by_default_sensors(
 ) -> None:
     """Test the disabled by default sensors."""
     await setup_integration(hass, aioclient_mock)
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     print(registry.entities)
 
     state = hass.states.get(entity_id)

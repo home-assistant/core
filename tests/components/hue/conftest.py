@@ -1,5 +1,6 @@
 """Test helpers for Hue."""
 from collections import deque
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohue.groups import Groups
 from aiohue.lights import Lights
@@ -11,8 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components import hue
 from homeassistant.components.hue import sensor_base as hue_sensor_base
 
-from tests.async_mock import AsyncMock, Mock, patch
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture(autouse=True)

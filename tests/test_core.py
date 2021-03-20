@@ -6,6 +6,7 @@ import functools
 import logging
 import os
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 import pytz
@@ -40,7 +41,6 @@ from homeassistant.exceptions import (
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.async_mock import MagicMock, Mock, PropertyMock, patch
 from tests.common import async_capture_events, async_mock_service
 
 PST = pytz.timezone("America/Los_Angeles")
@@ -167,6 +167,30 @@ async def test_stage_shutdown(hass):
     assert len(test_close) == 1
     assert len(test_final_write) == 1
     assert len(test_all) == 2
+
+
+async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_threadsafe(
+    hass,
+):
+    """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
+    stop_calls = []
+
+    async def _record_block_till_done():
+        nonlocal stop_calls
+        stop_calls.append("async_block_till_done")
+
+    def _record_shutdown_run_callback_threadsafe(loop):
+        nonlocal stop_calls
+        stop_calls.append(("shutdown_run_callback_threadsafe", loop))
+
+    with patch.object(hass, "async_block_till_done", _record_block_till_done), patch(
+        "homeassistant.core.shutdown_run_callback_threadsafe",
+        _record_shutdown_run_callback_threadsafe,
+    ):
+        await hass.async_stop()
+
+    assert stop_calls[-2] == ("shutdown_run_callback_threadsafe", hass.loop)
+    assert stop_calls[-1] == "async_block_till_done"
 
 
 async def test_pending_sheduler(hass):
@@ -352,6 +376,35 @@ async def test_eventbus_add_remove_listener(hass):
     assert old_count == len(hass.bus.async_listeners())
 
     # Should do nothing now
+    unsub()
+
+
+async def test_eventbus_filtered_listener(hass):
+    """Test we can prefilter events."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    @ha.callback
+    def filter(event):
+        """Mock filter."""
+        return not event.data["filtered"]
+
+    unsub = hass.bus.async_listen("test", listener, event_filter=filter)
+
+    hass.bus.async_fire("test", {"filtered": True})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 0
+
+    hass.bus.async_fire("test", {"filtered": False})
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
     unsub()
 
 
@@ -1268,41 +1321,6 @@ def test_valid_entity_id():
         "light.something_yoo",
     ]:
         assert ha.valid_entity_id(valid), valid
-
-
-async def test_migration_base_url(hass, hass_storage):
-    """Test that we migrate base url to internal/external url."""
-    config = ha.Config(hass)
-    stored = {"version": 1, "data": {}}
-    hass_storage[ha.CORE_STORAGE_KEY] = stored
-    with patch.object(hass.bus, "async_listen_once") as mock_listen:
-        # Empty config
-        await config.async_load()
-        assert len(mock_listen.mock_calls) == 0
-
-        # With just a name
-        stored["data"] = {"location_name": "Test Name"}
-        await config.async_load()
-        assert len(mock_listen.mock_calls) == 1
-
-        # With external url
-        stored["data"]["external_url"] = "https://example.com"
-        await config.async_load()
-        assert len(mock_listen.mock_calls) == 1
-
-    # Test that the event listener works
-    assert mock_listen.mock_calls[0][1][0] == EVENT_HOMEASSISTANT_START
-
-    # External
-    hass.config.api = Mock(deprecated_base_url="https://loaded-example.com")
-    await mock_listen.mock_calls[0][1][1](None)
-    assert config.external_url == "https://loaded-example.com"
-
-    # Internal
-    for internal in ("http://hass.local", "http://192.168.1.100:8123"):
-        hass.config.api = Mock(deprecated_base_url=internal)
-        await mock_listen.mock_calls[0][1][1](None)
-        assert config.internal_url == internal
 
 
 async def test_additional_data_in_core_config(hass, hass_storage):

@@ -1,7 +1,8 @@
 """Config flow for Plugwise integration."""
 import logging
 
-from Plugwise_Smile.Smile import Smile
+from plugwise.exceptions import InvalidAuthentication, PlugwiseException
+from plugwise.smile import Smile
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -18,12 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import (  # pylint:disable=unused-import
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    ZEROCONF_MAP,
-)
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, ZEROCONF_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,9 +63,9 @@ async def validate_gw_input(hass: core.HomeAssistant, data):
 
     try:
         await api.connect()
-    except Smile.InvalidAuthentication as err:
+    except InvalidAuthentication as err:
         raise InvalidAuth from err
-    except Smile.PlugwiseError as err:
+    except PlugwiseException as err:
         raise CannotConnect from err
 
     return api
@@ -101,7 +97,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _version = _properties.get("version", "n/a")
         _name = f"{ZEROCONF_MAP.get(_product, _product)} v{_version}"
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             CONF_HOST: discovery_info[CONF_HOST],
             CONF_PORT: discovery_info.get(CONF_PORT, DEFAULT_PORT),
@@ -151,7 +146,6 @@ class PlugwiseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-
         # PLACEHOLDER USB vs Gateway Logic
         return await self.async_step_user_gateway()
 

@@ -1,8 +1,9 @@
 """ONVIF device abstraction."""
+from __future__ import annotations
+
 import asyncio
 import datetime as dt
 import os
-from typing import List
 
 from httpx import RequestError
 import onvif
@@ -28,6 +29,7 @@ from .const import (
     LOGGER,
     PAN_FACTOR,
     RELATIVE_MOVE,
+    STOP_MOVE,
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
@@ -49,7 +51,7 @@ class ONVIFDevice:
 
         self.info: DeviceInfo = DeviceInfo()
         self.capabilities: Capabilities = Capabilities()
-        self.profiles: List[Profile] = []
+        self.profiles: list[Profile] = []
         self.max_resolution: int = 0
 
         self._dt_diff_seconds: int = 0
@@ -249,19 +251,19 @@ class ONVIFDevice:
         pullpoint = False
         try:
             pullpoint = await self.events.async_start()
-        except (ONVIFError, Fault):
+        except (ONVIFError, Fault, RequestError):
             pass
 
         ptz = False
         try:
             self.device.get_definition("ptz")
             ptz = True
-        except ONVIFError:
+        except (ONVIFError, Fault, RequestError):
             pass
 
         return Capabilities(snapshot, pullpoint, ptz)
 
-    async def async_get_profiles(self) -> List[Profile]:
+    async def async_get_profiles(self) -> list[Profile]:
         """Obtain media profiles for this device."""
         media_service = self.device.create_media_service()
         result = await media_service.GetProfiles()
@@ -433,9 +435,11 @@ class ONVIFDevice:
                     "Zoom": {"x": speed_val},
                 }
                 await ptz_service.GotoPreset(req)
+            elif move_mode == STOP_MOVE:
+                await ptz_service.Stop(req)
         except ONVIFError as err:
             if "Bad Request" in err.reason:
-                LOGGER.warning("Device '%s' doesn't support PTZ.", self.name)
+                LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
 

@@ -3,6 +3,8 @@ import logging
 
 import httpx
 
+from homeassistant.helpers.httpx_client import get_async_client
+
 DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -13,6 +15,7 @@ class RestData:
 
     def __init__(
         self,
+        hass,
         method,
         resource,
         auth,
@@ -23,6 +26,7 @@ class RestData:
         timeout=DEFAULT_TIMEOUT,
     ):
         """Initialize the data object."""
+        self._hass = hass
         self._method = method
         self._resource = resource
         self._auth = auth
@@ -35,11 +39,6 @@ class RestData:
         self.data = None
         self.headers = None
 
-    async def async_remove(self):
-        """Destroy the http session on destroy."""
-        if self._async_client:
-            await self._async_client.aclose()
-
     def set_url(self, url):
         """Set url."""
         self._resource = url
@@ -47,7 +46,9 @@ class RestData:
     async def async_update(self):
         """Get the latest data from REST service with provided method."""
         if not self._async_client:
-            self._async_client = httpx.AsyncClient(verify=self._verify_ssl)
+            self._async_client = get_async_client(
+                self._hass, verify_ssl=self._verify_ssl
+            )
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:

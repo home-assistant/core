@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_MYDEVOLO, DOMAIN, PLATFORMS
+from .const import CONF_MYDEVOLO, DOMAIN, GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 
 async def async_setup(hass, config):
@@ -22,13 +22,9 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the devolo account from a config entry."""
-    conf = entry.data
     hass.data.setdefault(DOMAIN, {})
 
-    mydevolo = Mydevolo()
-    mydevolo.user = conf[CONF_USERNAME]
-    mydevolo.password = conf[CONF_PASSWORD]
-    mydevolo.url = conf[CONF_MYDEVOLO]
+    mydevolo = _mydevolo(entry.data)
 
     credentials_valid = await hass.async_add_executor_job(mydevolo.credentials_valid)
 
@@ -39,6 +35,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         raise ConfigEntryNotReady
 
     gateway_ids = await hass.async_add_executor_job(mydevolo.get_gateway_ids)
+
+    if GATEWAY_SERIAL_PATTERN.match(entry.unique_id):
+        uuid = await hass.async_add_executor_job(mydevolo.uuid)
+        hass.config_entries.async_update_entry(entry, unique_id=uuid)
 
     try:
         zeroconf_instance = await zeroconf.async_get_instance(hass)
@@ -95,3 +95,12 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     hass.data[DOMAIN][entry.entry_id]["listener"]()
     hass.data[DOMAIN].pop(entry.entry_id)
     return unload
+
+
+def _mydevolo(conf: dict) -> Mydevolo:
+    """Configure mydevolo."""
+    mydevolo = Mydevolo()
+    mydevolo.user = conf[CONF_USERNAME]
+    mydevolo.password = conf[CONF_PASSWORD]
+    mydevolo.url = conf[CONF_MYDEVOLO]
+    return mydevolo

@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -22,8 +23,8 @@ from homeassistant.util import Throttle, slugify
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
-ATTR_FRIENDLY_NAME = "friendly_name"
 ATTR_INFO_TEXT = "info_text"
+ATTR_TIMESTAMP = "timestamp"
 ATTR_ORIGIN_COUNTRY = "origin_country"
 ATTR_PACKAGES = "packages"
 ATTR_PACKAGE_TYPE = "package_type"
@@ -65,9 +66,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Configure the platform and add the sensors."""
 
-    websession = aiohttp_client.async_get_clientsession(hass)
+    session = aiohttp_client.async_get_clientsession(hass)
 
-    client = SeventeenTrackClient(websession)
+    client = SeventeenTrackClient(session=session)
 
     try:
         login_result = await client.profile.login(
@@ -89,6 +90,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         scan_interval,
         config[CONF_SHOW_ARCHIVED],
         config[CONF_SHOW_DELIVERED],
+        str(hass.config.time_zone),
     )
     await data.async_update()
 
@@ -109,7 +111,7 @@ class SeventeenTrackSummarySensor(Entity):
         return self._state is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -151,7 +153,9 @@ class SeventeenTrackSummarySensor(Entity):
                 {
                     ATTR_FRIENDLY_NAME: package.friendly_name,
                     ATTR_INFO_TEXT: package.info_text,
+                    ATTR_TIMESTAMP: package.timestamp,
                     ATTR_STATUS: package.status,
+                    ATTR_LOCATION: package.location,
                     ATTR_TRACKING_NUMBER: package.tracking_number,
                 }
             )
@@ -171,6 +175,7 @@ class SeventeenTrackPackageSensor(Entity):
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_DESTINATION_COUNTRY: package.destination_country,
             ATTR_INFO_TEXT: package.info_text,
+            ATTR_TIMESTAMP: package.timestamp,
             ATTR_LOCATION: package.location,
             ATTR_ORIGIN_COUNTRY: package.origin_country,
             ATTR_PACKAGE_TYPE: package.package_type,
@@ -189,7 +194,7 @@ class SeventeenTrackPackageSensor(Entity):
         return self._data.packages.get(self._tracking_number) is not None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         return self._attrs
 
@@ -236,14 +241,18 @@ class SeventeenTrackPackageSensor(Entity):
             return
 
         self._attrs.update(
-            {ATTR_INFO_TEXT: package.info_text, ATTR_LOCATION: package.location}
+            {
+                ATTR_INFO_TEXT: package.info_text,
+                ATTR_TIMESTAMP: package.timestamp,
+                ATTR_LOCATION: package.location,
+            }
         )
         self._state = package.status
         self._friendly_name = package.friendly_name
 
     async def _remove(self, *_):
         """Remove entity itself."""
-        await self.async_remove()
+        await self.async_remove(force_remove=True)
 
         reg = await self.hass.helpers.entity_registry.async_get_registry()
         entity_id = reg.async_get_entity_id(
@@ -276,7 +285,13 @@ class SeventeenTrackData:
     """Define a data handler for 17track.net."""
 
     def __init__(
-        self, client, async_add_entities, scan_interval, show_archived, show_delivered
+        self,
+        client,
+        async_add_entities,
+        scan_interval,
+        show_archived,
+        show_delivered,
+        timezone,
     ):
         """Initialize."""
         self._async_add_entities = async_add_entities
@@ -286,6 +301,7 @@ class SeventeenTrackData:
         self.account_id = client.profile.account_id
         self.packages = {}
         self.show_delivered = show_delivered
+        self.timezone = timezone
         self.summary = {}
 
         self.async_update = Throttle(self._scan_interval)(self._async_update)
@@ -296,7 +312,7 @@ class SeventeenTrackData:
 
         try:
             packages = await self._client.profile.packages(
-                show_archived=self._show_archived
+                show_archived=self._show_archived, tz=self.timezone
             )
             _LOGGER.debug("New package data received: %s", packages)
 

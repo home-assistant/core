@@ -1,4 +1,6 @@
 """Tests for the Plum Lightpad config flow."""
+from unittest.mock import Mock, patch
+
 from aiohttp import ContentTypeError
 from requests.exceptions import HTTPError
 
@@ -6,7 +8,6 @@ from homeassistant.components.plum_lightpad.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 

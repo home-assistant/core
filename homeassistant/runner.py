@@ -1,14 +1,17 @@
 """Run Home Assistant."""
+from __future__ import annotations
+
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import dataclasses
 import logging
-import sys
-from typing import Any, Dict, Optional
+from typing import Any
 
 from homeassistant import bootstrap
 from homeassistant.core import callback
 from homeassistant.helpers.frame import warn_use
+
+# mypy: disallow-any-generics
 
 #
 # Python 3.8 has significantly less workers by default
@@ -33,22 +36,15 @@ class RuntimeConfig:
 
     verbose: bool = False
 
-    log_rotate_days: Optional[int] = None
-    log_file: Optional[str] = None
+    log_rotate_days: int | None = None
+    log_file: str | None = None
     log_no_color: bool = False
 
     debug: bool = False
     open_ui: bool = False
 
 
-# In Python 3.8+ proactor policy is the default on Windows
-if sys.platform == "win32" and sys.version_info[:2] < (3, 8):
-    PolicyBase = asyncio.WindowsProactorEventLoopPolicy
-else:
-    PolicyBase = asyncio.DefaultEventLoopPolicy
-
-
-class HassEventLoopPolicy(PolicyBase):  # type: ignore
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[valid-type,misc]
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -89,7 +85,7 @@ class HassEventLoopPolicy(PolicyBase):  # type: ignore
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: Dict) -> None:
+def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
     exception = context.get("exception")

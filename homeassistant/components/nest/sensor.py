@@ -4,7 +4,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DATA_SDM
-from .sensor_legacy import async_setup_legacy_entry
+from .legacy.sensor import async_setup_legacy_entry
 from .sensor_sdm import async_setup_sdm_entry
 
 

@@ -1,4 +1,6 @@
 """Tests for emulated_roku library bindings."""
+from unittest.mock import AsyncMock, Mock, patch
+
 from homeassistant.components.emulated_roku.binding import (
     ATTR_APP_ID,
     ATTR_COMMAND_TYPE,
@@ -11,8 +13,6 @@ from homeassistant.components.emulated_roku.binding import (
     ROKU_COMMAND_LAUNCH,
     EmulatedRoku,
 )
-
-from tests.async_mock import AsyncMock, Mock, patch
 
 
 async def test_events_fired_properly(hass):

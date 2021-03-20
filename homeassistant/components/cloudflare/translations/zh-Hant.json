@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002",
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "error": {
@@ -19,9 +19,9 @@
             },
             "user": {
                 "data": {
-                    "api_token": "API \u5bc6\u9470"
+                    "api_token": "API \u6b0a\u6756"
                 },
-                "description": "\u6b64\u6574\u5408\u9700\u8981\u5e33\u865f\u4e2d\u6240\u6709\u5340\u57df Zone:Zone:Read \u8207 Zone:DNS:Edit \u6b0a\u9650 API \u5bc6\u9470\u3002",
+                "description": "\u6b64\u6574\u5408\u9700\u8981\u5e33\u865f\u4e2d\u6240\u6709\u5340\u57df Zone:Zone:Read \u8207 Zone:DNS:Edit \u6b0a\u9650 API \u6b0a\u6756\u3002",
                 "title": "\u9023\u7dda\u81f3 Cloudflare"
             },
             "zone": {

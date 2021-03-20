@@ -6,6 +6,7 @@ import logging
 from tuyaha import TuyaApi
 from tuyaha.tuyaapi import (
     TuyaAPIException,
+    TuyaAPIRateLimitException,
     TuyaFrequentlyInvokeException,
     TuyaNetException,
     TuyaServerException,
@@ -137,6 +138,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     ) as exc:
         raise ConfigEntryNotReady() from exc
 
+    except TuyaAPIRateLimitException as exc:
+        _LOGGER.error("Tuya login rate limited")
+        raise ConfigEntryNotReady() from exc
+
     except TuyaAPIException as exc:
         _LOGGER.error(
             "Connection error during integration setup. Error: %s",
@@ -235,9 +240,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(
-                    entry, component.split(".", 1)[0]
+                    entry, platform.split(".", 1)[0]
                 )
-                for component in hass.data[DOMAIN][ENTRY_IS_SETUP]
+                for platform in hass.data[DOMAIN][ENTRY_IS_SETUP]
             ]
         )
     )
@@ -269,7 +274,7 @@ async def cleanup_device_registry(hass: HomeAssistant, device_id):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     if device_id and not hass.helpers.entity_registry.async_entries_for_device(
-        entity_registry, device_id
+        entity_registry, device_id, include_disabled_entities=True
     ):
         device_registry.async_remove_device(device_id)
 
@@ -387,7 +392,7 @@ class TuyaDevice(Entity):
                 entity_registry.async_remove(self.entity_id)
                 await cleanup_device_registry(self.hass, entity_entry.device_id)
             else:
-                await self.async_remove()
+                await self.async_remove(force_remove=True)
 
     @callback
     def _update_callback(self):

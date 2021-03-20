@@ -1,12 +1,12 @@
 """The tests for the Google Wifi platform."""
 from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 
 import homeassistant.components.google_wifi.sensor as google_wifi
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 NAME = "foo"
@@ -129,13 +129,13 @@ def test_state(hass, requests_mock):
             fake_delay(hass, 2)
             sensor.update()
             if name == google_wifi.ATTR_LAST_RESTART:
-                assert "1969-12-31 00:00:00" == sensor.state
+                assert sensor.state == "1969-12-31 00:00:00"
             elif name == google_wifi.ATTR_UPTIME:
-                assert 1 == sensor.state
+                assert sensor.state == 1
             elif name == google_wifi.ATTR_STATUS:
-                assert "Online" == sensor.state
+                assert sensor.state == "Online"
             else:
-                assert "initial" == sensor.state
+                assert sensor.state == "initial"
 
 
 def test_update_when_value_is_none(hass, requests_mock):
@@ -158,17 +158,17 @@ def test_update_when_value_changed(hass, requests_mock):
             fake_delay(hass, 2)
             sensor.update()
             if name == google_wifi.ATTR_LAST_RESTART:
-                assert "1969-12-30 00:00:00" == sensor.state
+                assert sensor.state == "1969-12-30 00:00:00"
             elif name == google_wifi.ATTR_UPTIME:
-                assert 2 == sensor.state
+                assert sensor.state == 2
             elif name == google_wifi.ATTR_STATUS:
-                assert "Offline" == sensor.state
+                assert sensor.state == "Offline"
             elif name == google_wifi.ATTR_NEW_VERSION:
-                assert "Latest" == sensor.state
+                assert sensor.state == "Latest"
             elif name == google_wifi.ATTR_LOCAL_IP:
-                assert STATE_UNKNOWN == sensor.state
+                assert sensor.state == STATE_UNKNOWN
             else:
-                assert "next" == sensor.state
+                assert sensor.state == "next"
 
 
 def test_when_api_data_missing(hass, requests_mock):
@@ -180,7 +180,7 @@ def test_when_api_data_missing(hass, requests_mock):
             sensor = sensor_dict[name]["sensor"]
             fake_delay(hass, 2)
             sensor.update()
-            assert STATE_UNKNOWN == sensor.state
+            assert sensor.state == STATE_UNKNOWN
 
 
 def test_update_when_unavailable(requests_mock):

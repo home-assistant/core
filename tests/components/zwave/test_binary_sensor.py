@@ -1,9 +1,9 @@
 """Test Z-Wave binary sensors."""
 import datetime
+from unittest.mock import patch
 
 from homeassistant.components.zwave import binary_sensor, const
 
-from tests.async_mock import patch
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 

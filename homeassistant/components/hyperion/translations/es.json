@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servicio ya est\u00e1 configurado",
+            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "auth_new_token_not_granted_error": "El token reci\u00e9n creado no se aprob\u00f3 en la interfaz de usuario de Hyperion",
+            "auth_new_token_not_work_error": "Error al autenticarse con el token reci\u00e9n creado",
+            "auth_required_error": "No se pudo determinar si se requiere autorizaci\u00f3n",
+            "cannot_connect": "No se pudo conectar",
+            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su identificaci\u00f3n",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "invalid_access_token": "Token de acceso no v\u00e1lido"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "Crea un nuevo token autom\u00e1ticamente",
+                    "token": "O proporcionar un token preexistente"
+                },
+                "description": "Configurar autorizaci\u00f3n a tu servidor Hyperion Ambilight"
+            },
+            "confirm": {
+                "description": "\u00bfQuieres a\u00f1adir este Hyperion Ambilight a Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**Identificaci\u00f3n**: {id}",
+                "title": "Confirmar la adici\u00f3n del servicio Hyperion Ambilight"
+            },
+            "create_token": {
+                "description": "Elige ** Enviar ** a continuaci\u00f3n para solicitar un nuevo token de autenticaci\u00f3n. Se te redirigir\u00e1 a la interfaz de usuario de Hyperion para aprobar la solicitud. Verifica que la identificaci\u00f3n que se muestra sea \"{auth_id}\"",
+                "title": "Crear autom\u00e1ticamente un nuevo token de autenticaci\u00f3n"
+            },
+            "create_token_external": {
+                "title": "Aceptar nuevo token en la interfaz de usuario de Hyperion"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Puerto"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "priority": "Prioridad de Hyperion a usar para colores y efectos"
+                }
+            }
+        }
+    }
+}

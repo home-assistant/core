@@ -1,11 +1,12 @@
 """Test ONVIF config flow."""
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from onvif.exceptions import ONVIFError
 from zeep.exceptions import Fault
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.onvif import config_flow
 
-from tests.async_mock import AsyncMock, MagicMock, patch
 from tests.common import MockConfigEntry
 
 URN = "urn:uuid:123456789"

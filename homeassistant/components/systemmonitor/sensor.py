@@ -174,7 +174,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # If not, do not create the entity and add a warning to the log
         if resource[CONF_TYPE] == "processor_temperature":
             if SystemMonitorSensor.read_cpu_temperature() is None:
-                _LOGGER.warning("Cannot read CPU / processor temperature information.")
+                _LOGGER.warning("Cannot read CPU / processor temperature information")
                 continue
 
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
@@ -268,7 +268,7 @@ class SystemMonitorSensor(Entity):
                         return
                 except psutil.NoSuchProcess as err:
                     _LOGGER.warning(
-                        "Failed to load process with id: %s, old name: %s",
+                        "Failed to load process with ID: %s, old name: %s",
                         err.pid,
                         err.name,
                     )
@@ -316,9 +316,11 @@ class SystemMonitorSensor(Entity):
             else:
                 self._state = None
         elif self.type == "last_boot":
-            self._state = dt_util.as_local(
-                dt_util.utc_from_timestamp(psutil.boot_time())
-            ).isoformat()
+            # Only update on initial setup
+            if self._state is None:
+                self._state = dt_util.as_local(
+                    dt_util.utc_from_timestamp(psutil.boot_time())
+                ).isoformat()
         elif self.type == "load_1m":
             self._state = round(os.getloadavg()[0], 2)
         elif self.type == "load_5m":

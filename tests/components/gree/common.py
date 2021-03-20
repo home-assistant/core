@@ -1,5 +1,5 @@
 """Common helpers for gree test cases."""
-from tests.async_mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock
 
 
 def build_device_info_mock(

@@ -27,7 +27,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
-from .const import DATA_REMOVE_DISCOVER_COMPONENT, DOMAIN as TASMOTA_DOMAIN
+from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
 from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
 
@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)
     ] = async_dispatcher_connect(
         hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN, TASMOTA_DOMAIN),
+        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
         async_discover,
     )
 
@@ -74,7 +74,6 @@ class TasmotaLight(
         self._flash_times = None
 
         super().__init__(
-            discovery_update=self.discovery_update,
             **kwds,
         )
 
@@ -93,7 +92,6 @@ class TasmotaLight(
 
         if light_type != LIGHT_TYPE_NONE:
             supported_features |= SUPPORT_BRIGHTNESS
-            supported_features |= SUPPORT_TRANSITION
 
         if light_type in [LIGHT_TYPE_COLDWARM, LIGHT_TYPE_RGBCW]:
             supported_features |= SUPPORT_COLOR_TEMP
@@ -104,6 +102,9 @@ class TasmotaLight(
 
         if light_type in [LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
             supported_features |= SUPPORT_WHITE_VALUE
+
+        if self._tasmota_entity.supports_transition:
+            supported_features |= SUPPORT_TRANSITION
 
         self._supported_features = supported_features
 

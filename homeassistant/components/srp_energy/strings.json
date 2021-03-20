@@ -1,0 +1,24 @@
+{
+  "title": "SRP Energy",
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "id": "Account Id",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "is_tou": "Is Time of Use Plan"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_account": "Account ID should be a 9 digit number",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  }
+}

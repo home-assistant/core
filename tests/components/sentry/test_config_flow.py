@@ -1,5 +1,6 @@
 """Test the sentry config flow."""
 import logging
+from unittest.mock import patch
 
 from sentry_sdk.utils import BadDsn
 
@@ -18,7 +19,6 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

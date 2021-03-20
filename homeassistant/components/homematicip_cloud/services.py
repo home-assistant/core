@@ -1,7 +1,8 @@
 """Support for HomematicIP Cloud devices."""
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Optional
 
 from homematicip.aio.device import AsyncSwitchMeasuring
 from homematicip.aio.group import AsyncHeatingGroup
@@ -9,7 +10,7 @@ from homematicip.aio.home import AsyncHome
 from homematicip.base.helpers import handle_config
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
@@ -29,7 +30,6 @@ ATTR_CONFIG_OUTPUT_FILE_PREFIX = "config_output_file_prefix"
 ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
-ATTR_TEMPERATURE = "temperature"
 
 DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 
@@ -343,7 +343,7 @@ async def _async_reset_energy_counter(
                     await device.reset_energy_counter()
 
 
-def _get_home(hass: HomeAssistantType, hapid: str) -> Optional[AsyncHome]:
+def _get_home(hass: HomeAssistantType, hapid: str) -> AsyncHome | None:
     """Return a HmIP home."""
     hap = hass.data[HMIPC_DOMAIN].get(hapid)
     if hap:

@@ -1,9 +1,11 @@
 """Support for Google Cloud Pub/Sub."""
+from __future__ import annotations
+
 import datetime
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from google.cloud import pubsub_v1
 import voluptuous as vol
@@ -37,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+def setup(hass: HomeAssistant, yaml_config: dict[str, Any]):
     """Activate Google Pub/Sub component."""
 
     config = yaml_config[DOMAIN]
@@ -57,9 +59,7 @@ def setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
         service_principal_path
     )
 
-    topic_path = publisher.topic_path(  # pylint: disable=no-member
-        project_id, topic_name
-    )
+    topic_path = publisher.topic_path(project_id, topic_name)
 
     encoder = DateTimeJSONEncoder()
 

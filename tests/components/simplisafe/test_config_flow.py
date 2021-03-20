@@ -1,4 +1,6 @@
 """Define tests for the SimpliSafe config flow."""
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
 from simplipy.errors import (
     InvalidCredentialsError,
     PendingAuthorizationError,
@@ -10,7 +12,6 @@ from homeassistant.components.simplisafe import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -72,6 +73,7 @@ async def test_options_flow(hass):
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

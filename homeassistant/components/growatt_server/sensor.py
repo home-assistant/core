@@ -416,7 +416,7 @@ def _setup_entity(hass, config, async_add_entities):
             sensors = STORAGE_SENSOR_TYPES
         else:
             _LOGGER.debug(
-                "Device type %s was found but is not supported right now.",
+                "Device type %s was found but is not supported right now",
                 device["deviceType"],
             )
 

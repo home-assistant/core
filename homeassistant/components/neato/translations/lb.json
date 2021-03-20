@@ -2,7 +2,10 @@
     "config": {
         "abort": {
             "already_configured": "Apparat ass scho konfigur\u00e9iert",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun"
+            "authorize_url_timeout": "Z\u00e4itiwwerschreidung beim erstellen vun der Authorisatiouns URL.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "missing_configuration": "Komponent net konfigur\u00e9iert. Folleg w.e.g der Dokumentatioun.",
+            "reauth_successful": "Re-authentifikatioun war erfollegr\u00e4ich"
         },
         "create_entry": {
             "default": "Kuckt [Neato Dokumentatioun]({docs_url})."
@@ -12,6 +15,12 @@
             "unknown": "Onerwaarte Feeler"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Authentifikatiouns Method auswielen"
+            },
+            "reauth_confirm": {
+                "title": "Soll den Ariichtungs Prozess gestart ginn?"
+            },
             "user": {
                 "data": {
                     "password": "Passwuert",
@@ -22,5 +31,6 @@
                 "title": "Neato Kont Informatiounen"
             }
         }
-    }
+    },
+    "title": "Neato Botvac"
 }

@@ -1,4 +1,6 @@
 """Test fixtures for Tasmota component."""
+from unittest.mock import patch
+
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
@@ -9,14 +11,13 @@ from homeassistant.components.tasmota.const import (
     DOMAIN,
 )
 
-from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_mock_service,
     mock_device_registry,
     mock_registry,
 )
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture

@@ -1,10 +1,11 @@
 """Tests for Tibber config flow."""
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+
 import pytest
 
 from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from tests.async_mock import AsyncMock, MagicMock, PropertyMock, patch
 from tests.common import MockConfigEntry
 
 

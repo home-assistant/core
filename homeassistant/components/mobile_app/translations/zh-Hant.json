@@ -8,5 +8,11 @@
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u624b\u6a5f App \u5143\u4ef6\uff1f"
             }
         }
-    }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "\u50b3\u9001\u901a\u77e5"
+        }
+    },
+    "title": "\u624b\u6a5f App"
 }

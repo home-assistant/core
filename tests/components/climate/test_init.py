@@ -1,5 +1,7 @@
 """The tests for the climate component."""
-from typing import List
+from __future__ import annotations
+
+from unittest.mock import MagicMock
 
 import pytest
 import voluptuous as vol
@@ -12,7 +14,6 @@ from homeassistant.components.climate import (
     ClimateEntity,
 )
 
-from tests.async_mock import MagicMock
 from tests.common import async_mock_service
 
 
@@ -58,7 +59,7 @@ class MockClimateEntity(ClimateEntity):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.

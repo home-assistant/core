@@ -1,9 +1,9 @@
 """Test singleton helper."""
+from unittest.mock import Mock
+
 import pytest
 
 from homeassistant.helpers import singleton
-
-from tests.async_mock import Mock
 
 
 @pytest.fixture

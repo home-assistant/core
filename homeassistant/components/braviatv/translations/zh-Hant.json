@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u8a2d\u5099\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_configured": "\u88dd\u7f6e\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "no_ip_control": "\u96fb\u8996\u4e0a\u7684 IP \u5df2\u95dc\u9589\u6216\u4e0d\u652f\u63f4\u6b64\u6b3e\u96fb\u8996\u3002"
         },
         "error": {

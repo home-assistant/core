@@ -7,6 +7,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "\u4e3b\u673a\u7aef",
                     "password": "\u5bc6\u7801",
                     "port": "\u7aef\u53e3",
                     "username": "\u7528\u6237\u540d"

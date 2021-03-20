@@ -1,6 +1,7 @@
 """MediaPlayer platform for Roon integration."""
 import logging
 
+from roonapi import split_media_path
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -120,8 +121,6 @@ class RoonDevice(MediaPlayerEntity):
         self._last_position_update = None
         self._supports_standby = False
         self._state = STATE_IDLE
-        self._last_playlist = None
-        self._last_media = None
         self._unique_id = None
         self._zone_id = None
         self._output_id = None
@@ -176,7 +175,7 @@ class RoonDevice(MediaPlayerEntity):
             "name": self.name,
             "manufacturer": "RoonLabs",
             "model": dev_model,
-            "via_hub": (DOMAIN, self._server.host),
+            "via_device": (DOMAIN, self._server.roon_id),
         }
 
     def update_data(self, player_data=None):
@@ -355,11 +354,6 @@ class RoonDevice(MediaPlayerEntity):
         return self._media_artist
 
     @property
-    def media_playlist(self):
-        """Title of Playlist currently playing."""
-        return self._last_playlist
-
-    @property
     def media_image_url(self):
         """Image url of current playing media."""
         return self._media_image_url
@@ -471,7 +465,7 @@ class RoonDevice(MediaPlayerEntity):
             return
 
         for source in self.player_data["source_controls"]:
-            if source["supports_standby"] and not source["status"] == "indeterminate":
+            if source["supports_standby"] and source["status"] != "indeterminate":
                 self._server.roonapi.standby(self.output_id, source["control_key"])
                 return
 
@@ -481,32 +475,21 @@ class RoonDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        # Roon itself doesn't support playback of media by filename/url so this a bit of a workaround.
-        media_type = media_type.lower()
-        if media_type == "radio":
-            if self._server.roonapi.play_radio(self.zone_id, media_id):
-                self._last_playlist = media_id
-                self._last_media = media_id
-        elif media_type == "playlist":
-            if self._server.roonapi.play_playlist(
-                self.zone_id, media_id, shuffle=False
-            ):
-                self._last_playlist = media_id
-        elif media_type == "shuffleplaylist":
-            if self._server.roonapi.play_playlist(self.zone_id, media_id, shuffle=True):
-                self._last_playlist = media_id
-        elif media_type == "queueplaylist":
-            self._server.roonapi.queue_playlist(self.zone_id, media_id)
-        elif media_type == "genre":
-            self._server.roonapi.play_genre(self.zone_id, media_id)
-        elif media_type in ("library", "track"):
+
+        _LOGGER.debug("Playback request for %s / %s", media_type, media_id)
+        if media_type in ("library", "track"):
+            # media_id is a roon browser id
             self._server.roonapi.play_id(self.zone_id, media_id)
         else:
-            _LOGGER.error(
-                "Playback requested of unsupported type: %s --> %s",
-                media_type,
-                media_id,
-            )
+            # media_id is a path matching the Roon menu structure
+            path_list = split_media_path(media_id)
+            if not self._server.roonapi.play_media(self.zone_id, path_list):
+                _LOGGER.error(
+                    "Playback request for %s / %s / %s was unsuccessful",
+                    media_type,
+                    media_id,
+                    path_list,
+                )
 
     def join(self, join_ids):
         """Add another Roon player to this player's join group."""

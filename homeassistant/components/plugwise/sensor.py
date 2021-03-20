@@ -305,10 +305,7 @@ class PwThermostatSensor(SmileSensor, Entity):
             return
 
         if data.get(self._sensor) is not None:
-            measurement = data[self._sensor]
-            if self._unit_of_measurement == PERCENTAGE:
-                measurement = int(measurement * 100)
-            self._state = measurement
+            self._state = data[self._sensor]
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()
@@ -380,10 +377,7 @@ class PwPowerSensor(SmileSensor, Entity):
             return
 
         if data.get(self._sensor) is not None:
-            measurement = data[self._sensor]
-            if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-                measurement = round((measurement / 1000), 1)
-            self._state = measurement
+            self._state = data[self._sensor]
             self._icon = CUSTOM_ICONS.get(self._sensor, self._icon)
 
         self.async_write_ha_state()

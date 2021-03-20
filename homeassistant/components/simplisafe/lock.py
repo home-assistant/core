@@ -17,13 +17,17 @@ ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SimpliSafe locks based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    async_add_entities(
-        [
-            SimpliSafeLock(simplisafe, system, lock)
-            for system in simplisafe.systems.values()
-            for lock in system.locks.values()
-        ]
-    )
+    locks = []
+
+    for system in simplisafe.systems.values():
+        if system.version == 2:
+            LOGGER.info("Skipping lock setup for V2 system: %s", system.system_id)
+            continue
+
+        for lock in system.locks.values():
+            locks.append(SimpliSafeLock(simplisafe, system, lock))
+
+    async_add_entities(locks)
 
 
 class SimpliSafeLock(SimpliSafeEntity, LockEntity):
@@ -51,6 +55,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
+        self._is_locked = True
+        self.async_write_ha_state()
+
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
         try:
@@ -58,6 +65,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         except SimplipyError as err:
             LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
+
+        self._is_locked = False
+        self.async_write_ha_state()
 
     @callback
     def async_update_from_rest_api(self):

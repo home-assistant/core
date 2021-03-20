@@ -8,8 +8,14 @@
           "name": "[%key:common::config_flow::data::name%]",
           "location": "[%key:common::config_flow::data::location%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "statistics_only": "Statistics Only",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        }
+      },
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }
     },

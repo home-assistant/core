@@ -2,6 +2,7 @@
 
 DOMAIN = "nest"
 DATA_SDM = "sdm"
+DATA_SUBSCRIBER = "subscriber"
 
 SIGNAL_NEST_UPDATE = "nest_update"
 

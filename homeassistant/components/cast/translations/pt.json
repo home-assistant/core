@@ -5,8 +5,18 @@
             "single_instance_allowed": "Apenas uma \u00fanica configura\u00e7\u00e3o do Google Cast \u00e9 necess\u00e1ria."
         },
         "step": {
+            "config": {
+                "title": "Google Cast"
+            },
             "confirm": {
                 "description": "Deseja configurar o Google Cast?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "description": "Por favor introduza a configura\u00e7\u00e3o do Google Cast"
             }
         }
     }

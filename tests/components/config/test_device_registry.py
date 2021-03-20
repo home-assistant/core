@@ -4,6 +4,7 @@ import pytest
 from homeassistant.components.config import device_registry
 
 from tests.common import mock_device_registry
+from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
 
 
 @pytest.fixture
@@ -55,6 +56,7 @@ async def test_list_devices(hass, client, registry):
             "via_device_id": None,
             "area_id": None,
             "name_by_user": None,
+            "disabled_by": None,
         },
         {
             "config_entries": ["1234"],
@@ -68,6 +70,7 @@ async def test_list_devices(hass, client, registry):
             "via_device_id": dev1,
             "area_id": None,
             "name_by_user": None,
+            "disabled_by": None,
         },
     ]
 
@@ -91,6 +94,7 @@ async def test_update_device(hass, client, registry):
             "device_id": device.id,
             "area_id": "12345A",
             "name_by_user": "Test Friendly Name",
+            "disabled_by": "user",
             "type": "config/device_registry/update",
         }
     )
@@ -100,4 +104,5 @@ async def test_update_device(hass, client, registry):
     assert msg["result"]["id"] == device.id
     assert msg["result"]["area_id"] == "12345A"
     assert msg["result"]["name_by_user"] == "Test Friendly Name"
+    assert msg["result"]["disabled_by"] == "user"
     assert len(registry.devices) == 1

@@ -18,5 +18,10 @@
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Spotify API \u53ef\u9054\u7aef\u9ede"
+        }
     }
 }

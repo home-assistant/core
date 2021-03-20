@@ -157,30 +157,29 @@ def get_entities(onewirehub: OneWireHub):
     for device in onewirehub.devices:
         family = device["family"]
         device_type = device["type"]
-        sensor_id = os.path.split(os.path.split(device["path"])[0])[1]
+        device_id = os.path.split(os.path.split(device["path"])[0])[1]
 
         if family not in DEVICE_SWITCHES:
             continue
 
         device_info = {
-            "identifiers": {(DOMAIN, sensor_id)},
+            "identifiers": {(DOMAIN, device_id)},
             "manufacturer": "Maxim Integrated",
             "model": device_type,
-            "name": sensor_id,
+            "name": device_id,
         }
-        for device_switch in DEVICE_SWITCHES[family]:
-            device_file = os.path.join(
-                os.path.split(device["path"])[0], device_switch["path"]
+        for entity_specs in DEVICE_SWITCHES[family]:
+            entity_path = os.path.join(
+                os.path.split(device["path"])[0], entity_specs["path"]
             )
             entities.append(
                 OneWireProxySwitch(
-                    sensor_id,
-                    device_file,
-                    device_switch["type"],
-                    device_switch["name"],
-                    device_info,
-                    device_switch.get("default_disabled", False),
-                    onewirehub.owproxy,
+                    device_id=device_id,
+                    device_name=device_id,
+                    device_info=device_info,
+                    entity_path=entity_path,
+                    entity_specs=entity_specs,
+                    owproxy=onewirehub.owproxy,
                 )
             )
 

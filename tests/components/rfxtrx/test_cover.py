@@ -140,3 +140,180 @@ async def test_duplicate_cover(hass, rfxtrx):
     assert state
     assert state.state == "closed"
     assert state.attributes.get("friendly_name") == "LightwaveRF, Siemens 0213c7:242"
+
+
+async def test_rfy_cover(hass, rfxtrx):
+    """Test Rfy venetian blind covers."""
+    entry_data = create_rfx_test_cfg(
+        devices={
+            "071a000001020301": {
+                "signal_repetitions": 1,
+                "venetian_blind_mode": "Unknown",
+            },
+            "071a000001020302": {"signal_repetitions": 1, "venetian_blind_mode": "US"},
+            "071a000001020303": {"signal_repetitions": 1, "venetian_blind_mode": "EU"},
+        }
+    )
+    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Test a blind with no venetian mode setting
+    state = hass.states.get("cover.rfy_010203_1")
+    assert state
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover_tilt",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover_tilt",
+        {"entity_id": "cover.rfy_010203_1"},
+        blocking=True,
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x01\x00")),
+        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x01\x01")),
+        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x01\x03")),
+    ]
+
+    # Test a blind with venetian mode set to US
+    state = hass.states.get("cover.rfy_010203_2")
+    assert state
+    rfxtrx.transport.send.mock_calls = []
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover_tilt",
+        {"entity_id": "cover.rfy_010203_2"},
+        blocking=True,
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
+        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x02\x0F")),
+        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x02\x10")),
+        call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x02\x11")),
+        call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x02\x12")),
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x02\x00")),
+    ]
+
+    # Test a blind with venetian mode set to EU
+    state = hass.states.get("cover.rfy_010203_3")
+    assert state
+    rfxtrx.transport.send.mock_calls = []
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover_tilt",
+        {"entity_id": "cover.rfy_010203_3"},
+        blocking=True,
+    )
+
+    assert rfxtrx.transport.send.mock_calls == [
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
+        call(bytearray(b"\x08\x1a\x00\x01\x01\x02\x03\x03\x11")),
+        call(bytearray(b"\x08\x1a\x00\x02\x01\x02\x03\x03\x12")),
+        call(bytearray(b"\x08\x1a\x00\x03\x01\x02\x03\x03\x0F")),
+        call(bytearray(b"\x08\x1a\x00\x04\x01\x02\x03\x03\x10")),
+        call(bytearray(b"\x08\x1a\x00\x00\x01\x02\x03\x03\x00")),
+    ]

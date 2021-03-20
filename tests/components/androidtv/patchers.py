@@ -1,6 +1,6 @@
 """Define patches used for androidtv tests."""
 
-from tests.async_mock import mock_open, patch
+from unittest.mock import mock_open, patch
 
 KEY_PYTHON = "python"
 KEY_SERVER = "server"

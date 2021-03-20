@@ -1,7 +1,7 @@
 """Intents for the humidifier integration."""
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
@@ -9,7 +9,6 @@ import homeassistant.helpers.config_validation as cv
 from . import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,

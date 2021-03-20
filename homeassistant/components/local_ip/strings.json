@@ -4,9 +4,7 @@
     "step": {
       "user": {
         "title": "Local IP Address",
-        "data": {
-          "name": "Sensor Name"
-        }
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
     },
     "abort": {

@@ -1,8 +1,10 @@
 """Tests for the WiLight integration."""
+from unittest.mock import patch
+
 import pytest
 import pywilight
+from pywilight.const import DOMAIN
 
-from homeassistant.components.wilight.const import DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -10,7 +12,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.components.wilight import (
     HOST,
     UPNP_MAC_ADDRESS,

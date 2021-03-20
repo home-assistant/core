@@ -1,11 +1,13 @@
 """Device for Zigbee Home Automation."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from enum import Enum
 import logging
 import random
 import time
-from typing import Any, Dict
+from typing import Any
 
 from zigpy import types
 import zigpy.exceptions
@@ -14,6 +16,7 @@ import zigpy.quirks
 from zigpy.zcl.clusters.general import Groups
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -28,7 +31,6 @@ from .const import (
     ATTR_ATTRIBUTE,
     ATTR_AVAILABLE,
     ATTR_CLUSTER_ID,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
@@ -40,7 +42,6 @@ from .const import (
     ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
     ATTR_MODEL,
-    ATTR_NAME,
     ATTR_NEIGHBORS,
     ATTR_NODE_DESCRIPTOR,
     ATTR_NWK,
@@ -254,8 +255,10 @@ class ZHADevice(LogMixin):
                 "device_event_type": "device_offline"
             }
         }
+
         if hasattr(self._zigpy_device, "device_automation_triggers"):
             triggers.update(self._zigpy_device.device_automation_triggers)
+
         return triggers
 
     @property
@@ -274,7 +277,7 @@ class ZHADevice(LogMixin):
         self._available = new_availability
 
     @property
-    def zigbee_signature(self) -> Dict[str, Any]:
+    def zigbee_signature(self) -> dict[str, Any]:
         """Get zigbee signature for this device."""
         return {
             ATTR_NODE_DESCRIPTOR: str(self._zigpy_device.node_desc),

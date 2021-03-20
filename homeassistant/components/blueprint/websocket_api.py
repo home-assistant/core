@@ -1,6 +1,5 @@
 """Websocket API for blueprint."""
-import logging
-from typing import Dict, Optional
+from __future__ import annotations
 
 import async_timeout
 import voluptuous as vol
@@ -14,8 +13,6 @@ from homeassistant.util import yaml
 from . import importer, models
 from .const import DOMAIN
 from .errors import FileAlreadyExists
-
-_LOGGER = logging.getLogger(__package__)
 
 
 @callback
@@ -36,7 +33,7 @@ def async_setup(hass: HomeAssistant):
 )
 async def ws_list_blueprints(hass, connection, msg):
     """List available blueprints."""
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
         DOMAIN, {}
     )
     results = {}
@@ -79,12 +76,12 @@ async def ws_import_blueprint(hass, connection, msg):
     connection.send_result(
         msg["id"],
         {
-            "url": imported_blueprint.url,
             "suggested_filename": imported_blueprint.suggested_filename,
             "raw_data": imported_blueprint.raw_data,
             "blueprint": {
                 "metadata": imported_blueprint.blueprint.metadata,
             },
+            "validation_errors": imported_blueprint.blueprint.validate(),
         },
     )
 
@@ -105,7 +102,7 @@ async def ws_save_blueprint(hass, connection, msg):
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
         DOMAIN, {}
     )
 
@@ -152,7 +149,7 @@ async def ws_delete_blueprint(hass, connection, msg):
     path = msg["path"]
     domain = msg["domain"]
 
-    domain_blueprints: Optional[Dict[str, models.DomainBlueprints]] = hass.data.get(
+    domain_blueprints: dict[str, models.DomainBlueprints] | None = hass.data.get(
         DOMAIN, {}
     )
 

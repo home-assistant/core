@@ -1,8 +1,11 @@
 """Support for esphome devices."""
+from __future__ import annotations
+
 import asyncio
+import functools
 import logging
 import math
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from aioesphomeapi import (
     APIClient,
@@ -21,6 +24,7 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
@@ -34,13 +38,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 # Import config flow so that it's added to the registry
-from .config_flow import EsphomeFlowHandler  # noqa: F401
-from .entry_data import DATA_KEY, RuntimeEntryData
+from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 _LOGGER = logging.getLogger(__name__)
@@ -52,16 +56,13 @@ CONFIG_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Stub to allow setting up this component.
-
-    Configuration through YAML is not supported at this time.
-    """
+    """Stub to allow setting up this component."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up the esphome component."""
-    hass.data.setdefault(DATA_KEY, {})
+    hass.data.setdefault(DOMAIN, {})
 
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -83,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     store = Store(
         hass, STORAGE_VERSION, f"esphome.{entry.entry_id}", encoder=JSONEncoder
     )
-    entry_data = hass.data[DATA_KEY][entry.entry_id] = RuntimeEntryData(
+    entry_data = hass.data[DOMAIN][entry.entry_id] = RuntimeEntryData(
         client=cli, entry_id=entry.entry_id, store=store
     )
 
@@ -156,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         await cli.send_home_assistant_state(entity_id, new_state.state)
 
     async def _send_home_assistant_state(
-        entity_id: str, new_state: Optional[State]
+        entity_id: str, new_state: State | None
     ) -> None:
         """Forward Home Assistant states to ESPHome."""
         await cli.send_home_assistant_state(entity_id, new_state.state)
@@ -225,6 +226,14 @@ async def _setup_auto_reconnect_logic(
             # When removing/disconnecting manually
             return
 
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        for device in devices:
+            # There is only one device in ESPHome
+            if device.disabled:
+                # Don't attempt to connect if it's disabled
+                return
+
         data: RuntimeEntryData = hass.data[DOMAIN][entry.entry_id]
         for disconnect_cb in data.disconnect_callbacks:
             disconnect_cb()
@@ -251,13 +260,22 @@ async def _setup_auto_reconnect_logic(
             # really short reconnect interval.
             tries = min(tries, 10)  # prevent OverflowError
             wait_time = int(round(min(1.8 ** tries, 60.0)))
-            _LOGGER.info("Trying to reconnect to %s in %s seconds", host, wait_time)
+            if tries == 1:
+                _LOGGER.info("Trying to reconnect to %s in the background", host)
+            _LOGGER.debug("Retrying %s in %d seconds", host, wait_time)
             await asyncio.sleep(wait_time)
 
         try:
             await cli.connect(on_stop=try_connect, login=True)
         except APIConnectionError as error:
-            _LOGGER.info("Can't connect to ESPHome API for %s: %s", host, error)
+            level = logging.WARNING if tries == 0 else logging.DEBUG
+            _LOGGER.log(
+                level,
+                "Can't connect to ESPHome API for %s (%s): %s",
+                entry.unique_id,
+                host,
+                error,
+            )
             # Schedule re-connect in event loop in order not to delay HA
             # startup. First connect is scheduled in tracked tasks.
             data.reconnect_task = hass.loop.create_task(
@@ -294,17 +312,63 @@ async def _register_service(
 ):
     service_name = f"{entry_data.device_info.name}_{service.name}"
     schema = {}
+    fields = {}
+
     for arg in service.args:
-        schema[vol.Required(arg.name)] = {
-            UserServiceArgType.BOOL: cv.boolean,
-            UserServiceArgType.INT: vol.Coerce(int),
-            UserServiceArgType.FLOAT: vol.Coerce(float),
-            UserServiceArgType.STRING: cv.string,
-            UserServiceArgType.BOOL_ARRAY: [cv.boolean],
-            UserServiceArgType.INT_ARRAY: [vol.Coerce(int)],
-            UserServiceArgType.FLOAT_ARRAY: [vol.Coerce(float)],
-            UserServiceArgType.STRING_ARRAY: [cv.string],
+        metadata = {
+            UserServiceArgType.BOOL: {
+                "validator": cv.boolean,
+                "example": "False",
+                "selector": {"boolean": None},
+            },
+            UserServiceArgType.INT: {
+                "validator": vol.Coerce(int),
+                "example": "42",
+                "selector": {"number": {CONF_MODE: "box"}},
+            },
+            UserServiceArgType.FLOAT: {
+                "validator": vol.Coerce(float),
+                "example": "12.3",
+                "selector": {"number": {CONF_MODE: "box", "step": 1e-3}},
+            },
+            UserServiceArgType.STRING: {
+                "validator": cv.string,
+                "example": "Example text",
+                "selector": {"text": None},
+            },
+            UserServiceArgType.BOOL_ARRAY: {
+                "validator": [cv.boolean],
+                "description": "A list of boolean values.",
+                "example": "[True, False]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.INT_ARRAY: {
+                "validator": [vol.Coerce(int)],
+                "description": "A list of integer values.",
+                "example": "[42, 34]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.FLOAT_ARRAY: {
+                "validator": [vol.Coerce(float)],
+                "description": "A list of floating point numbers.",
+                "example": "[ 12.3, 34.5 ]",
+                "selector": {"object": {}},
+            },
+            UserServiceArgType.STRING_ARRAY: {
+                "validator": [cv.string],
+                "description": "A list of strings.",
+                "example": "['Example text', 'Another example']",
+                "selector": {"object": {}},
+            },
         }[arg.type_]
+        schema[vol.Required(arg.name)] = metadata["validator"]
+        fields[arg.name] = {
+            "name": arg.name,
+            "required": True,
+            "description": metadata.get("description"),
+            "example": metadata["example"],
+            "selector": metadata["selector"],
+        }
 
     async def execute_service(call):
         await entry_data.client.execute_service(service, call.data)
@@ -313,9 +377,16 @@ async def _register_service(
         DOMAIN, service_name, execute_service, vol.Schema(schema)
     )
 
+    service_desc = {
+        "description": f"Calls the service {service.name} of the node {entry_data.device_info.name}",
+        "fields": fields,
+    }
+
+    async_set_service_schema(hass, DOMAIN, service_name, service_desc)
+
 
 async def _setup_services(
-    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: List[UserService]
+    hass: HomeAssistantType, entry_data: RuntimeEntryData, services: list[UserService]
 ):
     old_services = entry_data.services.copy()
     to_unregister = []
@@ -349,7 +420,7 @@ async def _cleanup_instance(
     hass: HomeAssistantType, entry: ConfigEntry
 ) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
-    data: RuntimeEntryData = hass.data[DATA_KEY].pop(entry.entry_id)
+    data: RuntimeEntryData = hass.data[DOMAIN].pop(entry.entry_id)
     if data.reconnect_task is not None:
         data.reconnect_task.cancel()
     for disconnect_cb in data.disconnect_callbacks:
@@ -392,7 +463,7 @@ async def platform_async_setup_entry(
     entry_data.state[component_key] = {}
 
     @callback
-    def async_list_entities(infos: List[EntityInfo]):
+    def async_list_entities(infos: list[EntityInfo]):
         """Update entities of this platform when entities are listed."""
         old_infos = entry_data.info[component_key]
         new_infos = {}
@@ -466,7 +537,7 @@ def esphome_state_property(func):
 class EsphomeEnumMapper:
     """Helper class to convert between hass and esphome enum values."""
 
-    def __init__(self, func: Callable[[], Dict[int, str]]):
+    def __init__(self, func: Callable[[], dict[int, str]]):
         """Construct a EsphomeEnumMapper."""
         self._func = func
 
@@ -480,7 +551,7 @@ class EsphomeEnumMapper:
         return inverse[value]
 
 
-def esphome_map_enum(func: Callable[[], Dict[int, str]]):
+def esphome_map_enum(func: Callable[[], dict[int, str]]):
     """Map esphome int enum values to hass string constants.
 
     This class has to be used as a decorator. This ensures the aioesphomeapi
@@ -507,7 +578,7 @@ class EsphomeBaseEntity(Entity):
                     f"esphome_{self._entry_id}_remove_"
                     f"{self._component_key}_{self._key}"
                 ),
-                self.async_remove,
+                functools.partial(self.async_remove, force_remove=True),
             )
         )
 
@@ -531,7 +602,7 @@ class EsphomeBaseEntity(Entity):
 
     @property
     def _entry_data(self) -> RuntimeEntryData:
-        return self.hass.data[DATA_KEY][self._entry_id]
+        return self.hass.data[DOMAIN][self._entry_id]
 
     @property
     def _static_info(self) -> EntityInfo:
@@ -552,7 +623,7 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.client
 
     @property
-    def _state(self) -> Optional[EntityState]:
+    def _state(self) -> EntityState | None:
         try:
             return self._entry_data.state[self._component_key][self._key]
         except KeyError:
@@ -571,14 +642,14 @@ class EsphomeBaseEntity(Entity):
         return self._entry_data.available
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique id identifying the entity."""
         if not self._static_info.unique_id:
             return None
         return self._static_info.unique_id
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device registry information for this entity."""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._device_info.mac_address)}

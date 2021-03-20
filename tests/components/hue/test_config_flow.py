@@ -1,5 +1,6 @@
 """Tests for Philips Hue config flow."""
 import asyncio
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import client_exceptions
 import aiohue
@@ -11,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -375,14 +375,15 @@ async def test_flow_link_unknown_host(hass):
     assert result["reason"] == "cannot_connect"
 
 
-async def test_bridge_ssdp(hass):
+@pytest.mark.parametrize("mf_url", config_flow.HUE_MANUFACTURERURL)
+async def test_bridge_ssdp(hass, mf_url):
     """Test a bridge being discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": "ssdp"},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: mf_url,
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -411,7 +412,7 @@ async def test_bridge_ssdp_emulated_hue(hass):
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -426,7 +427,7 @@ async def test_bridge_ssdp_missing_location(hass):
         const.DOMAIN,
         context={"source": "ssdp"},
         data={
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -442,7 +443,7 @@ async def test_bridge_ssdp_missing_serial(hass):
         context={"source": "ssdp"},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
         },
     )
 
@@ -458,7 +459,7 @@ async def test_bridge_ssdp_espalexa(hass):
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -478,7 +479,7 @@ async def test_bridge_ssdp_already_configured(hass):
         context={"source": "ssdp"},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "1234",
         },
     )
@@ -570,7 +571,14 @@ async def test_bridge_homekit(hass, aioclient_mock):
     )
 
     assert result["type"] == "form"
-    assert result["step_id"] == "init"
+    assert result["step_id"] == "link"
+
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["flow_id"] == result["flow_id"]
+    )
+    assert flow["context"]["unique_id"] == config_entries.DEFAULT_DISCOVERY_UNIQUE_ID
 
 
 async def test_bridge_import_already_configured(hass):
@@ -617,7 +625,7 @@ async def test_ssdp_discovery_update_configuration(hass):
         context={"source": "ssdp"},
         data={
             ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1/",
-            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
             ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
         },
     )
@@ -640,6 +648,15 @@ async def test_options_flow(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
+    schema = result["data_schema"].schema
+    assert (
+        _get_schema_default(schema, const.CONF_ALLOW_HUE_GROUPS)
+        == const.DEFAULT_ALLOW_HUE_GROUPS
+    )
+    assert (
+        _get_schema_default(schema, const.CONF_ALLOW_UNREACHABLE)
+        == const.DEFAULT_ALLOW_UNREACHABLE
+    )
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
@@ -654,3 +671,11 @@ async def test_options_flow(hass):
         const.CONF_ALLOW_HUE_GROUPS: True,
         const.CONF_ALLOW_UNREACHABLE: True,
     }
+
+
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")

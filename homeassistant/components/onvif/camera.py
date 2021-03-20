@@ -35,6 +35,7 @@ from .const import (
     LOGGER,
     RELATIVE_MOVE,
     SERVICE_PTZ,
+    STOP_MOVE,
     ZOOM_IN,
     ZOOM_OUT,
 )
@@ -54,7 +55,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
             vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
             vol.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): vol.In(
-                [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, GOTOPRESET_MOVE]
+                [
+                    CONTINUOUS_MOVE,
+                    RELATIVE_MOVE,
+                    ABSOLUTE_MOVE,
+                    GOTOPRESET_MOVE,
+                    STOP_MOVE,
+                ]
             ),
             vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
             vol.Optional(ATTR_PRESET, default="0"): cv.string,
@@ -129,7 +136,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                 )
 
         if image is None:
-            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
+            ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary)
             image = await asyncio.shield(
                 ffmpeg.get_image(
                     self._stream_uri,
@@ -147,7 +154,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)
 
         ffmpeg_manager = self.hass.data[DATA_FFMPEG]
-        stream = CameraMjpeg(ffmpeg_manager.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(ffmpeg_manager.binary)
 
         await stream.open_camera(
             self._stream_uri,

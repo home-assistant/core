@@ -8,6 +8,8 @@ pubsub subscriber.
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
 from .common import async_setup_sdm_platform
 
 PLATFORM = "sensor"
@@ -52,13 +54,13 @@ async def test_thermostat_device(hass):
     assert humidity is not None
     assert humidity.state == "35.0"
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == "some-device-id-temperature"
     assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model == "Thermostat"
@@ -164,7 +166,7 @@ async def test_event_updates_sensor(hass):
         },
         auth=None,
     )
-    subscriber.receive_event(event)
+    await subscriber.async_receive_event(event)
     await hass.async_block_till_done()  # Process dispatch/update signal
 
     temperature = hass.states.get("sensor.my_sensor_temperature")
@@ -197,13 +199,13 @@ async def test_device_with_unknown_type(hass):
     assert temperature is not None
     assert temperature.state == "25.1"
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")
     assert entry.unique_id == "some-device-id-temperature"
     assert entry.original_name == "My Sensor Temperature"
     assert entry.domain == "sensor"
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
     assert device.name == "My Sensor"
     assert device.model is None

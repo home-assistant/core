@@ -2,6 +2,7 @@
 
 import re
 from unittest import mock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import zigpy.profiles.zha
@@ -29,8 +30,6 @@ import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
-
-from tests.async_mock import AsyncMock, patch
 
 NO_TAIL_ID = re.compile("_\\d$")
 
@@ -68,7 +67,7 @@ async def test_devices(
     zha_device_joined_restored,
 ):
     """Test device discovery."""
-    entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
+    entity_registry = homeassistant.helpers.entity_registry.async_get(
         hass_disable_services
     )
 
@@ -97,7 +96,7 @@ async def test_devices(
     entity_ids = hass_disable_services.states.async_entity_ids()
     await hass_disable_services.async_block_till_done()
     zha_entity_ids = {
-        ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
+        ent for ent in entity_ids if ent.split(".")[0] in zha_const.PLATFORMS
     }
 
     if cluster_identify:

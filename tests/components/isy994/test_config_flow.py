@@ -1,5 +1,7 @@
 """Test the Universal Devices ISY994 config flow."""
 
+from unittest.mock import patch
+
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components import ssdp
 from homeassistant.components.isy994.config_flow import CannotConnect
@@ -17,7 +19,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 MOCK_HOSTNAME = "1.1.1.1"

@@ -32,9 +32,7 @@ CONF_DESTINATION = "destination"
 
 _QUERY_SCHEME = vol.Schema(
     {
-        vol.Required(CONF_MODE): vol.All(
-            cv.ensure_list, [vol.In(list(["bus", "train"]))]
-        ),
+        vol.Required(CONF_MODE): vol.All(cv.ensure_list, [vol.In(["bus", "train"])]),
         vol.Required(CONF_ORIGIN): cv.string,
         vol.Required(CONF_DESTINATION): cv.string,
     }
@@ -191,7 +189,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
                 self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
@@ -261,7 +259,7 @@ class UkTransportLiveTrainTimeSensor(UkTransportSensor):
                     self._state = None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:

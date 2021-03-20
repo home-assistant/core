@@ -71,7 +71,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
-        context = self.context  # pylint: disable=no-member
+        context = self.context
         placeholders = {
             "host": context[CONF_HOST],
         }
@@ -94,7 +94,7 @@ class ArcamFmjFlowHandler(config_entries.ConfigFlow):
 
         await self._async_set_unique_id_and_update(host, port, uuid)
 
-        context = self.context  # pylint: disable=no-member
+        context = self.context
         context[CONF_HOST] = host
         context[CONF_PORT] = DEFAULT_PORT
         return await self.async_step_confirm()

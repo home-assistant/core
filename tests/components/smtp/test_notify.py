@@ -1,6 +1,7 @@
 """The tests for the notify smtp platform."""
 from os import path
 import re
+from unittest.mock import patch
 
 import pytest
 
@@ -10,8 +11,6 @@ from homeassistant.components.smtp import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 class MockSMTP(MailNotificationService):

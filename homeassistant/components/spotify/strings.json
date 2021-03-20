@@ -10,11 +10,16 @@
       }
     },
     "abort": {
-      "authorize_url_timeout": "Timeout generating authorize url.",
+      "authorize_url_timeout": "Timeout generating authorize URL.",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "missing_configuration": "The Spotify integration is not configured. Please follow the documentation.",
       "reauth_account_mismatch": "The Spotify account authenticated with, does not match the account needed re-authentication."
     },
     "create_entry": { "default": "Successfully authenticated with Spotify." }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "Spotify API endpoint reachable"
+    }
   }
 }

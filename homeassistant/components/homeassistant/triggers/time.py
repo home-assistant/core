@@ -143,9 +143,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
         if remove:
             entities[entity_id] = remove
 
+    to_track = []
+
     for at_time in config[CONF_AT]:
         if isinstance(at_time, str):
             # entity
+            to_track.append(at_time)
             update_entity_trigger(at_time, new_state=hass.states.get(at_time))
         else:
             # datetime.time
@@ -161,9 +164,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     # Track state changes of any entities.
     removes.append(
-        async_track_state_change_event(
-            hass, list(entities), update_entity_trigger_event
-        )
+        async_track_state_change_event(hass, to_track, update_entity_trigger_event)
     )
 
     @callback

@@ -3,7 +3,7 @@
         "info": {
             "board": "Deska",
             "disk_total": "Kapacita disku",
-            "disk_used": "Obsazen\u00fd disk",
+            "disk_used": "Obsazeno na disku",
             "docker_version": "Verze Dockeru",
             "healthy": "V po\u0159\u00e1dku",
             "host_os": "Hostitelsk\u00fd opera\u010dn\u00ed syst\u00e9m",
@@ -15,5 +15,5 @@
             "version_api": "Verze API"
         }
     },
-    "title": "Hass.io"
+    "title": "Home Assistant Supervisor"
 }

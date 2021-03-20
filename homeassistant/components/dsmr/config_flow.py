@@ -1,8 +1,10 @@
 """Config flow for DSMR integration."""
+from __future__ import annotations
+
 import asyncio
 from functools import partial
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
@@ -35,11 +37,15 @@ class DSMRConnection:
         self._port = port
         self._dsmr_version = dsmr_version
         self._telegram = {}
+        if dsmr_version == "5L":
+            self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
+        else:
+            self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
 
     def equipment_identifier(self):
         """Equipment identifier."""
-        if obis_ref.EQUIPMENT_IDENTIFIER in self._telegram:
-            dsmr_object = self._telegram[obis_ref.EQUIPMENT_IDENTIFIER]
+        if self._equipment_identifier in self._telegram:
+            dsmr_object = self._telegram[self._equipment_identifier]
             return getattr(dsmr_object, "value", None)
 
     def equipment_identifier_gas(self):
@@ -52,7 +58,7 @@ class DSMRConnection:
         """Test if we can validate connection with the device."""
 
         def update_telegram(telegram):
-            if obis_ref.EQUIPMENT_IDENTIFIER in telegram:
+            if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
 
@@ -129,7 +135,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         port: str,
         host: str = None,
-        updates: Optional[Dict[Any, Any]] = None,
+        updates: dict[Any, Any] | None = None,
         reload_on_update: bool = True,
     ):
         """Test if host and port are already configured."""

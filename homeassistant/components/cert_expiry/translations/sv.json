@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten har redan konfigurerats"
+        },
         "error": {
             "connection_refused": "Anslutningen blev tillbakavisad under anslutning till v\u00e4rd.",
             "connection_timeout": "Timeout vid anslutning till den h\u00e4r v\u00e4rden",

@@ -11,5 +11,15 @@
             "one": "Leeg",
             "other": "Leeg"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Minimumtijd tussen entiteitsupdates [s]"
+                },
+                "title": "DSMR-opties"
+            }
+        }
     }
 }

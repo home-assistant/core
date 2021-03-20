@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 import socket
+from unittest.mock import patch
 
 from voluptuous import MultipleInvalid
 
@@ -9,7 +10,6 @@ from homeassistant.components import pilight
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
@@ -360,7 +360,7 @@ async def test_whitelist_no_match(mock_debug, hass):
         await hass.async_block_till_done()
         debug_log_call = mock_debug.call_args_list[-3]
 
-        assert not ("Event pilight_received" in debug_log_call)
+        assert "Event pilight_received" not in debug_log_call
 
 
 async def test_call_rate_delay_throttle_enabled(hass):

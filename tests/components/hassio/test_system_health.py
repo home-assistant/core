@@ -1,6 +1,7 @@
 """Test hassio system health."""
 import asyncio
 import os
+from unittest.mock import patch
 
 from aiohttp import ClientError
 
@@ -8,7 +9,6 @@ from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.async_mock import patch
 from tests.common import get_system_health_info
 
 
@@ -60,7 +60,7 @@ async def test_hassio_system_health(hass, aioclient_mock):
         "host_os": "Home Assistant OS 5.9",
         "installed_addons": "Awesome Addon (1.0.0)",
         "supervisor_api": "ok",
-        "supervisor_version": "2020.11.1",
+        "supervisor_version": "supervisor-2020.11.1",
         "supported": True,
         "update_channel": "stable",
         "version_api": "ok",

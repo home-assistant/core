@@ -2,7 +2,7 @@
   "domain": "wink",
   "name": "Wink",
   "documentation": "https://www.home-assistant.io/integrations/wink",
-  "requirements": ["pubnubsub-handler==1.0.8", "python-wink==1.10.5"],
+  "requirements": ["pubnubsub-handler==1.0.9", "python-wink==1.10.5"],
   "dependencies": ["configurator", "http"],
   "codeowners": []
 }

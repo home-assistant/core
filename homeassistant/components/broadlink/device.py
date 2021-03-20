@@ -22,9 +22,9 @@ from .updater import get_update_manager
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(device_type):
+def get_domains(dev_type):
     """Return the domains available for a device type."""
-    return {domain for domain, types in DOMAINS_AND_TYPES if device_type in types}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
 
 
 class BroadlinkDevice:
@@ -57,9 +57,7 @@ class BroadlinkDevice:
         Triggered when the device is renamed on the frontend.
         """
         device_registry = await dr.async_get_registry(hass)
-        device_entry = device_registry.async_get_device(
-            {(DOMAIN, entry.unique_id)}, set()
-        )
+        device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 

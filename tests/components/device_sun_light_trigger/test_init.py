@@ -1,6 +1,7 @@
 """The tests device sun light trigger component."""
 # pylint: disable=protected-access
 from datetime import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -24,7 +25,6 @@ from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import async_fire_time_changed
 
 

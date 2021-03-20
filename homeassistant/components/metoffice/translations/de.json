@@ -3,6 +3,10 @@
         "abort": {
             "already_configured": "Service ist bereits konfiguriert"
         },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
+        },
         "step": {
             "user": {
                 "data": {

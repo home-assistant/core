@@ -1,13 +1,12 @@
 """Tests for the Point config flow."""
 import asyncio
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.point import DOMAIN, config_flow
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-
-from tests.async_mock import AsyncMock, patch
 
 
 def init_config_flow(hass, side_effect=None):
@@ -141,7 +140,7 @@ async def test_abort_if_exception_generating_auth_url(hass):
 
     result = await flow.async_step_user()
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "authorize_url_fail"
+    assert result["reason"] == "unknown_authorize_url_generation"
 
 
 async def test_abort_no_code(hass):

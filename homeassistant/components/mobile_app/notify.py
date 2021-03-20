@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+import aiohttp
 import async_timeout
 
 from homeassistant.components.notify import (
@@ -35,8 +36,10 @@ from .const import (
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
     DATA_CONFIG_ENTRIES,
+    DATA_NOTIFY,
     DOMAIN,
 )
+from .util import supports_push
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,15 +47,13 @@ _LOGGER = logging.getLogger(__name__)
 def push_registrations(hass):
     """Return a dictionary of push enabled registrations."""
     targets = {}
+
     for webhook_id, entry in hass.data[DOMAIN][DATA_CONFIG_ENTRIES].items():
-        data = entry.data
-        app_data = data[ATTR_APP_DATA]
-        if ATTR_PUSH_TOKEN in app_data and ATTR_PUSH_URL in app_data:
-            device_name = data[ATTR_DEVICE_NAME]
-            if device_name in targets:
-                _LOGGER.warning("Found duplicate device name %s", device_name)
-                continue
-            targets[device_name] = webhook_id
+        if not supports_push(hass, webhook_id):
+            continue
+
+        targets[entry.data[ATTR_DEVICE_NAME]] = webhook_id
+
     return targets
 
 
@@ -84,7 +85,8 @@ def log_rate_limits(hass, device_name, resp, level=logging.INFO):
 async def async_get_service(hass, config, discovery_info=None):
     """Get the mobile_app notification service."""
     session = async_get_clientsession(hass)
-    return MobileAppNotificationService(session)
+    service = hass.data[DOMAIN][DATA_NOTIFY] = MobileAppNotificationService(session)
+    return service
 
 
 class MobileAppNotificationService(BaseNotificationService):
@@ -167,3 +169,5 @@ class MobileAppNotificationService(BaseNotificationService):
 
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout sending notification to %s", push_url)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error sending notification to %s: %r", push_url, err)

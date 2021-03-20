@@ -83,9 +83,9 @@ class WinkSensorDevice(WinkDevice):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        super_attrs = super().device_state_attributes
+        super_attrs = super().extra_state_attributes
         try:
             super_attrs["egg_times"] = self.wink.eggs()
         except AttributeError:

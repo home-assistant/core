@@ -1,7 +1,10 @@
 """Tests for Vizio config flow."""
+from __future__ import annotations
+
 from contextlib import asynccontextmanager
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
+from unittest.mock import call, patch
 
 import pytest
 from pytest import raises
@@ -40,6 +43,7 @@ from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APPS,
     CONF_VOLUME_STEP,
+    DEFAULT_VOLUME_STEP,
     DOMAIN,
     SERVICE_UPDATE_SETTING,
     VIZIO_SCHEMA,
@@ -74,7 +78,6 @@ from .const import (
     VOLUME_STEP,
 )
 
-from tests.async_mock import call, patch
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -86,7 +89,7 @@ async def _add_config_entry_to_hass(
     await hass.async_block_till_done()
 
 
-def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
+def _get_ha_power_state(vizio_power_state: bool | None) -> str:
     """Return HA power state given Vizio power state."""
     if vizio_power_state:
         return STATE_ON
@@ -97,7 +100,7 @@ def _get_ha_power_state(vizio_power_state: Optional[bool]) -> str:
     return STATE_UNAVAILABLE
 
 
-def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class: str) -> None:
+def _assert_sources_and_volume(attr: dict[str, Any], vizio_device_class: str) -> None:
     """Assert source list, source, and volume level based on attr dict and device class."""
     assert attr["source_list"] == INPUT_LIST
     assert attr["source"] == CURRENT_INPUT
@@ -110,7 +113,7 @@ def _assert_sources_and_volume(attr: Dict[str, Any], vizio_device_class: str) ->
 
 def _get_attr_and_assert_base_attr(
     hass: HomeAssistantType, device_class: str, power_state: str
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Return entity attributes  after asserting name, device class, and power state."""
     attr = hass.states.get(ENTITY_ID).attributes
     assert attr["friendly_name"] == NAME
@@ -122,7 +125,7 @@ def _get_attr_and_assert_base_attr(
 
 @asynccontextmanager
 async def _cm_for_test_setup_without_apps(
-    all_settings: Dict[str, Any], vizio_power_state: Optional[bool]
+    all_settings: dict[str, Any], vizio_power_state: bool | None
 ) -> None:
     """Context manager to setup test for Vizio devices without including app specific patches."""
     with patch(
@@ -139,7 +142,7 @@ async def _cm_for_test_setup_without_apps(
 
 
 async def _test_setup_tv(
-    hass: HomeAssistantType, vizio_power_state: Optional[bool]
+    hass: HomeAssistantType, vizio_power_state: bool | None
 ) -> None:
     """Test Vizio TV entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
@@ -163,7 +166,7 @@ async def _test_setup_tv(
 
 
 async def _test_setup_speaker(
-    hass: HomeAssistantType, vizio_power_state: Optional[bool]
+    hass: HomeAssistantType, vizio_power_state: bool | None
 ) -> None:
     """Test Vizio Speaker entity setup."""
     ha_power_state = _get_ha_power_state(vizio_power_state)
@@ -200,7 +203,7 @@ async def _test_setup_speaker(
 
 @asynccontextmanager
 async def _cm_for_test_setup_tv_with_apps(
-    hass: HomeAssistantType, device_config: Dict[str, Any], app_config: Dict[str, Any]
+    hass: HomeAssistantType, device_config: dict[str, Any], app_config: dict[str, Any]
 ) -> None:
     """Context manager to setup test for Vizio TV with support for apps."""
     config_entry = MockConfigEntry(
@@ -228,7 +231,7 @@ async def _cm_for_test_setup_tv_with_apps(
 
 
 def _assert_source_list_with_apps(
-    list_to_test: List[str], attr: Dict[str, Any]
+    list_to_test: list[str], attr: dict[str, Any]
 ) -> None:
     """Assert source list matches list_to_test after removing INPUT_APPS from list."""
     for app_to_remove in INPUT_APPS:
@@ -238,27 +241,17 @@ def _assert_source_list_with_apps(
     assert attr["source_list"] == list_to_test
 
 
-async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
-    """Test generic Vizio entity setup failure."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
-        return_value=False,
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
-        await _add_config_entry_to_hass(hass, config_entry)
-        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
-
-
 async def _test_service(
     hass: HomeAssistantType,
     domain: str,
     vizio_func_name: str,
     ha_service_name: str,
-    additional_service_data: Optional[Dict[str, Any]],
+    additional_service_data: dict[str, Any] | None,
     *args,
     **kwargs,
 ) -> None:
     """Test generic Vizio media player entity service."""
+    kwargs["log_api_exception"] = False
     service_data = {ATTR_ENTITY_ID: ENTITY_ID}
     if additional_service_data:
         service_data.update(additional_service_data)
@@ -332,18 +325,28 @@ async def test_init_tv_unavailable(
     await _test_setup_tv(hass, None)
 
 
-async def test_setup_failure_speaker(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture
+async def test_setup_unavailable_speaker(
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test speaker entity setup failure."""
-    await _test_setup_failure(hass, MOCK_SPEAKER_CONFIG)
+    """Test speaker entity sets up as unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
-async def test_setup_failure_tv(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture
+async def test_setup_unavailable_tv(
+    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture
 ) -> None:
-    """Test TV entity setup failure."""
-    await _test_setup_failure(hass, MOCK_USER_VALID_TV_CONFIG)
+    """Test TV entity sets up as unavailable."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _add_config_entry_to_hass(hass, config_entry)
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
+    assert hass.states.get("media_player.vizio").state == STATE_UNAVAILABLE
 
 
 async def test_services(
@@ -378,13 +381,27 @@ async def test_services(
         {ATTR_INPUT_SOURCE: "USB"},
         "USB",
     )
-    await _test_service(hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None)
-    await _test_service(hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_DOWN, None)
     await _test_service(
-        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 1}
+        hass, MP_DOMAIN, "vol_up", SERVICE_VOLUME_UP, None, num=DEFAULT_VOLUME_STEP
     )
     await _test_service(
-        hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0}
+        hass, MP_DOMAIN, "vol_down", SERVICE_VOLUME_DOWN, None, num=DEFAULT_VOLUME_STEP
+    )
+    await _test_service(
+        hass,
+        MP_DOMAIN,
+        "vol_up",
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 1},
+        num=(100 - 15),
+    )
+    await _test_service(
+        hass,
+        MP_DOMAIN,
+        "vol_down",
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0},
+        num=(15 - 0),
     )
     await _test_service(hass, MP_DOMAIN, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
     await _test_service(hass, MP_DOMAIN, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
@@ -394,6 +411,9 @@ async def test_services(
         "set_setting",
         SERVICE_SELECT_SOUND_MODE,
         {ATTR_SOUND_MODE: "Music"},
+        "audio",
+        "eq",
+        "Music",
     )
     # Test that the update_setting service does config validation/transformation correctly
     await _test_service(
@@ -442,8 +462,8 @@ async def test_options_update(
 
 async def _test_update_availability_switch(
     hass: HomeAssistantType,
-    initial_power_state: Optional[bool],
-    final_power_state: Optional[bool],
+    initial_power_state: bool | None,
+    final_power_state: bool | None,
     caplog: pytest.fixture,
 ) -> None:
     now = dt_util.utcnow()

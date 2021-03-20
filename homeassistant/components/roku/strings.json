@@ -8,7 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         }
       },
-      "ssdp_confirm": {
+      "discovery_confirm": {
         "title": "Roku",
         "description": "Do you want to set up {name}?",
         "data": {}
@@ -19,6 +19,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   }

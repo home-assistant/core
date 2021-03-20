@@ -66,17 +66,17 @@ class InvalidBlueprintInputs(BlueprintException):
         )
 
 
-class MissingPlaceholder(BlueprintWithNameException):
-    """When we miss a placeholder."""
+class MissingInput(BlueprintWithNameException):
+    """When we miss an input."""
 
     def __init__(
-        self, domain: str, blueprint_name: str, placeholder_names: Iterable[str]
+        self, domain: str, blueprint_name: str, input_names: Iterable[str]
     ) -> None:
         """Initialize blueprint exception."""
         super().__init__(
             domain,
             blueprint_name,
-            f"Missing placeholder {', '.join(sorted(placeholder_names))}",
+            f"Missing input {', '.join(sorted(input_names))}",
         )
 
 

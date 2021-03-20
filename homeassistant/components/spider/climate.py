@@ -45,6 +45,16 @@ class SpiderThermostat(ClimateEntity):
         self.thermostat = thermostat
 
     @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self.thermostat.id)},
+            "name": self.thermostat.name,
+            "manufacturer": self.thermostat.manufacturer,
+            "model": self.thermostat.model,
+        }
+
+    @property
     def supported_features(self):
         """Return the list of supported features."""
         if self.thermostat.has_fan_mode:

@@ -1,5 +1,6 @@
 """Test Times of the Day Binary Sensor."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 import pytz
@@ -10,7 +11,6 @@ from homeassistant.helpers.sun import get_astral_event_date, get_astral_event_ne
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component
 
 

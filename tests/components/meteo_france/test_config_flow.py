@@ -1,5 +1,7 @@
 """Tests for the Meteo-France config flow."""
-from meteofrance.model import Place
+from unittest.mock import patch
+
+from meteofrance_api.model import Place
 import pytest
 
 from homeassistant import data_entry_flow
@@ -13,7 +15,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 CITY_1_POSTAL = "74220"

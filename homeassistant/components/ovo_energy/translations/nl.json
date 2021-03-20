@@ -2,14 +2,25 @@
     "config": {
         "error": {
             "already_configured": "Account is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie"
         },
+        "flow_title": "OVO Energy: {username}",
         "step": {
+            "reauth": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Authenticatie mislukt voor OVO Energy. Voer uw huidige inloggegevens in.",
+                "title": "Opnieuw verifi\u00ebren"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
-                }
+                },
+                "description": "Stel een OVO Energy instance in om toegang te krijgen tot je energieverbruik.",
+                "title": "Voeg OVO Energie Account toe"
             }
         }
     }

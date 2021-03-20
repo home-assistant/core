@@ -7,12 +7,29 @@ import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE, TIME_SECONDS
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    CONF_DEVICE,
+    CONF_ENTITIES,
+    DEVICE_CLASS_TIMESTAMP,
+    PERCENTAGE,
+    TIME_SECONDS,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    ATTR_AMBIENT,
+    ATTR_DESC,
+    ATTR_DEVICE,
+    ATTR_KEY,
+    ATTR_SENSOR_TYPE,
+    ATTR_SIGN,
+    ATTR_UNIT,
+    ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
+    BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_STANDBY,
     SIGNAL_UPDATE_ENTITIES,
@@ -71,7 +88,9 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             else:
                 _LOGGER.warning("Appliance type %s not implemented", app.type)
                 continue
-            devices.append({"device": device, "entities": device.get_entity_info()})
+            devices.append(
+                {CONF_DEVICE: device, CONF_ENTITIES: device.get_entity_info()}
+            )
         self.devices = devices
         return devices
 
@@ -103,8 +122,10 @@ class HomeConnectDevice:
         except (HomeConnectError, ValueError):
             _LOGGER.debug("Unable to fetch active programs. Probably offline")
             program_active = None
-        if program_active and "key" in program_active:
-            self.appliance.status[BSH_ACTIVE_PROGRAM] = {"value": program_active["key"]}
+        if program_active and ATTR_KEY in program_active:
+            self.appliance.status[BSH_ACTIVE_PROGRAM] = {
+                ATTR_VALUE: program_active[ATTR_KEY]
+            }
         self.appliance.listen_events(callback=self.event_callback)
 
     def event_callback(self, appliance):
@@ -129,7 +150,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         There will be one switch for each program.
         """
         programs = self.get_programs_available()
-        return [{"device": self, "program_name": p["name"]} for p in programs]
+        return [{ATTR_DEVICE: self, "program_name": p["name"]} for p in programs]
 
     def get_program_sensors(self):
         """Get a dictionary with info about program sensors.
@@ -144,15 +165,34 @@ class DeviceWithPrograms(HomeConnectDevice):
         }
         return [
             {
-                "device": self,
-                "desc": k,
-                "unit": unit,
-                "key": "BSH.Common.Option.{}".format(k.replace(" ", "")),
-                "icon": icon,
-                "device_class": device_class,
-                "sign": sign,
+                ATTR_DEVICE: self,
+                ATTR_DESC: k,
+                ATTR_UNIT: unit,
+                ATTR_KEY: "BSH.Common.Option.{}".format(k.replace(" ", "")),
+                ATTR_ICON: icon,
+                ATTR_DEVICE_CLASS: device_class,
+                ATTR_SIGN: sign,
             }
             for k, (unit, icon, device_class, sign) in sensors.items()
+        ]
+
+
+class DeviceWithOpState(HomeConnectDevice):
+    """Device that has an operation state sensor."""
+
+    def get_opstate_sensor(self):
+        """Get a list with info about operation state sensors."""
+
+        return [
+            {
+                ATTR_DEVICE: self,
+                ATTR_DESC: "Operation State",
+                ATTR_UNIT: None,
+                ATTR_KEY: BSH_OPERATION_STATE,
+                ATTR_ICON: "mdi:state-machine",
+                ATTR_DEVICE_CLASS: None,
+                ATTR_SIGN: 1,
+            }
         ]
 
 
@@ -162,13 +202,60 @@ class DeviceWithDoor(HomeConnectDevice):
     def get_door_entity(self):
         """Get a dictionary with info about the door binary sensor."""
         return {
-            "device": self,
-            "desc": "Door",
-            "device_class": "door",
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Door",
+            ATTR_SENSOR_TYPE: "door",
+            ATTR_DEVICE_CLASS: "door",
         }
 
 
-class Dryer(DeviceWithDoor, DeviceWithPrograms):
+class DeviceWithLight(HomeConnectDevice):
+    """Device that has lighting."""
+
+    def get_light_entity(self):
+        """Get a dictionary with info about the lighting."""
+        return {ATTR_DEVICE: self, ATTR_DESC: "Light", ATTR_AMBIENT: None}
+
+
+class DeviceWithAmbientLight(HomeConnectDevice):
+    """Device that has ambient lighting."""
+
+    def get_ambientlight_entity(self):
+        """Get a dictionary with info about the ambient lighting."""
+        return {ATTR_DEVICE: self, ATTR_DESC: "AmbientLight", ATTR_AMBIENT: True}
+
+
+class DeviceWithRemoteControl(HomeConnectDevice):
+    """Device that has Remote Control binary sensor."""
+
+    def get_remote_control(self):
+        """Get a dictionary with info about the remote control sensor."""
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Remote Control",
+            ATTR_SENSOR_TYPE: "remote_control",
+        }
+
+
+class DeviceWithRemoteStart(HomeConnectDevice):
+    """Device that has a Remote Start binary sensor."""
+
+    def get_remote_start(self):
+        """Get a dictionary with info about the remote start sensor."""
+        return {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "Remote Start",
+            ATTR_SENSOR_TYPE: "remote_start",
+        }
+
+
+class Dryer(
+    DeviceWithDoor,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
     """Dryer class."""
 
     PROGRAMS = [
@@ -193,16 +280,26 @@ class Dryer(DeviceWithDoor, DeviceWithPrograms):
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity],
+            "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
-            "sensor": program_sensors,
+            "sensor": program_sensors + op_state_sensor,
         }
 
 
-class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
+class Dishwasher(
+    DeviceWithDoor,
+    DeviceWithAmbientLight,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
     """Dishwasher class."""
 
     PROGRAMS = [
@@ -233,16 +330,25 @@ class Dishwasher(DeviceWithDoor, DeviceWithPrograms):
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity],
+            "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
-            "sensor": program_sensors,
+            "sensor": program_sensors + op_state_sensor,
         }
 
 
-class Oven(DeviceWithDoor, DeviceWithPrograms):
+class Oven(
+    DeviceWithDoor,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
     """Oven class."""
 
     PROGRAMS = [
@@ -258,16 +364,25 @@ class Oven(DeviceWithDoor, DeviceWithPrograms):
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity],
+            "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
-            "sensor": program_sensors,
+            "sensor": program_sensors + op_state_sensor,
         }
 
 
-class Washer(DeviceWithDoor, DeviceWithPrograms):
+class Washer(
+    DeviceWithDoor,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
     """Washer class."""
 
     PROGRAMS = [
@@ -297,16 +412,19 @@ class Washer(DeviceWithDoor, DeviceWithPrograms):
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
         return {
-            "binary_sensor": [door_entity],
+            "binary_sensor": [door_entity, remote_control, remote_start],
             "switch": program_switches,
-            "sensor": program_sensors,
+            "sensor": program_sensors + op_state_sensor,
         }
 
 
-class CoffeeMaker(DeviceWithPrograms):
+class CoffeeMaker(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteStart):
     """Coffee maker class."""
 
     PROGRAMS = [
@@ -330,12 +448,25 @@ class CoffeeMaker(DeviceWithPrograms):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        remote_start = self.get_remote_start()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
-        return {"switch": program_switches, "sensor": program_sensors}
+        return {
+            "binary_sensor": [remote_start],
+            "switch": program_switches,
+            "sensor": program_sensors + op_state_sensor,
+        }
 
 
-class Hood(DeviceWithPrograms):
+class Hood(
+    DeviceWithLight,
+    DeviceWithAmbientLight,
+    DeviceWithOpState,
+    DeviceWithPrograms,
+    DeviceWithRemoteControl,
+    DeviceWithRemoteStart,
+):
     """Hood class."""
 
     PROGRAMS = [
@@ -346,9 +477,19 @@ class Hood(DeviceWithPrograms):
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        remote_control = self.get_remote_control()
+        remote_start = self.get_remote_start()
+        light_entity = self.get_light_entity()
+        ambientlight_entity = self.get_ambientlight_entity()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
-        return {"switch": program_switches, "sensor": program_sensors}
+        return {
+            "binary_sensor": [remote_control, remote_start],
+            "switch": program_switches,
+            "sensor": program_sensors + op_state_sensor,
+            "light": [light_entity, ambientlight_entity],
+        }
 
 
 class FridgeFreezer(DeviceWithDoor):
@@ -360,13 +501,19 @@ class FridgeFreezer(DeviceWithDoor):
         return {"binary_sensor": [door_entity]}
 
 
-class Hob(DeviceWithPrograms):
+class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
     """Hob class."""
 
     PROGRAMS = [{"name": "Cooking.Hob.Program.PowerLevelMode"}]
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
+        remote_control = self.get_remote_control()
+        op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
-        return {"switch": program_switches, "sensor": program_sensors}
+        return {
+            "binary_sensor": [remote_control],
+            "switch": program_switches,
+            "sensor": program_sensors + op_state_sensor,
+        }

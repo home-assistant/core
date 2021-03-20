@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
+        },
+        "step": {
+            "config": {
+                "description": "Add meg a Tasmota konfigur\u00e1ci\u00f3t.",
+                "title": "Tasmota"
+            },
+            "confirm": {
+                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a Tasmota-t?"
+            }
+        }
+    }
+}

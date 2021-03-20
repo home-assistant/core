@@ -1,5 +1,11 @@
 """Test the Plugwise config flow."""
-from Plugwise_Smile.Smile import Smile
+from unittest.mock import MagicMock, patch
+
+from plugwise.exceptions import (
+    ConnectionFailedError,
+    InvalidAuthentication,
+    PlugwiseException,
+)
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -18,7 +24,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.1.1.1"
@@ -47,9 +52,9 @@ def mock_smile():
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
     ) as smile_mock:
-        smile_mock.PlugwiseError = Smile.PlugwiseError
-        smile_mock.InvalidAuthentication = Smile.InvalidAuthentication
-        smile_mock.ConnectionFailedError = Smile.ConnectionFailedError
+        smile_mock.PlugwiseError = PlugwiseException
+        smile_mock.InvalidAuthentication = InvalidAuthentication
+        smile_mock.ConnectionFailedError = ConnectionFailedError
         smile_mock.return_value.connect.return_value = True
         yield smile_mock.return_value
 
@@ -207,7 +212,7 @@ async def test_form_invalid_auth(hass, mock_smile):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_smile.connect.side_effect = Smile.InvalidAuthentication
+    mock_smile.connect.side_effect = InvalidAuthentication
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -225,7 +230,7 @@ async def test_form_cannot_connect(hass, mock_smile):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_smile.connect.side_effect = Smile.ConnectionFailedError
+    mock_smile.connect.side_effect = ConnectionFailedError
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -243,7 +248,7 @@ async def test_form_cannot_connect_port(hass, mock_smile):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_smile.connect.side_effect = Smile.ConnectionFailedError
+    mock_smile.connect.side_effect = ConnectionFailedError
     mock_smile.gateway_id = "0a636a4fc1704ab4a24e4f7e37fb187a"
 
     result2 = await hass.config_entries.flow.async_configure(

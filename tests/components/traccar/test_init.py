@@ -1,4 +1,6 @@
 """The tests the for Traccar device tracker platform."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import data_entry_flow
@@ -12,10 +14,9 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
@@ -113,7 +114,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     # Enter Home again
     req = await client.post(url, params=data)
@@ -122,7 +123,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     data["lon"] = 0
     data["lat"] = 0
@@ -134,12 +135,12 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_NOT_HOME == state_name
+    assert state_name == STATE_NOT_HOME
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
 
-    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+    ent_reg = er.async_get(hass)
     assert len(ent_reg.entities) == 1
 
 
@@ -236,7 +237,7 @@ async def test_load_unload_entry(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

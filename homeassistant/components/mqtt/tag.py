@@ -1,27 +1,30 @@
 """Provides tag scanning for MQTT."""
+import functools
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components import mqtt
-from homeassistant.const import CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-from . import (
-    ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
-    CONF_CONNECTIONS,
-    CONF_DEVICE,
-    CONF_IDENTIFIERS,
-    CONF_QOS,
-    CONF_TOPIC,
-    DOMAIN,
-    cleanup_device_registry,
-    subscription,
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
 )
-from .discovery import MQTT_DISCOVERY_NEW, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+
+from . import CONF_QOS, CONF_TOPIC, DOMAIN, subscription
+from .. import mqtt
+from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
+from .mixins import (
+    CONF_CONNECTIONS,
+    CONF_IDENTIFIERS,
+    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+    async_setup_entry_helper,
+    cleanup_device_registry,
+    device_info_from_config,
+    validate_device_has_at_least_one_identifier,
+)
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,31 +34,19 @@ TAGS = "mqtt_tags"
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+        vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Optional(CONF_PLATFORM): "mqtt",
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
-    mqtt.validate_device_has_at_least_one_identifier,
+    validate_device_has_at_least_one_identifier,
 )
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up MQTT tag scan dynamically through MQTT discovery."""
-
-    async def async_discover(discovery_payload):
-        """Discover and add MQTT tag scan."""
-        discovery_data = discovery_payload.discovery_data
-        try:
-            config = PLATFORM_SCHEMA(discovery_payload)
-            await async_setup_tag(hass, config, config_entry, discovery_data)
-        except Exception:
-            clear_discovery_hash(hass, discovery_data[ATTR_DISCOVERY_HASH])
-            raise
-
-    async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_NEW.format("tag", "mqtt"), async_discover
-    )
+    setup = functools.partial(async_setup_tag, hass, config_entry=config_entry)
+    await async_setup_entry_helper(hass, "tag", setup, PLATFORM_SCHEMA)
 
 
 async def async_setup_tag(hass, config, config_entry, discovery_data):
@@ -142,6 +133,10 @@ class MQTTTagScanner:
             self._setup_from_config(config)
             await self.subscribe_topics()
 
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+        )
+
     def _setup_from_config(self, config):
         self._value_template = lambda value, error_value: value
         if CONF_VALUE_TEMPLATE in config:
@@ -162,6 +157,9 @@ class MQTTTagScanner:
             self.hass,
             MQTT_DISCOVERY_UPDATED.format(discovery_hash),
             self.discovery_update,
+        )
+        async_dispatcher_send(
+            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
         )
 
     async def subscribe_topics(self):
@@ -217,7 +215,7 @@ async def _update_device(hass, config_entry, config):
     """Update device registry."""
     device_registry = await hass.helpers.device_registry.async_get_registry()
     config_entry_id = config_entry.entry_id
-    device_info = mqtt.device_info_from_config(config[CONF_DEVICE])
+    device_info = device_info_from_config(config[CONF_DEVICE])
 
     if config_entry_id is not None and device_info is not None:
         device_info["config_entry_id"] = config_entry_id

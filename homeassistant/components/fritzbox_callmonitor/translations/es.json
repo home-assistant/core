@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "insufficient_permissions": "El usuario no tiene permisos suficientes para acceder a la configuraci\u00f3n de AVM FRITZ! Box y sus agendas telef\u00f3nicas."
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+        },
+        "flow_title": "Monitor de llamadas de AVM FRITZ! Box: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Directorio telef\u00f3nico"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Contrase\u00f1a",
+                    "port": "Puerto",
+                    "username": "Usuario"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Los prefijos tienen un formato incorrecto, comprueba el formato."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefijos (lista separada por comas)"
+                },
+                "title": "Configurar prefijos"
+            }
+        }
+    }
+}

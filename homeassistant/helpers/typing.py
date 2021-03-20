@@ -1,4 +1,5 @@
 """Typing Helpers for Home Assistant."""
+from enum import Enum
 from typing import Any, Dict, Mapping, Optional, Tuple, Union
 
 import homeassistant.core
@@ -16,3 +17,13 @@ TemplateVarsType = Optional[Mapping[str, Any]]
 
 # Custom type for recorder Queries
 QueryType = Any
+
+
+class UndefinedType(Enum):
+    # pylint: disable=invalid-name
+    """Singleton type for use with not set sentinel values."""
+
+    _singleton = 0
+
+
+UNDEFINED = UndefinedType._singleton  # pylint: disable=protected-access

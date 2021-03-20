@@ -82,7 +82,7 @@ class HassIOAuth(HassIOBaseAuth):
                 data[ATTR_USERNAME], data[ATTR_PASSWORD]
             )
         except auth_ha.InvalidAuth:
-            raise HTTPUnauthorized() from None
+            raise HTTPNotFound() from None
 
         return web.Response(status=HTTP_OK)
 

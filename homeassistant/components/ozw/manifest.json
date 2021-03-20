@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ozw",
   "requirements": [
-    "python-openzwave-mqtt==1.3.2"
+    "python-openzwave-mqtt[mqtt-client]==1.4.0"
   ],
   "after_dependencies": [
     "mqtt"

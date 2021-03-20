@@ -1,6 +1,7 @@
 """The tests for Home Assistant frontend."""
 from datetime import timedelta
 import re
+from unittest.mock import patch
 
 import pytest
 
@@ -19,7 +20,6 @@ from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from tests.async_mock import patch
 from tests.common import async_capture_events, async_fire_time_changed
 
 CONFIG_THEMES = {
@@ -33,44 +33,67 @@ CONFIG_THEMES = {
 
 
 @pytest.fixture
-def mock_http_client(hass, aiohttp_client):
-    """Start the Home Assistant HTTP component."""
-    hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+async def ignore_frontend_deps(hass):
+    """Frontend dependencies."""
+    frontend = await async_get_integration(hass, "frontend")
+    for dep in frontend.dependencies:
+        if dep not in ("http", "websocket_api"):
+            hass.config.components.add(dep)
 
 
 @pytest.fixture
-def mock_http_client_with_themes(hass, aiohttp_client):
-    """Start the Home Assistant HTTP component."""
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            "frontend",
-            {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}},
-        )
+async def frontend(hass, ignore_frontend_deps):
+    """Frontend setup with themes."""
+    assert await async_setup_component(
+        hass,
+        "frontend",
+        {},
     )
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-def mock_http_client_with_urls(hass, aiohttp_client):
-    """Start the Home Assistant HTTP component."""
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            "frontend",
-            {
-                DOMAIN: {
-                    CONF_JS_VERSION: "auto",
-                    CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"],
-                    CONF_EXTRA_HTML_URL_ES5: [
-                        "https://domain.com/my_extra_url_es5.html"
-                    ],
-                }
-            },
-        )
+async def frontend_themes(hass):
+    """Frontend setup with themes."""
+    assert await async_setup_component(
+        hass,
+        "frontend",
+        CONFIG_THEMES,
     )
-    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
+
+
+@pytest.fixture
+async def mock_http_client(hass, aiohttp_client, frontend):
+    """Start the Home Assistant HTTP component."""
+    return await aiohttp_client(hass.http.app)
+
+
+@pytest.fixture
+async def themes_ws_client(hass, hass_ws_client, frontend_themes):
+    """Start the Home Assistant HTTP component."""
+    return await hass_ws_client(hass)
+
+
+@pytest.fixture
+async def ws_client(hass, hass_ws_client, frontend):
+    """Start the Home Assistant HTTP component."""
+    return await hass_ws_client(hass)
+
+
+@pytest.fixture
+async def mock_http_client_with_urls(hass, aiohttp_client, ignore_frontend_deps):
+    """Start the Home Assistant HTTP component."""
+    assert await async_setup_component(
+        hass,
+        "frontend",
+        {
+            DOMAIN: {
+                CONF_JS_VERSION: "auto",
+                CONF_EXTRA_HTML_URL: ["https://domain.com/my_extra_url.html"],
+                CONF_EXTRA_HTML_URL_ES5: ["https://domain.com/my_extra_url_es5.html"],
+            }
+        },
+    )
+    return await aiohttp_client(hass.http.app)
 
 
 @pytest.fixture
@@ -118,13 +141,10 @@ async def test_we_cannot_POST_to_root(mock_http_client):
     assert resp.status == 405
 
 
-async def test_themes_api(hass, hass_ws_client):
+async def test_themes_api(hass, themes_ws_client):
     """Test that /api/themes returns correct data."""
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
-
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
     assert msg["result"]["default_dark_theme"] is None
@@ -135,8 +155,8 @@ async def test_themes_api(hass, hass_ws_client):
 
     # safe mode
     hass.config.safe_mode = True
-    await client.send_json({"id": 6, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "safe_mode"
     assert msg["result"]["themes"] == {
@@ -144,9 +164,8 @@ async def test_themes_api(hass, hass_ws_client):
     }
 
 
-async def test_themes_persist(hass, hass_ws_client, hass_storage):
+async def test_themes_persist(hass, hass_storage, hass_ws_client, ignore_frontend_deps):
     """Test that theme settings are restores after restart."""
-
     hass_storage[THEMES_STORAGE_KEY] = {
         "key": THEMES_STORAGE_KEY,
         "version": 1,
@@ -157,25 +176,17 @@ async def test_themes_persist(hass, hass_ws_client, hass_storage):
     }
 
     assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
+    themes_ws_client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "happy"
     assert msg["result"]["default_dark_theme"] == "dark"
 
 
-async def test_themes_save_storage(hass, hass_storage):
+async def test_themes_save_storage(hass, hass_storage, frontend_themes):
     """Test that theme settings are restores after restart."""
-
-    hass_storage[THEMES_STORAGE_KEY] = {
-        "key": THEMES_STORAGE_KEY,
-        "version": 1,
-        "data": {},
-    }
-
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
 
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "happy"}, blocking=True
@@ -196,17 +207,14 @@ async def test_themes_save_storage(hass, hass_storage):
     }
 
 
-async def test_themes_set_theme(hass, hass_ws_client):
+async def test_themes_set_theme(hass, themes_ws_client):
     """Test frontend.set_theme service."""
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
-
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "happy"}, blocking=True
     )
 
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "happy"
 
@@ -214,8 +222,8 @@ async def test_themes_set_theme(hass, hass_ws_client):
         DOMAIN, "set_theme", {"name": "default"}, blocking=True
     )
 
-    await client.send_json({"id": 6, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
 
@@ -225,39 +233,35 @@ async def test_themes_set_theme(hass, hass_ws_client):
 
     await hass.services.async_call(DOMAIN, "set_theme", {"name": "none"}, blocking=True)
 
-    await client.send_json({"id": 7, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_themes_set_theme_wrong_name(hass, hass_ws_client):
+async def test_themes_set_theme_wrong_name(hass, themes_ws_client):
     """Test frontend.set_theme service called with wrong name."""
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
 
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
     )
 
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
-    msg = await client.receive_json()
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_themes_set_dark_theme(hass, hass_ws_client):
+async def test_themes_set_dark_theme(hass, themes_ws_client):
     """Test frontend.set_theme service called with dark mode."""
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
 
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "dark", "mode": "dark"}, blocking=True
     )
 
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] == "dark"
 
@@ -265,8 +269,8 @@ async def test_themes_set_dark_theme(hass, hass_ws_client):
         DOMAIN, "set_theme", {"name": "default", "mode": "dark"}, blocking=True
     )
 
-    await client.send_json({"id": 6, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] == "default"
 
@@ -274,32 +278,27 @@ async def test_themes_set_dark_theme(hass, hass_ws_client):
         DOMAIN, "set_theme", {"name": "none", "mode": "dark"}, blocking=True
     )
 
-    await client.send_json({"id": 7, "type": "frontend/get_themes"})
-    msg = await client.receive_json()
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] is None
 
 
-async def test_themes_set_dark_theme_wrong_name(hass, hass_ws_client):
+async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client):
     """Test frontend.set_theme service called with mode dark and wrong name."""
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
-
     await hass.services.async_call(
         DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
     )
 
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
-    msg = await client.receive_json()
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["default_dark_theme"] is None
 
 
-async def test_themes_reload_themes(hass, hass_ws_client):
+async def test_themes_reload_themes(hass, frontend, themes_ws_client):
     """Test frontend.reload_themes service."""
-    assert await async_setup_component(hass, "frontend", CONFIG_THEMES)
-    client = await hass_ws_client(hass)
 
     with patch(
         "homeassistant.components.frontend.async_hass_config_yaml",
@@ -310,22 +309,19 @@ async def test_themes_reload_themes(hass, hass_ws_client):
         )
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
-    msg = await client.receive_json()
+    msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["themes"] == {"sad": {"primary-color": "blue"}}
     assert msg["result"]["default_theme"] == "default"
 
 
-async def test_missing_themes(hass, hass_ws_client):
+async def test_missing_themes(hass, ws_client):
     """Test that themes API works when themes are not defined."""
-    await async_setup_component(hass, "frontend", {})
+    await ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
-    client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "frontend/get_themes"})
-
-    msg = await client.receive_json()
+    msg = await ws_client.receive_json()
 
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
@@ -372,10 +368,10 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     assert len(events) == 2
 
 
-async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
+async def test_get_panels_non_admin(hass, ws_client, hass_admin_user):
     """Test get_panels command."""
     hass_admin_user.groups = []
-    await async_setup_component(hass, "frontend", {})
+
     hass.components.frontend.async_register_built_in_panel(
         "map", "Map", "mdi:tooltip-account", require_admin=True
     )
@@ -383,10 +379,9 @@ async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
         "history", "History", "mdi:history"
     )
 
-    client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "get_panels"})
+    await ws_client.send_json({"id": 5, "type": "get_panels"})
 
-    msg = await client.receive_json()
+    msg = await ws_client.receive_json()
 
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
@@ -395,18 +390,15 @@ async def test_get_panels_non_admin(hass, hass_ws_client, hass_admin_user):
     assert "map" not in msg["result"]
 
 
-async def test_get_translations(hass, hass_ws_client):
+async def test_get_translations(hass, ws_client):
     """Test get_translations command."""
-    await async_setup_component(hass, "frontend", {})
-    client = await hass_ws_client(hass)
-
     with patch(
         "homeassistant.components.frontend.async_get_translations",
         side_effect=lambda hass, lang, category, integration, config_flow: {
             "lang": lang
         },
     ):
-        await client.send_json(
+        await ws_client.send_json(
             {
                 "id": 5,
                 "type": "frontend/get_translations",
@@ -414,7 +406,7 @@ async def test_get_translations(hass, hass_ws_client):
                 "category": "lang",
             }
         )
-        msg = await client.receive_json()
+        msg = await ws_client.receive_json()
 
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
@@ -422,16 +414,16 @@ async def test_get_translations(hass, hass_ws_client):
     assert msg["result"] == {"resources": {"lang": "nl"}}
 
 
-async def test_auth_load(mock_http_client, mock_onboarded):
+async def test_auth_load(hass):
     """Test auth component loaded by default."""
-    resp = await mock_http_client.get("/auth/providers")
-    assert resp.status == 200
+    frontend = await async_get_integration(hass, "frontend")
+    assert "auth" in frontend.dependencies
 
 
-async def test_onboarding_load(mock_http_client):
+async def test_onboarding_load(hass):
     """Test onboarding component loaded by default."""
-    resp = await mock_http_client.get("/api/onboarding")
-    assert resp.status == 200
+    frontend = await async_get_integration(hass, "frontend")
+    assert "onboarding" in frontend.dependencies
 
 
 async def test_auth_authorize(mock_http_client):
@@ -457,7 +449,7 @@ async def test_auth_authorize(mock_http_client):
     assert "public" in resp.headers.get("cache-control")
 
 
-async def test_get_version(hass, hass_ws_client):
+async def test_get_version(hass, ws_client):
     """Test get_version command."""
     frontend = await async_get_integration(hass, "frontend")
     cur_version = next(
@@ -466,11 +458,8 @@ async def test_get_version(hass, hass_ws_client):
         if req.startswith("home-assistant-frontend==")
     )
 
-    await async_setup_component(hass, "frontend", {})
-    client = await hass_ws_client(hass)
-
-    await client.send_json({"id": 5, "type": "frontend/get_version"})
-    msg = await client.receive_json()
+    await ws_client.send_json({"id": 5, "type": "frontend/get_version"})
+    msg = await ws_client.receive_json()
 
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT

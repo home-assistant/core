@@ -1,42 +1,87 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 from sqlalchemy.exc import OperationalError
 
 from homeassistant.components.recorder import (
+    CONF_DB_URL,
     CONFIG_SCHEMA,
+    DATA_INSTANCE,
     DOMAIN,
+    SERVICE_DISABLE,
+    SERVICE_ENABLE,
+    SERVICE_PURGE,
+    SQLITE_URL_PREFIX,
     Recorder,
     run_information,
     run_information_from_instance,
     run_information_with_session,
 )
-from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import Events, RecorderRuns, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import MATCH_ALL, STATE_LOCKED, STATE_UNLOCKED
-from homeassistant.core import Context, callback
-from homeassistant.setup import async_setup_component
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+)
+from homeassistant.core import Context, CoreState, callback
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import wait_recording_done
+from .common import (
+    async_wait_recording_done,
+    async_wait_recording_done_without_instance,
+    corrupt_db_file,
+    wait_recording_done,
+)
+from .conftest import SetupRecorderInstanceT
 
-from tests.async_mock import patch
-from tests.common import async_fire_time_changed, get_test_home_assistant
+from tests.common import (
+    async_init_recorder_component,
+    fire_time_changed,
+    get_test_home_assistant,
+)
 
 
-def test_saving_state(hass, hass_recorder):
+async def test_shutdown_before_startup_finishes(hass):
+    """Test shutdown before recorder starts is clean."""
+
+    hass.state = CoreState.not_running
+
+    await async_init_recorder_component(hass)
+    await hass.async_block_till_done()
+
+    session = await hass.async_add_executor_job(hass.data[DATA_INSTANCE].get_session)
+
+    with patch.object(hass.data[DATA_INSTANCE], "engine"):
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        await hass.async_stop()
+
+    run_info = await hass.async_add_executor_job(run_information_with_session, session)
+
+    assert run_info.run_id == 1
+    assert run_info.start is not None
+    assert run_info.end is not None
+
+
+async def test_saving_state(
+    hass: HomeAssistantType, async_setup_recorder_instance: SetupRecorderInstanceT
+):
     """Test saving and restoring a state."""
-    hass = hass_recorder()
+    instance = await async_setup_recorder_instance(hass)
 
     entity_id = "test.recorder"
     state = "restoring_from_db"
     attributes = {"test_attr": 5, "test_attr_10": "nice"}
 
-    hass.states.set(entity_id, state, attributes)
+    hass.states.async_set(entity_id, state, attributes)
 
-    wait_recording_done(hass)
+    await async_wait_recording_done(hass, instance)
 
     with session_scope(hass=hass) as session:
         db_states = list(session.query(States))
@@ -351,8 +396,15 @@ async def test_defaults_set(hass):
     assert recorder_config["purge_keep_days"] == 10
 
 
+def run_tasks_at_time(hass, test_time):
+    """Advance the clock and wait for any callbacks to finish."""
+    fire_time_changed(hass, test_time)
+    hass.block_till_done()
+    hass.data[DATA_INSTANCE].block_till_done()
+
+
 def test_auto_purge(hass_recorder):
-    """Test saving and restoring a state."""
+    """Test periodic purge alarm scheduling."""
     hass = hass_recorder()
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
@@ -360,18 +412,40 @@ def test_auto_purge(hass_recorder):
     tz = dt_util.get_time_zone("Europe/Copenhagen")
     dt_util.set_default_time_zone(tz)
 
+    # Purging is schedule to happen at 4:12am every day. Exercise this behavior
+    # by firing alarms and advancing the clock around this time. Pick an arbitrary
+    # year in the future to avoid boundary conditions relative to the current date.
+    #
+    # The clock is started at 4:15am then advanced forward below
     now = dt_util.utcnow()
-    test_time = tz.localize(datetime(now.year + 1, 1, 1, 4, 12, 0))
-    async_fire_time_changed(hass, test_time)
+    test_time = tz.localize(datetime(now.year + 2, 1, 1, 4, 15, 0))
+    run_tasks_at_time(hass, test_time)
 
     with patch(
         "homeassistant.components.recorder.purge.purge_old_data", return_value=True
     ) as purge_old_data:
-        for delta in (-1, 0, 1):
-            async_fire_time_changed(hass, test_time + timedelta(seconds=delta))
-            hass.block_till_done()
-            hass.data[DATA_INSTANCE].block_till_done()
+        # Advance one day, and the purge task should run
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
 
+        purge_old_data.reset_mock()
+
+        # Advance one day, and the purge task should run again
+        test_time = test_time + timedelta(days=1)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 1
+
+        purge_old_data.reset_mock()
+
+        # Advance less than one full day.  The alarm should not yet fire.
+        test_time = test_time + timedelta(hours=23)
+        run_tasks_at_time(hass, test_time)
+        assert len(purge_old_data.mock_calls) == 0
+
+        # Advance to the next day and fire the alarm again
+        test_time = test_time + timedelta(hours=1)
+        run_tasks_at_time(hass, test_time)
         assert len(purge_old_data.mock_calls) == 1
 
     dt_util.set_default_time_zone(original_tz)
@@ -457,5 +531,203 @@ def test_run_information(hass_recorder):
     assert run_info.closed_incorrect is False
 
 
+def test_has_services(hass_recorder):
+    """Test the services exist."""
+    hass = hass_recorder()
+
+    assert hass.services.has_service(DOMAIN, SERVICE_DISABLE)
+    assert hass.services.has_service(DOMAIN, SERVICE_ENABLE)
+    assert hass.services.has_service(DOMAIN, SERVICE_PURGE)
+
+
+def test_service_disable_events_not_recording(hass, hass_recorder):
+    """Test that events are not recorded when recorder is disabled using service."""
+    hass = hass_recorder()
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_DISABLE,
+        {},
+        blocking=True,
+    )
+
+    event_type = "EVENT_TEST"
+
+    events = []
+
+    @callback
+    def event_listener(event):
+        """Record events from eventbus."""
+        if event.event_type == event_type:
+            events.append(event)
+
+    hass.bus.listen(MATCH_ALL, event_listener)
+
+    event_data1 = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire(event_type, event_data1)
+    wait_recording_done(hass)
+
+    assert len(events) == 1
+    event = events[0]
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        assert len(db_events) == 0
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_ENABLE,
+        {},
+        blocking=True,
+    )
+
+    event_data2 = {"attr_one": 5, "attr_two": "nice"}
+    hass.bus.fire(event_type, event_data2)
+    wait_recording_done(hass)
+
+    assert len(events) == 2
+    assert events[0] != events[1]
+    assert events[0].data != events[1].data
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        assert len(db_events) == 1
+        db_event = db_events[0].to_native()
+
+    event = events[1]
+
+    assert event.event_type == db_event.event_type
+    assert event.data == db_event.data
+    assert event.origin == db_event.origin
+    assert event.time_fired.replace(microsecond=0) == db_event.time_fired.replace(
+        microsecond=0
+    )
+
+
+def test_service_disable_states_not_recording(hass, hass_recorder):
+    """Test that state changes are not recorded when recorder is disabled using service."""
+    hass = hass_recorder()
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_DISABLE,
+        {},
+        blocking=True,
+    )
+
+    hass.states.set("test.one", "on", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        assert len(list(session.query(States))) == 0
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_ENABLE,
+        {},
+        blocking=True,
+    )
+
+    hass.states.set("test.two", "off", {})
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_states = list(session.query(States))
+        assert len(db_states) == 1
+        assert db_states[0].event_id > 0
+        assert db_states[0].to_native() == _state_empty_context(hass, "test.two")
+
+
+def test_service_disable_run_information_recorded(tmpdir):
+    """Test that runs are still recorded when recorder is disabled."""
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    hass = get_test_home_assistant()
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_run_info = list(session.query(RecorderRuns))
+        assert len(db_run_info) == 1
+        assert db_run_info[0].start is not None
+        assert db_run_info[0].end is None
+
+    assert hass.services.call(
+        DOMAIN,
+        SERVICE_DISABLE,
+        {},
+        blocking=True,
+    )
+
+    wait_recording_done(hass)
+    hass.stop()
+
+    hass = get_test_home_assistant()
+    setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    hass.start()
+    wait_recording_done(hass)
+
+    with session_scope(hass=hass) as session:
+        db_run_info = list(session.query(RecorderRuns))
+        assert len(db_run_info) == 2
+        assert db_run_info[0].start is not None
+        assert db_run_info[0].end is not None
+        assert db_run_info[1].start is not None
+        assert db_run_info[1].end is None
+
+    hass.stop()
+
+
 class CannotSerializeMe:
     """A class that the JSONEncoder cannot serialize."""
+
+
+async def test_database_corruption_while_running(hass, tmpdir, caplog):
+    """Test we can recover from sqlite3 db corruption."""
+
+    def _create_tmpdir_for_test_db():
+        return tmpdir.mkdir("sqlite").join("test.db")
+
+    test_db_file = await hass.async_add_executor_job(_create_tmpdir_for_test_db)
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_DB_URL: dburl}})
+    await hass.async_block_till_done()
+    caplog.clear()
+
+    hass.states.async_set("test.lost", "on", {})
+
+    await async_wait_recording_done_without_instance(hass)
+    await hass.async_add_executor_job(corrupt_db_file, test_db_file)
+    await async_wait_recording_done_without_instance(hass)
+
+    # This state will not be recorded because
+    # the database corruption will be discovered
+    # and we will have to rollback to recover
+    hass.states.async_set("test.one", "off", {})
+    await async_wait_recording_done_without_instance(hass)
+
+    assert "Unrecoverable sqlite3 database corruption detected" in caplog.text
+    assert "The system will rename the corrupt database file" in caplog.text
+    assert "Connected to recorder database" in caplog.text
+
+    # This state should go into the new database
+    hass.states.async_set("test.two", "on", {})
+    await async_wait_recording_done_without_instance(hass)
+
+    def _get_last_state():
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(States))
+            assert len(db_states) == 1
+            assert db_states[0].event_id > 0
+            return db_states[0].to_native()
+
+    state = await hass.async_add_executor_job(_get_last_state)
+    assert state.entity_id == "test.two"
+    assert state.state == "on"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    hass.stop()

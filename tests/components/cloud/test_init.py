@@ -1,5 +1,7 @@
 """Test the cloud component."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import cloud
@@ -9,8 +11,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import patch
 
 
 async def test_constructor_loads_info_from_config(hass):

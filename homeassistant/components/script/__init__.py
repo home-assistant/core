@@ -1,12 +1,14 @@
 """Support for scripts."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import List
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_NAME,
     CONF_ALIAS,
     CONF_ICON,
@@ -27,7 +29,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.script import (
     ATTR_CUR,
     ATTR_MAX,
-    ATTR_MODE,
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     SCRIPT_MODE_SINGLE,
@@ -89,7 +90,7 @@ def is_on(hass, entity_id):
 
 
 @callback
-def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all scripts that reference the entity."""
     if DOMAIN not in hass.data:
         return []
@@ -104,7 +105,7 @@ def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all entities in script."""
     if DOMAIN not in hass.data:
         return []
@@ -120,7 +121,7 @@ def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
 
 
 @callback
-def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+def scripts_with_device(hass: HomeAssistant, device_id: str) -> list[str]:
     """Return all scripts that reference the device."""
     if DOMAIN not in hass.data:
         return []
@@ -135,7 +136,7 @@ def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
 
 
 @callback
-def devices_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
     """Return all devices in script."""
     if DOMAIN not in hass.data:
         return []
@@ -181,7 +182,10 @@ async def async_setup(hass, config):
             return
 
         await asyncio.wait(
-            [script_entity.async_turn_off() for script_entity in script_entities]
+            [
+                asyncio.create_task(script_entity.async_turn_off())
+                for script_entity in script_entities
+            ]
         )
 
     async def toggle_service(service):
@@ -305,7 +309,11 @@ class ScriptEntity(ToggleEntity):
         self._changed.set()
 
     async def async_turn_on(self, **kwargs):
-        """Turn the script on."""
+        """Run the script.
+
+        Depending on the script's run mode, this may do nothing, restart the script or
+        fire an additional parallel run.
+        """
         variables = kwargs.get("variables")
         context = kwargs.get("context")
         wait = kwargs.get("wait", True)
@@ -328,7 +336,10 @@ class ScriptEntity(ToggleEntity):
         await self._changed.wait()
 
     async def async_turn_off(self, **kwargs):
-        """Turn script off."""
+        """Stop running the script.
+
+        If multiple runs are in progress, all will be stopped.
+        """
         await self.script.async_stop()
 
     async def async_will_remove_from_hass(self):

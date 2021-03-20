@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u8a2d\u5099\u3002"
+            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
@@ -27,9 +27,15 @@
                 "data": {
                     "forecast": "\u5929\u6c23\u9810\u5831"
                 },
-                "description": "\u7531\u65bc AccuWeather API \u5bc6\u9470\u514d\u8cbb\u7248\u672c\u9650\u5236\uff0c\u7576\u958b\u555f\u5929\u6c23\u9810\u5831\u6642\u3001\u6578\u64da\u6703\u6bcf 64 \u5206\u9418\u66f4\u65b0\u4e00\u6b21\uff0c\u800c\u975e 32 \u5206\u9418\u3002",
+                "description": "\u7531\u65bc AccuWeather API \u5bc6\u9470\u514d\u8cbb\u7248\u672c\u9650\u5236\uff0c\u7576\u958b\u555f\u5929\u6c23\u9810\u5831\u6642\u3001\u6578\u64da\u6703\u6bcf 80 \u5206\u9418\u66f4\u65b0\u4e00\u6b21\uff0c\u800c\u975e 40 \u5206\u9418\u3002",
                 "title": "AccuWeather \u9078\u9805"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "\u9023\u7dda AccuWeather \u4f3a\u670d\u5668",
+            "remaining_requests": "\u5176\u9918\u5141\u8a31\u7684\u8acb\u6c42"
         }
     }
 }

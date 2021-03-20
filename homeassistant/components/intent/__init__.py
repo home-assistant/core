@@ -9,8 +9,6 @@ from homeassistant.helpers import config_validation as cv, integration_platform,
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
-
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Intent component."""

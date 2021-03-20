@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from os import path
 import statistics
 import unittest
+from unittest.mock import patch
 
 import pytest
 
@@ -18,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import (
     fire_time_changed,
     get_test_home_assistant,
@@ -115,7 +115,7 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.mean == state.attributes.get("mean")
         assert self.count == state.attributes.get("count")
         assert self.total == state.attributes.get("total")
-        assert TEMP_CELSIUS == state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
         assert self.change == state.attributes.get("change")
         assert self.average_change == state.attributes.get("average_change")
 
@@ -146,8 +146,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get("sensor.test")
 
-        assert 3.8 == state.attributes.get("min_value")
-        assert 14 == state.attributes.get("max_value")
+        assert state.attributes.get("min_value") == 3.8
+        assert state.attributes.get("max_value") == 14
 
     def test_sampling_size_1(self):
         """Test validity of stats requiring only one sample."""
@@ -182,12 +182,12 @@ class TestStatisticsSensor(unittest.TestCase):
         assert self.values[-1] == state.attributes.get("mean")
         assert self.values[-1] == state.attributes.get("median")
         assert self.values[-1] == state.attributes.get("total")
-        assert 0 == state.attributes.get("change")
-        assert 0 == state.attributes.get("average_change")
+        assert state.attributes.get("change") == 0
+        assert state.attributes.get("average_change") == 0
 
         # require at least two data points
-        assert STATE_UNKNOWN == state.attributes.get("variance")
-        assert STATE_UNKNOWN == state.attributes.get("standard_deviation")
+        assert state.attributes.get("variance") == STATE_UNKNOWN
+        assert state.attributes.get("standard_deviation") == STATE_UNKNOWN
 
     def test_max_age(self):
         """Test value deprecation."""
@@ -231,8 +231,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get("sensor.test")
 
-        assert 6 == state.attributes.get("min_value")
-        assert 14 == state.attributes.get("max_value")
+        assert state.attributes.get("min_value") == 6
+        assert state.attributes.get("max_value") == 14
 
     def test_max_age_without_sensor_change(self):
         """Test value deprecation."""
@@ -276,8 +276,8 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get("sensor.test")
 
-            assert 3.8 == state.attributes.get("min_value")
-            assert 15.2 == state.attributes.get("max_value")
+            assert state.attributes.get("min_value") == 3.8
+            assert state.attributes.get("max_value") == 15.2
 
             # wait for 3 minutes (max_age).
             mock_data["return_time"] += timedelta(minutes=3)

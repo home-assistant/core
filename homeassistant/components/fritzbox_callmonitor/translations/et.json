@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "insufficient_permissions": "Kasutajal ei ole piisavalt \u00f5igusi juurdep\u00e4\u00e4suks AVM FRITZ! Box'i seadetele jatelefoniraamatutele.",
+            "no_devices_found": "V\u00f5rgust ei leitud \u00fchtegi seadet"
+        },
+        "error": {
+            "invalid_auth": "Vigane autentimine"
+        },
+        "flow_title": "AVM FRITZ! K\u00f5nekontroll: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Telefoniraamat"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Eesliited on valesti vormindatud, kontrolli nende vormingut."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Eesliited (komadega eraldatud loend)"
+                },
+                "title": "Eesliidete seadistamine"
+            }
+        }
+    }
+}

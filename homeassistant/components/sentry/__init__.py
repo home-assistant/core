@@ -1,6 +1,7 @@
 """The sentry integration."""
+from __future__ import annotations
+
 import re
-from typing import Dict, Union
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -33,7 +34,7 @@ from .const import (
     ENTITY_COMPONENTS,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.117")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
@@ -126,8 +127,8 @@ def process_before_send(
     options,
     channel: str,
     huuid: str,
-    system_info: Dict[str, Union[bool, str]],
-    custom_components: Dict[str, Integration],
+    system_info: dict[str, bool | str],
+    custom_components: dict[str, Integration],
     event,
     hint,
 ):

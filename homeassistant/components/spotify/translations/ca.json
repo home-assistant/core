@@ -18,5 +18,10 @@
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "api_endpoint_reachable": "Endpoint de l'API d'Spotify accessible"
+        }
     }
 }

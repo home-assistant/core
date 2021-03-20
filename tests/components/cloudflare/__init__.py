@@ -1,12 +1,13 @@
 """Tests for the Cloudflare integration."""
-from typing import List
+from __future__ import annotations
+
+from unittest.mock import AsyncMock, patch
 
 from pycfdns import CFRecord
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 
-from tests.async_mock import AsyncMock, patch
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
@@ -71,7 +72,7 @@ async def init_integration(
 def _get_mock_cfupdate(
     zone: str = MOCK_ZONE,
     zone_id: str = MOCK_ZONE_ID,
-    records: List = MOCK_ZONE_RECORDS,
+    records: list = MOCK_ZONE_RECORDS,
 ):
     client = AsyncMock()
 

@@ -31,5 +31,11 @@
                 "title": "AccuWeather Optiounen"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "AccuWeather Server ereechbar",
+            "remaining_requests": "Rescht vun erlaabten Ufroen"
+        }
     }
 }

@@ -1,4 +1,6 @@
 """The test for the geo rss events sensor platform."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from homeassistant.components import sensor
@@ -12,7 +14,6 @@ from homeassistant.const import (
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import MagicMock, patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 URL = "http://geo.rss.local/geo_rss_events.xml"

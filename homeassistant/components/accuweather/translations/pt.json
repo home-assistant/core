@@ -10,9 +10,10 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Chave de API",
+                    "api_key": "API Key",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "longitude": "Longitude",
+                    "name": "Nome"
                 }
             }
         }

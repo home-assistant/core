@@ -50,10 +50,7 @@ async def async_setup_entry(
                 )
             )
 
-    async_add_entities(
-        entities,
-        True,
-    )
+    async_add_entities(entities, True)
 
 
 class OVOEnergySensor(OVOEnergyDeviceEntity):
@@ -103,7 +100,7 @@ class OVOEnergyLastElectricityReading(OVOEnergySensor):
         return usage.electricity[-1].consumption
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -138,7 +135,7 @@ class OVOEnergyLastGasReading(OVOEnergySensor):
         return usage.gas[-1].consumption
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:
@@ -174,7 +171,7 @@ class OVOEnergyLastElectricityCost(OVOEnergySensor):
         return usage.electricity[-1].cost.amount
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.electricity:
@@ -210,7 +207,7 @@ class OVOEnergyLastGasCost(OVOEnergySensor):
         return usage.gas[-1].cost.amount
 
     @property
-    def device_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> object:
         """Return the attributes of the sensor."""
         usage: OVODailyUsage = self.coordinator.data
         if usage is None or not usage.gas:

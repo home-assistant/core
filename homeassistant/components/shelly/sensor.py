@@ -1,6 +1,4 @@
 """Sensor for Shelly."""
-import logging
-
 from homeassistant.components import sensor
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -14,27 +12,25 @@ from homeassistant.const import (
     VOLT,
 )
 
-from . import ShellyDeviceWrapper, get_device_name
-from .const import DATA_CONFIG_ENTRY, DOMAIN, REST, SHAIR_MAX_WORK_HOURS
+from .const import SHAIR_MAX_WORK_HOURS
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,
     ShellyBlockAttributeEntity,
     ShellyRestAttributeEntity,
+    ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
 )
-from .utils import async_remove_entity_by_domain, temperature_unit
-
-_LOGGER = logging.getLogger(__name__)
-
-BATTERY_SENSOR = {
-    ("device", "battery"): BlockAttributeDescription(
-        name="Battery", unit=PERCENTAGE, device_class=sensor.DEVICE_CLASS_BATTERY
-    ),
-}
+from .utils import get_device_uptime, temperature_unit
 
 SENSORS = {
+    ("device", "battery"): BlockAttributeDescription(
+        name="Battery",
+        unit=PERCENTAGE,
+        device_class=sensor.DEVICE_CLASS_BATTERY,
+        removal_condition=lambda settings, _: settings.get("external_power") == 1,
+    ),
     ("device", "deviceTemp"): BlockAttributeDescription(
         name="Device Temperature",
         unit=temperature_unit,
@@ -153,15 +149,25 @@ SENSORS = {
         unit=LIGHT_LUX,
         device_class=sensor.DEVICE_CLASS_ILLUMINANCE,
     ),
-    ("sensor", "tilt"): BlockAttributeDescription(name="Tilt", unit=DEGREE),
+    ("sensor", "tilt"): BlockAttributeDescription(
+        name="Tilt",
+        unit=DEGREE,
+        icon="mdi:angle-acute",
+    ),
     ("relay", "totalWorkTime"): BlockAttributeDescription(
-        name="Lamp life",
+        name="Lamp Life",
         unit=PERCENTAGE,
         icon="mdi:progress-wrench",
         value=lambda value: round(100 - (value / 3600 / SHAIR_MAX_WORK_HOURS), 1),
-        device_state_attributes=lambda block: {
+        extra_state_attributes=lambda block: {
             "Operational hours": round(block.totalWorkTime / 3600, 1)
         },
+    ),
+    ("adc", "adc"): BlockAttributeDescription(
+        name="ADC",
+        unit=VOLT,
+        value=lambda value: round(value, 1),
+        device_class=sensor.DEVICE_CLASS_VOLTAGE,
     ),
 }
 
@@ -169,48 +175,32 @@ REST_SENSORS = {
     "rssi": RestAttributeDescription(
         name="RSSI",
         unit=SIGNAL_STRENGTH_DECIBELS,
+        value=lambda status, _: status["wifi_sta"]["rssi"],
         device_class=sensor.DEVICE_CLASS_SIGNAL_STRENGTH,
         default_enabled=False,
-        path="wifi_sta/rssi",
     ),
     "uptime": RestAttributeDescription(
         name="Uptime",
+        value=get_device_uptime,
         device_class=sensor.DEVICE_CLASS_TIMESTAMP,
-        path="uptime",
+        default_enabled=False,
     ),
 }
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for device."""
-
-    wrapper: ShellyDeviceWrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][
-        config_entry.entry_id
-    ][REST]
-
-    if (
-        "external_power" in wrapper.device.settings
-        and wrapper.device.settings["external_power"] == 1
-    ):
-        _LOGGER.debug(
-            "Removed battery sensor [externally powered] for %s",
-            get_device_name(wrapper.device),
-        )
-        unique_id = f'{wrapper.device.shelly["mac"]}-battery'
-        await async_remove_entity_by_domain(
-            hass, "sensor", unique_id, config_entry.entry_id
+    if config_entry.data["sleep_period"]:
+        await async_setup_entry_attribute_entities(
+            hass, config_entry, async_add_entities, SENSORS, ShellySleepingSensor
         )
     else:
         await async_setup_entry_attribute_entities(
-            hass, config_entry, async_add_entities, BATTERY_SENSOR, ShellySensor
+            hass, config_entry, async_add_entities, SENSORS, ShellySensor
         )
-
-    await async_setup_entry_attribute_entities(
-        hass, config_entry, async_add_entities, SENSORS, ShellySensor
-    )
-    await async_setup_entry_rest(
-        hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
-    )
+        await async_setup_entry_rest(
+            hass, config_entry, async_add_entities, REST_SENSORS, ShellyRestSensor
+        )
 
 
 class ShellySensor(ShellyBlockAttributeEntity):
@@ -229,3 +219,15 @@ class ShellyRestSensor(ShellyRestAttributeEntity):
     def state(self):
         """Return value of sensor."""
         return self.attribute_value
+
+
+class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
+    """Represent a shelly sleeping sensor."""
+
+    @property
+    def state(self):
+        """Return value of sensor."""
+        if self.block is not None:
+            return self.attribute_value
+
+        return self.last_state

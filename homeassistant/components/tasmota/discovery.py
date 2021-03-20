@@ -144,7 +144,9 @@ async def async_start(
 
         orphaned_entities = {
             entry.unique_id
-            for entry in async_entries_for_device(entity_registry, device.id)
+            for entry in async_entries_for_device(
+                entity_registry, device.id, include_disabled_entities=True
+            )
             if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
         }
         for (tasmota_sensor_config, discovery_hash) in sensors:

@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "host": "Host",
                     "name": "Naam",
                     "password": "Wachtwoord",
                     "port": "Poort",
@@ -19,6 +20,15 @@
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "title": "Maak verbinding met NZBGet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequentie (seconden)"
+                }
             }
         }
     }

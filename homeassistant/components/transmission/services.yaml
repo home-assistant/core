@@ -20,3 +20,23 @@ remove_torrent:
     delete_data:
       description: Delete torrent data
       example: false
+
+start_torrent:
+  description: Start a torrent
+  fields:
+    name:
+      description: Instance name as entered during entry config
+      example: Transmission
+    id:
+      description: ID of a torrent
+      example: 123
+
+stop_torrent:
+  description: Stop a torrent
+  fields:
+    name:
+      description: Instance name as entered during entry config
+      example: Transmission
+    id:
+      description: ID of a torrent
+      example: 123

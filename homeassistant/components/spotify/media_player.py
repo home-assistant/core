@@ -1,9 +1,11 @@
 """Support for interacting with Spotify Connect."""
+from __future__ import annotations
+
 from asyncio import run_coroutine_threadsafe
 import datetime as dt
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 import requests
 from spotipy import Spotify, SpotifyException
@@ -25,12 +27,16 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
+    REPEAT_MODE_ALL,
+    REPEAT_MODE_OFF,
+    REPEAT_MODE_ONE,
     SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
@@ -71,11 +77,22 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_PLAY
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_REPEAT_SET
     | SUPPORT_SEEK
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_VOLUME_SET
 )
+
+REPEAT_MODE_MAPPING_TO_HA = {
+    "context": REPEAT_MODE_ALL,
+    "off": REPEAT_MODE_OFF,
+    "track": REPEAT_MODE_ONE,
+}
+
+REPEAT_MODE_MAPPING_TO_SPOTIFY = {
+    value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
+}
 
 BROWSE_LIMIT = 48
 
@@ -170,7 +187,7 @@ class UnknownMediaType(BrowseError):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Spotify based on a config entry."""
     spotify = SpotifyMediaPlayer(
@@ -222,9 +239,9 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
             SPOTIFY_SCOPES
         )
 
-        self._currently_playing: Optional[dict] = {}
-        self._devices: Optional[List[dict]] = []
-        self._playlist: Optional[dict] = None
+        self._currently_playing: dict | None = {}
+        self._devices: list[dict] | None = []
+        self._playlist: dict | None = None
         self._spotify: Spotify = None
 
         self.player_available = False
@@ -250,7 +267,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return self._id
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information about this entity."""
         if self._me is not None:
             model = self._me["product"]
@@ -263,7 +280,7 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         }
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the playback state."""
         if not self._currently_playing:
             return STATE_IDLE
@@ -272,44 +289,44 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return STATE_PAUSED
 
     @property
-    def volume_level(self) -> Optional[float]:
+    def volume_level(self) -> float | None:
         """Return the device volume."""
         return self._currently_playing.get("device", {}).get("volume_percent", 0) / 100
 
     @property
-    def media_content_id(self) -> Optional[str]:
+    def media_content_id(self) -> str | None:
         """Return the media URL."""
         item = self._currently_playing.get("item") or {}
         return item.get("uri")
 
     @property
-    def media_content_type(self) -> Optional[str]:
+    def media_content_type(self) -> str | None:
         """Return the media type."""
         return MEDIA_TYPE_MUSIC
 
     @property
-    def media_duration(self) -> Optional[int]:
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         if self._currently_playing.get("item") is None:
             return None
         return self._currently_playing["item"]["duration_ms"] / 1000
 
     @property
-    def media_position(self) -> Optional[str]:
+    def media_position(self) -> str | None:
         """Position of current playing media in seconds."""
         if not self._currently_playing:
             return None
         return self._currently_playing["progress_ms"] / 1000
 
     @property
-    def media_position_updated_at(self) -> Optional[dt.datetime]:
+    def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
         if not self._currently_playing:
             return None
         return utc_from_timestamp(self._currently_playing["timestamp"] / 1000)
 
     @property
-    def media_image_url(self) -> Optional[str]:
+    def media_image_url(self) -> str | None:
         """Return the media image URL."""
         if (
             self._currently_playing.get("item") is None
@@ -324,13 +341,13 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return False
 
     @property
-    def media_title(self) -> Optional[str]:
+    def media_title(self) -> str | None:
         """Return the media title."""
         item = self._currently_playing.get("item") or {}
         return item.get("name")
 
     @property
-    def media_artist(self) -> Optional[str]:
+    def media_artist(self) -> str | None:
         """Return the media artist."""
         if self._currently_playing.get("item") is None:
             return None
@@ -339,14 +356,14 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         )
 
     @property
-    def media_album_name(self) -> Optional[str]:
+    def media_album_name(self) -> str | None:
         """Return the media album."""
         if self._currently_playing.get("item") is None:
             return None
         return self._currently_playing["item"]["album"]["name"]
 
     @property
-    def media_track(self) -> Optional[int]:
+    def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
         item = self._currently_playing.get("item") or {}
         return item.get("track_number")
@@ -359,12 +376,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
         return self._playlist["name"]
 
     @property
-    def source(self) -> Optional[str]:
+    def source(self) -> str | None:
         """Return the current playback device."""
         return self._currently_playing.get("device", {}).get("name")
 
     @property
-    def source_list(self) -> Optional[List[str]]:
+    def source_list(self) -> list[str] | None:
         """Return a list of source devices."""
         if not self._devices:
             return None
@@ -374,6 +391,12 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def shuffle(self) -> bool:
         """Shuffling state."""
         return bool(self._currently_playing.get("shuffle_state"))
+
+    @property
+    def repeat(self) -> str | None:
+        """Return current repeat mode."""
+        repeat_state = self._currently_playing.get("repeat_state")
+        return REPEAT_MODE_MAPPING_TO_HA.get(repeat_state)
 
     @property
     def supported_features(self) -> int:
@@ -448,6 +471,13 @@ class SpotifyMediaPlayer(MediaPlayerEntity):
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         self._spotify.shuffle(shuffle)
+
+    @spotify_exception_handler
+    def set_repeat(self, repeat: str) -> None:
+        """Set repeat mode."""
+        if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
+            raise ValueError(f"Unsupported repeat mode: {repeat}")
+        self._spotify.repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
 
     @spotify_exception_handler
     def update(self) -> None:

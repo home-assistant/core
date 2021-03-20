@@ -1,10 +1,11 @@
 """Tests for the Gree Integration."""
 
+from unittest.mock import patch
+
 from homeassistant.components.gree.const import DOMAIN as GREE_DOMAIN
 from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 

@@ -1,4 +1,6 @@
 """Test the solarlog config flow."""
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -6,7 +8,6 @@ from homeassistant.components.solarlog import config_flow
 from homeassistant.components.solarlog.const import DEFAULT_HOST, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 NAME = "Solarlog test 1 2 3"

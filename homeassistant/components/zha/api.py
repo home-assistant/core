@@ -11,6 +11,7 @@ from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
+from homeassistant.const import ATTR_COMMAND, ATTR_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -20,14 +21,12 @@ from .core.const import (
     ATTR_ATTRIBUTE,
     ATTR_CLUSTER_ID,
     ATTR_CLUSTER_TYPE,
-    ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LEVEL,
     ATTR_MANUFACTURER,
     ATTR_MEMBERS,
-    ATTR_NAME,
     ATTR_VALUE,
     ATTR_WARNING_DEVICE_DURATION,
     ATTR_WARNING_DEVICE_MODE,
@@ -467,6 +466,19 @@ async def websocket_reconfigure_node(hass, connection, msg):
     device = zha_gateway.get_device(ieee)
     _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
     hass.async_create_task(device.async_configure())
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/topology/update",
+    }
+)
+async def websocket_update_topology(hass, connection, msg):
+    """Update the ZHA network topology."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    hass.async_create_task(zha_gateway.application_controller.topology.scan())
 
 
 @websocket_api.require_admin
@@ -1143,6 +1155,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_get_bindable_devices)
     websocket_api.async_register_command(hass, websocket_bind_devices)
     websocket_api.async_register_command(hass, websocket_unbind_devices)
+    websocket_api.async_register_command(hass, websocket_update_topology)
 
 
 @callback

@@ -1,6 +1,7 @@
 """The tests for the Template Binary sensor platform."""
 from datetime import timedelta
 import logging
+from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components import binary_sensor
@@ -14,7 +15,6 @@ from homeassistant.const import (
 from homeassistant.core import CoreState
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_fire_time_changed
 
 

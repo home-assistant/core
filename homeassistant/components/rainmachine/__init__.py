@@ -6,7 +6,6 @@ from functools import partial
 from regenmaschine import Client
 from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,10 +15,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -35,14 +33,9 @@ from .const import (
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
-    DEFAULT_ZONE_RUN,
     DOMAIN,
     LOGGER,
 )
-
-CONF_PROGRAM_ID = "program_id"
-CONF_SECONDS = "seconds"
-CONF_ZONE_ID = "zone_id"
 
 DATA_LISTENER = "listener"
 
@@ -51,30 +44,7 @@ DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
-SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
-
-SERVICE_ALTER_ZONE = vol.Schema({vol.Required(CONF_ZONE_ID): cv.positive_int})
-
-SERVICE_PAUSE_WATERING = vol.Schema({vol.Required(CONF_SECONDS): cv.positive_int})
-
-SERVICE_START_PROGRAM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
-)
-
-SERVICE_START_ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ZONE_ID): cv.positive_int,
-        vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN): cv.positive_int,
-    }
-)
-
-SERVICE_STOP_PROGRAM_SCHEMA = vol.Schema(
-    {vol.Required(CONF_PROGRAM_ID): cv.positive_int}
-)
-
-SERVICE_STOP_ZONE_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_ID): cv.positive_int})
-
-CONFIG_SCHEMA = cv.deprecated(DOMAIN, invalidation_version="0.119")
+CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 PLATFORMS = ["binary_sensor", "sensor", "switch"]
 
@@ -124,8 +94,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
-
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
@@ -187,93 +155,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await asyncio.gather(*controller_init_tasks)
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-
-    @_verify_domain_control
-    async def disable_program(call: ServiceCall):
-        """Disable a program."""
-        await controller.programs.disable(call.data[CONF_PROGRAM_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def disable_zone(call: ServiceCall):
-        """Disable a zone."""
-        await controller.zones.disable(call.data[CONF_ZONE_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def enable_program(call: ServiceCall):
-        """Enable a program."""
-        await controller.programs.enable(call.data[CONF_PROGRAM_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def enable_zone(call: ServiceCall):
-        """Enable a zone."""
-        await controller.zones.enable(call.data[CONF_ZONE_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def pause_watering(call: ServiceCall):
-        """Pause watering for a set number of seconds."""
-        await controller.watering.pause_all(call.data[CONF_SECONDS])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def start_program(call: ServiceCall):
-        """Start a particular program."""
-        await controller.programs.start(call.data[CONF_PROGRAM_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def start_zone(call: ServiceCall):
-        """Start a particular zone for a certain amount of time."""
-        await controller.zones.start(
-            call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME]
-        )
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def stop_all(call: ServiceCall):
-        """Stop all watering."""
-        await controller.watering.stop_all()
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def stop_program(call: ServiceCall):
-        """Stop a program."""
-        await controller.programs.stop(call.data[CONF_PROGRAM_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def stop_zone(call: ServiceCall):
-        """Stop a zone."""
-        await controller.zones.stop(call.data[CONF_ZONE_ID])
-        await async_update_programs_and_zones(hass, entry)
-
-    @_verify_domain_control
-    async def unpause_watering(call: ServiceCall):
-        """Unpause watering."""
-        await controller.watering.unpause_all()
-        await async_update_programs_and_zones(hass, entry)
-
-    for service, method, schema in [
-        ("disable_program", disable_program, SERVICE_ALTER_PROGRAM),
-        ("disable_zone", disable_zone, SERVICE_ALTER_ZONE),
-        ("enable_program", enable_program, SERVICE_ALTER_PROGRAM),
-        ("enable_zone", enable_zone, SERVICE_ALTER_ZONE),
-        ("pause_watering", pause_watering, SERVICE_PAUSE_WATERING),
-        ("start_program", start_program, SERVICE_START_PROGRAM_SCHEMA),
-        ("start_zone", start_zone, SERVICE_START_ZONE_SCHEMA),
-        ("stop_all", stop_all, {}),
-        ("stop_program", stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
-        ("stop_zone", stop_zone, SERVICE_STOP_ZONE_SCHEMA),
-        ("unpause_watering", unpause_watering, {}),
-    ]:
-        hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     hass.data[DOMAIN][DATA_LISTENER] = entry.add_update_listener(async_reload_entry)
 
@@ -285,8 +170,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -340,7 +225,7 @@ class RainMachineEntity(CoordinatorEntity):
         }
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attrs
 
