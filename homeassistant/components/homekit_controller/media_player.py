@@ -93,9 +93,11 @@ class HomeKitTelevision(HomeKitEntity, MediaPlayerEntity):
             if TargetMediaStateValues.STOP in self.supported_media_states:
                 features |= SUPPORT_STOP
 
-        if self.service.has(CharacteristicsTypes.REMOTE_KEY):
-            if RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys:
-                features |= SUPPORT_PAUSE | SUPPORT_PLAY
+        if (
+            self.service.has(CharacteristicsTypes.REMOTE_KEY)
+            and RemoteKeyValues.PLAY_PAUSE in self.supported_remote_keys
+        ):
+            features |= SUPPORT_PAUSE | SUPPORT_PLAY
 
         return features
 

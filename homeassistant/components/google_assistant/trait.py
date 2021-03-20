@@ -1420,17 +1420,17 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if self.state.domain == media_player.DOMAIN:
-            if media_player.ATTR_SOUND_MODE_LIST in attrs:
-                mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+        if (
+            self.state.domain == media_player.DOMAIN
+            and media_player.ATTR_SOUND_MODE_LIST in attrs
+        ):
+            mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
-        elif self.state.domain == humidifier.DOMAIN:
-            if ATTR_MODE in attrs:
-                mode_settings["mode"] = attrs.get(ATTR_MODE)
-        elif self.state.domain == light.DOMAIN:
-            if light.ATTR_EFFECT in attrs:
-                mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
+        elif self.state.domain == humidifier.DOMAIN and ATTR_MODE in attrs:
+            mode_settings["mode"] = attrs.get(ATTR_MODE)
+        elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
+            mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
         if mode_settings:
             response["on"] = self.state.state not in (STATE_OFF, STATE_UNKNOWN)
@@ -1618,15 +1618,17 @@ class OpenCloseTrait(_Trait):
         if self.state.domain == binary_sensor.DOMAIN:
             response["queryOnlyOpenClose"] = True
             response["discreteOnlyOpenClose"] = True
-        elif self.state.domain == cover.DOMAIN:
-            if features & cover.SUPPORT_SET_POSITION == 0:
-                response["discreteOnlyOpenClose"] = True
+        elif (
+            self.state.domain == cover.DOMAIN
+            and features & cover.SUPPORT_SET_POSITION == 0
+        ):
+            response["discreteOnlyOpenClose"] = True
 
-                if (
-                    features & cover.SUPPORT_OPEN == 0
-                    and features & cover.SUPPORT_CLOSE == 0
-                ):
-                    response["queryOnlyOpenClose"] = True
+            if (
+                features & cover.SUPPORT_OPEN == 0
+                and features & cover.SUPPORT_CLOSE == 0
+            ):
+                response["queryOnlyOpenClose"] = True
 
         if self.state.attributes.get(ATTR_ASSUMED_STATE):
             response["commandOnlyOpenClose"] = True

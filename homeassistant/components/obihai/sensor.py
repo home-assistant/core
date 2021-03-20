@@ -147,9 +147,8 @@ class ObihaiServiceSensors(Entity):
 
         services = self._pyobihai.get_line_state()
 
-        if services is not None:
-            if self._service_name in services:
-                self._state = services.get(self._service_name)
+        if services is not None and self._service_name in services:
+            self._state = services.get(self._service_name)
 
         call_direction = self._pyobihai.get_call_direction()
 

@@ -180,9 +180,11 @@ class ThermostatEntity(ClimateEntity):
     @property
     def _target_temperature_trait(self):
         """Return the correct trait with a target temp depending on mode."""
-        if self.preset_mode == PRESET_ECO:
-            if ThermostatEcoTrait.NAME in self._device.traits:
-                return self._device.traits[ThermostatEcoTrait.NAME]
+        if (
+            self.preset_mode == PRESET_ECO
+            and ThermostatEcoTrait.NAME in self._device.traits
+        ):
+            return self._device.traits[ThermostatEcoTrait.NAME]
         if ThermostatTemperatureSetpointTrait.NAME in self._device.traits:
             return self._device.traits[ThermostatTemperatureSetpointTrait.NAME]
         return None

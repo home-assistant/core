@@ -67,14 +67,17 @@ def restore_entities(registry, coordinator, entry, async_add_entities, tracked):
     missing = []
 
     for entity in registry.entities.values():
-        if entity.config_entry_id == entry.entry_id and entity.platform == DOMAIN:
-            if entity.unique_id not in coordinator.data[API_CLIENTS]:
-                missing.append(
-                    RuckusUnleashedDevice(
-                        coordinator, entity.unique_id, entity.original_name
-                    )
+        if (
+            entity.config_entry_id == entry.entry_id
+            and entity.platform == DOMAIN
+            and entity.unique_id not in coordinator.data[API_CLIENTS]
+        ):
+            missing.append(
+                RuckusUnleashedDevice(
+                    coordinator, entity.unique_id, entity.original_name
                 )
-                tracked.add(entity.unique_id)
+            )
+            tracked.add(entity.unique_id)
 
     if missing:
         async_add_entities(missing)

@@ -294,11 +294,13 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     self.async_write_ha_state()
                     break
 
-            elif data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT:
-                if self._id == room["id"]:
-                    self.async_update_callback()
-                    self.async_write_ha_state()
-                    break
+            elif (
+                data["event_type"] == EVENT_TYPE_CANCEL_SET_POINT
+                and self._id == room["id"]
+            ):
+                self.async_update_callback()
+                self.async_write_ha_state()
+                break
 
     @property
     def supported_features(self):
