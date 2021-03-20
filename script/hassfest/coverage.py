@@ -106,8 +106,8 @@ def validate(integrations: dict[str, Integration], config: Config):
 
             if (
                 not line.startswith("homeassistant/components/")
-                or not len(path.parts) == 4
-                or not path.parts[-1] == "*"
+                or len(path.parts) != 4
+                or path.parts[-1] != "*"
             ):
                 continue
 

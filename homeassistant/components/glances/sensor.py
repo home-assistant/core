@@ -15,7 +15,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = []
 
     for sensor_type, sensor_details in SENSOR_TYPES.items():
-        if not sensor_details[0] in client.api.data:
+        if sensor_details[0] not in client.api.data:
             continue
         if sensor_details[0] in client.api.data:
             if sensor_details[0] == "fs":
