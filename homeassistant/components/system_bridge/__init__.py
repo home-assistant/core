@@ -178,9 +178,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                     data=entry.data,
                 )
             )
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                "Authentication failed when connecting to System Bridge."
+            ) from exception
         except BRIDGE_CONNECTION_ERRORS as exception:
-            raise UpdateFailed(exception) from exception
+            _LOGGER.warning(exception)
+            raise UpdateFailed("Could not connect to System Bridge.") from exception
 
     coordinator = DataUpdateCoordinator(
         hass,
