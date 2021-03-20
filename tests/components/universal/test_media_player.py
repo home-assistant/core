@@ -333,7 +333,7 @@ class TestMediaPlayer(unittest.TestCase):
         config = {"name": "test", "asdf": 5, "platform": "universal"}
 
         config = validate_config(config)
-        assert not ("asdf" in config)
+        assert "asdf" not in config
 
     def test_platform_setup(self):
         """Test platform setup."""

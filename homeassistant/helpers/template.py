@@ -1439,7 +1439,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(obj, (AllStates, DomainStates, TemplateState)):
-            return not attr[0] == "_"
+            return attr[0] != "_"
 
         if isinstance(obj, Namespace):
             return True

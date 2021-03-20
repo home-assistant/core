@@ -465,7 +465,7 @@ class RoonDevice(MediaPlayerEntity):
             return
 
         for source in self.player_data["source_controls"]:
-            if source["supports_standby"] and not source["status"] == "indeterminate":
+            if source["supports_standby"] and source["status"] != "indeterminate":
                 self._server.roonapi.standby(self.output_id, source["control_key"])
                 return
 

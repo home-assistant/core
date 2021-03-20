@@ -197,8 +197,8 @@ class ZWaveListSensor(ZwaveSensorBase):
         if self.info.primary_value.value is None:
             return None
         if (
-            not str(self.info.primary_value.value)
-            in self.info.primary_value.metadata.states
+            str(self.info.primary_value.value)
+            not in self.info.primary_value.metadata.states
         ):
             return str(self.info.primary_value.value)
         return str(

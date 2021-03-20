@@ -525,9 +525,9 @@ async def test_current_cover_position(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not (ATTR_CURRENT_POSITION in state_attributes_dict)
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
-    assert not (4 & hass.states.get("cover.test").attributes["supported_features"] == 4)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
+    assert 4 & hass.states.get("cover.test").attributes["supported_features"] != 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "0")
     current_cover_position = hass.states.get("cover.test").attributes[
@@ -576,9 +576,9 @@ async def test_current_cover_position_inverted(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not (ATTR_CURRENT_POSITION in state_attributes_dict)
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
-    assert not (4 & hass.states.get("cover.test").attributes["supported_features"] == 4)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
+    assert 4 & hass.states.get("cover.test").attributes["supported_features"] != 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "100")
     current_percentage_cover_position = hass.states.get("cover.test").attributes[
@@ -659,14 +659,14 @@ async def test_position_update(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert not (ATTR_CURRENT_POSITION in state_attributes_dict)
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
+    assert ATTR_CURRENT_POSITION not in state_attributes_dict
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
     assert 4 & hass.states.get("cover.test").attributes["supported_features"] == 4
 
     async_fire_mqtt_message(hass, "get-position-topic", "22")
     state_attributes_dict = hass.states.get("cover.test").attributes
     assert ATTR_CURRENT_POSITION in state_attributes_dict
-    assert not (ATTR_CURRENT_TILT_POSITION in state_attributes_dict)
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
     current_cover_position = hass.states.get("cover.test").attributes[
         ATTR_CURRENT_POSITION
     ]
