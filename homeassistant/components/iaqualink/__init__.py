@@ -116,11 +116,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     try:
         systems = await aqualink.get_systems()
-    except AqualinkServiceException as e:
+    except AqualinkServiceException as svc_exception:
         _LOGGER.warning(
-            "Exception raised while attempting to retrieve systems list: %s", e
+            "Exception raised while attempting to retrieve systems list: %s",
+            svc_exception,
         )
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady from svc_exception
 
     systems = list(systems.values())
     if not systems:
@@ -130,11 +131,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     # Only supporting the first system for now.
     try:
         devices = await systems[0].get_devices()
-    except AqualinkServiceException as e:
+    except AqualinkServiceException as svc_exception:
         _LOGGER.warning(
-            "Exception raised while attempting to retrieve devices list: %s", e
+            "Exception raised while attempting to retrieve devices list: %s",
+            svc_exception,
         )
-        raise ConfigEntryNotReady from e
+        raise ConfigEntryNotReady from svc_exception
 
     for dev in devices.values():
         if isinstance(dev, AqualinkThermostat):
@@ -171,8 +173,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
         try:
             await systems[0].update()
-        except AqualinkServiceException as e:
-            _LOGGER.warning("Failed to refresh iAqualink state: %s", e)
+        except AqualinkServiceException as svc_exception:
+            _LOGGER.warning("Failed to refresh iAqualink state: %s", svc_exception)
         else:
             if prev is not True:
                 _LOGGER.warning("Reconnected to iAqualink")
@@ -256,8 +258,8 @@ class AqualinkEntity(Entity):
         try:
             await awaitable
             return True
-        except AqualinkServiceException as e:
-            _LOGGER.warning("Aqualink Service Exception raised: %s", e)
+        except AqualinkServiceException as svc_exception:
+            _LOGGER.warning("Aqualink Service Exception raised: %s", svc_exception)
             return False
 
     @property
