@@ -61,6 +61,20 @@ SENSORS_TYPE_RATES = "sensors_rates"
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_dict(keys: list, values: list):
+    """Create a dict from a list of keys and values."""
+    ret_dict: dict[str, Any] = dict.fromkeys(keys)
+    if not values:
+        return ret_dict
+    if len(values) < len(keys):
+        return ret_dict
+
+    for index, key in enumerate(ret_dict):
+        ret_dict[key] = values[index]
+
+    return ret_dict
+
+
 class AsusWrtSensorDataHandler:
     """Data handler for AsusWrt sensor."""
 
@@ -69,19 +83,6 @@ class AsusWrtSensorDataHandler:
         self._hass = hass
         self._api = api
         self._connected_devices = 0
-
-    def _get_dict(self, keys: list, values: list):
-        """Create a dict from a list of keys and values."""
-        ret_dict: dict[str, Any] = dict.fromkeys(keys)
-        if not values:
-            return ret_dict
-        if len(values) < len(keys):
-            return ret_dict
-
-        for index, key in enumerate(ret_dict):
-            ret_dict[key] = values[index]
-
-        return ret_dict
 
     async def _get_connected_devices(self):
         """Return number of connected devices."""
@@ -94,7 +95,7 @@ class AsusWrtSensorDataHandler:
         except (OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 
-        return self._get_dict(SENSORS_BYTES, datas)
+        return _get_dict(SENSORS_BYTES, datas)
 
     async def _get_rates(self):
         """Fetch rates information from the router."""
@@ -103,7 +104,7 @@ class AsusWrtSensorDataHandler:
         except (OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 
-        return self._get_dict(SENSORS_RATES, rates)
+        return _get_dict(SENSORS_RATES, rates)
 
     async def _get_load_avg(self):
         """Fetch load average information from the router."""
@@ -112,7 +113,7 @@ class AsusWrtSensorDataHandler:
         except (OSError, ValueError) as exc:
             raise UpdateFailed(exc) from exc
 
-        return self._get_dict(SENSORS_LOAD_AVG, avg)
+        return _get_dict(SENSORS_LOAD_AVG, avg)
 
     def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
