@@ -13,5 +13,6 @@
         "action_type": {
             "notify": "Enviar una notificaci\u00f3n"
         }
-    }
+    },
+    "title": "Aplicaci\u00f3n m\u00f3vil"
 }

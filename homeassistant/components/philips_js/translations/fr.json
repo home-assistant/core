@@ -10,6 +10,10 @@
             "unknown": "Erreur inattendue"
         },
         "step": {
+            "pair": {
+                "description": "Entrez le code PIN affich\u00e9 sur votre t\u00e9l\u00e9viseur",
+                "title": "Paire"
+            },
             "user": {
                 "data": {
                     "api_version": "Version de l'API",
