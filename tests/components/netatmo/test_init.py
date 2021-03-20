@@ -6,10 +6,11 @@ import jwt
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from .common import fake_post_request
+from .common import fake_post_request, simulate_webhook
 
 from tests.common import MockConfigEntry
 from tests.components.cloud import mock_cloud
@@ -86,25 +87,18 @@ async def test_setup_component_with_config(hass, config_entry):
 
     assert config_entry.state == config_entries.ENTRY_STATE_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    assert "camera" in hass.data
-    assert "climate" in hass.data
-    assert "light" in hass.data
-    assert "sensor" in hass.data
+    assert len(hass.states.async_all()) > 0
 
 
 async def test_setup_component_with_webhook(hass, entry):
     """Test setup and teardown of the netatmo component with webhook registration."""
+    webhook_id = entry.data[CONF_WEBHOOK_ID]
+
+    # Fake webhook activation
     webhook_data = {
-        "user_id": "123",
-        "user": {"id": "123", "email": "foo@bar.com"},
         "push_type": "webhook_activation",
     }
-    async_dispatcher_send(
-        hass,
-        f"signal-{DOMAIN}-webhook-None",
-        {"type": None, "data": webhook_data},
-    )
+    await simulate_webhook(hass, webhook_id, webhook_data)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) > 0
