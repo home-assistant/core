@@ -341,9 +341,7 @@ class ReconnectLogic(RecordUpdateListener):
             if self._entry.entry_id not in self._hass.data[DOMAIN]:
                 # When removing/disconnecting manually
                 return
-            device_registry = (
-                await self._hass.helpers.device_registry.async_get_registry()
-            )
+            device_registry = self._hass.helpers.device_registry.async_get()
             devices = dr.async_entries_for_config_entry(
                 device_registry, self._entry.entry_id
             )
