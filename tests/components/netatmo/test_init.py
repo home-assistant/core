@@ -197,3 +197,9 @@ async def test_setup_with_cloud(hass, config_entry):
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
         await hass.config_entries.async_remove(config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+
+    assert hass.states.get("climate.netatmo_livingroom") is None
