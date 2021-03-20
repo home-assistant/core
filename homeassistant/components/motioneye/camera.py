@@ -4,7 +4,12 @@ import logging
 from typing import Any, Callable, Dict
 
 from motioneye_client.client import MotionEyeClient
-from motioneye_client.const import KEY_CAMERAS, KEY_ID, KEY_NAME
+from motioneye_client.const import (
+    DEFAULT_USERNAME_SURVEILLANCE,
+    KEY_CAMERAS,
+    KEY_ID,
+    KEY_NAME,
+)
 
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
@@ -22,7 +27,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -32,7 +37,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import get_motioneye_unique_id
+from . import get_camera_from_cameras_data, get_motioneye_unique_id
 from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
@@ -78,8 +83,8 @@ async def async_setup_entry(
                 MotionEyeMjpegCamera(
                     entry.data[CONF_HOST],
                     entry.data[CONF_PORT],
-                    entry.data[CONF_USERNAME],
-                    entry.data.get(CONF_PASSWORD),
+                    entry.data.get(CONF_USERNAME) or DEFAULT_USERNAME_SURVEILLANCE,
+                    entry.data.get(CONF_PASSWORD) or "",
                     HTTP_BASIC_AUTHENTICATION,  # TODO Add auth options.
                     camera,
                     entry_data[CONF_CLIENT],
@@ -126,9 +131,11 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         coordinator: DataUpdateCoordinator,
     ):
         """Initialize a MJPEG camera."""
+        self._camera_id = camera[KEY_ID]
         self._unique_id = get_motioneye_unique_id(
-            host, port, camera[KEY_ID], TYPE_MOTIONEYE_MJPEG_CAMERA
+            host, port, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
+        self._client = client
         MjpegCamera.__init__(
             self,
             {
@@ -161,3 +168,15 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
                 functools.partial(self.async_remove, force_remove=True),
             )
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        if self.coordinator.last_update_success:
+            camera = get_camera_from_cameras_data(
+                self._camera_id, self.coordinator.data
+            )
+            if camera:
+                self._still_image_url = self._client.get_camera_snapshot_url(camera)
+                self._mjpeg_url = self._client.get_camera_steam_url(camera)
+        CoordinatorEntity._handle_coordinator_update(self)

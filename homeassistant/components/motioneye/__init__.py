@@ -1,16 +1,17 @@
 """The motionEye integration."""
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from motioneye_client.client import (
     MotionEyeClient,
     MotionEyeClientError,
     MotionEyeClientInvalidAuth,
 )
+from motioneye_client.const import KEY_CAMERAS, KEY_ID
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,6 +20,10 @@ from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
     CONF_ON_UNLOAD,
+    CONF_PASSWORD_ADMIN,
+    CONF_PASSWORD_SURVEILLANCE,
+    CONF_USERNAME_ADMIN,
+    CONF_USERNAME_SURVEILLANCE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -41,6 +46,16 @@ def get_motioneye_unique_id(host: str, port: int, camera_id: int, name: str) -> 
     return f"{host}:{port}_{camera_id}_{name}"
 
 
+def get_camera_from_cameras_data(
+    camera_id: int, data: Dict[str, Any]
+) -> Optional[Dict[str, Any]]:
+    """Get an individual camera dict from a multiple cameras data response."""
+    for camera in data.get(KEY_CAMERAS) or []:
+        if camera.get(KEY_ID) == camera_id:
+            return camera
+    return None
+
+
 async def async_setup(hass: HomeAssistant, config: Dict[str, Any]):
     """Set up the motionEye component."""
     hass.data[DOMAIN] = {}
@@ -52,8 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = create_motioneye_client(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        username=entry.data[CONF_USERNAME],
-        password=entry.data.get(CONF_PASSWORD),
+        username_admin=entry.data.get(CONF_USERNAME_ADMIN),
+        username_surveillance=entry.data.get(CONF_USERNAME_SURVEILLANCE),
+        password_admin=entry.data.get(CONF_PASSWORD_ADMIN),
+        password_surveillance=entry.data.get(CONF_PASSWORD_SURVEILLANCE),
     )
 
     try:

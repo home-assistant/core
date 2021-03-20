@@ -4,9 +4,12 @@
     "step": {
       "user": {
         "data": {
-          "base_url": "[%key:common::config_flow::data::url%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username_admin": "Admin [%key:common::config_flow::data::username%]",
+          "password_admin": "Admin [%key:common::config_flow::data::password%]",
+          "username_surveillance": "Surveillance [%key:common::config_flow::data::username%]",
+          "password_surveillance": "Surveillance [%key:common::config_flow::data::password%]"
         }
       }
     },

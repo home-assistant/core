@@ -7,13 +7,19 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuth,
     MotionEyeClientRequestFailed,
 )
-from motioneye_client.const import DEFAULT_PORT, DEFAULT_USERNAME
+from motioneye_client.const import DEFAULT_PORT
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PORT
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import (  # pylint:disable=unused-import
+    CONF_PASSWORD_ADMIN,
+    CONF_PASSWORD_SURVEILLANCE,
+    CONF_USERNAME_ADMIN,
+    CONF_USERNAME_SURVEILLANCE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,8 +27,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
+        vol.Optional(CONF_USERNAME_ADMIN): str,
+        vol.Optional(CONF_USERNAME_SURVEILLANCE): str,
+        vol.Optional(CONF_PASSWORD_ADMIN): str,
+        vol.Optional(CONF_PASSWORD_SURVEILLANCE): str,
     }
 )
 
@@ -44,8 +52,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         client = MotionEyeClient(
             user_input[CONF_HOST],
             user_input[CONF_PORT],
-            username=user_input.get(CONF_USERNAME),
-            password=user_input.get(CONF_PASSWORD),
+            username_admin=user_input.get(CONF_USERNAME_ADMIN),
+            username_surveillance=user_input.get(CONF_USERNAME_SURVEILLANCE),
+            password_admin=user_input.get(CONF_PASSWORD_ADMIN),
+            password_surveillance=user_input.get(CONF_PASSWORD_SURVEILLANCE),
         )
 
         try:

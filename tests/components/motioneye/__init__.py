@@ -7,7 +7,7 @@ from motioneye_client.const import DEFAULT_PORT
 
 from homeassistant.components.motioneye.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
 TEST_HOST = "test"
 TEST_PORT = DEFAULT_PORT + 1
-TEST_USERNAME = "username"
+TEST_USERNAME_SURVEILLANCE = "surveillance_username"
 TEST_CAMERA_NAME = "Test Camera"
 TEST_CAMERA_ENTITY_ID = "camera.test_camera"
 TEST_CAMERA_ID = 100
@@ -151,8 +151,7 @@ def create_mock_motioneye_config_entry(
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
         entry_id=TEST_CONFIG_ENTRY_ID,
         domain=DOMAIN,
-        data=data
-        or {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT, CONF_USERNAME: TEST_USERNAME},
+        data=data or {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
         title=f"{TEST_HOST}:{TEST_PORT}",
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]

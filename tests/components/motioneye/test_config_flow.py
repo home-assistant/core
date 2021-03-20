@@ -9,8 +9,14 @@ from motioneye_client.client import (
 )
 
 from homeassistant import config_entries, setup
-from homeassistant.components.motioneye.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.components.motioneye.const import (
+    CONF_PASSWORD_ADMIN,
+    CONF_PASSWORD_SURVEILLANCE,
+    CONF_USERNAME_ADMIN,
+    CONF_USERNAME_SURVEILLANCE,
+    DOMAIN,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 from . import create_mock_motioneye_client
 
@@ -42,8 +48,10 @@ async def test_user_success(hass):
             {
                 CONF_HOST: "localhost",
                 CONF_PORT: 8765,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_USERNAME_ADMIN: "admin-username",
+                CONF_PASSWORD_ADMIN: "admin-password",
+                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
+                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
             },
         )
         await hass.async_block_till_done()
@@ -53,8 +61,10 @@ async def test_user_success(hass):
     assert result["data"] == {
         CONF_HOST: "localhost",
         CONF_PORT: 8765,
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+        CONF_USERNAME_ADMIN: "admin-username",
+        CONF_USERNAME_SURVEILLANCE: "surveillance-username",
+        CONF_PASSWORD_ADMIN: "admin-password",
+        CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -78,8 +88,10 @@ async def test_user_invalid_auth(hass):
             {
                 CONF_HOST: "localhost",
                 CONF_PORT: 8765,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_USERNAME_ADMIN: "admin-username",
+                CONF_PASSWORD_ADMIN: "admin-password",
+                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
+                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
             },
         )
         await mock_client.async_client_close()
@@ -108,8 +120,10 @@ async def test_user_cannot_connect(hass):
             {
                 CONF_HOST: "localhost",
                 CONF_PORT: 8765,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_USERNAME_ADMIN: "admin-username",
+                CONF_PASSWORD_ADMIN: "admin-password",
+                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
+                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
             },
         )
         await mock_client.async_client_close()
@@ -136,8 +150,10 @@ async def test_user_request_error(hass):
             {
                 CONF_HOST: "localhost",
                 CONF_PORT: 8765,
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
+                CONF_USERNAME_ADMIN: "admin-username",
+                CONF_PASSWORD_ADMIN: "admin-password",
+                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
+                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
             },
         )
         await mock_client.async_client_close()
