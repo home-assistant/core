@@ -127,7 +127,7 @@ async def test_setup_config_full(hass, mock_client, config_ext, get_write_api):
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert get_write_api(mock_client).call_count == 1
 
 
@@ -260,7 +260,7 @@ async def test_setup_config_ssl(
             await hass.async_block_till_done()
 
             assert hass.bus.listen.called
-            assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+            assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
             assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
 
 
@@ -280,7 +280,7 @@ async def test_setup_minimal_config(hass, mock_client, config_ext, get_write_api
     assert await async_setup_component(hass, influxdb.DOMAIN, config)
     await hass.async_block_till_done()
     assert hass.bus.listen.called
-    assert EVENT_STATE_CHANGED == hass.bus.listen.call_args_list[0][0][0]
+    assert hass.bus.listen.call_args_list[0][0][0] == EVENT_STATE_CHANGED
     assert get_write_api(mock_client).call_count == 1
 
 

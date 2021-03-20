@@ -41,7 +41,7 @@ async def test_valid_hostname(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
 
@@ -53,7 +53,7 @@ async def test_valid_hostname(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
+        assert state.state == STATE_ON
 
         await hass.services.async_call(
             switch.DOMAIN,
@@ -63,7 +63,7 @@ async def test_valid_hostname(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
+        assert state.state == STATE_ON
 
 
 async def test_valid_hostname_windows(hass):
@@ -82,7 +82,7 @@ async def test_valid_hostname_windows(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0), patch.object(
         platform, "system", return_value="Windows"
@@ -95,7 +95,7 @@ async def test_valid_hostname_windows(hass):
         )
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_ON == state.state
+    assert state.state == STATE_ON
 
 
 async def test_broadcast_config_ip_and_port(hass, mock_send_magic_packet):
@@ -119,7 +119,7 @@ async def test_broadcast_config_ip_and_port(hass, mock_send_magic_packet):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
 
@@ -155,7 +155,7 @@ async def test_broadcast_config_ip(hass, mock_send_magic_packet):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
 
@@ -183,7 +183,7 @@ async def test_broadcast_config_port(hass, mock_send_magic_packet):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
 
@@ -216,7 +216,7 @@ async def test_off_script(hass):
     calls = async_mock_service(hass, "shell_command", "turn_off_target")
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=0):
 
@@ -228,7 +228,7 @@ async def test_off_script(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_ON == state.state
+        assert state.state == STATE_ON
         assert len(calls) == 0
 
     with patch.object(subprocess, "call", return_value=2):
@@ -241,7 +241,7 @@ async def test_off_script(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        assert state.state == STATE_OFF
         assert len(calls) == 1
 
 
@@ -262,7 +262,7 @@ async def test_invalid_hostname_windows(hass):
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.wake_on_lan")
-    assert STATE_OFF == state.state
+    assert state.state == STATE_OFF
 
     with patch.object(subprocess, "call", return_value=2):
 
@@ -274,7 +274,7 @@ async def test_invalid_hostname_windows(hass):
         )
 
         state = hass.states.get("switch.wake_on_lan")
-        assert STATE_OFF == state.state
+        assert state.state == STATE_OFF
 
 
 async def test_no_hostname_state(hass):
