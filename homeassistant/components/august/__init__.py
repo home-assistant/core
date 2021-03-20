@@ -172,6 +172,7 @@ class AugustData(AugustSubscriberMixin):
         device = self.get_device_detail(device_id)
         # TODO: move this to pypi
         # from yalexs.pubnub_activity import activity_from_pubnub_message
+        # then get rid of update_doorbell_details_from_pubnub_message and update_lock_details_from_pubnub_message
         # activity = activity_from_pubnub_message(device, data_time, message)
         # if activity:
         #    - LockOperationActivity (users in LockDetail)
