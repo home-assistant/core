@@ -2497,3 +2497,10 @@ async def test_parse_result(hass):
         ("0011101.00100001010001", "0011101.00100001010001"),
     ):
         assert template.Template(tpl, hass).async_render() == result
+
+
+async def test_undefined_variable(hass, caplog):
+    """Test a warning is logged on undefined variables."""
+    tpl = template.Template("{{ no_such_variable }}", hass)
+    assert tpl.async_render() == ""
+    assert "Template variable warning: no_such_variable is undefined" in caplog.text
