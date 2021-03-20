@@ -479,7 +479,15 @@ async def test_error_rendering_template(
     sensors = await _setup(hass, config_ext, queries, ["sensor.test"])
     assert sensors[0].state == STATE_UNKNOWN
     assert (
-        len([record for record in caplog.records if record.levelname == "ERROR"]) == 1
+        len(
+            [
+                record
+                for record in caplog.records
+                if record.levelname == "ERROR"
+                and "Could not render where template" in record.msg
+            ]
+        )
+        == 1
     )
 
 
