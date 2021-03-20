@@ -4,7 +4,7 @@ from unittest.mock import patch
 from aiohttp.client_exceptions import ClientConnectionError
 from systembridge.exceptions import BridgeAuthenticationException
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 
@@ -17,6 +17,12 @@ FIXTURE_AUTH_INPUT = {CONF_API_KEY: "abc-123-def-456-ghi"}
 FIXTURE_USER_INPUT = {
     CONF_API_KEY: "abc-123-def-456-ghi",
     CONF_HOST: "test-bridge",
+    CONF_PORT: "9170",
+}
+
+FIXTURE_ZEROCONF_INPUT = {
+    CONF_API_KEY: "abc-123-def-456-ghi",
+    CONF_HOST: "1.1.1.1",
     CONF_PORT: "9170",
 }
 
@@ -74,6 +80,10 @@ FIXTURE_NETWORK = {
 
 FIXTURE_BASE_URL = (
     f"http://{FIXTURE_USER_INPUT[CONF_HOST]}:{FIXTURE_USER_INPUT[CONF_PORT]}"
+)
+
+FIXTURE_ZEROCONF_BASE_URL = (
+    f"http://{FIXTURE_ZEROCONF[CONF_HOST]}:{FIXTURE_ZEROCONF[CONF_PORT]}"
 )
 
 
@@ -243,6 +253,7 @@ async def test_zeroconf_flow(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -252,8 +263,8 @@ async def test_zeroconf_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", json=FIXTURE_OS)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", json=FIXTURE_NETWORK)
+    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", json=FIXTURE_OS)
+    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/network", json=FIXTURE_NETWORK)
 
     with patch(
         "homeassistant.components.system_bridge.async_setup", return_value=True
@@ -268,7 +279,7 @@ async def test_zeroconf_flow(
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "test-bridge"
-    assert result2["data"] == FIXTURE_USER_INPUT
+    assert result2["data"] == FIXTURE_ZEROCONF_INPUT
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -277,6 +288,7 @@ async def test_zeroconf_cannot_connect(
     hass, aiohttp_client, aioclient_mock, current_request_with_host
 ) -> None:
     """Test zeroconf cannot connect flow."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -286,8 +298,10 @@ async def test_zeroconf_cannot_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=ClientConnectionError)
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=ClientConnectionError)
+    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", exc=ClientConnectionError)
+    aioclient_mock.get(
+        f"{FIXTURE_ZEROCONF_BASE_URL}/network", exc=ClientConnectionError
+    )
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
