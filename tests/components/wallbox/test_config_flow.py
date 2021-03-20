@@ -109,6 +109,7 @@ def test_hub_class():
         side_effect=ConnectionError,
     ), raises(ConnectionError):
         assert hub.get_data()
+
     with patch("wallbox.Wallbox.authenticate",), patch(
         "wallbox.Wallbox.getChargerStatus",
         side_effect=InvalidAuth,
@@ -144,7 +145,7 @@ async def test_validate_input(hass):
         assert result == {"title": "Wallbox Portal"}
 
 
-def test_configflow_class():
+async def test_configflow_class():
     """Test configFlow class."""
     configflow = config_flow.ConfigFlow
     assert configflow
@@ -153,7 +154,7 @@ def test_configflow_class():
         "homeassistant.components.wallbox.config_flow.validate_input",
         side_effect=TypeError,
     ), raises(Exception):
-        assert configflow.async_step_user(True)
+        assert await configflow.async_step_user(True)
 
 
 def test_cannot_connect_class():
