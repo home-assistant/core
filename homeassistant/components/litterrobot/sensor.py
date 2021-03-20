@@ -1,5 +1,5 @@
 """Support for Litter-Robot sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from pylitterbot.robot import Robot
 
@@ -10,7 +10,7 @@ from .const import DOMAIN
 from .hub import LitterRobotEntity, LitterRobotHub
 
 
-def icon_for_gauge_level(gauge_level: Optional[int] = None, offset: int = 0) -> str:
+def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str:
     """Return a gauge icon valid identifier."""
     if gauge_level is None or gauge_level <= 0 + offset:
         return "mdi:gauge-empty"

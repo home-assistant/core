@@ -43,7 +43,7 @@ class User:
     groups: list[Group] = attr.ib(factory=list, eq=False, order=False)
 
     # List of credentials of a user.
-    credentials: list["Credentials"] = attr.ib(factory=list, eq=False, order=False)
+    credentials: list[Credentials] = attr.ib(factory=list, eq=False, order=False)
 
     # Tokens associated with a user.
     refresh_tokens: dict[str, "RefreshToken"] = attr.ib(

@@ -1,7 +1,8 @@
 """Support KNX devices."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Union
 
 import voluptuous as vol
 from xknx import XKNX
@@ -194,7 +195,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
 )
 
 SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
-    ExposeSchema.SCHEMA.extend(
+    ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
         {
             vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
         }
@@ -466,7 +467,7 @@ class KNXModule:
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
 
-        payload: Union[DPTBinary, DPTArray]
+        payload: DPTBinary | DPTArray
         if attr_type is not None:
             transcoder = DPTBase.parse_transcoder(attr_type)
             if transcoder is None:

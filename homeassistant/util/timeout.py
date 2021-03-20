@@ -243,7 +243,7 @@ class _GlobalTaskContext:
         """Wait until zones are done."""
         await self._wait_zone.wait()
         await asyncio.sleep(self._cool_down)  # Allow context switch
-        if not self.state == _State.TIMEOUT:
+        if self.state != _State.TIMEOUT:
             return
         self._cancel_task()
 

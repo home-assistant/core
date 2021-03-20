@@ -1,8 +1,9 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Optional
 
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
@@ -181,7 +182,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
+    async def _initialize(host: str, capabilities: dict | None = None) -> None:
         remove_dispatcher = async_dispatcher_connect(
             hass,
             DEVICE_INITIALIZED.format(host),
@@ -593,7 +594,7 @@ async def _async_get_device(
     hass: HomeAssistant,
     host: str,
     entry: ConfigEntry,
-    capabilities: Optional[dict],
+    capabilities: dict | None,
 ) -> YeelightDevice:
     # Get model from config and capabilities
     model = entry.options.get(CONF_MODEL)

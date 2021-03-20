@@ -1,6 +1,7 @@
 """The Tag integration."""
+from __future__ import annotations
+
 import logging
-import typing
 import uuid
 
 import voluptuous as vol
@@ -63,7 +64,7 @@ class TagStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+    async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
         if not data[TAG_ID]:
@@ -74,11 +75,11 @@ class TagStorageCollection(collection.StorageCollection):
         return data
 
     @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
+    def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[TAG_ID]
 
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+    async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make last_scanned JSON serializeable

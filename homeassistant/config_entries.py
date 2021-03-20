@@ -463,7 +463,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     """Manage all the config entry flows that are in progress."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entries: "ConfigEntries", hass_config: dict
+        self, hass: HomeAssistant, config_entries: ConfigEntries, hass_config: dict
     ):
         """Initialize the config entry flow manager."""
         super().__init__(hass)

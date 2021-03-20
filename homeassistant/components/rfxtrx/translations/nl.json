@@ -39,6 +39,8 @@
         "error": {
             "already_configured_device": "Apparaat is al geconfigureerd",
             "invalid_event_code": "Ongeldige gebeurteniscode",
+            "invalid_input_2262_off": "Ongeldige invoer voor commando uit",
+            "invalid_input_2262_on": "Ongeldige invoer voor commando aan",
             "invalid_input_off_delay": "Ongeldige invoer voor uitschakelvertraging",
             "unknown": "Onverwachte fout"
         },
@@ -55,6 +57,8 @@
             },
             "set_device_options": {
                 "data": {
+                    "command_off": "Waarde gegevensbits voor commando uit",
+                    "command_on": "Waarde gegevensbits voor commando aan",
                     "data_bit": "Aantal databits",
                     "fire_event": "Schakel apparaatgebeurtenis in",
                     "off_delay": "Uitschakelvertraging",

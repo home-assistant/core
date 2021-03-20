@@ -1,7 +1,9 @@
 """Support for a Genius Hub system."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import aiohttp
 from geniushubclient import GeniusHub
@@ -218,12 +220,12 @@ class GeniusEntity(Entity):
         """Set up a listener when this entity is added to HA."""
         self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
 
-    async def _refresh(self, payload: Optional[dict] = None) -> None:
+    async def _refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
 
@@ -250,7 +252,7 @@ class GeniusDevice(GeniusEntity):
         self._last_comms = self._state_attr = None
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attrs = {}
         attrs["assigned_zone"] = self._device.data["assignedZones"][0]["name"]
@@ -285,7 +287,7 @@ class GeniusZone(GeniusEntity):
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
-    async def _refresh(self, payload: Optional[dict] = None) -> None:
+    async def _refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
@@ -317,7 +319,7 @@ class GeniusZone(GeniusEntity):
         return self._zone.name
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}
         return {"status": status}
@@ -333,7 +335,7 @@ class GeniusHeatingZone(GeniusZone):
         self._max_temp = self._min_temp = self._supported_features = None
 
     @property
-    def current_temperature(self) -> Optional[float]:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.data.get("temperature")
 

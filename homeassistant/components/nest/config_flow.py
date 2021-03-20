@@ -11,12 +11,12 @@ and everything else custom is for the old api.  When configured with the
 new api via NestFlowHandler.register_sdm_api, the custom methods just
 invoke the AbstractOAuth2FlowHandler methods.
 """
+from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
 import logging
 import os
-from typing import Dict
 
 import async_timeout
 import voluptuous as vol
@@ -98,7 +98,7 @@ class NestFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> Dict[str, str]:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": " ".join(SDM_SCOPES),

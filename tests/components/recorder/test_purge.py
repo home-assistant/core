@@ -157,7 +157,7 @@ async def test_purge_method(
         assert runs[1] == runs_before_purge[5]
         assert runs[2] == runs_before_purge[6]
 
-        assert not ("EVENT_TEST_PURGE" in (event.event_type for event in events.all()))
+        assert "EVENT_TEST_PURGE" not in (event.event_type for event in events.all())
 
         # run purge method - correct service data, with repack
         service_data["repack"] = True

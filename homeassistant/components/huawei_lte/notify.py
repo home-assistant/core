@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import attr
 from huawei_lte_api.exceptions import ResponseErrorException
@@ -20,9 +20,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_get_service(
     hass: HomeAssistantType,
-    config: Dict[str, Any],
-    discovery_info: Optional[Dict[str, Any]] = None,
-) -> Optional[HuaweiLteSmsNotificationService]:
+    config: dict[str, Any],
+    discovery_info: dict[str, Any] | None = None,
+) -> HuaweiLteSmsNotificationService | None:
     """Get the notification service."""
     if discovery_info is None:
         return None
@@ -38,7 +38,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
     """Huawei LTE router SMS notification service."""
 
     router: Router = attr.ib()
-    default_targets: List[str] = attr.ib()
+    default_targets: list[str] = attr.ib()
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to target numbers."""

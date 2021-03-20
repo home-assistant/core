@@ -76,7 +76,7 @@ STAGE_1_INTEGRATIONS = {
 
 
 async def async_setup_hass(
-    runtime_config: "RuntimeConfig",
+    runtime_config: RuntimeConfig,
 ) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
     hass = core.HomeAssistant()

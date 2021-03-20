@@ -982,7 +982,7 @@ def distance(hass, *args):
         else:
             if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
-                    "distance:State does not contain valid location: %s", point_state
+                    "Distance:State does not contain valid location: %s", point_state
                 )
                 return None
 
@@ -1439,7 +1439,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(obj, (AllStates, DomainStates, TemplateState)):
-            return not attr[0] == "_"
+            return attr[0] != "_"
 
         if isinstance(obj, Namespace):
             return True
