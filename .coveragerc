@@ -1098,6 +1098,7 @@ omit =
     homeassistant/components/volumio/media_player.py
     homeassistant/components/volvooncall/*
     homeassistant/components/w800rf32/*
+    homeassistant/components/wallbox/*
     homeassistant/components/waqi/sensor.py
     homeassistant/components/waterfurnace/*
     homeassistant/components/watson_iot/*
