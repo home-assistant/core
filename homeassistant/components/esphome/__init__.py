@@ -339,33 +339,41 @@ class ReconnectLogic(RecordUpdateListener):
                 self._connected = True
             self._hass.async_create_task(self._on_login())
 
+    async def _reconnect_once(self):
+        # Wait and clear reconnection event
+        await self._reconnect_event.wait()
+        self._reconnect_event.clear()
+
+        # If in connected state, do not try to connect again.
+        async with self._connected_lock:
+            if self._connected:
+                return False
+
+        # Check if the entry got removed or disabled, in which case we shouldn't reconnect
+        if self._entry.entry_id not in self._hass.data[DOMAIN]:
+            # When removing/disconnecting manually
+            return
+
+        device_registry = self._hass.helpers.device_registry.async_get(self._hass)
+        devices = dr.async_entries_for_config_entry(
+            device_registry, self._entry.entry_id
+        )
+        for device in devices:
+            # There is only one device in ESPHome
+            if device.disabled:
+                # Don't attempt to connect if it's disabled
+                return
+
+        await self._try_connect()
+
     async def _reconnect_loop(self):
         while True:
-            # Wait and clear reconnection event
-            await self._reconnect_event.wait()
-            self._reconnect_event.clear()
-
-            # If in connected state, do not try to connect again.
-            async with self._connected_lock:
-                if self._connected:
-                    continue
-
-            # Check if the entry got removed or disabled, in which case we shouldn't reconnect
-            if self._entry.entry_id not in self._hass.data[DOMAIN]:
-                # When removing/disconnecting manually
-                return
-            device_registry = self._hass.helpers.device_registry.async_get(self._hass)
-
-            devices = dr.async_entries_for_config_entry(
-                device_registry, self._entry.entry_id
-            )
-            for device in devices:
-                # There is only one device in ESPHome
-                if device.disabled:
-                    # Don't attempt to connect if it's disabled
-                    return
-
-            await self._try_connect()
+            try:
+                await self._reconnect_once()
+            except asyncio.CancelledError:  # pylint: disable=try-except-raise
+                raise
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.error("Caught exception while reconnecting", exc_info=True)
 
     async def start(self):
         """Start the reconnecting logic background task."""
