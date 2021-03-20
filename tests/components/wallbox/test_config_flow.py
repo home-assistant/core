@@ -73,12 +73,19 @@ def test_hub_class():
 
     hub = config_flow.PlaceholderHub(station, username, password)
 
+    def alternate_authenticate_method():
+        return None
+
+    def alternate_get_charger_status_method(station):
+        data = '{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}'
+        return data
+
     with patch(
-        "homeassistant.components.wallbox.config_flow.Wallbox.authenticate",
-        return_value=True,
+        "wallbox.Wallbox.authenticate",
+        side_effect=alternate_authenticate_method,
     ), patch(
-        "homeassistant.components.wallbox.config_flow.Wallbox.getChargerStatus",
-        return_value=True,
+        "wallbox.Wallbox.getChargerStatus",
+        side_effect=alternate_get_charger_status_method,
     ):
         assert hub.authenticate()
         assert hub.get_data()
@@ -92,12 +99,19 @@ async def test_validate_input(hass):
         "password": "test-password",
     }
 
+    def alternate_authenticate_method():
+        return None
+
+    def alternate_get_charger_status_method(station):
+        data = '{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}'
+        return data
+
     with patch(
-        "homeassistant.components.wallbox.config_flow.Wallbox.authenticate",
-        return_value=True,
+        "wallbox.Wallbox.authenticate",
+        side_effect=alternate_authenticate_method,
     ), patch(
-        "homeassistant.components.wallbox.config_flow.Wallbox.getChargerStatus",
-        return_value=True,
+        "wallbox.Wallbox.getChargerStatus",
+        side_effect=alternate_get_charger_status_method,
     ):
 
         result = await config_flow.validate_input(hass, data)
