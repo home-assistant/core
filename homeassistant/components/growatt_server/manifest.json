@@ -3,6 +3,10 @@
   "name": "Growatt",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/growatt_server/",
-  "requirements": ["growattServer==0.1.1"],
-  "codeowners": ["@indykoning"]
+  "requirements": [
+    "growattServer==0.1.1"
+  ],
+  "codeowners": [
+    "@indykoning"
+  ]
 }

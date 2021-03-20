@@ -2,15 +2,15 @@
 from homeassistant import config_entries
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN
-
 
 async def async_setup(hass, config):
     """Set up this integration."""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: config_entries.ConfigEntry
+) -> bool:
     """Load the saved entities."""
 
     hass.async_create_task(

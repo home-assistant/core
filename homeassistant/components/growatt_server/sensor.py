@@ -358,7 +358,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up growatt server from yaml."""
     if not hass.config_entries.async_entries(DOMAIN):
         hass.async_create_task(
@@ -368,12 +368,14 @@ async def async_setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
 
-async def async_setup_entry(hass, config_entry, add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up growatt server from Config Flow."""
-    hass.async_add_executor_job(_setup_entity, hass, config_entry.data, add_entities)
+    hass.async_add_executor_job(
+        _setup_entity, hass, config_entry.data, async_add_entities
+    )
 
 
-def _setup_entity(hass, config, add_entities):
+def _setup_entity(hass, config, async_add_entities):
     """Set up the Growatt sensor."""
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
@@ -428,7 +430,7 @@ def _setup_entity(hass, config, add_entities):
                 )
             )
 
-    add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class GrowattInverter(Entity):

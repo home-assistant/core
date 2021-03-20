@@ -16,9 +16,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialise growatt server flow."""
-        self.user_input = {}
         self.api = growattServer.GrowattApi()
-        self.plants = {}
         self.user_id = None
 
     async def _show_user_form(self, errors=None):
@@ -31,9 +29,9 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def _show_plant_id_form(self, errors=None):
+    async def _show_plant_id_form(self, plants, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(self.plants)})
+        data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
 
         return self.async_show_form(
             step_id="plant", data_schema=data_schema, errors=errors
@@ -49,15 +47,13 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if not login_response["success"] and login_response["errCode"] == "102":
-            return await self._show_user_form({"base": "auth_error"})
+            return await self._show_user_form({"base": "invalid_auth"})
         self.user_id = login_response["userId"]
 
         return await self.async_step_plant(user_input)
 
-    async def async_step_plant(self, user_input=None):
+    async def async_step_plant(self, user_input):
         """Handle adding a "plant" to Home Assistant."""
-        user_input = {**self.user_input, **user_input}
-
         if CONF_PLANT_ID not in user_input or user_input[CONF_PLANT_ID] == "0":
             plant_info = await self.hass.async_add_executor_job(
                 self.api.plant_list, self.user_id
@@ -66,17 +62,19 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not plant_info["data"]:
                 return self.async_abort(reason="no_plants")
 
-            self.plants = {}
+            plants = {}
             for plant in plant_info["data"]:
-                self.plants[plant["plantId"]] = plant["plantName"]
-            self.user_input = user_input
+                plants[plant["plantId"]] = plant["plantName"]
+
             if (
                 CONF_PLANT_ID not in user_input or user_input[CONF_PLANT_ID] != "0"
             ) and len(plant_info["data"]) > 1:
-                return await self._show_plant_id_form()
+                return await self._show_plant_id_form(plants)
             user_input[CONF_PLANT_ID] = plant_info["data"][0]["plantId"]
 
-        user_input[CONF_NAME] = self.plants[user_input[CONF_PLANT_ID]]
+        user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]
+        await self.async_set_unique_id(user_input[CONF_PLANT_ID])
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
 
     async def async_step_import(self, import_data):
