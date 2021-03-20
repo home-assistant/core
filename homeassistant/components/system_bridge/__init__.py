@@ -108,7 +108,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         _LOGGER.debug("Open payload: %s", {CONF_PATH: path})
         try:
             await bridge.async_open({CONF_PATH: path})
-            _LOGGER.debug("Sent.")
+            _LOGGER.debug("Sent open request")
         except (BridgeAuthenticationException, *BRIDGE_CONNECTION_ERRORS) as exception:
             _LOGGER.warning("Error sending. Error was: %s", exception)
 
