@@ -573,7 +573,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
     orig_kitchen_light_witout_suggested_area = registry.async_update_device(
         orig_kitchen_light.id, suggested_area=None
     )
-    orig_kitchen_light_witout_suggested_area.suggested_area is None
+    assert orig_kitchen_light_witout_suggested_area.suggested_area is None
     assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
 
 

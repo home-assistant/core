@@ -165,9 +165,9 @@ async def test_can_set_level(hass):
         logger.DOMAIN, "set_level", {f"{UNCONFIG_NS}.any": "debug"}, blocking=True
     )
 
-    logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
-    logging.getLogger(f"{UNCONFIG_NS}.any").level == logging.DEBUG
-    logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
+    assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
+    assert logging.getLogger(f"{UNCONFIG_NS}.any").level == logging.DEBUG
+    assert logging.getLogger(UNCONFIG_NS).level == logging.NOTSET
 
     await hass.services.async_call(
         logger.DOMAIN, "set_default_level", {"level": "debug"}, blocking=True
