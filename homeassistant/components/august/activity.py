@@ -46,7 +46,7 @@ class ActivityStream(AugustSubscriberMixin):
     def _async_create_debouncer(self, house_id):
         """Create a debouncer for the house id."""
 
-        async def _async_update_house_id(_):
+        async def _async_update_house_id():
             await self._async_update_house_id(house_id)
 
         return Debouncer(
@@ -112,7 +112,7 @@ class ActivityStream(AugustSubscriberMixin):
             self._schedule_updates[house_id]()
             self._schedule_updates[house_id] = None
 
-        async def _update_house_activities():
+        async def _update_house_activities(_):
             await self._update_debounce[house_id].async_call()
 
         self._hass.async_create_task(self._update_debounce[house_id].async_call())
