@@ -3,7 +3,6 @@ import asyncio
 from enum import Enum
 from functools import partial
 import logging
-import math
 
 from miio import (
     AirFresh,
@@ -43,8 +42,6 @@ from homeassistant.components.fan import (
     SPEED_LOW,
     SPEED_MEDIUM,
     SUPPORT_SET_SPEED,
-    ATTR_SPEED,
-    ATTR_PERCENTAGE,
     FanEntity,
 )
 
@@ -67,9 +64,7 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
-    MODEL_AIRPURIFIER_3,
     MODEL_AIRPURIFIER_3C,
-    MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -684,7 +679,6 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
-        self._state_attrs.update( {"test_marco": "0"} )
         return self._state_attrs
 
     @property
@@ -869,6 +863,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     @property
     def percentage(self):
+        """Get the current percentage."""
         speed = self._state_attrs[ATTR_MOTOR_SPEED]
         return (speed - 300) / 19
 
