@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "no_serial_ports": "No com ports found.  Need a valid RS485 device to communicate."
         },
         "error": {
             "cannot_connect": "Unable to connect, please check serial port, address, electrical connection and that inverter is on (in daylight)",
@@ -16,8 +17,7 @@
                     "port": "RS485 or USB-RS485 Adaptor Port",
                     "usedummyonfail": "Use dummy data if connection fails (for debug)"
                 },
-                "description": "Select configuration options. Inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
-                "title": "Configure Aurora ABB PowerOne solar PV inverter"
+                "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel"
             }
         }
     }

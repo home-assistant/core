@@ -87,8 +87,8 @@ async def test_form_no_comports(hass):
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     print("result=%s" % result)
-    assert result["type"] == "form"
-    assert result["errors"] == {"base": "no_serial_ports"}
+    assert result["type"] == "abort"
+    assert result["reason"] == "no_serial_ports"
 
 
 async def test_form_invalid_com_ports(hass):
