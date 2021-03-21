@@ -259,4 +259,5 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             },
             "name": self.name,
             "manufacturer": MOTIONEYE_MANUFACTURER,
+            "model": MOTIONEYE_MANUFACTURER,
         }

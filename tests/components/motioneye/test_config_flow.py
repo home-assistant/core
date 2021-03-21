@@ -62,7 +62,7 @@ async def test_user_success(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "localhost:8765"
+    assert result["title"] == f"{TEST_HOST}:{TEST_PORT}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
