@@ -38,7 +38,6 @@ def _retrieve_motion_state(data, detail):
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_MOTION}
     )
-    _LOGGER.debug("_retrieve_motion_state: latest=%s", latest)
 
     if latest is None:
         return False
@@ -51,7 +50,6 @@ def _retrieve_ding_state(data, detail):
         detail.device_id, {ActivityType.DOORBELL_DING}
     )
 
-    _LOGGER.debug("_retrieve_ding_state: latest=%s", latest)
     if latest is None:
         return False
 
@@ -69,9 +67,6 @@ def _activity_time_based_state(latest):
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
     now = datetime.now()
-    _LOGGER.debug(
-        "_activity_time_based_state: start=%s <= now=%s <= end=%s", start, now, end
-    )
     return start <= now <= end
 
 
