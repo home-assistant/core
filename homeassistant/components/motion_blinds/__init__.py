@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     """Class to manage fetching data from single endpoint."""
 
-    async def _async_update_data(self) -> Optional[T]:
+    async def _async_update_data(self):
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")

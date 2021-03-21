@@ -186,7 +186,7 @@ class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
         if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
             return False
 
-        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
+        return self.coordinator.data[self._device.mac][ATTR_AVAILABLE]
 
     @property
     def unit_of_measurement(self):
