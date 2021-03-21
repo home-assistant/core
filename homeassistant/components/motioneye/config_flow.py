@@ -23,10 +23,10 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import get_motioneye_config_unique_id
 from .const import (  # pylint:disable=unused-import
-    CONF_PASSWORD_ADMIN,
-    CONF_PASSWORD_SURVEILLANCE,
-    CONF_USERNAME_ADMIN,
-    CONF_USERNAME_SURVEILLANCE,
+    CONF_ADMIN_PASSWORD,
+    CONF_ADMIN_USERNAME,
+    CONF_SURVEILLANCE_PASSWORD,
+    CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
 )
 
@@ -36,10 +36,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME_ADMIN): str,
-        vol.Optional(CONF_USERNAME_SURVEILLANCE): str,
-        vol.Optional(CONF_PASSWORD_ADMIN): str,
-        vol.Optional(CONF_PASSWORD_SURVEILLANCE): str,
+        vol.Optional(CONF_ADMIN_USERNAME): str,
+        vol.Optional(CONF_ADMIN_PASSWORD): str,
+        vol.Optional(CONF_SURVEILLANCE_USERNAME): str,
+        vol.Optional(CONF_SURVEILLANCE_PASSWORD): str,
     }
 )
 
@@ -63,10 +63,10 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         client = MotionEyeClient(
             user_input[CONF_HOST],
             user_input[CONF_PORT],
-            username_admin=user_input.get(CONF_USERNAME_ADMIN),
-            username_surveillance=user_input.get(CONF_USERNAME_SURVEILLANCE),
-            password_admin=user_input.get(CONF_PASSWORD_ADMIN),
-            password_surveillance=user_input.get(CONF_PASSWORD_SURVEILLANCE),
+            admin_username=user_input.get(CONF_ADMIN_USERNAME),
+            admin_password=user_input.get(CONF_ADMIN_PASSWORD),
+            surveillance_username=user_input.get(CONF_SURVEILLANCE_USERNAME),
+            surveillance_password=user_input.get(CONF_SURVEILLANCE_PASSWORD),
         )
 
         unique_id = get_motioneye_config_unique_id(

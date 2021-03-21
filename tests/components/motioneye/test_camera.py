@@ -18,7 +18,7 @@ import pytest
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
 from homeassistant.components.motioneye import get_motioneye_device_unique_id
 from homeassistant.components.motioneye.const import (
-    CONF_USERNAME_SURVEILLANCE,
+    CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MOTIONEYE_MANUFACTURER,
@@ -37,7 +37,7 @@ from . import (
     TEST_CONFIG_ENTRY_ID,
     TEST_HOST,
     TEST_PORT,
-    TEST_USERNAME_SURVEILLANCE,
+    TEST_SURVEILLANCE_USERNAME,
     create_mock_motioneye_client,
     create_mock_motioneye_config_entry,
     setup_mock_motioneye_config_entry,
@@ -174,7 +174,7 @@ async def test_get_still_image_from_camera(
         data={
             CONF_HOST: "localhost",
             CONF_PORT: server.port,
-            CONF_USERNAME_SURVEILLANCE: TEST_USERNAME_SURVEILLANCE,
+            CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
     )
 
@@ -210,7 +210,7 @@ async def test_get_stream_from_camera(
             CONF_HOST: "localhost",
             # The port won't be used as the client is a mock.
             CONF_PORT: 0,
-            CONF_USERNAME_SURVEILLANCE: TEST_USERNAME_SURVEILLANCE,
+            CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
     )
     cameras = copy.deepcopy(TEST_CAMERAS)

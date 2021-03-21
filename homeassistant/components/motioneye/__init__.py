@@ -19,13 +19,13 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONF_ADMIN_PASSWORD,
+    CONF_ADMIN_USERNAME,
     CONF_CLIENT,
     CONF_COORDINATOR,
     CONF_ON_UNLOAD,
-    CONF_PASSWORD_ADMIN,
-    CONF_PASSWORD_SURVEILLANCE,
-    CONF_USERNAME_ADMIN,
-    CONF_USERNAME_SURVEILLANCE,
+    CONF_SURVEILLANCE_PASSWORD,
+    CONF_SURVEILLANCE_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -92,10 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     client = create_motioneye_client(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        username_admin=entry.data.get(CONF_USERNAME_ADMIN),
-        username_surveillance=entry.data.get(CONF_USERNAME_SURVEILLANCE),
-        password_admin=entry.data.get(CONF_PASSWORD_ADMIN),
-        password_surveillance=entry.data.get(CONF_PASSWORD_SURVEILLANCE),
+        admin_username=entry.data.get(CONF_ADMIN_USERNAME),
+        admin_password=entry.data.get(CONF_ADMIN_PASSWORD),
+        surveillance_username=entry.data.get(CONF_SURVEILLANCE_USERNAME),
+        surveillance_password=entry.data.get(CONF_SURVEILLANCE_PASSWORD),
     )
 
     try:

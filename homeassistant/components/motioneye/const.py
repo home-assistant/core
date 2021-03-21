@@ -4,10 +4,10 @@ from datetime import timedelta
 CONF_CLIENT = "client"
 CONF_COORDINATOR = "coordinator"
 CONF_ON_UNLOAD = "on_unload"
-CONF_PASSWORD_ADMIN = "password_admin"
-CONF_PASSWORD_SURVEILLANCE = "password_surveillance"
-CONF_USERNAME_ADMIN = "username_admin"
-CONF_USERNAME_SURVEILLANCE = "username_surveillance"
+CONF_ADMIN_PASSWORD = "admin_password"
+CONF_ADMIN_USERNAME = "admin_username"
+CONF_SURVEILLANCE_USERNAME = "surveillance_username"
+CONF_SURVEILLANCE_PASSWORD = "surveillance_password"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DOMAIN = "motioneye"
 

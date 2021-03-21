@@ -16,7 +16,6 @@ from tests.common import MockConfigEntry
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
 TEST_HOST = "test"
 TEST_PORT = DEFAULT_PORT + 1
-TEST_USERNAME_SURVEILLANCE = "surveillance_username"
 TEST_CAMERA_NAME = "Test Camera"
 TEST_CAMERA_ENTITY_ID = "camera.test_camera"
 TEST_CAMERA_ID = 100
@@ -132,6 +131,7 @@ TEST_CAMERA = {
     "resolution": "1920x1080",
 }
 TEST_CAMERAS = {"cameras": [TEST_CAMERA]}
+TEST_SURVEILLANCE_USERNAME = "surveillance_username"
 TEST_UNIQUE_ID = f"{TEST_HOST}:{TEST_PORT}"
 
 

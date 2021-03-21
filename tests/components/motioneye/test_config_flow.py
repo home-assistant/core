@@ -10,10 +10,10 @@ from motioneye_client.client import (
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.motioneye.const import (
-    CONF_PASSWORD_ADMIN,
-    CONF_PASSWORD_SURVEILLANCE,
-    CONF_USERNAME_ADMIN,
-    CONF_USERNAME_SURVEILLANCE,
+    CONF_ADMIN_PASSWORD,
+    CONF_ADMIN_USERNAME,
+    CONF_SURVEILLANCE_PASSWORD,
+    CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -54,10 +54,10 @@ async def test_user_success(hass: HomeAssistantType) -> None:
             {
                 CONF_HOST: TEST_HOST,
                 CONF_PORT: TEST_PORT,
-                CONF_USERNAME_ADMIN: "admin-username",
-                CONF_PASSWORD_ADMIN: "admin-password",
-                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
-                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
             },
         )
         await hass.async_block_till_done()
@@ -67,10 +67,10 @@ async def test_user_success(hass: HomeAssistantType) -> None:
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
-        CONF_USERNAME_ADMIN: "admin-username",
-        CONF_USERNAME_SURVEILLANCE: "surveillance-username",
-        CONF_PASSWORD_ADMIN: "admin-password",
-        CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
+        CONF_ADMIN_USERNAME: "admin-username",
+        CONF_ADMIN_PASSWORD: "admin-password",
+        CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+        CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -94,10 +94,10 @@ async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
             {
                 CONF_HOST: TEST_HOST,
                 CONF_PORT: TEST_PORT,
-                CONF_USERNAME_ADMIN: "admin-username",
-                CONF_PASSWORD_ADMIN: "admin-password",
-                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
-                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
             },
         )
         await mock_client.async_client_close()
@@ -126,10 +126,10 @@ async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
             {
                 CONF_HOST: TEST_HOST,
                 CONF_PORT: TEST_PORT,
-                CONF_USERNAME_ADMIN: "admin-username",
-                CONF_PASSWORD_ADMIN: "admin-password",
-                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
-                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
             },
         )
         await mock_client.async_client_close()
@@ -156,10 +156,10 @@ async def test_user_request_error(hass: HomeAssistantType) -> None:
             {
                 CONF_HOST: TEST_HOST,
                 CONF_PORT: TEST_PORT,
-                CONF_USERNAME_ADMIN: "admin-username",
-                CONF_PASSWORD_ADMIN: "admin-password",
-                CONF_USERNAME_SURVEILLANCE: "surveillance-username",
-                CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
             },
         )
         await mock_client.async_client_close()
@@ -189,10 +189,10 @@ async def test_reauth(hass: HomeAssistantType) -> None:
     new_data = {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
-        CONF_USERNAME_ADMIN: "admin-username",
-        CONF_PASSWORD_ADMIN: "admin-password",
-        CONF_USERNAME_SURVEILLANCE: "surveillance-username",
-        CONF_PASSWORD_SURVEILLANCE: "surveillance-password",
+        CONF_ADMIN_USERNAME: "admin-username",
+        CONF_ADMIN_PASSWORD: "admin-password",
+        CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+        CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
     }
 
     with patch(

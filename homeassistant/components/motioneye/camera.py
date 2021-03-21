@@ -8,7 +8,7 @@ from typing import Any, Callable
 import aiohttp
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
-    DEFAULT_USERNAME_SURVEILLANCE,
+    DEFAULT_SURVEILLANCE_USERNAME,
     KEY_CAMERAS,
     KEY_ID,
     KEY_MOTION_DETECTION,
@@ -52,8 +52,8 @@ from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
     CONF_ON_UNLOAD,
-    CONF_PASSWORD_SURVEILLANCE,
-    CONF_USERNAME_SURVEILLANCE,
+    CONF_SURVEILLANCE_PASSWORD,
+    CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
     MOTIONEYE_MANUFACTURER,
     SIGNAL_ENTITY_REMOVE,
@@ -117,9 +117,9 @@ async def async_setup_entry(
             current_camera_ids.add(camera_id)
 
             surveillance_username = entry.data.get(
-                CONF_USERNAME_SURVEILLANCE, DEFAULT_USERNAME_SURVEILLANCE
+                CONF_SURVEILLANCE_USERNAME, DEFAULT_SURVEILLANCE_USERNAME
             )
-            surveillance_password = entry.data.get(CONF_PASSWORD_SURVEILLANCE, "")
+            surveillance_password = entry.data.get(CONF_SURVEILLANCE_PASSWORD, "")
 
             entities_to_add.append(
                 MotionEyeMjpegCamera(
