@@ -74,11 +74,6 @@ class RPiGPIOBinarySensor(BinarySensorEntity):
 
         rpi_gpio.setup_input(self._port, self._pull_mode)
 
-        def read_gpio(port):
-            """Read state from GPIO."""
-            self._state = rpi_gpio.read_input(self._port)
-            self.schedule_update_ha_state()
-
         def edge_detected(port):
             """Edge detection handler."""
             self.hass.add_job(self.async_read_gpio)
