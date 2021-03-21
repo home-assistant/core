@@ -32,8 +32,6 @@ SENSOR_NAMES_TO_DEVICE_CLASS = {
     SENSOR_NAME_SCREEN_LOCKED: DEVICE_CLASS_LOCK,
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up EcoNet binary sensor based on a config entry."""
