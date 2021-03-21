@@ -297,7 +297,7 @@ class HyperionBaseLight(LightEntity):
             else:
                 _LOGGER.warning(
                     "Use of Hyperion effect '%s' is deprecated and will be removed "
-                    "in a future release. Please use '%s' instead.",
+                    "in a future release. Please use '%s' instead",
                     effect,
                     const.KEY_COMPONENTID_TO_NAME[effect],
                 )
