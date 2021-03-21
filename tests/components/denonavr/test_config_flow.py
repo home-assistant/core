@@ -15,6 +15,7 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_ZONE3,
     DOMAIN,
 )
+from homeassistant.components.denonavr.receiver import AvrTimoutError
 from homeassistant.const import CONF_HOST, CONF_MAC
 
 from tests.common import MockConfigEntry
@@ -38,37 +39,28 @@ TEST_DISCOVER_2_RECEIVER = [{CONF_HOST: TEST_HOST}, {CONF_HOST: TEST_HOST2}]
 def denonavr_connect_fixture():
     """Mock denonavr connection and entry setup."""
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR._update_input_func_list",
+        "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.async_update",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.support_sound_mode",
         return_value=True,
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR._get_receiver_name",
-        return_value=TEST_NAME,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR._get_support_sound_mode",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR._update_avr_2016",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR._update_avr",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.get_device_info",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.name",
+        "homeassistant.components.denonavr.receiver.DenonAVR.name",
         TEST_NAME,
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.model_name",
+        "homeassistant.components.denonavr.receiver.DenonAVR.model_name",
         TEST_MODEL,
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
         TEST_SERIALNUMBER,
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.manufacturer",
+        "homeassistant.components.denonavr.receiver.DenonAVR.manufacturer",
         TEST_MANUFACTURER,
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
+        "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
         TEST_RECEIVER_TYPE,
     ), patch(
         "homeassistant.components.denonavr.config_flow.get_mac_address",
@@ -125,7 +117,7 @@ async def test_config_flow_manual_discover_1_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.config_flow.denonavr.ssdp.identify_denonavr_receivers",
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
         return_value=TEST_DISCOVER_1_RECEIVER,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -160,7 +152,7 @@ async def test_config_flow_manual_discover_2_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.config_flow.denonavr.ssdp.identify_denonavr_receivers",
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
         return_value=TEST_DISCOVER_2_RECEIVER,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -204,7 +196,7 @@ async def test_config_flow_manual_discover_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.config_flow.denonavr.ssdp.identify_denonavr_receivers",
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
         return_value=[],
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -232,7 +224,7 @@ async def test_config_flow_manual_host_no_serial(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -302,7 +294,7 @@ async def test_config_flow_manual_host_no_serial_no_mac(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
         None,
     ), patch(
         "homeassistant.components.denonavr.config_flow.get_mac_address",
@@ -340,7 +332,7 @@ async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
         None,
     ), patch(
         "homeassistant.components.denonavr.config_flow.get_mac_address",
@@ -378,10 +370,10 @@ async def test_config_flow_manual_host_connection_error(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.get_device_info",
-        side_effect=ConnectionError,
+        "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
+        side_effect=AvrTimoutError("Timeout", "async_setup"),
     ), patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
+        "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -408,7 +400,7 @@ async def test_config_flow_manual_host_no_device_info(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.receiver_type",
+        "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -567,7 +559,7 @@ async def test_config_flow_manual_host_no_serial_double_config(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -595,7 +587,7 @@ async def test_config_flow_manual_host_no_serial_double_config(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR.serial_number",
+        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
         None,
     ):
         result = await hass.config_entries.flow.async_configure(
