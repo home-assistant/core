@@ -206,5 +206,30 @@ async def test_lock_update_via_pubnub(hass):
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
 
+    # Ensure pubnub status is always preserved
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=2))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            message={
+                "status": "kAugLockState_Unlocking",
+            },
+        ),
+    )
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(hours=4))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
+
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
