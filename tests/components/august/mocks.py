@@ -50,7 +50,6 @@ def _mock_authenticator(auth_state):
     return authenticator
 
 
-@patch("homeassistant.components.august.async_create_pubnub")
 @patch("homeassistant.components.august.gateway.ApiAsync")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
@@ -69,16 +68,19 @@ async def _mock_setup_august(
         options={},
     )
     entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    return True
+    with patch("homeassistant.components.august.async_create_pubnub", pubnub_mock):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
 
 
 async def _create_august_with_devices(
-    hass, devices, api_call_side_effects=None, activities=None
+    hass, devices, api_call_side_effects=None, activities=None, pubnub=None
 ):
     if api_call_side_effects is None:
         api_call_side_effects = {}
+    if pubnub is None:
+        pubnub = MagicMock()
 
     device_data = {"doorbells": [], "locks": []}
     for device in devices:
@@ -159,7 +161,9 @@ async def _create_august_with_devices(
             "unlock_return_activities"
         ] = unlock_return_activities_side_effect
 
-    return await _mock_setup_august_with_api_side_effects(hass, api_call_side_effects)
+    return await _mock_setup_august_with_api_side_effects(
+        hass, api_call_side_effects, pubnub
+    )
 
 
 async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
