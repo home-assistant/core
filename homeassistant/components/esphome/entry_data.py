@@ -54,7 +54,6 @@ class RuntimeEntryData:
     entry_id: str = attr.ib()
     client: APIClient = attr.ib()
     store: Store = attr.ib()
-    reconnect_task: asyncio.Task | None = attr.ib(default=None)
     state: dict[str, dict[str, Any]] = attr.ib(factory=dict)
     info: dict[str, dict[str, Any]] = attr.ib(factory=dict)
 
