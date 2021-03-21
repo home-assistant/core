@@ -1,7 +1,7 @@
 """Tesla Config Flow."""
 import datetime
 import logging
-from typing import Any, Dict, List, Optional, Text
+from typing import Any, Dict, List, Optional
 
 from aiohttp import web, web_response
 from aiohttp.web_exceptions import HTTPBadRequest
@@ -50,7 +50,7 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
     proxy: TeslaProxy = None
     proxy_view: "TeslaAuthorizationProxyView" = None
-    data: Dict[Text, Any] = None
+    data: Dict[str, Any] = None
     warning_shown: bool = False
     callback_url: Optional[URL] = None
     controller: Optional[TeslaAPI] = None
@@ -265,12 +265,12 @@ class TeslaAuthorizationCallbackView(HomeAssistantView):
 class TeslaAuthorizationProxyView(HomeAssistantView):
     """Handle proxy connections."""
 
-    url: Text = AUTH_PROXY_PATH
-    extra_urls: List[Text] = [f"{AUTH_PROXY_PATH}/{{tail:.*}}"]
-    name: Text = AUTH_PROXY_NAME
+    url: str = AUTH_PROXY_PATH
+    extra_urls: List[str] = [f"{AUTH_PROXY_PATH}/{{tail:.*}}"]
+    name: str = AUTH_PROXY_NAME
     requires_auth: bool = False
     handler: web.RequestHandler = None
-    known_ips: Dict[Text, datetime.datetime] = {}
+    known_ips: Dict[str, datetime.datetime] = {}
     auth_seconds: int = 300
     cors_allowed = False
 

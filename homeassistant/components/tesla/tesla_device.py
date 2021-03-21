@@ -1,7 +1,7 @@
 """Support for Tesla cars."""
 from functools import wraps
 import logging
-from typing import Any, Optional, Text
+from typing import Any, Optional
 
 from teslajsonpy.exceptions import IncompleteCredentials
 
@@ -53,10 +53,10 @@ class TeslaDevice(CoordinatorEntity):
         """Initialise the Tesla device."""
         super().__init__(coordinator)
         self.tesla_device = tesla_device
-        self._name: Text = self.tesla_device.name
-        self._unique_id: Text = slugify(self.tesla_device.uniq_name)
-        self._attributes: Text = self.tesla_device.attrs.copy()
-        self.config_entry_id: Optional[Text] = None
+        self._name: str = self.tesla_device.name
+        self._unique_id: str = slugify(self.tesla_device.uniq_name)
+        self._attributes: str = self.tesla_device.attrs.copy()
+        self.config_entry_id: Optional[str] = None
 
     @property
     def name(self):
