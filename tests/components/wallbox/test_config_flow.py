@@ -1,7 +1,7 @@
 """Test the Wallbox config flow."""
 from unittest.mock import patch
 
-import requests
+import requests_mock
 from voluptuous.schema_builder import raises
 
 from homeassistant import config_entries, data_entry_flow
@@ -76,33 +76,32 @@ def test_hub_class():
 
     hub = config_flow.PlaceholderHub(station, username, password)
 
-    def alternate_authenticate_method():
-        return None
-
-    def alternate_get_charger_status_method(station):
-        data = '{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}'
-        return data
-
-    with patch(
-        "wallbox.Wallbox.authenticate",
-        side_effect=alternate_authenticate_method,
-    ), patch(
-        "wallbox.Wallbox.getChargerStatus",
-        side_effect=alternate_get_charger_status_method,
-    ):
+    with requests_mock.Mocker() as m:
+        m.get(
+            "https://api.wall-box.com/auth/token/user",
+            text='{"jwt":"fakekeyhere","user_id":12345,"ttl":145656758,"error":false,"status":200}',
+            status_code=200,
+        )
+        m.get(
+            "https://api.wall-box.com/chargers/status/('12345',)",
+            text='{"Temperature": 100, "Location": "Toronto", "Datetime": "2020-07-23", "Units": "Celsius"}',
+            status_code=200,
+        )
         assert hub.authenticate()
         assert hub.get_data()
 
-    with patch(
-        "wallbox.Wallbox.authenticate",
-        side_effect=requests.exceptions.HTTPError(),
-    ), raises(InvalidAuth):
+    with requests_mock.Mocker() as m, raises(InvalidAuth):
+        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
+
         assert hub.authenticate()
 
-    with patch("wallbox.Wallbox.authenticate",), patch(
-        "wallbox.Wallbox.getChargerStatus",
-        side_effect=requests.exceptions.HTTPError(),
-    ), raises(InvalidAuth):
+    with requests_mock.Mocker() as m, raises(InvalidAuth):
+        m.get("https://api.wall-box.com/auth/token/user", text="data", status_code=403)
+        m.get(
+            "https://api.wall-box.com/chargers/status/test",
+            text="data",
+            status_code=403,
+        )
         assert hub.get_data()
 
 
