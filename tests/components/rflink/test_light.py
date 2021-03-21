@@ -386,6 +386,21 @@ async def test_set_level_command(hass, monkeypatch):
     assert state
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 170
+    # turn off
+    event_callback({"id": "newkaku_12345678_0", "command": "off"})
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{DOMAIN}.l1")
+    assert state
+    assert state.state == STATE_OFF
+    # off light shouldn't have brightness
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
+    # turn on
+    event_callback({"id": "newkaku_12345678_0", "command": "on"})
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{DOMAIN}.l1")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 170
 
     # test sending command to a no dimmable device
     event_callback({"id": "test_no_dimmable", "command": "set_level=10"})
@@ -420,7 +435,8 @@ async def test_set_level_command(hass, monkeypatch):
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    # off light shouldn't have brightness
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
 
     event_callback({"id": "test_hybrid", "command": "set_level=0"})
     await hass.async_block_till_done()
@@ -599,7 +615,8 @@ async def test_restore_state(hass, monkeypatch):
     state = hass.states.get(f"{DOMAIN}.l4")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    # off light shouldn't have brightness
+    assert not state.attributes.get(ATTR_BRIGHTNESS)
     assert state.attributes["assumed_state"]
 
     # test coverage for dimmable light

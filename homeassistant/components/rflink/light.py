@@ -28,6 +28,7 @@ from . import (
     EVENT_KEY_ID,
     SwitchableRflinkDevice,
 )
+from .utils import brightness_to_rflink, rflink_to_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +185,9 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
-            self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
+            self._brightness = rflink_to_brightness(
+                brightness_to_rflink(kwargs[ATTR_BRIGHTNESS])
+            )
 
         # Turn on light at the requested dim level
         await self._async_handle_command("dim", self._brightness)
@@ -200,20 +203,13 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
             self._state = False
         # dimmable device accept 'set_level=(0-15)' commands
         elif re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
-            self._brightness = int(command.split("=")[1]) * 17
+            self._brightness = rflink_to_brightness(int(command.split("=")[1]))
             self._state = True
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def extra_state_attributes(self):
-        """Return the device state attributes."""
-        if self._brightness is None:
-            return {}
-        return {ATTR_BRIGHTNESS: self._brightness}
 
     @property
     def supported_features(self):
