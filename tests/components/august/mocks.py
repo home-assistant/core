@@ -25,6 +25,7 @@ from yalexs.activity import (
 from yalexs.authenticator import AuthenticationState
 from yalexs.doorbell import Doorbell, DoorbellDetail
 from yalexs.lock import Lock, LockDetail
+from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.august.const import CONF_LOGIN_METHOD, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -53,7 +54,7 @@ def _mock_authenticator(auth_state):
 @patch("homeassistant.components.august.gateway.ApiAsync")
 @patch("homeassistant.components.august.gateway.AuthenticatorAsync.async_authenticate")
 async def _mock_setup_august(
-    hass, api_instance, authenticate_mock, api_mock, pubnub_mock
+    hass, api_instance, pubnub_mock, authenticate_mock, api_mock
 ):
     """Set up august integration."""
     authenticate_mock.side_effect = MagicMock(
@@ -68,7 +69,9 @@ async def _mock_setup_august(
         options={},
     )
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.august.async_create_pubnub", pubnub_mock):
+    with patch("homeassistant.components.august.async_create_pubnub"), patch(
+        "homeassistant.components.august.AugustPubNub", return_value=pubnub_mock
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
@@ -80,7 +83,7 @@ async def _create_august_with_devices(
     if api_call_side_effects is None:
         api_call_side_effects = {}
     if pubnub is None:
-        pubnub = MagicMock()
+        pubnub = AugustPubNub()
 
     device_data = {"doorbells": [], "locks": []}
     for device in devices:
@@ -166,7 +169,7 @@ async def _create_august_with_devices(
     )
 
 
-async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
+async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects, pubnub):
     api_instance = MagicMock(name="Api")
 
     if api_call_side_effects["get_lock_detail"]:
@@ -206,7 +209,7 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
 
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
 
-    return await _mock_setup_august(hass, api_instance)
+    return await _mock_setup_august(hass, api_instance, pubnub)
 
 
 def _mock_august_authentication(token_text, token_timestamp, state):
