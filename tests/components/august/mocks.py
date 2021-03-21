@@ -7,11 +7,15 @@ import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from yalexs.activity import (
+    ACTIVITY_ACTIONS_BRIDGE_OPERATION,
     ACTIVITY_ACTIONS_DOOR_OPERATION,
     ACTIVITY_ACTIONS_DOORBELL_DING,
     ACTIVITY_ACTIONS_DOORBELL_MOTION,
     ACTIVITY_ACTIONS_DOORBELL_VIEW,
     ACTIVITY_ACTIONS_LOCK_OPERATION,
+    SOURCE_LOCK_OPERATE,
+    SOURCE_LOG,
+    BridgeOperationActivity,
     DoorbellDingActivity,
     DoorbellMotionActivity,
     DoorbellViewActivity,
@@ -306,23 +310,25 @@ async def _mock_doorsense_missing_august_lock_detail(hass):
 
 def _mock_lock_operation_activity(lock, action, offset):
     return LockOperationActivity(
+        SOURCE_LOCK_OPERATE,
         {
             "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
-        }
+        },
     )
 
 
 def _mock_door_operation_activity(lock, action, offset):
     return DoorOperationActivity(
+        SOURCE_LOCK_OPERATE,
         {
             "dateTime": (time.time() + offset) * 1000,
             "deviceID": lock.device_id,
             "deviceType": "lock",
             "action": action,
-        }
+        },
     )
 
 
@@ -332,13 +338,15 @@ def _activity_from_dict(activity_dict):
     activity_dict["dateTime"] = time.time() * 1000
 
     if action in ACTIVITY_ACTIONS_DOORBELL_DING:
-        return DoorbellDingActivity(activity_dict)
+        return DoorbellDingActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_DOORBELL_MOTION:
-        return DoorbellMotionActivity(activity_dict)
+        return DoorbellMotionActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_DOORBELL_VIEW:
-        return DoorbellViewActivity(activity_dict)
+        return DoorbellViewActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_LOCK_OPERATION:
-        return LockOperationActivity(activity_dict)
+        return LockOperationActivity(SOURCE_LOG, activity_dict)
     if action in ACTIVITY_ACTIONS_DOOR_OPERATION:
-        return DoorOperationActivity(activity_dict)
+        return DoorOperationActivity(SOURCE_LOG, activity_dict)
+    if action in ACTIVITY_ACTIONS_BRIDGE_OPERATION:
+        return BridgeOperationActivity(SOURCE_LOG, activity_dict)
     return None
