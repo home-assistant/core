@@ -5,7 +5,7 @@ from abc import abstractmethod
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -167,7 +167,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry):
 
 
 class ClimateEntity(Entity):
-    """Representation of a climate entity."""
+    """Base class for climate entities."""
 
     @property
     def state(self) -> str:
@@ -213,6 +213,7 @@ class ClimateEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Iterable, cast
+from typing import Any, Iterable, cast, final
 
 import voluptuous as vol
 
@@ -141,7 +141,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 class RemoteEntity(ToggleEntity):
-    """Representation of a remote."""
+    """Base class for remote entities."""
 
     @property
     def supported_features(self) -> int:
@@ -158,6 +158,7 @@ class RemoteEntity(ToggleEntity):
         """List of available activities."""
         return None
 
+    @final
     @property
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""

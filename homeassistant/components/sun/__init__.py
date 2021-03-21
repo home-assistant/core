@@ -124,7 +124,7 @@ class Sun(Entity):
         return STATE_BELOW_HORIZON
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sun."""
         return {
             STATE_ATTR_NEXT_DAWN: self.next_dawn.isoformat(),

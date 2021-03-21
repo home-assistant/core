@@ -232,7 +232,7 @@ class Timer(RestoreEntity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_DURATION: _format_timedelta(self._duration),

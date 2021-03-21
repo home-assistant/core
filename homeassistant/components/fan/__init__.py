@@ -5,6 +5,7 @@ from datetime import timedelta
 import functools as ft
 import logging
 import math
+from typing import final
 
 import voluptuous as vol
 
@@ -220,7 +221,7 @@ def _fan_native(method):
 
 
 class FanEntity(ToggleEntity):
-    """Representation of a fan."""
+    """Base class for fan entities."""
 
     @_fan_native
     def set_speed(self, speed: str) -> None:
@@ -586,6 +587,7 @@ class FanEntity(ToggleEntity):
                 f"The speed_list {speed_list} does not contain any valid speeds."
             ) from ex
 
+    @final
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""

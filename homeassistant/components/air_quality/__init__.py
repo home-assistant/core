@@ -1,6 +1,7 @@
 """Component for handling Air Quality data for your location."""
 from datetime import timedelta
 import logging
+from typing import final
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -131,6 +132,7 @@ class AirQualityEntity(Entity):
         """Return the NO2 (nitrogen dioxide) level."""
         return None
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""

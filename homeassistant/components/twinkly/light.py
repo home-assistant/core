@@ -129,7 +129,7 @@ class TwinklyLight(LightEntity):
         return self._brightness
 
     @property
-    def state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return device specific state attributes."""
 
         attributes = self._attributes

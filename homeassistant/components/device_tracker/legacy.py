@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 import hashlib
 from types import ModuleType
-from typing import Any, Callable, Sequence
+from typing import Any, Callable, Sequence, final
 
 import attr
 import voluptuous as vol
@@ -588,7 +588,7 @@ class DeviceTracker:
 
 
 class Device(RestoreEntity):
-    """Represent a tracked device."""
+    """Base class for a tracked device."""
 
     host_name: str = None
     location_name: str = None
@@ -661,6 +661,7 @@ class Device(RestoreEntity):
         """Return the picture of the device."""
         return self.config_picture
 
+    @final
     @property
     def state_attributes(self):
         """Return the device state attributes."""

@@ -66,7 +66,7 @@ class BanSensor(Entity):
         return self._name
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the fail2ban sensor."""
         return self.ban_dict
 

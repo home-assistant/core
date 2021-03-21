@@ -93,7 +93,7 @@ class FritzboxMonitorSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         # Don't return attributes if FritzBox is unreachable
         if self._state == STATE_UNAVAILABLE:

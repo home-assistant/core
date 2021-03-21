@@ -400,7 +400,7 @@ class Person(RestoreEntity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the person."""
         data = {ATTR_EDITABLE: self.editable, ATTR_ID: self.unique_id}
         if self._latitude is not None:

@@ -253,7 +253,7 @@ class InputSelect(RestoreEntity):
         return self._current_option
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_OPTIONS: self._config[ATTR_OPTIONS], ATTR_EDITABLE: self.editable}
 

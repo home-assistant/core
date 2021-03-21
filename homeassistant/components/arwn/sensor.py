@@ -154,7 +154,7 @@ class ArwnSensor(Entity):
         return self._uid
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self.event
 
