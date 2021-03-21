@@ -28,6 +28,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .utils import brightness_to_rflink
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_EVENT = "event"
@@ -509,7 +511,7 @@ class RflinkCommand(RflinkDevice):
 
         elif command == "dim":
             # convert brightness to rflink dim level
-            cmd = str(int(args[0] / 17))
+            cmd = str(brightness_to_rflink(args[0]))
             self._state = True
 
         elif command == "toggle":
