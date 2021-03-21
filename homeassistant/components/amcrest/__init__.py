@@ -193,7 +193,7 @@ class AmcrestChecker(Http):
         """Test if camera is back online."""
         _LOGGER.debug("Testing if %s back online", self._wrap_name)
         with suppress(AmcrestError):
-            self.current_time
+            self.current_time  # pylint: disable=pointless-statement
 
 
 def _monitor_events(hass, name, api, event_codes):

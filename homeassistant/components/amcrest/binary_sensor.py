@@ -156,7 +156,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
             # Override of Http.command() in __init__.py will set self._api.available
             # accordingly.
             with suppress(AmcrestError):
-                self._api.current_time
+                self._api.current_time  # pylint: disable=pointless-statement
         self._state = self._api.available
 
     def _update_others(self):
