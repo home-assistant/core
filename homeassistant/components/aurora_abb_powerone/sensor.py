@@ -20,7 +20,7 @@ from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
 
 from .aurora_device import AuroraDevice
-from .const import ATTR_SERIAL_NUMBER, DEFAULT_ADDRESS, DOMAIN
+from .const import DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,12 +103,6 @@ class AuroraSensor(AuroraDevice):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Get a unique ID for this device."""
-        sn = self.config_entry.data.get(ATTR_SERIAL_NUMBER)
-        return f"{sn}_{self.type}"
 
     @property
     def state(self):
