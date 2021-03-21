@@ -179,10 +179,10 @@ class DenonDevice(MediaPlayerEntity):
     async def async_added_to_hass(self):
         """Register signal handler."""
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+            async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
         )
 
-    def signal_handler(self, data):
+    async def async_signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""
         entity_ids = data[ATTR_ENTITY_ID]
 
@@ -195,7 +195,7 @@ class DenonDevice(MediaPlayerEntity):
                 for key, value in data.items()
                 if key not in ["entity_id", "method"]
             }
-            getattr(self, data["method"])(**params)
+            await getattr(self, data["method"])(**params)
 
     @async_log_errors
     async def async_update(self) -> None:
