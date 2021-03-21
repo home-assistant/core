@@ -66,8 +66,12 @@ def _activity_time_based_state(latest):
     """Get the latest state of the sensor."""
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    now = datetime.now()
-    return start <= now <= end
+    return start <= _native_datetime() <= end
+
+
+def _native_datetime():
+    """Return time in the format august uses without timezone."""
+    return datetime.now()
 
 
 SENSOR_NAME = 0
@@ -249,7 +253,8 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             """Timer callback for sensor update."""
             self._check_for_off_update_listener = None
             self._update_from_data()
-            self.async_write_ha_state()
+            if not self._state:
+                self.async_write_ha_state()
 
         self._check_for_off_update_listener = async_call_later(
             self.hass, TIME_TO_RECHECK_DETECTION.seconds, _scheduled_update
