@@ -5,6 +5,7 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
@@ -112,3 +113,31 @@ async def test_one_lock_unknown_state(hass):
     lock_brokenid_name = hass.states.get("lock.brokenid_name")
 
     assert lock_brokenid_name.state == STATE_UNKNOWN
+
+
+async def test_lock_bridge_offline(hass):
+    """Test creation of a lock with doorsense and bridge that goes offline."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.bridge_offline.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_UNAVAILABLE
+
+
+async def test_lock_bridge_online(hass):
+    """Test creation of a lock with doorsense and bridge that goes offline."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.bridge_online.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED

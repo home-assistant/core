@@ -52,6 +52,22 @@ async def test_doorsense(hass):
     assert binary_sensor_online_with_doorsense_name.state == STATE_OFF
 
 
+async def test_lock_bridge_offline(hass):
+    """Test creation of a lock with doorsense and bridge that goes offline."""
+    lock_one = await _mock_lock_from_fixture(
+        hass, "get_lock.online_with_doorsense.json"
+    )
+    activities = await _mock_activities_from_fixture(
+        hass, "get_activity.bridge_offline.json"
+    )
+    await _create_august_with_devices(hass, [lock_one], activities=activities)
+
+    binary_sensor_online_with_doorsense_name = hass.states.get(
+        "binary_sensor.online_with_doorsense_name_open"
+    )
+    assert binary_sensor_online_with_doorsense_name.state == STATE_UNAVAILABLE
+
+
 async def test_create_doorbell(hass):
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
