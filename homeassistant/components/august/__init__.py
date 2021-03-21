@@ -210,13 +210,13 @@ class AugustData(AugustSubscriberMixin):
 
     async def _async_refresh_device_detail_by_id(self, device_id):
         if device_id in self._locks_by_id:
-            if self.activity_stream.pubnub.connected:
-                saved_attrs = _save_live_attrs(self._locks_by_id[device_id])
+            if self.activity_stream and self.activity_stream.pubnub.connected:
+                saved_attrs = _save_live_attrs(self._device_detail_by_id[device_id])
             await self._async_update_device_detail(
                 self._locks_by_id[device_id], self._api.async_get_lock_detail
             )
-            if self.activity_stream.pubnub.connected:
-                _restore_live_attrs(self._locks_by_id[device_id], saved_attrs)
+            if self.activity_stream and self.activity_stream.pubnub.connected:
+                _restore_live_attrs(self._device_detail_by_id[device_id], saved_attrs)
             # keypads are always attached to locks
             if (
                 device_id in self._device_detail_by_id
