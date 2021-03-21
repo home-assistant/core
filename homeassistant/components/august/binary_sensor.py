@@ -21,8 +21,8 @@ from .entity import AugustEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
-TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds / 2)
-TIME_TO_RECHECK_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds * 2)
+TIME_TO_DECLARE_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds)
+TIME_TO_RECHECK_DETECTION = timedelta(seconds=ACTIVITY_UPDATE_INTERVAL.seconds * 3)
 
 
 def _retrieve_online_state(data, detail):
