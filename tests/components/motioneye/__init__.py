@@ -131,6 +131,7 @@ TEST_CAMERA = {
     "resolution": "1920x1080",
 }
 TEST_CAMERAS = {"cameras": [TEST_CAMERA]}
+TEST_UNIQUE_ID = f"{TEST_HOST}:{TEST_PORT}"
 
 
 def create_mock_motioneye_client() -> AsyncMock:
@@ -153,6 +154,7 @@ def create_mock_motioneye_config_entry(
         domain=DOMAIN,
         data=data or {CONF_HOST: TEST_HOST, CONF_PORT: TEST_PORT},
         title=f"{TEST_HOST}:{TEST_PORT}",
+        unique_id=TEST_UNIQUE_ID,
     )
     config_entry.add_to_hass(hass)  # type: ignore[no-untyped-call]
     return config_entry

@@ -10,8 +10,8 @@ from motioneye_client.client import (
 )
 from motioneye_client.const import KEY_CAMERAS, KEY_ID
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -41,16 +41,21 @@ def create_motioneye_client(
     return MotionEyeClient(*args, **kwargs)
 
 
-def get_motioneye_entity_unique_id(
-    host: str, port: int, camera_id: int, entity_type: str
-) -> str:
-    """Get the unique_id for a motionEye entity."""
-    return f"{host}:{port}_{camera_id}_{entity_type}"
+def get_motioneye_config_unique_id(host: str, port: int) -> str:
+    """Get the unique_id for a motionEye config."""
+    return f"{host}:{port}"
 
 
 def get_motioneye_device_unique_id(host: str, port: int, camera_id: int) -> str:
     """Get the unique_id for a motionEye device."""
     return f"{host}:{port}_{camera_id}"
+
+
+def get_motioneye_entity_unique_id(
+    host: str, port: int, camera_id: int, entity_type: str
+) -> str:
+    """Get the unique_id for a motionEye entity."""
+    return f"{host}:{port}_{camera_id}_{entity_type}"
 
 
 def get_camera_from_cameras(
@@ -63,10 +68,24 @@ def get_camera_from_cameras(
     return None
 
 
+# TODO old types change to new
+
+
 async def async_setup(hass: HomeAssistant, config: Dict[str, Any]):
     """Set up the motionEye component."""
     hass.data[DOMAIN] = {}
     return True
+
+
+async def _create_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> None:
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
+        )
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -83,9 +102,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     try:
         await client.async_client_login()
     except MotionEyeClientInvalidAuth:
-        # TODO: Add reauth handler.
+        await client.async_client_close()
+        await _create_reauth_flow(hass, entry)
         return False
     except MotionEyeClientError:
+        await client.async_client_close()
         raise ConfigEntryNotReady
 
     async def async_update_data():
