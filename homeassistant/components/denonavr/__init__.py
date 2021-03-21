@@ -8,7 +8,7 @@ from homeassistant import config_entries, core
 from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
@@ -33,22 +33,22 @@ CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 GET_COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
 
 SERVICE_TO_METHOD = {
-    SERVICE_GET_COMMAND: {"method": "get_command", "schema": GET_COMMAND_SCHEMA}
+    SERVICE_GET_COMMAND: {"method": "async_get_command", "schema": GET_COMMAND_SCHEMA}
 }
 
 
-def setup(hass: core.HomeAssistant, config: Dict):
+async def async_setup(hass: core.HomeAssistant, config: Dict):
     """Set up the denonavr platform."""
 
     def service_handler(service):
         method = SERVICE_TO_METHOD.get(service.service)
         data = service.data.copy()
         data["method"] = method["method"]
-        dispatcher_send(hass, DOMAIN, data)
+        async_dispatcher_send(hass, DOMAIN, data)
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.register(DOMAIN, service, service_handler, schema=schema)
+        hass.services.async_register(DOMAIN, service, service_handler, schema=schema)
 
     return True
 
