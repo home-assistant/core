@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_ZONE,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 
@@ -131,7 +132,8 @@ class KonnectedSwitch(ToggleEntity):
             state,
         )
 
-    async def async_set_state(self, state):
+    @callback
+    def async_set_state(self, state):
         """Update the switch state."""
         self._set_state(state)
 
