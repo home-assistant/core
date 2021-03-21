@@ -3,7 +3,6 @@
 from datetime import timedelta
 
 DEFAULT_TIMEOUT = 10
-DEFAULT_OPERATION_TIME = 10
 
 CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_LOGIN_METHOD = "login_method"
