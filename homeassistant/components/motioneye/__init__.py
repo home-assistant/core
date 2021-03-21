@@ -46,7 +46,7 @@ def get_motioneye_unique_id(host: str, port: int, camera_id: int, name: str) -> 
     return f"{host}:{port}_{camera_id}_{name}"
 
 
-def get_camera_from_cameras_data(
+def get_camera_from_cameras(
     camera_id: int, data: Dict[str, Any]
 ) -> Optional[Dict[str, Any]]:
     """Get an individual camera dict from a multiple cameras data response."""
