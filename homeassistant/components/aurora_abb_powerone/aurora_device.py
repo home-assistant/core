@@ -32,8 +32,8 @@ class AuroraDevice(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique id for this device."""
-        sn = self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
-        return f"{sn}_{self.type}"
+        serial = self.config_entry.data.get(ATTR_SERIAL_NUMBER, "dummy sn")
+        return f"{serial}_{self.type}"
 
     @property
     def available(self) -> bool:
