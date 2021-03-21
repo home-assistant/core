@@ -444,10 +444,11 @@ def port_is_available(port: int) -> bool:
 
 async def async_find_next_available_port(hass: HomeAssistant, start_port: int) -> int:
     """Find the next available port not assigned to a config entry."""
-    exclude_ports = set()
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if CONF_PORT in entry.data:
-            exclude_ports.add(entry.data[CONF_PORT])
+    exclude_ports = {
+        entry.data[CONF_PORT]
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if CONF_PORT in entry.data
+    }
 
     return await hass.async_add_executor_job(
         _find_next_available_port, start_port, exclude_ports
@@ -499,10 +500,7 @@ def state_needs_accessory_mode(state):
     if state.domain == CAMERA_DOMAIN:
         return True
 
-    if (
+    return (
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
-    ):
-        return True
-
-    return False
+    )
