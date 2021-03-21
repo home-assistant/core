@@ -10,11 +10,13 @@ from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
+    CONF_PORT,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.exceptions import InvalidStateError
 import homeassistant.helpers.config_validation as cv
 
 from .aurora_device import AuroraDevice
@@ -56,17 +58,21 @@ def setup_platform(hass, config: dict, add_entities, discovery_info=None):
 async def async_setup_entry(hass, config, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
-    client = hass.data[DOMAIN][config.entry_id]["client"]
-    serialnum = config.data[ATTR_SERIAL_NUMBER]
-    for sensor in hass.data[DOMAIN][config.entry_id]["devices"][serialnum]["sensor"]:
-        if sensor["parameter"] == "temperature":
-            entities.append(AuroraSensor(client, config, sensor["name"], "temperature"))
-        elif sensor["parameter"] == "instantaneouspower":
-            entities.append(
-                AuroraSensor(client, config, sensor["name"], "instantaneouspower")
-            )
-        else:
-            _LOGGER.error("Unrecognised sensor parameter '%s'", sensor["parameter"])
+
+    comport = config.data[CONF_PORT]
+    address = config.data[CONF_ADDRESS]
+    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+
+    sensortypes = [
+        {"parameter": "instantaneouspower", "name": "Power Output"},
+        {"parameter": "temperature", "name": "Temperature"},
+    ]
+
+    for sens in sensortypes:
+        entities.append(AuroraSensor(client, config, sens["name"], sens["parameter"]))
+
+    hass.data[DOMAIN][config.entry_id] = {"client": client}
+
     _LOGGER.debug("async_setup_entry adding %d entities", len(entities))
     async_add_entities(entities, True)
 
@@ -90,9 +96,8 @@ class AuroraSensor(AuroraDevice):
             self.units = TEMP_CELSIUS
             self._device_class = DEVICE_CLASS_TEMPERATURE
         else:
-            _LOGGER.warning("Unrecognised typename '%s'", typename)
-        if self.type:
-            self._name = f"{self.device_name} {name}"
+            raise InvalidStateError(f"Unrecognised typename '{typename}'")
+        self._name = f"{name}"
 
     @property
     def name(self):
@@ -102,7 +107,8 @@ class AuroraSensor(AuroraDevice):
     @property
     def unique_id(self) -> str:
         """Get a unique ID for this device."""
-        return f"{self.serialnum}_{self.type}"
+        sn = self.config_entry.data.get(ATTR_SERIAL_NUMBER)
+        return f"{sn}_{self.type}"
 
     @property
     def state(self):
@@ -119,12 +125,18 @@ class AuroraSensor(AuroraDevice):
         """Return the device class."""
         return self._device_class
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._state is not None
+
     def update(self):
         """Fetch new state data for the sensor.
 
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
+            availableprev = self.available
             self.client.connect()
             if self.type == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
@@ -148,15 +160,13 @@ class AuroraSensor(AuroraDevice):
             else:
                 raise error
         finally:
-            self._available = bool(self._state is not None)
-            if self._available != self.availableprev:
-                if self._available:
+            if self.available != availableprev:
+                if self.available:
                     _LOGGER.info("Communication with %s back online", self._name)
                 else:
                     _LOGGER.warning(
                         "Communication with %s lost",
                         self._name,
                     )
-            self.availableprev = self._available
             if self.client.serline.isOpen():
                 self.client.close()

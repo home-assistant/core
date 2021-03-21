@@ -7,10 +7,7 @@
 import asyncio
 import logging
 
-from aurorapy.client import AuroraSerialClient
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -29,28 +26,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Aurora ABB PowerOne from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     _LOGGER.debug("async_setup_entry got user config data=%s", entry.data)
-
-    comport = entry.data[CONF_PORT]
-    address = entry.data[CONF_ADDRESS]
-    client = AuroraSerialClient(address, comport, parity="N", timeout=1)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        "client": client,
-        "devices": {
-            entry.data: [
-                {  # Power output to grid
-                    "type": "sensor",
-                    "parameter": "instantaneouspower",
-                    "name": "Power Output",
-                },
-                {  # Inverter temperature
-                    "type": "sensor",
-                    "parameter": "temperature",
-                    "name": "Temperature",
-                },
-            ]
-        },
-    }
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -71,7 +46,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    entry["client"].close()
+    # It should not be necessary to close the serial port because we close
+    # it after every use in sensor.py, i.e. no need to do entry["client"].close()
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
