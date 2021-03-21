@@ -81,7 +81,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 defaultcomport = comportslist[0]
             else:
                 _LOGGER.warning(
-                    "No com ports found.  Need a valid RS485 device to communicate."
+                    "No com ports found.  Need a valid RS485 device to communicate"
                 )
                 return self.async_abort(reason="no_serial_ports")
             self._comportslist = comportslist
