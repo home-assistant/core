@@ -7,13 +7,19 @@ from unittest.mock import AsyncMock, Mock
 from aiohttp import web  # type: ignore
 from aiohttp.web_exceptions import HTTPBadGateway
 from motioneye_client.client import MotionEyeClientError, MotionEyeClientInvalidAuth
-from motioneye_client.const import KEY_CAMERAS, KEY_NAME, KEY_VIDEO_STREAMING
+from motioneye_client.const import (
+    KEY_CAMERAS,
+    KEY_MOTION_DETECTION,
+    KEY_NAME,
+    KEY_VIDEO_STREAMING,
+)
 import pytest
 
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
 from homeassistant.components.motioneye.const import (
     CONF_USERNAME_SURVEILLANCE,
     DEFAULT_SCAN_INTERVAL,
+    MOTIONEYE_MANUFACTURER,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
@@ -212,3 +218,24 @@ async def test_get_stream_from_camera(
     with pytest.raises(HTTPBadGateway):
         await async_get_mjpeg_stream(hass, None, TEST_CAMERA_ENTITY_ID)  # type: ignore[no-untyped-call]
     assert stream_handler.called
+
+
+async def test_state_attributes(hass: HomeAssistantType) -> None:
+    """Test state attributes are set correctly."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
+    assert entity_state.attributes.get("brand") == MOTIONEYE_MANUFACTURER
+    assert not entity_state.attributes.get("motion_detection")
+
+    cameras = copy.deepcopy(TEST_CAMERAS)
+    cameras[KEY_CAMERAS][0][KEY_MOTION_DETECTION] = True
+    client.async_get_cameras = AsyncMock(return_value=cameras)
+    async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert entity_state
+    assert entity_state.attributes.get("motion_detection")
