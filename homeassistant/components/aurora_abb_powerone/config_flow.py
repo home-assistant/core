@@ -15,8 +15,6 @@ from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
-    CONF_USEDUMMYONFAIL,
-    DEBUGMODE,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -27,7 +25,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False):
+def validate_and_connect(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -48,16 +46,7 @@ def validate_and_connect(hass: core.HomeAssistant, data, populate_on_fail: False
         _LOGGER.info("Returning device info=%s", ret)
     except AuroraError as err:
         _LOGGER.warning("Could not connect to device=%s", comport)
-        if populate_on_fail:
-            ret = {
-                "title": DEFAULT_INTEGRATION_TITLE,
-                "serial_number": "735492",
-                "pn": "-3G97-",
-                "firmware": "C.0.3.5",
-            }
-            _LOGGER.warning("Using dummy device info=%s", ret)
-        else:
-            raise err
+        raise err
     finally:
         if client.serline.isOpen():
             client.close()
@@ -102,9 +91,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Handle the initial step.
         if user_input is not None:
             try:
-                info = validate_and_connect(
-                    self.hass, user_input, user_input.get(CONF_USEDUMMYONFAIL, False)
-                )
+                info = validate_and_connect(self.hass, user_input)
                 info.update(user_input)
                 # Bomb out early if someone has already set up this device.
                 device_unique_id = info["serial_number"]
@@ -140,9 +127,6 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 range(MIN_ADDRESS, MAX_ADDRESS + 1)
             ),
         }
-        # Only show the debug option if debugging is active.
-        if DEBUGMODE:
-            config_options[vol.Required(CONF_USEDUMMYONFAIL, default=False)] = bool
         schema = vol.Schema(config_options)
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

@@ -10,8 +10,6 @@ from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
-    CONF_USEDUMMYONFAIL,
-    DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
@@ -71,7 +69,6 @@ async def test_form(hass):
         ATTR_MODEL: "9.8.7.6 (A.B.C)",
         ATTR_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
-        # CONF_USEDUMMYONFAIL: False,
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -156,41 +153,3 @@ async def test_form_invalid_com_ports(hass):
         )
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_clientclose.mock_calls) == 1
-
-
-async def test_form_populate_defaults(hass):
-    """Test we populate with defaults if the user ticks that option."""
-
-    fakecomports = []
-    fakecomports.append(list_ports_common.ListPortInfo("/dev/ttyUSB7"))
-
-    with patch("serial.tools.list_ports.comports", return_value=fakecomports,), patch(
-        "homeassistant.components.aurora_abb_powerone.config_flow.DEBUGMODE",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-    print("result=%s" % result)
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    with patch(
-        "aurorapy.client.AuroraSerialClient.connect",
-        side_effect=AuroraError,
-        return_value=None,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7, CONF_USEDUMMYONFAIL: True},
-        )
-    print("result2=%s" % result2)
-    assert result2["data"] == {
-        "title": DEFAULT_INTEGRATION_TITLE,
-        "serial_number": "735492",
-        "pn": "-3G97-",
-        "firmware": "C.0.3.5",
-        CONF_ADDRESS: 7,
-        CONF_PORT: "/dev/ttyUSB7",
-        CONF_USEDUMMYONFAIL: True,
-    }

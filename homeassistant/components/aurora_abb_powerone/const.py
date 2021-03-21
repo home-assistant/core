@@ -11,7 +11,6 @@ DEFAULT_ADDRESS = 2
 
 DEFAULT_INTEGRATION_TITLE = "PhotoVoltaic Inverters"
 DEFAULT_DEVICE_NAME = "Solar Inverter"
-CONF_USEDUMMYONFAIL = "usedummyonfail"
 
 DEVICES = "devices"
 MANUFACTURER = "ABB"
@@ -21,5 +20,3 @@ ATTR_DEVICE_ID = "device_id"
 ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_MODEL = "model"
 ATTR_FIRMWARE = "firmware"
-
-DEBUGMODE = False
