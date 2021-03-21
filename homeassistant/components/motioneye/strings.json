@@ -6,10 +6,10 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "username_admin": "Admin [%key:common::config_flow::data::username%]",
-          "password_admin": "Admin [%key:common::config_flow::data::password%]",
-          "username_surveillance": "Surveillance [%key:common::config_flow::data::username%]",
-          "password_surveillance": "Surveillance [%key:common::config_flow::data::password%]"
+          "admin_username": "Admin [%key:common::config_flow::data::username%]",
+          "admin_password": "Admin [%key:common::config_flow::data::password%]",
+          "surveillance_username": "Surveillance [%key:common::config_flow::data::username%]",
+          "surveillance_password": "Surveillance [%key:common::config_flow::data::password%]"
         }
       }
     },
@@ -19,7 +19,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }
