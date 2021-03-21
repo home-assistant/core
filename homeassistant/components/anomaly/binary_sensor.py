@@ -1,27 +1,17 @@
 """A sensor that detects anomalies in other components."""
 from collections import deque
 import logging
-from typing import Optional
+from typing import Optional, OrderedDict
 
 import voluptuous as vol
 
+from homeassistant import const
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    CONF_DEVICE_CLASS,
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_SENSORS,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change_event
@@ -32,17 +22,6 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ATTRIBUTE = "attribute"
-ATTR_INVERT = "invert"
-ATTR_REQUIRE_BOTH = "require_both"
-ATTR_POSITIVE_ONLY = "positive_only"
-ATTR_NEGATIVE_ONLY = "negative_only"
-ATTR_MIN_CHANGE_AMOUNT = "min_change_amount"
-ATTR_MIN_CHANGE_PERCENT = "min_change_percent"
-ATTR_SAMPLE_DURATION = "sample_duration"
-ATTR_MAX_SAMPLES = "max_samples"
-ATTR_TRAILING_SAMPLE_DURATION = "trailing_sample_duration"
-ATTR_MAX_TRAILING_SAMPLES = "max_trailing_samples"
 ATTR_SAMPLE_COUNT = "sample_count"
 ATTR_TRAILING_SAMPLE_COUNT = "trailing_sample_count"
 ATTR_SAMPLE_AVG = "sample_average"
@@ -50,7 +29,6 @@ ATTR_TRAILING_AVG = "trailing_sample_average"
 ATTR_CHANGE_AMOUNT = "change_amount"
 ATTR_CHANGE_PERCENT = "change_percent"
 
-CONF_ATTRIBUTE = "attribute"
 CONF_INVERT = "invert"
 CONF_POSITIVE_ONLY = "positive_only"
 CONF_NEGATIVE_ONLY = "negative_only"
@@ -64,10 +42,10 @@ CONF_MIN_CHANGE_PERCENT = "min_change_percent"
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Required(const.CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(const.CONF_ATTRIBUTE): cv.string,
+        vol.Optional(const.CONF_UNIQUE_ID): cv.string,
+        vol.Optional(const.CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_INVERT, default=False): cv.boolean,
         vol.Optional(CONF_REQUIRE_BOTH, default=False): cv.boolean,
         vol.Optional(CONF_POSITIVE_ONLY, default=False): cv.boolean,
@@ -82,20 +60,21 @@ SENSOR_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
+    {vol.Required(const.CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the anomaly sensors."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+async def _async_create_entities(hass: HomeAssistant, config: OrderedDict):
+    """Create the template binary sensors."""
 
+    config_sensors = config.get(const.CONF_SENSORS, {})
     sensors = []
-    for device_id, device_config in config[CONF_SENSORS].items():
-        monitored_entity_id = device_config[ATTR_ENTITY_ID]
-        attribute = device_config.get(CONF_ATTRIBUTE)
-        device_class = device_config.get(CONF_DEVICE_CLASS)
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device_id)
+    for device_id, device_config in config_sensors.items():
+        entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+        unique_id = device_config.get(const.CONF_UNIQUE_ID)
+        friendly_name = device_config.get(const.CONF_FRIENDLY_NAME)
+        monitored_entity_id = device_config[const.ATTR_ENTITY_ID]
+        attribute = device_config.get(const.CONF_ATTRIBUTE)
         invert = device_config[CONF_INVERT]
         require_both = device_config[CONF_REQUIRE_BOTH]
         positive_only = device_config[CONF_POSITIVE_ONLY]
@@ -108,12 +87,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         min_change_percent = device_config[CONF_MIN_CHANGE_PERCENT]
         sensors.append(
             SensorAnomaly(
-                hass=hass,
-                entity_id=generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass),
+                entity_id=entity_id,
+                unique_id=unique_id,
                 friendly_name=friendly_name,
                 monitored_entity_id=monitored_entity_id,
                 attribute=attribute,
-                device_class=device_class,
                 invert=invert,
                 require_both=require_both,
                 positive_only=positive_only,
@@ -126,8 +104,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 min_change_percent=min_change_percent,
             )
         )
-    if sensors:
-        async_add_entities(sensors)
+
+    return sensors
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the anomaly sensors."""
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    async_add_entities(await _async_create_entities(hass, config))
 
 
 class SensorAnomaly(BinarySensorEntity):
@@ -135,12 +120,11 @@ class SensorAnomaly(BinarySensorEntity):
 
     def __init__(
         self,
-        hass,
         entity_id: str,
+        unique_id: Optional[str],
         friendly_name: str,
         monitored_entity_id: str,
         attribute: str,
-        device_class: str,
         invert: bool,
         require_both: bool,
         positive_only: bool,
@@ -153,12 +137,11 @@ class SensorAnomaly(BinarySensorEntity):
         min_change_percent: float,
     ):
         """Initialize the sensor."""
-        self._hass = hass
         self.entity_id: str = entity_id
-        self._name: str = friendly_name
+        self._unique_id: Optional[str] = unique_id
         self._entity_id: str = monitored_entity_id
+        self._name: str = friendly_name
         self._attribute: str = attribute
-        self._device_class: str = device_class
         self._invert: bool = invert
         self._require_both: bool = require_both
         self._positive_only: bool = positive_only
@@ -178,19 +161,9 @@ class SensorAnomaly(BinarySensorEntity):
         self.samples: deque = deque(maxlen=max_samples)
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
     def is_on(self) -> str:
         """Return true if sensor is on."""
         return self._state
-
-    @property
-    def device_class(self) -> str:
-        """Return the sensor class of the sensor."""
-        return self._device_class
 
     @property
     def device_state_attributes(self) -> dict:
@@ -203,6 +176,16 @@ class SensorAnomaly(BinarySensorEntity):
             ATTR_CHANGE_AMOUNT: self._change_amount,
             ATTR_CHANGE_PERCENT: self._change_percent,
         }
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this binary sensor."""
+        return self._unique_id
 
     @property
     def should_poll(self) -> bool:
@@ -223,7 +206,7 @@ class SensorAnomaly(BinarySensorEntity):
                     state: str = new_state.attributes.get(self._attribute)
                 else:
                     state: str = new_state.state
-                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                if state not in (const.STATE_UNKNOWN, const.STATE_UNAVAILABLE):
                     sample: tuple = (new_state.last_updated.timestamp(), float(state))
                     self.samples.append(sample)
                     self.trailing_samples.append(sample)
