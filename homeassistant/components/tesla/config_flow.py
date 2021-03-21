@@ -254,7 +254,7 @@ class TeslaAuthorizationCallbackView(HomeAssistantView):
                 user_input=request.query,
             )
         except (KeyError, UnknownFlow) as ex:
-            _LOGGER.debug("Callback flow_id is invalid.")
+            _LOGGER.debug("Callback flow_id is invalid")
             raise HTTPBadRequest() from ex
         return web_response.Response(
             headers={"content-type": "text/html"},
