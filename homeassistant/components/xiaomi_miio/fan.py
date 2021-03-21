@@ -3,12 +3,14 @@ import asyncio
 from enum import Enum
 from functools import partial
 import logging
+import math
 
 from miio import (
     AirFresh,
     AirHumidifier,
     AirHumidifierMiot,
     AirPurifier,
+    AirPurifierMB4,
     AirPurifierMiot,
     DeviceException,
 )
@@ -41,8 +43,11 @@ from homeassistant.components.fan import (
     SPEED_LOW,
     SPEED_MEDIUM,
     SUPPORT_SET_SPEED,
+    ATTR_SPEED,
+    ATTR_PERCENTAGE,
     FanEntity,
 )
+
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -62,6 +67,9 @@ from .const import (
     MODEL_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1,
     MODEL_AIRPURIFIER_2S,
+    MODEL_AIRPURIFIER_3,
+    MODEL_AIRPURIFIER_3C,
+    MODEL_AIRPURIFIER_3H,
     MODEL_AIRPURIFIER_PRO,
     MODEL_AIRPURIFIER_PRO_V7,
     MODEL_AIRPURIFIER_V3,
@@ -249,6 +257,18 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
     ATTR_FAN_LEVEL: "fan_level",
 }
 
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C = {
+    ATTR_AIR_QUALITY_INDEX: "aqi",
+    ATTR_MODE: "mode",
+    ATTR_FILTER_HOURS_USED: "filter_hours_used",
+    ATTR_FILTER_LIFE: "filter_life_remaining",
+    ATTR_FAVORITE_LEVEL: "favorite_rpm",
+    ATTR_CHILD_LOCK: "child_lock",
+    ATTR_MOTOR_SPEED: "motor_speed",
+    ATTR_BUZZER: "buzzer",
+    ATTR_LED_BRIGHTNESS: "led_brightness_level",
+}
+
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
     ATTR_AIR_QUALITY_INDEX: "aqi",
@@ -344,6 +364,7 @@ OPERATION_MODES_AIRPURIFIER_V3 = [
     "High",
     "Strong",
 ]
+OPERATION_MODES_AIRPURIFIER_3C = ["Auto", "Silent", "Favorite"]
 OPERATION_MODES_AIRFRESH = ["Auto", "Silent", "Interval", "Low", "Middle", "Strong"]
 
 SUCCESS = ["ok"]
@@ -397,6 +418,15 @@ FEATURE_FLAGS_AIRPURIFIER_2S = (
 )
 
 FEATURE_FLAGS_AIRPURIFIER_3 = (
+    FEATURE_SET_BUZZER
+    | FEATURE_SET_CHILD_LOCK
+    | FEATURE_SET_LED
+    | FEATURE_SET_FAVORITE_LEVEL
+    | FEATURE_SET_FAN_LEVEL
+    | FEATURE_SET_LED_BRIGHTNESS
+)
+
+FEATURE_FLAGS_AIRPURIFIER_3C = (
     FEATURE_SET_BUZZER
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_LED
@@ -548,7 +578,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        if model in MODELS_PURIFIER_MIOT:
+        if model == MODEL_AIRPURIFIER_3C:
+            air_purifier = AirPurifierMB4(host, token)
+            entity = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
+        elif model in MODELS_PURIFIER_MIOT:
             air_purifier = AirPurifierMiot(host, token)
             entity = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
         elif model.startswith("zhimi.airpurifier."):
@@ -651,6 +684,7 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the device."""
+        self._state_attrs.update( {"test_marco": "0"} )
         return self._state_attrs
 
     @property
@@ -698,7 +732,10 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         **kwargs,
     ) -> None:
         """Turn the device on."""
-        if speed:
+        if percentage is not None:
+            result = await self.async_set_percentage(speed)
+
+        elif speed:
             # If operation mode was set the device must not be turned on.
             result = await self.async_set_speed(speed)
         else:
@@ -784,6 +821,10 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
             self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
+        elif self._model == MODEL_AIRPURIFIER_3C:
+            self._device_features = FEATURE_FLAGS_AIRPURIFIER_3C
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_3C
         elif self._model in MODELS_PURIFIER_MIOT:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
@@ -827,6 +868,11 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
+    def percentage(self):
+        speed = self._state_attrs[ATTR_MOTOR_SPEED]
+        return (speed - 300) / 19
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._speed_list
@@ -850,6 +896,26 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             "Setting operation mode of the miio device failed.",
             self._device.set_mode,
             AirpurifierOperationMode[speed.title()],
+        )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the percentage of the fan."""
+        if self.supported_features & SUPPORT_SET_SPEED == 0:
+            return
+
+        # only values between 300 and 1200 are accepted
+        value = (percentage * 19) + 300
+
+        # value must be divisible by 10
+        if value % 10 != 0:
+            value = int((str(value))[:-1] + "0")
+
+        self._state_attrs[ATTR_MOTOR_SPEED] = percentage
+
+        await self._try_command(
+            "Setting percentage of the miio device failed.",
+            self._device.set_favorite_rpm,
+            value,
         )
 
     async def async_set_led_on(self):
