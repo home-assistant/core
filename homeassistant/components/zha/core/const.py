@@ -173,6 +173,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
+PRESET_SCHEDULE = "schedule"
+PRESET_COMPLEX = "complex"
+
 
 class RadioType(enum.Enum):
     # pylint: disable=invalid-name
