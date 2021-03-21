@@ -139,15 +139,15 @@ class DenonDevice(MediaPlayerEntity):
                 if self._available is True:  # pylint: disable=protected-access
                     _LOGGER.warning(
                         "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
-                        self._receiver.host,
+                        self._receiver.host,  # pylint: disable=protected-access
                     )
-                    self._available = False
+                    self._available = False  # pylint: disable=protected-access
             except AvrForbiddenError:
                 available = False
                 if self._available is True:  # pylint: disable=protected-access
                     _LOGGER.warning(
                         "Denon AVR receiver at host %s responded with HTTP 403 error. Device is unavailable. Please consider power cycling your receiver",
-                        self._receiver.host,
+                        self._receiver.host,  # pylint: disable=protected-access
                     )
                     self._available = False  # pylint: disable=protected-access
             except AvrCommandError as err:
@@ -164,13 +164,15 @@ class DenonDevice(MediaPlayerEntity):
                     exc_info=True,
                 )
             finally:
-                if available is True:
-                    if self._available is False:  # pylint: disable=protected-access
-                        _LOGGER.info(
-                            "Denon AVR receiver at host %s is available again",
-                            self._receiver.host,
-                        )
-                        self._available = True  # pylint: disable=protected-access
+                if (
+                    available is True
+                    and self._available is False  # pylint: disable=protected-access
+                ):
+                    _LOGGER.info(
+                        "Denon AVR receiver at host %s is available again",
+                        self._receiver.host,  # pylint: disable=protected-access
+                    )
+                    self._available = True  # pylint: disable=protected-access
 
         return wrapper
 
