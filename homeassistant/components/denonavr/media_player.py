@@ -306,7 +306,7 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if (
             self._sound_mode_raw is not None

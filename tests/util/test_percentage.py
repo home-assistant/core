@@ -28,15 +28,6 @@ SMALL_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4]
 LARGE_ORDERED_LIST = [SPEED_1, SPEED_2, SPEED_3, SPEED_4, SPEED_5, SPEED_6, SPEED_7]
 
 
-async def test_ordered_list_percentage_round_trip():
-    """Test we can round trip."""
-    for ordered_list in (SMALL_ORDERED_LIST, LARGE_ORDERED_LIST):
-        for i in range(1, 100):
-            ordered_list_item_to_percentage(
-                ordered_list, percentage_to_ordered_list_item(ordered_list, i)
-            ) == i
-
-
 async def test_ordered_list_item_to_percentage():
     """Test percentage of an item in an ordered list."""
 

@@ -1,6 +1,5 @@
 """Support for MQTT vacuums."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -12,8 +11,6 @@ from ..mixins import async_setup_entry_helper
 from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy
 from .schema_state import PLATFORM_SCHEMA_STATE, async_setup_entity_state
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def validate_mqtt_vacuum(value):

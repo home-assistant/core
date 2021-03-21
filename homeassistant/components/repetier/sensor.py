@@ -66,7 +66,7 @@ class RepetierSensor(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return sensor attributes."""
         return self._attributes
 

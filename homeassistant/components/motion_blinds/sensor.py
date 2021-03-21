@@ -1,6 +1,4 @@
 """Support for Motion Blinds sensors."""
-import logging
-
 from motionblinds import BlindType
 
 from homeassistant.const import (
@@ -13,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_BATTERY_VOLTAGE = "battery_voltage"
 TYPE_BLIND = "blind"
@@ -92,7 +88,7 @@ class MotionBatterySensor(CoordinatorEntity, Entity):
         return self._blind.battery_level
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {ATTR_BATTERY_VOLTAGE: self._blind.battery_voltage}
 
@@ -138,7 +134,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return self._blind.battery_level[self._motor[0]]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.battery_voltage is not None:

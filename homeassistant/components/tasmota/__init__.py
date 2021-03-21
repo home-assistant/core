@@ -92,8 +92,8 @@ async def async_setup_entry(hass, entry):
         await device_automation.async_setup_entry(hass, entry)
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_setup(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_setup(entry, platform)
+                for platform in PLATFORMS
             ]
         )
 
@@ -113,8 +113,8 @@ async def async_unload_entry(hass, entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -128,8 +128,8 @@ async def async_unload_entry(hass, entry):
     for unsub in hass.data[DATA_UNSUB]:
         unsub()
     hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format("device_automation"))()
-    for component in PLATFORMS:
-        hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(component))()
+    for platform in PLATFORMS:
+        hass.data.pop(DATA_REMOVE_DISCOVER_COMPONENT.format(platform))()
 
     # deattach device triggers
     device_registry = await hass.helpers.device_registry.async_get_registry()

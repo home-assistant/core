@@ -6,24 +6,35 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "no_device_selected": "Kein Ger\u00e4t ausgew\u00e4hlt, bitte w\u00e4hle ein Ger\u00e4t aus."
+            "no_device_selected": "Kein Ger\u00e4t ausgew\u00e4hlt, bitte w\u00e4hle ein Ger\u00e4t aus.",
+            "unknown_device": "Das Ger\u00e4temodell ist nicht bekannt und das Ger\u00e4t kann nicht  mithilfe des Assistenten eingerichtet werden."
         },
         "flow_title": "Xiaomi Miio: {name}",
         "step": {
+            "device": {
+                "data": {
+                    "host": "IP-Adresse",
+                    "model": "Ger\u00e4temodell (optional)",
+                    "name": "Name des Ger\u00e4ts",
+                    "token": "API-Token"
+                },
+                "description": "Sie ben\u00f6tigen den 32 Zeichen langen API-Token, siehe https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token f\u00fcr eine Anleitung. Dieser unterscheidet sich vom API-Token, den die Xiaomi Aqara-Integration nutzt.",
+                "title": "Herstellen einer Verbindung mit einem Xiaomi Miio-Ger\u00e4t oder Xiaomi Gateway"
+            },
             "gateway": {
                 "data": {
                     "host": "IP-Adresse",
                     "name": "Name des Gateways",
                     "token": "API-Token"
                 },
-                "description": "Du ben\u00f6tigst den 32 Zeichen langen API-Token. Anweisungen findest du unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
+                "description": "Sie ben\u00f6tigen den 32 Zeichen langen API-Token. Anweisungen finden Sie unter https://www.home-assistant.io/integrations/vacuum.xiaomi_miio/#retrieving-the-access-token.",
                 "title": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
             },
             "user": {
                 "data": {
                     "gateway": "Stelle eine Verbindung zu einem Xiaomi Gateway her"
                 },
-                "description": "W\u00e4hle aus, mit welchem Ger\u00e4t du eine Verbindung herstellen m\u00f6chtest.",
+                "description": "W\u00e4hlen Sie aus, mit welchem Ger\u00e4t Sie eine Verbindung herstellen m\u00f6chten.",
                 "title": "Xiaomi Miio"
             }
         }

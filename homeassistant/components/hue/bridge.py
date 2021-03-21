@@ -19,7 +19,6 @@ from .const import (
     CONF_ALLOW_UNREACHABLE,
     DEFAULT_ALLOW_HUE_GROUPS,
     DEFAULT_ALLOW_UNREACHABLE,
-    DEFAULT_SCENE_TRANSITION,
     LOGGER,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -34,9 +33,7 @@ SCENE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_GROUP_NAME): cv.string,
         vol.Required(ATTR_SCENE_NAME): cv.string,
-        vol.Optional(
-            ATTR_TRANSITION, default=DEFAULT_SCENE_TRANSITION
-        ): cv.positive_int,
+        vol.Optional(ATTR_TRANSITION): cv.positive_int,
     }
 )
 # How long should we sleep if the hub is busy
@@ -209,7 +206,7 @@ class HueBridge:
         """Service to call directly into bridge to set scenes."""
         group_name = call.data[ATTR_GROUP_NAME]
         scene_name = call.data[ATTR_SCENE_NAME]
-        transition = call.data.get(ATTR_TRANSITION, DEFAULT_SCENE_TRANSITION)
+        transition = call.data.get(ATTR_TRANSITION)
 
         group = next(
             (group for group in self.api.groups.values() if group.name == group_name),
@@ -255,7 +252,7 @@ class HueBridge:
             # we already created a new config flow, no need to do it again
             return
         LOGGER.error(
-            "Unable to authorize to bridge %s, setup the linking again.", self.host
+            "Unable to authorize to bridge %s, setup the linking again", self.host
         )
         self.authorized = False
         create_config_flow(self.hass, self.host)

@@ -4,7 +4,8 @@
             "already_configured": "Cette AVM FRITZ!Box est d\u00e9j\u00e0 configur\u00e9e.",
             "already_in_progress": "Une configuration d'AVM FRITZ!Box est d\u00e9j\u00e0 en cours.",
             "no_devices_found": "Aucun appareil trouv\u00e9 sur le r\u00e9seau",
-            "not_supported": "Connect\u00e9 \u00e0 AVM FRITZ! Box mais impossible de contr\u00f4ler les appareils Smart Home."
+            "not_supported": "Connect\u00e9 \u00e0 AVM FRITZ! Box mais impossible de contr\u00f4ler les appareils Smart Home.",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
             "invalid_auth": "Authentification invalide"

@@ -1,7 +1,5 @@
 """Support for Plaato Airlock sensors."""
-
-import logging
-from typing import Optional
+from __future__ import annotations
 
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import PlaatoKeg
@@ -24,8 +22,6 @@ from .const import (
     SENSOR_SIGNAL,
 )
 from .entity import PlaatoEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -67,7 +63,7 @@ class PlaatoSensor(PlaatoEntity):
     """Representation of a Plaato Sensor."""
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         if self._coordinator is not None:
             if self._sensor_type == PlaatoKeg.Pins.TEMPERATURE:

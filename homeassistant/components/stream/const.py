@@ -6,6 +6,10 @@ ATTR_STREAMS = "streams"
 
 OUTPUT_FORMATS = ["hls"]
 
+SEGMENT_CONTAINER_FORMAT = "mp4"  # format for segments
+RECORDER_CONTAINER_FORMAT = "mp4"  # format for recorder output
+AUDIO_CODECS = {"aac", "mp3"}
+
 FORMAT_CONTENT_TYPE = {"hls": "application/vnd.apple.mpegurl"}
 
 OUTPUT_IDLE_TIMEOUT = 300  # Idle timeout due to inactivity

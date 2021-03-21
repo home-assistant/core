@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "no_device": "Nessuno dei tuoi dispositivi ha attivato \"Trova il mio iPhone\"",
-            "reauth_successful": "La riautenticazione ha avuto successo"
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
             "invalid_auth": "Autenticazione non valida",
@@ -16,7 +16,7 @@
                     "password": "Password"
                 },
                 "description": "La password inserita in precedenza per {username} non funziona pi\u00f9. Aggiorna la tua password per continuare a utilizzare questa integrazione.",
-                "title": "Reautenticare l'integrazione"
+                "title": "Autenticare nuovamente l'integrazione"
             },
             "trusted_device": {
                 "data": {

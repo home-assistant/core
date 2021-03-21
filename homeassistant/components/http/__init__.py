@@ -1,10 +1,12 @@
 """Support to serve the Home Assistant API as WSGI application."""
+from __future__ import annotations
+
 from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
 import ssl
-from typing import Dict, Optional, cast
+from typing import Optional, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -59,7 +61,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_DEVELOPMENT = "0"
 # Cast to be able to load custom cards.
 # My to be able to check url and version info.
-DEFAULT_CORS = ["https://cast.home-assistant.io", "https://my.home-assistant.io"]
+DEFAULT_CORS = ["https://cast.home-assistant.io"]
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
@@ -102,7 +104,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> Optional[dict]:
+async def async_get_last_config(hass: HomeAssistant) -> dict | None:
     """Return the last known working config."""
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
     return cast(Optional[dict], await store.async_load())
@@ -115,7 +117,7 @@ class ApiConfig:
         self,
         local_ip: str,
         host: str,
-        port: Optional[int] = SERVER_PORT,
+        port: int | None = SERVER_PORT,
         use_ssl: bool = False,
     ) -> None:
         """Initialize a new API config object."""
@@ -379,7 +381,7 @@ class HomeAssistantHTTP:
 
 
 async def start_http_server_and_save_config(
-    hass: HomeAssistant, conf: Dict, server: HomeAssistantHTTP
+    hass: HomeAssistant, conf: dict, server: HomeAssistantHTTP
 ) -> None:
     """Startup the http server and save the config."""
     await server.start()  # type: ignore
@@ -395,6 +397,6 @@ async def start_http_server_and_save_config(
     await store.async_save(conf)
 
 
-current_request: ContextVar[Optional[web.Request]] = ContextVar(
+current_request: ContextVar[web.Request | None] = ContextVar(
     "current_request", default=None
 )

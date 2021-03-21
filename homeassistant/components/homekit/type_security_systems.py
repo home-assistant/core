@@ -150,7 +150,7 @@ class SecuritySystem(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state):

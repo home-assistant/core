@@ -1,10 +1,11 @@
 """Helper classes for Google Assistant integration."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
 import logging
 import pprint
-from typing import Dict, List, Optional, Tuple
 
 from aiohttp.web import json_response
 
@@ -44,7 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _get_entity_and_device(
     hass, entity_id
-) -> Optional[Tuple[RegistryEntry, DeviceEntry]]:
+) -> tuple[RegistryEntry, DeviceEntry] | None:
     """Fetch the entity and device entries for a entity_id."""
     dev_reg, ent_reg = await gather(
         hass.helpers.device_registry.async_get_registry(),
@@ -58,7 +59,7 @@ async def _get_entity_and_device(
     return entity_entry, device_entry
 
 
-async def _get_area(hass, entity_entry, device_entry) -> Optional[AreaEntry]:
+async def _get_area(hass, entity_entry, device_entry) -> AreaEntry | None:
     """Calculate the area for an entity."""
     if entity_entry and entity_entry.area_id:
         area_id = entity_entry.area_id
@@ -71,7 +72,7 @@ async def _get_area(hass, entity_entry, device_entry) -> Optional[AreaEntry]:
     return area_reg.areas.get(area_id)
 
 
-async def _get_device_info(device_entry) -> Optional[Dict[str, str]]:
+async def _get_device_info(device_entry) -> dict[str, str] | None:
     """Retrieve the device info for a device."""
     if not device_entry:
         return None
@@ -344,7 +345,7 @@ class RequestData:
         user_id: str,
         source: str,
         request_id: str,
-        devices: Optional[List[dict]],
+        devices: list[dict] | None,
     ):
         """Initialize the request data."""
         self.config = config
@@ -578,7 +579,7 @@ def deep_update(target, source):
 
 
 @callback
-def async_get_entities(hass, config) -> List[GoogleEntity]:
+def async_get_entities(hass, config) -> list[GoogleEntity]:
     """Return all entities that are supported by Google."""
     entities = []
     for state in hass.states.async_all():

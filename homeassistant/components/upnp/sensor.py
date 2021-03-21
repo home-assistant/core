@@ -1,4 +1,6 @@
 """Support for UPnP/IGD Sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 from typing import Any, Mapping
 
@@ -176,7 +178,7 @@ class RawUpnpSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
         value = self.coordinator.data[device_value_key]
@@ -214,7 +216,7 @@ class DerivedUpnpSensor(UpnpSensor):
         return current_value < self._last_value
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]

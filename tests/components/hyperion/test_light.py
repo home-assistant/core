@@ -1,6 +1,6 @@
 """Tests for the Hyperion integration."""
-import logging
-from typing import Optional
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
@@ -27,7 +27,7 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.color as color_util
 
@@ -52,14 +52,12 @@ from . import (
     setup_test_config_entry,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 COLOR_BLACK = color_util.COLORS["black"]
 
 
 def _get_config_entry_from_unique_id(
     hass: HomeAssistantType, unique_id: str
-) -> Optional[ConfigEntry]:
+) -> ConfigEntry | None:
     for entry in hass.config_entries.async_entries(domain=DOMAIN):
         if TEST_SYSINFO_ID == entry.unique_id:
             return entry
@@ -112,7 +110,7 @@ async def test_setup_config_entry_not_ready_load_state_fail(
 
 async def test_setup_config_entry_dynamic_instances(hass: HomeAssistantType) -> None:
     """Test dynamic changes in the instance configuration."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     config_entry = add_test_config_entry(hass)
 

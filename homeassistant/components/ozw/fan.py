@@ -1,5 +1,4 @@
 """Support for Z-Wave fans."""
-import logging
 import math
 
 from homeassistant.components.fan import (
@@ -10,14 +9,13 @@ from homeassistant.components.fan import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
+    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
 from .const import DATA_UNSUBSCRIBE, DOMAIN
 from .entity import ZWaveDeviceEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 SPEED_RANGE = (1, 99)  # off is not included
@@ -74,6 +72,11 @@ class ZwaveFan(ZWaveDeviceEntity, FanEntity):
         The normal range of the speed is 0-99. 0 means off.
         """
         return ranged_value_to_percentage(SPEED_RANGE, self.values.primary.value)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(SPEED_RANGE)
 
     @property
     def supported_features(self):

@@ -1,6 +1,5 @@
 """Support for MQTT scenes."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -19,8 +18,6 @@ from .mixins import (
     MqttDiscoveryUpdate,
     async_setup_entry_helper,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Scene"
 DEFAULT_RETAIN = False

@@ -63,11 +63,11 @@ async def test_single_sensor_readings(hass, requests_mock):
     assert await async_setup_component(hass, "sensor", {"sensor": ONE_SENSOR_CONFIG})
     await hass.async_block_till_done()
 
-    assert "38.21" == hass.states.get("sensor.energy_consumed").state
-    assert "1580" == hass.states.get("sensor.energy_usage").state
-    assert "ok" == hass.states.get("sensor.energy_budget").state
-    assert "5.27" == hass.states.get("sensor.energy_cost").state
-    assert "1628" == hass.states.get("sensor.efergy_728386").state
+    assert hass.states.get("sensor.energy_consumed").state == "38.21"
+    assert hass.states.get("sensor.energy_usage").state == "1580"
+    assert hass.states.get("sensor.energy_budget").state == "ok"
+    assert hass.states.get("sensor.energy_cost").state == "5.27"
+    assert hass.states.get("sensor.efergy_728386").state == "1628"
 
 
 async def test_multi_sensor_readings(hass, requests_mock):
@@ -76,6 +76,6 @@ async def test_multi_sensor_readings(hass, requests_mock):
     assert await async_setup_component(hass, "sensor", {"sensor": MULTI_SENSOR_CONFIG})
     await hass.async_block_till_done()
 
-    assert "218" == hass.states.get("sensor.efergy_728386").state
-    assert "1808" == hass.states.get("sensor.efergy_0").state
-    assert "312" == hass.states.get("sensor.efergy_728387").state
+    assert hass.states.get("sensor.efergy_728386").state == "218"
+    assert hass.states.get("sensor.efergy_0").state == "1808"
+    assert hass.states.get("sensor.efergy_728387").state == "312"

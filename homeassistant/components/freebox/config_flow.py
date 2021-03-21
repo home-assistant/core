@@ -106,6 +106,8 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_discovery(self, discovery_info):
-        """Initialize step from discovery."""
-        return await self.async_step_user(discovery_info)
+    async def async_step_zeroconf(self, discovery_info: dict):
+        """Initialize flow from zeroconf."""
+        host = discovery_info["properties"]["api_domain"]
+        port = discovery_info["properties"]["https_port"]
+        return await self.async_step_user({CONF_HOST: host, CONF_PORT: port})

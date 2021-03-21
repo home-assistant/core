@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "already_configured": "Gateway al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
             "id_exists": "Gateway id bestaat al"
         },
         "step": {

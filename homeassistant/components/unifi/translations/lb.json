@@ -8,6 +8,7 @@
             "service_unavailable": "Feeler beim verbannen",
             "unknown_client_mac": "Kee Cliwent mat der MAC Adress disponibel"
         },
+        "flow_title": "UniFi Network {site} ({host})",
         "step": {
             "user": {
                 "data": {

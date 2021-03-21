@@ -1,6 +1,8 @@
 """Support for tracking people."""
+from __future__ import annotations
+
 import logging
-from typing import List, Optional, cast
+from typing import cast
 
 import voluptuous as vol
 
@@ -171,7 +173,7 @@ class PersonStorageCollection(collection.StorageCollection):
         super().__init__(store, logger, id_manager)
         self.yaml_collection = yaml_collection
 
-    async def _async_load_data(self) -> Optional[dict]:
+    async def _async_load_data(self) -> dict | None:
         """Load the data.
 
         A past bug caused onboarding to create invalid person objects.
@@ -257,7 +259,7 @@ class PersonStorageCollection(collection.StorageCollection):
                 raise ValueError("User already taken")
 
 
-async def filter_yaml_data(hass: HomeAssistantType, persons: List[dict]) -> List[dict]:
+async def filter_yaml_data(hass: HomeAssistantType, persons: list[dict]) -> list[dict]:
     """Validate YAML data that we can't validate via schema."""
     filtered = []
     person_invalid_user = []
@@ -380,7 +382,7 @@ class Person(RestoreEntity):
         return self._config[CONF_NAME]
 
     @property
-    def entity_picture(self) -> Optional[str]:
+    def entity_picture(self) -> str | None:
         """Return entity picture."""
         return self._config.get(CONF_PICTURE)
 
@@ -522,7 +524,7 @@ def ws_list_person(
     )
 
 
-def _get_latest(prev: Optional[State], curr: State):
+def _get_latest(prev: State | None, curr: State):
     """Get latest state."""
     if prev is None or curr.last_updated > prev.last_updated:
         return curr

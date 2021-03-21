@@ -1,6 +1,7 @@
 """Describe deCONZ logbook events."""
+from __future__ import annotations
 
-from typing import Callable, Optional
+from typing import Callable
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT
 from homeassistant.core import HomeAssistant, callback
@@ -125,7 +126,7 @@ def async_describe_events(
     @callback
     def async_describe_deconz_event(event: Event) -> dict:
         """Describe deCONZ logbook event."""
-        deconz_event: Optional[DeconzEvent] = _get_deconz_event_from_device_id(
+        deconz_event: DeconzEvent | None = _get_deconz_event_from_device_id(
             hass, event.data[ATTR_DEVICE_ID]
         )
 

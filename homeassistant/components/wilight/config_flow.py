@@ -84,7 +84,6 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": self._title}
         return await self.async_step_confirm()
 

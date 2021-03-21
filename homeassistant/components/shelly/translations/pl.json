@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nUrz\u0105dzenia zasilane bateryjnie, z ustawionym has\u0142em, nale\u017cy wybudzi\u0107 przed konfiguracj\u0105.\nUrz\u0105dzenia zasilane bateryjnie, bez ustawionego has\u0142a, zostan\u0105 dodane gdy urz\u0105dzenie si\u0119 wybudzi. Mo\u017cesz r\u0119cznie wybudzi\u0107 urz\u0105dzenie jego przyciskiem lub poczeka\u0107 na aktualizacj\u0119 danych z urz\u0105dzenia."
+                "description": "Czy chcesz skonfigurowa\u0107 {model} ({host})?\n\nUrz\u0105dzenia zasilane bateryjnie, z ustawionym has\u0142em, nale\u017cy wybudzi\u0107 przed konfiguracj\u0105.\nUrz\u0105dzenia zasilane bateryjnie, bez ustawionego has\u0142a, zostan\u0105 dodane, gdy si\u0119 wybudz\u0105. Mo\u017cesz r\u0119cznie wybudzi\u0107 urz\u0105dzenie przyciskiem na obudowie lub poczeka\u0107 na aktualizacj\u0119 danych z urz\u0105dzenia."
             },
             "credentials": {
                 "data": {
@@ -24,13 +24,13 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Przed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na urz\u0105dzeniu."
+                "description": "Przed skonfigurowaniem urz\u0105dzenia zasilane bateryjnie nale\u017cy, wybudzi\u0107 naciskaj\u0105c przycisk na obudowie."
             }
         }
     },
     "device_automation": {
         "trigger_subtype": {
-            "button": "Przycisk",
+            "button": "przycisk",
             "button1": "pierwszy",
             "button2": "drugi",
             "button3": "trzeci"

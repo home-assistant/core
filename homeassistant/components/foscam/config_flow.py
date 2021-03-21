@@ -17,8 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import CONF_RTSP_PORT, CONF_STREAM, DOMAIN, LOGGER
 
 STREAMS = ["Main", "Sub"]
 
@@ -128,16 +127,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._validate_and_create(import_config)
 
         except CannotConnect:
-            LOGGER.error("Error importing foscam platform config: cannot connect.")
+            LOGGER.error("Error importing foscam platform config: cannot connect")
             return self.async_abort(reason="cannot_connect")
 
         except InvalidAuth:
-            LOGGER.error("Error importing foscam platform config: invalid auth.")
+            LOGGER.error("Error importing foscam platform config: invalid auth")
             return self.async_abort(reason="invalid_auth")
 
         except InvalidResponse:
             LOGGER.exception(
-                "Error importing foscam platform config: invalid response from camera."
+                "Error importing foscam platform config: invalid response from camera"
             )
             return self.async_abort(reason="invalid_response")
 
@@ -146,7 +145,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception(
-                "Error importing foscam platform config: unexpected exception."
+                "Error importing foscam platform config: unexpected exception"
             )
             return self.async_abort(reason="unknown")
 

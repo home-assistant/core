@@ -1,8 +1,9 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Optional
 
 import voluptuous as vol
 from yeelight import Bulb, BulbException, discover_bulbs
@@ -42,7 +43,6 @@ CONF_FLOW_PARAMS = "flow_params"
 CONF_CUSTOM_EFFECTS = "custom_effects"
 CONF_NIGHTLIGHT_SWITCH_TYPE = "nightlight_switch_type"
 CONF_NIGHTLIGHT_SWITCH = "nightlight_switch"
-CONF_DEVICE = "device"
 
 DATA_CONFIG_ENTRIES = "config_entries"
 DATA_CUSTOM_EFFECTS = "custom_effects"
@@ -182,7 +182,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Yeelight from a config entry."""
 
-    async def _initialize(host: str, capabilities: Optional[dict] = None) -> None:
+    async def _initialize(host: str, capabilities: dict | None = None) -> None:
         remove_dispatcher = async_dispatcher_connect(
             hass,
             DEVICE_INITIALIZED.format(host),
@@ -199,9 +199,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _load_platforms():
 
-        for component in PLATFORMS:
+        for platform in PLATFORMS:
             hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
+                hass.config_entries.async_forward_entry_setup(entry, platform)
             )
 
     # Move options from data for imported entries
@@ -247,8 +247,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -423,7 +423,6 @@ class YeelightDevice:
 
         Uses brightness as it appears to be supported in both ceiling and other lights.
         """
-
         return self._nightlight_brightness is not None
 
     @property
@@ -595,7 +594,7 @@ async def _async_get_device(
     hass: HomeAssistant,
     host: str,
     entry: ConfigEntry,
-    capabilities: Optional[dict],
+    capabilities: dict | None,
 ) -> YeelightDevice:
     # Get model from config and capabilities
     model = entry.options.get(CONF_MODEL)
