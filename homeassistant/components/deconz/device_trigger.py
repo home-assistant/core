@@ -419,7 +419,8 @@ async def async_validate_trigger_config(hass, config):
             f"deCONZ trigger {trigger} device with ID "
             f"{config[CONF_DEVICE_ID]} not found"
         )
-    elif device.model not in REMOTES or trigger not in REMOTES[device.model]:
+
+    if device.model not in REMOTES or trigger not in REMOTES[device.model]:
         raise InvalidDeviceAutomationConfig(
             f"deCONZ trigger {trigger} is not valid for device "
             f"{device} ({config[CONF_DEVICE_ID]})"
