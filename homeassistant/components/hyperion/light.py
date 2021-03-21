@@ -227,7 +227,7 @@ class HyperionBaseLight(LightEntity):
         return self._unique_id
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},

@@ -180,7 +180,7 @@ class HyperionComponentSwitch(SwitchEntity):
         return bool(self._client.has_loaded_state)
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._device_id)},
