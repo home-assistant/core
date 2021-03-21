@@ -1,4 +1,9 @@
 """The lock tests for the august platform."""
+import datetime
+from unittest.mock import Mock
+
+from yalexs.pubnub_async import AugustPubNub
+
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -10,7 +15,9 @@ from homeassistant.const import (
     STATE_UNLOCKED,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+import homeassistant.util.dt as dt_util
 
+from tests.common import async_fire_time_changed
 from tests.components.august.mocks import (
     _create_august_with_devices,
     _mock_activities_from_fixture,
@@ -141,3 +148,63 @@ async def test_lock_bridge_online(hass):
     lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
 
     assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+
+async def test_lock_update_via_pubnub(hass):
+    """Test creation of a lock with doorsense and bridge."""
+    lock_one = await _mock_doorsense_enabled_august_lock_detail(hass)
+    assert lock_one.pubsub_channel == "pubsub"
+    pubnub = AugustPubNub()
+
+    activities = await _mock_activities_from_fixture(hass, "get_activity.lock.json")
+    config_entry = await _create_august_with_devices(
+        hass, [lock_one], activities=activities, pubnub=pubnub
+    )
+
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            message={
+                "status": "kAugLockState_Unlocking",
+            },
+        ),
+    )
+
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_UNLOCKED
+
+    pubnub.message(
+        pubnub,
+        Mock(
+            channel=lock_one.pubsub_channel,
+            timetoken=dt_util.utcnow().timestamp() * 10000000,
+            message={
+                "status": "kAugLockState_Locking",
+            },
+        ),
+    )
+
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    pubnub.connected = True
+    async_fire_time_changed(hass, dt_util.utcnow() + datetime.timedelta(seconds=30))
+    await hass.async_block_till_done()
+    lock_online_with_doorsense_name = hass.states.get("lock.online_with_doorsense_name")
+    assert lock_online_with_doorsense_name.state == STATE_LOCKED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

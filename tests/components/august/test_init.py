@@ -283,3 +283,4 @@ async def test_load_unload(hass):
     assert config_entry.state == ENTRY_STATE_LOADED
 
     await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
