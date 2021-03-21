@@ -45,9 +45,9 @@ class AnovaCookerSensor(Entity):
         except:
             pass
         else:
-            self._set_attrs()
+            self._update_attrs()
 
-    def _set_attrs(self):
+    def _update_attrs(self):
         self._attr = {
             # 	str 	The status of the current job, for example, PREHEATING.
             "job_status": self._cooker.job_status,
