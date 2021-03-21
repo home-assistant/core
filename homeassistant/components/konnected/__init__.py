@@ -360,8 +360,14 @@ class KonnectedView(HomeAssistantView):
         try:
             zone_num = str(payload.get(CONF_ZONE) or PIN_TO_ZONE[payload[CONF_PIN]])
             payload[CONF_ZONE] = zone_num
-            zone_data = device[CONF_BINARY_SENSORS].get(zone_num) or next(
-                (s for s in device[CONF_SENSORS] if s[CONF_ZONE] == zone_num), None
+            zone_data = (
+                device[CONF_BINARY_SENSORS].get(zone_num)
+                or next(
+                    (s for s in device[CONF_SWITCHES] if s[CONF_ZONE] == zone_num), None
+                )
+                or next(
+                    (s for s in device[CONF_SENSORS] if s[CONF_ZONE] == zone_num), None
+                )
             )
         except KeyError:
             zone_data = None
