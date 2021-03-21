@@ -3,6 +3,10 @@
 # Reference info:
 # https://s1.solacity.com/docs/PVI-3.0-3.6-4.2-OUTD-US%20Manual.pdf
 # http://www.drhack.it/images/PDF/AuroraCommunicationProtocol_4_2.pdf
+#
+# Developer note:
+# vscode devcontainer: use the following to access USB device:
+# "runArgs": ["-e", "GIT_EDITOR=code --wait", "--device=/dev/ttyUSB0"],
 
 import asyncio
 import logging
