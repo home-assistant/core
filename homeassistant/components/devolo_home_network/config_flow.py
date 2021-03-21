@@ -79,7 +79,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         if discovery_info["properties"]["MT"] in ["2600", "2601"]:
-            return self.async_abort(reason="devolo Home Control Gateway")
+            return self.async_abort(reason="home_control")
 
         await self.async_set_unique_id(discovery_info["properties"]["SN"])
         self._abort_if_unique_id_configured()

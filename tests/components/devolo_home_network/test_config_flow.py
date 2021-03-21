@@ -118,7 +118,7 @@ async def test_abort_zeroconf_wrong_device(hass):
         data=DISCOVERY_INFO_WRONG_DEVICE,
     )
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "devolo Home Control Gateway"
+    assert result["reason"] == "home_control"
 
 
 async def test_step_zeroconf_confirm(hass):
