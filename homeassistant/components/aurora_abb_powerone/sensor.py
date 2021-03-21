@@ -43,7 +43,7 @@ def setup_platform(hass, config: dict, add_entities, discovery_info=None):
     _LOGGER.warning(
         "DEPRECATED: setting up %s via configuration.yaml will "
         "soon be unsupported.  Please remove the entries from your "
-        "configuration.yaml file and the set up the integration via the UI",
+        "configuration.yaml file and then set up the integration via the UI",
         DOMAIN,
     )
     _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
