@@ -8,7 +8,8 @@
                 "data": {
                      "username": "Nazwa użytkownika używana do logowania w eLicznik",
                      "password": "Hasło używane do logowania w eLiczniku",
-                     "energy_meter_id": "Punkt poboru"
+                     "energy_meter_id": "Punkt poboru",
+                     "show_generation_sensors": "Pokaż energię wygenerowaną"
                 }
             },
            "confirm": {

@@ -1,37 +1,37 @@
 """Support for Tauron sensors."""
 import datetime
 import logging
-from datetime import timedelta
+import ssl
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.config_entries import SOURCE_IMPORT
 import requests
+from requests import adapters
+from urllib3 import poolmanager
 import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_NAME,
-    CONF_MONITORED_VARIABLES,
-)
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+
 from .const import (
-    DOMAIN,
-    DEFAULT_NAME,
     CONF_METER_ID,
-    CONF_URL_SERVICE,
-    CONF_URL_LOGIN,
-    CONF_URL_CHARTS,
     CONF_REQUEST_HEADERS,
     CONF_REQUEST_PAYLOAD_CHARTS,
-    TYPE_ZONE,
+    CONF_URL_CHARTS,
+    CONF_URL_LOGIN,
+    CONF_URL_SERVICE,
+    DATA_TAURON_CLIENT,
+    DEFAULT_NAME,
+    DOMAIN,
+    SENSOR_TYPES,
+    TARIFF_G12,
     TYPE_CONSUMPTION_DAILY,
     TYPE_CONSUMPTION_MONTHLY,
     TYPE_CONSUMPTION_YEARLY,
-    TARIFF_G12,
-    DATA_TAURON_CLIENT,
-    SENSOR_TYPES,
+    TYPE_ZONE,
+    ZONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +47,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_METER_ID): cv.string,
     }
 )
+
+
+# to fix the SSLError
+class TLSAdapter(adapters.HTTPAdapter):
+    def init_poolmanager(self, connections, maxsize, block=False):
+        """Create and initialize the urllib3 PoolManager."""
+        ctx = ssl.create_default_context()
+        ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+        ctx.check_hostname = False
+        self.poolmanager = poolmanager.PoolManager(
+            num_pools=connections,
+            maxsize=maxsize,
+            block=block,
+            ssl_version=ssl.PROTOCOL_TLS,
+            ssl_context=ctx,
+        )
 
 
 async def async_setup(hass, config):
@@ -84,14 +100,21 @@ def calculate_configuration(username, password, meter_id, days_before=2):
     payload_login = {
         "username": username,
         "password": password,
-        "service": CONF_URL_SERVICE,
+        "service": "https://elicznik.tauron-dystrybucja.pl",
     }
     session = requests.session()
+    session.mount("https://", TLSAdapter())
     session.request(
-        "POST", CONF_URL_LOGIN, data=payload_login, headers=CONF_REQUEST_HEADERS
+        "POST",
+        TauronAmiplusSensor.url_login,
+        data=payload_login,
+        headers=TauronAmiplusSensor.headers,
     )
     session.request(
-        "POST", CONF_URL_LOGIN, data=payload_login, headers=CONF_REQUEST_HEADERS
+        "POST",
+        TauronAmiplusSensor.url_login,
+        data=payload_login,
+        headers=TauronAmiplusSensor.headers,
     )
     config_date = datetime.datetime.now() - datetime.timedelta(days_before)
     payload = {
@@ -102,9 +125,9 @@ def calculate_configuration(username, password, meter_id, days_before=2):
     }
     response = session.request(
         "POST",
-        CONF_URL_CHARTS,
-        data={**CONF_REQUEST_PAYLOAD_CHARTS, **payload},
-        headers=CONF_REQUEST_HEADERS,
+        TauronAmiplusSensor.url_charts,
+        data={**TauronAmiplusSensor.payload_charts, **payload},
+        headers=TauronAmiplusSensor.headers,
     )
     json_data = response.json()
     zones = json_data["dane"]["zone"]
@@ -120,33 +143,43 @@ def calculate_configuration(username, password, meter_id, days_before=2):
         stop = datetime.time(parsed_zones[next_i]["start"].hour)
         calculated_zones.append({"start": start, "stop": stop})
     power_zones = {1: parsed_zones, 2: calculated_zones}
-    tariff = json_data["dane"]["chart"][0]["Taryfa"]
+    tariff = list(json_data["dane"]["chart"].values())[0]["Taryfa"]
     return power_zones, tariff, config_date.strftime("%d.%m.%Y, %H:%M")
 
 
 class TauronAmiplusSensor(Entity):
-    def __init__(self, username, password, meter_id, sensor_type):
-        self.client_name = SENSOR_TYPES[sensor_type][4]
+    url_login = "https://logowanie.tauron-dystrybucja.pl/login"
+    url_charts = "https://elicznik.tauron-dystrybucja.pl/index/charts"
+    headers = {
+        "cache-control": "no-cache",
+    }
+    payload_charts = {"dane[cache]": 0, "dane[chartType]": 2}
+
+    def __init__(self, name, username, password, meter_id, generation, sensor_type):
+        self.client_name = name
         self.username = username
         self.password = password
         self.meter_id = meter_id
-        self.additional_param_enabled = SENSOR_TYPES[sensor_type][3][0] == "generation"
+        self.additional_param_enabled = generation or sensor_type.startswith(
+            "generation"
+        )
         self.sensor_type = sensor_type
         self.unit = SENSOR_TYPES[sensor_type][1]
         configuration = calculate_configuration(username, password, meter_id)
         self.power_zones = configuration[0]
         self.mode = configuration[1]
         self.power_zones_last_update = configuration[2]
-        self.power_zones_last_update_tech = datetime.datetime.now() - datetime.timedelta(
-            days=1
+        self.power_zones_last_update_tech = (
+            datetime.datetime.now() - datetime.timedelta(days=1)
         )
         self.data = None
         self.params = {}
         self._state = None
         self.update = Throttle(SENSOR_TYPES[sensor_type][0])(self._update)
-        self.state_param = SENSOR_TYPES[sensor_type][2]
-        self.additional_param_name = SENSOR_TYPES[sensor_type][3][0]
-        self.additional_param = SENSOR_TYPES[sensor_type][3][1]
+        if not sensor_type == ZONE:
+            self.state_param = SENSOR_TYPES[sensor_type][2]
+            self.additional_param_name = SENSOR_TYPES[sensor_type][3][0]
+            self.additional_param = SENSOR_TYPES[sensor_type][3][1]
 
     @property
     def device_info(self):
@@ -162,11 +195,11 @@ class TauronAmiplusSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "tauron-{}-{}".format(self.mode.lower(), self.sensor_type.lower())
+        return f"tauron-{self.mode.lower()}-{self.sensor_type.lower()}"
 
     @property
     def name(self):
-        return "{}".format(self.client_name)
+        return f"{self.client_name} {self.sensor_type}"
 
     @property
     def state(self):
@@ -191,7 +224,7 @@ class TauronAmiplusSensor(Entity):
 
     def _update(self):
         self.update_configuration()
-        if self.sensor_type == TYPE_ZONE:
+        if self.sensor_type == ZONE:
             self.update_zone()
         elif self.sensor_type.endswith("daily"):
             self.update_values_daily()
@@ -204,14 +237,21 @@ class TauronAmiplusSensor(Entity):
         payload_login = {
             "username": self.username,
             "password": self.password,
-            "service": CONF_URL_SERVICE,
+            "service": "https://elicznik.tauron-dystrybucja.pl",
         }
         session = requests.session()
+        session.mount("https://", TLSAdapter())
         session.request(
-            "POST", CONF_URL_LOGIN, data=payload_login, headers=CONF_REQUEST_HEADERS
+            "POST",
+            TauronAmiplusSensor.url_login,
+            data=payload_login,
+            headers=TauronAmiplusSensor.headers,
         )
         session.request(
-            "POST", CONF_URL_LOGIN, data=payload_login, headers=CONF_REQUEST_HEADERS
+            "POST",
+            TauronAmiplusSensor.url_login,
+            data=payload_login,
+            headers=TauronAmiplusSensor.headers,
         )
         return session
 
@@ -247,7 +287,7 @@ class TauronAmiplusSensor(Entity):
                 self._state = 2
             self.params = {}
             for power_zone in self.power_zones:
-                pz_name = "zone{} ".format(power_zone)
+                pz_name = f"zone{power_zone} "
                 pz = (
                     str(
                         list(
@@ -279,9 +319,9 @@ class TauronAmiplusSensor(Entity):
         }
         response = session.request(
             "POST",
-            CONF_URL_CHARTS,
-            data={**CONF_REQUEST_PAYLOAD_CHARTS, **payload},
-            headers=CONF_REQUEST_HEADERS,
+            TauronAmiplusSensor.url_charts,
+            data={**TauronAmiplusSensor.payload_charts, **payload},
+            headers=TauronAmiplusSensor.headers,
         )
         correct_data = False
         if (
@@ -302,9 +342,9 @@ class TauronAmiplusSensor(Entity):
             }
             response = session.request(
                 "POST",
-                CONF_URL_CHARTS,
-                data={**CONF_REQUEST_PAYLOAD_CHARTS, **payload},
-                headers=CONF_REQUEST_HEADERS,
+                TauronAmiplusSensor.url_charts,
+                data={**TauronAmiplusSensor.payload_charts, **payload},
+                headers=TauronAmiplusSensor.headers,
             )
             if response.status_code == 200 and response.text.startswith('{"name"'):
                 correct_data = True
@@ -312,7 +352,7 @@ class TauronAmiplusSensor(Entity):
             json_data = response.json()
             self._state = round(float(json_data[self.state_param]), 3)
             if self.mode == TARIFF_G12:
-                values = json_data["dane"]["chart"]
+                values = list(json_data["dane"]["chart"].values())
                 z1 = list(filter(lambda x: x["Zone"] == "1", values))
                 z2 = list(filter(lambda x: x["Zone"] == "2", values))
                 sum_z1 = round(sum(float(val["EC"]) for val in z1), 3)
@@ -338,9 +378,9 @@ class TauronAmiplusSensor(Entity):
         }
         response = session.request(
             "POST",
-            CONF_URL_CHARTS,
-            data={**CONF_REQUEST_PAYLOAD_CHARTS, **payload},
-            headers=CONF_REQUEST_HEADERS,
+            TauronAmiplusSensor.url_charts,
+            data={**TauronAmiplusSensor.payload_charts, **payload},
+            headers=TauronAmiplusSensor.headers,
         )
         if response.status_code == 200 and response.text.startswith('{"name"'):
             json_data = response.json()
@@ -372,9 +412,9 @@ class TauronAmiplusSensor(Entity):
         }
         response = session.request(
             "POST",
-            CONF_URL_CHARTS,
-            data={**CONF_REQUEST_PAYLOAD_CHARTS, **payload},
-            headers=CONF_REQUEST_HEADERS,
+            TauronAmiplusSensor.url_charts,
+            data={**TauronAmiplusSensor.payload_charts, **payload},
+            headers=TauronAmiplusSensor.headers,
         )
         if response.status_code == 200 and response.text.startswith('{"name"'):
             json_data = response.json()
