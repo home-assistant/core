@@ -105,11 +105,9 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_serial_port"
             except AuroraError as error:
                 if "could not open port" in str(error):
-                    _LOGGER.error("Unable to open serial port")
                     errors["base"] = "cannot_open_serial_port"
                 elif "No response after" in str(error):
-                    _LOGGER.error("No response from inverter (could be dark)")
-                    errors["base"] = "cannot_connect"
+                    errors["base"] = "cannot_connect"  # could be dark
                 else:
                     _LOGGER.error(
                         "Unable to communicate with Aurora ABB Inverter at %s: %s %s",
