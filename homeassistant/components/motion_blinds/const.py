@@ -11,6 +11,7 @@ KEY_MULTICAST_LISTENER = "multicast_listener"
 
 ATTR_WIDTH = "width"
 ATTR_ABSOLUTE_POSITION = "absolute_position"
+ATTR_AVAILABLE = "available"
 
 SERVICE_SET_ABSOLUTE_POSITION = "set_absolute_position"
 

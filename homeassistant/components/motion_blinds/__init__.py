@@ -5,6 +5,7 @@ import logging
 from socket import timeout
 
 from motionblinds import MotionMulticast
+from motionblinds.motion_blinds import ParseException
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
@@ -13,6 +14,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    ATTR_AVAILABLE,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_GATEWAY,
@@ -25,6 +27,16 @@ from .const import (
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
+    """Class to manage fetching data from single endpoint."""
+
+    async def _async_update_data(self) -> Optional[T]:
+        """Fetch the latest data from the source."""
+        if self.update_method is None:
+            raise NotImplementedError("Update method not implemented")
+        return await self.update_method(self)
 
 
 def setup(hass: core.HomeAssistant, config: dict):
@@ -64,31 +76,45 @@ async def async_setup_entry(
 
     def update_gateway():
         """Call all updates using one async_add_executor_job."""
-        all_available = True
-        motion_gateway.Update()
+        data = {}
+
+        try:
+            motion_gateway.Update()
+        except (timeout, ParseException):
+            # let the error be logged and handled by the motionblinds library
+            data[KEY_GATEWAY] = {ATTR_AVAILABLE: False}
+        else:
+            data[KEY_GATEWAY] = {ATTR_AVAILABLE: True}
+
         for blind in motion_gateway.device_list.values():
             try:
                 blind.Update()
-            except timeout:
+            except (timeout, ParseException):
                 # let the error be logged and handled by the motionblinds library
-                all_available = False
+                data[blind.mac] = {ATTR_AVAILABLE: False}
+            else:
+                data[blind.mac] = {ATTR_AVAILABLE: True}
 
-        return all_available
+        return data
 
     async def async_update_data(self):
         """Fetch data from the gateway and blinds."""
-        try:
-            all_available = await hass.async_add_executor_job(update_gateway)
-        except timeout:
-            # let the error be logged and handled by the motionblinds library
-            all_available = False
+        data = await hass.async_add_executor_job(update_gateway)
+
+        all_available = True
+        for device in data.values():
+            if not device[ATTR_AVAILABLE]:
+                all_available = False
+                break
 
         if all_available:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
         else:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
 
-    coordinator = DataUpdateCoordinator(
+        return data
+
+    coordinator = DataUpdateCoordinatorMotionBlinds(
         hass,
         _LOGGER,
         # Name of the data. For logging purposes.
