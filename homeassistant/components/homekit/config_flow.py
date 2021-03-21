@@ -247,10 +247,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Determine is a name or port is already used."""
         name = user_input[CONF_NAME]
         port = user_input[CONF_PORT]
-        for entry in self._async_current_entries():
-            if entry.data[CONF_NAME] == name or entry.data[CONF_PORT] == port:
-                return False
-        return True
+        return not any(
+            entry.data[CONF_NAME] == name or entry.data[CONF_PORT] == port
+            for entry in self._async_current_entries()
+        )
 
     @staticmethod
     @callback
