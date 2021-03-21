@@ -16,20 +16,27 @@ from motioneye_client.const import (
 import pytest
 
 from homeassistant.components.camera import async_get_image, async_get_mjpeg_stream
+from homeassistant.components.motioneye import get_motioneye_device_unique_id
 from homeassistant.components.motioneye.const import (
     CONF_USERNAME_SURVEILLANCE,
     DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
     MOTIONEYE_MANUFACTURER,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import (
     TEST_CAMERA_ENTITY_ID,
+    TEST_CAMERA_ID,
     TEST_CAMERA_NAME,
     TEST_CAMERAS,
+    TEST_CONFIG_ENTRY_ID,
+    TEST_HOST,
+    TEST_PORT,
     TEST_USERNAME_SURVEILLANCE,
     create_mock_motioneye_client,
     create_mock_motioneye_config_entry,
@@ -239,3 +246,26 @@ async def test_state_attributes(hass: HomeAssistantType) -> None:
     entity_state = hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert entity_state
     assert entity_state.attributes.get("motion_detection")
+
+
+async def test_device_info(hass: HomeAssistantType) -> None:
+    """Verify device information includes expected details."""
+    client = create_mock_motioneye_client()
+    await setup_mock_motioneye_config_entry(hass, client=client)
+
+    device_id = get_motioneye_device_unique_id(TEST_HOST, TEST_PORT, TEST_CAMERA_ID)
+    device_registry = dr.async_get(hass)
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    assert device
+    assert device.config_entries == {TEST_CONFIG_ENTRY_ID}
+    assert device.identifiers == {(DOMAIN, device_id)}
+    assert device.manufacturer == MOTIONEYE_MANUFACTURER
+    assert device.name == TEST_CAMERA_NAME
+
+    entity_registry = await er.async_get_registry(hass)
+    entities_from_device = [
+        entry.entity_id
+        for entry in er.async_entries_for_device(entity_registry, device.id)
+    ]
+    assert TEST_CAMERA_ENTITY_ID in entities_from_device
