@@ -502,6 +502,6 @@ class IcloudDevice:
         return self._location
 
     @property
-    def state_attributes(self) -> dict[str, any]:
+    def exta_state_attributes(self) -> dict[str, any]:
         """Return the attributes."""
         return self._attrs

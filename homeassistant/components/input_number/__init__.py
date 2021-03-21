@@ -256,7 +256,7 @@ class InputNumber(RestoreEntity):
         return self._config[CONF_ID]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),

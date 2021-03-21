@@ -319,7 +319,7 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_EDITABLE: self.editable,
