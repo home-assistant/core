@@ -8,6 +8,9 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.deconz import device_trigger
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
+from homeassistant.components.device_automation.exceptions import (
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -286,19 +289,25 @@ async def test_validate_trigger_unsupported_device(
         model="unsupported",
     )
 
+    trigger_config = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DECONZ_DOMAIN,
+        CONF_DEVICE_ID: device.id,
+        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
+        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+    }
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(hass, trigger_config)
+        await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "trigger": {
-                        CONF_PLATFORM: "device",
-                        CONF_DOMAIN: DECONZ_DOMAIN,
-                        CONF_DEVICE_ID: device.id,
-                        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
-                        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
-                    },
+                    "trigger": trigger_config,
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "test_trigger_button_press"},
@@ -325,19 +334,25 @@ async def test_validate_trigger_unsupported_trigger(
         model="TRADFRI on/off switch",
     )
 
+    trigger_config = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DECONZ_DOMAIN,
+        CONF_DEVICE_ID: device.id,
+        CONF_TYPE: "unsupported",
+        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+    }
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_validate_trigger_config(hass, trigger_config)
+        await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "trigger": {
-                        CONF_PLATFORM: "device",
-                        CONF_DOMAIN: DECONZ_DOMAIN,
-                        CONF_DEVICE_ID: device.id,
-                        CONF_TYPE: "unsupported",
-                        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
-                    },
+                    "trigger": trigger_config,
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "test_trigger_button_press"},
@@ -364,19 +379,25 @@ async def test_attach_trigger_no_matching_event(
         model="TRADFRI on/off switch",
     )
 
+    trigger_config = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DECONZ_DOMAIN,
+        CONF_DEVICE_ID: device.id,
+        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
+        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+    }
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_attach_trigger(hass, trigger_config, None, None)
+        await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "trigger": {
-                        CONF_PLATFORM: "device",
-                        CONF_DOMAIN: DECONZ_DOMAIN,
-                        CONF_DEVICE_ID: device.id,
-                        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
-                        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
-                    },
+                    "trigger": trigger_config,
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "test_trigger_button_press"},
