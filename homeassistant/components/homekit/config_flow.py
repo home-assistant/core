@@ -9,7 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_DOMAINS,
@@ -224,7 +224,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return {
             entry.data[CONF_NAME]
             for entry in self._async_current_entries()
-            if CONF_NAME in entry.data
+            if entry.source != SOURCE_IGNORE and CONF_NAME in entry.data
         }
 
     @callback
@@ -252,6 +252,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return not any(
             entry.data[CONF_NAME] == name or entry.data[CONF_PORT] == port
             for entry in self._async_current_entries()
+            if entry.source != SOURCE_IGNORE
         )
 
     @staticmethod
