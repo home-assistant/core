@@ -88,7 +88,7 @@ class IOSSensor(Entity):
         return self._unit_of_measurement
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device state attributes."""
         device = self._device[ios.ATTR_DEVICE]
         device_battery = self._device[ios.ATTR_BATTERY]

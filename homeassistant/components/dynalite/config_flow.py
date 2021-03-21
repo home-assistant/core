@@ -1,5 +1,7 @@
 """Config flow to configure Dynalite hub."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
@@ -18,7 +20,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Dynalite flow."""
         self.host = None
 
-    async def async_step_import(self, import_info: Dict[str, Any]) -> Any:
+    async def async_step_import(self, import_info: dict[str, Any]) -> Any:
         """Import a new bridge as a config entry."""
         LOGGER.debug("Starting async_step_import - %s", import_info)
         host = import_info[CONF_HOST]

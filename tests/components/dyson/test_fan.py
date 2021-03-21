@@ -1,5 +1,5 @@
 """Test the Dyson fan component."""
-from typing import Type
+from __future__ import annotations
 
 from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool, DysonPureCoolLink
@@ -19,16 +19,18 @@ from homeassistant.components.dyson.fan import (
     ATTR_HEPA_FILTER,
     ATTR_NIGHT_MODE,
     ATTR_TIMER,
+    PRESET_MODE_AUTO,
     SERVICE_SET_ANGLE,
     SERVICE_SET_AUTO_MODE,
     SERVICE_SET_DYSON_SPEED,
     SERVICE_SET_FLOW_DIRECTION_FRONT,
     SERVICE_SET_NIGHT_MODE,
     SERVICE_SET_TIMER,
-    SPEED_LOW,
 )
 from homeassistant.components.fan import (
     ATTR_OSCILLATING,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     ATTR_SPEED,
     ATTR_SPEED_LIST,
     DOMAIN as PLATFORM_DOMAIN,
@@ -37,7 +39,9 @@ from homeassistant.components.fan import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SPEED_HIGH,
+    SPEED_LOW,
     SPEED_MEDIUM,
+    SPEED_OFF,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
 )
@@ -48,7 +52,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     ENTITY_NAME,
@@ -63,7 +67,7 @@ ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
-def async_get_device(spec: Type[DysonPureCoolLink]) -> DysonPureCoolLink:
+def async_get_device(spec: type[DysonPureCoolLink]) -> DysonPureCoolLink:
     """Return a Dyson fan device."""
     if spec == DysonPureCoolLink:
         return async_get_purecoollink_device()
@@ -75,8 +79,8 @@ async def test_state_purecoollink(
     hass: HomeAssistant, device: DysonPureCoolLink
 ) -> None:
     """Test the state of a PureCoolLink fan."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -84,8 +88,16 @@ async def test_state_purecoollink(
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is True
     assert attributes[ATTR_OSCILLATING] is True
+    assert attributes[ATTR_PERCENTAGE] == 10
+    assert attributes[ATTR_PRESET_MODE] is None
     assert attributes[ATTR_SPEED] == SPEED_LOW
-    assert attributes[ATTR_SPEED_LIST] == [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    assert attributes[ATTR_SPEED_LIST] == [
+        SPEED_OFF,
+        SPEED_LOW,
+        SPEED_MEDIUM,
+        SPEED_HIGH,
+        PRESET_MODE_AUTO,
+    ]
     assert attributes[ATTR_DYSON_SPEED] == 1
     assert attributes[ATTR_DYSON_SPEED_LIST] == list(range(1, 11))
     assert attributes[ATTR_AUTO_MODE] is False
@@ -106,7 +118,9 @@ async def test_state_purecoollink(
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is False
     assert attributes[ATTR_OSCILLATING] is False
-    assert attributes[ATTR_SPEED] == SPEED_MEDIUM
+    assert attributes[ATTR_PERCENTAGE] is None
+    assert attributes[ATTR_PRESET_MODE] == "auto"
+    assert attributes[ATTR_SPEED] == PRESET_MODE_AUTO
     assert attributes[ATTR_DYSON_SPEED] == "AUTO"
     assert attributes[ATTR_AUTO_MODE] is True
 
@@ -114,8 +128,8 @@ async def test_state_purecoollink(
 @pytest.mark.parametrize("device", [DysonPureCool], indirect=True)
 async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> None:
     """Test the state of a PureCool fan."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
@@ -125,8 +139,16 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
     assert attributes[ATTR_OSCILLATING] is True
     assert attributes[ATTR_ANGLE_LOW] == 24
     assert attributes[ATTR_ANGLE_HIGH] == 254
+    assert attributes[ATTR_PERCENTAGE] == 10
+    assert attributes[ATTR_PRESET_MODE] is None
     assert attributes[ATTR_SPEED] == SPEED_LOW
-    assert attributes[ATTR_SPEED_LIST] == [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+    assert attributes[ATTR_SPEED_LIST] == [
+        SPEED_OFF,
+        SPEED_LOW,
+        SPEED_MEDIUM,
+        SPEED_HIGH,
+        PRESET_MODE_AUTO,
+    ]
     assert attributes[ATTR_DYSON_SPEED] == 1
     assert attributes[ATTR_DYSON_SPEED_LIST] == list(range(1, 11))
     assert attributes[ATTR_AUTO_MODE] is False
@@ -148,7 +170,9 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
     attributes = state.attributes
     assert attributes[ATTR_NIGHT_MODE] is False
     assert attributes[ATTR_OSCILLATING] is False
-    assert attributes[ATTR_SPEED] == SPEED_MEDIUM
+    assert attributes[ATTR_PERCENTAGE] is None
+    assert attributes[ATTR_PRESET_MODE] == "auto"
+    assert attributes[ATTR_SPEED] == PRESET_MODE_AUTO
     assert attributes[ATTR_DYSON_SPEED] == "AUTO"
     assert attributes[ATTR_AUTO_MODE] is True
     assert attributes[ATTR_FLOW_DIRECTION_FRONT] is False
@@ -168,6 +192,11 @@ async def test_state_purecool(hass: HomeAssistant, device: DysonPureCool) -> Non
         (
             SERVICE_TURN_ON,
             {ATTR_SPEED: SPEED_LOW},
+            {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_PERCENTAGE: 40},
             {"fan_mode": FanMode.FAN, "fan_speed": FanSpeed.FAN_SPEED_4},
         ),
         (SERVICE_TURN_OFF, {}, {"fan_mode": FanMode.OFF}),
@@ -228,6 +257,18 @@ async def test_commands_purecoollink(
             {ATTR_SPEED: SPEED_LOW},
             "set_fan_speed",
             [FanSpeed.FAN_SPEED_4],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_PERCENTAGE: 40},
+            "set_fan_speed",
+            [FanSpeed.FAN_SPEED_4],
+        ),
+        (
+            SERVICE_TURN_ON,
+            {ATTR_PRESET_MODE: "auto"},
+            "enable_auto_mode",
+            [],
         ),
         (SERVICE_TURN_OFF, {}, "turn_off", []),
         (SERVICE_OSCILLATE, {ATTR_OSCILLATING: True}, "enable_oscillation", []),

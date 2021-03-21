@@ -4,9 +4,9 @@
             "already_configured": "Dieser Vilfo Router ist bereits konfiguriert."
         },
         "error": {
-            "cannot_connect": "Verbindung nicht m\u00f6glich. Bitte \u00fcberpr\u00fcfen Sie die von Ihnen angegebenen Informationen und versuchen Sie es erneut.",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung. Bitte \u00fcberpr\u00fcfen Sie den Zugriffstoken und versuchen Sie es erneut.",
-            "unknown": "Beim Einrichten der Integration ist ein unerwarteter Fehler aufgetreten."
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung. Bitte \u00fcberpr\u00fcfe den Zugriffstoken und versuche es erneut.",
+            "unknown": "Unerwarteter Fehler"
         },
         "step": {
             "user": {

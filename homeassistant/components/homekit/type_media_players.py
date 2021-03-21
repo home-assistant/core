@@ -177,7 +177,7 @@ class MediaPlayer(HomeAccessory):
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     def set_play_pause(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -186,7 +186,7 @@ class MediaPlayer(HomeAccessory):
         )
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_PAUSE
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     def set_play_stop(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -195,7 +195,7 @@ class MediaPlayer(HomeAccessory):
         )
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_STOP
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     def set_toggle_mute(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -203,7 +203,7 @@ class MediaPlayer(HomeAccessory):
             '%s: Set switch state for "toggle_mute" to %s', self.entity_id, value
         )
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
-        self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
+        self.async_call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
     @callback
     def async_update_state(self, new_state):
@@ -344,7 +344,7 @@ class TelevisionMediaPlayer(HomeAccessory):
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     def set_mute(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -352,27 +352,27 @@ class TelevisionMediaPlayer(HomeAccessory):
             '%s: Set switch state for "toggle_mute" to %s', self.entity_id, value
         )
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_MUTED: value}
-        self.call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
+        self.async_call_service(DOMAIN, SERVICE_VOLUME_MUTE, params)
 
     def set_volume(self, value):
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug("%s: Set volume to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_MEDIA_VOLUME_LEVEL: value}
-        self.call_service(DOMAIN, SERVICE_VOLUME_SET, params)
+        self.async_call_service(DOMAIN, SERVICE_VOLUME_SET, params)
 
     def set_volume_step(self, value):
         """Send volume step value if call came from HomeKit."""
         _LOGGER.debug("%s: Step volume by %s", self.entity_id, value)
         service = SERVICE_VOLUME_DOWN if value else SERVICE_VOLUME_UP
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.call_service(DOMAIN, service, params)
+        self.async_call_service(DOMAIN, service, params)
 
     def set_input_source(self, value):
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
         source = self.sources[value]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source}
-        self.call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
+        self.async_call_service(DOMAIN, SERVICE_SELECT_SOURCE, params)
 
     def set_remote_key(self, value):
         """Send remote key value if call came from HomeKit."""
@@ -392,7 +392,7 @@ class TelevisionMediaPlayer(HomeAccessory):
             else:
                 service = SERVICE_MEDIA_PLAY_PAUSE
             params = {ATTR_ENTITY_ID: self.entity_id}
-            self.call_service(DOMAIN, service, params)
+            self.async_call_service(DOMAIN, service, params)
         else:
             # Unhandled keys can be handled by listening to the event bus
             self.hass.bus.fire(

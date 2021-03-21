@@ -10,6 +10,8 @@ from typing import Any, Awaitable, Callable, Coroutine, TypeVar
 
 _LOGGER = logging.getLogger(__name__)
 
+_SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
+
 T = TypeVar("T")
 
 
@@ -58,6 +60,28 @@ def run_callback_threadsafe(
                 _LOGGER.warning("Exception on lost future: ", exc_info=True)
 
     loop.call_soon_threadsafe(run_callback)
+
+    if hasattr(loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE):
+        #
+        # If the final `HomeAssistant.async_block_till_done` in
+        # `HomeAssistant.async_stop` has already been called, the callback
+        # will never run and, `future.result()` will block forever which
+        # will prevent the thread running this code from shutting down which
+        # will result in a deadlock when the main thread attempts to shutdown
+        # the executor and `.join()` the thread running this code.
+        #
+        # To prevent this deadlock we do the following on shutdown:
+        #
+        # 1. Set the _SHUTDOWN_RUN_CALLBACK_THREADSAFE attr on this function
+        #    by calling `shutdown_run_callback_threadsafe`
+        # 2. Call `hass.async_block_till_done` at least once after shutdown
+        #    to ensure all callbacks have run
+        # 3. Raise an exception here to ensure `future.result()` can never be
+        #    called and hit the deadlock since once `shutdown_run_callback_threadsafe`
+        #    we cannot promise the callback will be executed.
+        #
+        raise RuntimeError("The event loop is in the process of shutting down.")
+
     return future
 
 
@@ -139,3 +163,20 @@ async def gather_with_concurrency(
     return await gather(
         *(sem_task(task) for task in tasks), return_exceptions=return_exceptions
     )
+
+
+def shutdown_run_callback_threadsafe(loop: AbstractEventLoop) -> None:
+    """Call when run_callback_threadsafe should prevent creating new futures.
+
+    We must finish all callbacks before the executor is shutdown
+    or we can end up in a deadlock state where:
+
+    `executor.result()` is waiting for its `._condition`
+    and the executor shutdown is trying to `.join()` the
+    executor thread.
+
+    This function is considered irreversible and should only ever
+    be called when Home Assistant is going to shutdown and
+    python is going to exit.
+    """
+    setattr(loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE, True)

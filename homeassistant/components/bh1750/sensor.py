@@ -3,7 +3,7 @@ from functools import partial
 import logging
 
 from i2csense.bh1750 import BH1750  # pylint: disable=import-error
-import smbus  # pylint: disable=import-error
+import smbus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

@@ -1,18 +1,21 @@
 """Helper to test significant NEW_NAME state changes."""
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any
 
 from homeassistant.const import ATTR_DEVICE_CLASS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 
-async def async_check_significant_change(
+@callback
+def async_check_significant_change(
     hass: HomeAssistant,
     old_state: str,
     old_attrs: dict,
     new_state: str,
     new_attrs: dict,
     **kwargs: Any,
-) -> Optional[bool]:
+) -> bool | None:
     """Test if state significantly changed."""
     device_class = new_attrs.get(ATTR_DEVICE_CLASS)
 

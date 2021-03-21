@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Verbindung fehlgeschlagen"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
@@ -22,6 +23,9 @@
                 }
             },
             "plm": {
+                "data": {
+                    "device": "USB-Ger\u00e4te-Pfad"
+                },
                 "title": "Insteon PLM"
             },
             "user": {

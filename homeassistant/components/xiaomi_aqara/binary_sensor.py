@@ -170,10 +170,10 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_DENSITY: self._density}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -214,10 +214,10 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_NO_MOTION_SINCE: self._no_motion_since}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     @callback
@@ -308,10 +308,10 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_OPEN_SINCE: self._open_since}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -389,10 +389,10 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_DENSITY: self._density}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -424,10 +424,10 @@ class XiaomiVibration(XiaomiBinarySensor):
         super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_LAST_ACTION: self._last_action}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -459,10 +459,10 @@ class XiaomiButton(XiaomiBinarySensor):
         super().__init__(device, name, xiaomi_hub, data_key, None, config_entry)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_LAST_ACTION: self._last_action}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):
@@ -519,10 +519,10 @@ class XiaomiCube(XiaomiBinarySensor):
         super().__init__(device, "Cube", xiaomi_hub, data_key, None, config_entry)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {ATTR_LAST_ACTION: self._last_action}
-        attrs.update(super().device_state_attributes)
+        attrs.update(super().extra_state_attributes)
         return attrs
 
     def parse_data(self, data, raw_data):

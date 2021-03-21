@@ -1,7 +1,9 @@
 """Support for HERE travel time sensors."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, Dict, Optional, Union
+from typing import Callable
 
 import herepy
 import voluptuous as vol
@@ -12,6 +14,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MODE,
+    CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
@@ -35,7 +38,6 @@ CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 CONF_ARRIVAL = "arrival"
@@ -143,12 +145,11 @@ PLATFORM_SCHEMA = vol.All(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Dict[str, Union[str, bool]],
+    config: dict[str, str | bool],
     async_add_entities: Callable,
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the HERE travel time platform."""
-
     api_key = config[CONF_API_KEY]
     here_client = herepy.RoutingApi(api_key)
 
@@ -224,7 +225,7 @@ class HERETravelTimeSensor(Entity):
         destination: str,
         origin_entity_id: str,
         destination_entity_id: str,
-        here_data: "HERETravelTimeData",
+        here_data: HERETravelTimeData,
     ) -> None:
         """Initialize the sensor."""
         self._name = name
@@ -256,7 +257,7 @@ class HERETravelTimeSensor(Entity):
         )
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         if self._here_data.traffic_mode:
             if self._here_data.traffic_time is not None:
@@ -272,9 +273,9 @@ class HERETravelTimeSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(
+    def extra_state_attributes(
         self,
-    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
+    ) -> dict[str, None | float | str | bool] | None:
         """Return the state attributes."""
         if self._here_data.base_time is None:
             return None
@@ -325,7 +326,7 @@ class HERETravelTimeSensor(Entity):
 
         await self.hass.async_add_executor_job(self._here_data.update)
 
-    async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
+    async def _get_location_from_entity(self, entity_id: str) -> str | None:
         """Get the location from the entity state or attributes."""
         entity = self.hass.states.get(entity_id)
 
@@ -458,11 +459,9 @@ class HERETravelTimeData:
 
             _LOGGER.debug("Raw response is: %s", response.response)
 
-            # pylint: disable=no-member
             source_attribution = response.response.get("sourceAttribution")
             if source_attribution is not None:
                 self.attribution = self._build_hass_attribution(source_attribution)
-            # pylint: disable=no-member
             route = response.response["route"]
             summary = route[0]["summary"]
             waypoint = route[0]["waypoint"]
@@ -478,13 +477,12 @@ class HERETravelTimeData:
             else:
                 # Convert to kilometers
                 self.distance = distance / 1000
-            # pylint: disable=no-member
             self.route = response.route_short
             self.origin_name = waypoint[0]["mappedRoadName"]
             self.destination_name = waypoint[1]["mappedRoadName"]
 
     @staticmethod
-    def _build_hass_attribution(source_attribution: Dict) -> Optional[str]:
+    def _build_hass_attribution(source_attribution: dict) -> str | None:
         """Build a hass frontend ready string out of the sourceAttribution."""
         suppliers = source_attribution.get("supplier")
         if suppliers is not None:

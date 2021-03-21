@@ -12,7 +12,7 @@
     "step": {
       "confirm": {
         "data": {
-          "name": "[%key:component::syncthru::config::step::user::data::name%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "url": "[%key:component::syncthru::config::step::user::data::url%]"
         }
       },

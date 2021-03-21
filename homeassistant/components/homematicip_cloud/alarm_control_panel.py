@@ -1,6 +1,8 @@
 """Support for HomematicIP Cloud alarm control panel."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
@@ -44,7 +46,7 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         _LOGGER.info("Setting up %s", self.name)
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},

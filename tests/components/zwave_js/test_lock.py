@@ -14,7 +14,7 @@ from homeassistant.components.zwave_js.lock import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED
 
-SCHLAGE_BE469_LOCK_ENTITY = "lock.touchscreen_deadbolt_current_lock_mode"
+SCHLAGE_BE469_LOCK_ENTITY = "lock.touchscreen_deadbolt"
 
 
 async def test_door_lock(hass, client, lock_schlage_be469, integration):

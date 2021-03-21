@@ -12,12 +12,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD
 
-from .const import CONF_UUID, KEY_IP, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("daikin")
+@config_entries.HANDLERS.register(DOMAIN)
 class FlowHandler(config_entries.ConfigFlow):
     """Handle a config flow."""
 
@@ -123,14 +123,6 @@ class FlowHandler(config_entries.ConfigFlow):
         if not host:
             return await self.async_step_user()
         return await self._create_device(host)
-
-    async def async_step_discovery(self, discovery_info):
-        """Initialize step from discovery."""
-        _LOGGER.debug("Discovered device: %s", discovery_info)
-        await self.async_set_unique_id(discovery_info[KEY_MAC])
-        self._abort_if_unique_id_configured()
-        self.host = discovery_info[KEY_IP]
-        return await self.async_step_user()
 
     async def async_step_zeroconf(self, discovery_info):
         """Prepare configuration for a discovered Daikin device."""

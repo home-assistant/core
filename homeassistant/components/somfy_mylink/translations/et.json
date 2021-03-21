@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "flow_title": "Somfy MyLink {mac} ( {ip} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "system_id": "S\u00fcsteemi ID"
+                },
+                "description": "S\u00fcsteemi ID saab rakenduse MyLink sidumise alt valides mis tahes mitte- pilveteenuse."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "entity_config": {
+                "data": {
+                    "reverse": "(Akna)kate t\u00f6\u00f6tab vastupidi"
+                },
+                "description": "Olemi {entity_id} suvandite seadmine",
+                "title": "Seadista olem"
+            },
+            "init": {
+                "data": {
+                    "default_reverse": "Seadistamata (akna)katete vaikep\u00f6\u00f6rduse olek",
+                    "entity_id": "Seadista konkreetne olem.",
+                    "target_id": "Seadista (akna)katte suvandid"
+                },
+                "title": "Seadista MyLinki suvandid"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "(Akna)kate liigub vastupidi"
+                },
+                "description": "Seadme `{target_name}` suvandite seadmine",
+                "title": "Seadista MyLink Cover"
+            }
+        }
+    },
+    "title": ""
+}

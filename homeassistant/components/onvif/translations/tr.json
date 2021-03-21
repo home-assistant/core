@@ -1,8 +1,42 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
         "step": {
+            "auth": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
+            "configure_profile": {
+                "data": {
+                    "include": "Kamera varl\u0131\u011f\u0131 olu\u015ftur"
+                },
+                "title": "Profilleri Yap\u0131land\u0131r"
+            },
+            "device": {
+                "data": {
+                    "host": "Ke\u015ffedilen ONVIF cihaz\u0131n\u0131 se\u00e7in"
+                },
+                "title": "ONVIF cihaz\u0131n\u0131 se\u00e7in"
+            },
+            "manual_input": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "name": "Ad",
+                    "port": "Port"
+                },
+                "title": "ONVIF cihaz\u0131n\u0131 yap\u0131land\u0131r\u0131n"
+            },
             "user": {
-                "description": "G\u00f6nder d\u00fc\u011fmesine t\u0131klad\u0131\u011f\u0131n\u0131zda, Profil S'yi destekleyen ONVIF cihazlar\u0131 i\u00e7in a\u011f\u0131n\u0131zda arama yapaca\u011f\u0131z. \n\n Baz\u0131 \u00fcreticiler varsay\u0131lan olarak ONVIF'i devre d\u0131\u015f\u0131 b\u0131rakmaya ba\u015flad\u0131. L\u00fctfen kameran\u0131z\u0131n yap\u0131land\u0131rmas\u0131nda ONVIF'in etkinle\u015ftirildi\u011finden emin olun."
+                "description": "G\u00f6nder d\u00fc\u011fmesine t\u0131klad\u0131\u011f\u0131n\u0131zda, Profil S'yi destekleyen ONVIF cihazlar\u0131 i\u00e7in a\u011f\u0131n\u0131zda arama yapaca\u011f\u0131z. \n\n Baz\u0131 \u00fcreticiler varsay\u0131lan olarak ONVIF'i devre d\u0131\u015f\u0131 b\u0131rakmaya ba\u015flad\u0131. L\u00fctfen kameran\u0131z\u0131n yap\u0131land\u0131rmas\u0131nda ONVIF'in etkinle\u015ftirildi\u011finden emin olun.",
+                "title": "ONVIF cihaz kurulumu"
             }
         }
     },

@@ -1,5 +1,5 @@
 """Support for Modbus Coil and Discrete Input sensors."""
-from typing import Optional
+from __future__ import annotations
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
@@ -10,13 +10,12 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
-    CONF_ADDRESS,
     CONF_COILS,
     CONF_HUB,
     CONF_INPUT_TYPE,
@@ -95,7 +94,7 @@ class ModbusBinarySensor(BinarySensorEntity):
         return self._value
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

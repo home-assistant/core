@@ -1,13 +1,16 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u63a7\u5236\u5668\u4f4d\u5740\u5df2\u7d93\u8a2d\u5b9a"
+            "already_configured": "\u63a7\u5236\u5668\u4f4d\u5740\u5df2\u7d93\u8a2d\u5b9a",
+            "configuration_updated": "\u8a2d\u5b9a\u5df2\u66f4\u65b0\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "faulty_credentials": "\u9a57\u8b49\u78bc\u7121\u6548",
             "service_unavailable": "\u9023\u7dda\u5931\u6557",
             "unknown_client_mac": "\u8a72 Mac \u4f4d\u5740\u7121\u53ef\u7528\u5ba2\u6236\u7aef"
         },
+        "flow_title": "UniFi Network {site} ({host})",
         "step": {
             "user": {
                 "data": {

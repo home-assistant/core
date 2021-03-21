@@ -1,11 +1,12 @@
 """Manifest validation."""
-from typing import Dict
+from __future__ import annotations
+
 from urllib.parse import urlparse
 
-from awesomeversion import AwesomeVersion
-from awesomeversion.strategy import AwesomeVersionStrategy
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
+
+from homeassistant.loader import validate_custom_integration_version
 
 from .model import Integration
 
@@ -53,15 +54,9 @@ def verify_uppercase(value: str):
 
 def verify_version(value: str):
     """Verify the version."""
-    version = AwesomeVersion(value)
-    if version.strategy not in [
-        AwesomeVersionStrategy.CALVER,
-        AwesomeVersionStrategy.SEMVER,
-        AwesomeVersionStrategy.SIMPLEVER,
-        AwesomeVersionStrategy.BUILDVER,
-    ]:
+    if not validate_custom_integration_version(value):
         raise vol.Invalid(
-            f"'{version}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
+            f"'{value}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
         )
     return value
 
@@ -125,7 +120,7 @@ def validate_version(integration: Integration):
     Will be removed when the version key is no longer optional for custom integrations.
     """
     if not integration.manifest.get("version"):
-        integration.add_warning(
+        integration.add_error(
             "manifest",
             "No 'version' key in the manifest file. This will cause a future version of Home Assistant to block this integration.",
         )
@@ -151,7 +146,7 @@ def validate_manifest(integration: Integration):
         validate_version(integration)
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle all integrations manifests."""
     for integration in integrations.values():
         if integration.manifest:

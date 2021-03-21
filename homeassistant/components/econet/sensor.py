@@ -1,6 +1,4 @@
 """Support for Rheem EcoNet water heaters."""
-import logging
-
 from pyeconet.equipment import EquipmentType
 
 from homeassistant.const import (
@@ -48,9 +46,6 @@ SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     WIFI_SIGNAL: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     RUNNING_STATE: None,  # This is just a string
 }
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

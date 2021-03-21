@@ -1,4 +1,6 @@
 """Provide methods to bootstrap a Home Assistant instance."""
+from __future__ import annotations
+
 import asyncio
 import contextlib
 from datetime import datetime
@@ -8,7 +10,7 @@ import os
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any, Dict, Optional, Set
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 import yarl
@@ -17,6 +19,7 @@ from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -27,7 +30,6 @@ from homeassistant.setup import (
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
-from homeassistant.util.yaml import clear_secret_cache
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -74,8 +76,8 @@ STAGE_1_INTEGRATIONS = {
 
 
 async def async_setup_hass(
-    runtime_config: "RuntimeConfig",
-) -> Optional[core.HomeAssistant]:
+    runtime_config: RuntimeConfig,
+) -> core.HomeAssistant | None:
     """Set up Home Assistant."""
     hass = core.HomeAssistant()
     hass.config.config_dir = runtime_config.config_dir
@@ -121,8 +123,6 @@ async def async_setup_hass(
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
             )
-        finally:
-            clear_secret_cache()
 
     if config_dict is None:
         safe_mode = True
@@ -190,7 +190,7 @@ def open_hass_ui(hass: core.HomeAssistant) -> None:
 
 async def async_from_config_dict(
     config: ConfigType, hass: core.HomeAssistant
-) -> Optional[core.HomeAssistant]:
+) -> core.HomeAssistant | None:
     """Try to configure Home Assistant from a configuration dictionary.
 
     Dynamically loads required components and its dependencies.
@@ -257,8 +257,8 @@ async def async_from_config_dict(
 def async_enable_logging(
     hass: core.HomeAssistant,
     verbose: bool = False,
-    log_rotate_days: Optional[int] = None,
-    log_file: Optional[str] = None,
+    log_rotate_days: int | None = None,
+    log_file: str | None = None,
     log_no_color: bool = False,
 ) -> None:
     """Set up the logging.
@@ -364,7 +364,7 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 
 @core.callback
-def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
+def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
     domains = {key.split(" ")[0] for key in config if key != core.DOMAIN}
@@ -381,7 +381,7 @@ def _get_domains(hass: core.HomeAssistant, config: Dict[str, Any]) -> Set[str]:
 
 
 async def _async_log_pending_setups(
-    hass: core.HomeAssistant, domains: Set[str], setup_started: Dict[str, datetime]
+    hass: core.HomeAssistant, domains: set[str], setup_started: dict[str, datetime]
 ) -> None:
     """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
     while True:
@@ -398,9 +398,9 @@ async def _async_log_pending_setups(
 
 async def async_setup_multi_components(
     hass: core.HomeAssistant,
-    domains: Set[str],
-    config: Dict[str, Any],
-    setup_started: Dict[str, datetime],
+    domains: set[str],
+    config: dict[str, Any],
+    setup_started: dict[str, datetime],
 ) -> None:
     """Set up multiple domains. Log on failure."""
     futures = {
@@ -424,7 +424,7 @@ async def async_setup_multi_components(
 
 
 async def _async_set_up_integrations(
-    hass: core.HomeAssistant, config: Dict[str, Any]
+    hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
     setup_started = hass.data[DATA_SETUP_STARTED] = {}
@@ -432,7 +432,7 @@ async def _async_set_up_integrations(
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
-    integration_cache: Dict[str, loader.Integration] = {}
+    integration_cache: dict[str, loader.Integration] = {}
     to_resolve = domains_to_setup
     while to_resolve:
         old_to_resolve = to_resolve
@@ -510,10 +510,12 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
-    # Kick off loading the registries. They don't need to be awaited.
-    asyncio.create_task(hass.helpers.device_registry.async_get_registry())
-    asyncio.create_task(hass.helpers.entity_registry.async_get_registry())
-    asyncio.create_task(hass.helpers.area_registry.async_get_registry())
+    # Load the registries
+    await asyncio.gather(
+        device_registry.async_load(hass),
+        entity_registry.async_load(hass),
+        area_registry.async_load(hass),
+    )
 
     # Start setup
     if stage_1_domains:

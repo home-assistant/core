@@ -221,7 +221,7 @@ class HangoutsBot:
     async def _on_disconnect(self):
         """Handle disconnecting."""
         if self._connected:
-            _LOGGER.debug("Connection lost! Reconnect...")
+            _LOGGER.debug("Connection lost! Reconnect")
             await self.async_connect()
         else:
             dispatcher.async_dispatcher_send(self.hass, EVENT_HANGOUTS_DISCONNECTED)
