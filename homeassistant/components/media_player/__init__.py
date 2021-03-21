@@ -9,6 +9,7 @@ import functools as ft
 import hashlib
 import logging
 import secrets
+from typing import final
 from urllib.parse import urlparse
 
 from aiohttp import web
@@ -853,6 +854,7 @@ class MediaPlayerEntity(Entity):
 
         return data
 
+    @final
     @property
     def state_attributes(self):
         """Return the state attributes."""

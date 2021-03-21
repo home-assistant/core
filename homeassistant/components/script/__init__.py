@@ -284,7 +284,7 @@ class ScriptEntity(ToggleEntity):
         return self.script.name
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_LAST_TRIGGERED: self.script.last_triggered,
