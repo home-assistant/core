@@ -2,7 +2,7 @@
 from datetime import datetime, timedelta
 import logging
 
-from yalexs.activity import ActivityType
+from yalexs.activity import ACTION_DOORBELL_CALL_MISSED, ActivityType
 from yalexs.lock import LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
@@ -36,30 +36,36 @@ def _retrieve_online_state(data, detail):
 
 
 def _retrieve_motion_state(data, detail):
-
-    return _activity_time_based_state(
-        data,
-        detail.device_id,
-        {ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_DING},
+    latest = data.activity_stream.get_latest_device_activity(
+        detail.device_id, {ActivityType.DOORBELL_MOTION}
     )
+    if latest is None:
+        return False
+
+    return _activity_time_based_state(latest)
 
 
 def _retrieve_ding_state(data, detail):
-
-    return _activity_time_based_state(
-        data, detail.device_id, {ActivityType.DOORBELL_DING}
+    latest = data.activity_stream.get_latest_device_activity(
+        detail.device_id, {ActivityType.DOORBELL_DING}
     )
+    if latest is None:
+        return False
+
+    if (
+        data.activity_stream.pubnub.connected
+        and latest.action == ACTION_DOORBELL_CALL_MISSED
+    ):
+        return False
+
+    return _activity_time_based_state(latest)
 
 
-def _activity_time_based_state(data, device_id, activity_types):
+def _activity_time_based_state(latest):
     """Get the latest state of the sensor."""
-    latest = data.activity_stream.get_latest_device_activity(device_id, activity_types)
-
-    if latest is not None:
-        start = latest.activity_start_time
-        end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-        return start <= datetime.now() <= end
-    return False
+    start = latest.activity_start_time
+    end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
+    return start <= datetime.now() <= end
 
 
 SENSOR_NAME = 0

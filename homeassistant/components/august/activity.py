@@ -32,7 +32,7 @@ class ActivityStream(AugustSubscriberMixin):
         self._latest_activities = {}
         self._last_update_time = None
         self._abort_async_track_time_interval = None
-        self._pubnub = pubnub
+        self.pubnub = pubnub
         self._update_debounce = {}
 
     async def async_setup(self):
@@ -90,7 +90,7 @@ class ActivityStream(AugustSubscriberMixin):
         """Update the activity stream from August."""
         # This is the only place we refresh the api token
         await self._august_gateway.async_refresh_access_token_if_needed()
-        if self._pubnub.connected:
+        if self.pubnub.connected:
             _LOGGER.debug("Skipping update because pubnub is connected")
             return
         await self._async_update_device_activities(time)
