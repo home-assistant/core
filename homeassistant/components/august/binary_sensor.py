@@ -14,8 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.event import async_call_later
 
 from .const import ACTIVITY_UPDATE_INTERVAL, DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
@@ -69,7 +68,11 @@ def _activity_time_based_state(latest):
     """Get the latest state of the sensor."""
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    return start <= datetime.now() <= end
+    now = datetime.now()
+    _LOGGER.debug(
+        "_activity_time_based_state: start=%s <= now=%s <= end=%s", start, now, end
+    )
+    return start <= now <= end
 
 
 SENSOR_NAME = 0
@@ -252,8 +255,8 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             self._check_for_off_update_listener = None
             self._update_from_data()
 
-        self._check_for_off_update_listener = async_track_point_in_utc_time(
-            self.hass, _scheduled_update, utcnow() + TIME_TO_RECHECK_DETECTION
+        self._check_for_off_update_listener = async_call_later(
+            self.hass, TIME_TO_RECHECK_DETECTION, _scheduled_update
         )
 
     def _cancel_any_pending_updates(self):
