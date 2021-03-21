@@ -69,7 +69,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
 
-            if len(errors) > 0:
+            if errors:
                 return self.async_show_form(
                     step_id="user",
                     errors=errors,
