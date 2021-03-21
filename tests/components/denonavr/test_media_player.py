@@ -39,7 +39,7 @@ def client_fixture():
         "homeassistant.components.denonavr.receiver.DenonAVR",
         autospec=True,
     ) as mock_client_class, patch(
-        "homeassistant.components.denonavr.receiver.denonavr.async_discover"
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover"
     ):
         mock_client_class.return_value.name = TEST_NAME
         mock_client_class.return_value.model_name = TEST_MODEL
