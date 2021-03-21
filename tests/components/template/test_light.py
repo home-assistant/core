@@ -9,6 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
 )
 from homeassistant.const import (
@@ -628,6 +629,70 @@ async def test_white_value_template(hass, expected_white_value, template):
     state = hass.states.get("light.test_template_light")
     assert state is not None
     assert state.attributes.get("white_value") == expected_white_value
+
+
+@pytest.mark.parametrize(
+    "service_name, data, expected_transition",
+    [
+        (SERVICE_TURN_ON, {ATTR_TRANSITION: 60.5}, 60.5),
+        (SERVICE_TURN_ON, {}, 72.1),
+        (SERVICE_TURN_OFF, {ATTR_TRANSITION: 61.2}, 61.2),
+        (SERVICE_TURN_OFF, {}, 86.3),
+    ],
+)
+async def test_on_off_with_transition(
+    hass, service_name, calls, data, expected_transition
+):
+    """Test on action."""
+    assert await setup.async_setup_component(
+        hass,
+        light.DOMAIN,
+        {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "test_template_light": {
+                        "value_template": "{{states.light.test_state.state}}",
+                        "turn_on": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "transition": "{% if transition is defined %}{{ transition }}{% else %}72.1{% endif %}",
+                            },
+                        },
+                        "turn_off": {
+                            "service": "test.automation",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "transition": "{% if transition is defined %}{{ transition }}{% else %}86.3{% endif %}",
+                            },
+                        },
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    hass.states.async_set("light.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.test_template_light")
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        service_name,
+        {ATTR_ENTITY_ID: "light.test_template_light", **data},
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data[ATTR_TRANSITION] == expected_transition
+    _LOGGER.info("logline")
 
 
 async def test_level_action_no_template(hass, calls):

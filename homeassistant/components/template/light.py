@@ -7,11 +7,13 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     ATTR_WHITE_VALUE,
     ENTITY_ID_FORMAT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
 )
@@ -238,7 +240,7 @@ class LightTemplate(TemplateEntity, LightEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = 0
+        supported_features = SUPPORT_TRANSITION
         if self._level_script is not None:
             supported_features |= SUPPORT_BRIGHTNESS
         if self._temperature_script is not None:
@@ -297,6 +299,10 @@ class LightTemplate(TemplateEntity, LightEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         optimistic_set = False
+        if ATTR_TRANSITION in kwargs:
+            transition = {"transition": kwargs[ATTR_TRANSITION]}
+        else:
+            transition = {}
         # set optimistic states
         if self._template is None:
             self._state = True
@@ -326,31 +332,43 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
             await self._level_script.async_run(
-                {"brightness": kwargs[ATTR_BRIGHTNESS]}, context=self._context
+                {**transition, "brightness": kwargs[ATTR_BRIGHTNESS]},
+                context=self._context,
             )
         elif ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             await self._temperature_script.async_run(
-                {"color_temp": kwargs[ATTR_COLOR_TEMP]}, context=self._context
+                {**transition, "color_temp": kwargs[ATTR_COLOR_TEMP]},
+                context=self._context,
             )
         elif ATTR_WHITE_VALUE in kwargs and self._white_value_script:
             await self._white_value_script.async_run(
-                {"white_value": kwargs[ATTR_WHITE_VALUE]}, context=self._context
+                {**transition, "white_value": kwargs[ATTR_WHITE_VALUE]},
+                context=self._context,
             )
         elif ATTR_HS_COLOR in kwargs and self._color_script:
             hs_value = kwargs[ATTR_HS_COLOR]
             await self._color_script.async_run(
-                {"hs": hs_value, "h": int(hs_value[0]), "s": int(hs_value[1])},
+                {
+                    **transition,
+                    "hs": hs_value,
+                    "h": int(hs_value[0]),
+                    "s": int(hs_value[1]),
+                },
                 context=self._context,
             )
         else:
-            await self._on_script.async_run(context=self._context)
+            await self._on_script.async_run(transition, context=self._context)
 
         if optimistic_set:
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        await self._off_script.async_run(context=self._context)
+        if ATTR_TRANSITION in kwargs:
+            transition = {ATTR_TRANSITION: kwargs[ATTR_TRANSITION]}
+        else:
+            transition = {}
+        await self._off_script.async_run(transition, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
