@@ -36,7 +36,7 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 def client_fixture():
     """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.denonavr.receiver.denonavr.DenonAVR",
+        "homeassistant.components.denonavr.receiver.DenonAVR",
         autospec=True,
     ) as mock_client_class, patch(
         "homeassistant.components.denonavr.receiver.denonavr.async_discover"
