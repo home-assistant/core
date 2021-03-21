@@ -6,7 +6,7 @@ import logging
 
 from screenlogicpy import ScreenLogicError, ScreenLogicGateway
 from screenlogicpy.const import (
-    CONTROLLER_HARDWARE,
+    EQUIPMENT,
     SL_GATEWAY_IP,
     SL_GATEWAY_NAME,
     SL_GATEWAY_PORT,
@@ -28,7 +28,7 @@ from .const import DEFAULT_SCAN_INTERVAL, DISCOVERED_GATEWAYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "sensor", "binary_sensor", "water_heater"]
+PLATFORMS = ["switch", "sensor", "binary_sensor", "climate"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -59,11 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except ScreenLogicError as ex:
         _LOGGER.error("Error while connecting to the gateway %s: %s", connect_info, ex)
         raise ConfigEntryNotReady from ex
-    except AttributeError as ex:
-        _LOGGER.exception(
-            "Unexpected error while connecting to the gateway %s", connect_info
-        )
-        raise ConfigEntryNotReady from ex
 
     coordinator = ScreenlogicDataUpdateCoordinator(
         hass, config_entry=entry, gateway=gateway
@@ -91,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             device_data["pump"].append(pump)
 
     for body in coordinator.data["bodies"]:
-        device_data["water_heater"].append(body)
+        device_data["body"].append(body)
 
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinator": coordinator,
@@ -151,18 +146,18 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from the Screenlogic gateway."""
         try:
             await self.hass.async_add_executor_job(self.gateway.update)
-            return self.gateway.get_data()
         except ScreenLogicError as error:
             raise UpdateFailed(error) from error
+        return self.gateway.get_data()
 
 
 class ScreenlogicEntity(CoordinatorEntity):
     """Base class for all ScreenLogic entities."""
 
-    def __init__(self, coordinator, datakey):
+    def __init__(self, coordinator, data_key):
         """Initialize of the entity."""
         super().__init__(coordinator)
-        self._data_key = datakey
+        self._data_key = data_key
 
     @property
     def mac(self):
@@ -192,11 +187,11 @@ class ScreenlogicEntity(CoordinatorEntity):
     @property
     def device_info(self):
         """Return device information for the controller."""
-        controller_type = self.config_data["controler_type"]
+        controller_type = self.config_data["controller_type"]
         hardware_type = self.config_data["hardware_type"]
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "name": self.gateway_name,
             "manufacturer": "Pentair",
-            "model": CONTROLLER_HARDWARE[controller_type][hardware_type],
+            "model": EQUIPMENT.CONTROLLER_HARDWARE[controller_type][hardware_type],
         }
