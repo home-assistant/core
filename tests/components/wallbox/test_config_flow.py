@@ -1,6 +1,7 @@
 """Test the Wallbox config flow."""
 from unittest.mock import patch
 
+import requests
 from voluptuous.schema_builder import raises
 
 from homeassistant import config_entries, data_entry_flow
@@ -94,25 +95,13 @@ def test_hub_class():
 
     with patch(
         "wallbox.Wallbox.authenticate",
-        side_effect=InvalidAuth,
+        side_effect=requests.exceptions.HTTPError(),
     ), raises(InvalidAuth):
         assert hub.authenticate()
 
-    with patch(
-        "wallbox.Wallbox.authenticate",
-        side_effect=ConnectionError,
-    ), raises(ConnectionError):
-        assert hub.authenticate()
-
     with patch("wallbox.Wallbox.authenticate",), patch(
         "wallbox.Wallbox.getChargerStatus",
-        side_effect=ConnectionError,
-    ), raises(ConnectionError):
-        assert hub.get_data()
-
-    with patch("wallbox.Wallbox.authenticate",), patch(
-        "wallbox.Wallbox.getChargerStatus",
-        side_effect=InvalidAuth,
+        side_effect=requests.exceptions.HTTPError(),
     ), raises(InvalidAuth):
         assert hub.get_data()
 
