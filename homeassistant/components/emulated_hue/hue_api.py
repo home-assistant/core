@@ -447,24 +447,23 @@ class HueOneLightChangeView(HomeAssistantView):
                         parsed[STATE_BRIGHTNESS]
                     )
 
-                if entity_features & SUPPORT_COLOR and any(
-                    (parsed[STATE_HUE], parsed[STATE_SATURATION])
-                ):
-                    if parsed[STATE_HUE] is not None:
-                        hue = parsed[STATE_HUE]
-                    else:
-                        hue = 0
+                if entity_features & SUPPORT_COLOR:
+                    if any((parsed[STATE_HUE], parsed[STATE_SATURATION])):
+                        if parsed[STATE_HUE] is not None:
+                            hue = parsed[STATE_HUE]
+                        else:
+                            hue = 0
 
-                    if parsed[STATE_SATURATION] is not None:
-                        sat = parsed[STATE_SATURATION]
-                    else:
-                        sat = 0
+                        if parsed[STATE_SATURATION] is not None:
+                            sat = parsed[STATE_SATURATION]
+                        else:
+                            sat = 0
 
-                    # Convert hs values to hass hs values
-                    hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
-                    sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
+                        # Convert hs values to hass hs values
+                        hue = int((hue / HUE_API_STATE_HUE_MAX) * 360)
+                        sat = int((sat / HUE_API_STATE_SAT_MAX) * 100)
 
-                    data[ATTR_HS_COLOR] = (hue, sat)
+                        data[ATTR_HS_COLOR] = (hue, sat)
 
                     if parsed[STATE_XY] is not None:
                         data[ATTR_XY_COLOR] = parsed[STATE_XY]
