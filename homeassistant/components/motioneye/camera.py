@@ -41,7 +41,11 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from . import get_camera_from_cameras, get_motioneye_unique_id
+from . import (
+    get_camera_from_cameras,
+    get_motioneye_device_unique_id,
+    get_motioneye_entity_unique_id,
+)
 from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
@@ -84,7 +88,7 @@ async def async_setup_entry(
             async_dispatcher_send(
                 hass,
                 SIGNAL_ENTITY_REMOVE.format(
-                    get_motioneye_unique_id(
+                    get_motioneye_entity_unique_id(
                         entry.data[CONF_HOST],
                         entry.data[CONF_PORT],
                         camera_id,
@@ -155,7 +159,8 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         self._surveillance_password = password
         self._client = client
         self._camera_id = camera[KEY_ID]
-        self._unique_id = get_motioneye_unique_id(
+        self._device_id = get_motioneye_device_unique_id(host, port, self._camera_id)
+        self._unique_id = get_motioneye_entity_unique_id(
             host, port, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
         self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
@@ -232,7 +237,6 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             if _is_acceptable_camera(camera):
                 self._set_mjpeg_camera_state_for_camera(camera)
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
-                _LOGGER.error("============>MD %i" % self._motion_detection_enabled)
         CoordinatorEntity._handle_coordinator_update(self)
 
     @property
@@ -244,3 +248,15 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
+
+    @property
+    def device_info(self):
+        """Return the device information."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._device_id),
+            },
+            "name": self.name,
+            "manufacturer": MOTIONEYE_MANUFACTURER,
+        }

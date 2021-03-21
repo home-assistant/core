@@ -41,9 +41,16 @@ def create_motioneye_client(
     return MotionEyeClient(*args, **kwargs)
 
 
-def get_motioneye_unique_id(host: str, port: int, camera_id: int, name: str) -> str:
+def get_motioneye_entity_unique_id(
+    host: str, port: int, camera_id: int, entity_type: str
+) -> str:
     """Get the unique_id for a motionEye entity."""
-    return f"{host}:{port}_{camera_id}_{name}"
+    return f"{host}:{port}_{camera_id}_{entity_type}"
+
+
+def get_motioneye_device_unique_id(host: str, port: int, camera_id: int) -> str:
+    """Get the unique_id for a motionEye device."""
+    return f"{host}:{port}_{camera_id}"
 
 
 def get_camera_from_cameras(
