@@ -23,7 +23,7 @@ CURRENCY_ICONS = {
     "USD": "mdi:currency-usd",
 }
 
-DEFAULT_COIN_ICON = "mdi:currency-usd-circle"
+DEFAULT_COIN_ICON = "mdi:currency-usd"
 
 ASSET_VALUE_CURRENCIES = {"USDT", "EUR", "BTC"}
 

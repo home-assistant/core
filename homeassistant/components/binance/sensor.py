@@ -180,6 +180,11 @@ class Order(CoordinatorEntity):
             "source": "Binance",
         }
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return "Orders"
+
 
 class OpenOrder(Order):
     """Implementation of the open order sensor."""
