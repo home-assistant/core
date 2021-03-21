@@ -10,6 +10,7 @@ from homeassistant import setup
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
 )
@@ -268,3 +269,18 @@ async def test_requires_validation_state(hass):
 
     assert len(hass.config_entries.flow.async_progress()) == 1
     assert hass.config_entries.flow.async_progress()[0]["context"]["source"] == "reauth"
+
+
+async def test_load_unload(hass):
+    """Config entry can be unloaded."""
+
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
+    august_inoperative_lock = await _mock_inoperative_august_lock_detail(hass)
+    config_entry = await _create_august_with_devices(
+        hass, [august_operative_lock, august_inoperative_lock]
+    )
+
+    assert config_entry.state == ENTRY_STATE_LOADED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
