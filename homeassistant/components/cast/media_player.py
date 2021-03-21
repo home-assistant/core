@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import json
@@ -330,21 +331,14 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                try:
+                with suppress(KeyError):  # base_url not configured
                     tts_base_url = self.hass.components.tts.get_base_url(self.hass)
-                except KeyError:
-                    # base_url not configured, ignore
-                    pass
-            try:
+
+            with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
-            except NoURLAvailableError:
-                # external_url not configured, ignore
-                pass
-            try:
+
+            with suppress(NoURLAvailableError):  # internal_url not configured
                 internal_url = get_url(self.hass, allow_external=False)
-            except NoURLAvailableError:
-                # internal_url not configured, ignore
-                pass
 
             if media_status.content_id:
                 if tts_base_url and media_status.content_id.startswith(tts_base_url):

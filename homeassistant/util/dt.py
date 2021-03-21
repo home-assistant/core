@@ -1,6 +1,7 @@
 """Helper methods to handle the time in Home Assistant."""
 from __future__ import annotations
 
+from contextlib import suppress
 import datetime as dt
 import re
 from typing import Any, cast
@@ -127,10 +128,9 @@ def parse_datetime(dt_str: str) -> dt.datetime | None:
     Raises ValueError if the input is well formatted but not a valid datetime.
     Returns None if the input isn't well formatted.
     """
-    try:
+    with suppress(ValueError, IndexError):
         return ciso8601.parse_datetime(dt_str)
-    except (ValueError, IndexError):
-        pass
+
     match = DATETIME_RE.match(dt_str)
     if not match:
         return None
