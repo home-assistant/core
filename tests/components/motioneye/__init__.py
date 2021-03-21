@@ -1,6 +1,7 @@
 """Tests for the motionEye integration."""
+from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from motioneye_client.const import DEFAULT_PORT
@@ -146,7 +147,7 @@ def create_mock_motioneye_client() -> AsyncMock:
 
 
 def create_mock_motioneye_config_entry(
-    hass: HomeAssistantType, data: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType, data: dict[str, Any] | None = None
 ) -> ConfigEntry:
     """Add a test config entry."""
     config_entry: MockConfigEntry = MockConfigEntry(  # type: ignore[no-untyped-call]
@@ -162,8 +163,8 @@ def create_mock_motioneye_config_entry(
 
 async def setup_mock_motioneye_config_entry(
     hass: HomeAssistantType,
-    config_entry: Optional[ConfigEntry] = None,
-    client: Optional[Mock] = None,
+    config_entry: ConfigEntry | None = None,
+    client: Mock | None = None,
 ) -> ConfigEntry:
     """Add a mock MotionEye config entry to hass."""
     config_entry = config_entry or create_mock_motioneye_config_entry(hass)

@@ -1,7 +1,9 @@
 """The motionEye integration."""
+from __future__ import annotations
+
 import functools
 import logging
-from typing import Any, Callable, Dict, Set
+from typing import Any, Callable
 
 import aiohttp
 from motioneye_client.client import MotionEyeClient
@@ -63,7 +65,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["camera"]
 
 
-def _is_acceptable_camera(camera: Dict[str, Any]) -> bool:
+def _is_acceptable_camera(camera: dict[str, Any]) -> bool:
     """Determine if a camera dict is acceptable."""
     return (
         camera
@@ -82,7 +84,7 @@ async def async_setup_entry(
     coordinator = entry_data[CONF_COORDINATOR]
     current_camera_ids = set()
 
-    def _remove_cameras(remove_ids: Set[int]):
+    def _remove_cameras(remove_ids: set[int]):
         for camera_id in remove_ids:
             current_camera_ids.remove(camera_id)
             async_dispatcher_send(
@@ -150,7 +152,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         port: int,
         username: str,
         password: str,
-        camera: Dict[str, Any],
+        camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
     ):
@@ -178,7 +180,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         )
         CoordinatorEntity.__init__(self, coordinator)
 
-    def _get_mjpeg_camera_properties_for_camera(self, camera: Dict[str, Any]):
+    def _get_mjpeg_camera_properties_for_camera(self, camera: dict[str, Any]):
         """Convert a motionEye camera to MjpegCamera internal properties."""
         auth = None
         if camera[KEY_STREAMING_AUTH_MODE] in [
@@ -196,7 +198,7 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             CONF_AUTHENTICATION: auth,
         }
 
-    def _set_mjpeg_camera_state_for_camera(self, camera: Dict[str, Any]):
+    def _set_mjpeg_camera_state_for_camera(self, camera: dict[str, Any]):
         """Set the internal state to match the given camera."""
 
         # Sets the state of the underlying (inherited) MjpegCamera based on the updated

@@ -1,7 +1,9 @@
 """The motionEye integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from motioneye_client.client import (
     MotionEyeClient,
@@ -59,8 +61,8 @@ def get_motioneye_entity_unique_id(
 
 
 def get_camera_from_cameras(
-    camera_id: int, data: Dict[str, Any]
-) -> Optional[Dict[str, Any]]:
+    camera_id: int, data: dict[str, Any]
+) -> dict[str, Any] | None:
     """Get an individual camera dict from a multiple cameras data response."""
     for camera in data.get(KEY_CAMERAS) or []:
         if camera.get(KEY_ID) == camera_id:
@@ -68,10 +70,7 @@ def get_camera_from_cameras(
     return None
 
 
-# TODO old types change to new
-
-
-async def async_setup(hass: HomeAssistant, config: Dict[str, Any]):
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]):
     """Set up the motionEye component."""
     hass.data[DOMAIN] = {}
     return True

@@ -17,6 +17,7 @@ from homeassistant.components.motioneye.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
     TEST_HOST,
@@ -28,7 +29,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_user_success(hass):
+async def test_user_success(hass: HomeAssistantType) -> None:
     """Test successful user flow."""
     await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +76,7 @@ async def test_user_success(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_invalid_auth(hass):
+async def test_user_invalid_auth(hass: HomeAssistantType) -> None:
     """Test invalid auth is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,7 +106,7 @@ async def test_user_invalid_auth(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_user_cannot_connect(hass):
+async def test_user_cannot_connect(hass: HomeAssistantType) -> None:
     """Test connection failure is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,7 +138,7 @@ async def test_user_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_user_request_error(hass):
+async def test_user_request_error(hass: HomeAssistantType) -> None:
     """Test a request error is handled correctly."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -167,7 +168,7 @@ async def test_user_request_error(hass):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_reauth(hass):
+async def test_reauth(hass: HomeAssistantType) -> None:
     """Test a reauth."""
     config_data = {
         CONF_HOST: TEST_HOST,
