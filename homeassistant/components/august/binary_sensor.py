@@ -254,6 +254,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             """Timer callback for sensor update."""
             self._check_for_off_update_listener = None
             self._update_from_data()
+            self.async_write_ha_state()
 
         self._check_for_off_update_listener = async_call_later(
             self.hass, TIME_TO_RECHECK_DETECTION.seconds, _scheduled_update
