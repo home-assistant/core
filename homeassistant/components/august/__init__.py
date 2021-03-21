@@ -21,6 +21,13 @@ from .subscriber import AugustSubscriberMixin
 
 _LOGGER = logging.getLogger(__name__)
 
+API_CACHED_ATTRS = (
+    "door_state",
+    "door_state_datetime",
+    "lock_status",
+    "lock_status_datetime",
+)
+
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the August component from YAML."""
@@ -203,9 +210,13 @@ class AugustData(AugustSubscriberMixin):
 
     async def _async_refresh_device_detail_by_id(self, device_id):
         if device_id in self._locks_by_id:
+            if self.activity_stream.pubnub.connected:
+                saved_attrs = _save_live_attrs(self._locks_by_id[device_id])
             await self._async_update_device_detail(
                 self._locks_by_id[device_id], self._api.async_get_lock_detail
             )
+            if self.activity_stream.pubnub.connected:
+                _restore_live_attrs(self._locks_by_id[device_id], saved_attrs)
             # keypads are always attached to locks
             if (
                 device_id in self._device_detail_by_id
@@ -330,3 +341,19 @@ class AugustData(AugustSubscriberMixin):
             if not lock_is_operative:
                 del self._locks_by_id[device_id]
                 del self._device_detail_by_id[device_id]
+
+
+def _save_live_attrs(lock_detail):
+    """Store the attributes that the lock detail api may have an invalid cache for.
+
+    Since we are connected to pubnub we may have more current data
+    then the api so we want to restore the most current data after
+    updating battery state etc.
+    """
+    return {attr: getattr(lock_detail, attr) for attr in API_CACHED_ATTRS}
+
+
+def _restore_live_attrs(lock_detail, attrs):
+    """Restore the non-cache attributes after a cached update."""
+    for attr, value in attrs.items():
+        setattr(lock_detail, attr, value)
