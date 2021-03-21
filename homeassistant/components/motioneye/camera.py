@@ -9,6 +9,7 @@ from motioneye_client.const import (
     KEY_CAMERAS,
     KEY_ID,
     KEY_NAME,
+    KEY_STREAMING_AUTH_MODE,
 )
 
 from homeassistant.components.mjpeg.camera import (
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -88,7 +90,6 @@ async def async_setup_entry(
                     entry.data.get(CONF_USERNAME_SURVEILLANCE)
                     or DEFAULT_USERNAME_SURVEILLANCE,
                     entry.data.get(CONF_PASSWORD_SURVEILLANCE) or "",
-                    HTTP_BASIC_AUTHENTICATION,  # TODO Add auth options.
                     camera,
                     entry_data[CONF_CLIENT],
                     coordinator,
@@ -128,7 +129,6 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         port: int,
         username: str,
         password: str,
-        auth: str,
         camera: Dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
@@ -139,12 +139,20 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             host, port, self._camera_id, TYPE_MOTIONEYE_MJPEG_CAMERA
         )
         self._client = client
+
+        auth = None
+        if camera[KEY_STREAMING_AUTH_MODE] in [
+            HTTP_BASIC_AUTHENTICATION,
+            HTTP_DIGEST_AUTHENTICATION,
+        ]:
+            auth = camera[KEY_STREAMING_AUTH_MODE]
+
         MjpegCamera.__init__(
             self,
             {
                 CONF_NAME: camera[KEY_NAME],
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
+                CONF_USERNAME: username if auth is not None else None,
+                CONF_PASSWORD: password if auth is not None else None,
                 CONF_MJPEG_URL: client.get_camera_steam_url(camera),
                 CONF_STILL_IMAGE_URL: client.get_camera_snapshot_url(camera),
                 CONF_AUTHENTICATION: auth,
@@ -182,4 +190,5 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
             if camera:
                 self._still_image_url = self._client.get_camera_snapshot_url(camera)
                 self._mjpeg_url = self._client.get_camera_steam_url(camera)
+                # TODO: update auth if auth value in camera changes.
         CoordinatorEntity._handle_coordinator_update(self)
