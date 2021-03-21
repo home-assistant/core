@@ -256,7 +256,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
             self._update_from_data()
 
         self._check_for_off_update_listener = async_call_later(
-            self.hass, TIME_TO_RECHECK_DETECTION, _scheduled_update
+            self.hass, TIME_TO_RECHECK_DETECTION.seconds, _scheduled_update
         )
 
     def _cancel_any_pending_updates(self):
