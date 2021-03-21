@@ -73,8 +73,8 @@ class OpenHardwareMonitorDevice(Entity):
         return self.value
 
     @property
-    def state_attributes(self):
-        """Return the state attributes of the sun."""
+    def extra_state_attributes(self):
+        """Return the state attributes of the entity."""
         return self.attributes
 
     @classmethod

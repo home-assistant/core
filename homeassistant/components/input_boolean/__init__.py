@@ -169,7 +169,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         return self._config.get(CONF_NAME)
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the entity."""
         return {ATTR_EDITABLE: self.editable}
 
