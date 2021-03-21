@@ -92,4 +92,4 @@ async def test_get_command(hass, client):
     await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
     await hass.async_block_till_done()
 
-    client.send_get_command.assert_called_with("test_command")
+    await client.async_get_command.assert_awaited_with("test_command")
