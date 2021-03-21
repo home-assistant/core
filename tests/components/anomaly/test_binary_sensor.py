@@ -1,6 +1,7 @@
 """The test for the Anomaly sensor platform."""
 from datetime import timedelta
 from os import path
+from unittest.mock import patch
 
 from homeassistant import config as hass_config, setup
 from homeassistant.components.anomaly import DOMAIN
@@ -8,8 +9,6 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-
-from tests.async_mock import patch
 
 
 async def test_up_and_off(hass: HomeAssistant):
