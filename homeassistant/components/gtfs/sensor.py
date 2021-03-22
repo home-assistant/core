@@ -11,7 +11,7 @@ import pygtfs
 from sqlalchemy.sql import text
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
@@ -20,7 +20,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
     ConfigType,
     DiscoveryInfoType,
@@ -519,7 +518,7 @@ def setup_platform(
     )
 
 
-class GTFSDepartureSensor(Entity):
+class GTFSDepartureSensor(SensorEntity):
     """Implementation of a GTFS departure sensor."""
 
     def __init__(
