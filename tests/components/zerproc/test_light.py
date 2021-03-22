@@ -17,7 +17,11 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
 )
-from homeassistant.components.zerproc.light import DOMAIN
+from homeassistant.components.zerproc.const import (
+    DATA_ADDRESSES,
+    DATA_DISCOVERY_SUBSCRIPTION,
+    DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -146,7 +150,8 @@ async def test_discovery_exception(hass, mock_entry):
 
 async def test_remove_entry(hass, mock_light, mock_entry):
     """Test platform setup."""
-    assert hass.data[DOMAIN]["addresses"] == {"AA:BB:CC:DD:EE:FF"}
+    assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:DD:EE:FF"}
+    assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
 
     with patch.object(mock_light, "disconnect") as mock_disconnect:
         await hass.config_entries.async_remove(mock_entry.entry_id)
