@@ -1,6 +1,8 @@
 """Support for Minut Point binary sensors."""
 import logging
 
+from pypoint import EVENTS
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DOMAIN,
@@ -13,39 +15,6 @@ from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
 _LOGGER = logging.getLogger(__name__)
-
-EVENTS = {
-    "battery": ("battery_low", ""),  # On means low, Off means normal
-    "button_press": (  # On means the button was pressed, Off means normal
-        "short_button_press",
-        "",
-    ),
-    "cold": (  # On means cold, Off means normal
-        "temperature_low",
-        "temperature_risen_normal",
-    ),
-    "connectivity": (  # On means connected, Off means disconnected
-        "device_online",
-        "device_offline",
-    ),
-    "dry": (  # On means too dry, Off means normal
-        "humidity_low",
-        "humidity_risen_normal",
-    ),
-    "heat": (  # On means hot, Off means normal
-        "temperature_high",
-        "temperature_dropped_normal",
-    ),
-    "moisture": (  # On means wet, Off means dry
-        "humidity_high",
-        "humidity_dropped_normal",
-    ),
-    "sound": (  # On means sound detected, Off means no sound (clear)
-        "avg_sound_high",
-        "sound_level_dropped_normal",
-    ),
-    "tamper": ("tamper", ""),  # On means the point was removed or attached
-}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
