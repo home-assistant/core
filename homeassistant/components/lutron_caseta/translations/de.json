@@ -29,7 +29,8 @@
             "button_3": "Dritte Taste",
             "button_4": "Vierte Taste",
             "off": "Aus",
-            "on": "An"
+            "on": "An",
+            "stop_all": "Alle anhalten"
         }
     }
 }
