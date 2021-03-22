@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class DysonSensor(SensorEntity, DysonEntity):
+class DysonSensor(DysonEntity, SensorEntity):
     """Representation of a generic Dyson sensor."""
 
     def __init__(self, device, sensor_type):

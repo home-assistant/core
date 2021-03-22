@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([derivative])
 
 
-class DerivativeSensor(SensorEntity, RestoreEntity):
+class DerivativeSensor(RestoreEntity, SensorEntity):
     """Representation of an derivative sensor."""
 
     def __init__(

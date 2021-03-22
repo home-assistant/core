@@ -122,7 +122,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class DeconzSensor(SensorEntity, DeconzDevice):
+class DeconzSensor(DeconzDevice, SensorEntity):
     """Representation of a deCONZ sensor."""
 
     TYPE = DOMAIN
@@ -186,7 +186,7 @@ class DeconzSensor(SensorEntity, DeconzDevice):
         return attr
 
 
-class DeconzBattery(SensorEntity, DeconzDevice):
+class DeconzBattery(DeconzDevice, SensorEntity):
     """Battery class for when a device is only represented as an event."""
 
     TYPE = DOMAIN

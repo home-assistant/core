@@ -68,7 +68,7 @@ def temperature_to_state(temperature, undefined_temperature):
     return temperature if temperature > undefined_temperature else None
 
 
-class ElkSensor(SensorEntity, ElkAttachedEntity):
+class ElkSensor(ElkAttachedEntity, SensorEntity):
     """Base representation of Elk-M1 sensor."""
 
     def __init__(self, element, elk, elk_data):

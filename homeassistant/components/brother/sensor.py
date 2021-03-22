@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class BrotherPrinterSensor(SensorEntity, CoordinatorEntity):
+class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     """Define an Brother Printer sensor."""
 
     def __init__(self, coordinator, kind, device_info):

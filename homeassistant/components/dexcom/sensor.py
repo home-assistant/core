@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class DexcomGlucoseValueSensor(SensorEntity, CoordinatorEntity):
+class DexcomGlucoseValueSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
     def __init__(self, coordinator, username, unit_of_measurement):
@@ -59,7 +59,7 @@ class DexcomGlucoseValueSensor(SensorEntity, CoordinatorEntity):
         return self._unique_id
 
 
-class DexcomGlucoseTrendSensor(SensorEntity, CoordinatorEntity):
+class DexcomGlucoseTrendSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Dexcom glucose trend sensor."""
 
     def __init__(self, coordinator, username):

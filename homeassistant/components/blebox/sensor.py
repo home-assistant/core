@@ -14,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class BleBoxSensorEntity(SensorEntity, BleBoxEntity):
+class BleBoxSensorEntity(BleBoxEntity, SensorEntity):
     """Representation of a BleBox sensor feature."""
 
     @property

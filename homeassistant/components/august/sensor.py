@@ -117,7 +117,7 @@ async def _async_migrate_old_unique_ids(hass, devices):
             registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
-class AugustOperatorSensor(SensorEntity, AugustEntityMixin, RestoreEntity):
+class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, SensorEntity):
     """Representation of an August lock operation sensor."""
 
     def __init__(self, data, device):
@@ -216,7 +216,7 @@ class AugustOperatorSensor(SensorEntity, AugustEntityMixin, RestoreEntity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(SensorEntity, AugustEntityMixin):
+class AugustBatterySensor(AugustEntityMixin, SensorEntity):
     """Representation of an August sensor."""
 
     def __init__(self, data, sensor_type, device, old_device):

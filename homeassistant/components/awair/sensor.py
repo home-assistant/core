@@ -84,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AwairSensor(SensorEntity, CoordinatorEntity):
+class AwairSensor(CoordinatorEntity, SensorEntity):
     """Defines an Awair sensor entity."""
 
     def __init__(

@@ -48,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class EcoNetSensor(SensorEntity, EcoNetEntity):
+class EcoNetSensor(EcoNetEntity, SensorEntity):
     """Define a Econet sensor."""
 
     def __init__(self, econet_device, device_name):

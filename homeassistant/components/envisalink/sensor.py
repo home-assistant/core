@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-class EnvisalinkSensor(SensorEntity, EnvisalinkDevice):
+class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
     """Representation of an Envisalink keypad."""
 
     def __init__(self, hass, partition_name, partition_number, info, controller):
