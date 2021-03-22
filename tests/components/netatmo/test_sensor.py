@@ -42,7 +42,6 @@ async def test_public_weather_sensor(hass, sensor_entry):
 
     assert len(hass.states.async_all()) > 0
     entities_before_change = len(hass.states.async_all())
-    print(sensor_entry.options)
 
     valid_option = {
         "lat_ne": 32.91336,
