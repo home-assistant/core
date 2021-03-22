@@ -2,8 +2,6 @@
 from time import time
 from unittest.mock import patch
 
-import jwt
-
 from homeassistant import config_entries
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -176,38 +174,44 @@ async def test_setup_without_https(hass, config_entry):
 async def test_setup_with_cloud(hass, config_entry):
     """Test if set up with active cloud subscription."""
     await mock_cloud(hass)
-    hass.data["cloud"].id_token = jwt.encode(
-        {
-            "email": "hello@home-assistant.io",
-            "custom:sub-exp": "2018-01-03",
-            "cognito:username": "abcdefghjkl",
-        },
-        "test",
-    )
     await hass.async_block_till_done()
-    assert hass.data["cloud"].is_logged_in is True
 
     with patch(
+        "homeassistant.components.cloud.async_is_logged_in", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_active_subscription", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_create_cloudhook",
+        return_value="https://hooks.nabu.casa/ABCD",
+    ) as fake_create_cloudhook, patch(
+        "homeassistant.components.cloud.async_delete_cloudhook"
+    ) as fake_delete_cloudhook, patch(
         "homeassistant.components.netatmo.api.ConfigEntryNetatmoAuth"
     ) as mock_auth, patch(
+        "homeassistant.components.netatmo.PLATFORMS", []
+    ), patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch(
         "homeassistant.components.webhook.async_generate_url"
-    ), patch(
-        "homeassistant.components.cloud.async_active_subscription", return_value=True
     ):
         mock_auth.return_value.post_request.side_effect = fake_post_request
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
         assert hass.components.cloud.async_active_subscription() is True
+        fake_create_cloudhook.assert_called_once()
+
+        assert (
+            hass.config_entries.async_entries("netatmo")[0].data["cloudhook_url"]
+            == "https://hooks.nabu.casa/ABCD"
+        )
 
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) > 0
+        assert len(hass.config_entries.async_entries(DOMAIN)) > 0
 
         for config_entry in hass.config_entries.async_entries("netatmo"):
             await hass.config_entries.async_remove(config_entry.entry_id)
+            fake_delete_cloudhook.assert_called_once()
 
         await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
         assert len(hass.config_entries.async_entries(DOMAIN)) == 0
