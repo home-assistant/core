@@ -59,12 +59,14 @@ class ConnectionSchema:
     """Voluptuous schema for KNX connection."""
 
     CONF_KNX_LOCAL_IP = "local_ip"
+    CONF_KNX_ROUTE_BACK = "route_back"
 
     TUNNELING_SCHEMA = vol.Schema(
         {
             vol.Optional(CONF_PORT, default=DEFAULT_MCAST_PORT): cv.port,
             vol.Required(CONF_HOST): cv.string,
             vol.Optional(CONF_KNX_LOCAL_IP): cv.string,
+            vol.Optional(CONF_KNX_ROUTE_BACK, default=False): cv.boolean,
         }
     )
 
