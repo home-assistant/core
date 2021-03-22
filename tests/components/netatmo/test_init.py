@@ -87,6 +87,7 @@ async def test_setup_component(hass):
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_setup_component_with_config(hass, config_entry):
@@ -137,6 +138,7 @@ async def test_setup_component_with_webhook(hass, entry):
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
 
 async def test_setup_without_https(hass, config_entry):
@@ -208,3 +210,4 @@ async def test_setup_with_cloud(hass, config_entry):
 
         await hass.async_block_till_done()
         assert len(hass.states.async_all()) == 0
+        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
