@@ -1394,6 +1394,12 @@ async def test_entry_id_existing_entry(hass, manager):
         unique_id="mock-unique-id",
     ).add_to_hass(hass)
 
+    mock_integration(
+        hass,
+        MockModule("comp"),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
