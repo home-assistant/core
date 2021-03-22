@@ -16,9 +16,10 @@ from tests.common import MockConfigEntry
 TEST_CONFIG_ENTRY_ID = "74565ad414754616000674c87bdc876c"
 TEST_HOST = "test"
 TEST_PORT = DEFAULT_PORT + 1
+TEST_CAMERA_ID = 100
 TEST_CAMERA_NAME = "Test Camera"
 TEST_CAMERA_ENTITY_ID = "camera.test_camera"
-TEST_CAMERA_ID = 100
+TEST_CAMERA_DEVICE_ID = f"{TEST_HOST}:{TEST_PORT}_{TEST_CAMERA_ID}"
 TEST_CAMERA = {
     "show_frame_changes": False,
     "framerate": 25,

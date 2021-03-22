@@ -26,10 +26,12 @@ from homeassistant.components.motioneye.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 from . import (
+    TEST_CAMERA_DEVICE_ID,
     TEST_CAMERA_ENTITY_ID,
     TEST_CAMERA_ID,
     TEST_CAMERA_NAME,
@@ -116,13 +118,19 @@ async def test_setup_camera_new_data_same(hass: HomeAssistantType) -> None:
 
 async def test_setup_camera_new_data_camera_removed(hass: HomeAssistantType) -> None:
     """Test a data refresh with a removed camera."""
+    device_registry = await async_get_registry(hass)
+
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
+    await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert device_registry.async_get_device({(DOMAIN, TEST_CAMERA_DEVICE_ID)})
+
     client.async_get_cameras = AsyncMock(return_value={KEY_CAMERAS: []})
     async_fire_time_changed(hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL)
     await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
+    assert not device_registry.async_get_device({(DOMAIN, TEST_CAMERA_DEVICE_ID)})
 
 
 async def test_setup_camera_new_data_error(hass: HomeAssistantType) -> None:

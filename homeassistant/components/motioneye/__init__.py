@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -175,6 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     current_camera_ids: set[int] = set()
+    device_registry = await async_get_registry(hass)
 
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
@@ -204,6 +206,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             async_dispatcher_send(
                 hass, SIGNAL_CAMERA_REMOVE.format(entry.entry_id), camera_id
             )
+
+            device_unique_id = get_motioneye_device_unique_id(
+                entry.data[CONF_HOST], entry.data[CONF_PORT], camera_id
+            )
+            device_entry = device_registry.async_get_device(
+                {(DOMAIN, device_unique_id)}
+            )
+            if device_entry:
+                device_registry.async_remove_device(device_entry.id)
 
     async def setup_then_listen() -> None:
         await asyncio.gather(
