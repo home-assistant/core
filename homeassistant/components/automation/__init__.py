@@ -189,7 +189,7 @@ async def async_setup(hass, config):
     async def trigger_service_handler(entity, service_call):
         """Handle forced automation trigger, e.g. from frontend."""
         await entity.async_trigger(
-            service_call.data[ATTR_VARIABLES],
+            {**service_call.data[ATTR_VARIABLES], "trigger": {"platform": None}},
             skip_condition=service_call.data[CONF_SKIP_CONDITION],
             context=service_call.context,
         )
