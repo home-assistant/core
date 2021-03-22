@@ -35,17 +35,35 @@ async def test_creating_entry_sets_up_media_player(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_cast_creates_entry(hass):
+async def test_import(hass, caplog):
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.cast.async_setup_entry", return_value=True
     ) as mock_setup:
         await async_setup_component(
-            hass, cast.DOMAIN, {"cast": {"some_config": "to_trigger_import"}}
+            hass,
+            cast.DOMAIN,
+            {
+                "cast": {
+                    "media_player": [
+                        {"uuid": "abcd"},
+                        {"uuid": "abcd", "ignore_cec": "milk"},
+                        {"uuid": "efgh", "ignore_cec": "beer"},
+                        {"incorrect": "config"},
+                    ]
+                }
+            },
         )
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
+
+    assert len(hass.config_entries.async_entries("cast")) == 1
+    entry = hass.config_entries.async_entries("cast")[0]
+    assert set(entry.data["ignore_cec"]) == {"milk", "beer"}
+    assert set(entry.data["uuid"]) == {"abcd", "efgh"}
+
+    assert "Invalid config '{'incorrect': 'config'}'" in caplog.text
 
 
 async def test_not_configuring_cast_not_creates_entry(hass):
@@ -72,7 +90,7 @@ async def test_single_instance(hass, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_setup(hass, mqtt_mock):
+async def test_user_setup(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": "user"}
@@ -92,7 +110,7 @@ async def test_user_setup(hass, mqtt_mock):
     }
 
 
-async def test_user_setup_options(hass, mqtt_mock):
+async def test_user_setup_options(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": "user"}

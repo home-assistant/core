@@ -5,7 +5,6 @@ from homeassistant import config_entries
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, CONF_UUID, DOMAIN
-from .media_player import ENTITY_SCHEMA
 
 IGNORE_CEC_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
 KNOWN_HOSTS_SCHEMA = vol.Schema(vol.All(cv.ensure_list, [cv.string]))
@@ -20,9 +19,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._ignore_cec = []
-        self._known_hosts = []
-        self._wanted_uuid = []
+        self._ignore_cec = set()
+        self._known_hosts = set()
+        self._wanted_uuid = set()
 
     @staticmethod
     def async_get_options_flow(config_entry):
@@ -34,19 +33,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        media_player_config = self.hass.data[DOMAIN].get("media_player") or {}
-        if not isinstance(media_player_config, list):
-            media_player_config = [media_player_config]
+        media_player_config = import_data or []
         for cfg in media_player_config:
-            try:
-                cfg = ENTITY_SCHEMA(cfg)
-                if CONF_IGNORE_CEC in cfg:
-                    self._ignore_cec.extend(cfg[CONF_IGNORE_CEC])
-                if CONF_UUID in cfg:
-                    self._wanted_uuid.append(cfg[CONF_UUID])
-            except vol.Error:
-                # Invalid config, ignore it
-                pass
+            if CONF_IGNORE_CEC in cfg:
+                self._ignore_cec.update(set(cfg[CONF_IGNORE_CEC]))
+            if CONF_UUID in cfg:
+                self._wanted_uuid.add(cfg[CONF_UUID])
 
         data = self._get_data()
         return self.async_create_entry(title="Google Cast", data=data)
@@ -106,9 +98,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_data(self):
         return {
-            CONF_IGNORE_CEC: self._ignore_cec,
-            CONF_KNOWN_HOSTS: self._known_hosts,
-            CONF_UUID: self._wanted_uuid,
+            CONF_IGNORE_CEC: list(self._ignore_cec),
+            CONF_KNOWN_HOSTS: list(self._known_hosts),
+            CONF_UUID: list(self._wanted_uuid),
         }
 
 
