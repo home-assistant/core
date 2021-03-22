@@ -6,8 +6,9 @@ from aiohue import AiohueException, Unauthorized
 from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-from homeassistant.helpers import debounce, entity
+from homeassistant.helpers import debounce
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import REQUEST_REFRESH_DELAY
@@ -160,7 +161,7 @@ class SensorManager:
             self._component_add_entities[platform](to_add[platform])
 
 
-class GenericHueSensor(GenericHueDevice, entity.Entity):
+class GenericHueSensor(SensorEntity, GenericHueDevice):
     """Representation of a Hue sensor."""
 
     should_poll = False
