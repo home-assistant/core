@@ -226,7 +226,7 @@ buienradar==1.0.4
 caldav==0.7.1
 
 # homeassistant.scripts.check_config
-colorlog==4.7.2
+colorlog==4.8.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
