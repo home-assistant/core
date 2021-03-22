@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from transmissionrpc.torrent import Torrent
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, DATA_RATE_MEGABYTES_PER_SECOND, STATE_IDLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import TransmissionClient
 from .const import (
@@ -38,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class TransmissionSensor(Entity):
+class TransmissionSensor(SensorEntity):
     """A base class for all Transmission sensors."""
 
     def __init__(self, tm_client, client_name, sensor_name, sub_type=None):
