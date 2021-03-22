@@ -7,10 +7,9 @@ from i2csense.htu21d import HTU21D  # pylint: disable=import-error
 import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, PERCENTAGE, TEMP_FAHRENHEIT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -70,7 +69,7 @@ class HTU21DHandler:
         self.sensor.update()
 
 
-class HTU21DSensor(Entity):
+class HTU21DSensor(SensorEntity):
     """Implementation of the HTU21D sensor."""
 
     def __init__(self, htu21d_client, name, variable, unit):

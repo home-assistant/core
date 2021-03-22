@@ -8,7 +8,7 @@ from time import sleep
 from fritzconnection.core.fritzmonitor import FritzMonitor
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_PREFIXES,
@@ -102,7 +101,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([sensor])
 
 
-class FritzBoxCallSensor(Entity):
+class FritzBoxCallSensor(SensorEntity):
     """Implementation of a Fritz!Box call monitor."""
 
     def __init__(self, name, unique_id, fritzbox_phonebook, prefixes, host, port):

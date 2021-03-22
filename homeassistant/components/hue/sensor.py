@@ -6,6 +6,7 @@ from aiohue.sensors import (
     TYPE_ZLL_TEMPERATURE,
 )
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -14,7 +15,6 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
@@ -31,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ].sensor_manager.async_register_component("sensor", async_add_entities)
 
 
-class GenericHueGaugeSensorEntity(GenericZLLSensor, Entity):
+class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
     """Parent class for all 'gauge' Hue device sensors."""
 
     async def _async_update_ha_state(self, *args, **kwargs):
@@ -88,7 +88,7 @@ class HueTemperature(GenericHueGaugeSensorEntity):
         return self.sensor.temperature / 100
 
 
-class HueBattery(GenericHueSensor):
+class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
 
     @property

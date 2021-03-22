@@ -8,7 +8,7 @@ from typing import Callable
 import herepy
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import DiscoveryInfoType
 import homeassistant.util.dt as dt
 
@@ -215,7 +214,7 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     return True
 
 
-class HERETravelTimeSensor(Entity):
+class HERETravelTimeSensor(SensorEntity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(

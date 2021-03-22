@@ -1,6 +1,7 @@
 """Support for hunterdouglass_powerview sensors."""
 from aiopvapi.resources.shade import factory as PvShade
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.core import callback
 
@@ -45,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class PowerViewShadeBatterySensor(ShadeEntity):
+class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
     @property

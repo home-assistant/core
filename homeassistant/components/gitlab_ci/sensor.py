@@ -5,7 +5,7 @@ import logging
 from gitlab import Gitlab, GitlabAuthenticationError, GitlabGetError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_URL,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,7 +65,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([GitLabSensor(_gitlab_data, _name)], True)
 
 
-class GitLabSensor(Entity):
+class GitLabSensor(SensorEntity):
     """Representation of a GitLab sensor."""
 
     def __init__(self, gitlab_data, name):

@@ -6,10 +6,9 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(device_list, True)
 
 
-class BanSensor(Entity):
+class BanSensor(SensorEntity):
     """Implementation of a fail2ban sensor."""
 
     def __init__(self, name, jail, log_parser):

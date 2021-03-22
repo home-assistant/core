@@ -2,8 +2,7 @@
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
 
 from . import HiveEntity
 from .const import DOMAIN
@@ -27,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class HiveSensorEntity(HiveEntity, Entity):
+class HiveSensorEntity(HiveEntity, SensorEntity):
     """Hive Sensor Entity."""
 
     @property

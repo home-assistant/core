@@ -1,6 +1,7 @@
 """Support for HomeMatic sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEGREE,
     DEVICE_CLASS_HUMIDITY,
@@ -97,7 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class HMSensor(HMDevice):
+class HMSensor(HMDevice, SensorEntity):
     """Representation of a HomeMatic sensor."""
 
     @property
