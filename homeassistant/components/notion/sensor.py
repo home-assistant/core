@@ -43,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(sensor_list)
 
 
-class NotionSensor(SensorEntity, NotionEntity):
+class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
     def __init__(

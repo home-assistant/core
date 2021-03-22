@@ -236,7 +236,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class SmileSensor(SensorEntity, SmileGateway):
+class SmileSensor(SmileGateway, SensorEntity):
     """Represent Smile Sensors."""
 
     def __init__(self, api, coordinator, name, dev_id, sensor):

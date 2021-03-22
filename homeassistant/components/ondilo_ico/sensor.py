@@ -84,7 +84,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class OndiloICO(SensorEntity, CoordinatorEntity):
+class OndiloICO(CoordinatorEntity, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(

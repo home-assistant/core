@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MinutPointSensor(SensorEntity, MinutPointEntity):
+class MinutPointSensor(MinutPointEntity, SensorEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, point_client, device_id, device_class):

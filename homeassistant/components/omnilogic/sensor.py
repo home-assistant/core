@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class OmnilogicSensor(SensorEntity, OmniLogicEntity):
+class OmnilogicSensor(OmniLogicEntity, SensorEntity):
     """Defines an Omnilogic sensor entity."""
 
     def __init__(

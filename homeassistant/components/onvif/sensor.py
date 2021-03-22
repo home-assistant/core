@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     return True
 
 
-class ONVIFSensor(SensorEntity, ONVIFBaseEntity):
+class ONVIFSensor(ONVIFBaseEntity, SensorEntity):
     """Representation of a ONVIF sensor event."""
 
     def __init__(self, uid, device):

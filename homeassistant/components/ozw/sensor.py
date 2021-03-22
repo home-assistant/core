@@ -58,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class ZwaveSensorBase(SensorEntity, ZWaveDeviceEntity):
+class ZwaveSensorBase(ZWaveDeviceEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     @property

@@ -150,7 +150,7 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_sensors), True)
 
 
-class NestBasicSensor(SensorEntity, NestSensorDevice):
+class NestBasicSensor(NestSensorDevice, SensorEntity):
     """Representation a basic Nest sensor."""
 
     @property
@@ -180,7 +180,7 @@ class NestBasicSensor(SensorEntity, NestSensorDevice):
             self._state = getattr(self.device, self.variable)
 
 
-class NestTempSensor(SensorEntity, NestSensorDevice):
+class NestTempSensor(NestSensorDevice, SensorEntity):
     """Representation of a Nest Temperature sensor."""
 
     @property

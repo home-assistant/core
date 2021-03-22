@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class PowerWallChargeSensor(SensorEntity, PowerWallEntity):
+class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall charge sensor."""
 
     @property
@@ -89,7 +89,7 @@ class PowerWallChargeSensor(SensorEntity, PowerWallEntity):
         return round(self.coordinator.data[POWERWALL_API_CHARGE])
 
 
-class PowerWallEnergySensor(SensorEntity, PowerWallEntity):
+class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
     def __init__(

@@ -150,7 +150,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class NexiaThermostatSensor(SensorEntity, NexiaThermostatEntity):
+class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
     """Provides Nexia thermostat sensor support."""
 
     def __init__(
@@ -197,7 +197,7 @@ class NexiaThermostatSensor(SensorEntity, NexiaThermostatEntity):
         return self._unit_of_measurement
 
 
-class NexiaThermostatZoneSensor(SensorEntity, NexiaThermostatZoneEntity):
+class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
     """Nexia Zone Sensor Support."""
 
     def __init__(

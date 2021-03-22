@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class ElecPriceSensor(SensorEntity, RestoreEntity):
+class ElecPriceSensor(RestoreEntity, SensorEntity):
     """Class to hold the prices of electricity as a sensor."""
 
     unit_of_measurement = UNIT

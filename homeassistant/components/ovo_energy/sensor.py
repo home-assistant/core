@@ -54,7 +54,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class OVOEnergySensor(SensorEntity, OVOEnergyDeviceEntity):
+class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     """Defines a OVO Energy sensor."""
 
     def __init__(

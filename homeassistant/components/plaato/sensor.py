@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
 
-class PlaatoSensor(SensorEntity, PlaatoEntity):
+class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
     @property

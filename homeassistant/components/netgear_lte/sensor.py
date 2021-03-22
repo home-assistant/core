@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     async_add_entities(sensors)
 
 
-class LTESensor(SensorEntity, LTEEntity):
+class LTESensor(LTEEntity, SensorEntity):
     """Base LTE sensor entity."""
 
     @property
