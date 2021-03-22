@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from functools import partial
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
@@ -29,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     update_friends()
 
 
-class XboxSensorEntity(XboxBaseSensorEntity):
+class XboxSensorEntity(XboxBaseSensorEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
     @property

@@ -6,11 +6,10 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT, PERCENTAGE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         async_add_entities([WorxLandroidSensor(typ, config)])
 
 
-class WorxLandroidSensor(Entity):
+class WorxLandroidSensor(SensorEntity):
     """Implementation of a Worx Landroid sensor."""
 
     def __init__(self, sensor, config):

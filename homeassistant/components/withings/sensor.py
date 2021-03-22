@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WithingsHealthSensor(BaseWithingsSensor):
+class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     """Implementation of a Withings sensor."""
 
     @property

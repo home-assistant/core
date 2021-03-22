@@ -5,11 +5,10 @@ import logging
 import voluptuous as vol
 from xboxapi import Client
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +72,7 @@ def get_user_gamercard(api, xuid):
     return None
 
 
-class XboxSensor(Entity):
+class XboxSensor(SensorEntity):
     """A class for the Xbox account."""
 
     def __init__(self, api, xuid, gamercard, interval):
