@@ -494,7 +494,7 @@ homeassistant/components/trace/* @home-assistant/core
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
-homeassistant/components/trigger/* @home-assistant/core
+homeassistant/components/trigger_entity/* @home-assistant/core
 homeassistant/components/tts/* @pvizeli
 homeassistant/components/tuya/* @ollo69
 homeassistant/components/twentemilieu/* @frenck

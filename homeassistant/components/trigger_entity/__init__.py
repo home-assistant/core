@@ -3,46 +3,11 @@
 import logging
 from typing import Optional
 
-import voluptuous as vol
-
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-    trigger,
-    update_coordinator,
-)
+from homeassistant.helpers import discovery, trigger, update_coordinator
 
-DOMAIN = "trigger"
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        vol.Required(DOMAIN): vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Optional("unique_id"): cv.string,
-                        vol.Optional("variables"): cv.SCRIPT_VARIABLES_SCHEMA,
-                        vol.Required("trigger"): cv.TRIGGER_SCHEMA,
-                        vol.Optional("sensor"): vol.Schema(
-                            {
-                                str: vol.Schema(
-                                    {
-                                        vol.Optional("name"): cv.string,
-                                        vol.Required("value_template"): cv.template,
-                                    }
-                                )
-                            }
-                        ),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+from .const import DOMAIN
 
 
 async def async_setup(hass, config):
@@ -67,20 +32,16 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 
     @property
     def unique_id(self) -> Optional[str]:
+        """Return unique ID for the entity."""
         return self.config.get("unique_id")
 
     async def async_setup(self, hass_config):
         """Set up the trigger and create entities."""
         home_assistant_start = True
 
-        # TODO process variables in config.
-
         self._unsub_trigger = await trigger.async_initialize_triggers(
             self.hass,
-            # TODO move this to trigger/config.py
-            await trigger.async_validate_trigger_config(
-                self.hass, self.config["trigger"]
-            ),
+            self.config["trigger"],
             self._handle_triggered,
             DOMAIN,
             self.name,
@@ -94,7 +55,7 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 self.hass,
                 "sensor",
                 DOMAIN,
-                {"coordinator": self, "entities": self.config["sensor"]},
+                {"coordinator": self, "entities": self.config[SENSOR_DOMAIN]},
                 hass_config,
             )
         )
