@@ -7,10 +7,9 @@ from fritzconnection.lib.fritzstatus import FritzStatus
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([FritzboxMonitorSensor(name, fstatus)], True)
 
 
-class FritzboxMonitorSensor(Entity):
+class FritzboxMonitorSensor(SensorEntity):
     """Implementation of a fritzbox monitor sensor."""
 
     def __init__(self, name, fstatus):
