@@ -58,7 +58,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AemetSensor(SensorEntity, AbstractAemetSensor):
+class AemetSensor(AbstractAemetSensor, SensorEntity):
     """Implementation of an AEMET OpenData sensor."""
 
     def __init__(
@@ -81,7 +81,7 @@ class AemetSensor(SensorEntity, AbstractAemetSensor):
         return self._weather_coordinator.data.get(self._sensor_type)
 
 
-class AemetForecastSensor(SensorEntity, AbstractAemetSensor):
+class AemetForecastSensor(AbstractAemetSensor, SensorEntity):
     """Implementation of an AEMET OpenData forecast sensor."""
 
     def __init__(

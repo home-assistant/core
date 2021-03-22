@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([EnOceanWindowHandle(dev_id, dev_name)])
 
 
-class EnOceanSensor(SensorEntity, EnOceanEntity, RestoreEntity):
+class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
     """Representation of an  EnOcean sensor device such as a power meter."""
 
     def __init__(self, dev_id, dev_name, sensor_type):

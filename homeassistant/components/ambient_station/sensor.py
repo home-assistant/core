@@ -37,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensor_list, True)
 
 
-class AmbientWeatherSensor(SensorEntity, AmbientWeatherEntity):
+class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     """Define an Ambient sensor."""
 
     def __init__(

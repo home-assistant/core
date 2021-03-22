@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AdGuardHomeSensor(SensorEntity, AdGuardHomeDeviceEntity):
+class AdGuardHomeSensor(AdGuardHomeDeviceEntity, SensorEntity):
     """Defines a AdGuard Home sensor."""
 
     def __init__(

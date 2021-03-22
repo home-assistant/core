@@ -78,7 +78,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await coordinator.async_refresh()
 
 
-class Measurement(SensorEntity, CoordinatorEntity):
+class Measurement(CoordinatorEntity, SensorEntity):
     """A gauge at a flood monitoring station."""
 
     attribution = "This uses Environment Agency flood and river level data from the real-time data API"

@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AcmedaBattery(SensorEntity, AcmedaBase):
+class AcmedaBattery(AcmedaBase, SensorEntity):
     """Representation of a Acmeda cover device."""
 
     device_class = DEVICE_CLASS_BATTERY
