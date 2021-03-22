@@ -317,7 +317,7 @@ class InputSelect(RestoreEntity):
 
     @callback
     def async_random(self, cycle):
-        """Select previous option."""
+        """Select random option."""
         size = len(self._options)
         idx = random.randint(0, size)
         self.async_select_index(idx)
