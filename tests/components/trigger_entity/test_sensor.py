@@ -49,7 +49,7 @@ async def test_it_works(hass):
     )
 
 
-async def test_render_error(hass):
+async def test_render_error(hass, caplog):
     """Test it works."""
     assert await async_setup_component(
         hass,
@@ -67,6 +67,7 @@ async def test_render_error(hass):
     )
 
     await hass.async_block_till_done()
+    assert "Ignoring unique ID no-base-id" in caplog.text
 
     state = hass.states.get("sensor.hello")
     assert state is not None
