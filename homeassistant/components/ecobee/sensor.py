@@ -1,13 +1,13 @@
 """Support for Ecobee sensors."""
 from pyecobee.const import ECOBEE_STATE_CALIBRATING, ECOBEE_STATE_UNKNOWN
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import _LOGGER, DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class EcobeeSensor(Entity):
+class EcobeeSensor(SensorEntity):
     """Representation of an Ecobee sensor."""
 
     def __init__(self, data, sensor_name, sensor_type, sensor_index):

@@ -1,6 +1,7 @@
 """Support for Rheem EcoNet water heaters."""
 from pyeconet.equipment import EquipmentType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class EcoNetSensor(EcoNetEntity):
+class EcoNetSensor(SensorEntity, EcoNetEntity):
     """Define a Econet sensor."""
 
     def __init__(self, econet_device, device_name):

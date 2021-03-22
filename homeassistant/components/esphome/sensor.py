@@ -6,7 +6,7 @@ import math
 from aioesphomeapi import SensorInfo, SensorState, TextSensorInfo, TextSensorState
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -42,7 +42,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSensor(EsphomeEntity):
+class EsphomeSensor(SensorEntity, EsphomeEntity):
     """A sensor implementation for esphome."""
 
     @property
@@ -89,7 +89,7 @@ class EsphomeSensor(EsphomeEntity):
         return self._static_info.device_class
 
 
-class EsphomeTextSensor(EsphomeEntity):
+class EsphomeTextSensor(SensorEntity, EsphomeEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
