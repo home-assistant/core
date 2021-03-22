@@ -7,7 +7,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ID,
@@ -25,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import distance, location
 
@@ -258,7 +262,7 @@ class CityBikesNetwork:
                 raise PlatformNotReady from err
 
 
-class CityBikesStation(Entity):
+class CityBikesStation(SensorEntity):
     """CityBikes API Sensor."""
 
     def __init__(self, network, station_id, entity_id):
