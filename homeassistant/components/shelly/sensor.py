@@ -1,5 +1,6 @@
 """Sensor for Shelly."""
 from homeassistant.components import sensor
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -203,7 +204,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
 
-class ShellySensor(ShellyBlockAttributeEntity):
+class ShellySensor(SensorEntity, ShellyBlockAttributeEntity):
     """Represent a shelly sensor."""
 
     @property
@@ -212,7 +213,7 @@ class ShellySensor(ShellyBlockAttributeEntity):
         return self.attribute_value
 
 
-class ShellyRestSensor(ShellyRestAttributeEntity):
+class ShellyRestSensor(SensorEntity, ShellyRestAttributeEntity):
     """Represent a shelly REST sensor."""
 
     @property
@@ -221,7 +222,7 @@ class ShellyRestSensor(ShellyRestAttributeEntity):
         return self.attribute_value
 
 
-class ShellySleepingSensor(ShellySleepingBlockAttributeEntity):
+class ShellySleepingSensor(SensorEntity, ShellySleepingBlockAttributeEntity):
     """Represent a shelly sleeping sensor."""
 
     @property
