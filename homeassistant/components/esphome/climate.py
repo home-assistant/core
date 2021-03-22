@@ -194,13 +194,12 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         """Return preset modes."""
         if self._static_info.supports_away:
             return [PRESET_AWAY, PRESET_HOME]
-        elif self._static_info.supported_presets:
+        if self._static_info.supported_presets:
             return [
                 _presets.from_esphome(preset)
                 for preset in self._static_info.supported_presets
             ] + list(self._static_info.supported_custom_presets)
-        else:
-            return []
+        return []
 
     @property
     def swing_modes(self):
@@ -270,19 +269,16 @@ class EsphomeClimateEntity(EsphomeEntity, ClimateEntity):
         """Return current fan setting."""
         if self._state.custom_fan_mode:
             return self._state.custom_fan_mode
-        else:
-            return _fan_modes.from_esphome(self._state.fan_mode)
+        return _fan_modes.from_esphome(self._state.fan_mode)
 
     @esphome_state_property
     def preset_mode(self):
         """Return current preset mode."""
         if self._static_info.supports_away:
             return PRESET_AWAY if self._state.away else PRESET_HOME
-        else:
-            if self._state.custom_preset:
-                return self._state.custom_preset
-            else:
-                return _presets.from_esphome(self._state.preset)
+        if self._state.custom_preset:
+            return self._state.custom_preset
+        return _presets.from_esphome(self._state.preset)
 
     @esphome_state_property
     def swing_mode(self):
