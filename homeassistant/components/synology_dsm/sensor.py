@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISKS,
@@ -86,7 +87,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMUtilSensor(SynologyDSMBaseEntity):
+class SynoDSMUtilSensor(SynologyDSMBaseEntity, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -118,7 +119,7 @@ class SynoDSMUtilSensor(SynologyDSMBaseEntity):
         return bool(self._api.utilisation)
 
 
-class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SensorEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -139,7 +140,7 @@ class SynoDSMStorageSensor(SynologyDSMDeviceEntity):
         return attr
 
 
-class SynoDSMInfoSensor(SynologyDSMBaseEntity):
+class SynoDSMInfoSensor(SynologyDSMBaseEntity, SensorEntity):
     """Representation a Synology information sensor."""
 
     def __init__(
