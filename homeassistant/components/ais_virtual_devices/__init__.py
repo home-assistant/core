@@ -12,6 +12,22 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the ais ais environment."""
 
+    # TODO - do this dynamically
+    # recorder
+    hass.async_create_task(
+        hass.helpers.discovery.async_load_platform("recorder", "recorder", {}, config)
+    )
+
+    # logbook
+    hass.async_create_task(
+        hass.helpers.discovery.async_load_platform("logbook", "logbook", {}, config)
+    )
+
+    # history
+    hass.async_create_task(
+        hass.helpers.discovery.async_load_platform("history", "history", {}, config)
+    )
+
     # Set up ais dom devices (RF codes)
     hass.async_create_task(
         hass.helpers.discovery.async_load_platform(
@@ -244,9 +260,7 @@ async def async_setup(hass, config):
         "group.day_info",
         "on",
         {
-            "entity_id": [
-                "binary_sensor.dzien_pracujacy",
-            ],
+            "entity_id": ["binary_sensor.dzien_pracujacy"],
             "order": 6,
             "control": "hidden",
             "friendly_name": "Kalendarium",
