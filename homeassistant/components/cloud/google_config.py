@@ -6,11 +6,7 @@ from hass_nabucasa import Cloud, cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.helpers import AbstractConfig
-from homeassistant.const import (
-    CLOUD_NEVER_EXPOSED_ENTITIES,
-    EVENT_HOMEASSISTANT_STARTED,
-    HTTP_OK,
-)
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, HTTP_OK
 from homeassistant.core import CoreState, split_entity_id
 from homeassistant.helpers import entity_registry
 
@@ -198,17 +194,7 @@ class CloudGoogleConfig(AbstractConfig):
         if not self._should_expose_entity_id(entity_id):
             return
 
-        if self.hass.state == CoreState.running:
-            self.async_schedule_google_sync_all()
+        if self.hass.state != CoreState.running:
             return
 
-        if self._sync_on_started:
-            return
-
-        self._sync_on_started = True
-
-        async def sync_google(_):
-            """Sync entities to Google."""
-            await self.async_sync_entities_all()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
+        self.async_schedule_google_sync_all()

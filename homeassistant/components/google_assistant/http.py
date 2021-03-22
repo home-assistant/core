@@ -135,7 +135,7 @@ class GoogleConfig(AbstractConfig):
 
     async def _async_request_sync_devices(self, agent_user_id: str):
         if CONF_SERVICE_ACCOUNT in self._config:
-            await self.async_call_homegraph_api(
+            return await self.async_call_homegraph_api(
                 REQUEST_SYNC_BASE_URL, {"agentUserId": agent_user_id}
             )
         else:
