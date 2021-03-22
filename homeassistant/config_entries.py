@@ -1021,14 +1021,20 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self.context["confirm_only"] = True
 
     @callback
-    def _async_current_entries(self, include_ignore: bool = False) -> list[ConfigEntry]:
+    def _async_current_entries(
+        self, include_ignore: bool | None = None
+    ) -> list[ConfigEntry]:
         """Return current entries.
 
         If the flow is user initiated, filter out ignored entries unless include_ignore is True.
         """
         config_entries = self.hass.config_entries.async_entries(self.handler)
 
-        if include_ignore or self.source != SOURCE_USER:
+        if (
+            include_ignore is True
+            or include_ignore is None
+            and self.source != SOURCE_USER
+        ):
             return config_entries
 
         return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
