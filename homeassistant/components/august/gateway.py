@@ -5,8 +5,8 @@ import logging
 import os
 
 from aiohttp import ClientError, ClientResponseError
-from august.api_async import ApiAsync
-from august.authenticator_async import AuthenticationState, AuthenticatorAsync
+from yalexs.api_async import ApiAsync
+from yalexs.authenticator_async import AuthenticationState, AuthenticatorAsync
 
 from homeassistant.const import (
     CONF_PASSWORD,

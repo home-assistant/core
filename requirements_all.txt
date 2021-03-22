@@ -1191,9 +1191,6 @@ pushover_complete==1.1.1
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.6.7
 
-# homeassistant.components.august
-py-august==0.25.2
-
 # homeassistant.components.canary
 py-canary==0.5.1
 
@@ -2346,6 +2343,9 @@ xs1-api-client==3.0.0
 
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.1.6
+
+# homeassistant.components.august
+yalexs==1.1.4
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
