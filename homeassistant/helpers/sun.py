@@ -54,7 +54,7 @@ def get_astral_event_next(
 
 @callback
 def get_location_astral_event_next(
-    location: "astral.Location",
+    location: astral.Location,
     event: str,
     utc_point_in_time: datetime.datetime | None = None,
     offset: datetime.timedelta | None = None,

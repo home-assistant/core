@@ -1,5 +1,5 @@
 """Support for Fibaro sensors."""
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_CO2,
@@ -11,7 +11,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroSensor(FibaroDevice, Entity):
+class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(self, fibaro_device):
