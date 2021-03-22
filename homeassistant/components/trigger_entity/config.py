@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_VALUE_TEMPLATE,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
@@ -20,6 +19,7 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 from .const import DOMAIN
 
 CONF_TRIGGER = "trigger"
+CONF_STATE = "state"
 
 
 TRIGGER_ENTITY_SCHEMA = vol.Schema(
@@ -35,7 +35,7 @@ TRIGGER_ENTITY_SCHEMA = vol.Schema(
                         vol.Optional(CONF_NAME): cv.string,
                         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
                         vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
-                        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+                        vol.Required(CONF_STATE): cv.template,
                     }
                 )
             ],

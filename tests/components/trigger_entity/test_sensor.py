@@ -20,7 +20,7 @@ async def test_it_works(hass):
                     "unique_id": "just_a_test",
                     "device_class": "battery",
                     "unit_of_measurement": "%",
-                    "value_template": "{{ trigger.event.data.beer }}",
+                    "state": "{{ trigger.event.data.beer }}",
                 },
             },
         },
@@ -60,7 +60,7 @@ async def test_render_error(hass, caplog):
                 "sensor": {
                     "unique_id": "no-base-id",
                     "name": "Hello",
-                    "value_template": "{{ non_existing + 1 }}",
+                    "state": "{{ non_existing + 1 }}",
                 },
             },
         },

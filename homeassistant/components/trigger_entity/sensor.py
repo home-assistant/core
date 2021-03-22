@@ -14,6 +14,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, update_coordinator
 
+from .config import CONF_STATE
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -48,8 +50,7 @@ class TriggerSensorEntity(update_coordinator.CoordinatorEntity):
                 )
 
         self._config = config
-        self._state = None
-        self._available = True
+        self._rendered = {}
 
     @property
     def name(self):
@@ -72,12 +73,12 @@ class TriggerSensorEntity(update_coordinator.CoordinatorEntity):
     @property
     def available(self):
         """Return availability of the entity."""
-        return self._available
+        return self._rendered is not None
 
     @property
     def state(self):
         """State of the entity."""
-        return self._state
+        return self._rendered.get(CONF_STATE)
 
     @property
     def unit_of_measurement(self) -> str | None:
@@ -86,7 +87,7 @@ class TriggerSensorEntity(update_coordinator.CoordinatorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
-        self._config["value_template"].hass = self.hass
+        template.attach(self.hass, self._config)
         await super().async_added_to_hass()
         if self.coordinator.data is not None:
             self._handle_coordinator_update()
@@ -94,14 +95,19 @@ class TriggerSensorEntity(update_coordinator.CoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.async_set_context(self.coordinator.data["context"])
         try:
-            self._state = self._config["value_template"].async_render(
-                self.coordinator.data["run_variables"], parse_result=False
-            )
-            self._available = True
+            rendered = {}
+
+            for key in (CONF_STATE,):
+                if key in self._config:
+                    rendered[key] = self._config[key].async_render(
+                        self.coordinator.data["run_variables"], parse_result=False
+                    )
+
+            self._rendered = rendered
         except template.TemplateError as err:
             _LOGGER.error("Error rendering template: %s", err)
-            self._available = False
+            self._rendered = None
 
+        self.async_set_context(self.coordinator.data["context"])
         self.async_write_ha_state()
