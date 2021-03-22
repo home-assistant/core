@@ -17,11 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
-    CONF_FORECAST_SENSORS_DAYS,
+    CONF_FORECAST_SENSORS_DAY,
     CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DOMAIN,
-    ENTRY_FORECAST_SENSORS_DAYS,
+    ENTRY_FORECAST_SENSORS_DAY,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
     FORECAST_MODE_FREE_DAILY,
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
     forecast_mode = _get_config_value(config_entry, CONF_MODE)
-    forecast_sensors_days = _get_config_value(config_entry, CONF_FORECAST_SENSORS_DAYS)
+    forecast_sensors_day = _get_config_value(config_entry, CONF_FORECAST_SENSORS_DAY)
     language = _get_config_value(config_entry, CONF_LANGUAGE)
 
     config_dict = _get_owm_config(language)
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     hass.data[DOMAIN][config_entry.entry_id] = {
         ENTRY_NAME: name,
         ENTRY_WEATHER_COORDINATOR: weather_coordinator,
-        ENTRY_FORECAST_SENSORS_DAYS: forecast_sensors_days,
+        ENTRY_FORECAST_SENSORS_DAY: forecast_sensors_day,
     }
 
     for platform in PLATFORMS:

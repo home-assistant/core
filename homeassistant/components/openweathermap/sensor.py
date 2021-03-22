@@ -3,7 +3,7 @@ from .abstract_owm_sensor import AbstractOpenWeatherMapSensor
 from .const import (
     ATTR_API_FORECAST,
     DOMAIN,
-    ENTRY_FORECAST_SENSORS_DAYS,
+    ENTRY_FORECAST_SENSORS_DAY,
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
     FORECAST_MONITORED_CONDITIONS,
@@ -19,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     domain_data = hass.data[DOMAIN][config_entry.entry_id]
     name = domain_data[ENTRY_NAME]
     weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
-    forecast_sensors_days = domain_data[ENTRY_FORECAST_SENSORS_DAYS]
+    forecast_sensors_day = domain_data[ENTRY_FORECAST_SENSORS_DAY]
 
     weather_sensor_types = WEATHER_SENSOR_TYPES
     forecast_sensor_types = FORECAST_SENSOR_TYPES
@@ -46,7 +46,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensor_type,
                 forecast_sensor_types[sensor_type],
                 weather_coordinator,
-                forecast_sensors_days,
+                forecast_sensors_day,
             )
         )
 
@@ -86,19 +86,19 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
         sensor_type,
         sensor_configuration,
         weather_coordinator: WeatherUpdateCoordinator,
-        forecast_sensors_days,
+        forecast_sensors_day,
     ):
         """Initialize the sensor."""
         super().__init__(
             name, unique_id, sensor_type, sensor_configuration, weather_coordinator
         )
         self._weather_coordinator = weather_coordinator
-        self._forecast_sensors_days = forecast_sensors_days
+        self._forecast_sensors_day = forecast_sensors_day
 
     @property
     def state(self):
         """Return the state of the device."""
         forecasts = self._weather_coordinator.data.get(ATTR_API_FORECAST)
         if forecasts is not None and len(forecasts) > 0:
-            return forecasts[self._forecast_sensors_days].get(self._sensor_type, None)
+            return forecasts[self._forecast_sensors_day].get(self._sensor_type, None)
         return None

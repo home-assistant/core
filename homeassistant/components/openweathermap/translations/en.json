@@ -11,6 +11,7 @@
             "user": {
                 "data": {
                     "api_key": "API Key",
+                    "forecast_sensors_day": "Forecast sensors day",
                     "language": "Language",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
@@ -26,6 +27,7 @@
         "step": {
             "init": {
                 "data": {
+                    "forecast_sensors_day": "Forecast sensors day",
                     "language": "Language",
                     "mode": "Mode"
                 }
