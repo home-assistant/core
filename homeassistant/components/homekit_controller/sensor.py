@@ -2,6 +2,7 @@
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_BATTERY,
@@ -39,7 +40,7 @@ SIMPLE_SENSOR = {
 }
 
 
-class HomeKitHumiditySensor(HomeKitEntity):
+class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit humidity sensor."""
 
     def get_characteristic_types(self):
@@ -72,7 +73,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
-class HomeKitTemperatureSensor(HomeKitEntity):
+class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit temperature sensor."""
 
     def get_characteristic_types(self):
@@ -105,7 +106,7 @@ class HomeKitTemperatureSensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
-class HomeKitLightSensor(HomeKitEntity):
+class HomeKitLightSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit light level sensor."""
 
     def get_characteristic_types(self):
@@ -138,7 +139,7 @@ class HomeKitLightSensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
 
-class HomeKitCarbonDioxideSensor(HomeKitEntity):
+class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     def get_characteristic_types(self):
@@ -166,7 +167,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
-class HomeKitBatterySensor(HomeKitEntity):
+class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit battery sensor."""
 
     def get_characteristic_types(self):
@@ -233,7 +234,7 @@ class HomeKitBatterySensor(HomeKitEntity):
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-class SimpleSensor(CharacteristicEntity):
+class SimpleSensor(CharacteristicEntity, SensorEntity):
     """
     A simple sensor for a single characteristic.
 

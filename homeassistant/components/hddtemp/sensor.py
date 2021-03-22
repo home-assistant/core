@@ -6,7 +6,7 @@ from telnetlib import Telnet
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_DISKS,
     CONF_HOST,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class HddTempSensor(Entity):
+class HddTempSensor(SensorEntity):
     """Representation of a HDDTemp sensor."""
 
     def __init__(self, name, disk, hddtemp):
