@@ -30,6 +30,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PIN,
     CONF_SSL,
@@ -60,6 +61,7 @@ HOLD_MODE_TEMPERATURE = "temperature"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -81,6 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     timeout = config.get(CONF_TIMEOUT)
     humidifier = config.get(CONF_HUMIDIFIER)
+    name = config.get(CONF_NAME)
 
     protocol = "https" if config[CONF_SSL] else "http"
 
@@ -93,13 +96,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         proto=protocol,
     )
 
-    add_entities([VenstarThermostat(client, humidifier)], True)
+    add_entities([VenstarThermostat(client, humidifier, name)], True)
 
 
 class VenstarThermostat(ClimateEntity):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, client, humidifier):
+    def __init__(self, client, humidifier, name):
         """Initialize the thermostat."""
         self._client = client
         self._humidifier = humidifier
@@ -108,6 +111,12 @@ class VenstarThermostat(ClimateEntity):
             HVAC_MODE_COOL: self._client.MODE_COOL,
             HVAC_MODE_AUTO: self._client.MODE_AUTO,
         }
+        if name is not None:
+            self._name = name
+        else:
+            self._name = self._client.name
+        _LOGGER.debug("Venstar Thermostat initialized  for '%s'", self._name)
+
 
     def update(self):
         """Update the data from the thermostat."""
@@ -132,7 +141,7 @@ class VenstarThermostat(ClimateEntity):
     @property
     def name(self):
         """Return the name of the thermostat."""
-        return self._client.name
+        return self._name
 
     @property
     def precision(self):
