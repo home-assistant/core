@@ -688,7 +688,7 @@ def async_config_entry_disabled_by_changed(
 def async_cleanup(
     hass: HomeAssistantType,
     dev_reg: DeviceRegistry,
-    ent_reg: "entity_registry.EntityRegistry",
+    ent_reg: entity_registry.EntityRegistry,
 ) -> None:
     """Clean up device registry."""
     # Find all devices that are referenced by a config_entry.

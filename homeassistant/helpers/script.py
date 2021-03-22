@@ -427,11 +427,12 @@ class _ScriptRun:
 
         delay = delay.total_seconds()
         self._changed()
+        trace_set_result(delay=delay, done=False)
         try:
             async with async_timeout.timeout(delay):
                 await self._stop.wait()
         except asyncio.TimeoutError:
-            pass
+            trace_set_result(delay=delay, done=True)
 
     async def _async_wait_template_step(self):
         """Handle a wait template."""
@@ -443,6 +444,7 @@ class _ScriptRun:
         self._step_log("wait template", timeout)
 
         self._variables["wait"] = {"remaining": timeout, "completed": False}
+        trace_set_result(wait=self._variables["wait"])
 
         wait_template = self._action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self._hass
@@ -455,10 +457,9 @@ class _ScriptRun:
         @callback
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
-            self._variables["wait"] = {
-                "remaining": to_context.remaining if to_context else timeout,
-                "completed": True,
-            }
+            wait_var = self._variables["wait"]
+            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            wait_var["completed"] = True
             done.set()
 
         to_context = None
@@ -475,10 +476,11 @@ class _ScriptRun:
             async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
+            self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
+                trace_set_result(wait=self._variables["wait"], timeout=True)
                 raise _StopScript from ex
-            self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
                 task.cancel()
@@ -539,6 +541,7 @@ class _ScriptRun:
         else:
             limit = SERVICE_CALL_LIMIT
 
+        trace_set_result(params=params, running_script=running_script, limit=limit)
         service_task = self._hass.async_create_task(
             self._hass.services.async_call(
                 **params,
@@ -567,6 +570,7 @@ class _ScriptRun:
     async def _async_scene_step(self):
         """Activate the scene specified in the action."""
         self._step_log("activate scene")
+        trace_set_result(scene=self._action[CONF_SCENE])
         await self._hass.services.async_call(
             scene.DOMAIN,
             SERVICE_TURN_ON,
@@ -592,6 +596,7 @@ class _ScriptRun:
                     "Error rendering event data template: %s", ex, level=logging.ERROR
                 )
 
+        trace_set_result(event=self._action[CONF_EVENT], event_data=event_data)
         self._hass.bus.async_fire(
             self._action[CONF_EVENT], event_data, context=self._context
         )
@@ -748,14 +753,14 @@ class _ScriptRun:
 
         variables = {**self._variables}
         self._variables["wait"] = {"remaining": timeout, "trigger": None}
+        trace_set_result(wait=self._variables["wait"])
 
         done = asyncio.Event()
 
         async def async_done(variables, context=None):
-            self._variables["wait"] = {
-                "remaining": to_context.remaining if to_context else timeout,
-                "trigger": variables["trigger"],
-            }
+            wait_var = self._variables["wait"]
+            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            wait_var["trigger"] = variables["trigger"]
             done.set()
 
         def log_cb(level, msg, **kwargs):
@@ -782,10 +787,11 @@ class _ScriptRun:
             async with async_timeout.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
         except asyncio.TimeoutError as ex:
+            self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
+                trace_set_result(wait=self._variables["wait"], timeout=True)
                 raise _StopScript from ex
-            self._variables["wait"]["remaining"] = 0.0
         finally:
             for task in tasks:
                 task.cancel()

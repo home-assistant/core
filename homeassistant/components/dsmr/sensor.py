@@ -12,7 +12,7 @@ from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_rea
 import serial
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
@@ -286,7 +285,7 @@ async def async_setup_entry(
     hass.data[DOMAIN][entry.entry_id][DATA_TASK] = task
 
 
-class DSMREntity(Entity):
+class DSMREntity(SensorEntity):
     """Entity reading values from DSMR telegram."""
 
     def __init__(self, name, device_name, device_serial, obis, config, force_update):

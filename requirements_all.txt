@@ -269,7 +269,7 @@ apprise==0.8.9
 aprslib==0.6.46
 
 # homeassistant.components.aqualogic
-aqualogic==1.0
+aqualogic==2.6
 
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.5.3
@@ -429,7 +429,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==4.7.2
+colorlog==4.8.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
