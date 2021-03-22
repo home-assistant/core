@@ -569,7 +569,7 @@ async def test_options_flow(hass, client):
         source="bla",
         connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
-    entry = hass.config_entries._entries[0]
+    entry = hass.config_entries.async_entries()[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/options/flow"
@@ -618,7 +618,7 @@ async def test_two_step_options_flow(hass, client):
         source="bla",
         connection_class=core_ce.CONN_CLASS_LOCAL_POLL,
     ).add_to_hass(hass)
-    entry = hass.config_entries._entries[0]
+    entry = hass.config_entries.async_entries()[0]
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         url = "/api/config/config_entries/options/flow"

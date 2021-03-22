@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -44,7 +44,7 @@ def mock_handlers():
 def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = []
+    manager._entries = {}
     manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
@@ -1381,6 +1381,37 @@ async def test_unique_id_existing_entry(hass, manager):
     assert len(async_setup_entry.mock_calls) == 1
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_remove_entry.mock_calls) == 1
+
+
+async def test_entry_id_existing_entry(hass, manager):
+    """Test that we throw when the entry id collides."""
+    collide_entry_id = "collide"
+    hass.config.components.add("comp")
+    MockConfigEntry(
+        entry_id=collide_entry_id,
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        unique_id="mock-unique-id",
+    ).add_to_hass(hass)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            return self.async_create_entry(title="mock-title", data={"via": "flow"})
+
+    with pytest.raises(HomeAssistantError), patch.dict(
+        config_entries.HANDLERS, {"comp": TestFlow}
+    ), patch(
+        "homeassistant.config_entries.uuid_util.random_uuid_hex",
+        return_value=collide_entry_id,
+    ):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
 
 
 async def test_unique_id_update_existing_entry_without_reload(hass, manager):

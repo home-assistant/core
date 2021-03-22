@@ -619,7 +619,7 @@ class ConfigEntries:
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries: list[ConfigEntry] = []
+        self._entries: dict[str, ConfigEntry] = {}
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         EntityRegistryDisabledHandler(hass).async_setup()
 
@@ -629,7 +629,7 @@ class ConfigEntries:
         seen: set[str] = set()
         result = []
 
-        for entry in self._entries:
+        for entry in self._entries.values():
             if entry.domain not in seen:
                 seen.add(entry.domain)
                 result.append(entry.domain)
@@ -639,21 +639,22 @@ class ConfigEntries:
     @callback
     def async_get_entry(self, entry_id: str) -> ConfigEntry | None:
         """Return entry with matching entry_id."""
-        for entry in self._entries:
-            if entry_id == entry.entry_id:
-                return entry
-        return None
+        return self._entries.get(entry_id)
 
     @callback
     def async_entries(self, domain: str | None = None) -> list[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
-            return list(self._entries)
-        return [entry for entry in self._entries if entry.domain == domain]
+            return list(self._entries.values())
+        return [entry for entry in self._entries.values() if entry.domain == domain]
 
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
-        self._entries.append(entry)
+        if entry.entry_id in self._entries:
+            raise HomeAssistantError(
+                f"An entry with the id {entry.entry_id} already exists."
+            )
+        self._entries[entry.entry_id] = entry
         await self.async_setup(entry.entry_id)
         self._async_schedule_save()
 
@@ -671,7 +672,7 @@ class ConfigEntries:
 
         await entry.async_remove(self.hass)
 
-        self._entries.remove(entry)
+        del self._entries[entry.entry_id]
         self._async_schedule_save()
 
         dev_reg, ent_reg = await asyncio.gather(
@@ -707,11 +708,11 @@ class ConfigEntries:
         )
 
         if config is None:
-            self._entries = []
+            self._entries = {}
             return
 
-        self._entries = [
-            ConfigEntry(
+        self._entries = {
+            entry["entry_id"]: ConfigEntry(
                 version=entry["version"],
                 domain=entry["domain"],
                 entry_id=entry["entry_id"],
@@ -730,7 +731,7 @@ class ConfigEntries:
                 disabled_by=entry.get("disabled_by"),
             )
             for entry in config["entries"]
-        ]
+        }
 
     async def async_setup(self, entry_id: str) -> bool:
         """Set up a config entry.
@@ -920,7 +921,7 @@ class ConfigEntries:
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, Any]]]:
         """Return data to save."""
-        return {"entries": [entry.as_dict() for entry in self._entries]}
+        return {"entries": [entry.as_dict() for entry in self._entries.values()]}
 
 
 async def _old_conf_migrator(old_config: dict[str, Any]) -> dict[str, Any]:
