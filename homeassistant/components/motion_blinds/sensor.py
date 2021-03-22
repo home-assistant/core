@@ -1,13 +1,13 @@
 """Support for Motion Blinds sensors."""
 from motionblinds import BlindType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_GATEWAY
@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MotionBatterySensor(CoordinatorEntity, Entity):
+class MotionBatterySensor(CoordinatorEntity, SensorEntity):
     """
     Representation of a Motion Battery Sensor.
 
@@ -144,7 +144,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return attributes
 
 
-class MotionSignalStrengthSensor(CoordinatorEntity, Entity):
+class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Motion Signal Strength Sensor."""
 
     def __init__(self, coordinator, device, device_type):
