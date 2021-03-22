@@ -6,7 +6,11 @@ from typing import Callable, cast
 
 import pyvera as veraApi
 
-from homeassistant.components.sensor import DOMAIN as PLATFORM_DOMAIN, ENTITY_ID_FORMAT
+from homeassistant.components.sensor import (
+    DOMAIN as PLATFORM_DOMAIN,
+    ENTITY_ID_FORMAT,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
@@ -35,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSensor(VeraDevice[veraApi.VeraSensor], Entity):
+class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
     """Representation of a Vera Sensor."""
 
     def __init__(
