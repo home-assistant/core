@@ -665,7 +665,8 @@ omit =
     homeassistant/components/obihai/*
     homeassistant/components/oem/climate.py
     homeassistant/components/oasa_telematics/sensor.py
-    homeassistant/components/ohmconnect/sensor.py
+    homeassistant/components/octoprint/sensor.py
+    homeassistant/components/ohmconnect/__init__.py
     homeassistant/components/ombi/*
     homeassistant/components/omnilogic/__init__.py
     homeassistant/components/omnilogic/common.py
