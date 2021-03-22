@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -67,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class ZwaveSensorBase(ZWaveBaseEntity):
+class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     def __init__(
