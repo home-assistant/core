@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entries):
     async_add_entries([entity])
 
 
-class AuroraSensor(SensorEntity, AuroraEntity):
+class AuroraSensor(AuroraEntity, SensorEntity):
     """Implementation of an aurora sensor."""
 
     @property
