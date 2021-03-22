@@ -6,10 +6,9 @@ from random import randrange
 
 import aiohttp
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER
+from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
 from homeassistant.const import POWER_WATT
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -45,7 +44,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class TibberSensor(Entity):
+class TibberSensor(SensorEntity):
     """Representation of a generic Tibber sensor."""
 
     def __init__(self, tibber_home):

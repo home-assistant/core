@@ -7,7 +7,7 @@ from aiohttp.hdrs import ACCEPT, AUTHORIZATION
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_TIME,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from . import DATA_TTN, TTN_ACCESS_KEY, TTN_APP_ID, TTN_DATA_STORAGE_URL
 
@@ -59,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices, True)
 
 
-class TtnDataSensor(Entity):
+class TtnDataSensor(SensorEntity):
     """Representation of a The Things Network Data Storage sensor."""
 
     def __init__(self, ttn_data_storage, device_id, value, unit_of_measurement):

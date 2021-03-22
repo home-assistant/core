@@ -6,10 +6,9 @@ import requests
 import voluptuous as vol
 import xmltodict
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, POWER_WATT, VOLT
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class Ted5000Sensor(Entity):
+class Ted5000Sensor(SensorEntity):
     """Implementation of a Ted5000 sensor."""
 
     def __init__(self, gateway, name, mtu, unit):
