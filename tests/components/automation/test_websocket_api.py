@@ -50,6 +50,18 @@ async def test_get_automation_trace(hass, hass_ws_client):
         "action": {"event": "another_event"},
     }
 
+    sun_action = {
+        "limit": 10,
+        "params": {
+            "domain": "test",
+            "service": "automation",
+            "service_data": {},
+            "target": {},
+        },
+        "running_script": False,
+    }
+    moon_action = {"event": "another_event", "event_data": {}}
+
     assert await async_setup_component(
         hass,
         "automation",
@@ -94,7 +106,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert len(trace["action_trace"]) == 1
     assert len(trace["action_trace"]["action/0"]) == 1
     assert trace["action_trace"]["action/0"][0]["error"]
-    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert trace["action_trace"]["action/0"][0]["result"] == sun_action
     assert trace["condition_trace"] == {}
     assert trace["config"] == sun_config
     assert trace["context"]
@@ -133,7 +145,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert len(trace["action_trace"]) == 1
     assert len(trace["action_trace"]["action/0"]) == 1
     assert "error" not in trace["action_trace"]["action/0"][0]
-    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert trace["action_trace"]["action/0"][0]["result"] == moon_action
     assert len(trace["condition_trace"]) == 1
     assert len(trace["condition_trace"]["condition/0"]) == 1
     assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
@@ -212,7 +224,7 @@ async def test_get_automation_trace(hass, hass_ws_client):
     assert len(trace["action_trace"]) == 1
     assert len(trace["action_trace"]["action/0"]) == 1
     assert "error" not in trace["action_trace"]["action/0"][0]
-    assert "result" not in trace["action_trace"]["action/0"][0]
+    assert trace["action_trace"]["action/0"][0]["result"] == moon_action
     assert len(trace["condition_trace"]) == 1
     assert len(trace["condition_trace"]["condition/0"]) == 1
     assert trace["condition_trace"]["condition/0"][0]["result"] == {"result": True}
