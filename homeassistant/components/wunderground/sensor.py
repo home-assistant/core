@@ -68,7 +68,7 @@ class WUSensorConfig:
         self,
         friendly_name: str | Callable,
         feature: str,
-        value: Callable[["WUndergroundData"], Any],
+        value: Callable[[WUndergroundData], Any],
         unit_of_measurement: str | None = None,
         entity_picture=None,
         icon: str = "mdi:gauge",

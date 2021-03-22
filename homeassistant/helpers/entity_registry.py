@@ -222,7 +222,7 @@ class EntityRegistry:
         # To disable an entity if it gets created
         disabled_by: str | None = None,
         # Data that we want entry to have
-        config_entry: "ConfigEntry" | None = None,
+        config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
         area_id: str | None = None,
         capabilities: dict[str, Any] | None = None,

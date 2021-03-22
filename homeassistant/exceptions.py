@@ -115,7 +115,7 @@ class Unauthorized(HomeAssistantError):
 
     def __init__(
         self,
-        context: "Context" | None = None,
+        context: Context | None = None,
         user_id: str | None = None,
         entity_id: str | None = None,
         config_entry_id: str | None = None,
