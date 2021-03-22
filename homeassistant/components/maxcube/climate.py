@@ -160,13 +160,7 @@ class MaxCubeClimate(ClimateEntity):
         elif hvac_mode == HVAC_MODE_HEAT:
             temp = max(temp, self.min_temp)
         else:
-            # Reset the temperature to a sane value.
-            # Ideally, we should send 0 and the device will set its
-            # temperature according to the schedule. However, current
-            # version of the library has a bug which causes an
-            # exception when setting values below 8.
-            if temp in [OFF_TEMPERATURE, ON_TEMPERATURE]:
-                temp = device.eco_temperature
+            temp = None
             mode = MAX_DEVICE_MODE_AUTOMATIC
 
         cube = self._cubehandle.cube
@@ -264,7 +258,7 @@ class MaxCubeClimate(ClimateEntity):
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        temp = device.target_temperature
+        temp = None
         mode = MAX_DEVICE_MODE_AUTOMATIC
 
         if preset_mode in [PRESET_COMFORT, PRESET_ECO, PRESET_ON]:
