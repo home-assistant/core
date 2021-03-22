@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
 SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["fan"]
+FAN_PLATFORMS = ["fan", "sensor"]
 LIGHT_PLATFORMS = ["light"]
 VACUUM_PLATFORMS = ["vacuum"]
 AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]

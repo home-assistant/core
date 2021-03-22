@@ -44,7 +44,6 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
-
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -145,11 +144,13 @@ ATTR_SLEEP_MODE = "sleep_mode"
 ATTR_VOLUME = "volume"
 ATTR_USE_TIME = "use_time"
 ATTR_BUTTON_PRESSED = "button_pressed"
+NAME_AIR_PURIFIER = "Air Purifier"
 
 # Air Humidifier
 ATTR_TARGET_HUMIDITY = "target_humidity"
 ATTR_TRANS_LEVEL = "trans_level"
 ATTR_HARDWARE_VERSION = "hardware_version"
+NAME_AIR_HUMIDIFIER = "Air Humidifier"
 
 # Air Humidifier CA
 # ATTR_MOTOR_SPEED = "motor_speed"
@@ -163,15 +164,13 @@ ATTR_FAULT = "fault"
 
 # Air Fresh
 ATTR_CO2 = "co2"
+NAME_AIRFRESH = "Air Fresh"
 
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
     ATTR_TEMPERATURE: "temperature",
     ATTR_HUMIDITY: "humidity",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
@@ -233,10 +232,7 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S = {
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
     ATTR_TEMPERATURE: "temperature",
     ATTR_HUMIDITY: "humidity",
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_level",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_LED: "led",
@@ -253,10 +249,7 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_3 = {
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C = {
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_FAVORITE_LEVEL: "favorite_rpm",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_MOTOR_SPEED: "motor_speed",
@@ -266,14 +259,11 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_3C = {
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     # Common set isn't used here. It's a very basic version of the device.
-    ATTR_AIR_QUALITY_INDEX: "aqi",
     ATTR_MODE: "mode",
     ATTR_LED: "led",
     ATTR_BUZZER: "buzzer",
     ATTR_CHILD_LOCK: "child_lock",
     ATTR_ILLUMINANCE: "illuminance",
-    ATTR_FILTER_HOURS_USED: "filter_hours_used",
-    ATTR_FILTER_LIFE: "filter_life_remaining",
     ATTR_MOTOR_SPEED: "motor_speed",
     # perhaps supported but unconfirmed
     ATTR_AVERAGE_AIR_QUALITY_INDEX: "average_aqi",
@@ -567,7 +557,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
-        name = config_entry.title
         model = config_entry.data[CONF_MODEL]
         unique_id = config_entry.unique_id
 
@@ -575,24 +564,32 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         if model == MODEL_AIRPURIFIER_3C:
             air_purifier = AirPurifierMB4(host, token)
-            entity = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
+            entity = XiaomiAirPurifierMiot(
+                NAME_AIR_PURIFIER, air_purifier, config_entry, unique_id
+            )
         elif model in MODELS_PURIFIER_MIOT:
             air_purifier = AirPurifierMiot(host, token)
-            entity = XiaomiAirPurifierMiot(name, air_purifier, config_entry, unique_id)
+            entity = XiaomiAirPurifierMiot(
+                NAME_AIR_PURIFIER, air_purifier, config_entry, unique_id
+            )
         elif model.startswith("zhimi.airpurifier."):
             air_purifier = AirPurifier(host, token)
-            entity = XiaomiAirPurifier(name, air_purifier, config_entry, unique_id)
+            entity = XiaomiAirPurifier(
+                NAME_AIR_PURIFIER, air_purifier, config_entry, unique_id
+            )
         elif model in MODELS_HUMIDIFIER_MIOT:
             air_humidifier = AirHumidifierMiot(host, token)
             entity = XiaomiAirHumidifierMiot(
-                name, air_humidifier, config_entry, unique_id
+                NAME_AIR_HUMIDIFIER, air_humidifier, config_entry, unique_id
             )
         elif model.startswith("zhimi.humidifier."):
             air_humidifier = AirHumidifier(host, token, model=model)
-            entity = XiaomiAirHumidifier(name, air_humidifier, config_entry, unique_id)
+            entity = XiaomiAirHumidifier(
+                NAME_AIR_HUMIDIFIER, air_humidifier, config_entry, unique_id
+            )
         elif model.startswith("zhimi.airfresh."):
             air_fresh = AirFresh(host, token)
-            entity = XiaomiAirFresh(name, air_fresh, config_entry, unique_id)
+            entity = XiaomiAirFresh(NAME_AIRFRESH, air_fresh, config_entry, unique_id)
         else:
             _LOGGER.error(
                 "Unsupported device found! Please create an issue at "
@@ -677,7 +674,7 @@ class XiaomiGenericDevice(XiaomiMiioEntity, FanEntity):
         return self._available
 
     @property
-    def extra_state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
 
@@ -863,7 +860,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     @property
     def percentage(self):
-        """Get the current percentage."""
+        """Get the current speed percentage."""
         speed = self._state_attrs[ATTR_MOTOR_SPEED]
         return (speed - 300) / 19
 
