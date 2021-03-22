@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([roomba_vac], True)
 
 
-class RoombaBattery(SensorEntity, IRobotEntity):
+class RoombaBattery(IRobotEntity, SensorEntity):
     """Class to hold Roomba Sensor basic info."""
 
     @property

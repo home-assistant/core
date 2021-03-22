@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class RainCloudSensor(SensorEntity, RainCloudEntity):
+class RainCloudSensor(RainCloudEntity, SensorEntity):
     """A sensor implementation for raincloud device."""
 
     @property

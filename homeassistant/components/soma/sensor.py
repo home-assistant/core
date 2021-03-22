@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class SomaSensor(SensorEntity, SomaEntity):
+class SomaSensor(SomaEntity, SensorEntity):
     """Representation of a Soma cover device."""
 
     @property

@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class SkybellSensor(SensorEntity, SkybellDevice):
+class SkybellSensor(SkybellDevice, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
     def __init__(self, device, sensor_type):

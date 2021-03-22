@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class RingSensor(SensorEntity, RingEntityMixin):
+class RingSensor(RingEntityMixin, SensorEntity):
     """A sensor implementation for Ring device."""
 
     def __init__(self, config_entry_id, device, sensor_type):

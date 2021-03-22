@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev)
 
 
-class SleepNumberSensor(SensorEntity, SleepIQSensor):
+class SleepNumberSensor(SleepIQSensor, SensorEntity):
     """Implementation of a SleepIQ sensor."""
 
     def __init__(self, sleepiq_data, bed_id, side):

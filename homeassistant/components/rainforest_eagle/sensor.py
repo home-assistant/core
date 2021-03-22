@@ -159,7 +159,7 @@ class EagleData:
         return state
 
 
-class LeagleReader(SensorEntity, LegacyReader):
+class LeagleReader(LegacyReader, SensorEntity):
     """Wraps uEagle to make it behave like eagle_reader, offering update()."""
 
     def update(self):

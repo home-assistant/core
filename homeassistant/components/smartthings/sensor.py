@@ -307,7 +307,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     ]
 
 
-class SmartThingsSensor(SensorEntity, SmartThingsEntity):
+class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Sensor."""
 
     def __init__(
@@ -347,7 +347,7 @@ class SmartThingsSensor(SensorEntity, SmartThingsEntity):
         return UNITS.get(unit, unit) if unit else self._default_unit
 
 
-class SmartThingsThreeAxisSensor(SensorEntity, SmartThingsEntity):
+class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Three Axis Sensor."""
 
     def __init__(self, device, index):

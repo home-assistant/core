@@ -85,7 +85,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class RestSensor(SensorEntity, RestEntity):
+class RestSensor(RestEntity, SensorEntity):
     """Implementation of a REST sensor."""
 
     def __init__(

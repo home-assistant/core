@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
-class ReCollectWasteSensor(SensorEntity, CoordinatorEntity):
+class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:

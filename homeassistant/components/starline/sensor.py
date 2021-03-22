@@ -37,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class StarlineSensor(SensorEntity, StarlineEntity):
+class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
     def __init__(

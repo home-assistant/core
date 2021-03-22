@@ -204,7 +204,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
 
 
-class ShellySensor(SensorEntity, ShellyBlockAttributeEntity):
+class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
     """Represent a shelly sensor."""
 
     @property
@@ -213,7 +213,7 @@ class ShellySensor(SensorEntity, ShellyBlockAttributeEntity):
         return self.attribute_value
 
 
-class ShellyRestSensor(SensorEntity, ShellyRestAttributeEntity):
+class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
 
     @property
@@ -222,7 +222,7 @@ class ShellyRestSensor(SensorEntity, ShellyRestAttributeEntity):
         return self.attribute_value
 
 
-class ShellySleepingSensor(SensorEntity, ShellySleepingBlockAttributeEntity):
+class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
     """Represent a shelly sleeping sensor."""
 
     @property

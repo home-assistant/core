@@ -109,7 +109,7 @@ async def async_setup_entry(
     )
 
 
-class RainMachineSensor(SensorEntity, RainMachineEntity):
+class RainMachineSensor(RainMachineEntity, SensorEntity):
     """Define a general RainMachine sensor."""
 
     def __init__(

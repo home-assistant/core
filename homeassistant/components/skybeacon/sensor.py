@@ -119,7 +119,7 @@ class SkybeaconTemp(SensorEntity):
         return {ATTR_DEVICE: "SKYBEACON", ATTR_MODEL: 1}
 
 
-class Monitor(SensorEntity, threading.Thread):
+class Monitor(threading.Thread, SensorEntity):
     """Connection handling."""
 
     def __init__(self, hass, mac, name):

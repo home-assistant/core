@@ -170,7 +170,7 @@ def create_vehicle_sensors(vehicle_info, coordinator):
     ]
 
 
-class SubaruSensor(SensorEntity, SubaruEntity):
+class SubaruSensor(SubaruEntity, SensorEntity):
     """Class for Subaru sensors."""
 
     def __init__(

@@ -26,7 +26,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class SimplisafeFreezeSensor(SensorEntity, SimpliSafeBaseSensor):
+class SimplisafeFreezeSensor(SimpliSafeBaseSensor, SensorEntity):
     """Define a SimpliSafe freeze sensor entity."""
 
     def __init__(self, simplisafe, system, sensor):

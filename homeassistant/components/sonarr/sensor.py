@@ -66,7 +66,7 @@ def sonarr_exception_handler(func):
     return handler
 
 
-class SonarrSensor(SensorEntity, SonarrEntity):
+class SonarrSensor(SonarrEntity, SensorEntity):
     """Implementation of the Sonarr sensor."""
 
     def __init__(

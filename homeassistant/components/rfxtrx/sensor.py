@@ -130,7 +130,7 @@ async def async_setup_entry(
     connect_auto_add(hass, discovery_info, sensor_update)
 
 
-class RfxtrxSensor(SensorEntity, RfxtrxEntity):
+class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor."""
 
     def __init__(self, device, device_id, data_type, event=None):

@@ -98,7 +98,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
-class RflinkSensor(SensorEntity, RflinkDevice):
+class RflinkSensor(RflinkDevice, SensorEntity):
     """Representation of a Rflink sensor."""
 
     def __init__(

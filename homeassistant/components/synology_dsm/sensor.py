@@ -87,7 +87,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SynoDSMUtilSensor(SensorEntity, SynologyDSMBaseEntity):
+class SynoDSMUtilSensor(SynologyDSMBaseEntity, SensorEntity):
     """Representation a Synology Utilisation sensor."""
 
     @property
@@ -119,7 +119,7 @@ class SynoDSMUtilSensor(SensorEntity, SynologyDSMBaseEntity):
         return bool(self._api.utilisation)
 
 
-class SynoDSMStorageSensor(SensorEntity, SynologyDSMDeviceEntity):
+class SynoDSMStorageSensor(SynologyDSMDeviceEntity, SensorEntity):
     """Representation a Synology Storage sensor."""
 
     @property
@@ -140,7 +140,7 @@ class SynoDSMStorageSensor(SensorEntity, SynologyDSMDeviceEntity):
         return attr
 
 
-class SynoDSMInfoSensor(SensorEntity, SynologyDSMBaseEntity):
+class SynoDSMInfoSensor(SynologyDSMBaseEntity, SensorEntity):
     """Representation a Synology information sensor."""
 
     def __init__(

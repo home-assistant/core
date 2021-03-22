@@ -117,7 +117,7 @@ class SolarEdgeSensorFactory:
         return sensor_class(self.platform_name, sensor_key, service)
 
 
-class SolarEdgeSensor(SensorEntity, CoordinatorEntity):
+class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for a solaredge sensor."""
 
     def __init__(self, platform_name, sensor_key, data_service):
