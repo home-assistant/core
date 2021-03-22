@@ -274,20 +274,13 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     config_entry = MockConfigEntry(domain=config_flow.HOMEKIT_BRIDGE_DOMAIN, data={})
+    config_entry.add_to_hass(hass)
     formatted_mac = device_registry.format_mac("AA:BB:CC:DD:EE:FF")
 
     dev_reg = mock_device_registry(hass)
     dev_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={
-            (
-                config_flow.HOMEKIT_BRIDGE_DOMAIN,
-                config_entry.entry_id,
-                config_flow.HOMEKIT_BRIDGE_SERIAL_NUMBER,
-            )
-        },
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
-        model=config_flow.HOMEKIT_BRIDGE_MODEL,
     )
 
     discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
