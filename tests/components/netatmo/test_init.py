@@ -77,7 +77,7 @@ async def test_setup_component(hass):
     assert mock_webhook.call_count == 1
 
     assert config_entry.state == config_entries.ENTRY_STATE_LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert hass.config_entries.async_entries(DOMAIN)
     assert len(hass.states.async_all()) > 0
 
     for config_entry in hass.config_entries.async_entries("netatmo"):
@@ -91,26 +91,27 @@ async def test_setup_component(hass):
 async def test_setup_component_with_config(hass, config_entry):
     """Test setup of the netatmo component with dev account."""
     with patch(
-        "homeassistant.components.netatmo.api.ConfigEntryNetatmoAuth"
-    ) as mock_auth, patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ) as mock_impl, patch(
         "homeassistant.components.webhook.async_generate_url"
-    ) as mock_webhook:
-        mock_auth.return_value.post_request.side_effect = fake_post_request
+    ) as mock_webhook, patch(
+        "pyatmo.auth.NetatmoOAuth2.post_request"
+    ) as fake_post_requests, patch(
+        "homeassistant.components.netatmo.PLATFORMS", ["sensor"]
+    ):
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    assert mock_auth.call_count == 1
-    assert mock_impl.call_count == 1
-    assert mock_webhook.call_count == 1
+        fake_post_requests.assert_called()
+        mock_impl.assert_called_once()
+        mock_webhook.assert_called_once()
 
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(hass.states.async_all()) > 0
+        assert config_entry.state == config_entries.ENTRY_STATE_LOADED
+        assert hass.config_entries.async_entries(DOMAIN)
+        assert len(hass.states.async_all()) > 0
 
 
 async def test_setup_component_with_webhook(hass, entry):
@@ -211,14 +212,4 @@ async def test_setup_with_cloud(hass, config_entry):
             fake_delete_cloudhook.assert_called_once()
 
         await hass.async_block_till_done()
-        assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
-
-async def test_api(hass, config_entry):
-    """Test auth instantiation."""
-    config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ), patch("homeassistant.components.webhook.async_generate_url"):
-        assert await async_setup_component(hass, "netatmo", {})
+        assert not hass.config_entries.async_entries(DOMAIN)
