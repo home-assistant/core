@@ -50,6 +50,7 @@ from . import (  # noqa: F401
     type_lights,
     type_locks,
     type_media_players,
+    type_remotes,
     type_security_systems,
     type_sensors,
     type_switches,
