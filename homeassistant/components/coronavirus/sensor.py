@@ -24,7 +24,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class CoronavirusSensor(SensorEntity, CoordinatorEntity):
+class CoronavirusSensor(CoordinatorEntity, SensorEntity):
     """Sensor representing corona virus data."""
 
     name = None

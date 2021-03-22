@@ -139,7 +139,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class AirVisualGeographySensor(SensorEntity, AirVisualEntity):
+class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to geography data via the Cloud API."""
 
     def __init__(self, coordinator, config_entry, kind, name, icon, unit, locale):
@@ -237,7 +237,7 @@ class AirVisualGeographySensor(SensorEntity, AirVisualEntity):
             self._attrs.pop(ATTR_LONGITUDE, None)
 
 
-class AirVisualNodeProSensor(SensorEntity, AirVisualEntity):
+class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
     def __init__(self, coordinator, kind, name, device_class, unit):
