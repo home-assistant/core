@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MazdaFuelRemainingSensor(SensorEntity, MazdaEntity):
+class MazdaFuelRemainingSensor(MazdaEntity, SensorEntity):
     """Class for the fuel remaining sensor."""
 
     @property
@@ -60,7 +60,7 @@ class MazdaFuelRemainingSensor(SensorEntity, MazdaEntity):
         return self.coordinator.data[self.index]["status"]["fuelRemainingPercent"]
 
 
-class MazdaFuelDistanceSensor(SensorEntity, MazdaEntity):
+class MazdaFuelDistanceSensor(MazdaEntity, SensorEntity):
     """Class for the fuel distance sensor."""
 
     @property
@@ -101,7 +101,7 @@ class MazdaFuelDistanceSensor(SensorEntity, MazdaEntity):
         )
 
 
-class MazdaOdometerSensor(SensorEntity, MazdaEntity):
+class MazdaOdometerSensor(MazdaEntity, SensorEntity):
     """Class for the odometer sensor."""
 
     @property
@@ -138,7 +138,7 @@ class MazdaOdometerSensor(SensorEntity, MazdaEntity):
         )
 
 
-class MazdaFrontLeftTirePressureSensor(SensorEntity, MazdaEntity):
+class MazdaFrontLeftTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the front left tire pressure sensor."""
 
     @property
@@ -171,7 +171,7 @@ class MazdaFrontLeftTirePressureSensor(SensorEntity, MazdaEntity):
         return None if tire_pressure is None else round(tire_pressure)
 
 
-class MazdaFrontRightTirePressureSensor(SensorEntity, MazdaEntity):
+class MazdaFrontRightTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the front right tire pressure sensor."""
 
     @property
@@ -204,7 +204,7 @@ class MazdaFrontRightTirePressureSensor(SensorEntity, MazdaEntity):
         return None if tire_pressure is None else round(tire_pressure)
 
 
-class MazdaRearLeftTirePressureSensor(SensorEntity, MazdaEntity):
+class MazdaRearLeftTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the rear left tire pressure sensor."""
 
     @property
@@ -237,7 +237,7 @@ class MazdaRearLeftTirePressureSensor(SensorEntity, MazdaEntity):
         return None if tire_pressure is None else round(tire_pressure)
 
 
-class MazdaRearRightTirePressureSensor(SensorEntity, MazdaEntity):
+class MazdaRearRightTirePressureSensor(MazdaEntity, SensorEntity):
     """Class for the rear right tire pressure sensor."""
 
     @property

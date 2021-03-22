@@ -53,7 +53,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class IPPSensor(SensorEntity, IPPEntity):
+class IPPSensor(IPPEntity, SensorEntity):
     """Defines an IPP sensor."""
 
     def __init__(

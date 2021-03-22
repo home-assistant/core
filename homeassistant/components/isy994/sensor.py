@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-class ISYSensorEntity(SensorEntity, ISYNodeEntity):
+class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
@@ -105,7 +105,7 @@ class ISYSensorEntity(SensorEntity, ISYNodeEntity):
         return raw_units
 
 
-class ISYSensorVariableEntity(SensorEntity, ISYEntity):
+class ISYSensorVariableEntity(ISYEntity, SensorEntity):
     """Representation of an ISY994 variable as a sensor device."""
 
     def __init__(self, vname: str, vobj: object) -> None:

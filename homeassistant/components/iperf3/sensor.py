@@ -24,7 +24,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     async_add_entities(sensors, True)
 
 
-class Iperf3Sensor(SensorEntity, RestoreEntity):
+class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
     def __init__(self, iperf3_data, sensor_type):

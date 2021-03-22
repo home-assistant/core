@@ -162,7 +162,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ModbusRegisterSensor(SensorEntity, RestoreEntity):
+class ModbusRegisterSensor(RestoreEntity, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(

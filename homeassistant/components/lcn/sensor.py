@@ -51,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class LcnVariableSensor(SensorEntity, LcnEntity):
+class LcnVariableSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for variables."""
 
     def __init__(self, config, entry_id, device_connection):
@@ -99,7 +99,7 @@ class LcnVariableSensor(SensorEntity, LcnEntity):
         self.async_write_ha_state()
 
 
-class LcnLedLogicSensor(SensorEntity, LcnEntity):
+class LcnLedLogicSensor(LcnEntity, SensorEntity):
     """Representation of a LCN sensor for leds and logicops."""
 
     def __init__(self, config, entry_id, device_connection):

@@ -83,7 +83,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([integral])
 
 
-class IntegrationSensor(SensorEntity, RestoreEntity):
+class IntegrationSensor(RestoreEntity, SensorEntity):
     """Representation of an integration sensor."""
 
     def __init__(

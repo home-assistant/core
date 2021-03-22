@@ -99,7 +99,7 @@ def calculate_trend(indices):
     return TREND_FLAT
 
 
-class ForecastSensor(SensorEntity, IQVIAEntity):
+class ForecastSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to forecast data."""
 
     @callback
@@ -138,7 +138,7 @@ class ForecastSensor(SensorEntity, IQVIAEntity):
         self._state = average
 
 
-class IndexSensor(SensorEntity, IQVIAEntity):
+class IndexSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to indices."""
 
     @callback

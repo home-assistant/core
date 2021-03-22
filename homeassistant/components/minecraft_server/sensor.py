@@ -48,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class MinecraftServerSensorEntity(SensorEntity, MinecraftServerEntity):
+class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     """Representation of a Minecraft Server sensor base entity."""
 
     def __init__(

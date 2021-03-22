@@ -68,7 +68,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class LyricSensor(SensorEntity, LyricDeviceEntity):
+class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Defines a Honeywell Lyric sensor."""
 
     def __init__(

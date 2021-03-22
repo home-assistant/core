@@ -72,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MobileAppSensor(SensorEntity, MobileAppEntity):
+class MobileAppSensor(MobileAppEntity, SensorEntity):
     """Representation of an mobile app sensor."""
 
     @property

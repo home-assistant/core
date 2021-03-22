@@ -32,7 +32,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class KNXSensor(SensorEntity, KnxEntity):
+class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
     def __init__(self, device: XknxSensor) -> None:

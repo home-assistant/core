@@ -21,7 +21,7 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
     return "mdi:gauge-low"
 
 
-class LitterRobotPropertySensor(SensorEntity, LitterRobotEntity):
+class LitterRobotPropertySensor(LitterRobotEntity, SensorEntity):
     """Litter-Robot property sensors."""
 
     def __init__(

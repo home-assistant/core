@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class IotaBalanceSensor(SensorEntity, IotaDevice):
+class IotaBalanceSensor(IotaDevice, SensorEntity):
     """Implement an IOTA sensor for displaying wallets balance."""
 
     def __init__(self, wallet_config, iota_config):
@@ -61,7 +61,7 @@ class IotaBalanceSensor(SensorEntity, IotaDevice):
         self._state = self.api.get_inputs()["totalBalance"]
 
 
-class IotaNodeSensor(SensorEntity, IotaDevice):
+class IotaNodeSensor(IotaDevice, SensorEntity):
     """Implement an IOTA sensor for displaying attributes of node."""
 
     def __init__(self, iota_config):

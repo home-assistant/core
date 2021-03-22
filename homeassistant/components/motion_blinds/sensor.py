@@ -39,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class MotionBatterySensor(SensorEntity, CoordinatorEntity):
+class MotionBatterySensor(CoordinatorEntity, SensorEntity):
     """
     Representation of a Motion Battery Sensor.
 
@@ -144,7 +144,7 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         return attributes
 
 
-class MotionSignalStrengthSensor(SensorEntity, CoordinatorEntity):
+class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Motion Signal Strength Sensor."""
 
     def __init__(self, coordinator, device, device_type):

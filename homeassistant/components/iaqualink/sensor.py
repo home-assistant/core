@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities(devs, True)
 
 
-class HassAqualinkSensor(SensorEntity, AqualinkEntity):
+class HassAqualinkSensor(AqualinkEntity, SensorEntity):
     """Representation of a sensor."""
 
     @property

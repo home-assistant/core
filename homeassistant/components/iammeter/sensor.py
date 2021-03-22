@@ -74,7 +74,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class IamMeter(SensorEntity, CoordinatorEntity):
+class IamMeter(CoordinatorEntity, SensorEntity):
     """Class for a sensor."""
 
     def __init__(self, coordinator, uid, sensor_name, unit, dev_name):

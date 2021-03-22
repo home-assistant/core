@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class IncomfortSensor(SensorEntity, IncomfortChild):
+class IncomfortSensor(IncomfortChild, SensorEntity):
     """Representation of an InComfort/InTouch sensor device."""
 
     def __init__(self, client, heater, name) -> None:

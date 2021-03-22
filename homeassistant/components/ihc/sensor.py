@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices)
 
 
-class IHCSensor(SensorEntity, IHCDevice):
+class IHCSensor(IHCDevice, SensorEntity):
     """Implementation of the IHC sensor."""
 
     def __init__(

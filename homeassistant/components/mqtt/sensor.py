@@ -70,7 +70,7 @@ async def _async_setup_entity(
     async_add_entities([MqttSensor(hass, config, config_entry, discovery_data)])
 
 
-class MqttSensor(SensorEntity, MqttEntity):
+class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, hass, config, config_entry, discovery_data):

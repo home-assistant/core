@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class JuiceNetSensorDevice(SensorEntity, JuiceNetDevice):
+class JuiceNetSensorDevice(JuiceNetDevice, SensorEntity):
     """Implementation of a JuiceNet sensor."""
 
     def __init__(self, device, sensor_type, coordinator):
