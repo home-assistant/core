@@ -184,8 +184,18 @@ async def test_option_flow(hass, parameter_data):
     config_entry.add_to_hass(hass)
     await hass.async_block_till_done()
 
-    # Reconfigure known_hosts
+    # Test ignore_cec and uuid options are hidden if advanced options are disabled
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "options"
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"known_hosts"}
+
+    # Reconfigure ignore_cec, known_hosts, uuid
+    context = {"source": "user", "show_advanced_options": True}
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context=context
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "options"
     data_schema = result["data_schema"].schema

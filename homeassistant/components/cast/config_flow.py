@@ -153,10 +153,11 @@ class CastOptionsFlowHandler(config_entries.OptionsFlow):
         fields = {}
         suggested_value = _list_to_string(current_config.get(CONF_KNOWN_HOSTS))
         _add_with_suggestion(fields, CONF_KNOWN_HOSTS, suggested_value)
-        suggested_value = _list_to_string(current_config.get(CONF_UUID))
-        _add_with_suggestion(fields, CONF_UUID, suggested_value)
-        suggested_value = _list_to_string(current_config.get(CONF_IGNORE_CEC))
-        _add_with_suggestion(fields, CONF_IGNORE_CEC, suggested_value)
+        if self.show_advanced_options:
+            suggested_value = _list_to_string(current_config.get(CONF_UUID))
+            _add_with_suggestion(fields, CONF_UUID, suggested_value)
+            suggested_value = _list_to_string(current_config.get(CONF_IGNORE_CEC))
+            _add_with_suggestion(fields, CONF_IGNORE_CEC, suggested_value)
 
         return self.async_show_form(
             step_id="options",
