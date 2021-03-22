@@ -14,7 +14,6 @@ from homeassistant.const import (
     PERCENTAGE,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as HUE_DOMAIN
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
@@ -31,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ].sensor_manager.async_register_component("sensor", async_add_entities)
 
 
-class GenericHueGaugeSensorEntity(GenericZLLSensor, Entity):
+class GenericHueGaugeSensorEntity(GenericZLLSensor):
     """Parent class for all 'gauge' Hue device sensors."""
 
     async def _async_update_ha_state(self, *args, **kwargs):
