@@ -247,11 +247,6 @@ class VeraDevice(Generic[DeviceType], Entity):
         return self._name
 
     @property
-    def should_poll(self) -> bool:
-        """Get polling requirement from vera device."""
-        return self.vera_device.should_poll
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the device."""
         attr = {}
