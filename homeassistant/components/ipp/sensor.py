@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Callable
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, DEVICE_CLASS_TIMESTAMP, PERCENTAGE
 from homeassistant.helpers.entity import Entity
@@ -52,7 +53,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class IPPSensor(IPPEntity):
+class IPPSensor(IPPEntity, SensorEntity):
     """Defines an IPP sensor."""
 
     def __init__(

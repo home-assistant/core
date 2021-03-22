@@ -4,10 +4,9 @@ from datetime import timedelta
 from london_tube_status import TubeData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 ATTRIBUTION = "Powered by TfL Open Data"
 
@@ -51,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class LondonTubeSensor(Entity):
+class LondonTubeSensor(SensorEntity):
     """Sensor that reads the status of a line from Tube Data."""
 
     def __init__(self, name, data):

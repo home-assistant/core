@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -13,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -131,7 +130,7 @@ def calc_median(sensor_values, round_digits):
     return round(median, round_digits)
 
 
-class MinMaxSensor(Entity):
+class MinMaxSensor(SensorEntity):
     """Representation of a min/max sensor."""
 
     def __init__(self, entity_ids, name, sensor_type, round_digits):

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -67,7 +68,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class LyricSensor(LyricDeviceEntity):
+class LyricSensor(LyricDeviceEntity, SensorEntity):
     """Defines a Honeywell Lyric sensor."""
 
     def __init__(

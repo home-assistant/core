@@ -1,6 +1,7 @@
 """Sensor platform for mobile_app."""
 from functools import partial
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -71,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class MobileAppSensor(MobileAppEntity):
+class MobileAppSensor(MobileAppEntity, SensorEntity):
     """Representation of an mobile app sensor."""
 
     @property

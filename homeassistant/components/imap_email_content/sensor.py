@@ -7,7 +7,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DATE,
     CONF_NAME,
@@ -18,7 +18,6 @@ from homeassistant.const import (
     CONTENT_TYPE_TEXT_PLAIN,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +144,7 @@ class EmailReader:
         return None
 
 
-class EmailContentSensor(Entity):
+class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
 
     def __init__(self, hass, email_reader, name, allowed_senders, value_template):
