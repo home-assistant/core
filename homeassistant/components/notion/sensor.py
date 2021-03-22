@@ -1,6 +1,7 @@
 """Support for Notion sensors."""
 from typing import Callable
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
@@ -42,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(sensor_list)
 
 
-class NotionSensor(NotionEntity):
+class NotionSensor(NotionEntity, SensorEntity):
     """Define a Notion sensor."""
 
     def __init__(
