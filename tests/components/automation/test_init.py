@@ -1358,7 +1358,7 @@ async def test_blueprint_automation(hass, calls):
 
 
 async def test_trigger_service(hass, calls):
-    """Test the reload config service."""
+    """Test the automation trigger service."""
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
