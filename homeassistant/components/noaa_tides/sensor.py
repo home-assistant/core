@@ -6,7 +6,7 @@ import noaa_coops as coops
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_NAME,
@@ -15,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([noaa_sensor], True)
 
 
-class NOAATidesAndCurrentsSensor(Entity):
+class NOAATidesAndCurrentsSensor(SensorEntity):
     """Representation of a NOAA Tides and Currents sensor."""
 
     def __init__(self, name, station_id, timezone, unit_system, station):
