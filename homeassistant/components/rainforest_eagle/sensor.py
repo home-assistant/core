@@ -7,14 +7,13 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 from uEagle import Eagle as LegacyReader
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 CONF_CLOUD_ID = "cloud_id"
@@ -95,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class EagleSensor(Entity):
+class EagleSensor(SensorEntity):
     """Implementation of the Rainforest Eagle-200 sensor."""
 
     def __init__(self, eagle_data, sensor_type, name, unit):
@@ -160,7 +159,7 @@ class EagleData:
         return state
 
 
-class LeagleReader(LegacyReader):
+class LeagleReader(LegacyReader, SensorEntity):
     """Wraps uEagle to make it behave like eagle_reader, offering update()."""
 
     def update(self):

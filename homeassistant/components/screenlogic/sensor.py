@@ -3,7 +3,11 @@ import logging
 
 from screenlogicpy.const import DEVICE_TYPE
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
+)
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
@@ -34,7 +38,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class ScreenLogicSensor(ScreenlogicEntity):
+class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
     """Representation of a ScreenLogic sensor entity."""
 
     @property
@@ -65,7 +69,7 @@ class ScreenLogicSensor(ScreenlogicEntity):
         return self.coordinator.data["sensors"][self._data_key]
 
 
-class ScreenLogicPumpSensor(ScreenlogicEntity):
+class ScreenLogicPumpSensor(ScreenlogicEntity, SensorEntity):
     """Representation of a ScreenLogic pump sensor entity."""
 
     def __init__(self, coordinator, pump, key):
