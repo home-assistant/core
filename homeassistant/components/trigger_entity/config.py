@@ -26,7 +26,7 @@ TRIGGER_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-        vol.Optional(SENSOR_DOMAIN): vol.All(
+        vol.Required(SENSOR_DOMAIN): vol.All(
             cv.ensure_list,
             [
                 vol.Schema(
