@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class VeraSensor(SensorEntity, VeraDevice[veraApi.VeraSensor]):
+class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
     """Representation of a Vera Sensor."""
 
     def __init__(

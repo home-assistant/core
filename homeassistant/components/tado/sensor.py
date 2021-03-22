@@ -86,7 +86,7 @@ async def async_setup_entry(
         async_add_entities(entities, True)
 
 
-class TadoHomeSensor(SensorEntity, TadoHomeEntity):
+class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     """Representation of a Tado Sensor."""
 
     def __init__(self, tado, home_variable):
@@ -191,7 +191,7 @@ class TadoHomeSensor(SensorEntity, TadoHomeEntity):
             }
 
 
-class TadoZoneSensor(SensorEntity, TadoZoneEntity):
+class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     """Representation of a tado Sensor."""
 
     def __init__(self, tado, zone_name, zone_id, zone_variable):

@@ -72,7 +72,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TelldusLiveSensor(SensorEntity, TelldusLiveEntity):
+class TelldusLiveSensor(TelldusLiveEntity, SensorEntity):
     """Representation of a Telldus Live sensor."""
 
     @property

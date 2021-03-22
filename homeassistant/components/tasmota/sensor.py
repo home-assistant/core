@@ -145,7 +145,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class TasmotaSensor(SensorEntity, TasmotaAvailability, TasmotaDiscoveryUpdate):
+class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     """Representation of a Tasmota sensor."""
 
     def __init__(self, **kwds):

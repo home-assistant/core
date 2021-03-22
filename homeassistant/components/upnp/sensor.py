@@ -118,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class UpnpSensor(SensorEntity, CoordinatorEntity):
+class UpnpSensor(CoordinatorEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
     def __init__(

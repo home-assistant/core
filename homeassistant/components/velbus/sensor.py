@@ -19,7 +19,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class VelbusSensor(SensorEntity, VelbusEntity):
+class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
     def __init__(self, module, channel, counter=False):

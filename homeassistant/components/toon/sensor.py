@@ -110,7 +110,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class ToonSensor(SensorEntity, ToonEntity):
+class ToonSensor(ToonEntity, SensorEntity):
     """Defines a Toon sensor."""
 
     def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:

@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(TradfriSensor(sensor, api, gateway_id) for sensor in sensors)
 
 
-class TradfriSensor(SensorEntity, TradfriBaseDevice):
+class TradfriSensor(TradfriBaseDevice, SensorEntity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, device, api, gateway_id):

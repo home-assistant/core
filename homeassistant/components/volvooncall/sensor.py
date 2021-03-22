@@ -11,7 +11,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([VolvoSensor(hass.data[DATA_KEY], *discovery_info)])
 
 
-class VolvoSensor(SensorEntity, VolvoEntity):
+class VolvoSensor(VolvoEntity, SensorEntity):
     """Representation of a Volvo sensor."""
 
     @property

@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class TahomaSensor(SensorEntity, TahomaDevice):
+class TahomaSensor(TahomaDevice, SensorEntity):
     """Representation of a Tahoma Sensor."""
 
     def __init__(self, tahoma_device, controller):

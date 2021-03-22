@@ -100,7 +100,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class SensorTemplate(SensorEntity, TemplateEntity):
+class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     def __init__(

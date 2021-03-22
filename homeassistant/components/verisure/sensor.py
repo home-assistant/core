@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class VerisureThermometer(SensorEntity, CoordinatorEntity):
+class VerisureThermometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure thermometer."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -110,7 +110,7 @@ class VerisureThermometer(SensorEntity, CoordinatorEntity):
         return TEMP_CELSIUS
 
 
-class VerisureHygrometer(SensorEntity, CoordinatorEntity):
+class VerisureHygrometer(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure hygrometer."""
 
     coordinator: VerisureDataUpdateCoordinator
@@ -174,7 +174,7 @@ class VerisureHygrometer(SensorEntity, CoordinatorEntity):
         return PERCENTAGE
 
 
-class VerisureMouseDetection(SensorEntity, CoordinatorEntity):
+class VerisureMouseDetection(CoordinatorEntity, SensorEntity):
     """Representation of a Verisure mouse detector."""
 
     coordinator: VerisureDataUpdateCoordinator
