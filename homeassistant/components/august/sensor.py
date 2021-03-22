@@ -1,7 +1,7 @@
 """Support for August sensors."""
 import logging
 
-from august.activity import ActivityType
+from yalexs.activity import ActivityType
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
@@ -154,7 +154,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
     def _update_from_data(self):
         """Get the latest state of the sensor and update activity."""
         lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.LOCK_OPERATION]
+            self._device_id, {ActivityType.LOCK_OPERATION}
         )
 
         self._available = True

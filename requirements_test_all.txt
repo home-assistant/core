@@ -616,9 +616,6 @@ pure-python-adb[async]==0.3.0.dev0
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
-# homeassistant.components.august
-py-august==0.25.2
-
 # homeassistant.components.canary
 py-canary==0.5.1
 
@@ -1207,6 +1204,9 @@ xbox-webapi==2.0.8
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
 xmltodict==0.12.0
+
+# homeassistant.components.august
+yalexs==1.1.4
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
