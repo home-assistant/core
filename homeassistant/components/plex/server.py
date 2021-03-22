@@ -34,6 +34,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
@@ -322,6 +323,8 @@ class PlexServer:
     async def _async_update_platforms(self):
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
+
+        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
 
         available_clients = {}
         ignored_clients = set()
