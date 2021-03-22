@@ -3,6 +3,7 @@ from statistics import mean
 
 import numpy as np
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_STATE
 from homeassistant.core import callback
 
@@ -98,7 +99,7 @@ def calculate_trend(indices):
     return TREND_FLAT
 
 
-class ForecastSensor(IQVIAEntity):
+class ForecastSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to forecast data."""
 
     @callback
@@ -137,7 +138,7 @@ class ForecastSensor(IQVIAEntity):
         self._state = average
 
 
-class IndexSensor(IQVIAEntity):
+class IndexSensor(IQVIAEntity, SensorEntity):
     """Define sensor related to indices."""
 
     @callback

@@ -4,7 +4,7 @@ from typing import Callable
 from homeassistant.components import mysensors
 from homeassistant.components.mysensors import on_unload
 from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -87,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsSensor(mysensors.device.MySensorsEntity):
+class MySensorsSensor(mysensors.device.MySensorsEntity, SensorEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property

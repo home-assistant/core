@@ -5,7 +5,7 @@ from typing import Callable
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
-from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.sensor import DOMAIN as SENSOR, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.helpers.typing import HomeAssistantType
@@ -45,7 +45,7 @@ async def async_setup_entry(
     async_add_entities(devices)
 
 
-class ISYSensorEntity(ISYNodeEntity):
+class ISYSensorEntity(ISYNodeEntity, SensorEntity):
     """Representation of an ISY994 sensor device."""
 
     @property
@@ -105,7 +105,7 @@ class ISYSensorEntity(ISYNodeEntity):
         return raw_units
 
 
-class ISYSensorVariableEntity(ISYEntity):
+class ISYSensorVariableEntity(ISYEntity, SensorEntity):
     """Representation of an ISY994 variable as a sensor device."""
 
     def __init__(self, vname: str, vobj: object) -> None:
