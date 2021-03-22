@@ -1,6 +1,6 @@
 """deCONZ device automation tests."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
+from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
@@ -70,8 +71,6 @@ async def test_get_triggers(hass, aioclient_mock):
     device = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
-
-    assert device_trigger._get_deconz_event_from_device_id(hass, device.id)
 
     triggers = await async_get_device_automations(hass, "trigger", device.id)
 
@@ -162,8 +161,6 @@ async def test_get_triggers_manage_unsupported_remotes(hass, aioclient_mock):
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
 
-    assert device_trigger._get_deconz_event_from_device_id(hass, device.id)
-
     triggers = await async_get_device_automations(hass, "trigger", device.id)
 
     expected_triggers = []
@@ -208,23 +205,19 @@ async def test_functional_device_trigger(
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")}
     )
 
-    trigger_config = {
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DECONZ_DOMAIN,
-        CONF_DEVICE_ID: device.id,
-        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
-        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
-    }
-
-    assert await device_trigger.async_validate_trigger_config(hass, trigger_config)
-
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "trigger": trigger_config,
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DECONZ_DOMAIN,
+                        CONF_DEVICE_ID: device.id,
+                        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
+                        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+                    },
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "test_trigger_button_press"},
@@ -233,6 +226,8 @@ async def test_functional_device_trigger(
             ]
         },
     )
+
+    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
     event_changed_sensor = {
         "t": "event",
@@ -249,21 +244,10 @@ async def test_functional_device_trigger(
 
 
 async def test_validate_trigger_unknown_device(
-    hass, aioclient_mock, mock_deconz_websocket, automation_calls
+    hass, aioclient_mock, mock_deconz_websocket
 ):
     """Test unknown device does not return a trigger config."""
     await setup_deconz_integration(hass, aioclient_mock)
-
-    trigger_config = {
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DECONZ_DOMAIN,
-        CONF_DEVICE_ID: "unknown device",
-        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
-        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
-    }
-
-    with pytest.raises(InvalidDeviceAutomationConfig):
-        await device_trigger.async_validate_trigger_config(hass, trigger_config)
 
     assert await async_setup_component(
         hass,
@@ -271,7 +255,13 @@ async def test_validate_trigger_unknown_device(
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "trigger": trigger_config,
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DECONZ_DOMAIN,
+                        CONF_DEVICE_ID: "unknown device",
+                        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
+                        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+                    },
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "test_trigger_button_press"},
@@ -282,11 +272,11 @@ async def test_validate_trigger_unknown_device(
     )
     await hass.async_block_till_done()
 
-    assert len(automation_calls) == 0
+    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
 
 
 async def test_validate_trigger_unsupported_device(
-    hass, aioclient_mock, mock_deconz_websocket, automation_calls
+    hass, aioclient_mock, mock_deconz_websocket
 ):
     """Test unsupported device doesn't return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -298,24 +288,19 @@ async def test_validate_trigger_unsupported_device(
         model="unsupported",
     )
 
-    trigger_config = {
-        CONF_PLATFORM: "device",
-        CONF_DOMAIN: DECONZ_DOMAIN,
-        CONF_DEVICE_ID: device.id,
-        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
-        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
-    }
-
-    with pytest.raises(InvalidDeviceAutomationConfig):
-        await device_trigger.async_validate_trigger_config(hass, trigger_config)
-
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
         {
             AUTOMATION_DOMAIN: [
                 {
-                    "trigger": trigger_config,
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DECONZ_DOMAIN,
+                        CONF_DEVICE_ID: device.id,
+                        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
+                        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+                    },
                     "action": {
                         "service": "test.automation",
                         "data_template": {"some": "test_trigger_button_press"},
@@ -326,11 +311,11 @@ async def test_validate_trigger_unsupported_device(
     )
     await hass.async_block_till_done()
 
-    assert len(automation_calls) == 0
+    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
 
 
 async def test_validate_trigger_unsupported_trigger(
-    hass, aioclient_mock, mock_deconz_websocket, automation_calls
+    hass, aioclient_mock, mock_deconz_websocket
 ):
     """Test unsupported trigger does not return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -350,9 +335,6 @@ async def test_validate_trigger_unsupported_trigger(
         CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
     }
 
-    with pytest.raises(InvalidDeviceAutomationConfig):
-        await device_trigger.async_validate_trigger_config(hass, trigger_config)
-
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
@@ -370,11 +352,11 @@ async def test_validate_trigger_unsupported_trigger(
     )
     await hass.async_block_till_done()
 
-    assert len(automation_calls) == 0
+    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 0
 
 
 async def test_attach_trigger_no_matching_event(
-    hass, aioclient_mock, mock_deconz_websocket, automation_calls
+    hass, aioclient_mock, mock_deconz_websocket
 ):
     """Test no matching event for device doesn't return a trigger config."""
     config_entry = await setup_deconz_integration(hass, aioclient_mock)
@@ -383,6 +365,7 @@ async def test_attach_trigger_no_matching_event(
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DECONZ_DOMAIN, "d0:cf:5e:ff:fe:71:a4:3a")},
+        name="Tradfri switch",
         model="TRADFRI on/off switch",
     )
 
@@ -414,7 +397,18 @@ async def test_attach_trigger_no_matching_event(
     )
     await hass.async_block_till_done()
 
-    assert len(automation_calls) == 0
+    assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
+
+    # async_attach_trigger raise InvalidDeviceAutomationConfig
+
+    assert not await async_initialize_triggers(
+        hass,
+        [trigger_config],
+        action=Mock(),
+        domain=AUTOMATION_DOMAIN,
+        name="mock-name",
+        log_cb=Mock(),
+    )
 
 
 async def test_helper_no_match(hass, aioclient_mock):
