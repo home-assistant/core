@@ -252,7 +252,7 @@ class MqttFan(MqttEntity, FanEntity):
             )
             self._preset_modes = []
 
-        if not len(self._speeds_list) or self._feature_percentage:
+        if not self._speeds_list or self._feature_percentage:
             self._speed_count = 100
         else:
             self._speed_count = len(self._speeds_list)
