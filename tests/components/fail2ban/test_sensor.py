@@ -89,8 +89,8 @@ async def test_single_ban(hass):
         sensor.update()
 
     assert sensor.state == "111.111.111.111"
-    assert sensor.state_attributes[STATE_CURRENT_BANS] == ["111.111.111.111"]
-    assert sensor.state_attributes[STATE_ALL_BANS] == ["111.111.111.111"]
+    assert sensor.extra_state_attributes[STATE_CURRENT_BANS] == ["111.111.111.111"]
+    assert sensor.extra_state_attributes[STATE_ALL_BANS] == ["111.111.111.111"]
 
 
 async def test_ipv6_ban(hass):
@@ -103,8 +103,8 @@ async def test_ipv6_ban(hass):
         sensor.update()
 
     assert sensor.state == "2607:f0d0:1002:51::4"
-    assert sensor.state_attributes[STATE_CURRENT_BANS] == ["2607:f0d0:1002:51::4"]
-    assert sensor.state_attributes[STATE_ALL_BANS] == ["2607:f0d0:1002:51::4"]
+    assert sensor.extra_state_attributes[STATE_CURRENT_BANS] == ["2607:f0d0:1002:51::4"]
+    assert sensor.extra_state_attributes[STATE_ALL_BANS] == ["2607:f0d0:1002:51::4"]
 
 
 async def test_multiple_ban(hass):
@@ -117,11 +117,11 @@ async def test_multiple_ban(hass):
         sensor.update()
 
     assert sensor.state == "222.222.222.222"
-    assert sensor.state_attributes[STATE_CURRENT_BANS] == [
+    assert sensor.extra_state_attributes[STATE_CURRENT_BANS] == [
         "111.111.111.111",
         "222.222.222.222",
     ]
-    assert sensor.state_attributes[STATE_ALL_BANS] == [
+    assert sensor.extra_state_attributes[STATE_ALL_BANS] == [
         "111.111.111.111",
         "222.222.222.222",
     ]
@@ -137,8 +137,8 @@ async def test_unban_all(hass):
         sensor.update()
 
     assert sensor.state == "None"
-    assert sensor.state_attributes[STATE_CURRENT_BANS] == []
-    assert sensor.state_attributes[STATE_ALL_BANS] == [
+    assert sensor.extra_state_attributes[STATE_CURRENT_BANS] == []
+    assert sensor.extra_state_attributes[STATE_ALL_BANS] == [
         "111.111.111.111",
         "222.222.222.222",
     ]
@@ -154,8 +154,8 @@ async def test_unban_one(hass):
         sensor.update()
 
     assert sensor.state == "222.222.222.222"
-    assert sensor.state_attributes[STATE_CURRENT_BANS] == ["222.222.222.222"]
-    assert sensor.state_attributes[STATE_ALL_BANS] == [
+    assert sensor.extra_state_attributes[STATE_CURRENT_BANS] == ["222.222.222.222"]
+    assert sensor.extra_state_attributes[STATE_ALL_BANS] == [
         "111.111.111.111",
         "222.222.222.222",
     ]
@@ -174,11 +174,11 @@ async def test_multi_jail(hass):
         sensor2.update()
 
     assert sensor1.state == "111.111.111.111"
-    assert sensor1.state_attributes[STATE_CURRENT_BANS] == ["111.111.111.111"]
-    assert sensor1.state_attributes[STATE_ALL_BANS] == ["111.111.111.111"]
+    assert sensor1.extra_state_attributes[STATE_CURRENT_BANS] == ["111.111.111.111"]
+    assert sensor1.extra_state_attributes[STATE_ALL_BANS] == ["111.111.111.111"]
     assert sensor2.state == "222.222.222.222"
-    assert sensor2.state_attributes[STATE_CURRENT_BANS] == ["222.222.222.222"]
-    assert sensor2.state_attributes[STATE_ALL_BANS] == ["222.222.222.222"]
+    assert sensor2.extra_state_attributes[STATE_CURRENT_BANS] == ["222.222.222.222"]
+    assert sensor2.extra_state_attributes[STATE_ALL_BANS] == ["222.222.222.222"]
 
 
 async def test_ban_active_after_update(hass):
@@ -192,5 +192,5 @@ async def test_ban_active_after_update(hass):
         assert sensor.state == "111.111.111.111"
         sensor.update()
         assert sensor.state == "111.111.111.111"
-    assert sensor.state_attributes[STATE_CURRENT_BANS] == ["111.111.111.111"]
-    assert sensor.state_attributes[STATE_ALL_BANS] == ["111.111.111.111"]
+    assert sensor.extra_state_attributes[STATE_CURRENT_BANS] == ["111.111.111.111"]
+    assert sensor.extra_state_attributes[STATE_ALL_BANS] == ["111.111.111.111"]

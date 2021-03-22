@@ -8,6 +8,7 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "Logitech Squeezebox",
         "step": {
             "edit": {
                 "data": {
