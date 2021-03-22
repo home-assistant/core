@@ -2,6 +2,8 @@
 from enum import Enum
 import logging
 
+from homeassistant.components.sensor import SensorEntity
+
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
 
@@ -44,7 +46,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SmartTubSensor(SmartTubSensorBase):
+class SmartTubSensor(SmartTubSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
