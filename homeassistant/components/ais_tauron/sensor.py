@@ -19,7 +19,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     user = (entry.data[CONF_USERNAME],)
     password = (entry.data[CONF_PASSWORD],)
     meter_id = (entry.data[CONF_METER_ID],)
-    show_generation_sensors = (entry.data[CONF_SHOW_GENERATION],)
+    show_generation_sensors = True
+    if CONF_SHOW_GENERATION in entry.data:
+        show_generation_sensors = (entry.data[CONF_SHOW_GENERATION],)
     sensors = []
     for sensor_type in SENSOR_TYPES:
         generation = True if "generation" == SENSOR_TYPES[sensor_type][3][0] else False
