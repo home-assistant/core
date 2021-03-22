@@ -37,6 +37,7 @@ SERVICE_SELECT_NEXT = "select_next"
 SERVICE_SELECT_PREVIOUS = "select_previous"
 SERVICE_SELECT_FIRST = "select_first"
 SERVICE_SELECT_LAST = "select_last"
+SERVICE_SELECT_RANDOM = "select_random"
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -162,6 +163,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_SELECT_LAST,
         {},
         callback(lambda entity, call: entity.async_select_index(-1)),
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_RANDOM,
+        {},
+        "async_random",
     )
 
     component.async_register_entity_service(
@@ -306,6 +313,13 @@ class InputSelect(RestoreEntity):
     def async_previous(self, cycle):
         """Select previous option."""
         self.async_offset_index(-1, cycle)
+	
+	@callback
+    def async_random(self, cycle):
+        """Select previous option."""
+		size = len(self._options)
+		idx = random.randint(0, size)
+        self.async_select_index(idx)
 
     @callback
     def async_set_options(self, options):
