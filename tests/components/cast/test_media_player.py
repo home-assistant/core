@@ -1302,7 +1302,6 @@ async def test_entry_setup_list_config(hass: HomeAssistantType, pycast_mock):
     await hass.async_block_till_done()
 
     config_entry = hass.config_entries.async_entries("cast")[0]
-    assert config_entry.data["uuid"] == ["bla", "blu"]
-    assert config_entry.data["ignore_cec"] == ["cast1", "cast2", "cast3"]
-
-    assert pycast_mock.IGNORE_CEC == ["cast1", "cast2", "cast3"]
+    assert set(config_entry.data["uuid"]) == {"bla", "blu"}
+    assert set(config_entry.data["ignore_cec"]) == {"cast1", "cast2", "cast3"}
+    assert set(pycast_mock.IGNORE_CEC) == {"cast1", "cast2", "cast3"}
