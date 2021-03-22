@@ -61,7 +61,6 @@ from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
-from . import websocket_api
 from .config import AutomationConfig, async_validate_config_item
 
 # Not used except by packages to check config structure
@@ -76,7 +75,7 @@ from .const import (
     LOGGER,
 )
 from .helpers import async_get_blueprints
-from .trace import DATA_AUTOMATION_TRACE, trace_automation
+from .trace import trace_automation
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -176,9 +175,6 @@ async def async_setup(hass, config):
     """Set up all automations."""
     # Local import to avoid circular import
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
-    hass.data.setdefault(DATA_AUTOMATION_TRACE, {})
-
-    websocket_api.async_setup(hass)
 
     # To register the automation blueprints
     async_get_blueprints(hass)

@@ -1,4 +1,4 @@
-"""Test Automation config panel."""
+"""Test Trace websocket API."""
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component

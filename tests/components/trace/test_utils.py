@@ -1,14 +1,14 @@
-"""Test Automation trace helpers."""
+"""Test trace helpers."""
 from datetime import timedelta
 
 from homeassistant import core
-from homeassistant.components import automation
+from homeassistant.components import trace
 from homeassistant.util import dt as dt_util
 
 
 def test_json_encoder(hass):
     """Test the Trace JSON Encoder."""
-    ha_json_enc = automation.trace.TraceJSONEncoder()
+    ha_json_enc = trace.utils.TraceJSONEncoder()
     state = core.State("test.test", "hello")
 
     # Test serializing a datetime

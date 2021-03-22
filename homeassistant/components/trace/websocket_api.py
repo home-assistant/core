@@ -24,12 +24,12 @@ from homeassistant.helpers.script import (
 )
 
 from .trace import (
-    DATA_AUTOMATION_TRACE,
-    TraceJSONEncoder,
+    DATA_TRACE,
     get_debug_trace,
     get_debug_traces,
     get_debug_traces_for_automation,
 )
+from .utils import TraceJSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -101,11 +101,9 @@ def websocket_automation_trace_contexts(hass, connection, msg):
     automation_id = msg.get("automation_id")
 
     if automation_id is not None:
-        values = {
-            automation_id: hass.data[DATA_AUTOMATION_TRACE].get(automation_id, {})
-        }
+        values = {automation_id: hass.data[DATA_TRACE].get(automation_id, {})}
     else:
-        values = hass.data[DATA_AUTOMATION_TRACE]
+        values = hass.data[DATA_TRACE]
 
     contexts = {
         trace.context.id: {"run_id": trace.run_id, "automation_id": automation_id}
