@@ -28,6 +28,7 @@ import homeassistant.util.color as color_util
 
 from . import get_hyperion_unique_id, listen_for_instance_updates
 from .const import (
+    CONF_EFFECT_HIDE_LIST,
     CONF_INSTANCE_CLIENTS,
     CONF_PRIORITY,
     DEFAULT_ORIGIN,
@@ -217,7 +218,10 @@ class HyperionBaseLight(LightEntity):
 
     def _get_option(self, key: str) -> Any:
         """Get a value from the provided options."""
-        defaults = {CONF_PRIORITY: DEFAULT_PRIORITY}
+        defaults = {
+            CONF_PRIORITY: DEFAULT_PRIORITY,
+            CONF_EFFECT_HIDE_LIST: [],
+        }
         return self._options.get(key, defaults[key])
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -366,12 +370,18 @@ class HyperionBaseLight(LightEntity):
         if not self._client.effects:
             return
         effect_list: list[str] = []
+        hide_effects = self._get_option(CONF_EFFECT_HIDE_LIST)
+
         for effect in self._client.effects or []:
             if const.KEY_NAME in effect:
-                effect_list.append(effect[const.KEY_NAME])
-        if effect_list:
-            self._effect_list = self._static_effect_list + effect_list
-            self.async_write_ha_state()
+                effect_name = effect[const.KEY_NAME]
+                if effect_name not in hide_effects:
+                    effect_list.append(effect_name)
+
+        self._effect_list = [
+            effect for effect in self._static_effect_list if effect not in hide_effects
+        ] + effect_list
+        self.async_write_ha_state()
 
     @callback
     def _update_full_state(self) -> None:

@@ -6,7 +6,11 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from hyperion import const
 
 from homeassistant.components.hyperion import light as hyperion_light
-from homeassistant.components.hyperion.const import DEFAULT_ORIGIN, DOMAIN
+from homeassistant.components.hyperion.const import (
+    CONF_EFFECT_HIDE_LIST,
+    DEFAULT_ORIGIN,
+    DOMAIN,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
@@ -1129,3 +1133,21 @@ async def test_priority_light_has_no_external_sources(hass: HomeAssistantType) -
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["effect_list"] == [hyperion_light.KEY_EFFECT_SOLID]
+
+
+async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
+    """Test the effect_hide_list option."""
+    client = create_mock_client()
+    client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
+
+    await setup_test_config_entry(
+        hass, hyperion_client=client, options={CONF_EFFECT_HIDE_LIST: ["Two", "V4L"]}
+    )
+
+    entity_state = hass.states.get(TEST_ENTITY_ID_1)
+    assert entity_state.attributes["effect_list"] == [
+        "Solid",
+        "BOBLIGHTSERVER",
+        "GRABBER",
+        "One",
+    ]
