@@ -117,7 +117,6 @@ class VenstarThermostat(ClimateEntity):
             self._name = self._client.name
         _LOGGER.debug("Venstar Thermostat initialized  for '%s'", self._name)
 
-
     def update(self):
         """Update the data from the thermostat."""
         info_success = self._client.update_info()
