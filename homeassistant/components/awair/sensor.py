@@ -7,7 +7,7 @@ from python_awair.devices import AwairDevice
 import voluptuous as vol
 
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_ACCESS_TOKEN
 from homeassistant.helpers import device_registry as dr
@@ -84,7 +84,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class AwairSensor(CoordinatorEntity):
+class AwairSensor(SensorEntity, CoordinatorEntity):
     """Defines an Awair sensor entity."""
 
     def __init__(

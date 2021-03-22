@@ -3,10 +3,9 @@ import logging
 
 from yalexs.activity import ActivityType
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
+from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
 from homeassistant.const import ATTR_ENTITY_PICTURE, PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -118,7 +117,7 @@ async def _async_migrate_old_unique_ids(hass, devices):
             registry.async_update_entity(old_entity_id, new_unique_id=device.unique_id)
 
 
-class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
+class AugustOperatorSensor(SensorEntity, AugustEntityMixin, RestoreEntity):
     """Representation of an August lock operation sensor."""
 
     def __init__(self, data, device):
@@ -217,7 +216,7 @@ class AugustOperatorSensor(AugustEntityMixin, RestoreEntity, Entity):
         return f"{self._device_id}_lock_operator"
 
 
-class AugustBatterySensor(AugustEntityMixin, Entity):
+class AugustBatterySensor(SensorEntity, AugustEntityMixin):
     """Representation of an August sensor."""
 
     def __init__(self, data, sensor_type, device, old_device):
