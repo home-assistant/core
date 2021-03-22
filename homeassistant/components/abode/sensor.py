@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AbodeSensor(SensorEntity, AbodeDevice):
+class AbodeSensor(AbodeDevice, SensorEntity):
     """A sensor implementation for Abode devices."""
 
     def __init__(self, data, device, sensor_type):

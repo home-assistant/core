@@ -30,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([AtagSensor(coordinator, sensor) for sensor in SENSORS])
 
 
-class AtagSensor(SensorEntity, AtagEntity):
+class AtagSensor(AtagEntity, SensorEntity):
     """Representation of a AtagOne Sensor."""
 
     def __init__(self, coordinator, sensor):

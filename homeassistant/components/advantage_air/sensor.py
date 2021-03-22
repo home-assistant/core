@@ -41,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AdvantageAirTimeTo(SensorEntity, AdvantageAirEntity):
+class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
 
     def __init__(self, instance, ac_key, action):
@@ -83,7 +83,7 @@ class AdvantageAirTimeTo(SensorEntity, AdvantageAirEntity):
         await self.async_change({self.ac_key: {"info": {self._time_key: value}}})
 
 
-class AdvantageAirZoneVent(SensorEntity, AdvantageAirEntity):
+class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
     @property
@@ -116,7 +116,7 @@ class AdvantageAirZoneVent(SensorEntity, AdvantageAirEntity):
         return "mdi:fan-off"
 
 
-class AdvantageAirZoneSignal(SensorEntity, AdvantageAirEntity):
+class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     @property

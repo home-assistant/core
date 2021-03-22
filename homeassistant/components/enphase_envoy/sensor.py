@@ -156,7 +156,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class Envoy(SensorEntity, CoordinatorEntity):
+class Envoy(CoordinatorEntity, SensorEntity):
     """Envoy entity."""
 
     def __init__(self, sensor_type, name, serial_number, unit, coordinator):

@@ -98,7 +98,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class AsusWrtSensor(SensorEntity, CoordinatorEntity):
+class AsusWrtSensor(CoordinatorEntity, SensorEntity):
     """Representation of a AsusWrt sensor."""
 
     def __init__(

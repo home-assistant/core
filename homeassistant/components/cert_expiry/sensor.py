@@ -76,7 +76,7 @@ class CertExpiryEntity(CoordinatorEntity):
         }
 
 
-class SSLCertificateTimestamp(SensorEntity, CertExpiryEntity):
+class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
     @property

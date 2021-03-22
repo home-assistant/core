@@ -42,7 +42,7 @@ async def async_setup_entry(
 # pylint: disable=invalid-overridden-method
 
 
-class EsphomeSensor(SensorEntity, EsphomeEntity):
+class EsphomeSensor(EsphomeEntity, SensorEntity):
     """A sensor implementation for esphome."""
 
     @property
@@ -89,7 +89,7 @@ class EsphomeSensor(SensorEntity, EsphomeEntity):
         return self._static_info.device_class
 
 
-class EsphomeTextSensor(SensorEntity, EsphomeEntity):
+class EsphomeTextSensor(EsphomeEntity, SensorEntity):
     """A text sensor implementation for ESPHome."""
 
     @property
