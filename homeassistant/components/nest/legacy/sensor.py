@@ -1,6 +1,7 @@
 """Support for Nest Thermostat sensors for the legacy API."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
@@ -149,7 +150,7 @@ async def async_setup_legacy_entry(hass, entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_sensors), True)
 
 
-class NestBasicSensor(NestSensorDevice):
+class NestBasicSensor(NestSensorDevice, SensorEntity):
     """Representation a basic Nest sensor."""
 
     @property
@@ -179,7 +180,7 @@ class NestBasicSensor(NestSensorDevice):
             self._state = getattr(self.device, self.variable)
 
 
-class NestTempSensor(NestSensorDevice):
+class NestTempSensor(NestSensorDevice, SensorEntity):
     """Representation of a Nest Temperature sensor."""
 
     @property

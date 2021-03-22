@@ -7,10 +7,9 @@ import logging
 from nsw_fuel import FuelCheckClient, FuelCheckError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CURRENCY_CENT, VOLUME_LITERS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -146,7 +145,7 @@ class StationPriceData:
         return self._station_name
 
 
-class StationPriceSensor(Entity):
+class StationPriceSensor(SensorEntity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
     def __init__(self, station_data: StationPriceData, fuel_type: str):

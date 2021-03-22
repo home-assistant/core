@@ -4,7 +4,7 @@ from __future__ import annotations
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import PlaatoKeg
 
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
 
-class PlaatoSensor(PlaatoEntity):
+class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
     @property

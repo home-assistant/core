@@ -1,5 +1,6 @@
 """Support for getting statistical data from a Pi-hole system."""
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME
 
 from . import PiHoleEntity
@@ -30,7 +31,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class PiHoleSensor(PiHoleEntity):
+class PiHoleSensor(PiHoleEntity, SensorEntity):
     """Representation of a Pi-hole sensor."""
 
     def __init__(self, api, coordinator, name, sensor_name, server_unique_id):

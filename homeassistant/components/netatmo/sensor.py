@@ -1,6 +1,7 @@
 """Support for the Netatmo Weather Service."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -260,7 +261,7 @@ async def async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) ->
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
-class NetatmoSensor(NetatmoBase):
+class NetatmoSensor(NetatmoBase, SensorEntity):
     """Implementation of a Netatmo sensor."""
 
     def __init__(self, data_handler, data_class_name, module_info, sensor_type):
@@ -489,7 +490,7 @@ def process_wifi(strength):
     return "Full"
 
 
-class NetatmoPublicSensor(NetatmoBase):
+class NetatmoPublicSensor(NetatmoBase, SensorEntity):
     """Represent a single sensor in a Netatmo."""
 
     def __init__(self, data_handler, area, sensor_type):

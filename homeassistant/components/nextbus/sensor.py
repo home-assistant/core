@@ -5,10 +5,9 @@ import logging
 from py_nextbus import NextBusClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([NextBusDepartureSensor(client, agency, route, stop, name)], True)
 
 
-class NextBusDepartureSensor(Entity):
+class NextBusDepartureSensor(SensorEntity):
     """Sensor class that displays upcoming NextBus times.
 
     To function, this requires knowing the agency tag as well as the tags for

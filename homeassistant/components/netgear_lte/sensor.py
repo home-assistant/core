@@ -1,5 +1,5 @@
 """Support for Netgear LTE sensors."""
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.exceptions import PlatformNotReady
 
 from . import CONF_MONITORED_CONDITIONS, DATA_KEY, LTEEntity
@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info)
     async_add_entities(sensors)
 
 
-class LTESensor(LTEEntity):
+class LTESensor(LTEEntity, SensorEntity):
     """Base LTE sensor entity."""
 
     @property
