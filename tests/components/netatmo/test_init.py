@@ -117,13 +117,11 @@ async def test_setup_component_with_webhook(hass, entry):
     """Test setup and teardown of the netatmo component with webhook registration."""
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
-    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) > 0
 
     webhook_id = entry.data[CONF_WEBHOOK_ID]
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
-    await hass.async_block_till_done()
 
     # Assert webhook is established successfully
     climate_entity_livingroom = "climate.netatmo_livingroom"
@@ -162,7 +160,6 @@ async def test_setup_without_https(hass, config_entry):
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
-    await hass.async_block_till_done()
 
     # Assert webhook is established successfully
     climate_entity_livingroom = "climate.netatmo_livingroom"
@@ -225,5 +222,3 @@ async def test_api(hass, config_entry):
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
     ), patch("homeassistant.components.webhook.async_generate_url"):
         assert await async_setup_component(hass, "netatmo", {})
-
-    assert config_entry.state == config_entries.ENTRY_STATE_LOADED
