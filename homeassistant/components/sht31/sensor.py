@@ -7,7 +7,7 @@ import math
 from Adafruit_SHT31 import SHT31
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.util import Throttle
 
@@ -93,7 +92,7 @@ class SHTClient:
         self.humidity = humidity
 
 
-class SHTSensor(Entity):
+class SHTSensor(SensorEntity):
     """An abstract SHTSensor, can be either temperature or humidity."""
 
     def __init__(self, sensor, name):

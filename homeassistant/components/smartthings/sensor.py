@@ -6,6 +6,7 @@ from typing import Sequence
 
 from pysmartthings import Attribute, Capability
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -306,7 +307,7 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     ]
 
 
-class SmartThingsSensor(SmartThingsEntity):
+class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Sensor."""
 
     def __init__(
@@ -346,7 +347,7 @@ class SmartThingsSensor(SmartThingsEntity):
         return UNITS.get(unit, unit) if unit else self._default_unit
 
 
-class SmartThingsThreeAxisSensor(SmartThingsEntity):
+class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Three Axis Sensor."""
 
     def __init__(self, device, index):

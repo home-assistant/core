@@ -5,7 +5,7 @@ import logging
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,7 +159,7 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
     return remove_listener
 
 
-class SAJsensor(Entity):
+class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
     def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):

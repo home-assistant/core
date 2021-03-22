@@ -5,10 +5,9 @@ from random import Random
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 CONF_AMP = "amplitude"
@@ -67,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([sensor], True)
 
 
-class SimulatedSensor(Entity):
+class SimulatedSensor(SensorEntity):
     """Class for simulated sensor."""
 
     def __init__(

@@ -7,7 +7,7 @@ import sys
 import psutil
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
     CONF_TYPE,
@@ -20,7 +20,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -182,7 +181,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class SystemMonitorSensor(Entity):
+class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
     def __init__(self, sensor_type, argument=""):

@@ -1,7 +1,7 @@
 """Support for Subaru sensors."""
 import subarulink.const as sc
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
@@ -170,7 +170,7 @@ def create_vehicle_sensors(vehicle_info, coordinator):
     ]
 
 
-class SubaruSensor(SubaruEntity):
+class SubaruSensor(SubaruEntity, SensorEntity):
     """Class for Subaru sensors."""
 
     def __init__(

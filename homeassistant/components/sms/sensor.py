@@ -3,8 +3,8 @@ import logging
 
 import gammu  # pylint: disable=import-error
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SMS_GATEWAY
 
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class GSMSignalSensor(Entity):
+class GSMSignalSensor(SensorEntity):
     """Implementation of a GSM Signal sensor."""
 
     def __init__(

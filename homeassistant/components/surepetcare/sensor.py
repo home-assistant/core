@@ -6,6 +6,7 @@ from typing import Any
 
 from surepy import SureLockStateID, SurepyProduct
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_ID,
@@ -15,7 +16,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from . import SurePetcareAPI
 from .const import (
@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities, True)
 
 
-class SurePetcareSensor(Entity):
+class SurePetcareSensor(SensorEntity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(self, _id: int, sure_type: SurepyProduct, spc: SurePetcareAPI):

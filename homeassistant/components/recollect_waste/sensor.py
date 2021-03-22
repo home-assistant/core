@@ -6,7 +6,7 @@ from typing import Callable
 from aiorecollect.client import PickupType
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
-class ReCollectWasteSensor(CoordinatorEntity):
+class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
