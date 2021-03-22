@@ -161,7 +161,7 @@ class SensorManager:
             self._component_add_entities[platform](to_add[platform])
 
 
-class GenericHueSensor(SensorEntity, GenericHueDevice):
+class GenericHueSensor(GenericHueDevice, SensorEntity):
     """Representation of a Hue sensor."""
 
     should_poll = False
