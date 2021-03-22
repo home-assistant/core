@@ -1,8 +1,8 @@
 """Config flow for August integration."""
 import logging
 
-from august.authenticator import ValidationResult
 import voluptuous as vol
+from yalexs.authenticator import ValidationResult
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
