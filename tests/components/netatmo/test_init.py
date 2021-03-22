@@ -72,9 +72,9 @@ async def test_setup_component(hass):
 
     await hass.async_block_till_done()
 
-    assert mock_auth.call_count == 1
-    assert mock_impl.call_count == 1
-    assert mock_webhook.call_count == 1
+    mock_auth.assert_called_once()
+    mock_impl.assert_called_once()
+    mock_webhook.assert_called_once()
 
     assert config_entry.state == config_entries.ENTRY_STATE_LOADED
     assert hass.config_entries.async_entries(DOMAIN)
@@ -85,7 +85,7 @@ async def test_setup_component(hass):
 
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
+    assert not hass.config_entries.async_entries(DOMAIN)
 
 
 async def test_setup_component_with_config(hass, config_entry):
