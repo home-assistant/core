@@ -43,7 +43,7 @@ class TriggerSensorEntity(update_coordinator.CoordinatorEntity):
 
             if object_id:
                 _LOGGER.warning(
-                    "Ignoring unique ID %s because the config has no unique ID configured.",
+                    "Ignoring unique ID %s because the config has no unique ID configured",
                     object_id,
                 )
 
