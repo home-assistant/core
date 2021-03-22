@@ -1,7 +1,6 @@
 """The motionEye integration."""
 from __future__ import annotations
 
-import functools
 import logging
 from typing import Any, Callable
 
@@ -9,13 +8,13 @@ import aiohttp
 from motioneye_client.client import MotionEyeClient
 from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
-    KEY_CAMERAS,
     KEY_ID,
     KEY_MOTION_DETECTION,
     KEY_NAME,
     KEY_STREAMING_AUTH_MODE,
 )
 
+from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
@@ -34,10 +33,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -47,16 +43,17 @@ from . import (
     get_camera_from_cameras,
     get_motioneye_device_unique_id,
     get_motioneye_entity_unique_id,
+    is_acceptable_camera,
+    listen_for_camera_updates,
+    remove_motioneye_entity,
 )
 from .const import (
     CONF_CLIENT,
     CONF_COORDINATOR,
-    CONF_ON_UNLOAD,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     DOMAIN,
     MOTIONEYE_MANUFACTURER,
-    SIGNAL_ENTITY_REMOVE,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 
@@ -65,12 +62,10 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["camera"]
 
 
-def _is_acceptable_camera(camera: dict[str, Any]) -> bool:
-    """Determine if a camera dict is acceptable."""
+def _is_acceptable_streaming_camera(camera: dict[str, Any]) -> None:
+    """Determine if a camera is streaming/usable."""
     return (
-        camera
-        and KEY_ID in camera
-        and KEY_NAME in camera
+        is_acceptable_camera(camera)
         and KEY_STREAMING_AUTH_MODE in camera
         and MotionEyeClient.is_camera_streaming(camera)
     )
@@ -81,66 +76,44 @@ async def async_setup_entry(
 ) -> bool:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
-    coordinator = entry_data[CONF_COORDINATOR]
-    current_camera_ids = set()
+    registry = await async_get_registry(hass)
 
-    def _remove_cameras(remove_ids: set[int]):
-        for camera_id in remove_ids:
-            current_camera_ids.remove(camera_id)
-            async_dispatcher_send(
-                hass,
-                SIGNAL_ENTITY_REMOVE.format(
-                    get_motioneye_entity_unique_id(
-                        entry.data[CONF_HOST],
-                        entry.data[CONF_PORT],
-                        camera_id,
-                        TYPE_MOTIONEYE_MJPEG_CAMERA,
-                    ),
-                ),
-            )
-
-    def _process_camera_entities():
-        if KEY_CAMERAS not in coordinator.data:
-            return True
-        cameras = coordinator.data[KEY_CAMERAS]
-        refreshed_camera_ids = set()
-        entities_to_add = []
-
-        for camera in cameras:
-            if not _is_acceptable_camera(camera):
-                return
-            camera_id = camera[KEY_ID]
-
-            refreshed_camera_ids.add(camera_id)
-            if camera_id in current_camera_ids:
-                continue
-            current_camera_ids.add(camera_id)
-
-            surveillance_username = entry.data.get(
-                CONF_SURVEILLANCE_USERNAME, DEFAULT_SURVEILLANCE_USERNAME
-            )
-            surveillance_password = entry.data.get(CONF_SURVEILLANCE_PASSWORD, "")
-
-            entities_to_add.append(
+    @callback
+    def camera_add(camera: dict[str, Any]) -> None:
+        """Add a new motionEye camera."""
+        if not _is_acceptable_streaming_camera(camera):
+            return
+        async_add_entities(
+            [
                 MotionEyeMjpegCamera(
                     entry.data[CONF_HOST],
                     entry.data[CONF_PORT],
-                    surveillance_username,
-                    surveillance_password,
+                    entry.data.get(
+                        CONF_SURVEILLANCE_USERNAME, DEFAULT_SURVEILLANCE_USERNAME
+                    ),
+                    entry.data.get(CONF_SURVEILLANCE_PASSWORD, ""),
                     camera,
                     entry_data[CONF_CLIENT],
-                    coordinator,
+                    entry_data[CONF_COORDINATOR],
                 )
-            )
+            ]
+        )
 
-        async_add_entities(entities_to_add)
-        _remove_cameras(current_camera_ids - refreshed_camera_ids)
+    @callback
+    def camera_remove(camera_id: int) -> None:
+        """Remove a motionEye camera."""
+        remove_motioneye_entity(
+            registry,
+            CAMERA_DOMAIN,
+            get_motioneye_entity_unique_id(
+                entry.data[CONF_HOST],
+                entry.data[CONF_PORT],
+                camera_id,
+                TYPE_MOTIONEYE_MJPEG_CAMERA,
+            ),
+        )
 
-    _process_camera_entities()
-    entry_data[CONF_ON_UNLOAD].append(
-        coordinator.async_add_listener(_process_camera_entities)
-    )
-    return True
+    listen_for_camera_updates(hass, entry, camera_add, camera_remove)
 
 
 class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
@@ -219,24 +192,12 @@ class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
         """Return a unique id for this instance."""
         return self._unique_id
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks when entity added to hass."""
-        await super().async_added_to_hass()
-        assert self.hass
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_ENTITY_REMOVE.format(self.unique_id),
-                functools.partial(self.async_remove, force_remove=True),
-            )
-        )
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.coordinator.last_update_success:
             camera = get_camera_from_cameras(self._camera_id, self.coordinator.data)
-            if _is_acceptable_camera(camera):
+            if _is_acceptable_streaming_camera(camera):
                 self._set_mjpeg_camera_state_for_camera(camera)
                 self._motion_detection_enabled = camera.get(KEY_MOTION_DETECTION, False)
         CoordinatorEntity._handle_coordinator_update(self)

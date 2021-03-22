@@ -13,6 +13,7 @@ DOMAIN = "motioneye"
 
 MOTIONEYE_MANUFACTURER = "motionEye"
 
-SIGNAL_ENTITY_REMOVE = f"{DOMAIN}_entity_remove_signal." "{}"
+SIGNAL_CAMERA_ADD = f"{DOMAIN}_camera_add_signal." "{}"
+SIGNAL_CAMERA_REMOVE = f"{DOMAIN}_camera_remove_signal." "{}"
 
 TYPE_MOTIONEYE_MJPEG_CAMERA = "motioneye_mjpeg_camera"
