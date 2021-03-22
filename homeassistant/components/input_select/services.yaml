@@ -46,6 +46,11 @@ select_last:
   name: Last
   description: Select the last option of an input select entity.
   target:
+  
+select_random:
+  name: Random
+  description: Select a random option of an input select entity.
+  target:
 
 set_options:
   name: Set options
