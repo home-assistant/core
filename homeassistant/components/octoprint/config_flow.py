@@ -105,7 +105,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_progress_done(next_step_id="auth_failed")
 
         # store this off here to pick back up in the user step
-        self._user_input = user_input
+        if user_input:
+            self._user_input = user_input
         return self.async_show_progress_done(next_step_id="user")
 
     async def _finish_config(self, user_input):

@@ -53,15 +53,6 @@ async def test_form(hass):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "username": "testuser",
-                "host": "1.1.1.1",
-                "name": "Printer",
-                "port": 81,
-                "ssl": True,
-                "path": "/",
-                "api_key": "test-key",
-            },
         )
         await hass.async_block_till_done()
 
@@ -391,6 +382,37 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
     assert result["type"] == "progress"
 
     with patch("pyoctoprintapi.OctoprintClient.request_app_key", side_effect=ApiError):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+
+    assert result["type"] == "progress_done"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "auth_failed"
+
+
+async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
+    """Test we handle a random error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "username": "testuser",
+            "host": "1.1.1.1",
+            "name": "Printer",
+            "port": 81,
+            "ssl": True,
+            "path": "/",
+        },
+    )
+    assert result["type"] == "progress"
+
+    with patch("pyoctoprintapi.OctoprintClient.request_app_key", side_effect=Exception):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
