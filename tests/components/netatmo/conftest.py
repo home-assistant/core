@@ -83,9 +83,8 @@ async def mock_sensor_entry_fixture(hass, config_entry):
     """Mock setup of sensor platform."""
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         await hass.config_entries.async_setup(config_entry.entry_id)
-
         await hass.async_block_till_done()
-        return config_entry
+        yield config_entry
 
 
 @pytest.fixture(name="camera_entry")
@@ -131,5 +130,5 @@ async def mock_entry_error_fixture(hass, config_entry):
         mock_auth.return_value.post_request.side_effect = fake_post_request_no_data
         await hass.config_entries.async_setup(config_entry.entry_id)
 
-    await hass.async_block_till_done()
-    return config_entry
+        await hass.async_block_till_done()
+        yield config_entry

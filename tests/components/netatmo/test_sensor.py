@@ -1,14 +1,19 @@
 """The tests for the Netatmo sensor platform."""
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.netatmo import sensor
 from homeassistant.components.netatmo.sensor import MODULE_TYPE_WIND
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt
 
 from .common import TEST_TIME
 from .conftest import selected_platforms
+
+from tests.common import async_fire_time_changed
 
 
 async def test_weather_sensor(hass, sensor_entry):
@@ -23,8 +28,6 @@ async def test_weather_sensor(hass, sensor_entry):
 
 async def test_public_weather_sensor(hass, sensor_entry):
     """Test public weather sensor setup."""
-    await hass.async_block_till_done()
-
     prefix = "sensor.netatmo_home_max_"
 
     assert hass.states.get(f"{prefix}temperature").state == "27.4"
@@ -39,6 +42,7 @@ async def test_public_weather_sensor(hass, sensor_entry):
 
     assert len(hass.states.async_all()) > 0
     entities_before_change = len(hass.states.async_all())
+    print(sensor_entry.options)
 
     valid_option = {
         "lat_ne": 32.91336,
@@ -47,7 +51,7 @@ async def test_public_weather_sensor(hass, sensor_entry):
         "lon_sw": -117.26743,
         "show_on_map": True,
         "area_name": "Home avg",
-        "mode": "avg",
+        "mode": "max",
     }
 
     result = await hass.config_entries.options.async_init(sensor_entry.entry_id)
@@ -60,10 +64,16 @@ async def test_public_weather_sensor(hass, sensor_entry):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={}
     )
+    await hass.async_block_till_done()
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
 
-    assert hass.states.get(f"{prefix}temperature").state == "22.7"
-    assert hass.states.get(f"{prefix}humidity").state == "63.2"
-    assert hass.states.get(f"{prefix}pressure").state == "1010.3"
+    assert hass.states.get(f"{prefix}temperature").state == "27.4"
+    assert hass.states.get(f"{prefix}humidity").state == "76"
+    assert hass.states.get(f"{prefix}pressure").state == "1014.4"
 
     assert len(hass.states.async_all()) == entities_before_change
 
@@ -222,6 +232,5 @@ async def test_weather_sensor_enabling(hass, config_entry, uid, name, expected):
 
         await hass.async_block_till_done()
 
-        assert hass.states.get(f"sensor.{name}").state == expected
         assert len(hass.states.async_all()) > states_before
         assert hass.states.get(f"sensor.{name}").state == expected
