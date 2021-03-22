@@ -93,12 +93,12 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for dev in devs_2b_removed:
             self._devices.pop(dev)
         _LOGGER.debug("There are %d Zones can be included in Hass", len(self._devices))
-        Zones = list(self._devices.keys())
-        if len(Zones) == 1:
-            self._host = self._devices[Zones[0]]
-            self._host_uid = Zones[0]
+        zones = list(self._devices.keys())
+        if len(zones) == 1:
+            self._host = self._devices[zones[0]]
+            self._host_uid = zones[0]
             return await self.async_step_connect()
-        if len(Zones) > 1:
+        if len(zones) > 1:
             return await self.async_step_select()
 
         return self.async_abort(reason="no_new_devs")
