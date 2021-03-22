@@ -2,6 +2,6 @@
   "domain": "aqualogic",
   "name": "AquaLogic",
   "documentation": "https://www.home-assistant.io/integrations/aqualogic",
-  "requirements": ["aqualogic==1.0"],
+  "requirements": ["aqualogic==2.6"],
   "codeowners": []
 }
