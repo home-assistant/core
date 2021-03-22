@@ -207,7 +207,7 @@ async def test_setup_with_cloud(hass, config_entry):
         )
 
         await hass.async_block_till_done()
-        assert len(hass.config_entries.async_entries(DOMAIN)) > 0
+        assert hass.config_entries.async_entries(DOMAIN)
 
         for config_entry in hass.config_entries.async_entries("netatmo"):
             await hass.config_entries.async_remove(config_entry.entry_id)
