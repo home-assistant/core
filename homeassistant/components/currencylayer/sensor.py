@@ -5,7 +5,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_QUOTE,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://apilayer.net/api/live"
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class CurrencylayerSensor(Entity):
+class CurrencylayerSensor(SensorEntity):
     """Implementing the Currencylayer sensor."""
 
     def __init__(self, rest, base, quote):

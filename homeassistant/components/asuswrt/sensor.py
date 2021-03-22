@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from numbers import Number
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_GIGABYTES, DATA_RATE_MEGABITS_PER_SECOND
 from homeassistant.helpers.typing import HomeAssistantType
@@ -97,7 +98,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class AsusWrtSensor(CoordinatorEntity):
+class AsusWrtSensor(SensorEntity, CoordinatorEntity):
     """Representation of a AsusWrt sensor."""
 
     def __init__(

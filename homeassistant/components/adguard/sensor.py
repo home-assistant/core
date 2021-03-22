@@ -6,6 +6,7 @@ from typing import Callable
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TIME_MILLISECONDS
 from homeassistant.core import HomeAssistant
@@ -48,7 +49,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class AdGuardHomeSensor(AdGuardHomeDeviceEntity):
+class AdGuardHomeSensor(SensorEntity, AdGuardHomeDeviceEntity):
     """Defines a AdGuard Home sensor."""
 
     def __init__(

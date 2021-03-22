@@ -5,11 +5,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class CupsSensor(Entity):
+class CupsSensor(SensorEntity):
     """Representation of a CUPS sensor."""
 
     def __init__(self, data, printer):
@@ -155,7 +154,7 @@ class CupsSensor(Entity):
         self._available = self.data.available
 
 
-class IPPSensor(Entity):
+class IPPSensor(SensorEntity):
     """Implementation of the IPPSensor.
 
     This sensor represents the status of the printer.
@@ -232,7 +231,7 @@ class IPPSensor(Entity):
         self._available = self.data.available
 
 
-class MarkerSensor(Entity):
+class MarkerSensor(SensorEntity):
     """Implementation of the MarkerSensor.
 
     This sensor represents the percentage of ink or toner.

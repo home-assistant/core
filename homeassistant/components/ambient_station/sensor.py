@@ -1,5 +1,6 @@
 """Support for Ambient Weather Station sensors."""
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 
@@ -36,7 +37,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensor_list, True)
 
 
-class AmbientWeatherSensor(AmbientWeatherEntity):
+class AmbientWeatherSensor(SensorEntity, AmbientWeatherEntity):
     """Define an Ambient sensor."""
 
     def __init__(

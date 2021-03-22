@@ -1,4 +1,5 @@
 """Support for the Brother service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -56,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors, False)
 
 
-class BrotherPrinterSensor(CoordinatorEntity):
+class BrotherPrinterSensor(SensorEntity, CoordinatorEntity):
     """Define an Brother Printer sensor."""
 
     def __init__(self, coordinator, kind, device_info):

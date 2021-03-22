@@ -8,11 +8,11 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorEntity,
 )
 from homeassistant.const import CONF_HOST, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from .helpers import import_device
@@ -56,7 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class BroadlinkSensor(Entity):
+class BroadlinkSensor(SensorEntity):
     """Representation of a Broadlink sensor."""
 
     def __init__(self, device, monitored_condition):
