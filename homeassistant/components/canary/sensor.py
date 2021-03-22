@@ -5,6 +5,7 @@ from typing import Callable
 
 from canary.api import SensorType
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -77,7 +78,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class CanarySensor(CoordinatorEntity, Entity):
+class CanarySensor(SensorEntity, CoordinatorEntity):
     """Representation of a Canary sensor."""
 
     def __init__(self, coordinator, sensor_type, location, device):
