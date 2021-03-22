@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
@@ -113,7 +113,7 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, sync_google)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
 
     @property
     def enabled(self):
