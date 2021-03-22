@@ -6,7 +6,7 @@ import os
 from pi1wire import InvalidCRCException, UnsupportResponseException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 import homeassistant.helpers.config_validation as cv
@@ -394,7 +394,7 @@ def get_entities(onewirehub: OneWireHub, config):
     return entities
 
 
-class OneWireProxySensor(OneWireProxyEntity):
+class OneWireProxySensor(OneWireProxyEntity, SensorEntity):
     """Implementation of a 1-Wire sensor connected through owserver."""
 
     @property
@@ -403,7 +403,7 @@ class OneWireProxySensor(OneWireProxyEntity):
         return self._state
 
 
-class OneWireDirectSensor(OneWireBaseEntity):
+class OneWireDirectSensor(OneWireBaseEntity, SensorEntity):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
     def __init__(self, name, device_file, device_info, owsensor):
@@ -431,7 +431,7 @@ class OneWireDirectSensor(OneWireBaseEntity):
         self._state = value
 
 
-class OneWireOWFSSensor(OneWireBaseEntity):  # pragma: no cover
+class OneWireOWFSSensor(OneWireBaseEntity, SensorEntity):  # pragma: no cover
     """Implementation of a 1-Wire sensor through owfs.
 
     This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.

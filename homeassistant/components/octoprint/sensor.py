@@ -3,8 +3,8 @@ import logging
 
 import requests
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as COMPONENT_DOMAIN, SENSOR_TYPES
 
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class OctoPrintSensor(Entity):
+class OctoPrintSensor(SensorEntity):
     """Representation of an OctoPrint sensor."""
 
     def __init__(
