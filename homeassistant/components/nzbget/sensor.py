@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from typing import Callable
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -66,7 +67,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class NZBGetSensor(NZBGetEntity):
+class NZBGetSensor(NZBGetEntity, SensorEntity):
     """Representation of a NZBGet sensor."""
 
     def __init__(
