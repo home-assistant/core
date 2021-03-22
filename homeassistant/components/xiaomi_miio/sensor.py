@@ -146,7 +146,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, update_before_add=True)
 
 
-class XiaomiAirQualityMonitor(SensorEntity, XiaomiMiioEntity):
+class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
     def __init__(self, name, device, entry, unique_id):
@@ -220,7 +220,7 @@ class XiaomiAirQualityMonitor(SensorEntity, XiaomiMiioEntity):
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
-class XiaomiGatewaySensor(SensorEntity, XiaomiGatewayDevice):
+class XiaomiGatewaySensor(XiaomiGatewayDevice, SensorEntity):
     """Representation of a XiaomiGatewaySensor."""
 
     def __init__(self, coordinator, sub_device, entry, data_key):

@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.info("Device is not a sensor")
 
 
-class WinkSensorEntity(SensorEntity, WinkDevice):
+class WinkSensorEntity(WinkDevice, SensorEntity):
     """Representation of a Wink sensor."""
 
     def __init__(self, wink, hass):

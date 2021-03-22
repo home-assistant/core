@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensor_entities)
 
 
-class XS1Sensor(SensorEntity, XS1DeviceEntity):
+class XS1Sensor(XS1DeviceEntity, SensorEntity):
     """Representation of a Sensor."""
 
     @property

@@ -37,7 +37,7 @@ def get_device(node, values, **kwargs):
     return None
 
 
-class ZWaveSensor(SensorEntity, ZWaveDeviceEntity):
+class ZWaveSensor(ZWaveDeviceEntity, SensorEntity):
     """Representation of a Z-Wave sensor."""
 
     def __init__(self, values):

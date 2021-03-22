@@ -42,7 +42,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class WLEDSensor(SensorEntity, WLEDDeviceEntity):
+class WLEDSensor(WLEDDeviceEntity, SensorEntity):
     """Defines a WLED sensor."""
 
     def __init__(

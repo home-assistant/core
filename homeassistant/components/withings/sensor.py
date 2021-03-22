@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WithingsHealthSensor(SensorEntity, BaseWithingsSensor):
+class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     """Implementation of a Withings sensor."""
 
     @property

@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class WolfLinkSensor(SensorEntity, CoordinatorEntity):
+class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
     def __init__(self, coordinator, wolf_object: Parameter, device_id):

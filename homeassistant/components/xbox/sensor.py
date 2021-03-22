@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry, async_add_ent
     update_friends()
 
 
-class XboxSensorEntity(SensorEntity, XboxBaseSensorEntity):
+class XboxSensorEntity(XboxBaseSensorEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
     @property

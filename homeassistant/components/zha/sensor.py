@@ -90,7 +90,7 @@ async def async_setup_entry(
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 
-class Sensor(SensorEntity, ZhaEntity):
+class Sensor(ZhaEntity, SensorEntity):
     """Base ZHA sensor."""
 
     SENSOR_ATTR: int | str | None = None

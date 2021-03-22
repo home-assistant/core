@@ -68,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class ZwaveSensorBase(SensorEntity, ZWaveBaseEntity):
+class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     def __init__(

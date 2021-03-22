@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
 
 
-class NumberEntity(SensorEntity, WiffiEntity):
+class NumberEntity(WiffiEntity, SensorEntity):
     """Entity for wiffi metrics which have a number value."""
 
     def __init__(self, device, metric, options):
@@ -101,7 +101,7 @@ class NumberEntity(SensorEntity, WiffiEntity):
         self.async_write_ha_state()
 
 
-class StringEntity(SensorEntity, WiffiEntity):
+class StringEntity(WiffiEntity, SensorEntity):
     """Entity for wiffi metrics which have a string value."""
 
     def __init__(self, device, metric, options):

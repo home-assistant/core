@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class XiaomiSensor(SensorEntity, XiaomiDevice):
+class XiaomiSensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     def __init__(self, device, name, data_key, xiaomi_hub, config_entry):
@@ -172,7 +172,7 @@ class XiaomiSensor(SensorEntity, XiaomiDevice):
         return True
 
 
-class XiaomiBatterySensor(SensorEntity, XiaomiDevice):
+class XiaomiBatterySensor(XiaomiDevice, SensorEntity):
     """Representation of a XiaomiSensor."""
 
     @property

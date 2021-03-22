@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class WirelessTagSensor(SensorEntity, WirelessTagBaseSensor):
+class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api, tag, sensor_type, config):
