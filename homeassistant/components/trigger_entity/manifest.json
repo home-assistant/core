@@ -1,6 +1,6 @@
 {
   "domain": "trigger_entity",
-  "name": "Trigger based Entities",
+  "name": "Trigger Entities",
   "documentation": "https://www.home-assistant.io/integrations/trigger",
   "codeowners": ["@home-assistant/core"]
 }
