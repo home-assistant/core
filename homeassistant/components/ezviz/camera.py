@@ -182,18 +182,6 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         self._local_ip = self.coordinator.data[self._idx]["local_ip"]
 
     @property
-    def device_state_attributes(self):
-        """Return the Ezviz-specific camera state attributes."""
-        return {
-            # Camera firmware version update available?
-            "upgrade_available": self.coordinator.data[self._idx]["upgrade_available"],
-            # camera's local ip on local network
-            "local_ip": self.coordinator.data[self._idx]["local_ip"],
-            # RTSP Stream
-            "RTSP stream": self._rtsp_stream,
-        }
-
-    @property
     def available(self):
         """Return True if entity is available."""
         return self.coordinator.data[self._idx]["status"]

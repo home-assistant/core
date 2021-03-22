@@ -7,7 +7,7 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "Account region code (eu for European server)"
+          "URL": "Ezviz Server URL"
         }
       },
       "user_camera": {

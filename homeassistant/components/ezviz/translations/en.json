@@ -14,7 +14,7 @@
                 "data": {
                     "username": "username",
                     "password": "password",
-                    "region": "region"
+                    "URL": "Ezviz Server URL"
                 },
                 "title": "Connect to Ezviz Cloud"
             },
