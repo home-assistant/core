@@ -4,9 +4,12 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from contextvars import ContextVar
+import datetime as dt
 from functools import wraps
+from itertools import count
 from typing import Any, Callable, Deque, Generator, cast
 
+from homeassistant.core import Context
 from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
 
@@ -71,7 +74,7 @@ trace_path_stack_cv: ContextVar[list[str] | None] = ContextVar(
 )
 # Copy of last variables
 variables_cv: ContextVar[Any | None] = ContextVar("variables_cv", default=None)
-# Automation ID + Run ID
+# (domain, item_id) + Run ID
 trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "trace_id_cv", default=None
 )
@@ -198,3 +201,92 @@ def async_trace_path(suffix: str | list[str]) -> Callable:
         return async_wrapper
 
     return _trace_path_decorator
+
+
+class ActionTrace:
+    """Base container for an automation or script trace."""
+
+    _run_ids = count(0)
+
+    def __init__(
+        self,
+        key: tuple[str, str],
+        config: dict[str, Any],
+        context: Context,
+    ):
+        """Container for script trace."""
+        self._action_trace: dict[str, Deque[TraceElement]] | None = None
+        self._config: dict[str, Any] = config
+        self.context: Context = context
+        self._error: Exception | None = None
+        self._state: str = "running"
+        self.run_id: str = str(next(self._run_ids))
+        self._timestamp_finish: dt.datetime | None = None
+        self._timestamp_start: dt.datetime = dt_util.utcnow()
+        self._key: tuple[str, str] = key
+        self._variables: dict[str, Any] | None = None
+
+    def set_action_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
+        """Set action trace."""
+        self._action_trace = trace
+
+    def set_error(self, ex: Exception) -> None:
+        """Set error."""
+        self._error = ex
+
+    def set_variables(self, variables: dict[str, Any]) -> None:
+        """Set variables."""
+        self._variables = variables
+
+    def finished(self) -> None:
+        """Set finish time."""
+        self._timestamp_finish = dt_util.utcnow()
+        self._state = "stopped"
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return dictionary version of this ActionTrace."""
+
+        result = self.as_short_dict()
+
+        action_traces = {}
+        if self._action_trace:
+            for key, trace_list in self._action_trace.items():
+                action_traces[key] = [item.as_dict() for item in trace_list]
+
+        result.update(
+            {
+                "action_trace": action_traces,
+                "config": self._config,
+                "context": self.context,
+                "variables": self._variables,
+            }
+        )
+        if self._error is not None:
+            result["error"] = str(self._error)
+        return result
+
+    def as_short_dict(self) -> dict[str, Any]:
+        """Return a brief dictionary version of this ActionTrace."""
+
+        last_action = None
+
+        if self._action_trace:
+            last_action = list(self._action_trace)[-1]
+
+        result = {
+            "last_action": last_action,
+            "run_id": self.run_id,
+            "state": self._state,
+            "timestamp": {
+                "start": self._timestamp_start,
+                "finish": self._timestamp_finish,
+            },
+            "domain": self._key[0],
+            "item_id": self._key[1],
+        }
+        if self._error is not None:
+            result["error"] = str(self._error)
+        if last_action is not None:
+            result["last_action"] = last_action
+
+        return result

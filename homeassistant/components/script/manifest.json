@@ -2,6 +2,7 @@
   "domain": "script",
   "name": "Scripts",
   "documentation": "https://www.home-assistant.io/integrations/script",
+  "dependencies": ["trace"],
   "codeowners": [
     "@home-assistant/core"
   ],
