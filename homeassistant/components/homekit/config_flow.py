@@ -223,7 +223,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return a set of bridge names."""
         return {
             entry.data[CONF_NAME]
-            for entry in self._async_current_entries()
+            for entry in self._async_current_entries(include_ignore=False)
             if CONF_NAME in entry.data
         }
 
@@ -251,7 +251,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         port = user_input[CONF_PORT]
         return not any(
             entry.data[CONF_NAME] == name or entry.data[CONF_PORT] == port
-            for entry in self._async_current_entries()
+            for entry in self._async_current_entries(include_ignore=False)
         )
 
     @staticmethod
