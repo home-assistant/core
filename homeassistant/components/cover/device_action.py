@@ -153,7 +153,7 @@ async def async_get_action_capabilities(hass: HomeAssistant, config: dict) -> di
     return {
         "extra_fields": vol.Schema(
             {
-                vol.Optional("position", default=0): vol.All(
+                vol.Optional(ATTR_POSITION, default=0): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 )
             }
