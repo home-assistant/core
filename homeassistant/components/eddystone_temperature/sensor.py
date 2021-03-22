@@ -10,7 +10,7 @@ import logging
 from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ def get_from_conf(config, config_key, length):
     return string
 
 
-class EddystoneTemp(Entity):
+class EddystoneTemp(SensorEntity):
     """Representation of a temperature sensor."""
 
     def __init__(self, name, namespace, instance):

@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
@@ -65,7 +66,7 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity):
+class DevoloMultiLevelDeviceEntity(SensorEntity, DevoloDeviceEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
