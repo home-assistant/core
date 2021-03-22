@@ -15,7 +15,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([SpeedtestSensor(hass.data[FASTDOTCOM_DOMAIN])])
 
 
-class SpeedtestSensor(SensorEntity, RestoreEntity):
+class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 
     def __init__(self, speedtest_data):

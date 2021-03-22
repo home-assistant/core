@@ -111,7 +111,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class PairedSensorSensor(SensorEntity, PairedSensorEntity):
+class PairedSensorSensor(PairedSensorEntity, SensorEntity):
     """Define a binary sensor related to a Guardian valve controller."""
 
     def __init__(
@@ -154,7 +154,7 @@ class PairedSensorSensor(SensorEntity, PairedSensorEntity):
             self._state = self.coordinator.data["temperature"]
 
 
-class ValveControllerSensor(SensorEntity, ValveControllerEntity):
+class ValveControllerSensor(ValveControllerEntity, SensorEntity):
     """Define a generic Guardian sensor."""
 
     def __init__(

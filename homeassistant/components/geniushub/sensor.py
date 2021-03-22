@@ -39,7 +39,7 @@ async def async_setup_platform(
     async_add_entities(sensors + issues, update_before_add=True)
 
 
-class GeniusBattery(SensorEntity, GeniusDevice):
+class GeniusBattery(GeniusDevice, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, device, state_attr) -> None:
@@ -89,7 +89,7 @@ class GeniusBattery(SensorEntity, GeniusDevice):
         return level if level != 255 else 0
 
 
-class GeniusIssue(SensorEntity, GeniusEntity):
+class GeniusIssue(GeniusEntity, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, level) -> None:

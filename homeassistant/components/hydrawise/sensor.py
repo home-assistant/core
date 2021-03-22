@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class HydrawiseSensor(SensorEntity, HydrawiseEntity):
+class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
 
     @property

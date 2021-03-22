@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities([IncidentsSensor(client)])
 
 
-class IncidentsSensor(SensorEntity, RestoreEntity):
+class IncidentsSensor(RestoreEntity, SensorEntity):
     """Representation of FireServiceRota incidents sensor."""
 
     def __init__(self, client):

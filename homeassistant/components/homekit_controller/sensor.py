@@ -40,7 +40,7 @@ SIMPLE_SENSOR = {
 }
 
 
-class HomeKitHumiditySensor(SensorEntity, HomeKitEntity):
+class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit humidity sensor."""
 
     def get_characteristic_types(self):
@@ -73,7 +73,7 @@ class HomeKitHumiditySensor(SensorEntity, HomeKitEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
-class HomeKitTemperatureSensor(SensorEntity, HomeKitEntity):
+class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit temperature sensor."""
 
     def get_characteristic_types(self):
@@ -106,7 +106,7 @@ class HomeKitTemperatureSensor(SensorEntity, HomeKitEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
-class HomeKitLightSensor(SensorEntity, HomeKitEntity):
+class HomeKitLightSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit light level sensor."""
 
     def get_characteristic_types(self):
@@ -139,7 +139,7 @@ class HomeKitLightSensor(SensorEntity, HomeKitEntity):
         return self.service.value(CharacteristicsTypes.LIGHT_LEVEL_CURRENT)
 
 
-class HomeKitCarbonDioxideSensor(SensorEntity, HomeKitEntity):
+class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     def get_characteristic_types(self):
@@ -167,7 +167,7 @@ class HomeKitCarbonDioxideSensor(SensorEntity, HomeKitEntity):
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
-class HomeKitBatterySensor(SensorEntity, HomeKitEntity):
+class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     """Representation of a Homekit battery sensor."""
 
     def get_characteristic_types(self):
@@ -234,7 +234,7 @@ class HomeKitBatterySensor(SensorEntity, HomeKitEntity):
         return self.service.value(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-class SimpleSensor(SensorEntity, CharacteristicEntity):
+class SimpleSensor(CharacteristicEntity, SensorEntity):
     """
     A simple sensor for a single characteristic.
 

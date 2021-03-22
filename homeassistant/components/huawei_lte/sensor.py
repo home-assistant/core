@@ -374,7 +374,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
 
 
 @attr.s
-class HuaweiLteSensor(SensorEntity, HuaweiLteBaseEntity):
+class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
     """Huawei LTE sensor entity."""
 
     key: str = attr.ib()

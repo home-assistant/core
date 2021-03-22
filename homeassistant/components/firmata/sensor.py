@@ -42,7 +42,7 @@ async def async_setup_entry(
         async_add_entities(new_entities)
 
 
-class FirmataSensor(SensorEntity, FirmataPinEntity):
+class FirmataSensor(FirmataPinEntity, SensorEntity):
     """Representation of a sensor on a Firmata board."""
 
     async def async_added_to_hass(self) -> None:

@@ -49,7 +49,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class DoorSensorBattery(SensorEntity, GoGoGate2Entity):
+class DoorSensorBattery(GoGoGate2Entity, SensorEntity):
     """Battery sensor entity for gogogate2 door sensor."""
 
     def __init__(
@@ -87,7 +87,7 @@ class DoorSensorBattery(SensorEntity, GoGoGate2Entity):
         return None
 
 
-class DoorSensorTemperature(SensorEntity, GoGoGate2Entity):
+class DoorSensorTemperature(GoGoGate2Entity, SensorEntity):
     """Temperature sensor entity for gogogate2 door sensor."""
 
     def __init__(

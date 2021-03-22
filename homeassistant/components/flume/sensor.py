@@ -108,7 +108,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(flume_entity_list)
 
 
-class FlumeSensor(SensorEntity, CoordinatorEntity):
+class FlumeSensor(CoordinatorEntity, SensorEntity):
     """Representation of the Flume sensor."""
 
     def __init__(self, coordinator, flume_device, flume_query_sensor, name, device_id):

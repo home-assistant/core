@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroSensor(SensorEntity, FibaroDevice):
+class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(self, fibaro_device):

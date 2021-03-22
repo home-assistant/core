@@ -24,7 +24,7 @@ async def async_setup_entry(
     )
 
 
-class HuisbaasjeSensor(SensorEntity, CoordinatorEntity):
+class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
     """Defines a Huisbaasje sensor."""
 
     def __init__(

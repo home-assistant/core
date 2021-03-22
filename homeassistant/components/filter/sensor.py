@@ -454,7 +454,7 @@ class Filter:
 
 
 @FILTERS.register(FILTER_NAME_RANGE)
-class RangeFilter(SensorEntity, Filter):
+class RangeFilter(Filter, SensorEntity):
     """Range filter.
 
     Determines if new state is in the range of upper_bound and lower_bound.
@@ -509,7 +509,7 @@ class RangeFilter(SensorEntity, Filter):
 
 
 @FILTERS.register(FILTER_NAME_OUTLIER)
-class OutlierFilter(SensorEntity, Filter):
+class OutlierFilter(Filter, SensorEntity):
     """BASIC outlier filter.
 
     Determines if new state is in a band around the median.
@@ -547,7 +547,7 @@ class OutlierFilter(SensorEntity, Filter):
 
 
 @FILTERS.register(FILTER_NAME_LOWPASS)
-class LowPassFilter(SensorEntity, Filter):
+class LowPassFilter(Filter, SensorEntity):
     """BASIC Low Pass Filter."""
 
     def __init__(self, window_size, precision, entity, time_constant: int):
@@ -571,7 +571,7 @@ class LowPassFilter(SensorEntity, Filter):
 
 
 @FILTERS.register(FILTER_NAME_TIME_SMA)
-class TimeSMAFilter(SensorEntity, Filter):
+class TimeSMAFilter(Filter, SensorEntity):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
@@ -617,7 +617,7 @@ class TimeSMAFilter(SensorEntity, Filter):
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)
-class ThrottleFilter(SensorEntity, Filter):
+class ThrottleFilter(Filter, SensorEntity):
     """Throttle Filter.
 
     One sample per window.
@@ -640,7 +640,7 @@ class ThrottleFilter(SensorEntity, Filter):
 
 
 @FILTERS.register(FILTER_NAME_TIME_THROTTLE)
-class TimeThrottleFilter(SensorEntity, Filter):
+class TimeThrottleFilter(Filter, SensorEntity):
     """Time Throttle Filter.
 
     One sample per time period.

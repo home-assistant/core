@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HassioAddonSensor(SensorEntity, HassioAddonEntity):
+class HassioAddonSensor(HassioAddonEntity, SensorEntity):
     """Sensor to track a Hass.io add-on attribute."""
 
     @property
@@ -46,7 +46,7 @@ class HassioAddonSensor(SensorEntity, HassioAddonEntity):
         return self.addon_info[self.attribute_name]
 
 
-class HassioOSSensor(SensorEntity, HassioOSEntity):
+class HassioOSSensor(HassioOSEntity, SensorEntity):
     """Sensor to track a Hass.io add-on attribute."""
 
     @property

@@ -57,7 +57,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class FloDailyUsageSensor(SensorEntity, FloEntity):
+class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
     def __init__(self, device):
@@ -83,7 +83,7 @@ class FloDailyUsageSensor(SensorEntity, FloEntity):
         return VOLUME_GALLONS
 
 
-class FloSystemModeSensor(SensorEntity, FloEntity):
+class FloSystemModeSensor(FloEntity, SensorEntity):
     """Monitors the current Flo system mode."""
 
     def __init__(self, device):
@@ -99,7 +99,7 @@ class FloSystemModeSensor(SensorEntity, FloEntity):
         return self._device.current_system_mode
 
 
-class FloCurrentFlowRateSensor(SensorEntity, FloEntity):
+class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
     def __init__(self, device):
@@ -125,7 +125,7 @@ class FloCurrentFlowRateSensor(SensorEntity, FloEntity):
         return "gpm"
 
 
-class FloTemperatureSensor(SensorEntity, FloEntity):
+class FloTemperatureSensor(FloEntity, SensorEntity):
     """Monitors the temperature."""
 
     def __init__(self, name, device):
@@ -151,7 +151,7 @@ class FloTemperatureSensor(SensorEntity, FloEntity):
         return DEVICE_CLASS_TEMPERATURE
 
 
-class FloHumiditySensor(SensorEntity, FloEntity):
+class FloHumiditySensor(FloEntity, SensorEntity):
     """Monitors the humidity."""
 
     def __init__(self, device):
@@ -177,7 +177,7 @@ class FloHumiditySensor(SensorEntity, FloEntity):
         return DEVICE_CLASS_HUMIDITY
 
 
-class FloPressureSensor(SensorEntity, FloEntity):
+class FloPressureSensor(FloEntity, SensorEntity):
     """Monitors the water pressure."""
 
     def __init__(self, device):
@@ -203,7 +203,7 @@ class FloPressureSensor(SensorEntity, FloEntity):
         return DEVICE_CLASS_PRESSURE
 
 
-class FloBatterySensor(SensorEntity, FloEntity):
+class FloBatterySensor(FloEntity, SensorEntity):
     """Monitors the battery level for battery-powered leak detectors."""
 
     def __init__(self, device):

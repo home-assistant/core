@@ -124,7 +124,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class HomematicipAccesspointDutyCycle(SensorEntity, HomematicipGenericEntity):
+class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
     """Representation of then HomeMaticIP access point."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -147,7 +147,7 @@ class HomematicipAccesspointDutyCycle(SensorEntity, HomematicipGenericEntity):
         return PERCENTAGE
 
 
-class HomematicipHeatingThermostat(SensorEntity, HomematicipGenericEntity):
+class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP heating thermostat."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -176,7 +176,7 @@ class HomematicipHeatingThermostat(SensorEntity, HomematicipGenericEntity):
         return PERCENTAGE
 
 
-class HomematicipHumiditySensor(SensorEntity, HomematicipGenericEntity):
+class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP humidity sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -199,7 +199,7 @@ class HomematicipHumiditySensor(SensorEntity, HomematicipGenericEntity):
         return PERCENTAGE
 
 
-class HomematicipTemperatureSensor(SensorEntity, HomematicipGenericEntity):
+class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP thermometer."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -236,7 +236,7 @@ class HomematicipTemperatureSensor(SensorEntity, HomematicipGenericEntity):
         return state_attr
 
 
-class HomematicipIlluminanceSensor(SensorEntity, HomematicipGenericEntity):
+class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP Illuminance sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -274,7 +274,7 @@ class HomematicipIlluminanceSensor(SensorEntity, HomematicipGenericEntity):
         return state_attr
 
 
-class HomematicipPowerSensor(SensorEntity, HomematicipGenericEntity):
+class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP power measuring sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -297,7 +297,7 @@ class HomematicipPowerSensor(SensorEntity, HomematicipGenericEntity):
         return POWER_WATT
 
 
-class HomematicipWindspeedSensor(SensorEntity, HomematicipGenericEntity):
+class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP wind speed sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -330,7 +330,7 @@ class HomematicipWindspeedSensor(SensorEntity, HomematicipGenericEntity):
         return state_attr
 
 
-class HomematicipTodayRainSensor(SensorEntity, HomematicipGenericEntity):
+class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP rain counter of a day sensor."""
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
@@ -348,7 +348,7 @@ class HomematicipTodayRainSensor(SensorEntity, HomematicipGenericEntity):
         return LENGTH_MILLIMETERS
 
 
-class HomematicipPassageDetectorDeltaCounter(SensorEntity, HomematicipGenericEntity):
+class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP passage detector delta counter."""
 
     @property

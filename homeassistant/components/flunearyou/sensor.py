@@ -86,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class FluNearYouSensor(SensorEntity, CoordinatorEntity):
+class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     """Define a base Flu Near You sensor."""
 
     def __init__(self, coordinator, config_entry, sensor_type, name, icon, unit):
