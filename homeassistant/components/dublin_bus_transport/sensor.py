@@ -4,6 +4,7 @@ Support for Dublin RTPI information from data.dublinked.ie.
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 """
+from contextlib import suppress
 from datetime import datetime, timedelta
 
 import requests
@@ -117,10 +118,8 @@ class DublinPublicTransportSensor(SensorEntity):
         """Get the latest data from opendata.ch and update the states."""
         self.data.update()
         self._times = self.data.info
-        try:
+        with suppress(TypeError):
             self._state = self._times[0][ATTR_DUE_IN]
-        except TypeError:
-            pass
 
 
 class PublicTransportData:

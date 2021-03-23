@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import ipaddress
@@ -161,10 +162,8 @@ class Router:
             (KEY_DEVICE_BASIC_INFORMATION, "devicename"),
             (KEY_DEVICE_INFORMATION, "DeviceName"),
         ):
-            try:
+            with suppress(KeyError, TypeError):
                 return cast(str, self.data[key][item])
-            except (KeyError, TypeError):
-                pass
         return DEFAULT_DEVICE_NAME
 
     @property
