@@ -68,7 +68,7 @@ class AbodeSensor(AbodeDevice, SensorEntity):
             self._attr_unit_of_measurement = device.lux_unit
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.entity_description.key == CONST.TEMP_STATUS_KEY:
             return self._device.temp
@@ -76,3 +76,13 @@ class AbodeSensor(AbodeDevice, SensorEntity):
             return self._device.humidity
         if self.entity_description.key == CONST.LUX_STATUS_KEY:
             return self._device.lux
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the units of measurement."""
+        if self._sensor_type == CONST.TEMP_STATUS_KEY:
+            return self._device.temp_unit
+        if self._sensor_type == CONST.HUMI_STATUS_KEY:
+            return self._device.humidity_unit
+        if self._sensor_type == CONST.LUX_STATUS_KEY:
+            return self._device.lux_unit

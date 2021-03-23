@@ -32,7 +32,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription, MeasurableUnitEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -104,7 +104,7 @@ class SensorEntityDescription(EntityDescription):
     last_reset: datetime | None = None
 
 
-class SensorEntity(Entity):
+class SensorEntity(MeasurableUnitEntity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
@@ -144,4 +144,14 @@ class SensorEntity(Entity):
         if last_reset := self.last_reset:
             return {ATTR_LAST_RESET: last_reset.isoformat()}
 
+        return None
+
+    @property
+    def native_value(self):
+        """Return the value reported by the sensor."""
+        return None
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of the sensor, if any."""
         return None
