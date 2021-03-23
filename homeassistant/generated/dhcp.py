@@ -17,6 +17,11 @@ DHCP = [
         "macaddress": "B8B7F1*"
     },
     {
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*"
+    },
+    {
         "domain": "axis",
         "hostname": "axis-00408c*",
         "macaddress": "00408C*"
