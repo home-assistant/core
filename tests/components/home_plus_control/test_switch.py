@@ -52,8 +52,8 @@ def entity_assertions(
             assert bool(device_reg.async_get(exp_device_id)) == present
 
 
-def one_entity_assertion(hass, device_uid, availability):
-    """Assert the presence of an entity and its specified availability."""
+def one_entity_state(hass, device_uid):
+    """Assert the presence of an entity and return its state."""
     entity_reg = hass.helpers.entity_registry.async_get(hass)
     device_reg = hass.helpers.device_registry.async_get(hass)
 
@@ -64,11 +64,7 @@ def one_entity_assertion(hass, device_uid, availability):
 
     assert len(entity_entries) == 1
     entity_entry = entity_entries[0]
-    entity_state = hass.states.get(entity_entry.entity_id).state
-    if availability:
-        assert entity_state in (STATE_ON, STATE_OFF)
-    else:
-        assert entity_state == STATE_UNAVAILABLE
+    return hass.states.get(entity_entry.entity_id).state
 
 
 async def test_plant_update(
@@ -262,7 +258,8 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
 
     # Confirm the availability of this particular entity
     test_entity_uid = "0000000987654321fedcba"
-    one_entity_assertion(hass, test_entity_uid, True)
+    test_entity_state = one_entity_state(hass, test_entity_uid)
+    assert test_entity_state == STATE_ON
 
     # Now we refresh the topology with the module being unreachable
     mock_modules["0000000987654321fedcba"].reachable = False
@@ -288,7 +285,8 @@ async def test_module_status_unavailable(hass, mock_config_entry, mock_modules):
     )
     await hass.async_block_till_done()
     # The entity is present, but not available
-    one_entity_assertion(hass, test_entity_uid, False)
+    test_entity_state = one_entity_state(hass, test_entity_uid)
+    assert test_entity_state == STATE_UNAVAILABLE
 
 
 async def test_module_status_available(
@@ -332,7 +330,8 @@ async def test_module_status_available(
 
     # This particular entity is not available
     test_entity_uid = "0000000987654321fedcba"
-    one_entity_assertion(hass, test_entity_uid, False)
+    test_entity_state = one_entity_state(hass, test_entity_uid)
+    assert test_entity_state == STATE_UNAVAILABLE
 
     # Now we refresh the topology with the module being reachable
     mock_modules["0000000987654321fedcba"].reachable = True
@@ -358,7 +357,8 @@ async def test_module_status_available(
 
     # Now the entity is available
     test_entity_uid = "0000000987654321fedcba"
-    one_entity_assertion(hass, test_entity_uid, True)
+    test_entity_state = one_entity_state(hass, test_entity_uid)
+    assert test_entity_state == STATE_ON
 
 
 async def test_initial_api_error(
@@ -434,7 +434,8 @@ async def test_update_with_api_error(
         },
     )
     for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
-        one_entity_assertion(hass, test_entity_uid, True)
+        test_entity_state = one_entity_state(hass, test_entity_uid)
+        assert test_entity_state in (STATE_ON, STATE_OFF)
 
     # Attempt to update the data, but API update fails
     with patch(
@@ -460,4 +461,5 @@ async def test_update_with_api_error(
 
     # This entity has not returned a status, so appears as unavailable
     for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
-        one_entity_assertion(hass, test_entity_uid, False)
+        test_entity_state = one_entity_state(hass, test_entity_uid)
+        assert test_entity_state == STATE_UNAVAILABLE
