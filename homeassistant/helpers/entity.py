@@ -574,7 +574,6 @@ class Entity(ABC):
             if (
                 unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
                 and unit_of_measure != units.temperature_unit
-                and not hasattr(self, "native_unit_of_measurement")
             ):
                 if not self._temperature_conversion_reported:
                     self._temperature_conversion_reported = True
