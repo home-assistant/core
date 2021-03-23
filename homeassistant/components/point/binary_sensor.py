@@ -22,7 +22,7 @@ from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 _LOGGER = logging.getLogger(__name__)
 
 
-DEVICE_TYPES = {
+DEVICES = {
     "alarm": {"icon": "mdi:alarm-bell"},
     "battery": {"device_class": DEVICE_CLASS_BATTERY},
     "button_press": {"icon": "mdi:gesture-tap-button"},
@@ -49,7 +49,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(
             (
                 MinutPointBinarySensor(client, device_id, device_name)
-                for device_name in EVENTS
+                for device_name in DEVICES
+                if device_name in EVENTS
             ),
             True,
         )
@@ -67,7 +68,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(
             point_client,
             device_id,
-            DEVICE_TYPES.get(device_name, {}).get("device_class"),
+            DEVICES[device_name].get("device_class"),
         )
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
@@ -129,7 +130,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return DEVICE_TYPES.get(self._device_name, {}).get("icon")
+        return DEVICES[self._device_name].get("icon")
 
     @property
     def unique_id(self):
