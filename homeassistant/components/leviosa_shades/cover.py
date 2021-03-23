@@ -51,7 +51,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         hub_ip=hub_ip, hub_name=hub_name, websession=async_get_clientsession(hass)
     )
     await hub.getHubInfo()  # Check all is good
-    hub.groups.pop()  # Remove default all group, as our entities have it already
     _LOGGER.debug("Hub object created, FW: %s", hub.fwVer)
     entities = []
     for blind_group in blind_groups:
