@@ -1,4 +1,5 @@
 """Support for BME280 temperature, humidity and pressure sensor."""
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
@@ -110,13 +111,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor)
 
     dev = []
-    try:
+    with suppress(KeyError):
         for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(
                 BME280Sensor(sensor_handler, variable, SENSOR_TYPES[variable][1], name)
             )
-    except KeyError:
-        pass
 
     async_add_entities(dev, True)
 

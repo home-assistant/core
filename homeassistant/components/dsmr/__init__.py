@@ -1,6 +1,7 @@
 """The dsmr component."""
 import asyncio
 from asyncio import CancelledError
+from contextlib import suppress
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,10 +37,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     # Cancel the reconnect task
     task.cancel()
-    try:
+    with suppress(CancelledError):
         await task
-    except CancelledError:
-        pass
 
     unload_ok = all(
         await asyncio.gather(

@@ -1,4 +1,5 @@
 """Support for Wink sensors."""
+from contextlib import suppress
 import logging
 
 import pywink
@@ -87,9 +88,9 @@ class WinkSensorEntity(WinkDevice, SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         super_attrs = super().extra_state_attributes
-        try:
+
+        # Ignore error, this sensor isn't an eggminder
+        with suppress(AttributeError):
             super_attrs["egg_times"] = self.wink.eggs()
-        except AttributeError:
-            # Ignore error, this sensor isn't an eggminder
-            pass
+
         return super_attrs

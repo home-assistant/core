@@ -1,5 +1,6 @@
 """Support for LG webOS Smart TV."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 import os
@@ -150,9 +151,7 @@ async def async_setup_tv(hass, config, conf):
 
 async def async_connect(client):
     """Attempt a connection, but fail gracefully if tv is off for example."""
-    try:
-        await client.connect()
-    except (
+    with suppress(
         OSError,
         ConnectionClosed,
         ConnectionRefusedError,
@@ -161,7 +160,7 @@ async def async_connect(client):
         PyLGTVPairException,
         PyLGTVCmdException,
     ):
-        pass
+        await client.connect()
 
 
 async def async_setup_tv_finalize(hass, config, conf, client):
