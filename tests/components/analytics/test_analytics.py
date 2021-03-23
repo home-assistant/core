@@ -1,7 +1,7 @@
 """The tests for the analytics ."""
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
-    ANALYTICS_ENPOINT_URL,
+    ANALYTICS_ENDPOINT_URL,
     AnalyticsPreference,
 )
 from homeassistant.components.hassio.const import DOMAIN as HASSIO_DOMAIN
@@ -12,7 +12,7 @@ MOCK_HUUID = "abcdefg"
 
 async def test_no_send(hass, caplog, aioclient_mock):
     """Test send when no prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass, MOCK_HUUID)
     await analytics.load()
     assert analytics.preferences == []
@@ -24,7 +24,7 @@ async def test_no_send(hass, caplog, aioclient_mock):
 
 async def test_failed_to_send(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=400)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
     analytics = Analytics(hass, MOCK_HUUID)
     await analytics.save_preferences([AnalyticsPreference.BASE])
     assert analytics.preferences == ["base"]
@@ -35,7 +35,7 @@ async def test_failed_to_send(hass, caplog, aioclient_mock):
 
 async def test_send_base(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass, MOCK_HUUID)
     await analytics.save_preferences([AnalyticsPreference.BASE])
     assert analytics.preferences == ["base"]
@@ -50,7 +50,7 @@ async def test_send_base(hass, caplog, aioclient_mock):
 
 async def test_send_base_with_supervisor(hass, caplog, aioclient_mock, hassio_handler):
     """Test send base prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -73,7 +73,7 @@ async def test_send_base_with_supervisor(hass, caplog, aioclient_mock, hassio_ha
 
 async def test_send_usage(hass, caplog, aioclient_mock):
     """Test send usage prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass, MOCK_HUUID)
     await analytics.save_preferences(
         [AnalyticsPreference.BASE, AnalyticsPreference.USAGE]
@@ -88,7 +88,7 @@ async def test_send_usage(hass, caplog, aioclient_mock):
 
 async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock, hassio_handler):
     """Test send usage with supervisor prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
@@ -132,7 +132,7 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock, hassio_h
 
 async def test_send_statistics(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass, MOCK_HUUID)
     await analytics.save_preferences(
         [AnalyticsPreference.BASE, AnalyticsPreference.STATISTICS]
@@ -152,7 +152,7 @@ async def test_send_statistics_with_supervisor(
     hass, caplog, aioclient_mock, hassio_handler
 ):
     """Test send statistics prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",

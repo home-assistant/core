@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.analytics.const import ANALYTICS_ENPOINT_URL, DOMAIN
+from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
 from homeassistant.setup import async_setup_component
 
 MOCK_HUUID = "abcdefg"
@@ -27,7 +27,7 @@ async def test_setup(hass, mock_get_huuid):
 
 async def test_websocket(hass, mock_get_huuid, hass_ws_client, aioclient_mock):
     """Test websocekt commands."""
-    aioclient_mock.post(ANALYTICS_ENPOINT_URL, status=200)
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     mock_get_huuid.return_value = MOCK_HUUID
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

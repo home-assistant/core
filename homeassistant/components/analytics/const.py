@@ -3,7 +3,7 @@ from datetime import timedelta
 from enum import Enum
 import logging
 
-ANALYTICS_ENPOINT_URL = "https://floral-resonance-f63b.ludeeus.workers.dev"
+ANALYTICS_ENDPOINT_URL = "https://floral-resonance-f63b.ludeeus.workers.dev"
 DOMAIN = "analytics"
 INTERVAL = timedelta(days=1)
 STORAGE_KEY = "core.analytics"
@@ -53,6 +53,7 @@ INGORED_DOMAINS = [
     "camera",
     "climate",
     "config",
+    "conversation",
     "cover",
     "demo",
     "device_automation",
@@ -76,6 +77,7 @@ INGORED_DOMAINS = [
     "recorder",
     "search",
     "sensor",
+    "stt",
     "switch",
     "system_log",
     "tts",

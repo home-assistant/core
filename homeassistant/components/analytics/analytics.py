@@ -17,7 +17,7 @@ from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import async_get_integration
 
 from .const import (
-    ANALYTICS_ENPOINT_URL,
+    ANALYTICS_ENDPOINT_URL,
     ATTR_ADDON_COUNT,
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
@@ -64,7 +64,7 @@ class Analytics:
         return self._data[ATTR_PREFERENCES]
 
     @property
-    def onboarded(self) -> List[AnalyticsPreference]:
+    def onboarded(self) -> bool:
         """Return bool if the user has made a choice."""
         return self._data[ATTR_ONBOARDED]
 
@@ -186,7 +186,7 @@ class Analytics:
 
         try:
             with async_timeout.timeout(30):
-                response = await self.session.post(ANALYTICS_ENPOINT_URL, json=payload)
+                response = await self.session.post(ANALYTICS_ENDPOINT_URL, json=payload)
                 if response.status == 200:
                     LOGGER.info(
                         (
@@ -200,8 +200,8 @@ class Analytics:
                         "Sending analytics failed with statuscode %s", response.status
                     )
         except asyncio.TimeoutError:
-            LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENPOINT_URL)
+            LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
         except aiohttp.ClientError as err:
             LOGGER.error(
-                "Error sending analytics to %s: %r", ANALYTICS_ENPOINT_URL, err
+                "Error sending analytics to %s: %r", ANALYTICS_ENDPOINT_URL, err
             )
