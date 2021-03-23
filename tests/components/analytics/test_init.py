@@ -1,34 +1,22 @@
 """The tests for the analytics ."""
-from unittest.mock import patch
-
-import pytest
-
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
 from homeassistant.setup import async_setup_component
 
-MOCK_HUUID = "abcdefg"
 
-
-@pytest.fixture(name="mock_get_huuid", autouse=True)
-def mock_get_huuid_fixture():
-    """Fixture to mock get huuid."""
-    with patch("homeassistant.helpers.instance_id.async_get") as mock:
-        yield mock
-
-
-async def test_setup(hass, mock_get_huuid):
+async def test_setup(hass, hass_storage):
     """Test setup of the integration."""
-    mock_get_huuid.return_value = MOCK_HUUID
+    uuid = await hass.helpers.instance_id.async_get()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN].huuid == MOCK_HUUID
+    assert hass.data[DOMAIN].huuid == uuid
+    assert hass_storage["core.uuid"]["data"]["uuid"] == uuid
 
 
-async def test_websocket(hass, mock_get_huuid, hass_ws_client, aioclient_mock):
+async def test_websocket(hass, hass_storage, hass_ws_client, aioclient_mock):
     """Test websocekt commands."""
+    uuid = await hass.helpers.instance_id.async_get()
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
-    mock_get_huuid.return_value = MOCK_HUUID
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -37,7 +25,7 @@ async def test_websocket(hass, mock_get_huuid, hass_ws_client, aioclient_mock):
     response = await ws_client.receive_json()
 
     assert response["success"]
-    assert response["result"]["huuid"] == MOCK_HUUID
+    assert response["result"]["huuid"] == uuid
 
     await ws_client.send_json(
         {"id": 2, "type": "analytics/preferences", "preferences": ["base"]}
