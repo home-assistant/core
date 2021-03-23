@@ -228,7 +228,7 @@ class CloudLoginView(HomeAssistantView):
         async def _on_start():
             """Check if google assistant is linked."""
             gconf = await cloud.client.get_google_config()
-            status = await gconf._async_request_sync_devices(gconf.agent_user_id)
+            status = await gconf.async_sync_entities(gconf.agent_user_id)
             if status == HTTP_OK:
                 await gconf.async_connect_agent_user(gconf.agent_user_id)
 
