@@ -1,4 +1,6 @@
 """Support for 1-Wire environment sensors."""
+from __future__ import annotations
+
 from glob import glob
 import logging
 import os
@@ -416,6 +418,11 @@ class OneWireDirectSensor(OneWireBaseEntity, SensorEntity):
         """Return the state of the entity."""
         return self._state
 
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
+
     def update(self):
         """Get the latest data from the device."""
         value = None
@@ -442,6 +449,11 @@ class OneWireOWFSSensor(OneWireBaseEntity, SensorEntity):  # pragma: no cover
     def state(self) -> StateType:
         """Return the state of the entity."""
         return self._state
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""

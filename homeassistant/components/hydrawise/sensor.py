@@ -8,7 +8,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
-from . import DATA_HYDRAWISE, SENSORS, HydrawiseEntity
+from . import DATA_HYDRAWISE, DEVICE_MAP, DEVICE_MAP_INDEX, SENSORS, HydrawiseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     """A sensor implementation for Hydrawise device."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return DEVICE_MAP[self._sensor_type][
+            DEVICE_MAP_INDEX.index("UNIT_OF_MEASURE_INDEX")
+        ]
 
     @property
     def state(self):
