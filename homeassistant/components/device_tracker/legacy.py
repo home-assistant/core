@@ -364,6 +364,8 @@ def async_setup_scanner_platform(
 
     async_track_time_interval(hass, async_device_tracker_scan, interval)
     hass.async_create_task(async_device_tracker_scan(None))
+    LOGGER.debug("Finished setup for %s.%s", DOMAIN, platform)
+    hass.config.components.add(f"{DOMAIN}.{platform}")
 
 
 async def get_tracker(hass, config):
