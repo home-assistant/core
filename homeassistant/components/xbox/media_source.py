@@ -1,6 +1,7 @@
 """Xbox Media Source Implementation."""
 from __future__ import annotations
 
+from contextlib import suppress
 from dataclasses import dataclass
 
 from pydantic.error_wrappers import ValidationError  # pylint: disable=no-name-in-module
@@ -138,7 +139,7 @@ class XboxSource(MediaSource):
         owner, kind = category.split("#", 1)
 
         items: list[XboxMediaItem] = []
-        try:
+        with suppress(ValidationError):  # Unexpected API response
             if kind == "gameclips":
                 if owner == "my":
                     response: GameclipsResponse = (
@@ -189,9 +190,6 @@ class XboxSource(MediaSource):
                     )
                     for item in response.screenshots
                 ]
-        except ValidationError:
-            # Unexpected API response
-            pass
 
         return BrowseMediaSource(
             domain=DOMAIN,

@@ -1,4 +1,5 @@
 """APNS Notification platform."""
+from contextlib import suppress
 import logging
 
 from apns2.client import APNsClient
@@ -155,7 +156,7 @@ class ApnsNotificationService(BaseNotificationService):
         self.device_states = {}
         self.topic = topic
 
-        try:
+        with suppress(FileNotFoundError):
             self.devices = {
                 str(key): ApnsDevice(
                     str(key),
@@ -165,8 +166,6 @@ class ApnsNotificationService(BaseNotificationService):
                 )
                 for (key, value) in load_yaml_config_file(self.yaml_path).items()
             }
-        except FileNotFoundError:
-            pass
 
         tracking_ids = [
             device.full_tracking_device_id
