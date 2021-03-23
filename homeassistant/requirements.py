@@ -97,12 +97,18 @@ async def async_get_integration_with_requirements(
             deps_to_check.append(check_domain)
 
     if deps_to_check:
-        await asyncio.gather(
-            *[
-                async_get_integration_with_requirements(hass, dep, done)
-                for dep in deps_to_check
-            ]
-        )
+        try:
+            await asyncio.gather(
+                *[
+                    async_get_integration_with_requirements(hass, dep, done)
+                    for dep in deps_to_check
+                ]
+            )
+        except IntegrationNotFound as exception:
+            if exception.domain in integration.after_dependencies:
+                pass
+            else:
+                raise exception
 
     cache[domain] = integration
     event.set()
