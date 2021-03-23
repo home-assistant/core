@@ -5,7 +5,7 @@ import logging
 
 import av
 
-from homeassistant.components.stream import STREAM_SOURCE_RE
+from . import STREAM_SOURCE_RE
 
 from .const import (
     AUDIO_CODECS,
