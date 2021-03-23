@@ -102,14 +102,6 @@ class DeconzFan(DeconzDevice, FanEntity):
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
-    # @property
-    # def speed(self) -> int:
-    #     """Return the current speed.
-
-    #     Legacy fan support.
-    #     """
-    #     return convert_speed(self._device.speed)
-
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds.
