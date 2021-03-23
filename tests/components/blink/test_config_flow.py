@@ -273,7 +273,7 @@ async def test_options_flow(hass):
         data={"username": "blink@example.com", "password": "example"},
         options={},
         entry_id=1,
-        version=2,
+        version=3,
     )
     config_entry.add_to_hass(hass)
 
