@@ -15,9 +15,10 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.core import Context, CoreState, HomeAssistant, State, callback
 from homeassistant.helpers.area_registry import AreaEntry
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -103,6 +104,16 @@ class AbstractConfig(ABC):
         """Perform async initialization of config."""
         self._store = GoogleConfigStore(self.hass)
         await self._store.async_load()
+
+        if self.hass.state == CoreState.running:
+            await self.async_sync_entities_all()
+            return
+
+        async def sync_google(_):
+            """Sync entities to Google."""
+            await self.async_sync_entities_all()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, sync_google)
 
     @property
     def enabled(self):
@@ -193,7 +204,10 @@ class AbstractConfig(ABC):
         """Sync all entities to Google."""
         # Remove any pending sync
         self._google_sync_unsub.pop(agent_user_id, lambda: None)()
-        return await self._async_request_sync_devices(agent_user_id)
+        status = await self._async_request_sync_devices(agent_user_id)
+        if status == 404:
+            await self.async_disconnect_agent_user(agent_user_id)
+        return status
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
