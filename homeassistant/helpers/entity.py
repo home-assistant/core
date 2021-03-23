@@ -579,8 +579,8 @@ class Entity(ABC):
                     self._temperature_conversion_reported = True
                     _LOGGER.warning(
                         "Entity %s reports a temperature, but it doesn't extend "
-                        "MeasurableUnitEntity. This is deprecated and will be "
-                        "unsupported from Home Assistant 2021.10.",
+                        "MeasurableUnitEntity, this is deprecated and will be "
+                        "unsupported from Home Assistant 2021.10",
                         self.entity_id,
                     )
                 prec = len(state) - state.index(".") - 1 if "." in state else 0
@@ -952,7 +952,7 @@ class MeasurableUnitEntity(Entity):
         return native_unit_of_measurement
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> Any:
         """Return the state of the sensor and perform unit conversions, if needed."""
 
         unit_of_measurement = self.native_unit_of_measurement
