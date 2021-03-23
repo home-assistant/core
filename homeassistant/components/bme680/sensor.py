@@ -327,25 +327,25 @@ class BME680Sensor(SensorEntity):
         self.bme680_client = bme680_client
         self.temp_unit = temp_unit
         self.type = sensor_type
-        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._attr_device_class = SENSOR_TYPES[sensor_type][2]
 
     async def async_update(self):
         """Get the latest data from the BME680 and update the states."""
         await self.hass.async_add_executor_job(self.bme680_client.update)
         if self.type == SENSOR_TEMP:
-            self._attr_state = round(self.bme680_client.sensor_data.temperature, 1)
+            self._attr_native_value = round(self.bme680_client.sensor_data.temperature, 1)
             if self.temp_unit == TEMP_FAHRENHEIT:
-                self._attr_state = round(celsius_to_fahrenheit(self.state), 1)
+                self._attr_native_value = round(celsius_to_fahrenheit(self.state), 1)
         elif self.type == SENSOR_HUMID:
-            self._attr_state = round(self.bme680_client.sensor_data.humidity, 1)
+            self._attr_native_value = round(self.bme680_client.sensor_data.humidity, 1)
         elif self.type == SENSOR_PRESS:
-            self._attr_state = round(self.bme680_client.sensor_data.pressure, 1)
+            self._attr_native_value = round(self.bme680_client.sensor_data.pressure, 1)
         elif self.type == SENSOR_GAS:
-            self._attr_state = int(
+            self._attr_native_value = int(
                 round(self.bme680_client.sensor_data.gas_resistance, 0)
             )
         elif self.type == SENSOR_AQ:
             aq_score = self.bme680_client.sensor_data.air_quality
             if aq_score is not None:
-                self._attr_state = round(aq_score, 1)
+                self._attr_native_value = round(aq_score, 1)

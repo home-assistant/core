@@ -58,9 +58,14 @@ class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current value."""
         return self._ac[self._time_key]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return ADVANTAGE_AIR_SET_COUNTDOWN_UNIT
 
     @property
     def icon(self):
@@ -90,11 +95,16 @@ class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current value of the air vent."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return self._zone["value"]
         return 0
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the percent sign."""
+        return PERCENTAGE
 
     @property
     def icon(self):
@@ -119,9 +129,14 @@ class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
         )
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current value of the wireless signal."""
         return self._zone["rssi"]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the percent sign."""
+        return PERCENTAGE
 
     @property
     def icon(self):

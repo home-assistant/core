@@ -76,7 +76,7 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{self.coordinator.latitude}-{self.coordinator.longitude}-{self.kind.lower()}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         self._state = self.coordinator.data[self.kind]
         return self._state
@@ -93,3 +93,8 @@ class AirNowSensor(CoordinatorEntity, SensorEntity):
             ]
 
         return self._attrs
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_TYPES[self.kind][ATTR_UNIT]

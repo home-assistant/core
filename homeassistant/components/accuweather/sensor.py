@@ -101,7 +101,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self.forecast_day = forecast_day
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         if self.forecast_day is not None:
             if self.entity_description.device_class == DEVICE_CLASS_TEMPERATURE:
@@ -128,6 +128,13 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         ):
             return cast(StateType, self._sensor_data["Speed"]["Value"])
         return cast(StateType, self._sensor_data)
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        if self.forecast_day is not None:
+            return FORECAST_SENSOR_TYPES[self.kind][self._unit_system]
+        return SENSOR_TYPES[self.kind][self._unit_system]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

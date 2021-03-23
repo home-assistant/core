@@ -102,6 +102,7 @@ class SensorEntityDescription(EntityDescription):
 
     state_class: str | None = None
     last_reset: datetime | None = None
+    native_unit_of_measurement: str | None = None
 
 
 class SensorEntity(MeasurableUnitEntity):

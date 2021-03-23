@@ -258,10 +258,10 @@ class AtomeSensor(SensorEntity):
 
         if sensor_type == LIVE_TYPE:
             self._attr_device_class = DEVICE_CLASS_POWER
-            self._attr_unit_of_measurement = POWER_WATT
+            self._attr_native_unit_of_measurement = POWER_WATT
         else:
             self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def update(self):
         """Update device state."""
@@ -269,13 +269,13 @@ class AtomeSensor(SensorEntity):
         update_function()
 
         if self._sensor_type == LIVE_TYPE:
-            self._attr_state = self._data.live_power
+            self._attr_native_value = self._data.live_power
             self._attr_extra_state_attributes = {
                 "subscribed_power": self._data.subscribed_power,
                 "is_connected": self._data.is_connected,
             }
         else:
-            self._attr_state = getattr(self._data, f"{self._sensor_type}_usage")
+            self._attr_native_value = getattr(self._data, f"{self._sensor_type}_usage")
             self._attr_last_reset = dt_util.as_utc(
                 getattr(self._data, f"{self._sensor_type}_last_reset")
             )

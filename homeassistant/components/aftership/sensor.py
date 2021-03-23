@@ -125,6 +125,11 @@ class AfterShipSensor(SensorEntity):
         return self._state
 
     @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return "packages"
+
+    @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return attributes for the sensor."""
         return self._attributes

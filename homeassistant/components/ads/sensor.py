@@ -64,6 +64,11 @@ class AdsSensor(AdsEntity, SensorEntity):
         )
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         return self._state_dict[STATE_KEY_STATE]
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return self._unit_of_measurement

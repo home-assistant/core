@@ -364,7 +364,7 @@ class BrSensor(SensorEntity):
         self._attr_name = f"{client_name} {SENSOR_TYPES[sensor_type][0]}"
         self._attr_icon = SENSOR_TYPES[sensor_type][2]
         self.type = sensor_type
-        self._attr_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._attr_native_unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._measured = None
         self._attr_unique_id = "{:2.6f}{:2.6f}{}".format(
             coordinates[CONF_LATITUDE], coordinates[CONF_LONGITUDE], sensor_type
@@ -438,7 +438,7 @@ class BrSensor(SensorEntity):
                     img = condition.get(IMAGE)
 
                     if new_state != self.state or img != self.entity_picture:
-                        self._attr_state = new_state
+                        self._attr_native_value = new_state
                         self._attr_entity_picture = img
                         return True
                 return False
@@ -446,9 +446,9 @@ class BrSensor(SensorEntity):
             if self.type.startswith(WINDSPEED):
                 # hass wants windspeeds in km/h not m/s, so convert:
                 try:
-                    self._attr_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    self._attr_native_value = data.get(FORECAST)[fcday].get(self.type[:-3])
                     if self.state is not None:
-                        self._attr_state = round(self.state * 3.6, 1)
+                        self._attr_native_value = round(self.state * 3.6, 1)
                     return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s", fcday)
@@ -456,7 +456,7 @@ class BrSensor(SensorEntity):
 
             # update all other sensors
             try:
-                self._attr_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                self._attr_native_value = data.get(FORECAST)[fcday].get(self.type[:-3])
                 return True
             except IndexError:
                 _LOGGER.warning("No forecast for fcday=%s", fcday)
@@ -480,7 +480,7 @@ class BrSensor(SensorEntity):
                 img = condition.get(IMAGE)
 
                 if new_state != self.state or img != self.entity_picture:
-                    self._attr_state = new_state
+                    self._attr_native_value = new_state
                     self._attr_entity_picture = img
                     return True
 
@@ -490,25 +490,25 @@ class BrSensor(SensorEntity):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
-            self._attr_state = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
+            self._attr_native_value = nested.get(self.type[len(PRECIPITATION_FORECAST) + 1 :])
             return True
 
         if self.type in [WINDSPEED, WINDGUST]:
             # hass wants windspeeds in km/h not m/s, so convert:
-            self._attr_state = data.get(self.type)
+            self._attr_native_value = data.get(self.type)
             if self.state is not None:
-                self._attr_state = round(data.get(self.type) * 3.6, 1)
+                self._attr_native_value = round(data.get(self.type) * 3.6, 1)
             return True
 
         if self.type == VISIBILITY:
             # hass wants visibility in km (not m), so convert:
-            self._attr_state = data.get(self.type)
+            self._attr_native_value = data.get(self.type)
             if self.state is not None:
-                self._attr_state = round(self.state / 1000, 1)
+                self._attr_native_value = round(self.state / 1000, 1)
             return True
 
         # update all other sensors
-        self._attr_state = data.get(self.type)
+        self._attr_native_value = data.get(self.type)
         if self.type.startswith(PRECIPITATION_FORECAST):
             result = {ATTR_ATTRIBUTION: data.get(ATTRIBUTION)}
             if self._timeframe is not None:

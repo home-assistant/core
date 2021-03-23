@@ -141,13 +141,12 @@ class ArestSensor(SensorEntity):
         self.arest = arest
         self._attr_name = f"{location.title()} {name.title()}"
         self._variable = variable
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
         self._renderer = renderer
 
         if pin is not None:
             request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
             if request.status_code != HTTP_OK:
-                _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):
         """Get the latest data from aREST API."""
@@ -155,9 +154,9 @@ class ArestSensor(SensorEntity):
         self._attr_available = self.arest.available
         values = self.arest.data
         if "error" in values:
-            self._attr_state = values["error"]
+            self._attr_native_value = values["error"]
         else:
-            self._attr_state = self._renderer(
+            self._attr_native_value = self._renderer(
                 values.get("value", values.get(self._variable, None))
             )
 
