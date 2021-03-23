@@ -382,7 +382,7 @@ class XiaomiAirPurifier(XiaomiMiioEntity, SensorEntity):
                 self._available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-                
+
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
