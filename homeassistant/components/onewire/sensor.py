@@ -396,7 +396,16 @@ def get_entities(onewirehub: OneWireHub, config):
     return entities
 
 
-class OneWireProxySensor(OneWireProxyEntity, SensorEntity):
+class OneWireSensor(OneWireBaseEntity, SensorEntity):
+    """Mixin for sensor specific attributes."""
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit the value is expressed in."""
+        return self._unit_of_measurement
+
+
+class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     """Implementation of a 1-Wire sensor connected through owserver."""
 
     @property
@@ -405,7 +414,7 @@ class OneWireProxySensor(OneWireProxyEntity, SensorEntity):
         return self._state
 
 
-class OneWireDirectSensor(OneWireBaseEntity, SensorEntity):
+class OneWireDirectSensor(OneWireSensor):
     """Implementation of a 1-Wire sensor directly connected to RPI GPIO."""
 
     def __init__(self, name, device_file, device_info, owsensor):
@@ -417,11 +426,6 @@ class OneWireDirectSensor(OneWireBaseEntity, SensorEntity):
     def state(self) -> StateType:
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     def update(self):
         """Get the latest data from the device."""
@@ -438,7 +442,7 @@ class OneWireDirectSensor(OneWireBaseEntity, SensorEntity):
         self._state = value
 
 
-class OneWireOWFSSensor(OneWireBaseEntity, SensorEntity):  # pragma: no cover
+class OneWireOWFSSensor(OneWireSensor):  # pragma: no cover
     """Implementation of a 1-Wire sensor through owfs.
 
     This part of the implementation does not conform to policy regarding 3rd-party libraries, and will not longer be updated.
@@ -449,11 +453,6 @@ class OneWireOWFSSensor(OneWireBaseEntity, SensorEntity):  # pragma: no cover
     def state(self) -> StateType:
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
