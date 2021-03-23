@@ -15,7 +15,7 @@
                     "longitude": "Lengtegraad",
                     "station": "METAR-zendercode"
                 },
-                "description": "Als er geen METAR-zendercode is opgegeven, worden de lengte- en breedtegraad gebruikt om het dichtstbijzijnde station te vinden.",
+                "description": "Als er geen METAR-stationscode is opgegeven, worden de lengte- en breedtegraad gebruikt om het dichtstbijzijnde station te vinden. Voorlopig kan een API-sleutel van alles zijn. Het wordt aanbevolen om een geldig e-mailadres te gebruiken.",
                 "title": "Maak verbinding met de National Weather Service"
             }
         }
