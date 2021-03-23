@@ -13,8 +13,7 @@ from .const import ATTR_HUUID, ATTR_PREFERENCES, DOMAIN, INTERVAL
 
 async def async_setup(hass: HomeAssistant, _):
     """Set up the analytics integration."""
-    huuid = await hass.helpers.instance_id.async_get()
-    analytics = Analytics(hass, huuid)
+    analytics = Analytics(hass)
 
     # Load stored data
     await analytics.load()
@@ -46,9 +45,10 @@ async def websocket_analytics_preferences(
 ) -> None:
     """Return analytics preferences."""
     analytics: Analytics = hass.data[DOMAIN]
+    huuid = await hass.helpers.instance_id.async_get()
     connection.send_result(
         msg["id"],
-        {ATTR_PREFERENCES: analytics.preferences, ATTR_HUUID: analytics.huuid},
+        {ATTR_PREFERENCES: analytics.preferences, ATTR_HUUID: huuid},
     )
 
 

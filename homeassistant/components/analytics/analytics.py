@@ -49,10 +49,9 @@ DEFAULT_DATA = {ATTR_ONBOARDED: False, ATTR_PREFERENCES: []}
 class Analytics:
     """Analytics helper class for the analytics integration."""
 
-    def __init__(self, hass: HomeAssistant, huuid: str) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
-        self.huuid = huuid
         self.session = async_get_clientsession(hass)
         self._data = DEFAULT_DATA
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -101,18 +100,21 @@ class Analytics:
     async def send_analytics(self, _=None) -> None:
         """Send analytics."""
         supervisor_info = None
-        if self._supervisor:
-            supervisor_info = await self._supervisor.get_supervisor_info()
 
         if not self.onboarded or AnalyticsPreference.BASE not in self.preferences:
             LOGGER.debug("Nothing to submit")
             return
 
+        huuid = await self.hass.helpers.instance_id.async_get()
+
+        if self._supervisor:
+            supervisor_info = await self._supervisor.get_supervisor_info()
+
         system_info = await async_get_system_info(self.hass)
         integrations = []
         addons = []
         payload: dict = {
-            ATTR_HUUID: self.huuid,
+            ATTR_HUUID: huuid,
             ATTR_VERSION: HA_VERSION,
             ATTR_INSTALLATION_TYPE: system_info[ATTR_INSTALLATION_TYPE],
         }
