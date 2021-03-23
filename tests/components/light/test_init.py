@@ -1099,6 +1099,57 @@ async def test_light_backwards_compatibility_color_mode(hass):
     assert state.attributes["color_mode"] == light.COLOR_MODE_HS
 
 
+async def test_invalid_color_modes(hass, caplog):
+    """Test invalid combinations of color modes."""
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("Test_0", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_1", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_2", STATE_ON))
+    platform.ENTITIES.append(platform.MockLight("Test_3", STATE_ON))
+
+    entity0 = platform.ENTITIES[0]
+    entity0.supported_color_modes = []
+
+    entity1 = platform.ENTITIES[1]
+    entity1.supported_color_modes = [light.COLOR_MODE_ONOFF, light.COLOR_MODE_RGB]
+
+    entity2 = platform.ENTITIES[2]
+    entity2.supported_color_modes = [light.COLOR_MODE_BRIGHTNESS, light.COLOR_MODE_RGB]
+
+    entity3 = platform.ENTITIES[3]
+    entity3.supported_color_modes = [light.COLOR_MODE_UNKNOWN]
+
+    assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert "Light light.test_0: Invalid supported_color_modes []" in caplog.text
+    assert (
+        "Light light.test_1: Invalid supported_color_modes ['onoff', 'rgb']"
+        in caplog.text
+    )
+    assert (
+        "Light light.test_2: Invalid supported_color_modes ['brightness', 'rgb']"
+        in caplog.text
+    )
+    assert (
+        "Light light.test_3: Invalid supported_color_modes ['unknown']" in caplog.text
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_ONOFF]
+
+    state = hass.states.get(entity1.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_ONOFF]
+
+    state = hass.states.get(entity2.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_ONOFF]
+
+    state = hass.states.get(entity3.entity_id)
+    assert state.attributes["supported_color_modes"] == [light.COLOR_MODE_ONOFF]
+
+
 async def test_light_service_call_rgbw(hass):
     """Test backwards compatibility for rgbw functionality in service calls."""
     platform = getattr(hass.components, "test.light")
