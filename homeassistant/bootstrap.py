@@ -20,6 +20,7 @@ from homeassistant.components import http
 from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
@@ -28,6 +29,7 @@ from homeassistant.setup import (
     async_setup_component,
 )
 from homeassistant.util.async_ import gather_with_concurrency
+import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_activate_log_queue_handler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 
@@ -42,6 +44,8 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 DATA_LOGGING = "logging"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
+SLOW_STARTUP_CHECK_INTERVAL = 1
+SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
@@ -380,19 +384,29 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     return domains
 
 
-async def _async_log_pending_setups(
+async def _async_watch_pending_setups(
     hass: core.HomeAssistant, domains: set[str], setup_started: dict[str, datetime]
 ) -> None:
     """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
+    loop_count = 0
     while True:
-        await asyncio.sleep(LOG_SLOW_STARTUP_INTERVAL)
+        now = dt_util.utcnow()
         remaining = [domain for domain in domains if domain in setup_started]
+        remaining_with_setup_started = {
+            domain: (now - setup_started[domain]).seconds for domain in remaining
+        }
+        async_dispatcher_send(
+            hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
+        )
+        await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
+        loop_count += SLOW_STARTUP_CHECK_INTERVAL
 
-        if remaining:
+        if loop_count > LOG_SLOW_STARTUP_INTERVAL and remaining:
             _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s",
                 ", ".join(remaining),
             )
+            loop_count = 0
         _LOGGER.debug("Running timeout Zones: %s", hass.timeout.zones)
 
 
@@ -408,7 +422,7 @@ async def async_setup_multi_components(
         for domain in domains
     }
     log_task = asyncio.create_task(
-        _async_log_pending_setups(hass, domains, setup_started)
+        _async_watch_pending_setups(hass, domains, setup_started)
     )
     await asyncio.wait(futures.values())
     log_task.cancel()
