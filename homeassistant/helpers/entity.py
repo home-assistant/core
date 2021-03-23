@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Iterable, Mapping, MutableMapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
@@ -568,7 +569,8 @@ class Entity(ABC):
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
         # Convert temperature if we detect one
-        try:
+        # Suppress ValueError (Could not convert state to float)
+        with suppress(ValueError, AttributeError):
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
             if (
@@ -587,9 +589,6 @@ class Entity(ABC):
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-        except ValueError:
-            # Could not convert state to float
-            pass
 
         if (
             self._context_set is not None
@@ -942,12 +941,10 @@ class MeasurableUnitEntity(Entity):
         """Return the unit of measurement of the entity, after unit conversion."""
         native_unit_of_measurement = self.native_unit_of_measurement
 
-        try:
-            if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+        if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+            # Suppress AttributeError to handle tests testing directly on entity objects
+            with suppress(ValueError, AttributeError):
                 return self.hass.config.units.temperature_unit
-        except AttributeError:
-            # To handle tests testing directly on entity objects, without setting hass
-            pass
 
         return native_unit_of_measurement
 
@@ -959,7 +956,9 @@ class MeasurableUnitEntity(Entity):
         value = self.native_value
 
         # Convert temperature if we detect one
-        try:
+        # Suppress ValueError (Could not convert sensor_value to float)
+        # Suppress AttributeError (Handle tests testing directly on entity objects)
+        with suppress(ValueError, AttributeError):
             units = self.hass.config.units
             if (
                 value is not None
@@ -970,11 +969,5 @@ class MeasurableUnitEntity(Entity):
                 prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
                 temp = units.temperature(float(value), unit_of_measurement)
                 value = str(round(temp) if prec == 0 else round(temp, prec))
-        except ValueError:
-            # Could not convert sensor_value to float
-            pass
-        except AttributeError:
-            # To handle tests testing directly on entity objects, without setting hass
-            pass
 
         return value
