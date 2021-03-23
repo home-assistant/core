@@ -83,8 +83,15 @@ class CloudGoogleConfig(AbstractConfig):
     async def async_initialize(self):
         """Perform async initialization of config."""
         await super().async_initialize()
-        # Remove bad data that was there until 0.103.6 - Jan 6, 2020
-        self._store.pop_agent_user_id(self._user)
+
+        # Remove old/wrong user agent ids
+        remove_agent_user_ids = []
+        for agent_user_id in self._store.agent_user_ids:
+            if agent_user_id != self.agent_user_id:
+                remove_agent_user_ids.append(agent_user_id)
+
+        for agent_user_id in remove_agent_user_ids:
+            await self.async_disconnect_agent_user(agent_user_id)
 
         self._prefs.async_listen_updates(self._async_prefs_updated)
 

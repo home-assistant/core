@@ -140,6 +140,7 @@ class GoogleConfig(AbstractConfig):
             )
 
         _LOGGER.error("No configuration for request_sync available")
+        return HTTP_INTERNAL_SERVER_ERROR
 
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
