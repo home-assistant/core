@@ -134,15 +134,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await client.async_client_close()
         await _create_reauth_flow(hass, entry)
         return False
-    except MotionEyeClientError:
+    except MotionEyeClientError as exc:
         await client.async_client_close()
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady from exc
 
     async def async_update_data():
         try:
             return await client.async_get_cameras()
         except MotionEyeClientError as exc:
-            raise UpdateFailed(f"Error communicating with API: {exc}")
+            raise UpdateFailed("Error communicating with API") from exc
 
     coordinator = DataUpdateCoordinator(
         hass,
