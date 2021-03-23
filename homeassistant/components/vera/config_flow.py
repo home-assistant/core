@@ -1,7 +1,9 @@
 """Config flow for Vera."""
+from __future__ import annotations
+
 import logging
 import re
-from typing import Any, List
+from typing import Any
 
 import pyvera as pv
 from requests.exceptions import RequestException
@@ -13,32 +15,28 @@ from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import (  # pylint: disable=unused-import
-    CONF_CONTROLLER,
-    CONF_LEGACY_UNIQUE_ID,
-    DOMAIN,
-)
+from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
 LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)
 
 
-def fix_device_id_list(data: List[Any]) -> List[int]:
+def fix_device_id_list(data: list[Any]) -> list[int]:
     """Fix the id list by converting it to a supported int list."""
     return str_to_int_list(list_to_str(data))
 
 
-def str_to_int_list(data: str) -> List[int]:
+def str_to_int_list(data: str) -> list[int]:
     """Convert a string to an int list."""
     return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
 
 
-def list_to_str(data: List[Any]) -> str:
+def list_to_str(data: list[Any]) -> str:
     """Convert an int list to a string."""
     return " ".join([str(i) for i in data])
 
 
-def new_options(lights: List[int], exclude: List[int]) -> dict:
+def new_options(lights: list[int], exclude: list[int]) -> dict:
     """Create a standard options object."""
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 

@@ -7,12 +7,21 @@
         },
         "flow_title": "Motion Blinds",
         "step": {
+            "connect": {
+                "data": {
+                    "api_key": "Kl\u00ed\u010d API"
+                }
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP adresa"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Kl\u00ed\u010d API",
                     "host": "IP adresa"
                 },
-                "description": "Budete pot\u0159ebovat 16m\u00edstn\u00fd API kl\u00ed\u010d, pokyny najdete na https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
                 "title": "Motion Blinds"
             }
         }

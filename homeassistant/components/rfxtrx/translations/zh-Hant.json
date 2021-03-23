@@ -64,7 +64,8 @@
                     "off_delay": "\u5ef6\u9072",
                     "off_delay_enabled": "\u958b\u555f\u5ef6\u9072",
                     "replace_device": "\u9078\u64c7\u88dd\u7f6e\u4ee5\u53d6\u4ee3",
-                    "signal_repetitions": "\u8a0a\u865f\u91cd\u8907\u6b21\u6578"
+                    "signal_repetitions": "\u8a0a\u865f\u91cd\u8907\u6b21\u6578",
+                    "venetian_blind_mode": "\u767e\u8449\u7a97\u6a21\u5f0f"
                 },
                 "title": "\u8a2d\u5b9a\u88dd\u7f6e\u9078\u9805"
             }

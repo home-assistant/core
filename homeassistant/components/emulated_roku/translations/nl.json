@@ -6,8 +6,8 @@
         "step": {
             "user": {
                 "data": {
-                    "advertise_ip": "Adverteer IP",
-                    "advertise_port": "Adverterenpoort",
+                    "advertise_ip": "IP-adres zichtbaar",
+                    "advertise_port": "Adverteer Poort",
                     "host_ip": "Host IP",
                     "listen_port": "Luisterpoort",
                     "name": "Naam",
@@ -17,5 +17,5 @@
             }
         }
     },
-    "title": "EmulatedRoku"
+    "title": "Emulated Roku"
 }

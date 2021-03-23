@@ -1,12 +1,14 @@
 """Support for ReCollect Waste sensors."""
-from typing import Callable, List
+from __future__ import annotations
+
+from typing import Callable
 
 from aiorecollect.client import PickupType
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import (
@@ -25,8 +27,6 @@ DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_ICON = "mdi:trash-can-outline"
 
-CONF_NAME = "name"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PLACE_ID): cv.string,
@@ -38,8 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 @callback
 def async_get_pickup_type_names(
-    entry: ConfigEntry, pickup_types: List[PickupType]
-) -> List[str]:
+    entry: ConfigEntry, pickup_types: list[PickupType]
+) -> list[str]:
     """Return proper pickup type names from their associated objects."""
     return [
         t.friendly_name
@@ -57,8 +57,8 @@ async def async_setup_platform(
 ):
     """Import Recollect Waste configuration from YAML."""
     LOGGER.warning(
-        "Loading ReCollect Waste via platform setup is deprecated. "
-        "Please remove it from your configuration."
+        "Loading ReCollect Waste via platform setup is deprecated; "
+        "Please remove it from your configuration"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -77,7 +77,7 @@ async def async_setup_entry(
     async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
-class ReCollectWasteSensor(CoordinatorEntity):
+class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
     def __init__(self, coordinator: DataUpdateCoordinator, entry: ConfigEntry) -> None:
@@ -88,7 +88,7 @@ class ReCollectWasteSensor(CoordinatorEntity):
         self._state = None
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         return self._attributes
 

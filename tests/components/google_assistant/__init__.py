@@ -144,6 +144,15 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "cover.pergola_roof",
+        "name": {"name": "Pergola Roof"},
+        "traits": [
+            "action.devices.traits.OpenClose",
+        ],
+        "type": "action.devices.types.BLINDS",
+        "willReportState": False,
+    },
+    {
         "id": "cover.hall_window",
         "name": {"name": "Hall Window"},
         "traits": [
@@ -173,6 +182,19 @@ DEMO_DEVICES = [
     {
         "id": "media_player.bedroom",
         "name": {"name": "Bedroom"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
+        "id": "media_player.kitchen",
+        "name": {"name": "Kitchen"},
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Volume",
@@ -237,6 +259,27 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "fan.percentage_full_fan",
+        "name": {"name": "Percentage Full Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.percentage_limited_fan",
+        "name": {"name": "Percentage Limited Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.preset_only_limited_fan",
+        "name": {"name": "Preset Only Limited Fan"},
+        "traits": ["action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
         "traits": [
@@ -246,7 +289,15 @@ DEMO_DEVICES = [
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
         "attributes": {
-            "availableThermostatModes": "off,heat,cool,heatcool,auto,dry,fan-only",
+            "availableThermostatModes": [
+                "off",
+                "heat",
+                "cool",
+                "heatcool",
+                "auto",
+                "dry",
+                "fan-only",
+            ],
             "thermostatTemperatureUnit": "C",
         },
     },

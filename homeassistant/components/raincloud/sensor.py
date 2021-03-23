@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class RainCloudSensor(RainCloudEntity):
+class RainCloudSensor(RainCloudEntity, SensorEntity):
     """A sensor implementation for raincloud device."""
 
     @property

@@ -1,7 +1,8 @@
 """Support for FFmpeg."""
+from __future__ import annotations
+
 import asyncio
 import re
-from typing import Optional
 
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
 import voluptuous as vol
@@ -93,7 +94,7 @@ async def async_get_image(
     hass: HomeAssistantType,
     input_source: str,
     output_format: str = IMAGE_JPEG,
-    extra_cmd: Optional[str] = None,
+    extra_cmd: str | None = None,
 ):
     """Get an image from a frame of an RTSP stream."""
     manager = hass.data[DATA_FFMPEG]

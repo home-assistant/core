@@ -3,6 +3,7 @@ import logging
 
 from bimmer_connected.state import ChargingState
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_KILOMETERS,
@@ -12,7 +13,6 @@ from homeassistant.const import (
     VOLUME_GALLONS,
     VOLUME_LITERS,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import DOMAIN as BMW_DOMAIN, BMWConnectedDriveBaseEntity
@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities, True)
 
 
-class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, Entity):
+class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
     """Representation of a BMW vehicle sensor."""
 
     def __init__(self, account, vehicle, attribute: str, attribute_info):

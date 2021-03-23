@@ -8,6 +8,7 @@ from elkm1_lib.const import (
 from elkm1_lib.util import pretty_const, username
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import VOLT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -67,7 +68,7 @@ def temperature_to_state(temperature, undefined_temperature):
     return temperature if temperature > undefined_temperature else None
 
 
-class ElkSensor(ElkAttachedEntity):
+class ElkSensor(ElkAttachedEntity, SensorEntity):
     """Base representation of Elk-M1 sensor."""
 
     def __init__(self, element, elk, elk_data):
@@ -136,7 +137,7 @@ class ElkKeypad(ElkSensor):
         return "mdi:thermometer-lines"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
         attrs["area"] = self._element.area + 1
@@ -163,7 +164,7 @@ class ElkPanel(ElkSensor):
         return "mdi:home"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
         attrs["system_trouble_status"] = self._element.system_trouble_status
@@ -190,7 +191,7 @@ class ElkSetting(ElkSensor):
         self._state = self._element.value
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
         attrs["value_format"] = SettingFormat(self._element.value_format).name.lower()
@@ -227,7 +228,7 @@ class ElkZone(ElkSensor):
         return f"mdi:{zone_icons.get(self._element.definition, 'alarm-bell')}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Attributes of the sensor."""
         attrs = self.initial_attrs()
         attrs["physical_status"] = ZonePhysicalStatus(

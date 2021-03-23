@@ -27,7 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     AUTOMATIC_SETUP_STRING,
@@ -230,10 +230,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         entry = await self.async_set_unique_id(server_id)
-        if (
-            self.context[CONF_SOURCE]  # pylint: disable=no-member
-            == config_entries.SOURCE_REAUTH
-        ):
+        if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(entry, data=data)
             _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -243,7 +240,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
 
-        return self.async_create_entry(title=plex_server.friendly_name, data=data)
+        return self.async_create_entry(title=url, data=data)
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
@@ -280,7 +277,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         host = f"{discovery_info['from'][0]}:{discovery_info['data']['Port']}"
         name = discovery_info["data"]["Name"]
-        self.context["title_placeholders"] = {  # pylint: disable=no-member
+        self.context["title_placeholders"] = {
             "host": host,
             "name": name,
         }

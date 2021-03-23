@@ -240,9 +240,17 @@ async def async_start(
     hass.data[ALREADY_DISCOVERED] = {}
     hass.data[PENDING_DISCOVERED] = {}
 
-    hass.data[DISCOVERY_UNSUBSCRIBE] = await mqtt.async_subscribe(
-        hass, f"{discovery_topic}/#", async_discovery_message_received, 0
+    discovery_topics = [
+        f"{discovery_topic}/+/+/config",
+        f"{discovery_topic}/+/+/+/config",
+    ]
+    hass.data[DISCOVERY_UNSUBSCRIBE] = await asyncio.gather(
+        *(
+            mqtt.async_subscribe(hass, topic, async_discovery_message_received, 0)
+            for topic in discovery_topics
+        )
     )
+
     hass.data[LAST_DISCOVERY] = time.time()
     mqtt_integrations = await async_get_mqtt(hass)
 
@@ -289,9 +297,10 @@ async def async_start(
 
 async def async_stop(hass: HomeAssistantType) -> bool:
     """Stop MQTT Discovery."""
-    if DISCOVERY_UNSUBSCRIBE in hass.data and hass.data[DISCOVERY_UNSUBSCRIBE]:
-        hass.data[DISCOVERY_UNSUBSCRIBE]()
-        hass.data[DISCOVERY_UNSUBSCRIBE] = None
+    if DISCOVERY_UNSUBSCRIBE in hass.data:
+        for unsub in hass.data[DISCOVERY_UNSUBSCRIBE]:
+            unsub()
+        hass.data[DISCOVERY_UNSUBSCRIBE] = []
     if INTEGRATION_UNSUBSCRIBE in hass.data:
         for key, unsub in list(hass.data[INTEGRATION_UNSUBSCRIBE].items()):
             unsub()

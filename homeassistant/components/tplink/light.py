@@ -1,9 +1,11 @@
 """Support for TPLink lights."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Any, Dict, NamedTuple, Tuple, cast
+from typing import Any, NamedTuple, cast
 
 from pyHS100 import SmartBulb, SmartDeviceException
 
@@ -88,7 +90,7 @@ class LightState(NamedTuple):
     state: bool
     brightness: int
     color_temp: float
-    hs: Tuple[int, int]
+    hs: tuple[int, int]
 
     def to_param(self):
         """Return a version that we can send to the bulb."""
@@ -109,7 +111,7 @@ class LightState(NamedTuple):
 class LightFeatures(NamedTuple):
     """Light features."""
 
-    sysinfo: Dict[str, Any]
+    sysinfo: dict[str, Any]
     mac: str
     alias: str
     model: str
@@ -163,7 +165,7 @@ class TPLinkSmartBulb(LightEntity):
         return self._is_available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return self._emeter_params
 

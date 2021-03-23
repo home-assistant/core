@@ -1,11 +1,39 @@
 {
+    "config": {
+        "abort": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "flow_title": "Tuya yap\u0131land\u0131rmas\u0131",
+        "step": {
+            "user": {
+                "data": {
+                    "country_code": "Hesap \u00fclke kodunuz (\u00f6r. ABD i\u00e7in 1 veya \u00c7in i\u00e7in 86)",
+                    "password": "Parola",
+                    "platform": "Hesab\u0131n\u0131z\u0131n kay\u0131tl\u0131 oldu\u011fu uygulama",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Tuya kimlik bilgilerinizi girin.",
+                "title": "Tuya"
+            }
+        }
+    },
     "options": {
         "abort": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "error": {
+            "dev_not_config": "Cihaz t\u00fcr\u00fc yap\u0131land\u0131r\u0131lamaz",
+            "dev_not_found": "Cihaz bulunamad\u0131"
+        },
         "step": {
             "device": {
                 "data": {
+                    "brightness_range_mode": "Cihaz\u0131n kulland\u0131\u011f\u0131 parlakl\u0131k aral\u0131\u011f\u0131",
                     "max_temp": "Maksimum hedef s\u0131cakl\u0131k (varsay\u0131lan olarak min ve maks = 0 kullan\u0131n)",
                     "min_kelvin": "Kelvin destekli min renk s\u0131cakl\u0131\u011f\u0131",
                     "min_temp": "Minimum hedef s\u0131cakl\u0131k (varsay\u0131lan i\u00e7in min ve maks = 0 kullan\u0131n)",

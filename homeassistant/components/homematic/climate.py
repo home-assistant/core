@@ -7,6 +7,7 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
@@ -92,14 +93,14 @@ class HMThermostat(HMDevice, ClimateEntity):
             return "boost"
 
         if not self._hm_control_mode:
-            return None
+            return PRESET_NONE
 
         mode = HM_ATTRIBUTE_SUPPORT[HM_CONTROL_MODE][1][self._hm_control_mode]
         mode = mode.lower()
 
         # Filter HVAC states
         if mode not in (HVAC_MODE_AUTO, HVAC_MODE_HEAT):
-            return None
+            return PRESET_NONE
         return mode
 
     @property

@@ -6,13 +6,13 @@
         },
         "error": {
             "invalid_2fa": "Invalid 2 Factor Authentication, please try again.",
-            "invalid_2fa_method": "Invalid 2FA Method (Verify on Phone).",
+            "invalid_2fa_method": "Invalid 2FA Method (verify on Phone).",
             "invalid_login": "Invalid Login, please try again."
         },
         "step": {
             "2fa": {
                 "data": {
-                    "2fa": "2FA Pin"
+                    "2fa": "2FA PIN"
                 },
                 "title": "2-Factor-Authentication"
             },

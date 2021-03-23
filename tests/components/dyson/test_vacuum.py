@@ -24,28 +24,29 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 
-from .common import ENTITY_NAME, NAME, SERIAL, async_update_device, get_basic_device
+from .common import (
+    ENTITY_NAME,
+    NAME,
+    SERIAL,
+    async_get_360eye_device,
+    async_update_device,
+)
 
 ENTITY_ID = f"{PLATFORM_DOMAIN}.{ENTITY_NAME}"
 
 
 @callback
-def get_device(state=Dyson360EyeMode.FULL_CLEAN_RUNNING) -> Dyson360Eye:
+def async_get_device(state=Dyson360EyeMode.FULL_CLEAN_RUNNING) -> Dyson360Eye:
     """Return a Dyson 360 Eye device."""
-    device = get_basic_device(Dyson360Eye)
-    device.state.state = state
-    device.state.battery_level = 85
-    device.state.power_mode = PowerMode.QUIET
-    device.state.position = (0, 0)
-    return device
+    return async_get_360eye_device(state)
 
 
 async def test_state(hass: HomeAssistant, device: Dyson360Eye) -> None:
     """Test the state of the vacuum."""
-    er = await entity_registry.async_get_registry(hass)
-    assert er.async_get(ENTITY_ID).unique_id == SERIAL
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(ENTITY_ID).unique_id == SERIAL
 
     state = hass.states.get(ENTITY_ID)
     assert state.name == NAME

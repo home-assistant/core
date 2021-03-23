@@ -5,21 +5,20 @@ import logging
 import Adafruit_DHT  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    CONF_PIN,
     PERCENTAGE,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PIN = "pin"
 CONF_SENSOR = "sensor"
 CONF_HUMIDITY_OFFSET = "humidity_offset"
 CONF_TEMPERATURE_OFFSET = "temperature_offset"
@@ -56,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
-
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     available_sensors = {
         "AM2302": Adafruit_DHT.AM2302,
@@ -94,7 +92,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class DHTSensor(Entity):
+class DHTSensor(SensorEntity):
     """Implementation of the DHT sensor."""
 
     def __init__(

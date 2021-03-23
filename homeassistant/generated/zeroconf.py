@@ -59,6 +59,11 @@ ZEROCONF = {
             "domain": "esphome"
         }
     ],
+    "_fbx-api._tcp.local.": [
+        {
+            "domain": "freebox"
+        }
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast"
@@ -94,6 +99,11 @@ ZEROCONF = {
         {
             "domain": "somfy",
             "name": "gateway*"
+        }
+    ],
+    "_leap._tcp.local.": [
+        {
+            "domain": "lutron_caseta"
         }
     ],
     "_mediaremotetv._tcp.local.": [
@@ -179,6 +189,7 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",

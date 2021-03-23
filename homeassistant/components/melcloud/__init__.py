@@ -1,8 +1,10 @@
 """The MELCloud Climate integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
@@ -101,7 +103,7 @@ class MelCloudDevice:
             _LOGGER.warning("Connection failed for %s", self.name)
             self._available = False
 
-    async def async_set(self, properties: Dict[str, Any]):
+    async def async_set(self, properties: dict[str, Any]):
         """Write state changes to the MELCloud API."""
         try:
             await self.device.set(properties)
@@ -142,7 +144,7 @@ class MelCloudDevice:
         return _device_info
 
 
-async def mel_devices_setup(hass, token) -> List[MelCloudDevice]:
+async def mel_devices_setup(hass, token) -> list[MelCloudDevice]:
     """Query connected devices from MELCloud."""
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:

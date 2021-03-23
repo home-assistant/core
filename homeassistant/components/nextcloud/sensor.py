@@ -1,5 +1,5 @@
 """Summary data from Nextcoud."""
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import SensorEntity
 
 from . import DOMAIN, SENSORS
 
@@ -15,7 +15,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class NextcloudSensor(Entity):
+class NextcloudSensor(SensorEntity):
     """Represents a Nextcloud sensor."""
 
     def __init__(self, item):

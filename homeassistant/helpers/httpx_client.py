@@ -1,6 +1,8 @@
 """Helper for httpx."""
+from __future__ import annotations
+
 import sys
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 
 import httpx
 
@@ -29,7 +31,7 @@ def get_async_client(
     """
     key = DATA_ASYNC_CLIENT if verify_ssl else DATA_ASYNC_CLIENT_NOVERIFY
 
-    client: Optional[httpx.AsyncClient] = hass.data.get(key)
+    client: httpx.AsyncClient | None = hass.data.get(key)
 
     if client is None:
         client = hass.data[key] = create_async_httpx_client(hass, verify_ssl)
@@ -51,7 +53,6 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
-
     client = httpx.AsyncClient(
         verify=verify_ssl,
         headers={USER_AGENT: SERVER_SOFTWARE},

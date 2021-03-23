@@ -1,14 +1,16 @@
 """Support for Bond generic devices."""
-from typing import Any, Callable, List, Optional
+from __future__ import annotations
 
-from bond_api import Action, DeviceType
+from typing import Any, Callable
+
+from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import BPUP_SUBS, DOMAIN, HUB
 from .entity import BondEntity
 from .utils import BondDevice, BondHub
 
@@ -16,13 +18,15 @@ from .utils import BondDevice, BondHub
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up Bond generic devices."""
-    hub: BondHub = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    hub: BondHub = data[HUB]
+    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
 
-    switches = [
-        BondSwitch(hub, device)
+    switches: list[Entity] = [
+        BondSwitch(hub, device, bpup_subs)
         for device in hub.devices
         if DeviceType.is_generic(device.type)
     ]
@@ -33,13 +37,13 @@ async def async_setup_entry(
 class BondSwitch(BondEntity, SwitchEntity):
     """Representation of a Bond generic device."""
 
-    def __init__(self, hub: BondHub, device: BondDevice):
+    def __init__(self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions):
         """Create HA entity representing Bond generic device (switch)."""
-        super().__init__(hub, device)
+        super().__init__(hub, device, bpup_subs)
 
-        self._power: Optional[bool] = None
+        self._power: bool | None = None
 
-    def _apply_state(self, state: dict):
+    def _apply_state(self, state: dict) -> None:
         self._power = state.get("power")
 
     @property

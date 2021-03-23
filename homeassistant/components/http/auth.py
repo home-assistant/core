@@ -9,7 +9,7 @@ import jwt
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-from .const import KEY_AUTHENTICATED, KEY_HASS_USER
+from .const import KEY_AUTHENTICATED, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -62,6 +62,7 @@ def setup_auth(hass, app):
             return False
 
         request[KEY_HASS_USER] = refresh_token.user
+        request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
     async def async_validate_signed_request(request):
@@ -92,6 +93,7 @@ def setup_auth(hass, app):
             return False
 
         request[KEY_HASS_USER] = refresh_token.user
+        request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
     @middleware

@@ -1,10 +1,9 @@
 """Support for MyChevy sensors."""
 import logging
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
@@ -46,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class MyChevyStatus(Entity):
+class MyChevyStatus(SensorEntity):
     """A string representing the charge mode."""
 
     _name = "MyChevy Status"
@@ -109,7 +108,7 @@ class MyChevyStatus(Entity):
         return False
 
 
-class EVSensor(Entity):
+class EVSensor(SensorEntity):
     """Base EVSensor class.
 
     The only real difference between sensors is which units and what
@@ -160,6 +159,8 @@ class EVSensor(Entity):
         """Update state."""
         if self._car is not None:
             self._state = getattr(self._car, self._attr, None)
+            if self._unit_of_measurement == "miles":
+                self._state = round(self._state)
             for attr in self._extra_attrs:
                 self._state_attributes[attr] = getattr(self._car, attr)
             self.async_write_ha_state()
@@ -170,7 +171,7 @@ class EVSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return all the state attributes."""
         return self._state_attributes
 

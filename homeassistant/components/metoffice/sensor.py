@@ -1,4 +1,5 @@
 """Support for UK Met Office weather service."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_HUMIDITY,
@@ -10,7 +11,6 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import (
@@ -92,7 +92,7 @@ async def async_setup_entry(
     )
 
 
-class MetOfficeCurrentSensor(Entity):
+class MetOfficeCurrentSensor(SensorEntity):
     """Implementation of a Met Office current weather condition sensor."""
 
     def __init__(self, entry_data, hass_data, sensor_type):
@@ -171,7 +171,7 @@ class MetOfficeCurrentSensor(Entity):
         return SENSOR_TYPES[self._type][1]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the device."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,

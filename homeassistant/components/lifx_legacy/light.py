@@ -46,13 +46,22 @@ SUPPORT_LIFX = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_SERVER): cv.string, vol.Optional(CONF_BROADCAST): cv.string}
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_SERVER),
+    cv.deprecated(CONF_BROADCAST),
+    PLATFORM_SCHEMA.extend(
+        {vol.Optional(CONF_SERVER): cv.string, vol.Optional(CONF_BROADCAST): cv.string}
+    ),
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LIFX platform."""
+    _LOGGER.warning(
+        "The LIFX Legacy platform is deprecated and will be removed in "
+        "Home Assistant Core 2021.6.0; Use the LIFX integration instead"
+    )
+
     server_addr = config.get(CONF_SERVER)
     broadcast_addr = config.get(CONF_BROADCAST)
 

@@ -57,9 +57,9 @@ async def async_setup_entry(hass, config_entry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
@@ -70,8 +70,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -100,13 +100,13 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator):
         self.accuweather = AccuWeather(api_key, session, location_key=self.location_key)
 
         # Enabling the forecast download increases the number of requests per data
-        # update, we use 32 minutes for current condition only and 64 minutes for
+        # update, we use 40 minutes for current condition only and 80 minutes for
         # current condition and forecast as update interval to not exceed allowed number
-        # of requests. We have 50 requests allowed per day, so we use 45 and leave 5 as
+        # of requests. We have 50 requests allowed per day, so we use 36 and leave 14 as
         # a reserve for restarting HA.
-        update_interval = (
-            timedelta(minutes=64) if self.forecast else timedelta(minutes=32)
-        )
+        update_interval = timedelta(minutes=40)
+        if self.forecast:
+            update_interval *= 2
         _LOGGER.debug("Data will be update every %s", update_interval)
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)

@@ -1,4 +1,5 @@
 """Support for Speedtest.net internet speed testing sensor."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -30,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class SpeedtestSensor(CoordinatorEntity, RestoreEntity):
+class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Implementation of a speedtest.net sensor."""
 
     def __init__(self, coordinator, sensor_type):
@@ -67,7 +68,7 @@ class SpeedtestSensor(CoordinatorEntity, RestoreEntity):
         return ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self.coordinator.data:
             return None

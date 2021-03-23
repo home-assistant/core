@@ -9,10 +9,9 @@ from datetime import datetime, timedelta
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, HTTP_OK, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([DublinPublicTransportSensor(data, stop, route, name)], True)
 
 
-class DublinPublicTransportSensor(Entity):
+class DublinPublicTransportSensor(SensorEntity):
     """Implementation of an Dublin public transport sensor."""
 
     def __init__(self, data, stop, route, name):
@@ -87,7 +86,7 @@ class DublinPublicTransportSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"

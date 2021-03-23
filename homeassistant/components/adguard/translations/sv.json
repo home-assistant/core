@@ -6,8 +6,8 @@
         },
         "step": {
             "hassio_confirm": {
-                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till AdGuard Home som tillhandah\u00e5lls av Hass.io Add-on: {addon}?",
-                "title": "AdGuard Home via Hass.io-till\u00e4gget"
+                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till AdGuard Home som tillhandah\u00e5lls av Supervisor Add-on: {addon}?",
+                "title": "AdGuard Home via Supervisor-till\u00e4gget"
             },
             "user": {
                 "data": {

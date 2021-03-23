@@ -42,6 +42,21 @@ DHCP = [
         "macaddress": "B4E62D*"
     },
     {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "48A2E6"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "B82CA0"
+    },
+    {
+        "domain": "lyric",
+        "hostname": "lyric-*",
+        "macaddress": "00D02D"
+    },
+    {
         "domain": "nest",
         "macaddress": "18B430*"
     },
@@ -54,6 +69,10 @@ DHCP = [
         "domain": "nuheat",
         "hostname": "nuheat",
         "macaddress": "002338*"
+    },
+    {
+        "domain": "nuki",
+        "hostname": "nuki_bridge_*"
     },
     {
         "domain": "powerwall",
@@ -89,6 +108,11 @@ DHCP = [
         "domain": "roomba",
         "hostname": "irobot-*",
         "macaddress": "501479*"
+    },
+    {
+        "domain": "screenlogic",
+        "hostname": "pentair: *",
+        "macaddress": "00C033*"
     },
     {
         "domain": "sense",
@@ -134,5 +158,9 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "verisure",
+        "macaddress": "0023C1*"
     }
 ]

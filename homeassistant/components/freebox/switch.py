@@ -1,8 +1,9 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
-import logging
-from typing import Dict
+from __future__ import annotations
 
-from aiofreepybox.exceptions import InsufficientPermissionsError
+import logging
+
+from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -48,7 +49,7 @@ class FreeboxWifiSwitch(SwitchEntity):
         return self._state
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> dict[str, any]:
         """Return the device information."""
         return self._router.device_info
 

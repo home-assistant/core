@@ -7,7 +7,7 @@ import sys
 import psutil
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_RESOURCES,
     CONF_TYPE,
@@ -20,7 +20,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -174,7 +173,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # If not, do not create the entity and add a warning to the log
         if resource[CONF_TYPE] == "processor_temperature":
             if SystemMonitorSensor.read_cpu_temperature() is None:
-                _LOGGER.warning("Cannot read CPU / processor temperature information.")
+                _LOGGER.warning("Cannot read CPU / processor temperature information")
                 continue
 
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
@@ -182,7 +181,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class SystemMonitorSensor(Entity):
+class SystemMonitorSensor(SensorEntity):
     """Implementation of a system monitor sensor."""
 
     def __init__(self, sensor_type, argument=""):
@@ -316,9 +315,11 @@ class SystemMonitorSensor(Entity):
             else:
                 self._state = None
         elif self.type == "last_boot":
-            self._state = dt_util.as_local(
-                dt_util.utc_from_timestamp(psutil.boot_time())
-            ).isoformat()
+            # Only update on initial setup
+            if self._state is None:
+                self._state = dt_util.as_local(
+                    dt_util.utc_from_timestamp(psutil.boot_time())
+                ).isoformat()
         elif self.type == "load_1m":
             self._state = round(os.getloadavg()[0], 2)
         elif self.type == "load_5m":

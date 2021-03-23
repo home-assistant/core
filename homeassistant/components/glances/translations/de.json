@@ -1,10 +1,10 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host ist bereits konfiguriert."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
         },
         "error": {
-            "cannot_connect": "Verbindung zum Host nicht m\u00f6glich",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "wrong_version": "Version nicht unterst\u00fctzt (nur 2 oder 3)"
         },
         "step": {

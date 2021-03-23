@@ -1,22 +1,30 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Autorisierungs-URL.",
-            "missing_configuration": "Die Withings-Integration ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+            "already_configured": "Konfiguration des Profils aktualisiert.",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
+            "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
+            "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url})."
         },
         "create_entry": {
             "default": "Erfolgreiche Authentifizierung mit Withings."
         },
+        "error": {
+            "already_configured": "Konto wurde bereits konfiguriert"
+        },
         "step": {
             "pick_implementation": {
-                "title": "Authentifizierungsmethode ausw\u00e4hlen"
+                "title": "W\u00e4hle die Authentifizierungsmethode"
             },
             "profile": {
                 "data": {
-                    "profile": "Profil"
+                    "profile": "Profilname"
                 },
                 "description": "Welches Profil hast du auf der Withings-Website ausgew\u00e4hlt? Es ist wichtig, dass die Profile \u00fcbereinstimmen, da sonst die Daten falsch beschriftet werden.",
                 "title": "Benutzerprofil"
+            },
+            "reauth": {
+                "title": "Integration erneut authentifizieren"
             }
         }
     }

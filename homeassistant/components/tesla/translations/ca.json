@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El compte ja ha estat configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
         "error": {
             "already_configured": "El compte ja ha estat configurat",
             "cannot_connect": "Ha fallat la connexi\u00f3",

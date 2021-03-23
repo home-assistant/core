@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontot har redan konfigurerats"
+            "already_configured": "Kontot har redan konfigurerats",
+            "no_device": "Ingen av dina enheter har \"Hitta min iPhone\" aktiverat"
         },
         "error": {
             "send_verification_code": "Det gick inte att skicka verifieringskod",

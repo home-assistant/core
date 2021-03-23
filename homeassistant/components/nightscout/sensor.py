@@ -1,17 +1,21 @@
 """Support for Nightscout sensors."""
+from __future__ import annotations
+
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
-from typing import Callable, List
+from typing import Callable
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-from .const import ATTR_DATE, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -23,14 +27,14 @@ DEFAULT_NAME = "Blood Glucose"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up the Glucose Sensor."""
     api = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
 
 
-class NightscoutSensor(Entity):
+class NightscoutSensor(SensorEntity):
     """Implementation of a Nightscout sensor."""
 
     def __init__(self, api: NightscoutAPI, name, unique_id):
@@ -114,6 +118,6 @@ class NightscoutSensor(Entity):
         return switcher.get(self._attributes[ATTR_DIRECTION], "mdi:cloud-question")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
