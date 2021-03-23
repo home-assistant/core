@@ -24,19 +24,8 @@ from .gateway import get_gateway_from_config_entry
 
 ORDERED_NAMED_FAN_SPEEDS = [1, 2, 3, 4]
 
-LEGACY_SPEEDS = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 2, SPEED_HIGH: 4}
-
-
-def convert_speed(speed: int) -> str:
-    """Convert speed from deCONZ to HASS.
-
-    Fallback to medium speed if unsupported by HASS fan platform.
-    """
-    if speed in LEGACY_SPEEDS.values():
-        for hass_speed, deconz_speed in LEGACY_SPEEDS.items():
-            if speed == deconz_speed:
-                return hass_speed
-    return SPEED_MEDIUM
+LEGACY_SPEED_TO_DECONZ = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 2, SPEED_HIGH: 4}
+LEGACY_DECONZ_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 4: SPEED_HIGH}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
@@ -108,7 +97,7 @@ class DeconzFan(DeconzDevice, FanEntity):
 
         Legacy fan support.
         """
-        return list(LEGACY_SPEEDS)
+        return list(LEGACY_SPEED_TO_DECONZ)
 
     def speed_to_percentage(self, speed: str) -> int:
         """Convert speed to percentage.
@@ -118,11 +107,11 @@ class DeconzFan(DeconzDevice, FanEntity):
         if speed == SPEED_OFF:
             return 0
 
-        if speed not in LEGACY_SPEEDS:
+        if speed not in LEGACY_SPEED_TO_DECONZ:
             speed = SPEED_MEDIUM
 
         return ordered_list_item_to_percentage(
-            ORDERED_NAMED_FAN_SPEEDS, LEGACY_SPEEDS[speed]
+            ORDERED_NAMED_FAN_SPEEDS, LEGACY_SPEED_TO_DECONZ[speed]
         )
 
     def percentage_to_speed(self, percentage: int) -> str:
@@ -132,8 +121,9 @@ class DeconzFan(DeconzDevice, FanEntity):
         """
         if percentage == 0:
             return SPEED_OFF
-        return convert_speed(
-            percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
+        return LEGACY_DECONZ_TO_SPEED.get(
+            percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage),
+            SPEED_MEDIUM,
         )
 
     @property
@@ -159,10 +149,10 @@ class DeconzFan(DeconzDevice, FanEntity):
 
         Legacy fan support.
         """
-        if speed not in LEGACY_SPEEDS:
+        if speed not in LEGACY_SPEED_TO_DECONZ:
             raise ValueError(f"Unsupported speed {speed}")
 
-        await self._device.set_speed(LEGACY_SPEEDS[speed])
+        await self._device.set_speed(LEGACY_SPEED_TO_DECONZ[speed])
 
     async def async_turn_on(
         self,
