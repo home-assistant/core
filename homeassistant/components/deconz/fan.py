@@ -89,6 +89,8 @@ class DeconzFan(DeconzDevice, FanEntity):
     @property
     def percentage(self) -> Optional[int]:
         """Return the current speed percentage."""
+        if self._device.speed == 0:
+            return 0
         if self._device.speed not in ORDERED_NAMED_FAN_SPEEDS:
             return
         return ordered_list_item_to_percentage(
@@ -100,13 +102,13 @@ class DeconzFan(DeconzDevice, FanEntity):
         """Return the number of speeds the fan supports."""
         return len(ORDERED_NAMED_FAN_SPEEDS)
 
-    @property
-    def speed(self) -> int:
-        """Return the current speed.
+    # @property
+    # def speed(self) -> int:
+    #     """Return the current speed.
 
-        Legacy fan support.
-        """
-        return convert_speed(self._device.speed)
+    #     Legacy fan support.
+    #     """
+    #     return convert_speed(self._device.speed)
 
     @property
     def speed_list(self) -> list:
@@ -115,6 +117,32 @@ class DeconzFan(DeconzDevice, FanEntity):
         Legacy fan support.
         """
         return list(LEGACY_SPEEDS)
+
+    def speed_to_percentage(self, speed: str) -> int:
+        """Convert speed to percentage.
+
+        Legacy fan support.
+        """
+        if speed == SPEED_OFF:
+            return 0
+
+        if speed not in LEGACY_SPEEDS:
+            speed = SPEED_MEDIUM
+
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, LEGACY_SPEEDS[speed]
+        )
+
+    def percentage_to_speed(self, percentage: int) -> str:
+        """Convert percentage to speed.
+
+        Legacy fan support.
+        """
+        if percentage == 0:
+            return SPEED_OFF
+        return convert_speed(
+            percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
+        )
 
     @property
     def supported_features(self) -> int:
@@ -130,7 +158,6 @@ class DeconzFan(DeconzDevice, FanEntity):
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        print("SET", percentage)
         await self._device.set_speed(
             percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         )
