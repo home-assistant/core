@@ -364,14 +364,11 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
                 "payload_off": "StAtE_OfF",
                 "payload_on": "StAtE_On",
                 "oscillation_command_topic": "oscillation-command-topic",
-                "oscillation_state_topic": "oscillation-state-topic",
                 "payload_oscillation_off": "OsC_OfF",
                 "payload_oscillation_on": "OsC_On",
-                "speed_state_topic": "speed-state-topic",
                 "speed_command_topic": "speed-command-topic",
                 "percentage_command_topic": "percentage-command-topic",
                 "preset_mode_command_topic": "preset-mode-command-topic",
-                "preset_mode_state_topic": "preset-mode-state-topic",
                 "speeds": ["off", "low", "medium"],
                 "preset_modes": [
                     "high",
@@ -455,6 +452,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
+    assert state.attributes.get(fan.ATTR_SPEED) == fan.SPEED_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "low")
@@ -467,7 +465,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PRESET_MODE) is None
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "low"
+    assert state.attributes.get(fan.ATTR_SPEED) == fan.SPEED_LOW
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "medium")
@@ -480,7 +479,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PRESET_MODE) is None
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "medium"
+    assert state.attributes.get(fan.ATTR_SPEED) == fan.SPEED_MEDIUM
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "high")
@@ -489,7 +489,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PRESET_MODE) is None
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "high"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
@@ -498,7 +498,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PRESET_MODE) is None
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "freaking-high"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_preset_mode(hass, "fan.test", "silent")
@@ -507,7 +507,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
-    assert state.attributes.get(fan.ATTR_PRESET_MODE) is None
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "silent"
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
@@ -545,6 +545,140 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock):
+    """Test optimistic mode without state topic without legacy speed command topic."""
+    assert await async_setup_component(
+        hass,
+        fan.DOMAIN,
+        {
+            fan.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "percentage_command_topic": "percentage-command-topic",
+                "preset_mode_command_topic": "preset-mode-command-topic",
+                "preset_modes": [
+                    "high",
+                    "freaking-high",
+                    "silent",
+                ],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    with pytest.raises(MultipleInvalid):
+        await common.async_set_percentage(hass, "fan.test", -1)
+
+    with pytest.raises(MultipleInvalid):
+        await common.async_set_percentage(hass, "fan.test", 101)
+
+    await common.async_set_percentage(hass, "fan.test", 100)
+    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "100", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "freaking-high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "freaking-high"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test", 0)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic", "0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
+    assert state.attributes.get(fan.ATTR_SPEED) is None
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
+
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
+
+    await common.async_set_preset_mode(hass, "fan.test", "high")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "preset-mode-command-topic", "high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "high"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "preset-mode-command-topic", "freaking-high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "freaking-high"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_preset_mode(hass, "fan.test", "silent")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "preset-mode-command-topic", "silent", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.attributes.get(fan.ATTR_PRESET_MODE) == "silent"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", percentage=25)
+    assert mqtt_mock.async_publish.call_count == 3
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "25", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", preset_mode="high")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_turn_on(hass, "fan.test", preset_mode="low")
 
 
 async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
@@ -684,6 +818,43 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+    await common.async_turn_on(hass, "fan.test", speed="medium")
+    assert mqtt_mock.async_publish.call_count == 3
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "medium", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", speed="high")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
 
 async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(hass, mqtt_mock):
     """Test optimistic mode without state topics with legacy speeds."""
@@ -761,6 +932,38 @@ async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(hass, mqt
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
+    await common.async_turn_on(hass, "fan.test", speed="medium")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", speed="off")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "off", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
 
 async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     """Test optimistic mode with state topic and turn on attributes."""
@@ -812,9 +1015,12 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test", speed=fan.SPEED_MEDIUM)
-    assert mqtt_mock.async_publish.call_count >= 2
+    assert mqtt_mock.async_publish.call_count == 3
     mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "medium", 0, False
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
@@ -828,9 +1034,13 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test", percentage=25)
-    assert mqtt_mock.async_publish.call_count >= 2
+    assert mqtt_mock.async_publish.call_count == 4
     mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "low", 0, False
+    )
     mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "25", 0, False)
+    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "low", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
@@ -844,10 +1054,58 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test", preset_mode="medium")
-    assert mqtt_mock.async_publish.call_count >= 2
+    assert mqtt_mock.async_publish.call_count == 3
     mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
         "preset-mode-command-topic", "medium", 0, False
+    )
+    mqtt_mock.async_publish.assert_any_call("speed-command-topic", "medium", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", preset_mode="high")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "high", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", preset_mode="silent")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "silent", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", preset_mode="silent")
+    assert mqtt_mock.async_publish.call_count == 2
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "silent", 0, False
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -865,6 +1123,26 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     mqtt_mock.async_publish.assert_called_once_with(
         "oscillation-command-topic", "oscillate_on", 0, False
     )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_on(hass, "fan.test", percentage=50)
+    assert mqtt_mock.async_publish.call_count >= 1
+    # mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "50", 0, False)
+    # mqtt_mock.async_publish.assert_any_call(
+    #     "preset-mode-command-topic", "silent", 0, False
+    # )
+    # mqtt_mock.async_publish.assert_any_call("speed-command-topic", "low", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_turn_off(hass, "fan.test")
+    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF

@@ -79,7 +79,6 @@ DEFAULT_NAME = "MQTT Fan"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 DEFAULT_OPTIMISTIC = False
-DEFAULT_PRESET_MODES = ["auto"]
 DEFAULT_SPEED_RANGE_MIN = 1
 DEFAULT_SPEED_RANGE_MAX = 100
 
@@ -527,7 +526,7 @@ class MqttFan(MqttEntity, FanEntity):
             await self.async_set_percentage(percentage)
         if preset_mode:
             await self.async_set_preset_mode(preset_mode)
-        if speed:
+        if speed and not percentage and not preset_mode:
             await self.async_set_speed(speed)
         if self._optimistic:
             self._state = True
