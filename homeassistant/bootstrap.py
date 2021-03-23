@@ -395,6 +395,7 @@ async def _async_watch_pending_setups(
         remaining_with_setup_started = {
             domain: (now - setup_started[domain]).seconds for domain in remaining
         }
+        _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         async_dispatcher_send(
             hass, SIGNAL_BOOTSTRAP_INTEGRATONS, remaining_with_setup_started
         )
