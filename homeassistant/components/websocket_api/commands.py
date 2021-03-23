@@ -257,7 +257,6 @@ def handle_get_config(hass, connection, msg):
 async def handle_manifest_list(hass, connection, msg):
     """Handle integrations command."""
     loaded_integrations = async_get_loaded_integrations(hass)
-    connection.logger.debug("loaded_integrations: %s", loaded_integrations)
     integrations = await asyncio.gather(
         *[async_get_integration(hass, domain) for domain in loaded_integrations]
     )

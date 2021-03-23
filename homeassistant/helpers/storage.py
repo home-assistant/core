@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from json import JSONEncoder
 import logging
 import os
@@ -243,7 +244,5 @@ class Store:
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
-        try:
+        with suppress(FileNotFoundError):
             await self.hass.async_add_executor_job(os.unlink, self.path)
-        except FileNotFoundError:
-            pass

@@ -1482,7 +1482,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lastfm
-pylast==4.1.0
+pylast==4.2.0
 
 # homeassistant.components.launch_library
 pylaunches==1.0.0
@@ -1551,7 +1551,7 @@ pymyq==3.0.4
 pymysensors==0.21.0
 
 # homeassistant.components.nanoleaf
-pynanoleaf==0.0.5
+pynanoleaf==0.1.0
 
 # homeassistant.components.nello
 pynello==2.0.3
@@ -2378,7 +2378,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-cc==0.5.2
 
 # homeassistant.components.zha
-zigpy-deconz==0.11.1
+zigpy-deconz==0.12.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.13.0

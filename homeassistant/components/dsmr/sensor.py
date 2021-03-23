@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from asyncio import CancelledError
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
@@ -342,10 +343,8 @@ class DSMREntity(SensorEntity):
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
-        try:
+        with suppress(TypeError):
             value = round(float(value), self._config[CONF_PRECISION])
-        except TypeError:
-            pass
 
         if value is not None:
             return value

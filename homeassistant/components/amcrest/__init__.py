@@ -1,4 +1,5 @@
 """Support for Amcrest IP cameras."""
+from contextlib import suppress
 from datetime import timedelta
 import logging
 import threading
@@ -191,10 +192,8 @@ class AmcrestChecker(Http):
     def _wrap_test_online(self, now):
         """Test if camera is back online."""
         _LOGGER.debug("Testing if %s back online", self._wrap_name)
-        try:
-            self.current_time
-        except AmcrestError:
-            pass
+        with suppress(AmcrestError):
+            self.current_time  # pylint: disable=pointless-statement
 
 
 def _monitor_events(hass, name, api, event_codes):
