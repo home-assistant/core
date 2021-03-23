@@ -1586,13 +1586,14 @@ async def test_supported_features(hass, mqtt_mock):
         and fan.SUPPORT_SET_SPEED == fan.SUPPORT_SET_SPEED
     )
     state = hass.states.get("fan.test3a3")
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
+    assert state is None
 
     state = hass.states.get("fan.test3b")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_SET_SPEED
 
     state = hass.states.get("fan.test3c1")
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
+    assert state is None
+
     state = hass.states.get("fan.test3c2")
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
@@ -1679,7 +1680,7 @@ async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
     )
 
 
-async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_json(hass, mqtt_mock, caplog):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
         hass, mqtt_mock, caplog, fan.DOMAIN, DEFAULT_CONFIG

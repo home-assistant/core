@@ -4,7 +4,10 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import fan
-from homeassistant.components.fan import (  # ATTR_SPEED, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM and SPEED_LOW; are deprecated in the schema, support will be removed after a quarter (2021.7)
+
+# ATTR_SPEED, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM and SPEED_LOW
+# are deprecated in the schema, support will be removed after a quarter (2021.7)
+from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
@@ -183,6 +186,23 @@ class MqttFan(MqttEntity, FanEntity):
         self._optimistic_percentage = None
         self._optimistic_preset_mode = None
         self._optimistic_speed = None
+        if CONF_SPEED_COMMAND_TOPIC in config and CONF_SPEED_LIST in config:
+            if not isinstance(
+                config[CONF_SPEED_LIST], list
+            ) or not speed_list_without_preset_modes(config[CONF_SPEED_LIST]):
+                raise ValueError(
+                    "No valid speeds configured, speeds mode feature disabled"
+                )
+        if (
+            CONF_PRESET_MODE_COMMAND_TOPIC in config
+            and CONF_PRESET_MODE_COMMAND_TOPIC in config
+            and (
+                not config[CONF_PRESET_MODES_LIST]
+                or not isinstance(config[CONF_PRESET_MODES_LIST], list)
+            )
+        ):
+            raise ValueError("No preset_modes configured, preset mode feature disabled")
+
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
     @staticmethod
@@ -233,24 +253,20 @@ class MqttFan(MqttEntity, FanEntity):
             "SPEED_OFF": config[CONF_PAYLOAD_OFF_SPEED],
         }
         # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
-        self._feature_legacy_speeds = False
-        if not self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
+        self._feature_legacy_speeds = not self._topic[CONF_SPEED_COMMAND_TOPIC] is None
+        if self._feature_legacy_speeds:
             self._legacy_speeds_list = config[CONF_SPEED_LIST]
             self._legacy_speeds_list_no_off = speed_list_without_preset_modes(
                 self._legacy_speeds_list
             )
-            if self._legacy_speeds_list_no_off:
-                self._feature_legacy_speeds = True
         else:
             self._legacy_speeds_list = []
 
         self._feature_percentage = (
             not self._topic[CONF_PERCENTAGE_COMMAND_TOPIC] is None
         )
-
         self._feature_preset_mode = (
             not self._topic[CONF_PRESET_MODE_COMMAND_TOPIC] is None
-            and config[CONF_PRESET_MODES_LIST]
         )
         if self._feature_preset_mode:
             self._speeds_list = speed_list_without_preset_modes(
@@ -353,7 +369,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "msg_callback": percentage_received,
                 "qos": self._config[CONF_QOS],
             }
-            self._percentage = 0
+            self._percentage = None
 
         @callback
         @log_messages(self.hass, self.entity_id)
@@ -400,27 +416,19 @@ class MqttFan(MqttEntity, FanEntity):
             else:
                 speed = None
 
-            if (
-                speed
-                and not self._implemented_percentage
-                and self._feature_legacy_speeds
-                and self._legacy_speeds_list_no_off
-                and (speed in self._speeds_list)
-            ):
-                self._percentage = ordered_list_item_to_percentage(
-                    self._speeds_list, speed
-                )
-            if (
-                speed
-                and not self._implemented_percentage
-                and self._feature_legacy_speeds
-                and speed == SPEED_OFF
-            ):
-                self._percentage = 0
             if speed and speed in self._legacy_speeds_list:
                 self._speed = speed
             else:
                 raise NotValidSpeedError(f"'{msg.payload}' is not a valid speed.")
+
+            if not self._implemented_percentage:
+                if speed in self._speeds_list:
+                    self._percentage = ordered_list_item_to_percentage(
+                        self._speeds_list, speed
+                    )
+                elif speed == SPEED_OFF:
+                    self._percentage = 0
+
             self.async_write_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
@@ -589,15 +597,16 @@ class MqttFan(MqttEntity, FanEntity):
                 await self.async_set_preset_mode(SPEED_OFF)
         # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
         elif self._feature_legacy_speeds:
-            if percentage and self._legacy_speeds_list_no_off:
+            if percentage:
                 await self.async_set_speed(
                     percentage_to_ordered_list_item(
                         self._legacy_speeds_list_no_off,
                         percentage,
                     )
                 )
-            if not percentage and SPEED_OFF in self._legacy_speeds_list:
+            elif SPEED_OFF in self._legacy_speeds_list:
                 await self.async_set_speed(SPEED_OFF)
+
         if self._implemented_percentage:
             mqtt.async_publish(
                 self.hass,
