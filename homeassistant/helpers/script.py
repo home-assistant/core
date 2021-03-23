@@ -143,26 +143,26 @@ async def trace_action(hass, script_run, stop, variables):
 
     trace_id = trace_id_get()
     if trace_id:
-        unique_id = trace_id[0]
+        key = trace_id[0]
         run_id = trace_id[1]
         breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
-        if unique_id in breakpoints and (
+        if key in breakpoints and (
             (
-                run_id in breakpoints[unique_id]
+                run_id in breakpoints[key]
                 and (
-                    path in breakpoints[unique_id][run_id]
-                    or NODE_ANY in breakpoints[unique_id][run_id]
+                    path in breakpoints[key][run_id]
+                    or NODE_ANY in breakpoints[key][run_id]
                 )
             )
             or (
-                RUN_ID_ANY in breakpoints[unique_id]
+                RUN_ID_ANY in breakpoints[key]
                 and (
-                    path in breakpoints[unique_id][RUN_ID_ANY]
-                    or NODE_ANY in breakpoints[unique_id][RUN_ID_ANY]
+                    path in breakpoints[key][RUN_ID_ANY]
+                    or NODE_ANY in breakpoints[key][RUN_ID_ANY]
                 )
             )
         ):
-            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, unique_id, run_id, path)
+            async_dispatcher_send(hass, SCRIPT_BREAKPOINT_HIT, key, run_id, path)
 
             done = asyncio.Event()
 
@@ -172,7 +172,7 @@ async def trace_action(hass, script_run, stop, variables):
                     stop.set()
                 done.set()
 
-            signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+            signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
             remove_signal1 = async_dispatcher_connect(hass, signal, async_continue_stop)
             remove_signal2 = async_dispatcher_connect(
                 hass, SCRIPT_DEBUG_CONTINUE_ALL, async_continue_stop
@@ -1281,13 +1281,13 @@ class Script:
 
 
 @callback
-def breakpoint_clear(hass, unique_id, run_id, node):
+def breakpoint_clear(hass, key, run_id, node):
     """Clear a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
-    if unique_id not in breakpoints or run_id not in breakpoints[unique_id]:
+    if key not in breakpoints or run_id not in breakpoints[key]:
         return
-    breakpoints[unique_id][run_id].discard(node)
+    breakpoints[key][run_id].discard(node)
 
 
 @callback
@@ -1297,15 +1297,15 @@ def breakpoint_clear_all(hass):
 
 
 @callback
-def breakpoint_set(hass, unique_id, run_id, node):
+def breakpoint_set(hass, key, run_id, node):
     """Set a breakpoint."""
     run_id = run_id or RUN_ID_ANY
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
-    if unique_id not in breakpoints:
-        breakpoints[unique_id] = {}
-    if run_id not in breakpoints[unique_id]:
-        breakpoints[unique_id][run_id] = set()
-    breakpoints[unique_id][run_id].add(node)
+    if key not in breakpoints:
+        breakpoints[key] = {}
+    if run_id not in breakpoints[key]:
+        breakpoints[key][run_id] = set()
+    breakpoints[key][run_id].add(node)
 
 
 @callback
@@ -1314,35 +1314,35 @@ def breakpoint_list(hass):
     breakpoints = hass.data[DATA_SCRIPT_BREAKPOINTS]
 
     return [
-        {"unique_id": unique_id, "run_id": run_id, "node": node}
-        for unique_id in breakpoints
-        for run_id in breakpoints[unique_id]
-        for node in breakpoints[unique_id][run_id]
+        {"key": key, "run_id": run_id, "node": node}
+        for key in breakpoints
+        for run_id in breakpoints[key]
+        for node in breakpoints[key][run_id]
     ]
 
 
 @callback
-def debug_continue(hass, unique_id, run_id):
+def debug_continue(hass, key, run_id):
     """Continue execution of a halted script."""
     # Clear any wildcard breakpoint
-    breakpoint_clear(hass, unique_id, run_id, NODE_ANY)
+    breakpoint_clear(hass, key, run_id, NODE_ANY)
 
-    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "continue")
 
 
 @callback
-def debug_step(hass, unique_id, run_id):
+def debug_step(hass, key, run_id):
     """Single step a halted script."""
     # Set a wildcard breakpoint
-    breakpoint_set(hass, unique_id, run_id, NODE_ANY)
+    breakpoint_set(hass, key, run_id, NODE_ANY)
 
-    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "continue")
 
 
 @callback
-def debug_stop(hass, unique_id, run_id):
+def debug_stop(hass, key, run_id):
     """Stop execution of a running or halted script."""
-    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(unique_id, run_id)
+    signal = SCRIPT_DEBUG_CONTINUE_STOP.format(key, run_id)
     async_dispatcher_send(hass, signal, "stop")
