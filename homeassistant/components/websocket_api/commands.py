@@ -4,6 +4,7 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
+from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
@@ -14,6 +15,7 @@ from homeassistant.exceptions import (
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -36,10 +38,12 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
+    async_reg(hass, handle_subscribe_bootstrap_integrations)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
+    async_reg(hass, handle_unsubscribe_bootstrap_integrations)
 
 
 def pong_message(iden):
@@ -92,6 +96,42 @@ def handle_subscribe_events(hass, connection, msg):
     )
 
     connection.send_message(messages.result_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "subscribe_bootstrap_integrations",
+    }
+)
+def handle_subscribe_bootstrap_integrations(hass, connection, msg):
+    """Handle subscribe bootstrap integrations command."""
+
+    @callback
+    def forward_bootstrap_integrations(message):
+        """Forward bootstrap integrations to websocket."""
+        connection.send_message(messages.result_message(msg["id"], message))
+
+    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
+        hass, SIGNAL_BOOTSTRAP_INTEGRATONS, forward_bootstrap_integrations
+    )
+
+    connection.send_message(messages.result_message(msg["id"]))
+
+
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "unsubscribe_bootstrap_integrations",
+        vol.Required("subscription"): cv.positive_int,
+    }
+)
+def handle_unsubscribe_bootstrap_integrations(hass, connection, msg):
+    """Handle unsubscribe bootstrap integrations command."""
+    # Currently these are the same as events so we pass on the request
+    # This api call only exists in case we change the implementation
+    # details.
+    return handle_unsubscribe_events(hass, connection, msg)
 
 
 @callback
