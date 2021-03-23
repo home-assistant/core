@@ -445,7 +445,7 @@ async def test_timeout_cancelled(hass, hass_client):
     ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
         assert respx.calls.call_count == 1
-        assert await resp.text() == "hello world"
+        assert resp.status == 500
 
     respx.get("http://example.com").side_effect = [
         httpx.RequestError,
