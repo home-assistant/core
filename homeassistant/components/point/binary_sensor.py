@@ -4,7 +4,12 @@ import logging
 from pypoint import EVENTS
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
+    DEVICE_CLASS_HEAT,
+    DEVICE_CLASS_MOISTURE,
+    DEVICE_CLASS_MOTION,
     DOMAIN,
     BinarySensorEntity,
 )
@@ -17,6 +22,24 @@ from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 _LOGGER = logging.getLogger(__name__)
 
 
+DEVICE_TYPES = {
+    "alarm": {"icon": "mdi:alarm-bell"},
+    "battery": {"device_class": DEVICE_CLASS_BATTERY},
+    "button_press": {"icon": "mdi:gesture-tap-button"},
+    "cold": {"device_class": DEVICE_CLASS_COLD},
+    "connectivity": {"device_class": DEVICE_CLASS_CONNECTIVITY},
+    "dry": {"device_class": DEVICE_CLASS_MOISTURE},
+    "glass": {"icon": "mdi:window-closed-variant"},
+    "heat": {"device_class": DEVICE_CLASS_HEAT},
+    "moisture": {"device_class": DEVICE_CLASS_MOISTURE},
+    "motion": {"device_class": DEVICE_CLASS_MOTION},
+    "noise": {"icon": "mdi:volume-high"},
+    "sound": {"icon": "mdi:volume-high"},
+    "tamper_old": {"icon": "mdi:shield-alert"},
+    "tamper": {"icon": "mdi:shield-alert"},
+}
+
+
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Point's binary sensors based on a config entry."""
 
@@ -25,8 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         client = hass.data[POINT_DOMAIN][config_entry.entry_id]
         async_add_entities(
             (
-                MinutPointBinarySensor(client, device_id, device_class)
-                for device_class in EVENTS
+                MinutPointBinarySensor(client, device_id, device_name)
+                for device_name in EVENTS
             ),
             True,
         )
@@ -39,12 +62,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, point_client, device_id, device_class):
+    def __init__(self, point_client, device_id, device_name):
         """Initialize the binary sensor."""
-        super().__init__(point_client, device_id, device_class)
-
+        super().__init__(
+            point_client,
+            device_id,
+            DEVICE_TYPES.get(device_name, {}).get("device_class"),
+        )
+        self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
-        self._events = EVENTS[device_class]
+        self._events = EVENTS[device_name]
         self._is_on = None
 
     async def async_added_to_hass(self):
@@ -93,3 +120,16 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             # connectivity is the other way around.
             return not self._is_on
         return self._is_on
+
+    @property
+    def name(self):
+        """Return the display name of this device."""
+        return f"{self._name} {self._device_name.capitalize()}"
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend, if any."""
+        icon = DEVICE_TYPES.get(self._device_name, {}).get("icon")
+        if icon:
+            return icon
+        return super().icon
