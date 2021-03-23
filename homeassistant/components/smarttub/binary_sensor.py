@@ -16,8 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
-# the date at which the reminder will be activated
-ATTR_REMINDER_DATE = "date"
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
