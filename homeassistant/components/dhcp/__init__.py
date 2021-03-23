@@ -11,6 +11,7 @@ from scapy.arch.common import compile_filter
 from scapy.config import conf
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
+from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import AsyncSniffer
 
@@ -31,7 +32,7 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.loader import async_get_dhcp
-from homeassistant.util.network import is_link_local
+from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
 from .const import DOMAIN
 
@@ -82,8 +83,14 @@ class WatcherBase:
 
     def process_client(self, ip_address, hostname, mac_address):
         """Process a client."""
-        if is_link_local(make_ip_address(ip_address)):
-            # Ignore self assigned addresses
+        made_ip_address = make_ip_address(ip_address)
+
+        if (
+            is_link_local(made_ip_address)
+            or is_loopback(made_ip_address)
+            or is_invalid(made_ip_address)
+        ):
+            # Ignore self assigned addresses, loopback, invalid
             return
 
         data = self._address_data.get(ip_address)
@@ -255,7 +262,7 @@ class DHCPWatcher(WatcherBase):
             # DHCP request
             return
 
-        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR)
+        ip_address = _decode_dhcp_option(options, REQUESTED_ADDR) or packet[IP].src
         hostname = _decode_dhcp_option(options, HOSTNAME)
         mac_address = _format_mac(packet[Ether].src)
 
