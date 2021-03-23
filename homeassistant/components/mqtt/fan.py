@@ -4,7 +4,7 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import fan
-from homeassistant.components.fan import (
+from homeassistant.components.fan import (  # ATTR_SPEED, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM and SPEED_LOW; are deprecated in the schema, support will be removed after a quarter (2021.7)
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     ATTR_SPEED,
@@ -61,6 +61,8 @@ CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
+# CONF_SPEED_STATE_TOPIC, CONF_SPEED_STATE_TOPIC and CONF_SPEED_VALUE_TEMPLATE
+# are deprecated in the schema, support will be removed after a quarter (2021.7)
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"
 CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
 CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
@@ -69,6 +71,8 @@ CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
 CONF_PAYLOAD_OSCILLATION_ON = "payload_oscillation_on"
 CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
+# CONF_PAYLOAD_OFF_SPEED, CONF_PAYLOAD_LOW_SPEED, CONF_PAYLOAD_MEDIUM_SPEED, CONF_PAYLOAD_HIGH_SPEED
+# and CONF_SPEED_LIST are deprecated in the schema, support will be removed after a quarter (2021.7)
 CONF_PAYLOAD_OFF_SPEED = "payload_off_speed"
 CONF_PAYLOAD_LOW_SPEED = "payload_low_speed"
 CONF_PAYLOAD_MEDIUM_SPEED = "payload_medium_speed"
@@ -107,6 +111,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
         ): cv.positive_int,
+        # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH and SPEED_OFF
+        # are deprecated in the schema, support will be removed after a quarter (2021.7)
         vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
         vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
         vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
@@ -119,6 +125,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
         ): cv.string,
+        # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_STATE_TOPIC, CONF_STATE_VALUE_TEMPLATE and CONF_SPEED_LIST
+        # are deprecated in the schema, support will be removed after a quarter (2021.7)
         vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
         vol.Optional(
             CONF_SPEED_LIST,
@@ -160,6 +168,7 @@ class MqttFan(MqttEntity, FanEntity):
     def __init__(self, hass, config, config_entry, discovery_data):
         """Initialize the MQTT fan."""
         self._state = False
+        # self._speed will be removed after a quarter (2021.7)
         self._speed = None
         self._percentage = None
         self._preset_mode = None
@@ -196,6 +205,8 @@ class MqttFan(MqttEntity, FanEntity):
                 CONF_PERCENTAGE_COMMAND_TOPIC,
                 CONF_PRESET_MODE_STATE_TOPIC,
                 CONF_PRESET_MODE_COMMAND_TOPIC,
+                # CONF_SPEED_STATE_TOPIC and CONF_SPEED_STATE_TOPIC are deprecated in the schema,
+                # support will be removed after a quarter (2021.7)
                 CONF_SPEED_STATE_TOPIC,
                 CONF_SPEED_COMMAND_TOPIC,
                 CONF_OSCILLATION_STATE_TOPIC,
@@ -206,6 +217,7 @@ class MqttFan(MqttEntity, FanEntity):
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_PERCENTAGE: config.get(CONF_PERCENTAGE_VALUE_TEMPLATE),
             ATTR_PRESET_MODE: config.get(CONF_PRESET_MODE_VALUE_TEMPLATE),
+            # ATTR_SPEED is deprecated in the schema, support will be removed after a quarter (2021.7)
             ATTR_SPEED: config.get(CONF_SPEED_VALUE_TEMPLATE),
             OSCILLATION: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
         }
@@ -214,11 +226,13 @@ class MqttFan(MqttEntity, FanEntity):
             "STATE_OFF": config[CONF_PAYLOAD_OFF],
             "OSCILLATE_ON_PAYLOAD": config[CONF_PAYLOAD_OSCILLATION_ON],
             "OSCILLATE_OFF_PAYLOAD": config[CONF_PAYLOAD_OSCILLATION_OFF],
+            # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
             "SPEED_LOW": config[CONF_PAYLOAD_LOW_SPEED],
             "SPEED_MEDIUM": config[CONF_PAYLOAD_MEDIUM_SPEED],
             "SPEED_HIGH": config[CONF_PAYLOAD_HIGH_SPEED],
             "SPEED_OFF": config[CONF_PAYLOAD_OFF_SPEED],
         }
+        # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
         self._feature_legacy_speeds = False
         if not self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
             self._legacy_speeds_list = config[CONF_SPEED_LIST]
@@ -369,6 +383,7 @@ class MqttFan(MqttEntity, FanEntity):
             }
             self._preset_mode = None
 
+        # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
         @callback
         @log_messages(self.hass, self.entity_id)
         def speed_received(msg):
@@ -459,6 +474,7 @@ class MqttFan(MqttEntity, FanEntity):
         """Return true if preset_mode has been implemented."""
         return self._feature_preset_mode
 
+    # The use of legacy speeds is deprecated in the schema, support will be removed after a quarter (2021.7)
     @property
     def _implemented_speed(self):
         """Return true if speed has been implemented."""
@@ -479,6 +495,7 @@ class MqttFan(MqttEntity, FanEntity):
         """Get the list of available preset modes."""
         return self._preset_modes
 
+    # The speed_list property is deprecated in the schema, support will be removed after a quarter (2021.7)
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
@@ -504,6 +521,7 @@ class MqttFan(MqttEntity, FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
+    # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
         self,
         speed: str = None,
@@ -526,6 +544,7 @@ class MqttFan(MqttEntity, FanEntity):
             await self.async_set_percentage(percentage)
         if preset_mode:
             await self.async_set_preset_mode(preset_mode)
+        # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
         if speed and not percentage and not preset_mode:
             await self.async_set_speed(speed)
         if self._optimistic:
@@ -563,10 +582,12 @@ class MqttFan(MqttEntity, FanEntity):
                         self.speed_list, percentage
                     )
                 )
+            # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
             elif self._feature_legacy_speeds and (
                 SPEED_OFF in self._legacy_speeds_list
             ):
                 await self.async_set_preset_mode(SPEED_OFF)
+        # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
         elif self._feature_legacy_speeds:
             if percentage and self._legacy_speeds_list_no_off:
                 await self.async_set_speed(
@@ -599,6 +620,7 @@ class MqttFan(MqttEntity, FanEntity):
             raise NotValidPresetModeError(
                 f"Preset mode {preset_mode} is not a valid preset mode within the range of {self.preset_modes}."
             )
+        # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
         if preset_mode in self._legacy_speeds_list:
             await self.async_set_speed(speed=preset_mode)
         if not self._implemented_percentage and preset_mode in self.speed_list:
@@ -619,6 +641,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._preset_mode = preset_mode
         self.async_write_ha_state()
 
+    # async_set_speed is deprecated, support will be removed after a quarter (2021.7)
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan.
 
