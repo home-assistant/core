@@ -1,56 +1,95 @@
 """Test the Leviosa Motor Shades Zone config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
-from homeassistant.components.leviosa_shades.config_flow import CannotConnect
-from homeassistant.components.leviosa_shades.const import DOMAIN
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.leviosa_shades.const import (
+    BLIND_GROUPS,
+    DEVICE_FW_V,
+    DEVICE_MAC,
+    DOMAIN,
+    GROUP1_NAME,
+    GROUP2_NAME,
+    GROUP3_NAME,
+    GROUP4_NAME,
+)
+from homeassistant.const import CONF_HOST, CONF_NAME
+
+TEST_HOST1 = "1.2.3.4"
+TEST_HOST2 = "5.6.7.8"
+TEST_MAC1 = "40f5205b658c"
+TEST_MAC2 = "40f5205b6687"
+
+TEST_ZONE_FW = "8.3"
+
+TEST_DISCOVERY_1 = {"uid:6bf25702-1d6a-4c7b-b949-40f5205b658c": TEST_HOST1}
+TEST_DISCOVERY_2 = {
+    "uid:6bf25702-1d6a-4c7b-b949-40f5205b658c": TEST_HOST1,
+    "uid:6bf25702-1d6a-4c7b-b949-40f5205b6687": TEST_HOST2,
+}
+
+TEST_USER_INPUT_1 = {
+    CONF_NAME: "Zone 1",
+    GROUP1_NAME: "Z1 Group 1",
+    GROUP2_NAME: "Z1 Group 2",
+    GROUP3_NAME: "Z1 Group 3",
+    GROUP4_NAME: "Z1 Group 4",
+}
+TEST_USER_INPUT_2 = {
+    CONF_NAME: "Zone 2",
+    GROUP1_NAME: "Z2 Group 1",
+    GROUP2_NAME: "Z2 Group 2",
+    GROUP3_NAME: "Z2 Group 3",
+    GROUP4_NAME: "Z2 Group 4",
+}
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+@pytest.fixture(name="leviosa_shades_connect", autouse=True)
+def leviosa_shades_connect_fixture():
+    """Mock motion blinds connection and entry setup."""
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
+        return_value=TEST_DISCOVERY_1,
+    ), patch(
+        "homeassistant.components.leviosa_shades.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+async def test_config_flow_one_zone_success(hass):
+    """Successful flow initiated by the user, one Zone discovered."""
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
+        return_value=TEST_DISCOVERY_1,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
     assert result["type"] == "form"
+    assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.leviosa_shades.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.leviosa_shades.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.leviosa_shades.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1"},
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {"host": "1.1.1.1"}
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.leviosa_shades.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.leviosa_shades.config_flow.validate_zone",
+        return_value=TEST_ZONE_FW,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1"},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT_1
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == "create_entry"
+    assert result["title"] == TEST_USER_INPUT_1[CONF_NAME]
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST1,
+        DEVICE_FW_V: TEST_ZONE_FW,
+        DEVICE_MAC: TEST_MAC1,
+        BLIND_GROUPS: [
+            "All Zone 1",
+            "Z1 Group 1",
+            "Z1 Group 2",
+            "Z1 Group 3",
+            "Z1 Group 4",
+        ],
+    }
