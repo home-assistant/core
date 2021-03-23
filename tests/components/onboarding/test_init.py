@@ -23,7 +23,7 @@ async def test_not_setup_views_if_onboarded(hass, hass_storage):
     assert onboarding.async_is_onboarded(hass)
 
 
-async def test_setup_views_if_not_onboarded(hass, hass_storage):
+async def test_setup_views_if_not_onboarded(hass):
     """Test if onboarding is not done, we setup views."""
     with patch(
         "homeassistant.components.onboarding.views.async_setup",
