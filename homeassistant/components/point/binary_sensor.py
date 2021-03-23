@@ -28,7 +28,7 @@ DEVICE_TYPES = {
     "button_press": {"icon": "mdi:gesture-tap-button"},
     "cold": {"device_class": DEVICE_CLASS_COLD},
     "connectivity": {"device_class": DEVICE_CLASS_CONNECTIVITY},
-    "dry": {"device_class": DEVICE_CLASS_MOISTURE},
+    "dry": {"icon": "mdi:water"},
     "glass": {"icon": "mdi:window-closed-variant"},
     "heat": {"device_class": DEVICE_CLASS_HEAT},
     "moisture": {"device_class": DEVICE_CLASS_MOISTURE},
@@ -127,9 +127,14 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         return f"{self._name} {self._device_name.capitalize()}"
 
     @property
-    def icon(self) -> str | None:
+    def icon(self):
         """Return the icon to use in the frontend, if any."""
         icon = DEVICE_TYPES.get(self._device_name, {}).get("icon")
         if icon:
             return icon
         return super().icon
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return f"point.{self._id}-{self._device_name}"
