@@ -46,17 +46,12 @@ async def async_setup(hass, config):
     async def async_get_db_log_settings_info(call):
         await _async_get_db_log_settings_info(hass, call)
 
-    async def async_check_db_connection(call):
-        await _async_check_db_connection(hass, call)
-
     hass.services.async_register(DOMAIN, "transfer_file", async_transfer_file)
     hass.services.async_register(DOMAIN, "remove_file", async_remove_file)
     hass.services.async_register(
         DOMAIN, "change_logger_settings", async_change_logger_settings
     )
-    hass.services.async_register(
-        DOMAIN, "check_db_connection", async_check_db_connection
-    )
+
     hass.services.async_register(
         DOMAIN, "get_db_log_settings_info", async_get_db_log_settings_info
     )
@@ -64,6 +59,7 @@ async def async_setup(hass, config):
     hass.http.register_view(FileUpladView)
     hass.http.register_view(FileReadView)
     hass.http.register_view(FileWriteView)
+    hass.http.register_view(AisDbConfigView)
 
     return True
 
@@ -218,100 +214,6 @@ async def _async_change_logger_settings(hass, call):
     hass.async_add_job(
         hass.services.async_call("ais_ai_service", "say_it", {"text": info})
     )
-
-
-async def _async_check_db_connection(hass, call):
-    # on logger change
-    buttonClick = call.data["buttonClick"]
-    if buttonClick is False:
-        # reset conn info after change in app
-        hass.states.async_set(
-            "sensor.ais_db_connection_info", "db_url_not_valid", call.data
-        )
-        return
-
-    # check db connection info to know the step
-    ais_db_connection_info = hass.states.get("sensor.ais_db_connection_info")
-    state = ais_db_connection_info.state
-    attributes = ais_db_connection_info.attributes
-    db_connection = {
-        "dbEngine": attributes.get("dbEngine", ""),
-        "dbDrive": attributes.get("dbDrive", ""),
-        "dbUrl": attributes.get("dbUrl", ""),
-        "dbPassword": attributes.get("dbPassword", ""),
-        "dbUser": attributes.get("dbUser", ""),
-        "dbServerIp": attributes.get("dbServerIp", ""),
-        "dbServerName": attributes.get("dbServerName", ""),
-        "dbKeepDays": attributes.get("dbKeepDays", 10),
-        "errorInfo": attributes.get("errorInfo", ""),
-    }
-    if state in ("no_db_url_saved", "db_url_not_valid"):
-        # buttonName = "Sprawdź połączenie";
-        """Ensure database is ready to fly."""
-        kwargs = {}
-        if "sqlite" in db_connection["dbUrl"]:
-            kwargs["connect_args"] = {"check_same_thread": False}
-            kwargs["poolclass"] = StaticPool
-            kwargs["pool_reset_on_return"] = None
-        else:
-            kwargs["echo"] = False
-        try:
-            # check if dbUrl is valid external drive drive
-            if db_connection["dbUrl"].startswith("sqlite://///"):
-                # DB in file
-                from homeassistant.components import ais_usb
-
-                if (
-                    ais_usb.is_usb_url_valid_external_drive(db_connection["dbUrl"])
-                    is not True
-                ):
-                    error_info = (
-                        "Invalid external drive: "
-                        + db_connection["dbUrl"]
-                        + " selected for recording!"
-                    )
-
-                    _LOGGER.error(error_info)
-                    db_connection["errorInfo"] = error_info
-                    hass.states.async_set(
-                        "sensor.ais_db_connection_info",
-                        "db_url_not_valid",
-                        db_connection,
-                    )
-                    return
-            engine = create_engine(db_connection["dbUrl"], **kwargs)
-            with engine.connect() as connection:
-                result = connection.execute("SELECT 1")
-                for row in result:
-                    _LOGGER.info("SELECT 1: " + str(row))
-                hass.states.async_set(
-                    "sensor.ais_db_connection_info", "db_url_valid", db_connection
-                )
-        except Exception as e:
-            _LOGGER.error("Exception:" + str(e))
-            db_connection["errorInfo"] = str(e)
-            hass.states.async_set(
-                "sensor.ais_db_connection_info", "db_url_not_valid", db_connection
-            )
-    elif state == "db_url_valid":
-        # buttonName = "Zapisz połączenie";
-        # save to file
-        await _async_save_db_settings_info(hass, db_connection)
-
-        hass.states.async_set(
-            "sensor.ais_db_connection_info", "db_url_saved", db_connection
-        )
-
-    elif state == "db_url_saved":
-        # buttonName = "Usuń polączenie";
-        # save to file
-        await _async_save_db_settings_info(hass, {})
-
-        hass.states.async_set(
-            "sensor.ais_db_connection_info",
-            "no_db_url_saved",
-            {"dbUrl": "", "dbDrive": "-", "dbEngine": "-"},
-        )
 
 
 async def _async_get_db_log_settings_info(hass, call):
@@ -493,3 +395,130 @@ class FileWriteView(HomeAssistantView):
         with open(file_path, "w") as f:
             f.write(file_body)
             f.close()
+
+
+class AisDbConfigView(HomeAssistantView):
+    """View to save config for the db."""
+
+    requires_auth = False
+    url = "/api/ais_file/ais_db_view"
+    name = "api:ais_file:ais_db_view"
+
+    def __init__(self):
+        """Initialize the view."""
+        pass
+
+    async def post(self, request):
+        """Handle user login to get gates info."""
+        hass = request.app["hass"]
+        message = await request.json()
+        error_info = ""
+        return_info = ""
+        db_connection = {
+            "dbEngine": message.get("dbEngine", ""),
+            "dbDrive": message.get("dbDrive", ""),
+            "dbPassword": message.get("dbPassword", ""),
+            "dbUser": message.get("dbUser", ""),
+            "dbServerIp": message.get("dbServerIp", ""),
+            "dbServerName": message.get("dbServerName", ""),
+            "dbKeepDays": message.get("dbKeepDays", 10),
+            "dbUrl": "",
+        }
+        # 1. calculate url
+        if db_connection["dbEngine"] == "-":
+            db_connection["dbUrl"] = ""
+            db_connection["dbDrive"] = "-"
+            db_connection["dbPassword"] = ""
+            db_connection["dbUser"] = ""
+            db_connection["dbServerIp"] = ""
+            db_connection["dbServerName"] = ""
+            db_connection["dbKeepDays"] = "0"
+            return_info = "Zapis wyłączony"
+        elif db_connection["dbEngine"] == "SQLite (memory)":
+            db_connection["dbUrl"] = "sqlite:///:memory:"
+            db_connection["dbDrive"] = "-"
+            db_connection["dbPassword"] = ""
+            db_connection["dbUser"] = ""
+            db_connection["dbServerIp"] = ""
+            db_connection["dbServerName"] = ""
+            db_connection["dbKeepDays"] = "2"
+        elif db_connection["dbEngine"] == "SQLite (file)":
+            db_connection["dbUrl"] = (
+                "sqlite://///data/data/pl.sviete.dom/files/home/dom/dyski-wymienne/"
+                + db_connection["dbDrive"]
+                + "/ais.db"
+            )
+            db_connection["dbPassword"] = ""
+            db_connection["dbUser"] = ""
+            db_connection["dbServerIp"] = ""
+            db_connection["dbServerName"] = ""
+            # check if dbUrl is valid external drive drive
+            from homeassistant.components import ais_usb
+
+            if not ais_usb.is_usb_url_valid_external_drive(db_connection["dbDrive"]):
+                error_info = (
+                    "Invalid external drive: "
+                    + db_connection["dbUrl"]
+                    + " selected for recording!"
+                )
+        else:
+            db_user_pass = ""
+            if db_connection["dbUser"] + db_connection["dbPassword"] != "":
+                db_user_pass = (
+                    db_connection["dbUser"] + ":" + db_connection["dbPassword"] + "@"
+                )
+
+            if db_connection["dbEngine"] == "MariaDB":
+                db_connection["dbUrl"] = (
+                    "mysql+pymysql://"
+                    + db_user_pass
+                    + db_connection["dbServerIp"]
+                    + "/"
+                    + db_connection["dbServerName"]
+                    + "?charset=utf8mb4"
+                )
+            elif db_connection["dbEngine"] == "MySQL":
+                db_connection["dbUrl"] = (
+                    "mysql://"
+                    + db_user_pass
+                    + db_connection["dbServerIp"]
+                    + "/"
+                    + db_connection["dbServerName"]
+                    + "?charset=utf8mb4"
+                )
+            elif db_connection["dbEngine"] == "PostgreSQL":
+                db_connection["dbUrl"] = (
+                    "postgresql://"
+                    + db_user_pass
+                    + db_connection["dbServerIp"]
+                    + "/"
+                    + db_connection["dbServerName"]
+                )
+
+        # 2. check the connection
+        if error_info == "" and return_info == "":
+            """Ensure database is ready to fly."""
+            kwargs = {}
+            if "sqlite" in db_connection["dbUrl"]:
+                kwargs["connect_args"] = {"check_same_thread": False}
+                kwargs["poolclass"] = StaticPool
+                kwargs["pool_reset_on_return"] = None
+            else:
+                kwargs["echo"] = False
+            try:
+                engine = create_engine(db_connection["dbUrl"], **kwargs)
+                with engine.connect() as connection:
+                    result = connection.execute("SELECT 1")
+                    for row in result:
+                        _LOGGER.info("SELECT 1: " + str(row))
+            except Exception as e:
+                _LOGGER.error("Exception:" + str(e))
+                error_info = str(e)
+
+        # 3. store the settings in session and file
+        if error_info == "":
+            await _async_save_db_settings_info(hass, db_connection)
+            hass.states.async_set(
+                "sensor.ais_db_connection_info", "db_url_saved", db_connection
+            )
+        return self.json({"return": return_info, "error": error_info})
