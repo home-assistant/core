@@ -201,7 +201,7 @@ class BrWeather(WeatherEntity):
             # keys understood by the weather component:
             condcode = data_in.get(CONDITION, []).get(CONDCODE)
             data_out = {
-                ATTR_FORECAST_TIME: data_in.get(DATETIME),
+                ATTR_FORECAST_TIME: data_in.get(DATETIME).isoformat(),
                 ATTR_FORECAST_CONDITION: cond[condcode],
                 ATTR_FORECAST_TEMP_LOW: data_in.get(MIN_TEMP),
                 ATTR_FORECAST_TEMP: data_in.get(MAX_TEMP),
