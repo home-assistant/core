@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_HEAT,
     DEVICE_CLASS_MOISTURE,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_SOUND,
     DOMAIN,
     BinarySensorEntity,
 )
@@ -34,7 +35,7 @@ DEVICES = {
     "moisture": {"device_class": DEVICE_CLASS_MOISTURE},
     "motion": {"device_class": DEVICE_CLASS_MOTION},
     "noise": {"icon": "mdi:volume-high"},
-    "sound": {"icon": "mdi:volume-high"},
+    "sound": {"device_class": DEVICE_CLASS_SOUND},
     "tamper_old": {"icon": "mdi:shield-alert"},
     "tamper": {"icon": "mdi:shield-alert"},
 }
