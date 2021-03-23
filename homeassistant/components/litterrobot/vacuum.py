@@ -1,11 +1,5 @@
 """Support for Litter-Robot "Vacuum"."""
-from __future__ import annotations
-
-from typing import Any, Callable
-
 from pylitterbot.enums import LitterBoxStatus
-from pylitterbot.robot import VALID_WAIT_TIMES
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
@@ -95,7 +89,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, VacuumEntity):
             LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
             LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
             LitterBoxStatus.READY: STATE_DOCKED,
-            LitterBoxStatus.CAT_SENSOR_INTERRUPTED: STATE_PAUSED,
             LitterBoxStatus.OFF: STATE_OFF,
         }
 
@@ -147,6 +140,6 @@ class LitterRobotCleaner(LitterRobotControlEntity, VacuumEntity):
             "is_sleeping": self.robot.is_sleeping,
             "sleep_mode_enabled": self.robot.sleep_mode_enabled,
             "power_status": self.robot.power_status,
-            "status_code": self.robot.status_code,
+            "status_code": self.robot.status.value,
             "last_seen": self.robot.last_seen,
         }

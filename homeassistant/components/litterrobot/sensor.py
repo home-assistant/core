@@ -73,7 +73,7 @@ class LitterRobotSleepTimeSensor(LitterRobotPropertySensor):
         return DEVICE_CLASS_TIMESTAMP
 
 
-ROBOT_SENSORS: list[tuple[type[LitterRobotPropertySensor], str, str]] = [
+ROBOT_SENSORS = [
     (LitterRobotWasteSensor, "Waste Drawer", "waste_drawer_level"),
     (LitterRobotSleepTimeSensor, "Sleep Mode Start Time", "sleep_mode_start_time"),
     (LitterRobotSleepTimeSensor, "Sleep Mode End Time", "sleep_mode_end_time"),
