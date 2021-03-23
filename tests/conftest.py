@@ -600,6 +600,13 @@ def enable_custom_integrations(hass):
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
 
 
+@pytest.fixture(name="mock_get_huuid")
+def mock_get_huuid_fixture():
+    """Fixture to mock get huuid."""
+    with patch("homeassistant.helpers.instance_id.async_get") as mock:
+        yield mock
+
+
 @pytest.fixture
 def hassio_handler(hass, aioclient_mock):
     """Create mock hassio handler."""

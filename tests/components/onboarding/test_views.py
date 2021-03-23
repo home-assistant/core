@@ -88,7 +88,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         yield
 
 
-async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
+async def test_onboarding_progress(hass, hass_storage, aiohttp_client, mock_get_huuid):
     """Test fetching progress."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
@@ -107,7 +107,9 @@ async def test_onboarding_progress(hass, hass_storage, aiohttp_client):
     assert data[1] == {"step": "world", "done": False}
 
 
-async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_already_done(
+    hass, hass_storage, aiohttp_client, mock_get_huuid
+):
     """Test creating a new user when user step already done."""
     mock_storage(hass_storage, {"done": [views.STEP_USER]})
 
@@ -131,7 +133,7 @@ async def test_onboarding_user_already_done(hass, hass_storage, aiohttp_client):
     assert resp.status == HTTP_FORBIDDEN
 
 
-async def test_onboarding_user(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user(hass, hass_storage, aiohttp_client, mock_get_huuid):
     """Test creating a new user."""
     assert await async_setup_component(hass, "person", {})
     assert await async_setup_component(hass, "onboarding", {})
@@ -191,7 +193,9 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     ]
 
 
-async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_invalid_name(
+    hass, hass_storage, aiohttp_client, mock_get_huuid
+):
     """Test not providing name."""
     mock_storage(hass_storage, {"done": []})
 
@@ -213,7 +217,7 @@ async def test_onboarding_user_invalid_name(hass, hass_storage, aiohttp_client):
     assert resp.status == 400
 
 
-async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
+async def test_onboarding_user_race(hass, hass_storage, aiohttp_client, mock_get_huuid):
     """Test race condition on creating new user."""
     mock_storage(hass_storage, {"done": ["hello"]})
 
@@ -248,7 +252,9 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
     assert sorted([res1.status, res2.status]) == [200, HTTP_FORBIDDEN]
 
 
-async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admin_user):
+async def test_onboarding_integration(
+    hass, hass_storage, hass_client, hass_admin_user, mock_get_huuid
+):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -290,7 +296,7 @@ async def test_onboarding_integration(hass, hass_storage, hass_client, hass_admi
 
 
 async def test_onboarding_integration_missing_credential(
-    hass, hass_storage, hass_client, hass_access_token
+    hass, hass_storage, hass_client, hass_access_token, mock_get_huuid
 ):
     """Test that we fail integration step if user is missing credentials."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -312,7 +318,7 @@ async def test_onboarding_integration_missing_credential(
 
 
 async def test_onboarding_integration_invalid_redirect_uri(
-    hass, hass_storage, hass_client
+    hass, hass_storage, hass_client, mock_get_huuid
 ):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -337,7 +343,9 @@ async def test_onboarding_integration_invalid_redirect_uri(
         assert len(user.refresh_tokens) == 1, user
 
 
-async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_client):
+async def test_onboarding_integration_requires_auth(
+    hass, hass_storage, aiohttp_client, mock_get_huuid
+):
     """Test finishing integration step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -353,7 +361,9 @@ async def test_onboarding_integration_requires_auth(hass, hass_storage, aiohttp_
     assert resp.status == 401
 
 
-async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
+async def test_onboarding_core_sets_up_met(
+    hass, hass_storage, hass_client, mock_get_huuid
+):
     """Test finishing the core step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
@@ -371,7 +381,7 @@ async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
 
 
 async def test_onboarding_core_sets_up_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, rpi
+    hass, hass_storage, hass_client, aioclient_mock, rpi, mock_get_huuid
 ):
     """Test that the core step sets up rpi_power on RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -396,7 +406,7 @@ async def test_onboarding_core_sets_up_rpi_power(
 
 
 async def test_onboarding_core_no_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, no_rpi
+    hass, hass_storage, hass_client, aioclient_mock, no_rpi, mock_get_huuid
 ):
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -420,7 +430,9 @@ async def test_onboarding_core_no_rpi_power(
     assert not rpi_power_state
 
 
-async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_user):
+async def test_onboarding_analytics(
+    hass, hass_storage, hass_client, hass_admin_user, mock_get_huuid
+):
     """Test finishing analytics step."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
