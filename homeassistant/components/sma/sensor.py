@@ -243,7 +243,7 @@ class SMAsensor(CoordinatorEntity, Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return f"sma-{self._confg_entry_unique_id}-{self._sensor.key}"
+        return f"sma-{self._confg_entry_unique_id}-{self._sensor.key}_{self._sensor.key_idx}"
 
     @property
     def device_info(self):
