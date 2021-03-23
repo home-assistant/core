@@ -129,10 +129,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        icon = DEVICE_TYPES.get(self._device_name, {}).get("icon")
-        if icon:
-            return icon
-        return super().icon
+        return DEVICE_TYPES.get(self._device_name, {}).get("icon", super().icon)
 
     @property
     def unique_id(self):
