@@ -16,12 +16,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -35,7 +34,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SIGNAL_CAMERA_ADD,
-    SIGNAL_CAMERA_REMOVE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,13 +82,12 @@ def is_acceptable_camera(camera: dict[str, Any]) -> bool:
 
 
 @callback
-def listen_for_camera_updates(
+def listen_for_new_cameras(
     hass: HomeAssistant,
     entry: ConfigEntry,
     add_func: Callable,
-    remove_func: Callable,
 ) -> None:
-    """Listen for camera additions/removals."""
+    """Listen for new cameras."""
 
     hass.data[DOMAIN][entry.entry_id][CONF_ON_UNLOAD].extend(
         [
@@ -98,11 +95,6 @@ def listen_for_camera_updates(
                 hass,
                 SIGNAL_CAMERA_ADD.format(entry.entry_id),
                 add_func,
-            ),
-            async_dispatcher_connect(
-                hass,
-                SIGNAL_CAMERA_REMOVE.format(entry.entry_id),
-                remove_func,
             ),
         ]
     )
@@ -123,16 +115,6 @@ async def _create_reauth_flow(
             DOMAIN, context={CONF_SOURCE: SOURCE_REAUTH}, data=config_entry.data
         )
     )
-
-
-def remove_motioneye_entity(
-    registry: EntityRegistry, platform: str, unique_id: str
-) -> None:
-    """Remove a given entity."""
-    entity_id = registry.async_get_entity_id(platform, DOMAIN, unique_id)
-
-    if entity_id:
-        registry.async_remove(entity_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -175,12 +157,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         CONF_ON_UNLOAD: [],
     }
 
-    current_camera_ids: set[int] = set()
-    device_registry = await async_get_registry(hass)
+    current_cameras: set[str] = set()
+    device_registry = await dr.async_get_registry(hass)
 
     def _async_process_motioneye_cameras() -> None:
         """Process motionEye camera additions and removals."""
-        inbound_camera_ids: set[int] = set()
+        inbound_camera: set[str] = set()
         if KEY_CAMERAS not in coordinator.data:
             return
 
@@ -188,10 +170,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             if not is_acceptable_camera(camera):
                 return
             camera_id = camera[KEY_ID]
-            inbound_camera_ids.add(camera_id)
-            if camera_id in current_camera_ids:
+            device_unique_id = get_motioneye_device_unique_id(
+                entry.data[CONF_HOST], entry.data[CONF_PORT], camera_id
+            )
+            inbound_camera.add(device_unique_id)
+
+            if device_unique_id in current_cameras:
                 continue
-            current_camera_ids.add(camera_id)
+            current_cameras.add(device_unique_id)
 
             async_dispatcher_send(
                 hass,
@@ -199,21 +185,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 camera,
             )
 
-        # Remove cameras that are are not present on the motionEye server.
-        cameras_to_remove = current_camera_ids - inbound_camera_ids
-        for camera_id in cameras_to_remove:
-            current_camera_ids.remove(camera_id)
-            async_dispatcher_send(
-                hass, SIGNAL_CAMERA_REMOVE.format(entry.entry_id), camera_id
-            )
-
-            device_unique_id = get_motioneye_device_unique_id(
-                entry.data[CONF_HOST], entry.data[CONF_PORT], camera_id
-            )
-            device_entry = device_registry.async_get_device(
-                {(DOMAIN, device_unique_id)}
-            )
-            if device_entry:
+        # Ensure every device associated with this config entry is still in the list of
+        # motionEye cameras, otherwise remove the device (and thus entities).
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            for (kind, key) in device_entry.identifiers:
+                if kind == DOMAIN and key in inbound_camera:
+                    break
+            else:
                 device_registry.async_remove_device(device_entry.id)
 
     async def setup_then_listen() -> None:

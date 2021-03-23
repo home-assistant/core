@@ -119,9 +119,25 @@ async def test_setup_camera_new_data_same(hass: HomeAssistantType) -> None:
 async def test_setup_camera_new_data_camera_removed(hass: HomeAssistantType) -> None:
     """Test a data refresh with a removed camera."""
     device_registry = await async_get_registry(hass)
+    entity_registry = await er.async_get_registry(hass)
 
     client = create_mock_motioneye_client()
-    await setup_mock_motioneye_config_entry(hass, client=client)
+    config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
+
+    # Create some random old devices/entity_ids and ensure they get cleaned up.
+    OLD_DEVICE_ID = "old-device-id"
+    OLD_ENTITY_UNIQUE_ID = "old-entity-unique_id"
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, OLD_DEVICE_ID)}
+    )
+    entity_registry.async_get_or_create(
+        domain=DOMAIN,
+        platform="camera",
+        unique_id=OLD_ENTITY_UNIQUE_ID,
+        config_entry=config_entry,
+        device_id=old_device.id,
+    )
+
     await hass.async_block_till_done()
     assert hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert device_registry.async_get_device({(DOMAIN, TEST_CAMERA_DEVICE_ID)})
@@ -131,6 +147,10 @@ async def test_setup_camera_new_data_camera_removed(hass: HomeAssistantType) -> 
     await hass.async_block_till_done()
     assert not hass.states.get(TEST_CAMERA_ENTITY_ID)
     assert not device_registry.async_get_device({(DOMAIN, TEST_CAMERA_DEVICE_ID)})
+    assert not device_registry.async_get_device({(DOMAIN, OLD_DEVICE_ID)})
+    assert not entity_registry.async_get_entity_id(
+        DOMAIN, "camera", OLD_ENTITY_UNIQUE_ID
+    )
 
 
 async def test_setup_camera_new_data_error(hass: HomeAssistantType) -> None:

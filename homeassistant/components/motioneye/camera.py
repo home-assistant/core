@@ -14,7 +14,6 @@ from motioneye_client.const import (
     KEY_STREAMING_AUTH_MODE,
 )
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.mjpeg.camera import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
@@ -33,7 +32,6 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -44,8 +42,7 @@ from . import (
     get_motioneye_device_unique_id,
     get_motioneye_entity_unique_id,
     is_acceptable_camera,
-    listen_for_camera_updates,
-    remove_motioneye_entity,
+    listen_for_new_cameras,
 )
 from .const import (
     CONF_CLIENT,
@@ -76,7 +73,6 @@ async def async_setup_entry(
 ) -> bool:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
-    registry = await async_get_registry(hass)
 
     @callback
     def camera_add(camera: dict[str, Any]) -> None:
@@ -99,21 +95,7 @@ async def async_setup_entry(
             ]
         )
 
-    @callback
-    def camera_remove(camera_id: int) -> None:
-        """Remove a motionEye camera."""
-        remove_motioneye_entity(
-            registry,
-            CAMERA_DOMAIN,
-            get_motioneye_entity_unique_id(
-                entry.data[CONF_HOST],
-                entry.data[CONF_PORT],
-                camera_id,
-                TYPE_MOTIONEYE_MJPEG_CAMERA,
-            ),
-        )
-
-    listen_for_camera_updates(hass, entry, camera_add, camera_remove)
+    listen_for_new_cameras(hass, entry, camera_add)
 
 
 class MotionEyeMjpegCamera(MjpegCamera, CoordinatorEntity):
