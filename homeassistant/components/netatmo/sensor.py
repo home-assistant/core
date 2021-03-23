@@ -650,8 +650,8 @@ class NetatmoPublicSensor(NetatmoBase, SensorEntity):
             self._state = None
             return
 
-        values = [x for x in data.values() if x is not None]
-        if self._mode == "avg":
-            self._state = round(sum(values) / len(values), 1)
-        elif self._mode == "max":
-            self._state = max(values)
+        if values := [x for x in data.values() if x is not None]:
+            if self._mode == "avg":
+                self._state = round(sum(values) / len(values), 1)
+            elif self._mode == "max":
+                self._state = max(values)

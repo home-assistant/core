@@ -645,8 +645,6 @@ omit =
     homeassistant/components/nest/legacy/*
     homeassistant/components/netatmo/data_handler.py
     homeassistant/components/netatmo/helper.py
-    homeassistant/components/netatmo/netatmo_entity_base.py
-    homeassistant/components/netatmo/webhook.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
