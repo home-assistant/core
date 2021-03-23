@@ -108,6 +108,7 @@ class NanoleafLight(LightEntity):
 
     def __init__(self, light, name):
         """Initialize an Nanoleaf light."""
+        self._unique_id = light.serialNo
         self._available = True
         self._brightness = None
         self._color_temp = None
@@ -156,6 +157,11 @@ class NanoleafLight(LightEntity):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         return 833
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
