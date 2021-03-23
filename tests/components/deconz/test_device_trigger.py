@@ -8,9 +8,6 @@ from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.deconz import device_trigger
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -377,9 +374,6 @@ async def test_attach_trigger_no_matching_event(
         CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
     }
 
-    with pytest.raises(InvalidDeviceAutomationConfig):
-        await device_trigger.async_attach_trigger(hass, trigger_config, None, None)
-
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
@@ -399,8 +393,7 @@ async def test_attach_trigger_no_matching_event(
 
     assert len(hass.states.async_entity_ids(AUTOMATION_DOMAIN)) == 1
 
-    # async_attach_trigger raise InvalidDeviceAutomationConfig
-
+    # Assert that deCONZ async_attach_trigger raises InvalidDeviceAutomationConfig
     assert not await async_initialize_triggers(
         hass,
         [trigger_config],
@@ -409,14 +402,3 @@ async def test_attach_trigger_no_matching_event(
         name="mock-name",
         log_cb=Mock(),
     )
-
-
-async def test_helper_no_match(hass, aioclient_mock):
-    """Verify trigger helper returns None when no event could be matched."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert not device_trigger._get_deconz_event_from_device_id(hass, "mock-id")
-
-
-async def test_helper_no_gateway_exist(hass):
-    """Verify trigger helper returns None when no gateway exist."""
-    assert not device_trigger._get_deconz_event_from_device_id(hass, "mock-id")
