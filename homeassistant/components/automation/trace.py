@@ -23,7 +23,7 @@ class AutomationTrace:
 
     def __init__(
         self,
-        unique_id: str | None,
+        key: tuple[str, str],
         config: dict[str, Any],
         context: Context,
     ):
@@ -37,7 +37,7 @@ class AutomationTrace:
         self.run_id: str = str(next(self._run_ids))
         self._timestamp_finish: dt.datetime | None = None
         self._timestamp_start: dt.datetime = dt_util.utcnow()
-        self._unique_id: str | None = unique_id
+        self._key: tuple[str, str] = key
         self._variables: dict[str, Any] | None = None
 
     def set_action_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
@@ -104,7 +104,6 @@ class AutomationTrace:
             trigger = self._variables.get("trigger", {}).get("description")
 
         result = {
-            "automation_id": self._unique_id,
             "last_action": last_action,
             "last_condition": last_condition,
             "run_id": self.run_id,
@@ -114,7 +113,8 @@ class AutomationTrace:
                 "finish": self._timestamp_finish,
             },
             "trigger": trigger,
-            "unique_id": self._unique_id,
+            "domain": self._key[0],
+            "item_id": self._key[1],
         }
         if self._error is not None:
             result["error"] = str(self._error)
@@ -126,23 +126,24 @@ class AutomationTrace:
 
 
 @contextmanager
-def trace_automation(hass, unique_id, config, context):
+def trace_automation(hass, item_id, config, context):
     """Trace action execution of automation with automation_id."""
-    automation_trace = AutomationTrace(unique_id, config, context)
-    trace_id_set((unique_id, automation_trace.run_id))
+    key = ("automation", item_id)
+    trace = AutomationTrace(key, config, context)
+    trace_id_set((key, trace.run_id))
 
-    if unique_id:
-        automation_traces = hass.data[DATA_TRACE]
-        if unique_id not in automation_traces:
-            automation_traces[unique_id] = LimitedSizeDict(size_limit=STORED_TRACES)
-        automation_traces[unique_id][automation_trace.run_id] = automation_trace
+    if key:
+        traces = hass.data[DATA_TRACE]
+        if key not in traces:
+            traces[key] = LimitedSizeDict(size_limit=STORED_TRACES)
+        traces[key][trace.run_id] = trace
 
     try:
-        yield automation_trace
+        yield trace
     except Exception as ex:  # pylint: disable=broad-except
-        if unique_id:
-            automation_trace.set_error(ex)
+        if key:
+            trace.set_error(ex)
         raise ex
     finally:
-        if unique_id:
-            automation_trace.finished()
+        if key:
+            trace.finished()
