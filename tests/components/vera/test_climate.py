@@ -4,6 +4,10 @@ from unittest.mock import MagicMock
 import pyvera as pv
 
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_ON,
     HVAC_MODE_COOL,
@@ -30,6 +34,7 @@ async def test_climate(
     vera_device.get_current_temperature.return_value = 71
     vera_device.get_hvac_mode.return_value = "Off"
     vera_device.get_current_goal_temperature.return_value = 72
+    vera_device.get_hvac_state.return_value = "Off"
     entity_id = "climate.dev1_1"
 
     component_data = await vera_component_factory.configure_component(
@@ -39,6 +44,7 @@ async def test_climate(
     update_callback = component_data.controller_data[0].update_callback
 
     assert hass.states.get(entity_id).state == HVAC_MODE_OFF
+    assert hass.states.get(entity_id).attributes["hvac_action"] == CURRENT_HVAC_OFF
 
     await hass.services.async_call(
         "climate",
@@ -48,9 +54,11 @@ async def test_climate(
     await hass.async_block_till_done()
     vera_device.turn_cool_on.assert_called()
     vera_device.get_hvac_mode.return_value = "CoolOn"
+    vera_device.get_hvac_state.return_value = "Cooling"
     update_callback(vera_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == HVAC_MODE_COOL
+    assert hass.states.get(entity_id).attributes["hvac_action"] == CURRENT_HVAC_COOL
 
     await hass.services.async_call(
         "climate",
@@ -60,9 +68,11 @@ async def test_climate(
     await hass.async_block_till_done()
     vera_device.turn_heat_on.assert_called()
     vera_device.get_hvac_mode.return_value = "HeatOn"
+    vera_device.get_hvac_state.return_value = "Heating"
     update_callback(vera_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == HVAC_MODE_HEAT
+    assert hass.states.get(entity_id).attributes["hvac_action"] == CURRENT_HVAC_HEAT
 
     await hass.services.async_call(
         "climate",
@@ -84,9 +94,11 @@ async def test_climate(
     await hass.async_block_till_done()
     vera_device.turn_auto_on.assert_called()
     vera_device.get_hvac_mode.return_value = "Off"
+    vera_device.get_hvac_state.return_value = "Idle"
     update_callback(vera_device)
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == HVAC_MODE_OFF
+    assert hass.states.get(entity_id).attributes["hvac_action"] == CURRENT_HVAC_IDLE
 
     await hass.services.async_call(
         "climate",
