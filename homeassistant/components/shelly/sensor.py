@@ -212,6 +212,11 @@ class ShellySensor(ShellyBlockAttributeEntity, SensorEntity):
         """Return value of sensor."""
         return self.attribute_value
 
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self._unit
+
 
 class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     """Represent a shelly REST sensor."""
@@ -220,6 +225,11 @@ class ShellyRestSensor(ShellyRestAttributeEntity, SensorEntity):
     def state(self):
         """Return value of sensor."""
         return self.attribute_value
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self.description.unit
 
 
 class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
@@ -232,3 +242,8 @@ class ShellySleepingSensor(ShellySleepingBlockAttributeEntity, SensorEntity):
             return self.attribute_value
 
         return self.last_state
+
+    @property
+    def unit_of_measurement(self):
+        """Return unit of sensor."""
+        return self._unit
