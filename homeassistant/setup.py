@@ -18,14 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
-DATA_SETUP_DONE = "setup_done"
-DATA_SETUP_STARTED = "setup_started"
-DATA_SETUP = "setup_tasks"
-DATA_DEPS_REQS = "deps_reqs_processed"
-
-SLOW_SETUP_WARNING = 10
-SLOW_SETUP_MAX_WAIT = 300
-
 BASE_PLATFORMS = {
     "alarm_control_panel",
     "binary_sensor",
@@ -45,6 +37,14 @@ BASE_PLATFORMS = {
     "vacuum",
     "water_heater",
 }
+
+DATA_SETUP_DONE = "setup_done"
+DATA_SETUP_STARTED = "setup_started"
+DATA_SETUP = "setup_tasks"
+DATA_DEPS_REQS = "deps_reqs_processed"
+
+SLOW_SETUP_WARNING = 10
+SLOW_SETUP_MAX_WAIT = 300
 
 
 @core.callback
@@ -400,3 +400,17 @@ def async_when_setup(
         await when_setup()
 
     unsub = hass.bus.async_listen(EVENT_COMPONENT_LOADED, loaded_event)
+
+
+@core.callback
+def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
+    """Return the complete list of loaded integrations."""
+    integrations = set()
+    for component in hass.config.components:
+        if "." not in component:
+            integrations.add(component)
+            continue
+        domain, platform = component.split(".", 1)
+        if domain in BASE_PLATFORMS:
+            integrations.add(platform)
+    return integrations

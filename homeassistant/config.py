@@ -66,28 +66,6 @@ from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-
-BASE_PLATFORMS = {
-    "alarm_control_panel",
-    "binary_sensor",
-    "climate",
-    "cover",
-    "device_tracker",
-    "fan",
-    "humidifier",
-    "image_processing",
-    "light",
-    "lock",
-    "media_player",
-    "remote",
-    "scene",
-    "sensor",
-    "switch",
-    "vacuum",
-    "water_heater",
-}
-
-
 DATA_PERSISTENT_ERRORS = "bootstrap_persistent_errors"
 RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
 RE_ASCII = re.compile(r"\033\[[^m]*m")
@@ -953,17 +931,3 @@ def async_notify_setup_error(
     persistent_notification.async_create(
         hass, message, "Invalid config", "invalid_config"
     )
-
-
-@callback
-def async_get_loaded_integrations(hass: HomeAssistant) -> set:
-    """Return the complete list of loaded integrations."""
-    integrations = set()
-    for component in hass.config.components:
-        if "." not in component:
-            integrations.add(component)
-            continue
-        domain, platform = component.split(".", 1)
-        if domain in BASE_PLATFORMS:
-            integrations.add(platform)
-    return integrations

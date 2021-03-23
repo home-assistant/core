@@ -4,8 +4,8 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from homeassistant.config import BASE_PLATFORMS
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
+from homeassistant.setup import BASE_PLATFORMS
 
 from .model import Integration
 
