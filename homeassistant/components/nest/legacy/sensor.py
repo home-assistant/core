@@ -154,6 +154,11 @@ class NestBasicSensor(NestSensorDevice, SensorEntity):
     """Representation a basic Nest sensor."""
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -187,6 +192,11 @@ class NestTempSensor(NestSensorDevice, SensorEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
 
     @property
     def device_class(self):

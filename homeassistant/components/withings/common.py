@@ -968,11 +968,6 @@ class BaseWithingsSensor(Entity):
         return self._unique_id
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this entity, if any."""
-        return self._attribute.unit_of_measurement
-
-    @property
     def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return self._attribute.icon

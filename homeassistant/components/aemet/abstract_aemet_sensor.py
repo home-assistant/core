@@ -1,4 +1,5 @@
 """Abstraction form AEMET OpenData sensors."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -6,7 +7,7 @@ from .const import ATTRIBUTION, SENSOR_DEVICE_CLASS, SENSOR_NAME, SENSOR_UNIT
 from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
-class AbstractAemetSensor(CoordinatorEntity):
+class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
     def __init__(

@@ -72,7 +72,6 @@ from .const import (
     STORAGE_VOL_SENSORS,
     SYNO_API,
     SYSTEM_LOADED,
-    TEMP_SENSORS_KEYS,
     UNDO_UPDATE_LISTENER,
     UTILISATION_SENSORS,
 )
@@ -630,13 +629,6 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
     def icon(self) -> str:
         """Return the icon."""
         return self._icon
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit the value is expressed in."""
-        if self.entity_type in TEMP_SENSORS_KEYS:
-            return self.hass.config.units.temperature_unit
-        return self._unit
 
     @property
     def device_class(self) -> str:
