@@ -238,6 +238,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(entities, update_before_add=True)
 
+
 class XiaomiAirPurifierFilterUsed(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Mi Air Purifier."""
 
@@ -381,6 +382,7 @@ class XiaomiAirPurifier(XiaomiMiioEntity, SensorEntity):
                 self._available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+                
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
