@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MILLISECONDS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -47,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class MinecraftServerSensorEntity(MinecraftServerEntity):
+class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     """Representation of a Minecraft Server sensor base entity."""
 
     def __init__(

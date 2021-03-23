@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
 from homeassistant.const import VOLUME_GALLONS
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ["streamlabswater"]
@@ -67,7 +67,7 @@ class StreamlabsUsageData:
         return self._this_year
 
 
-class StreamLabsDailyUsage(Entity):
+class StreamLabsDailyUsage(SensorEntity):
     """Monitors the daily water usage."""
 
     def __init__(self, location_name, streamlabs_usage_data):

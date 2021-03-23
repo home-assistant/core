@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(all_sensors, True)
 
 
-class IPWebcamSensor(SensorEntity, AndroidIPCamEntity):
+class IPWebcamSensor(AndroidIPCamEntity, SensorEntity):
     """Representation of a IP Webcam sensor."""
 
     def __init__(self, name, host, ipcam, sensor):

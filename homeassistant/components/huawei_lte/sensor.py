@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -373,7 +374,7 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
 
 
 @attr.s
-class HuaweiLteSensor(HuaweiLteBaseEntity):
+class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
     """Huawei LTE sensor entity."""
 
     key: str = attr.ib()

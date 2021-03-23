@@ -11,7 +11,7 @@ from pyfido import FidoClient
 from pyfido.client import PyFidoError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -21,7 +21,6 @@ from homeassistant.const import (
     TIME_MINUTES,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +89,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors, True)
 
 
-class FidoSensor(Entity):
+class FidoSensor(SensorEntity):
     """Implementation of a Fido sensor."""
 
     def __init__(self, fido_data, sensor_type, name, number):

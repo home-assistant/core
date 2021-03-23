@@ -1,25 +1,16 @@
 """Trace support for automation."""
 from __future__ import annotations
 
-from collections import OrderedDict
 from contextlib import contextmanager
 import datetime as dt
-from datetime import timedelta
 from itertools import count
-import logging
-from typing import Any, Awaitable, Callable, Deque
+from typing import Any, Deque
 
-from homeassistant.core import Context, HomeAssistant, callback
-from homeassistant.helpers.json import JSONEncoder as HAJSONEncoder
+from homeassistant.components.trace.const import DATA_TRACE, STORED_TRACES
+from homeassistant.components.trace.utils import LimitedSizeDict
+from homeassistant.core import Context
 from homeassistant.helpers.trace import TraceElement, trace_id_set
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util import dt as dt_util
-
-DATA_AUTOMATION_TRACE = "automation_trace"
-STORED_TRACES = 5  # Stored traces per automation
-
-_LOGGER = logging.getLogger(__name__)
-AutomationActionType = Callable[[HomeAssistant, TemplateVarsType], Awaitable[None]]
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -96,8 +87,6 @@ class AutomationTrace:
         )
         if self._error is not None:
             result["error"] = str(self._error)
-
-        _LOGGER.debug("as_dict: %s", result)
         return result
 
     def as_short_dict(self) -> dict[str, Any]:
@@ -133,29 +122,7 @@ class AutomationTrace:
             result["last_action"] = last_action
             result["last_condition"] = last_condition
 
-        _LOGGER.debug("as_short_dict: %s", result)
         return result
-
-
-class LimitedSizeDict(OrderedDict):
-    """OrderedDict limited in size."""
-
-    def __init__(self, *args, **kwds):
-        """Initialize OrderedDict limited in size."""
-        self.size_limit = kwds.pop("size_limit", None)
-        OrderedDict.__init__(self, *args, **kwds)
-        self._check_size_limit()
-
-    def __setitem__(self, key, value):
-        """Set item and check dict size."""
-        OrderedDict.__setitem__(self, key, value)
-        self._check_size_limit()
-
-    def _check_size_limit(self):
-        """Check dict size and evict items in FIFO order if needed."""
-        if self.size_limit is not None:
-            while len(self) > self.size_limit:
-                self.popitem(last=False)
 
 
 @contextmanager
@@ -165,7 +132,7 @@ def trace_automation(hass, unique_id, config, context):
     trace_id_set((unique_id, automation_trace.run_id))
 
     if unique_id:
-        automation_traces = hass.data[DATA_AUTOMATION_TRACE]
+        automation_traces = hass.data[DATA_TRACE]
         if unique_id not in automation_traces:
             automation_traces[unique_id] = LimitedSizeDict(size_limit=STORED_TRACES)
         automation_traces[unique_id][automation_trace.run_id] = automation_trace
@@ -179,62 +146,3 @@ def trace_automation(hass, unique_id, config, context):
     finally:
         if unique_id:
             automation_trace.finished()
-
-
-@callback
-def get_debug_trace(hass, automation_id, run_id):
-    """Return a serializable debug trace."""
-    _LOGGER.debug(
-        "get_debug_trace: %s %s %s",
-        automation_id,
-        run_id,
-        hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id],
-    )
-    _LOGGER.debug(
-        "get_debug_trace: %s %s %s",
-        automation_id,
-        run_id,
-        hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id].as_dict(),
-    )
-    return hass.data[DATA_AUTOMATION_TRACE][automation_id][run_id].as_dict()
-
-
-@callback
-def get_debug_traces_for_automation(hass, automation_id, summary=False):
-    """Return a serializable list of debug traces for an automation."""
-    traces = []
-
-    for trace in hass.data[DATA_AUTOMATION_TRACE].get(automation_id, {}).values():
-        if summary:
-            traces.append(trace.as_short_dict())
-        else:
-            traces.append(trace.as_dict())
-
-    return traces
-
-
-@callback
-def get_debug_traces(hass, summary=False):
-    """Return a serializable list of debug traces."""
-    traces = []
-
-    for automation_id in hass.data[DATA_AUTOMATION_TRACE]:
-        traces.extend(get_debug_traces_for_automation(hass, automation_id, summary))
-
-    return traces
-
-
-class TraceJSONEncoder(HAJSONEncoder):
-    """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
-
-    def default(self, o: Any) -> Any:
-        """Convert certain objects.
-
-        Fall back to repr(o).
-        """
-        if isinstance(o, timedelta):
-            return {"__type": str(type(o)), "total_seconds": o.total_seconds()}
-        try:
-            return super().default(o)
-        except TypeError:
-            return {"__type": str(type(o)), "repr": repr(o)}

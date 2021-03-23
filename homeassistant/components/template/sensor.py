@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    SensorEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -23,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN, PLATFORMS
@@ -99,7 +100,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(await _async_create_entities(hass, config))
 
 
-class SensorTemplate(TemplateEntity, Entity):
+class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
     def __init__(
