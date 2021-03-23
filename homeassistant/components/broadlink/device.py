@@ -1,5 +1,6 @@
 """Support for Broadlink devices."""
 import asyncio
+from contextlib import suppress
 from functools import partial
 import logging
 
@@ -102,10 +103,8 @@ class BroadlinkDevice:
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
-        try:
+        with suppress(BroadlinkException, OSError):
             self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
-        except (BroadlinkException, OSError):
-            pass
 
         # Forward entry setup to related domains.
         tasks = (

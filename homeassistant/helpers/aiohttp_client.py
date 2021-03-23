@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from ssl import SSLContext
 import sys
 from typing import Any, Awaitable, cast
@@ -37,10 +38,9 @@ def async_get_clientsession(
 
     This method must be run in the event loop.
     """
+    key = DATA_CLIENTSESSION_NOTVERIFY
     if verify_ssl:
         key = DATA_CLIENTSESSION
-    else:
-        key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
         hass.data[key] = async_create_clientsession(hass, verify_ssl)
@@ -130,7 +130,8 @@ async def async_aiohttp_proxy_stream(
         response.content_type = content_type
     await response.prepare(request)
 
-    try:
+    # Suppressing something went wrong fetching data, closed connection
+    with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
             with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
@@ -138,10 +139,6 @@ async def async_aiohttp_proxy_stream(
             if not data:
                 break
             await response.write(data)
-
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        # Something went wrong fetching data, closed connection
-        pass
 
     return response
 

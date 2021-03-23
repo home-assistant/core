@@ -5,6 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial, wraps
 import json
@@ -513,10 +514,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        try:
+        with suppress(ValueError, TypeError):
             variables["value_json"] = json.loads(value)
-        except (ValueError, TypeError):
-            pass
 
         try:
             return self._compiled.render(variables).strip()

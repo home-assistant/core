@@ -1,5 +1,6 @@
 """The ozw integration."""
 import asyncio
+from contextlib import suppress
 import json
 import logging
 
@@ -280,10 +281,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 Do not unsubscribe the manager topic.
                 """
                 mqtt_client_task.cancel()
-                try:
+                with suppress(asyncio.CancelledError):
                     await mqtt_client_task
-                except asyncio.CancelledError:
-                    pass
 
             ozw_data[DATA_UNSUBSCRIBE].append(
                 hass.bus.async_listen_once(

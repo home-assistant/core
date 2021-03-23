@@ -7,6 +7,7 @@ documentation as possible to keep it understandable.
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import functools as ft
 import importlib
 import json
@@ -587,10 +588,8 @@ def _load_file(
     Only returns it if also found to be valid.
     Async friendly.
     """
-    try:
+    with suppress(KeyError):
         return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
-    except KeyError:
-        pass
 
     cache = hass.data.get(DATA_COMPONENTS)
     if cache is None:

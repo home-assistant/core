@@ -1,6 +1,7 @@
 """Receive signals from a keyboard and use it as a remote control."""
 # pylint: disable=import-error
 import asyncio
+from contextlib import suppress
 import logging
 import os
 
@@ -255,10 +256,8 @@ class KeyboardRemote:
         async def async_stop_monitoring(self):
             """Stop event monitoring task and issue event."""
             if self.monitor_task is not None:
-                try:
+                with suppress(OSError):
                     await self.hass.async_add_executor_job(self.dev.ungrab)
-                except OSError:
-                    pass
                 # monitoring of the device form the event loop and closing of the
                 # device has to occur before cancelling the task to avoid
                 # triggering unhandled exceptions inside evdev coroutines

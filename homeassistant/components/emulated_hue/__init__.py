@@ -1,4 +1,5 @@
 """Support for local control of entities by emulating a Philips Hue bridge."""
+from contextlib import suppress
 import logging
 
 from aiohttp import web
@@ -341,8 +342,6 @@ class Config:
 
 def _load_json(filename):
     """Load JSON, handling invalid syntax."""
-    try:
+    with suppress(HomeAssistantError):
         return load_json(filename)
-    except HomeAssistantError:
-        pass
     return {}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -257,10 +258,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
             if not self._request_token_task.done():
                 self._request_token_task.cancel()
 
-            try:
+            with suppress(asyncio.CancelledError):
                 await self._request_token_task
-            except asyncio.CancelledError:
-                pass
             self._request_token_task = None
 
     async def _request_token_task_func(self, auth_id: str) -> None:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import datetime as dt
 from typing import Callable
 
@@ -86,10 +87,8 @@ class EventManager:
 
             # Initialize events
             pullpoint = self.device.create_pullpoint_service()
-            try:
+            with suppress(*SUBSCRIPTION_ERRORS):
                 await pullpoint.SetSynchronizationPoint()
-            except SUBSCRIPTION_ERRORS:
-                pass
             response = await pullpoint.PullMessages(
                 {"MessageLimit": 100, "Timeout": dt.timedelta(seconds=5)}
             )
@@ -119,10 +118,9 @@ class EventManager:
             return
 
         if self._subscription:
-            try:
+            # Suppressed. The subscription may no longer exist.
+            with suppress(*SUBSCRIPTION_ERRORS):
                 await self._subscription.Unsubscribe()
-            except SUBSCRIPTION_ERRORS:
-                pass  # Ignored. The subscription may no longer exist.
             self._subscription = None
 
         try:

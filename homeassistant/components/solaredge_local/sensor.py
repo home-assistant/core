@@ -1,4 +1,5 @@
 """Support for SolarEdge-local Monitoring API."""
+from contextlib import suppress
 from copy import deepcopy
 from datetime import timedelta
 import logging
@@ -350,19 +351,15 @@ class SolarEdgeData:
             self.info["optimizers"] = status.optimizersStatus.total
             self.info["invertertemperature"] = INVERTER_MODES[status.status]
 
-            try:
+            with suppress(IndexError):
                 if status.metersList[1]:
                     self.data["currentPowerimport"] = status.metersList[1].currentPower
                     self.data["totalEnergyimport"] = status.metersList[1].totalEnergy
-            except IndexError:
-                pass
 
-            try:
+            with suppress(IndexError):
                 if status.metersList[0]:
                     self.data["currentPowerexport"] = status.metersList[0].currentPower
                     self.data["totalEnergyexport"] = status.metersList[0].totalEnergy
-            except IndexError:
-                pass
 
         if maintenance.system.name:
             self.data["optimizertemperature"] = round(statistics.mean(temperature), 2)

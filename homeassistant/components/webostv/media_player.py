@@ -1,5 +1,6 @@
 """Support for interface with an LG webOS Smart TV."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
 import logging
@@ -214,9 +215,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
     async def async_update(self):
         """Connect."""
         if not self._client.is_connected():
-            try:
-                await self._client.connect()
-            except (
+            with suppress(
                 OSError,
                 ConnectionClosed,
                 ConnectionRefusedError,
@@ -225,7 +224,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
                 PyLGTVPairException,
                 PyLGTVCmdException,
             ):
-                pass
+                await self._client.connect()
 
     @property
     def unique_id(self):

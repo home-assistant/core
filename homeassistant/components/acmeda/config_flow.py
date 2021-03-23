@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 
 import aiopulse
 import async_timeout
@@ -37,13 +38,10 @@ class AcmedaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         hubs = []
-        try:
-            with async_timeout.timeout(5):
-                async for hub in aiopulse.Hub.discover():
-                    if hub.id not in already_configured:
-                        hubs.append(hub)
-        except asyncio.TimeoutError:
-            pass
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(5):
+            async for hub in aiopulse.Hub.discover():
+                if hub.id not in already_configured:
+                    hubs.append(hub)
 
         if len(hubs) == 0:
             return self.async_abort(reason="no_devices_found")

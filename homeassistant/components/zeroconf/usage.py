@@ -1,5 +1,6 @@
 """Zeroconf usage utility to warn about multiple instances."""
 
+from contextlib import suppress
 import logging
 
 import zeroconf
@@ -36,10 +37,8 @@ def _report(what: str) -> None:
     """
     integration_frame = None
 
-    try:
+    with suppress(MissingIntegrationFrame):
         integration_frame = get_integration_frame(exclude_integrations={"zeroconf"})
-    except MissingIntegrationFrame:
-        pass
 
     if not integration_frame:
         _LOGGER.warning(

@@ -1,4 +1,5 @@
 """Support for sending data to a Graphite installation."""
+from contextlib import suppress
 import logging
 import queue
 import socket
@@ -111,10 +112,8 @@ class GraphiteFeeder(threading.Thread):
         """Report the attributes."""
         now = time.time()
         things = dict(new_state.attributes)
-        try:
+        with suppress(ValueError):
             things["state"] = state.state_as_number(new_state)
-        except ValueError:
-            pass
         lines = [
             "%s.%s.%s %f %i"
             % (self._prefix, entity_id, key.replace(" ", "_"), value, now)

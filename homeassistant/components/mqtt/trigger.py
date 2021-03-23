@@ -1,4 +1,5 @@
 """Offer MQTT listening automation rules."""
+from contextlib import suppress
 import json
 import logging
 
@@ -79,10 +80,8 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 "description": f"mqtt topic {mqttmsg.topic}",
             }
 
-            try:
+            with suppress(ValueError):
                 data["payload_json"] = json.loads(mqttmsg.payload)
-            except ValueError:
-                pass
 
             hass.async_run_hass_job(job, {"trigger": data})
 

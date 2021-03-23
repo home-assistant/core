@@ -1,4 +1,5 @@
 """Support for media browsing."""
+from contextlib import suppress
 import logging
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
@@ -171,10 +172,8 @@ async def build_item_response(media_library, payload):
 
     children = []
     for item in media:
-        try:
+        with suppress(UnknownMediaType):
             children.append(item_payload(item, media_library))
-        except UnknownMediaType:
-            pass
 
     if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
         children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)

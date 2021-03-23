@@ -1,6 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
 from __future__ import annotations
 
+from contextlib import suppress
 import fnmatch
 from functools import partial
 import ipaddress
@@ -187,15 +188,11 @@ def _register_hass_zc_service(hass, zeroconf, uuid):
     }
 
     # Get instance URL's
-    try:
+    with suppress(NoURLAvailableError):
         params["external_url"] = get_url(hass, allow_internal=False)
-    except NoURLAvailableError:
-        pass
 
-    try:
+    with suppress(NoURLAvailableError):
         params["internal_url"] = get_url(hass, allow_external=False)
-    except NoURLAvailableError:
-        pass
 
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
@@ -380,11 +377,9 @@ def info_from_service(service):
 
         properties["_raw"][key] = value
 
-        try:
+        with suppress(UnicodeDecodeError):
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
-        except UnicodeDecodeError:
-            pass
 
     if not service.addresses:
         return None

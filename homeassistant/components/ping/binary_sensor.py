@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
@@ -242,10 +243,8 @@ class PingDataSubProcess(PingData):
                 self._count + PING_TIMEOUT,
             )
             if pinger:
-                try:
+                with suppress(TypeError):
                     await pinger.kill()
-                except TypeError:
-                    pass
                 del pinger
 
             return False

@@ -1,5 +1,6 @@
 """Config validation helper for the automation integration."""
 import asyncio
+from contextlib import suppress
 
 import voluptuous as vol
 
@@ -88,11 +89,8 @@ class AutomationConfig(dict):
 async def _try_async_validate_config_item(hass, config, full_config=None):
     """Validate config item."""
     raw_config = None
-    try:
+    with suppress(ValueError):
         raw_config = dict(config)
-    except ValueError:
-        # Invalid config
-        pass
 
     try:
         config = await async_validate_config_item(hass, config, full_config)

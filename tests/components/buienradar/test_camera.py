@@ -1,5 +1,6 @@
 """The tests for generic camera component."""
 import asyncio
+from contextlib import suppress
 
 from aiohttp.client_exceptions import ClientResponseError
 
@@ -214,10 +215,8 @@ async def test_retries_after_error(aioclient_mock, hass, hass_client):
     aioclient_mock.get(radar_map_url(), text=None, status=HTTP_INTERNAL_SERVER_ERROR)
 
     # A 404 should not return data and throw:
-    try:
+    with suppress(ClientResponseError):
         await client.get("/api/camera_proxy/camera.config_test")
-    except ClientResponseError:
-        pass
 
     assert aioclient_mock.call_count == 1
 

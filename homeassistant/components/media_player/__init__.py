@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
+from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import hashlib
@@ -935,18 +936,13 @@ class MediaPlayerEntity(Entity):
         """Retrieve an image."""
         content, content_type = (None, None)
         websession = async_get_clientsession(self.hass)
-        try:
-            with async_timeout.timeout(10):
-                response = await websession.get(url)
-
-                if response.status == HTTP_OK:
-                    content = await response.read()
-                    content_type = response.headers.get(CONTENT_TYPE)
-                    if content_type:
-                        content_type = content_type.split(";")[0]
-
-        except asyncio.TimeoutError:
-            pass
+        with suppress(asyncio.TimeoutError), async_timeout.timeout(10):
+            response = await websession.get(url)
+            if response.status == HTTP_OK:
+                content = await response.read()
+                content_type = response.headers.get(CONTENT_TYPE)
+                if content_type:
+                    content_type = content_type.split(";")[0]
 
         if content is None:
             _LOGGER.warning("Error retrieving proxied image from %s", url)

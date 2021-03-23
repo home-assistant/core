@@ -4,6 +4,7 @@ Support for Rejseplanen information from rejseplanen.dk.
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
@@ -147,10 +148,8 @@ class RejseplanenTransportSensor(SensorEntity):
         if not self._times:
             self._state = None
         else:
-            try:
+            with suppress(TypeError):
                 self._state = self._times[0][ATTR_DUE_IN]
-            except TypeError:
-                pass
 
 
 class PublicTransportData:
