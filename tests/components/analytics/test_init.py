@@ -1,8 +1,19 @@
 """The tests for the analytics ."""
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
 from homeassistant.setup import async_setup_component
 
 MOCK_HUUID = "abcdefg"
+
+
+@pytest.fixture(name="mock_get_huuid", autouse=True)
+def mock_get_huuid_fixture():
+    """Fixture to mock get huuid."""
+    with patch("homeassistant.helpers.instance_id.async_get") as mock:
+        yield mock
 
 
 async def test_setup(hass, mock_get_huuid):

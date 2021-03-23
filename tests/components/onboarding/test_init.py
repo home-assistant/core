@@ -11,7 +11,7 @@ from tests.common import MockUser, mock_coro
 # Temporarily: if auth not active, always set onboarded=True
 
 
-async def test_not_setup_views_if_onboarded(hass, hass_storage, mock_get_huuid):
+async def test_not_setup_views_if_onboarded(hass, hass_storage):
     """Test if onboarding is done, we don't setup views."""
     mock_storage(hass_storage, {"done": onboarding.STEPS})
 
@@ -23,7 +23,7 @@ async def test_not_setup_views_if_onboarded(hass, hass_storage, mock_get_huuid):
     assert onboarding.async_is_onboarded(hass)
 
 
-async def test_setup_views_if_not_onboarded(hass, mock_get_huuid):
+async def test_setup_views_if_not_onboarded(hass, hass_storage):
     """Test if onboarding is not done, we setup views."""
     with patch(
         "homeassistant.components.onboarding.views.async_setup",
@@ -65,7 +65,7 @@ async def test_is_user_onboarded():
     assert not onboarding.async_is_user_onboarded(hass)
 
 
-async def test_having_owner_finishes_user_step(hass, hass_storage, mock_get_huuid):
+async def test_having_owner_finishes_user_step(hass, hass_storage):
     """If owner user already exists, mark user step as complete."""
     MockUser(is_owner=True).add_to_hass(hass)
 
@@ -82,7 +82,7 @@ async def test_having_owner_finishes_user_step(hass, hass_storage, mock_get_huui
     assert onboarding.STEP_USER in done
 
 
-async def test_migration(hass, hass_storage, mock_get_huuid):
+async def test_migration(hass, hass_storage):
     """Test migrating onboarding to new version."""
     hass_storage[onboarding.STORAGE_KEY] = {"version": 1, "data": {"done": ["user"]}}
     assert await async_setup_component(hass, "onboarding", {})
