@@ -11,7 +11,7 @@ class LitterRobotNightLightModeSwitch(LitterRobotEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.robot.night_light_active
+        return self.robot.night_light_mode_enabled
 
     @property
     def icon(self):
@@ -33,7 +33,7 @@ class LitterRobotPanelLockoutSwitch(LitterRobotEntity, SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.robot.panel_lock_active
+        return self.robot.panel_lock_enabled
 
     @property
     def icon(self):

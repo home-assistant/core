@@ -1,5 +1,5 @@
 """Support for Litter-Robot "Vacuum"."""
-from pylitterbot import Robot
+from pylitterbot.enums import LitterBoxStatus
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
@@ -53,22 +53,24 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
     def state(self):
         """Return the state of the cleaner."""
         switcher = {
-            Robot.UnitStatus.CLEAN_CYCLE: STATE_CLEANING,
-            Robot.UnitStatus.EMPTY_CYCLE: STATE_CLEANING,
-            Robot.UnitStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
-            Robot.UnitStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
-            Robot.UnitStatus.DRAWER_FULL_1: STATE_DOCKED,
-            Robot.UnitStatus.DRAWER_FULL_2: STATE_DOCKED,
-            Robot.UnitStatus.READY: STATE_DOCKED,
-            Robot.UnitStatus.OFF: STATE_OFF,
+            LitterBoxStatus.CLEAN_CYCLE: STATE_CLEANING,
+            LitterBoxStatus.EMPTY_CYCLE: STATE_CLEANING,
+            LitterBoxStatus.CLEAN_CYCLE_COMPLETE: STATE_DOCKED,
+            LitterBoxStatus.CAT_SENSOR_TIMING: STATE_DOCKED,
+            LitterBoxStatus.DRAWER_FULL_1: STATE_DOCKED,
+            LitterBoxStatus.DRAWER_FULL_2: STATE_DOCKED,
+            LitterBoxStatus.READY: STATE_DOCKED,
+            LitterBoxStatus.OFF: STATE_OFF,
         }
 
-        return switcher.get(self.robot.unit_status, STATE_ERROR)
+        return switcher.get(self.robot.status, STATE_ERROR)
 
     @property
     def status(self):
         """Return the status of the cleaner."""
-        return f"{self.robot.unit_status.label}{' (Sleeping)' if self.robot.is_sleeping else ''}"
+        return (
+            f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
+        )
 
     async def async_turn_on(self, **kwargs):
         """Turn the cleaner on, starting a clean cycle."""
@@ -116,8 +118,8 @@ class LitterRobotCleaner(LitterRobotEntity, VacuumEntity):
         return {
             "clean_cycle_wait_time_minutes": self.robot.clean_cycle_wait_time_minutes,
             "is_sleeping": self.robot.is_sleeping,
-            "sleep_mode_active": self.robot.sleep_mode_active,
+            "sleep_mode_enabled": self.robot.sleep_mode_enabled,
             "power_status": self.robot.power_status,
-            "unit_status_code": self.robot.unit_status.value,
+            "status_code": self.robot.status.value,
             "last_seen": self.robot.last_seen,
         }

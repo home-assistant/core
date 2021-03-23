@@ -57,7 +57,7 @@ class LitterRobotSleepTimeSensor(LitterRobotPropertySensor):
     @property
     def state(self):
         """Return the state."""
-        if self.robot.sleep_mode_active:
+        if self.robot.sleep_mode_enabled:
             return super().state.isoformat()
         return None
 
@@ -68,7 +68,7 @@ class LitterRobotSleepTimeSensor(LitterRobotPropertySensor):
 
 
 ROBOT_SENSORS = [
-    (LitterRobotWasteSensor, "Waste Drawer", "waste_drawer_gauge"),
+    (LitterRobotWasteSensor, "Waste Drawer", "waste_drawer_level"),
     (LitterRobotSleepTimeSensor, "Sleep Mode Start Time", "sleep_mode_start_time"),
     (LitterRobotSleepTimeSensor, "Sleep Mode End Time", "sleep_mode_end_time"),
 ]

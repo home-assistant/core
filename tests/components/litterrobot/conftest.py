@@ -1,6 +1,5 @@
 """Configure pytest for Litter-Robot tests."""
-from __future__ import annotations
-
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pylitterbot
@@ -14,31 +13,27 @@ from .common import CONFIG, ROBOT_DATA
 from tests.common import MockConfigEntry
 
 
-def create_mock_robot(unit_status_code: str | None = None):
+def create_mock_robot(robot_data: Optional[dict] = None):
     """Create a mock Litter-Robot device."""
-    if not (
-        unit_status_code
-        and Robot.UnitStatus(unit_status_code) != Robot.UnitStatus.UNKNOWN
-    ):
-        unit_status_code = ROBOT_DATA["unitStatus"]
+    if not robot_data:
+        robot_data = {}
 
-    with patch.dict(ROBOT_DATA, {"unitStatus": unit_status_code}):
-        robot = Robot(data=ROBOT_DATA)
-        robot.start_cleaning = AsyncMock()
-        robot.set_power_status = AsyncMock()
-        robot.reset_waste_drawer = AsyncMock()
-        robot.set_sleep_mode = AsyncMock()
-        robot.set_night_light = AsyncMock()
-        robot.set_panel_lockout = AsyncMock()
-        return robot
+    robot = Robot(data={**ROBOT_DATA, **robot_data})
+    robot.start_cleaning = AsyncMock()
+    robot.set_power_status = AsyncMock()
+    robot.reset_waste_drawer = AsyncMock()
+    robot.set_sleep_mode = AsyncMock()
+    robot.set_night_light = AsyncMock()
+    robot.set_panel_lockout = AsyncMock()
+    return robot
 
 
-def create_mock_account(unit_status_code: str | None = None):
+def create_mock_account(robot_data: Optional[dict] = None):
     """Create a mock Litter-Robot account."""
     account = MagicMock(spec=pylitterbot.Account)
     account.connect = AsyncMock()
     account.refresh_robots = AsyncMock()
-    account.robots = [create_mock_robot(unit_status_code)]
+    account.robots = [create_mock_robot(robot_data)]
     return account
 
 
@@ -51,7 +46,7 @@ def mock_account():
 @pytest.fixture
 def mock_account_with_error():
     """Mock a Litter-Robot account with error."""
-    return create_mock_account("BR")
+    return create_mock_account({"unitStatus": "BR"})
 
 
 async def setup_integration(hass, mock_account, platform_domain=None):
