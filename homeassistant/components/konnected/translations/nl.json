@@ -2,12 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom voor het apparaat wordt al uitgevoerd.",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
             "not_konn_panel": "Geen herkend Konnected.io apparaat",
-            "unknown": "Onbekende fout opgetreden"
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met een Konnected Panel op {host} : {port}"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "confirm": {
@@ -20,8 +20,8 @@
             },
             "user": {
                 "data": {
-                    "host": "IP-adres van Konnected apparaat",
-                    "port": "Konnected apparaat poort"
+                    "host": "IP-adres",
+                    "port": "Poort"
                 },
                 "description": "Voer de host-informatie in voor uw Konnected-paneel."
             }
