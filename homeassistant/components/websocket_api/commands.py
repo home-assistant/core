@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
+from homeassistant.config import async_get_loaded_integrations
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import DOMAIN as HASS_DOMAIN, callback
 from homeassistant.exceptions import (
@@ -258,9 +259,7 @@ async def handle_manifest_list(hass, connection, msg):
     integrations = await asyncio.gather(
         *[
             async_get_integration(hass, domain)
-            for domain in hass.config.components
-            # Filter out platforms.
-            if "." not in domain
+            for domain in async_get_loaded_integrations(hass)
         ]
     )
     connection.send_result(

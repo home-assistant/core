@@ -26,6 +26,26 @@ DATA_DEPS_REQS = "deps_reqs_processed"
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 300
 
+BASE_PLATFORMS = {
+    "alarm_control_panel",
+    "binary_sensor",
+    "climate",
+    "cover",
+    "device_tracker",
+    "fan",
+    "humidifier",
+    "image_processing",
+    "light",
+    "lock",
+    "media_player",
+    "remote",
+    "scene",
+    "sensor",
+    "switch",
+    "vacuum",
+    "water_heater",
+}
+
 
 @core.callback
 def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) -> None:
