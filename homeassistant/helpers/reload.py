@@ -1,8 +1,9 @@
 """Class to reload platforms."""
+from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Dict, Iterable, List, Optional
+from typing import Iterable
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -61,7 +62,7 @@ async def _resetup_platform(
     if not conf:
         return
 
-    root_config: Dict = {integration_platform: []}
+    root_config: dict = {integration_platform: []}
     # Extract only the config for template, ignore the rest.
     for p_type, p_config in config_per_platform(conf, integration_platform):
         if p_type != integration_name:
@@ -101,7 +102,7 @@ async def _async_setup_platform(
     hass: HomeAssistantType,
     integration_name: str,
     integration_platform: str,
-    platform_configs: List[Dict],
+    platform_configs: list[dict],
 ) -> None:
     """Platform for the first time when new configuration is added."""
     if integration_platform not in hass.data:
@@ -119,7 +120,7 @@ async def _async_setup_platform(
 
 
 async def _async_reconfig_platform(
-    platform: EntityPlatform, platform_configs: List[Dict]
+    platform: EntityPlatform, platform_configs: list[dict]
 ) -> None:
     """Reconfigure an already loaded platform."""
     await platform.async_reset()
@@ -129,7 +130,7 @@ async def _async_reconfig_platform(
 
 async def async_integration_yaml_config(
     hass: HomeAssistantType, integration_name: str
-) -> Optional[ConfigType]:
+) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
 
@@ -141,7 +142,7 @@ async def async_integration_yaml_config(
 @callback
 def async_get_platform_without_config_entry(
     hass: HomeAssistantType, integration_name: str, integration_platform_name: str
-) -> Optional[EntityPlatform]:
+) -> EntityPlatform | None:
     """Find an existing platform that is not a config entry."""
     for integration_platform in async_get_platforms(hass, integration_name):
         if integration_platform.config_entry is not None:

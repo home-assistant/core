@@ -1,6 +1,7 @@
 """Sensor platform for Advantage Air integration."""
 import voluptuous as vol
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -40,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class AdvantageAirTimeTo(AdvantageAirEntity):
+class AdvantageAirTimeTo(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air timer control."""
 
     def __init__(self, instance, ac_key, action):
@@ -82,7 +83,7 @@ class AdvantageAirTimeTo(AdvantageAirEntity):
         await self.async_change({self.ac_key: {"info": {self._time_key: value}}})
 
 
-class AdvantageAirZoneVent(AdvantageAirEntity):
+class AdvantageAirZoneVent(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone Vent Sensor."""
 
     @property
@@ -115,7 +116,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity):
         return "mdi:fan-off"
 
 
-class AdvantageAirZoneSignal(AdvantageAirEntity):
+class AdvantageAirZoneSignal(AdvantageAirEntity, SensorEntity):
     """Representation of Advantage Air Zone wireless signal sensor."""
 
     @property

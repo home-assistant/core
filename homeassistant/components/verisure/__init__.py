@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import os
 from typing import Any
 
@@ -164,10 +165,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     cookie_file = hass.config.path(STORAGE_DIR, f"verisure_{entry.entry_id}")
-    try:
+    with suppress(FileNotFoundError):
         await hass.async_add_executor_job(os.unlink, cookie_file)
-    except FileNotFoundError:
-        pass
 
     del hass.data[DOMAIN][entry.entry_id]
 

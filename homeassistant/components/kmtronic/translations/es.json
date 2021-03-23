@@ -15,5 +15,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "reverse": "L\u00f3gica de conmutaci\u00f3n inversa (utilizar NC)"
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 """Support for Logi Circle sensors."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
@@ -9,7 +10,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
 
@@ -42,7 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors, True)
 
 
-class LogiSensor(Entity):
+class LogiSensor(SensorEntity):
     """A sensor implementation for a Logi Circle camera."""
 
     def __init__(self, camera, time_zone, sensor_type):

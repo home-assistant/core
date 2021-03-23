@@ -8,6 +8,7 @@
             "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
+        "flow_title": "Glimlach: {name}",
         "step": {
             "user": {
                 "data": {
@@ -33,7 +34,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Scaninterval (seconden)"
-                }
+                },
+                "description": "Plugwise opties aanpassen"
             }
         }
     }

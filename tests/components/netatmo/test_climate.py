@@ -31,16 +31,9 @@ from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     SERVICE_SET_SCHEDULE,
 )
-from homeassistant.components.webhook import async_handle_webhook
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_WEBHOOK_ID
-from homeassistant.util.aiohttp import MockRequest
 
-
-async def simulate_webhook(hass, webhook_id, response):
-    """Simulate a webhook event."""
-    request = MockRequest(content=response, mock_source="test")
-    await async_handle_webhook(hass, webhook_id, request)
-    await hass.async_block_till_done()
+from .common import simulate_webhook
 
 
 async def test_webhook_event_handling_thermostats(hass, climate_entry):
@@ -65,16 +58,31 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat manual set point
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
-        b'"home": { "id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
-        b'"rooms": [{ "id": "2746182631", "name": "Livingroom", "type": "livingroom",'
-        b'"therm_setpoint_mode": "manual", "therm_setpoint_temperature": 21,'
-        b'"therm_setpoint_end_time": 1612734552}], "modules": [{"id": "12:34:56:00:01:ae",'
-        b'"name": "Livingroom", "type": "NATherm1"}]}, "mode": "manual", "event_type": "set_point",'
-        b'"temperature": 21, "push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "manual",
+                    "therm_setpoint_temperature": 21,
+                    "therm_setpoint_end_time": 1612734552,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "manual",
+        "event_type": "set_point",
+        "temperature": 21,
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -94,15 +102,29 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Max"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
-        b'"home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
-        b'"rooms": [{"id": "2746182631", "name": "Livingroom", "type": "livingroom",'
-        b'"therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
-        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}]},'
-        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -118,15 +140,27 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook turn thermostat off
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
-        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
-        b'"rooms": [{"id": "2746182631","name": "Livingroom","type": "livingroom",'
-        b'"therm_setpoint_mode": "off"}],"modules": [{"id": "12:34:56:00:01:ae",'
-        b'"name": "Livingroom", "type": "NATherm1"}]}, "mode": "off", "event_type": "set_point",'
-        b'"push_type": "display_change"}'
-    )
+    response = {
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "off",
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "off",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "off"
@@ -141,15 +175,28 @@ async def test_webhook_event_handling_thermostats(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat mode cancel set point
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b","room_id": "2746182631",'
-        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
-        b'"rooms": [{"id": "2746182631","name": "Livingroom","type": "livingroom",'
-        b'"therm_setpoint_mode": "home"}], "modules": [{"id": "12:34:56:00:01:ae",'
-        b'"name": "Livingroom", "type": "NATherm1"}]}, "mode": "home",'
-        b'"event_type": "cancel_set_point", "push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "home",
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -183,13 +230,13 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Frost Guard"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b","user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"event_type": "therm_mode", "home": {"id": "91763b24c43d3e344f424e8b",'
-        b'"therm_mode": "hg"}, "mode": "hg", "previous_mode": "schedule",'
-        b'"push_type":"home_event_changed"}'
-    )
+    response = {
+        "event_type": "therm_mode",
+        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "hg"},
+        "mode": "hg",
+        "previous_mode": "schedule",
+        "push_type": "home_event_changed",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -211,13 +258,13 @@ async def test_service_preset_mode_frost_guard_thermostat(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Test webhook thermostat mode change to "Schedule"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b","user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"event_type": "therm_mode", "home": {"id": "91763b24c43d3e344f424e8b",'
-        b'"therm_mode": "schedule"}, "mode": "schedule", "previous_mode": "hg",'
-        b'"push_type": "home_event_changed"}'
-    )
+    response = {
+        "event_type": "therm_mode",
+        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "schedule"},
+        "mode": "schedule",
+        "previous_mode": "hg",
+        "push_type": "home_event_changed",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -248,13 +295,13 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake webhook thermostat mode change to "Away"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b","user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", '
-        b'"event_type": "therm_mode","home": {"id": "91763b24c43d3e344f424e8b",'
-        b'"therm_mode": "away"},"mode": "away","previous_mode": "schedule",'
-        b'"push_type": "home_event_changed"}'
-    )
+    response = {
+        "event_type": "therm_mode",
+        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+        "mode": "away",
+        "previous_mode": "schedule",
+        "push_type": "home_event_changed",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "auto"
@@ -271,16 +318,30 @@ async def test_service_preset_modes_thermostat(hass, climate_entry):
     )
     await hass.async_block_till_done()
 
-    # TFakeest webhook thermostat mode change to "Max"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email":"john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2746182631",'
-        b'"home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME", "country": "DE",'
-        b'"rooms": [{"id": "2746182631", "name": "Livingroom", "type": "livingroom",'
-        b'"therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
-        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}]},'
-        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
-    )
+    # Test webhook thermostat mode change to "Max"
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2746182631",
+                    "name": "Livingroom",
+                    "type": "livingroom",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [
+                {"id": "12:34:56:00:01:ae", "name": "Livingroom", "type": "NATherm1"}
+            ],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_livingroom).state == "heat"
@@ -292,31 +353,42 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
     # Test webhook without home entry
     webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
 
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"push_type": "home_event_changed"}'
-    )
+    response = {
+        "push_type": "home_event_changed",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     # Test webhook with different home id
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "3d3e344f491763b24c424e8b",'
-        b'"room_id": "2746182631", "home": {"id": "3d3e344f491763b24c424e8b",'
-        b'"name": "MYHOME","country": "DE", "rooms": [], "modules": []}, "mode": "home",'
-        b'"event_type": "cancel_set_point", "push_type": "display_change"}'
-    )
+    response = {
+        "home_id": "3d3e344f491763b24c424e8b",
+        "room_id": "2746182631",
+        "home": {
+            "id": "3d3e344f491763b24c424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [],
+            "modules": [],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     # Test webhook without room entries
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"room_id": "2746182631", "home": {"id": "91763b24c43d3e344f424e8b",'
-        b'"name": "MYHOME",  "country": "DE",  "rooms": [], "modules": []}, "mode": "home",'
-        b'"event_type": "cancel_set_point","push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [],
+            "modules": [],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
 
@@ -363,15 +435,27 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
 
     # Test webhook valve mode change to "Max"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"room_id": "2833524037", "home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME",'
-        b'"country": "DE","rooms": [{"id": "2833524037", "name": "Entrada", "type": "lobby",'
-        b'"therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
-        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
-        b'"mode": "max","event_type": "set_point","push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     # Test service setting the preset mode to "boost"
@@ -384,15 +468,27 @@ async def test_service_preset_mode_already_boost_valves(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Test webhook valve mode change to "Max"
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"room_id": "2833524037", "home": {"id": "91763b24c43d3e344f424e8b",'
-        b'"name": "MYHOME","country": "DE","rooms": [{"id": "2833524037", "name": "Entrada",'
-        b'"type": "lobby", "therm_setpoint_mode": "max", "therm_setpoint_end_time": 1612749189}],'
-        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
-        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
@@ -417,15 +513,27 @@ async def test_service_preset_mode_boost_valves(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake backend response
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b",'
-        b'"room_id": "2833524037", "home": {"id": "91763b24c43d3e344f424e8b", "name": "MYHOME",'
-        b'"country": "DE", "rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
-        b'"therm_setpoint_mode": "max","therm_setpoint_end_time": 1612749189}],'
-        b'"modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}]},'
-        b'"mode": "max", "event_type": "set_point", "push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "max",
+                    "therm_setpoint_end_time": 1612749189,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "max",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "heat"
@@ -460,14 +568,26 @@ async def test_valves_service_turn_off(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake backend response for valve being turned off
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2833524037",'
-        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
-        b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
-        b'"therm_setpoint_mode": "off"}], "modules": [{"id": "12:34:56:00:01:ae","name": "Entrada",'
-        b'"type": "NRV"}]}, "mode": "off", "event_type": "set_point", "push_type":"display_change"}'
-    )
+    response = {
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "off",
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "off",
+        "event_type": "set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "off"
@@ -488,15 +608,26 @@ async def test_valves_service_turn_on(hass, climate_entry):
     await hass.async_block_till_done()
 
     # Fake backend response for valve being turned on
-    response = (
-        b'{"user_id": "91763b24c43d3e344f424e8b", "user": {"id": "91763b24c43d3e344f424e8b",'
-        b'"email": "john@doe.com"}, "home_id": "91763b24c43d3e344f424e8b", "room_id": "2833524037",'
-        b'"home": {"id": "91763b24c43d3e344f424e8b","name": "MYHOME","country": "DE",'
-        b'"rooms": [{"id": "2833524037","name": "Entrada","type": "lobby",'
-        b'"therm_setpoint_mode": "home"}], "modules": [{"id": "12:34:56:00:01:ae",'
-        b'"name": "Entrada", "type": "NRV"}]}, "mode": "home", "event_type": "cancel_set_point",'
-        b'"push_type": "display_change"}'
-    )
+    response = {
+        "room_id": "2833524037",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "home",
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(climate_entity_entrada).state == "auto"

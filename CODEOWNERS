@@ -401,6 +401,7 @@ homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
+homeassistant/components/screenlogic/* @dieselrabbit
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
@@ -489,6 +490,7 @@ homeassistant/components/toon/* @frenck
 homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
+homeassistant/components/trace/* @home-assistant/core
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
@@ -509,7 +511,7 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 homeassistant/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
-homeassistant/components/vera/* @vangorra
+homeassistant/components/vera/* @pavoni
 homeassistant/components/verisure/* @frenck
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff @ludeeus

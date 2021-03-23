@@ -15,6 +15,7 @@ tokens are expired. Alternatively, a Stream can be configured with keepalive
 to always keep workers active.
 """
 import logging
+import re
 import secrets
 import threading
 import time
@@ -37,6 +38,8 @@ from .core import PROVIDERS, IdleTimer
 from .hls import async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
+
+STREAM_SOURCE_RE = re.compile("//(.*):(.*)@")
 
 
 def create_stream(hass, stream_source, options=None):
@@ -173,7 +176,9 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", self.source)
+            _LOGGER.info(
+                "Started stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
+            )
 
     def update_source(self, new_source):
         """Restart the stream with a new stream source."""
@@ -239,7 +244,9 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", self.source)
+            _LOGGER.info(
+                "Stopped stream: %s", STREAM_SOURCE_RE.sub("//", str(self.source))
+            )
 
     async def async_record(self, video_path, duration=30, lookback=5):
         """Make a .mp4 recording from a provided stream."""

@@ -61,12 +61,16 @@ async def async_setup(hass, config):
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
+    def gdm_scan():
+        _LOGGER.debug("Scanning for GDM clients")
+        gdm.scan(scan_for_clients=True)
+
     hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
         hass,
         _LOGGER,
         cooldown=10,
         immediate=True,
-        function=partial(gdm.scan, scan_for_clients=True),
+        function=gdm_scan,
     ).async_call
 
     return True
@@ -145,14 +149,10 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
-    async def async_update_plex():
-        await hass.data[PLEX_DOMAIN][GDM_DEBOUNCER]()
-        await plex_server.async_update_platforms()
-
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        async_update_plex,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
@@ -164,7 +164,7 @@ async def async_setup_entry(hass, entry):
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
-                hass.async_create_task(async_update_plex())
+                hass.async_create_task(plex_server.async_update_platforms())
             elif data == STATE_DISCONNECTED:
                 _LOGGER.debug(
                     "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]

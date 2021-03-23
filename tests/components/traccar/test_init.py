@@ -114,7 +114,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     # Enter Home again
     req = await client.post(url, params=data)
@@ -123,7 +123,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
 
     data["lon"] = 0
     data["lat"] = 0
@@ -135,7 +135,7 @@ async def test_enter_and_exit(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_NOT_HOME == state_name
+    assert state_name == STATE_NOT_HOME
 
     dev_reg = dr.async_get(hass)
     assert len(dev_reg.devices) == 1
@@ -237,7 +237,7 @@ async def test_load_unload_entry(hass, client, webhook_id):
     state_name = hass.states.get(
         "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
     ).state
-    assert STATE_HOME == state_name
+    assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

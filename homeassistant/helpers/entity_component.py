@@ -1,10 +1,12 @@
 """Helpers for components that manage entities."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Iterable
 
 import voluptuous as vol
 
@@ -76,10 +78,10 @@ class EntityComponent:
         self.domain = domain
         self.scan_interval = scan_interval
 
-        self.config: Optional[ConfigType] = None
+        self.config: ConfigType | None = None
 
-        self._platforms: Dict[
-            Union[str, Tuple[str, Optional[timedelta], Optional[str]]], EntityPlatform
+        self._platforms: dict[
+            str | tuple[str, timedelta | None, str | None], EntityPlatform
         ] = {domain: self._async_init_entity_platform(domain, None)}
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
@@ -93,7 +95,7 @@ class EntityComponent:
             platform.entities.values() for platform in self._platforms.values()
         )
 
-    def get_entity(self, entity_id: str) -> Optional[entity.Entity]:
+    def get_entity(self, entity_id: str) -> entity.Entity | None:
         """Get an entity."""
         for platform in self._platforms.values():
             entity_obj = platform.entities.get(entity_id)
@@ -125,7 +127,7 @@ class EntityComponent:
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.helpers.discovery.async_load_platform()
         async def component_platform_discovered(
-            platform: str, info: Optional[Dict[str, Any]]
+            platform: str, info: dict[str, Any] | None
         ) -> None:
             """Handle the loading of a platform."""
             await self.async_setup_platform(platform, {}, info)
@@ -176,7 +178,7 @@ class EntityComponent:
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
-    ) -> List[entity.Entity]:
+    ) -> list[entity.Entity]:
         """Extract all known and available entities from a service call.
 
         Will return an empty list if entities specified but unknown.
@@ -191,9 +193,9 @@ class EntityComponent:
     def async_register_entity_service(
         self,
         name: str,
-        schema: Union[Dict[str, Any], vol.Schema],
-        func: Union[str, Callable[..., Any]],
-        required_features: Optional[List[int]] = None,
+        schema: dict[str, Any] | vol.Schema,
+        func: str | Callable[..., Any],
+        required_features: list[int] | None = None,
     ) -> None:
         """Register an entity service."""
         if isinstance(schema, dict):
@@ -211,7 +213,7 @@ class EntityComponent:
         self,
         platform_type: str,
         platform_config: ConfigType,
-        discovery_info: Optional[DiscoveryInfoType] = None,
+        discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Set up a platform for this component."""
         if self.config is None:
@@ -274,7 +276,7 @@ class EntityComponent:
 
     async def async_prepare_reload(
         self, *, skip_reset: bool = False
-    ) -> Optional[ConfigType]:
+    ) -> ConfigType | None:
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.
@@ -303,9 +305,9 @@ class EntityComponent:
     def _async_init_entity_platform(
         self,
         platform_type: str,
-        platform: Optional[ModuleType],
-        scan_interval: Optional[timedelta] = None,
-        entity_namespace: Optional[str] = None,
+        platform: ModuleType | None,
+        scan_interval: timedelta | None = None,
+        entity_namespace: str | None = None,
     ) -> EntityPlatform:
         """Initialize an entity platform."""
         if scan_interval is None:

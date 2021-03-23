@@ -1,7 +1,7 @@
 """Support for August doorbell camera."""
 
-from august.activity import ActivityType
-from august.util import update_doorbell_image_from_activity
+from yalexs.activity import ActivityType
+from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
 from homeassistant.core import callback
@@ -63,7 +63,7 @@ class AugustCamera(AugustEntityMixin, Camera):
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         doorbell_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, [ActivityType.DOORBELL_MOTION]
+            self._device_id, {ActivityType.DOORBELL_MOTION}
         )
 
         if doorbell_activity is not None:

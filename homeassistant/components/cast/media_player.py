@@ -1,10 +1,12 @@
 """Provide functionality to interact with Cast devices on the network."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import functools as ft
 import json
 import logging
-from typing import Optional
 
 import pychromecast
 from pychromecast.controllers.homeassistant import HomeAssistantController
@@ -195,7 +197,7 @@ class CastDevice(MediaPlayerEntity):
 
         self._cast_info = cast_info
         self.services = cast_info.services
-        self._chromecast: Optional[pychromecast.Chromecast] = None
+        self._chromecast: pychromecast.Chromecast | None = None
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
@@ -203,8 +205,8 @@ class CastDevice(MediaPlayerEntity):
         self.mz_media_status_received = {}
         self.mz_mgr = None
         self._available = False
-        self._status_listener: Optional[CastStatusListener] = None
-        self._hass_cast_controller: Optional[HomeAssistantController] = None
+        self._status_listener: CastStatusListener | None = None
+        self._hass_cast_controller: HomeAssistantController | None = None
 
         self._add_remove_handler = None
         self._cast_view_remove_handler = None
@@ -329,21 +331,14 @@ class CastDevice(MediaPlayerEntity):
             tts_base_url = None
             url_description = ""
             if "tts" in self.hass.config.components:
-                try:
+                with suppress(KeyError):  # base_url not configured
                     tts_base_url = self.hass.components.tts.get_base_url(self.hass)
-                except KeyError:
-                    # base_url not configured, ignore
-                    pass
-            try:
+
+            with suppress(NoURLAvailableError):  # external_url not configured
                 external_url = get_url(self.hass, allow_internal=False)
-            except NoURLAvailableError:
-                # external_url not configured, ignore
-                pass
-            try:
+
+            with suppress(NoURLAvailableError):  # internal_url not configured
                 internal_url = get_url(self.hass, allow_external=False)
-            except NoURLAvailableError:
-                # internal_url not configured, ignore
-                pass
 
             if media_status.content_id:
                 if tts_base_url and media_status.content_id.startswith(tts_base_url):
@@ -783,7 +778,7 @@ class CastDevice(MediaPlayerEntity):
         return media_status_recevied
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._cast_info.uuid
 
@@ -805,7 +800,7 @@ class CastDevice(MediaPlayerEntity):
         controller: HomeAssistantController,
         entity_id: str,
         view_path: str,
-        url_path: Optional[str],
+        url_path: str | None,
     ):
         """Handle a show view signal."""
         if entity_id != self.entity_id:
@@ -827,9 +822,9 @@ class DynamicCastGroup:
         self.hass = hass
         self._cast_info = cast_info
         self.services = cast_info.services
-        self._chromecast: Optional[pychromecast.Chromecast] = None
+        self._chromecast: pychromecast.Chromecast | None = None
         self.mz_mgr = None
-        self._status_listener: Optional[CastStatusListener] = None
+        self._status_listener: CastStatusListener | None = None
 
         self._add_remove_handler = None
         self._del_remove_handler = None

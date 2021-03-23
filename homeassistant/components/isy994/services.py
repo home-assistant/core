@@ -174,7 +174,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             # If an address is provided, make sure we query the correct ISY.
             # Otherwise, query the whole system on all ISY's connected.
@@ -199,7 +199,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             if not hasattr(isy, "networking") or isy.networking is None:
                 continue
@@ -224,7 +224,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             program = None
             if address:
@@ -247,7 +247,7 @@ def async_setup_services(hass: HomeAssistantType):
 
         for config_entry_id in hass.data[DOMAIN]:
             isy = hass.data[DOMAIN][config_entry_id][ISY994_ISY]
-            if isy_name and not isy_name == isy.configuration["name"]:
+            if isy_name and isy_name != isy.configuration["name"]:
                 continue
             variable = None
             if name:

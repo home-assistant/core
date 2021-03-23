@@ -10,12 +10,23 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "PIN-Code"
+                },
+                "description": "Gib die auf deinem Fernseher angezeigten PIN ein"
+            },
             "user": {
                 "data": {
                     "api_version": "API-Version",
                     "host": "Host"
                 }
             }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Ger\u00e4t wird zum Einschalten aufgefordert"
         }
     }
 }

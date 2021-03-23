@@ -1,8 +1,10 @@
 """The National Weather Service integration."""
+from __future__ import annotations
+
 import asyncio
 import datetime
 import logging
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable
 
 from pynws import SimpleNWS
 
@@ -58,8 +60,8 @@ class NwsDataUpdateCoordinator(DataUpdateCoordinator):
         name: str,
         update_interval: datetime.timedelta,
         failed_update_interval: datetime.timedelta,
-        update_method: Optional[Callable[[], Awaitable]] = None,
-        request_refresh_debouncer: Optional[debounce.Debouncer] = None,
+        update_method: Callable[[], Awaitable] | None = None,
+        request_refresh_debouncer: debounce.Debouncer | None = None,
     ):
         """Initialize NWS coordinator."""
         super().__init__(
