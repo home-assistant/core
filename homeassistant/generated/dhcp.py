@@ -37,6 +37,11 @@ DHCP = [
         "macaddress": "B8A44F*"
     },
     {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "B85F98*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
