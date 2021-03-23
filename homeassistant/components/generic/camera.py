@@ -131,9 +131,9 @@ class GenericCamera(Camera):
             self._last_url, self._last_image = await asyncio.shield(
                 self._async_camera_image()
             )
-        except asyncio.CancelledError as e:
+        except asyncio.CancelledError as err:
             _LOGGER.warning("Timeout getting camera image from %s", self._name)
-            raise e
+            raise err
         return self._last_image
 
     async def _async_camera_image(self):
