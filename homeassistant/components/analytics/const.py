@@ -3,7 +3,7 @@ from datetime import timedelta
 from enum import Enum
 import logging
 
-ANALYTICS_ENDPOINT_URL = "https://floral-resonance-f63b.ludeeus.workers.dev"
+ANALYTICS_ENDPOINT_URL = "https://analytics-api.home-assistant.io"
 DOMAIN = "analytics"
 INTERVAL = timedelta(days=1)
 STORAGE_KEY = "core.analytics"
