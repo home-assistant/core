@@ -3,7 +3,6 @@ import asyncio
 import datetime
 import functools
 import logging
-import os
 import ssl
 import threading
 from unittest.mock import MagicMock, patch
@@ -18,7 +17,6 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant, legacy_api_password
 from homeassistant.components import mqtt
-from homeassistant.components.hassio.handler import HassIO
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
@@ -31,7 +29,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
-from tests.components.hassio import HASSIO_TOKEN
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
 pytest.register_assert_rewrite("tests.common")
@@ -598,16 +595,3 @@ def legacy_patchable_time():
 def enable_custom_integrations(hass):
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
-
-
-@pytest.fixture
-def hassio_handler(hass, aioclient_mock):
-    """Create mock hassio handler."""
-
-    async def get_client_session():
-        return hass.helpers.aiohttp_client.async_get_clientsession()
-
-    websession = hass.loop.run_until_complete(get_client_session())
-
-    with patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}):
-        yield HassIO(hass.loop, websession, "127.0.0.1")

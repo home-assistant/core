@@ -1,14 +1,13 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
-from typing import List, Optional
+from typing import List
 
 import aiohttp
 import async_timeout
 
+from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation.const import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.hassio.const import DOMAIN as HASSIO_DOMAIN
-from homeassistant.components.hassio.handler import HassIO
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -53,7 +52,6 @@ class Analytics:
         self.session = async_get_clientsession(hass)
         self._data = {}
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        self._supervisor: Optional[HassIO] = self.hass.data.get(HASSIO_DOMAIN)
 
     @property
     def preferences(self) -> List[AnalyticsPreference]:
@@ -65,11 +63,16 @@ class Analytics:
         """Return bool if the user has made a choice."""
         return self._data.get(ATTR_ONBOARDED, False)
 
+    @property
+    def supervisor(self) -> bool:
+        """Return bool if a supervisor is present."""
+        return hassio.DOMAIN in self.hass.data
+
     async def load(self) -> None:
         """Load preferences."""
         self._data = await self._store.async_load() or {}
-        if self._supervisor:
-            supervisor_info = await self._supervisor.get_supervisor_info()
+        if self.supervisor:
+            supervisor_info = hassio.get_supervisor_info(self.hass)
             if not self.onboarded:
                 # User have not configured analytics, get this setting from the supervisor
                 if (
@@ -89,9 +92,9 @@ class Analytics:
         self._data[ATTR_ONBOARDED] = True
         await self._store.async_save(self._data)
 
-        if self._supervisor:
-            await self._supervisor.update_diagnostics(
-                AnalyticsPreference.DIAGNOSTICS in self.preferences
+        if self.supervisor:
+            await hassio.async_update_diagnostics(
+                self.hass, AnalyticsPreference.DIAGNOSTICS in self.preferences
             )
 
     async def send_analytics(self, _=None) -> None:
@@ -104,8 +107,8 @@ class Analytics:
 
         huuid = await self.hass.helpers.instance_id.async_get()
 
-        if self._supervisor:
-            supervisor_info = await self._supervisor.get_supervisor_info()
+        if self.supervisor:
+            supervisor_info = hassio.get_supervisor_info(self.hass)
 
         system_info = await async_get_system_info(self.hass)
         integrations = []
@@ -148,7 +151,7 @@ class Analytics:
             if supervisor_info is not None:
                 installed_addons = await asyncio.gather(
                     *[
-                        self._supervisor.get_addon_info(addon[ATTR_SLUG])
+                        hassio.async_get_addon_info(self.hass, addon[ATTR_SLUG])
                         for addon in supervisor_info[ATTR_ADDONS]
                     ]
                 )

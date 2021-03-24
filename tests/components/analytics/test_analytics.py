@@ -1,5 +1,5 @@
 """The tests for the analytics ."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import aiohttp
 
@@ -9,7 +9,6 @@ from homeassistant.components.analytics.const import (
     ATTR_PREFERENCES,
     AnalyticsPreference,
 )
-from homeassistant.components.hassio.const import DOMAIN as HASSIO_DOMAIN
 from homeassistant.const import __version__ as HA_VERSION
 
 MOCK_HUUID = "abcdefg"
@@ -28,37 +27,36 @@ async def test_no_send(hass, caplog, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 0
 
 
-async def test_load_with_supervisor_diagnostics(hass, aioclient_mock, hassio_handler):
+async def test_load_with_supervisor_diagnostics(hass):
     """Test loading with a supervisor that has diagnostics enabled."""
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={"result": "ok", "data": {"diagnostics": True}},
-    )
-    hass.data[HASSIO_DOMAIN] = hassio_handler
-
     analytics = Analytics(hass)
     assert AnalyticsPreference.DIAGNOSTICS not in analytics.preferences
-    await analytics.load()
+    with patch(
+        "homeassistant.components.hassio.get_supervisor_info",
+        side_effect=Mock(return_value={"diagnostics": True}),
+    ), patch(
+        "homeassistant.components.analytics.analytics.Analytics.supervisor",
+        PropertyMock(return_value=True),
+    ):
+        await analytics.load()
     assert AnalyticsPreference.DIAGNOSTICS in analytics.preferences
 
 
-async def test_load_with_supervisor_without_diagnostics(
-    hass, aioclient_mock, hassio_handler
-):
+async def test_load_with_supervisor_without_diagnostics(hass):
     """Test loading with a supervisor that has not diagnostics enabled."""
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={"result": "ok", "data": {"diagnostics": False}},
-    )
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    hass.data[HASSIO_DOMAIN] = hassio_handler
-
     analytics = Analytics(hass)
     analytics._data[ATTR_PREFERENCES] = [AnalyticsPreference.DIAGNOSTICS]
 
     assert AnalyticsPreference.DIAGNOSTICS in analytics.preferences
 
-    await analytics.load()
+    with patch(
+        "homeassistant.components.hassio.get_supervisor_info",
+        side_effect=Mock(return_value={"diagnostics": False}),
+    ), patch(
+        "homeassistant.components.analytics.analytics.Analytics.supervisor",
+        PropertyMock(return_value=True),
+    ):
+        await analytics.load()
 
     assert AnalyticsPreference.DIAGNOSTICS not in analytics.preferences
 
@@ -103,21 +101,22 @@ async def test_send_base(hass, caplog, aioclient_mock):
     assert "'integrations':" not in caplog.text
 
 
-async def test_send_base_with_supervisor(hass, caplog, aioclient_mock, hassio_handler):
+async def test_send_base_with_supervisor(hass, caplog):
     """Test send base prefrences are defined."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={"result": "ok", "data": {"supported": True, "healthy": True}},
-    )
-    hass.data[HASSIO_DOMAIN] = hassio_handler
 
     analytics = Analytics(hass)
     await analytics.save_preferences([AnalyticsPreference.BASE])
     assert analytics.preferences == ["base"]
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+    with patch(
+        "homeassistant.components.hassio.get_supervisor_info",
+        side_effect=Mock(return_value={"supported": True, "healthy": True}),
+    ), patch(
+        "homeassistant.components.analytics.analytics.Analytics.supervisor",
+        PropertyMock(return_value=True),
+    ), patch(
+        "homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID
+    ):
         await analytics.send_analytics()
     assert f"'huuid': '{MOCK_HUUID}'" in caplog.text
     assert f"'version': '{HA_VERSION}'" in caplog.text
@@ -143,34 +142,9 @@ async def test_send_usage(hass, caplog, aioclient_mock):
     assert "'integration_count':" not in caplog.text
 
 
-async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock, hassio_handler):
+async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     """Test send usage with supervisor prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={
-            "result": "ok",
-            "data": {
-                "healthy": True,
-                "supported": True,
-                "addons": [{"slug": "test_addon"}],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test_addon/info",
-        json={
-            "result": "ok",
-            "data": {
-                "slug": "test_addon",
-                "protected": True,
-                "version": "1",
-                "auto_update": False,
-            },
-        },
-    )
-    hass.data[HASSIO_DOMAIN] = hassio_handler
 
     analytics = Analytics(hass)
     await analytics.save_preferences(
@@ -179,7 +153,31 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock, hassio_h
     assert analytics.preferences == ["base", "usage"]
     hass.config.components = ["default_config"]
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+    with patch(
+        "homeassistant.components.hassio.get_supervisor_info",
+        side_effect=Mock(
+            return_value={
+                "healthy": True,
+                "supported": True,
+                "addons": [{"slug": "test_addon"}],
+            }
+        ),
+    ), patch(
+        "homeassistant.components.hassio.async_get_addon_info",
+        side_effect=AsyncMock(
+            return_value={
+                "slug": "test_addon",
+                "protected": True,
+                "version": "1",
+                "auto_update": False,
+            }
+        ),
+    ), patch(
+        "homeassistant.components.analytics.analytics.Analytics.supervisor",
+        PropertyMock(return_value=True),
+    ), patch(
+        "homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID
+    ):
         await analytics.send_analytics()
     assert (
         "'addons': [{'slug': 'test_addon', 'protected': True, 'version': '1', 'auto_update': False}]"
@@ -207,44 +205,40 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
     assert "'integrations':" not in caplog.text
 
 
-async def test_send_statistics_with_supervisor(
-    hass, caplog, aioclient_mock, hassio_handler
-):
+async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/supervisor/info",
-        json={
-            "result": "ok",
-            "data": {
-                "healthy": True,
-                "supported": True,
-                "addons": [{"slug": "test_addon"}],
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test_addon/info",
-        json={
-            "result": "ok",
-            "data": {
-                "slug": "test_addon",
-                "protected": True,
-                "version": "1",
-                "auto_update": False,
-            },
-        },
-    )
-    hass.data[HASSIO_DOMAIN] = hassio_handler
-
     analytics = Analytics(hass)
     await analytics.save_preferences(
         [AnalyticsPreference.BASE, AnalyticsPreference.STATISTICS]
     )
     assert analytics.preferences == ["base", "statistics"]
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+    with patch(
+        "homeassistant.components.hassio.get_supervisor_info",
+        side_effect=Mock(
+            return_value={
+                "healthy": True,
+                "supported": True,
+                "addons": [{"slug": "test_addon"}],
+            }
+        ),
+    ), patch(
+        "homeassistant.components.hassio.async_get_addon_info",
+        side_effect=AsyncMock(
+            return_value={
+                "slug": "test_addon",
+                "protected": True,
+                "version": "1",
+                "auto_update": False,
+            }
+        ),
+    ), patch(
+        "homeassistant.components.analytics.analytics.Analytics.supervisor",
+        PropertyMock(return_value=True),
+    ), patch(
+        "homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID
+    ):
         await analytics.send_analytics()
     assert "'addon_count': 1" in caplog.text
     assert "'integrations':" not in caplog.text
