@@ -1289,15 +1289,17 @@ async def test_light_option_effect_hide_list(hass: HomeAssistantType) -> None:
     client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
 
     await setup_test_config_entry(
-        hass, hyperion_client=client, options={CONF_EFFECT_HIDE_LIST: ["Two", "V4L"]}
+        hass,
+        hyperion_client=client,
+        options={CONF_EFFECT_HIDE_LIST: ["Two", "USB Capture"]},
     )
 
     entity_state = hass.states.get(TEST_ENTITY_ID_1)
     assert entity_state
     assert entity_state.attributes["effect_list"] == [
         "Solid",
-        "BOBLIGHTSERVER",
-        "GRABBER",
+        "Boblight Server",
+        "Platform Capture",
         "One",
     ]
 
