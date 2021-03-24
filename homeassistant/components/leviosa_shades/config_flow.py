@@ -114,7 +114,7 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_connect()
 
         select_schema = vol.Schema(
-            {vol.Required("select_ip"): vol.In(self._devices.values())}
+            {vol.Required("select_ip"): vol.In(list(self._devices.values()))}
         )
         _LOGGER.debug("Select Zone to include in Hass, %s choices", len(self._devices))
         return self.async_show_form(step_id="select", data_schema=select_schema)
@@ -131,8 +131,8 @@ class LeviosaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for i in user_input:
                 _LOGGER.debug("UI %s -> %s", i, user_input[i])
 
-            if self._host_already_configured(self._host):
-                return self.async_abort(reason="device_already_configured")
+            # if self._host_already_configured(self._host):
+            #     return self.async_abort(reason="device_already_configured")
             try:
                 fw_ver = await validate_zone(self.hass, self._host)
             except CannotConnect:
