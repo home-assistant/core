@@ -583,18 +583,20 @@ async def async_setup(hass, config):
 
         if ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"]:
             # logbook
-            hass.async_create_task(
-                hass.helpers.discovery.async_load_platform(
-                    "logbook", "logbook", {}, config
+            if "logbook" not in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.async_create_task(
+                    hass.helpers.discovery.async_load_platform(
+                        "logbook", "logbook", {}, config
+                    )
                 )
-            )
 
         if ais_global.G_DB_SETTINGS_INFO["dbShowHistory"]:
             # history
-            hass.async_create_task(
-                hass.helpers.discovery.async_load_platform(
-                    "history", "history", {}, config
+            if "history" not in hass.data.get(hass.components.frontend.DATA_PANELS, {}):
+                hass.async_create_task(
+                    hass.helpers.discovery.async_load_platform(
+                        "history", "history", {}, config
+                    )
                 )
-            )
 
     return True
