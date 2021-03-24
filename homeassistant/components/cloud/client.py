@@ -110,7 +110,7 @@ class CloudClient(Interface):
 
     async def logged_in(self) -> None:
         """When user logs in."""
-        new_user = await self.prefs.async_set_username(self.cloud.username)
+        is_new_user = await self.prefs.async_set_username(self.cloud.username)
 
         async def enable_alexa(_):
             """Enable Alexa."""
@@ -129,7 +129,7 @@ class CloudClient(Interface):
 
         async def enable_google(_):
             """Enable Google."""
-            nonlocal new_user
+            nonlocal is_new_user
 
             gconf = await self.get_google_config()
 
@@ -138,7 +138,7 @@ class CloudClient(Interface):
             if gconf.should_report_state:
                 gconf.async_enable_report_state()
 
-            if new_user:
+            if is_new_user:
                 await gconf.async_sync_entities(gconf.agent_user_id)
 
         tasks = []
