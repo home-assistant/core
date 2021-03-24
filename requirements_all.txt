@@ -760,7 +760,7 @@ hole==0.5.1
 holidays==0.10.5.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20210316.0
+home-assistant-frontend==20210324.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1131,7 +1131,7 @@ pillow==8.1.2
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.4.1
+plexapi==4.5.0
 
 # homeassistant.components.plex
 plexauth==0.0.6
@@ -1622,7 +1622,7 @@ pypjlink2==1.2.1
 pyplaato==0.0.15
 
 # homeassistant.components.point
-pypoint==2.0.0
+pypoint==2.1.0
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5
