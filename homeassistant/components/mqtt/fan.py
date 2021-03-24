@@ -94,52 +94,86 @@ OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
 OSCILLATION = "oscillation"
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODES_LIST, default=[]): cv.ensure_list,
-        vol.Optional(
-            CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
-        ): cv.positive_int,
-        vol.Optional(
-            CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
-        ): cv.positive_int,
-        # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH and SPEED_OFF
-        # are deprecated in the schema, support will be removed after a quarter (2021.7)
-        vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
-        vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
-        vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-        vol.Optional(
-            CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
-        ): cv.string,
-        vol.Optional(
-            CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
-        ): cv.string,
-        # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_STATE_TOPIC, CONF_STATE_VALUE_TEMPLATE and CONF_SPEED_LIST
-        # are deprecated in the schema, support will be removed after a quarter (2021.7)
-        vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(
-            CONF_SPEED_LIST,
-            default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
-        ): cv.ensure_list,
-        vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
-        vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-    }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
+def valid_fan_speed_configuration(config):
+    """Validate that the fan speed configuration is valid, throws if it isn't."""
+    if config.get(CONF_SPEED_COMMAND_TOPIC) and not speed_list_without_preset_modes(
+        config.get(CONF_SPEED_LIST)
+    ):
+        raise ValueError("No valid speeds configured")
+    return config
+
+
+def valid_speed_range_configuration(config):
+    """Validate that the fan speed_range configuration is valid, throws if it isn't."""
+    if config.get(CONF_SPEED_RANGE_MIN) == 0:
+        raise ValueError("speed_range_min must be > 0")
+    if config.get(CONF_SPEED_RANGE_MIN) >= config.get(CONF_SPEED_RANGE_MAX):
+        raise ValueError("speed_range_max must be > speed_range_min")
+    return config
+
+
+PLATFORM_SCHEMA = vol.All(
+    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_STATE_TOPIC, CONF_STATE_VALUE_TEMPLATE, CONF_SPEED_LIST and
+    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
+    # are deprecated, support will be removed after a quarter (2021.7)
+    cv.deprecated(CONF_PAYLOAD_HIGH_SPEED),
+    cv.deprecated(CONF_PAYLOAD_LOW_SPEED),
+    cv.deprecated(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.deprecated(CONF_SPEED_LIST),
+    cv.deprecated(CONF_SPEED_COMMAND_TOPIC),
+    cv.deprecated(CONF_SPEED_STATE_TOPIC),
+    cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
+            # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
+            vol.Inclusive(
+                CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
+            ): mqtt.valid_publish_topic,
+            vol.Inclusive(
+                CONF_PRESET_MODES_LIST, "preset_modes", default=[]
+            ): cv.ensure_list,
+            vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
+            vol.Optional(
+                CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
+            ): cv.positive_int,
+            vol.Optional(
+                CONF_SPEED_RANGE_MAX, default=DEFAULT_SPEED_RANGE_MAX
+            ): cv.positive_int,
+            vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
+            vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
+            vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
+            vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
+            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
+            ): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
+            ): cv.string,
+            vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(
+                CONF_SPEED_LIST,
+                default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+            ): cv.ensure_list,
+            vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+        }
+    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+    valid_fan_speed_configuration,
+    valid_speed_range_configuration,
+)
 
 
 async def async_setup_platform(
@@ -186,20 +220,6 @@ class MqttFan(MqttEntity, FanEntity):
         self._optimistic_percentage = None
         self._optimistic_preset_mode = None
         self._optimistic_speed = None
-        if CONF_SPEED_COMMAND_TOPIC in config and CONF_SPEED_LIST in config:
-            if not isinstance(
-                config[CONF_SPEED_LIST], list
-            ) or not speed_list_without_preset_modes(config[CONF_SPEED_LIST]):
-                raise ValueError(
-                    "No valid speeds configured, speeds mode feature disabled"
-                )
-        if (
-            CONF_PRESET_MODE_COMMAND_TOPIC in config
-            and not config[CONF_PRESET_MODES_LIST]
-        ):
-            raise ValueError(
-                "No valid preset_modes configured, preset mode feature disabled"
-            )
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 

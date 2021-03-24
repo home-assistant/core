@@ -1565,6 +1565,30 @@ async def test_supported_features(hass, mqtt_mock):
                     "preset_mode_command_topic": "preset-mode-command-topic",
                     "preset_modes": ["Mode1", "Mode2", "Mode3"],
                 },
+                {
+                    "platform": "mqtt",
+                    "name": "test6spd_range_a",
+                    "command_topic": "command-topic",
+                    "percentage_command_topic": "percentage-command-topic",
+                    "speed_range_min": 1,
+                    "speed_range_max": 40,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test6spd_range_b",
+                    "command_topic": "command-topic",
+                    "percentage_command_topic": "percentage-command-topic",
+                    "speed_range_min": 50,
+                    "speed_range_max": 40,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test6spd_range_c",
+                    "command_topic": "command-topic",
+                    "percentage_command_topic": "percentage-command-topic",
+                    "speed_range_min": 0,
+                    "speed_range_max": 40,
+                },
             ]
         },
     )
@@ -1629,6 +1653,13 @@ async def test_supported_features(hass, mqtt_mock):
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
         == fan.SUPPORT_OSCILLATE | fan.SUPPORT_SET_SPEED | fan.SUPPORT_PRESET_MODE
     )
+
+    state = hass.states.get("fan.test6spd_range_a")
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_SET_SPEED
+    state = hass.states.get("fan.test6spd_range_b")
+    assert state is None
+    state = hass.states.get("fan.test6spd_range_c")
+    assert state is None
 
 
 async def test_availability_when_connection_lost(hass, mqtt_mock):
