@@ -25,6 +25,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     DATA_SETUP,
     DATA_SETUP_STARTED,
+    DATA_SETUP_TIME,
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
@@ -384,16 +385,15 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     return domains
 
 
-async def _async_watch_pending_setups(
-    hass: core.HomeAssistant, domains: set[str], setup_started: dict[str, datetime]
-) -> None:
+async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
     """Periodic log of setups that are pending for longer than LOG_SLOW_STARTUP_INTERVAL."""
     loop_count = 0
+    setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
     while True:
         now = dt_util.utcnow()
-        remaining = [domain for domain in domains if domain in setup_started]
+        remaining = setup_started.keys()
         remaining_with_setup_started = {
-            domain: (now - setup_started[domain]).seconds for domain in remaining
+            domain: (now - setup_started[domain]).seconds for domain in setup_started
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         async_dispatcher_send(
@@ -415,16 +415,13 @@ async def async_setup_multi_components(
     hass: core.HomeAssistant,
     domains: set[str],
     config: dict[str, Any],
-    setup_started: dict[str, datetime],
 ) -> None:
     """Set up multiple domains. Log on failure."""
     futures = {
         domain: hass.async_create_task(async_setup_component(hass, domain, config))
         for domain in domains
     }
-    log_task = asyncio.create_task(
-        _async_watch_pending_setups(hass, domains, setup_started)
-    )
+    log_task = asyncio.create_task(_async_watch_pending_setups(hass))
     await asyncio.wait(futures.values())
     log_task.cancel()
     errors = [domain for domain in domains if futures[domain].exception()]
@@ -442,7 +439,9 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
-    setup_started = hass.data[DATA_SETUP_STARTED] = {}
+    hass.data[DATA_SETUP_STARTED] = {}
+    hass.data[DATA_SETUP_TIME] = {}
+
     domains_to_setup = _get_domains(hass, config)
 
     # Resolve all dependencies so we know all integrations
@@ -491,14 +490,14 @@ async def _async_set_up_integrations(
     # Load logging as soon as possible
     if logging_domains:
         _LOGGER.info("Setting up logging: %s", logging_domains)
-        await async_setup_multi_components(hass, logging_domains, config, setup_started)
+        await async_setup_multi_components(hass, logging_domains, config)
 
     # Start up debuggers. Start these first in case they want to wait.
     debuggers = domains_to_setup & DEBUGGER_INTEGRATIONS
 
     if debuggers:
         _LOGGER.debug("Setting up debuggers: %s", debuggers)
-        await async_setup_multi_components(hass, debuggers, config, setup_started)
+        await async_setup_multi_components(hass, debuggers, config)
 
     # calculate what components to setup in what stage
     stage_1_domains = set()
@@ -539,9 +538,7 @@ async def _async_set_up_integrations(
             async with hass.timeout.async_timeout(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
-                await async_setup_multi_components(
-                    hass, stage_1_domains, config, setup_started
-                )
+                await async_setup_multi_components(hass, stage_1_domains, config)
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
@@ -554,9 +551,7 @@ async def _async_set_up_integrations(
             async with hass.timeout.async_timeout(
                 STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
-                await async_setup_multi_components(
-                    hass, stage_2_domains, config, setup_started
-                )
+                await async_setup_multi_components(hass, stage_2_domains, config)
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
