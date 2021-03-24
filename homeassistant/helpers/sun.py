@@ -16,13 +16,14 @@ DATA_LOCATION_CACHE = "astral_location_cache"
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 
+
 @callback
 @bind_hass
 def get_astral_location(
     hass: HomeAssistant
-) -> tuple["astral.location.location", "astral.Elevation"]:
+) -> tuple[astral.location.location, astral.Elevation]:
     """Get an astral location for the current Home Assistant configuration."""
-    from astral import LocationInfo # pylint: disable=import-outside-toplevel
+    from astral import LocationInfo  # pylint: disable=import-outside-toplevel
     from astral.location import Location  # pylint: disable=import-outside-toplevel
 
     timezone = str(hass.config.time_zone)
@@ -55,10 +56,11 @@ def get_astral_event_next(
         location, elevation, event, utc_point_in_time, offset
     )
 
+
 @callback
 def get_location_astral_event_next(
-    location: "astral.location.Location",
-    elevation: "astral.Elevation",
+    location: astral.location.Location,
+    elevation: astral.Elevation,
     event: str,
     utc_point_in_time: datetime.datetime | None = None,
     offset: datetime.timedelta | None = None,
