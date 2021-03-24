@@ -159,7 +159,7 @@ async def test_norway_in_june(hass):
     ) == datetime(2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC)
     assert dt_util.parse_datetime(
         state.attributes[sun.STATE_ATTR_NEXT_SETTING]
-    ) == datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+    ) == datetime(2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC)
 
     assert state.state == sun.STATE_ABOVE_HORIZON
 
