@@ -197,7 +197,7 @@ def test_norway_in_june(hass):
         2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC
     )
     assert sun.get_astral_event_next(hass, SUN_EVENT_SUNSET, june) == datetime(
-        2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC
+        2016, 7, 25, 22, 17, 13, 503932, tzinfo=dt_util.UTC
     )
     assert sun.get_astral_event_date(hass, SUN_EVENT_SUNRISE, june) is None
     assert sun.get_astral_event_date(hass, SUN_EVENT_SUNSET, june) is None
