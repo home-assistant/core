@@ -10,6 +10,7 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_PERSONS_HOME,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import callback
 from homeassistant.util import dt
 
 from .common import fake_post_request, simulate_webhook
@@ -253,3 +254,41 @@ async def test_camera_reconnect_webhook(hass, config_entry):
         )
         await hass.async_block_till_done()
         mock_post.assert_called()
+
+
+async def test_webhook_person_event(hass, camera_entry):
+    """Test that person events are handled."""
+    calls = []
+
+    @callback
+    def listener(event):
+        calls.append(event)
+
+    hass.bus.async_listen_once("netatmo_event", listener)
+    assert not calls
+
+    fake_webhook_event = {
+        "persons": [
+            {
+                "id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                "face_id": "a1b2c3d4e5",
+                "face_key": "9876543",
+                "is_known": True,
+                "face_url": "https://netatmocameraimage.blob.core.windows.net/production/12345",
+            }
+        ],
+        "snapshot_id": "123456789abc",
+        "snapshot_key": "foobar123",
+        "snapshot_url": "https://netatmocameraimage.blob.core.windows.net/production/12346",
+        "event_type": "person",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "event_id": "1234567890",
+        "message": "MYHOME: John Doe has been seen by Indoor Camera ",
+        "push_type": "NACamera-person",
+    }
+
+    webhook_id = camera_entry.data[CONF_WEBHOOK_ID]
+    await simulate_webhook(hass, webhook_id, fake_webhook_event)
+
+    assert calls
