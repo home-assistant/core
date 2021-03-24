@@ -8,7 +8,6 @@ from homeassistant import config_entries, setup
 from homeassistant.components.home_plus_control.const import (
     CONF_SUBSCRIPTION_KEY,
     DOMAIN,
-    ENTITY_UIDS,
 )
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -433,7 +432,7 @@ async def test_update_with_api_error(
             "switch.kitchen_wall_outlet": True,
         },
     )
-    for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
+    for test_entity_uid in mock_modules:
         test_entity_state = one_entity_state(hass, test_entity_uid)
         assert test_entity_state in (STATE_ON, STATE_OFF)
 
@@ -460,6 +459,6 @@ async def test_update_with_api_error(
     )
 
     # This entity has not returned a status, so appears as unavailable
-    for test_entity_uid in hass.data[DOMAIN]["home_plus_control_entry_id"][ENTITY_UIDS]:
+    for test_entity_uid in mock_modules:
         test_entity_state = one_entity_state(hass, test_entity_uid)
         assert test_entity_state == STATE_UNAVAILABLE
