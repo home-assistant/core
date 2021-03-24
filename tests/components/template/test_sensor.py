@@ -996,22 +996,26 @@ async def test_trigger_entity(hass):
         hass,
         "template",
         {
-            "template": {
-                "unique_id": "listening-test-event",
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "sensor": {
-                    "friendly_name": "Hello",
-                    "unique_id": "just_a_test",
-                    "device_class": "battery",
-                    "unit_of_measurement": "%",
-                    "value_template": "{{ trigger.event.data.beer }}",
-                    "entity_picture_template": "{{ '/local/dogs.png' }}",
-                    "icon_template": "{{ 'mdi:pirate' }}",
-                    "attribute_templates": {
-                        "plus_one": "{{ trigger.event.data.beer + 1 }}"
+            "template": [
+                {"invalid": "config"},
+                # This one should still be set up
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": {
+                        "friendly_name": "Hello",
+                        "unique_id": "just_a_test",
+                        "device_class": "battery",
+                        "unit_of_measurement": "%",
+                        "value_template": "{{ trigger.event.data.beer }}",
+                        "entity_picture_template": "{{ '/local/dogs.png' }}",
+                        "icon_template": "{{ 'mdi:pirate' }}",
+                        "attribute_templates": {
+                            "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                        },
                     },
                 },
-            },
+            ],
         },
     )
 
