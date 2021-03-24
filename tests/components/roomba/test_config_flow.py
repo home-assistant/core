@@ -1,6 +1,7 @@
 """Test the iRobot Roomba config flow."""
 from unittest.mock import MagicMock, PropertyMock, patch
 
+import pytest
 from roombapy import RoombaConnectionError
 from roombapy.roomba import RoombaInfo
 
@@ -12,7 +13,34 @@ from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 from tests.common import MockConfigEntry
 
 MOCK_IP = "1.2.3.4"
-VALID_CONFIG = {CONF_HOST: "1.2.3.4", CONF_BLID: "blid", CONF_PASSWORD: "password"}
+VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "blid", CONF_PASSWORD: "password"}
+
+DHCP_DISCOVERY_DEVICES = [
+    {
+        IP_ADDRESS: MOCK_IP,
+        MAC_ADDRESS: "50:14:79:DD:EE:FF",
+        HOSTNAME: "iRobot-blid",
+    },
+    {
+        IP_ADDRESS: MOCK_IP,
+        MAC_ADDRESS: "80:A5:89:DD:EE:FF",
+        HOSTNAME: "Roomba-blid",
+    },
+]
+
+
+DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP = [
+    {
+        IP_ADDRESS: "1.1.1.1",
+        MAC_ADDRESS: "50:14:79:DD:EE:FF",
+        HOSTNAME: "iRobot-blid",
+    },
+    {
+        IP_ADDRESS: "1.1.1.1",
+        MAC_ADDRESS: "80:A5:89:DD:EE:FF",
+        HOSTNAME: "Roomba-blid",
+    },
+]
 
 
 def _create_mocked_roomba(
@@ -577,7 +605,8 @@ async def test_form_user_discovery_and_password_fetch_gets_connection_refused(ha
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery_and_roomba_discovery_finds(hass):
+@pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES)
+async def test_dhcp_discovery_and_roomba_discovery_finds(hass, discovery_data):
     """Test we can process the discovery from dhcp and roomba discovery matches the device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -592,11 +621,7 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "iRobot-blid",
-            },
+            data=discovery_data,
         )
         await hass.async_block_till_done()
 
@@ -637,7 +662,8 @@ async def test_dhcp_discovery_and_roomba_discovery_finds(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_dhcp_discovery_falls_back_to_manual(hass):
+@pytest.mark.parametrize("discovery_data", DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP)
+async def test_dhcp_discovery_falls_back_to_manual(hass, discovery_data):
     """Test we can process the discovery from dhcp but roomba discovery cannot find the device."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
@@ -652,11 +678,7 @@ async def test_dhcp_discovery_falls_back_to_manual(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: "1.1.1.1",
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "iRobot-blid",
-            },
+            data=discovery_data,
         )
         await hass.async_block_till_done()
 
