@@ -39,7 +39,6 @@ async def async_validate_config(hass, config):
             )
             trigger_entity_configs.append(cfg)
         except vol.Invalid as err:
-            assert False
             async_log_exception(err, DOMAIN, cfg, hass)
 
     # Create a copy of the configuration with all config for current
