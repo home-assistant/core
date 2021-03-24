@@ -2,9 +2,9 @@
 from pyeconet.equipment import EquipmentType
 
 from homeassistant.const import (
+    DEVICE_CLASS_SIGNAL_STRENGTH,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    SIGNAL_STRENGTH,
     VOLUME_GALLONS,
 )
 
@@ -43,7 +43,7 @@ SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     WATER_USAGE_TODAY: VOLUME_GALLONS,
     POWER_USAGE_TODAY: None,  # Depends on unit type
     ALERT_COUNT: None,
-    WIFI_SIGNAL: SIGNAL_STRENGTH,
+    WIFI_SIGNAL: DEVICE_CLASS_SIGNAL_STRENGTH,
     RUNNING_STATE: None,  # This is just a string
 }
 
