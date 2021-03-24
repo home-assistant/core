@@ -1,6 +1,5 @@
 """The motion_blinds component."""
 import asyncio
-from contextlib import suppress
 from datetime import timedelta
 import logging
 from socket import timeout
