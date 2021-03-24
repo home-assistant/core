@@ -225,12 +225,6 @@ class CloudLoginView(HomeAssistantView):
         cloud = hass.data[DOMAIN]
         await cloud.login(data["email"], data["password"])
 
-        async def _on_start():
-            """Check if google assistant is linked."""
-            gconf = await cloud.client.get_google_config()
-            await gconf.async_sync_entities(gconf.agent_user_id)
-
-        cloud.register_on_start(_on_start)
         return self.json({"success": True})
 
 
