@@ -13,7 +13,7 @@ from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -385,15 +385,16 @@ def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generat
     hass.data.setdefault(DATA_SETUP_STARTED, {})
 
     started = dt_util.utcnow()
+    unique_components = []
     for domain in components:
-        hass.data[DATA_SETUP_STARTED][domain] = started
+        unique = ensure_unique_string(domain, hass.data[DATA_SETUP_STARTED])
+        unique_components.append(unique)
+        hass.data[DATA_SETUP_STARTED][unique] = started
 
     yield
 
-    if domain in hass.data[DATA_SETUP_STARTED]:
-        del hass.data[DATA_SETUP_STARTED][domain]
-
     hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
-    for domain in components:
+    for domain in unique_components:
+        del hass.data[DATA_SETUP_STARTED][domain]
         hass.data[DATA_SETUP_TIME][domain] = time_taken
