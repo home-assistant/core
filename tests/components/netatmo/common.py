@@ -29,6 +29,8 @@ COMMON_RESPONSE = {
     "user": {"id": "91763b24c43d3e344f424e8b", "email": "john@doe.com"},
 }
 
+TEST_TIME = 1559347200.0
+
 
 def fake_post_request(**args):
     """Return fake data."""
