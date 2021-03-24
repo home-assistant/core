@@ -43,7 +43,7 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 # hass.data key for logging information.
 DATA_LOGGING = "logging"
 
-LOG_SLOW_STARTUP_INTERVAL = 60
+LOG_SLOW_STARTUP_INTERVAL = 1
 SLOW_STARTUP_CHECK_INTERVAL = 1
 SIGNAL_BOOTSTRAP_INTEGRATONS = "bootstrap_integrations"
 
