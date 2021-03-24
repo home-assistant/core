@@ -422,6 +422,7 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
 @contextlib.contextmanager
 def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generator:
     """Keep track of when setup starts and finishes."""
+    hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
     unique_components = []
     for domain in components:
@@ -431,6 +432,7 @@ def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generat
 
     yield
 
+    hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
     for domain in unique_components:
         del hass.data[DATA_SETUP_STARTED][domain]
