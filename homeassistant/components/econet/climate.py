@@ -12,10 +12,10 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
@@ -34,7 +34,7 @@ ECONET_STATE_TO_HA = {
     ThermostatOperationMode.HEATING: HVAC_MODE_HEAT,
     ThermostatOperationMode.COOLING: HVAC_MODE_COOL,
     ThermostatOperationMode.OFF: HVAC_MODE_OFF,
-    ThermostatOperationMode.AUTO: HVAC_MODE_AUTO,
+    ThermostatOperationMode.AUTO: HVAC_MODE_HEAT_COOL,
     ThermostatOperationMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
@@ -74,55 +74,62 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         super().__init__(thermostat)
         self._running = thermostat.running
         self._poll = True
-        self.thermostat = thermostat
         self.econet_state_to_ha = {}
         self.ha_state_to_econet = {}
+        self.op_list = []
+        for mode in self._econet.modes:
+            if mode not in [
+                ThermostatOperationMode.UNKNOWN,
+                ThermostatOperationMode.EMERGENCY_HEAT,
+            ]:
+                ha_mode = ECONET_STATE_TO_HA[mode]
+                self.op_list.append(ha_mode)
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        if self.thermostat.supports_humidifier:
+        if self._econet.supports_humidifier:
             return SUPPORT_FLAGS_THERMOSTAT | SUPPORT_TARGET_HUMIDITY
         return SUPPORT_FLAGS_THERMOSTAT
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.thermostat.set_point
+        return self._econet.set_point
 
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        return self.thermostat.humidity
+        return self._econet.humidity
 
     @property
     def target_humidity(self):
         """Return the humidity we try to reach."""
-        if self.thermostat.supports_humidifier:
-            return self.thermostat.dehumidifier_set_point
+        if self._econet.supports_humidifier:
+            return self._econet.dehumidifier_set_point
         return None
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVAC_MODE_COOL:
-            return self.thermostat.cool_set_point
+            return self._econet.cool_set_point
         if self.hvac_mode == HVAC_MODE_HEAT:
-            return self.thermostat.heat_set_point
+            return self._econet.heat_set_point
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
-            return self.thermostat.heat_set_point
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+            return self._econet.heat_set_point
         return None
 
     @property
     def target_temperature_high(self):
         """Return the higher bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
-            return self.thermostat.cool_set_point
+        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+            return self._econet.cool_set_point
         return None
 
     def set_temperature(self, **kwargs):
@@ -131,16 +138,14 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if target_temp:
-            self.thermostat.set_set_point(target_temp, None, None)
-            return
+            self._econet.set_set_point(target_temp, None, None)
         if target_temp_low or target_temp_high:
-            self.thermostat.set_set_point(None, target_temp_high, target_temp_low)
-            return
+            self._econet.set_set_point(None, target_temp_high, target_temp_low)
 
     @property
     def is_aux_heat(self):
         """Return true if aux heater."""
-        return self.thermostat.mode == ThermostatOperationMode.EMERGENCY_HEAT
+        return self._econet.mode == ThermostatOperationMode.EMERGENCY_HEAT
 
     @property
     def hvac_modes(self):
@@ -148,16 +153,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
 
         Needs to be one of HVAC_MODE_*.
         """
-        econet_modes = self.thermostat.modes
-        op_list = []
-        for mode in econet_modes:
-            if mode not in [
-                ThermostatOperationMode.UNKNOWN,
-                ThermostatOperationMode.EMERGENCY_HEAT,
-            ]:
-                ha_mode = ECONET_STATE_TO_HA[mode]
-                op_list.append(ha_mode)
-        return op_list
+        return self.op_list
 
     @property
     def hvac_mode(self) -> str:
@@ -165,7 +161,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
 
         Needs to be one of HVAC_MODE_*.
         """
-        econet_mode = self.thermostat.mode
+        econet_mode = self.econet.mode
         _current_op = HVAC_MODE_OFF
         if econet_mode is not None:
             _current_op = ECONET_STATE_TO_HA[econet_mode]
@@ -175,16 +171,16 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         hvac_mode_to_set = HA_STATE_TO_ECONET.get(hvac_mode)
-        self.thermostat.set_mode(hvac_mode_to_set)
+        self.econet.set_mode(hvac_mode_to_set)
 
     def set_humidity(self, humidity: int):
         """Set new target humidity."""
-        self.thermostat.set_dehumidifier_set_point(humidity)
+        self.econet.set_dehumidifier_set_point(humidity)
 
     @property
     def fan_mode(self):
         """Return the current fan mode."""
-        econet_fan_mode = self.thermostat.fan_mode
+        econet_fan_mode = self.econet.fan_mode
 
         # Remove this after we figure out how to handle med lo and med hi
         if econet_fan_mode in [ThermostatFanMode.MEDHI, ThermostatFanMode.MEDLO]:
@@ -198,7 +194,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     @property
     def fan_modes(self):
         """Return the fan modes."""
-        econet_fan_modes = self.thermostat.fan_modes
+        econet_fan_modes = self.econet.fan_modes
         fan_list = []
         for mode in econet_fan_modes:
             # Remove the MEDLO MEDHI once we figure out how to handle it
@@ -212,32 +208,32 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
 
     def set_fan_mode(self, fan_mode):
         """Set the fan mode."""
-        self.thermostat.set_fan_mode(HA_FAN_STATE_TO_ECONET[fan_mode])
+        self._econet.set_fan_mode(HA_FAN_STATE_TO_ECONET[fan_mode])
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
-        self.thermostat.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
+        self._econet.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
 
     def turn_aux_heat_off(self):
         """Turn auxiliary heater off."""
-        self.thermostat.set_mode(ThermostatOperationMode.HEATING)
+        self._econet.set_mode(ThermostatOperationMode.HEATING)
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self.thermostat.set_point_limits[0]
+        return self._econet.set_point_limits[0]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self.thermostat.set_point_limits[1]
+        return self._econet.set_point_limits[1]
 
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return self.thermostat.dehumidifier_set_point_limits[0]
+        return self._econet.dehumidifier_set_point_limits[0]
 
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
-        return self.thermostat.dehumidifier_set_point_limits[1]
+        return self._econet.dehumidifier_set_point_limits[1]

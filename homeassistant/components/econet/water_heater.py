@@ -154,6 +154,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         """Get the latest energy usage."""
         await self.water_heater.get_energy_usage()
         await self.water_heater.get_water_usage()
+        self.async_write_ha_state()
         self._poll = False
 
     def turn_away_mode_on(self):

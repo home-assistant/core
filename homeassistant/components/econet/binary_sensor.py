@@ -19,18 +19,22 @@ SENSOR_NAME_RUNNING = "running"
 SENSOR_NAME_SCREEN_LOCKED = "screen_locked"
 SENSOR_NAME_BEEP_ENABLED = "beep_enabled"
 
-SENSOR_NAMES_TO_ATTRIBUTES = {
-    SENSOR_NAME_SHUTOFF_VALVE: "shutoff_valve_open",
-    SENSOR_NAME_RUNNING: "running",
-    SENSOR_NAME_SCREEN_LOCKED: "screen_locked",
-    SENSOR_NAME_BEEP_ENABLED: "beep_enabled",
-}
-
-SENSOR_NAMES_TO_DEVICE_CLASS = {
-    SENSOR_NAME_SHUTOFF_VALVE: DEVICE_CLASS_OPENING,
-    SENSOR_NAME_RUNNING: DEVICE_CLASS_POWER,
-    SENSOR_NAME_BEEP_ENABLED: DEVICE_CLASS_SOUND,
-    SENSOR_NAME_SCREEN_LOCKED: DEVICE_CLASS_LOCK,
+ATTR = "attr"
+DEVICE_CLASS = "device_class"
+SENSORS = {
+    SENSOR_NAME_SHUTOFF_VALVE: {
+        ATTR: "shutoff_valve_open",
+        DEVICE_CLASS: DEVICE_CLASS_OPENING,
+    },
+    SENSOR_NAME_RUNNING: {ATTR: "running", DEVICE_CLASS: DEVICE_CLASS_POWER},
+    SENSOR_NAME_SCREEN_LOCKED: {
+        ATTR: "screen_locked",
+        DEVICE_CLASS: DEVICE_CLASS_LOCK,
+    },
+    SENSOR_NAME_BEEP_ENABLED: {
+        ATTR: "beep_enabled",
+        DEVICE_CLASS: DEVICE_CLASS_SOUND,
+    },
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +47,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     all_equipment = equipment[EquipmentType.WATER_HEATER].copy()
     all_equipment.extend(equipment[EquipmentType.THERMOSTAT].copy())
     for _equip in all_equipment:
-        for name, attribute in SENSOR_NAMES_TO_ATTRIBUTES.items():
+        attributes = []
+        for sensor in SENSORS.values():
+            attributes.append(sensor[ATTR])
+        for name, attribute in attributes:
             if getattr(_equip, attribute, None) is not None:
                 binary_sensors.append(EcoNetBinarySensor(_equip, name))
     async_add_entities(
@@ -63,12 +70,12 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return getattr(self._econet, SENSOR_NAMES_TO_ATTRIBUTES[self._device_name])
+        return getattr(self._econet, SENSORS[self._device_name][ATTR])
 
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return SENSOR_NAMES_TO_DEVICE_CLASS[self._device_name]
+        return SENSORS[self._device_name][DEVICE_CLASS]
 
     @property
     def name(self):

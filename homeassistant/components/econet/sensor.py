@@ -6,7 +6,7 @@ from pyeconet.equipment import EquipmentType
 from homeassistant.const import (
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    SIGNAL_STRENGTH,
     VOLUME_GALLONS,
 )
 
@@ -45,7 +45,7 @@ SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     WATER_USAGE_TODAY: VOLUME_GALLONS,
     POWER_USAGE_TODAY: None,  # Depends on unit type
     ALERT_COUNT: None,
-    WIFI_SIGNAL: SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    WIFI_SIGNAL: SIGNAL_STRENGTH,
     RUNNING_STATE: None,  # This is just a string
 }
 
@@ -73,9 +73,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         sensors.append(EcoNetSensor(water_heater, WATER_USAGE_TODAY))
         sensors.append(EcoNetSensor(water_heater, POWER_USAGE_TODAY))
 
-    async_add_entities(
-        sensors,
-    )
+    async_add_entities(sensors)
 
 
 class EcoNetSensor(EcoNetEntity):
@@ -91,7 +89,7 @@ class EcoNetSensor(EcoNetEntity):
     def state(self):
         """Return sensors state."""
         value = getattr(self._econet, SENSOR_NAMES_TO_ATTRIBUTES[self._device_name])
-        if value is float:
+        if isinstance(value, float):
             value = round(value, 2)
         return value
 
