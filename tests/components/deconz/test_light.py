@@ -143,6 +143,10 @@ async def test_lights_and_groups(hass, aioclient_mock, mock_deconz_websocket):
 
     assert hass.states.get("light.light_group").state == STATE_ON
     assert hass.states.get("light.light_group").attributes["all_on"] is False
+    assert hass.states.get("light.light_group").attributes["entity_id"] == [
+        "light.rgb_light",
+        "light.tunable_white_light",
+    ]
 
     empty_group = hass.states.get("light.empty_group")
     assert empty_group is None

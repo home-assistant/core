@@ -21,7 +21,9 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     LightEntity,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
@@ -251,10 +253,29 @@ class DeconzGroup(DeconzBaseLight):
 
         super().__init__(device, gateway)
 
+        self._device_ids = []
+        self._entity_ids = []
+
         for light_id in device.lights:
             light = gateway.api.lights[light_id]
             if light.ZHATYPE == Light.ZHATYPE:
                 self.update_features(light)
+                self._device_ids.append(light.uniqueid)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass.
+
+        Perform initialization that can only be done in the event loop.
+        """
+        await super().async_added_to_hass()
+
+        # Resolve device unique IDs to entity IDs
+        self._entity_ids = []
+        ent_reg = entity_registry.async_get(self.hass)
+        for device_id in self._device_ids:
+            entity_id = ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, device_id)
+            if entity_id:
+                self._entity_ids.append(entity_id)
 
     @property
     def unique_id(self):
@@ -279,5 +300,6 @@ class DeconzGroup(DeconzBaseLight):
         """Return the device state attributes."""
         attributes = dict(super().extra_state_attributes)
         attributes["all_on"] = self._device.all_on
+        attributes[ATTR_ENTITY_ID] = self._entity_ids
 
         return attributes
