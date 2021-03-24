@@ -402,7 +402,7 @@ async def _async_watch_pending_setups(
         await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
         loop_count += SLOW_STARTUP_CHECK_INTERVAL
 
-        if loop_count > LOG_SLOW_STARTUP_INTERVAL and remaining:
+        if loop_count >= LOG_SLOW_STARTUP_INTERVAL and remaining:
             _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s",
                 ", ".join(remaining),
