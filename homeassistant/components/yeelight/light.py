@@ -1,4 +1,6 @@
 """Light platform support for yeelight."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
@@ -531,7 +533,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> "Bulb":  # noqa: F821
+    def _bulb(self) -> Bulb:  # noqa: F821
         return self.device.bulb
 
     @property
