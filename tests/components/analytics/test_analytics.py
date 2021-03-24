@@ -1,9 +1,12 @@
 """The tests for the analytics ."""
 from unittest.mock import patch
 
+import aiohttp
+
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
+    ATTR_PREFERENCES,
     AnalyticsPreference,
 )
 from homeassistant.components.hassio.const import DOMAIN as HASSIO_DOMAIN
@@ -25,8 +28,43 @@ async def test_no_send(hass, caplog, aioclient_mock):
     assert len(aioclient_mock.mock_calls) == 0
 
 
+async def test_load_with_supervisor_diagnostics(hass, aioclient_mock, hassio_handler):
+    """Test loading with a supervisor that has diagnostics enabled."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={"result": "ok", "data": {"diagnostics": True}},
+    )
+    hass.data[HASSIO_DOMAIN] = hassio_handler
+
+    analytics = Analytics(hass)
+    assert AnalyticsPreference.DIAGNOSTICS not in analytics.preferences
+    await analytics.load()
+    assert AnalyticsPreference.DIAGNOSTICS in analytics.preferences
+
+
+async def test_load_with_supervisor_without_diagnostics(
+    hass, aioclient_mock, hassio_handler
+):
+    """Test loading with a supervisor that has not diagnostics enabled."""
+    aioclient_mock.get(
+        "http://127.0.0.1/supervisor/info",
+        json={"result": "ok", "data": {"diagnostics": False}},
+    )
+    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
+    hass.data[HASSIO_DOMAIN] = hassio_handler
+
+    analytics = Analytics(hass)
+    analytics._data[ATTR_PREFERENCES] = [AnalyticsPreference.DIAGNOSTICS]
+
+    assert AnalyticsPreference.DIAGNOSTICS in analytics.preferences
+
+    await analytics.load()
+
+    assert AnalyticsPreference.DIAGNOSTICS not in analytics.preferences
+
+
 async def test_failed_to_send(hass, caplog, aioclient_mock):
-    """Test send base prefrences are defined."""
+    """Test failed to send payload."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
     analytics = Analytics(hass)
     await analytics.save_preferences([AnalyticsPreference.BASE])
@@ -35,6 +73,18 @@ async def test_failed_to_send(hass, caplog, aioclient_mock):
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()
     assert "Sending analytics failed with statuscode 400" in caplog.text
+
+
+async def test_failed_to_send_raises(hass, caplog, aioclient_mock):
+    """Test raises when failed to send payload."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, exc=aiohttp.ClientError())
+    analytics = Analytics(hass)
+    await analytics.save_preferences([AnalyticsPreference.BASE])
+    assert analytics.preferences == ["base"]
+
+    with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+        await analytics.send_analytics()
+    assert "Error sending analytics" in caplog.text
 
 
 async def test_send_base(hass, caplog, aioclient_mock):
@@ -85,7 +135,7 @@ async def test_send_usage(hass, caplog, aioclient_mock):
         [AnalyticsPreference.BASE, AnalyticsPreference.USAGE]
     )
     assert analytics.preferences == ["base", "usage"]
-    hass.config.components = ["default_config"]
+    hass.config.components = ["default_config", "api"]
 
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()

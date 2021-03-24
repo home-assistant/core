@@ -434,3 +434,6 @@ async def test_onboarding_analytics(hass, hass_storage, hass_client, hass_admin_
     assert resp.status == 200
 
     assert const.STEP_ANALYTICS in hass_storage[const.DOMAIN]["data"]["done"]
+
+    resp = await client.post("/api/onboarding/analytics")
+    assert resp.status == 403
