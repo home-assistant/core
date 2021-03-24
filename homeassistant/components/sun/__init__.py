@@ -92,6 +92,7 @@ class Sun(Entity):
         """Initialize the sun."""
         self.hass = hass
         self.location = None
+        self.elevation = 0.0
         self._state = self.next_rising = self.next_setting = None
         self.next_dawn = self.next_dusk = None
         self.next_midnight = self.next_noon = None
@@ -100,10 +101,11 @@ class Sun(Entity):
         self._next_change = None
 
         def update_location(_event):
-            location = get_astral_location(self.hass)
+            location, elevation = get_astral_location(self.hass)
             if location == self.location:
                 return
             self.location = location
+            self.elevation = elevation
             self.update_events()
 
         update_location(None)
@@ -140,7 +142,7 @@ class Sun(Entity):
 
     def _check_event(self, utc_point_in_time, sun_event, before):
         next_utc = get_location_astral_event_next(
-            self.location, sun_event, utc_point_in_time
+            self.location, self.elevation, sun_event, utc_point_in_time
         )
         if next_utc < self._next_change:
             self._next_change = next_utc
@@ -169,7 +171,7 @@ class Sun(Entity):
         )
         self.location.solar_depression = -10
         self._check_event(utc_point_in_time, "dawn", PHASE_SMALL_DAY)
-        self.next_noon = self._check_event(utc_point_in_time, "solar_noon", None)
+        self.next_noon = self._check_event(utc_point_in_time, "noon", None)
         self._check_event(utc_point_in_time, "dusk", PHASE_DAY)
         self.next_setting = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNSET, PHASE_SMALL_DAY
@@ -180,9 +182,7 @@ class Sun(Entity):
         self._check_event(utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT)
         self.location.solar_depression = "astronomical"
         self._check_event(utc_point_in_time, "dusk", PHASE_ASTRONOMICAL_TWILIGHT)
-        self.next_midnight = self._check_event(
-            utc_point_in_time, "solar_midnight", None
-        )
+        self.next_midnight = self._check_event(utc_point_in_time, "midnight", None)
         self.location.solar_depression = "civil"
 
         # if the event was solar midday or midnight, phase will now
@@ -190,7 +190,7 @@ class Sun(Entity):
         # even in the day at the poles, so we can't rely on it.
         # Need to calculate phase if next is noon or midnight
         if self.phase is None:
-            elevation = self.location.solar_elevation(self._next_change)
+            elevation = self.location.solar_elevation(self._next_change, self.elevation)
             if elevation >= 10:
                 self.phase = PHASE_DAY
             elif elevation >= 0:
@@ -222,9 +222,11 @@ class Sun(Entity):
         """Calculate the position of the sun."""
         # Grab current time in case system clock changed since last time we ran.
         utc_point_in_time = dt_util.utcnow()
-        self.solar_azimuth = round(self.location.solar_azimuth(utc_point_in_time), 2)
+        self.solar_azimuth = round(
+            self.location.solar_azimuth(utc_point_in_time, self.elevation), 2
+        )
         self.solar_elevation = round(
-            self.location.solar_elevation(utc_point_in_time), 2
+            self.location.solar_elevation(utc_point_in_time, self.elevation), 2
         )
 
         _LOGGER.debug(
