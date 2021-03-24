@@ -1,0 +1,63 @@
+{
+  "config": {
+    "flow_title": "FRITZ!Box Tools: {name}",
+    "step": {
+      "setup_options": {
+        "title": "Setup FRITZ!Box Tools - optional settings",
+        "description": "Select which features you want to use.\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "data": {
+          "use_tracker": "device tracker",
+          "use_profiles": "access profile switches",
+          "use_wifi": "wifi switches",
+          "use_port": "port forwarding switches for hass device",
+          "use_deflections": "call deflection switches"
+        }
+      },
+      "setup_profiles": {
+        "title": "Setup FRITZ!Box Tools - profile settings",
+        "description": "Access profiles needs at least one profile.\nCheck your profiles in the FRITZ!Box at Internet/Filters/Access Profiles\nleave it empty if you don't need it.\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "data": {
+          "profiles": "Access profiles: Comma separated list of profile names"
+        }
+      },
+      "confirm": {
+        "title": "Setup FRITZ!Box Tools",
+        "description": "Discovered FRITZ!Box: {name}\n\nSetup FRITZ!Box Tools to control your {name}\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "start_config": {
+        "title": "Setup FRITZ!Box Tools - mandatory",
+        "description": "Setup FRITZ!Box Tools to control your FRITZ!Box.\nMinimum needed: username, password.\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Updating FRITZ!Box Tools - credentials",
+        "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.\nDocumentation: https://github.com/mammuth/ha-fritzbox-tools",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "FRITZ!Box configuration is already in progress.",
+      "already_configured": "This AVM FRITZ!Box is already configured.",
+      "reauth_successful": "FRITZ!Box configuration successfully updated."
+    },
+    "error": {
+      "connection_error": "Failed to connect to FRITZ!Box. Check your username and password.",
+      "connection_error_profiles": "Profile switches only work if login with FRITZ!Box user name and password is enabled in the FRITZ!Box. This can be changed in the FRITZ!Box at System/FRITZ!Box Users/Login to the Home Network.",
+      "profile_not_found": "The format of the spcified profile(s) is wrong or profile not found in FRITZ!Box. Check your profiles in the FRITZ!Box at Internet/Filters/Access Profiles.",
+      "already_in_progress": "FRITZ!Box configuration is already in progress.",
+      "already_configured": "This AVM FRITZ!Box is already configured."
+    }
+  }
+}
