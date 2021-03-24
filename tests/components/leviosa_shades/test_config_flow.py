@@ -1,6 +1,8 @@
 """Test the Leviosa Motor Shades Zone config flow."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.leviosa_shades.const import (
     BLIND_GROUPS,
@@ -43,6 +45,18 @@ TEST_USER_INPUT_2 = {
     GROUP3_NAME: "Z2 Group 3",
     GROUP4_NAME: "Z2 Group 4",
 }
+
+
+@pytest.fixture(name="leviosa_shades_connect", autouse=True)
+def leviosa_shades_connect_fixture():
+    """Mock motion blinds connection and entry setup."""
+    with patch(
+        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
+        return_value=TEST_DISCOVERY_1,
+    ), patch(
+        "homeassistant.components.leviosa_shades.async_setup_entry", return_value=True
+    ):
+        yield
 
 
 async def test_config_flow_one_zone_success(hass):
