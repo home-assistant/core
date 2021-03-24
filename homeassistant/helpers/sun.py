@@ -23,7 +23,7 @@ ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 @bind_hass
 def get_astral_location(
     hass: HomeAssistantType,
-) -> tuple[astral.location.location, astral.Elevation]:
+) -> tuple[astral.location.Location, astral.Elevation]:
     """Get an astral location for the current Home Assistant configuration."""
     from astral import LocationInfo  # pylint: disable=import-outside-toplevel
     from astral.location import Location  # pylint: disable=import-outside-toplevel
