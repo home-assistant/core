@@ -7,10 +7,9 @@ from homeassistant.const import CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
-from .const import DOMAIN
+from .const import CONF_TRIGGER, DOMAIN
 from .sensor import SENSOR_SCHEMA
 
-CONF_TRIGGER = "trigger"
 CONF_STATE = "state"
 
 

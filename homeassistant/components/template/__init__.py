@@ -11,7 +11,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_TRIGGER, DOMAIN, PLATFORMS
 
 
 async def async_setup(hass, config):
@@ -65,13 +65,12 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         """Attach the triggers."""
         self._unsub_trigger = await trigger_helper.async_initialize_triggers(
             self.hass,
-            self.config["trigger"],
+            self.config[CONF_TRIGGER],
             self._handle_triggered,
             DOMAIN,
             self.name,
             self.logger.log,
             start_event is not None,
-            self.config.get("variables"),
         )
 
     @callback

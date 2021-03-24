@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -119,6 +120,11 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
             # Check against False so `None` is ok
             self._rendered.get(CONF_AVAILABILITY_TEMPLATE) is not False
         )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra attributes."""
+        return self._rendered.get(CONF_ATTRIBUTE_TEMPLATES)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""

@@ -1034,6 +1034,9 @@ async def test_trigger_entity(hass):
     state = hass.states.get("sensor.hello")
     assert state.state == "2"
     assert state.attributes.get("device_class") == "battery"
+    assert state.attributes.get("icon") == "mdi:pirate"
+    assert state.attributes.get("entity_picture") == "/local/dogs.png"
+    assert state.attributes.get("plus_one") == 3
     assert state.attributes.get("unit_of_measurement") == "%"
     assert state.context is context
 
