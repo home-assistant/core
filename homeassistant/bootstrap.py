@@ -440,14 +440,9 @@ async def _async_set_up_integrations(
 ) -> None:
     """Set up all the integrations."""
     hass.data[DATA_SETUP_STARTED] = {}
-    hass.data[DATA_SETUP_TIME] = {}
+    setup_time = hass.data[DATA_SETUP_TIME] = {}
 
     domains_to_setup = _get_domains(hass, config)
-
-    import cProfile
-
-    pr = cProfile.Profile()
-    pr.enable()
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
@@ -568,6 +563,4 @@ async def _async_set_up_integrations(
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
-    pr.disable()
-    pr.create_stats()
-    pr.dump_stats("bootstrap.cprof")
+    _LOGGER.debug("Setup times: %s", setup_time)
