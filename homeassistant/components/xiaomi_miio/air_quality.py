@@ -45,15 +45,24 @@ PROP_TO_ATTR = {
     "humidity": ATTR_HUM,
 }
 
-DEVICES = [
-    MODEL_AIRQUALITYMONITOR_B1,
-    MODEL_AIRQUALITYMONITOR_S1,
-    MODEL_AIRQUALITYMONITOR_V1,
-]
-
-MIOT_DEVICES = [
-    MODEL_AIRQUALITYMONITOR_CGDN1,
-]
+DEVICE_MAP = {
+    MODEL_AIRQUALITYMONITOR_S1: {
+        "device_class": AirQualityMonitor,
+        "entity_class": lambda *args: AirMonitorS1(*args),
+    },
+    MODEL_AIRQUALITYMONITOR_B1: {
+        "device_class": AirQualityMonitor,
+        "entity_class": lambda *args: AirMonitorB1(*args),
+    },
+    MODEL_AIRQUALITYMONITOR_V1: {
+        "device_class": AirQualityMonitor,
+        "entity_class": lambda *args: AirMonitorV1(*args),
+    },
+    MODEL_AIRQUALITYMONITOR_CGDN1: {
+        "device_class": lambda host, token, model: AirQualityMonitorCGDN1(host, token),
+        "entity_class": lambda *args: AirMonitorCGDN1(*args),
+    },
+}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -84,24 +93,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         _LOGGER.debug("Initializing with host %s (token %s...)", host, token[:5])
 
-        if model in DEVICES:
-            device = AirQualityMonitor(host, token, model=model)
-            if model == MODEL_AIRQUALITYMONITOR_S1:
-                entities.append(AirMonitorS1(name, device, config_entry, unique_id))
-            elif model == MODEL_AIRQUALITYMONITOR_B1:
-                entities.append(AirMonitorB1(name, device, config_entry, unique_id))
-            elif model == MODEL_AIRQUALITYMONITOR_V1:
-                entities.append(AirMonitorV1(name, device, config_entry, unique_id))
-        elif model in MIOT_DEVICES:
-            if model == MODEL_AIRQUALITYMONITOR_CGDN1:
-                entities.append(
-                    AirMonitorCGDN1(
-                        name,
-                        AirQualityMonitorCGDN1(host, token),
-                        config_entry,
-                        unique_id,
-                    )
+        if model in DEVICE_MAP:
+            device_entry = DEVICE_MAP[model]
+            entities.append(
+                device_entry["entity_class"](
+                    name,
+                    device_entry["device_class"](host, token, model=model),
+                    config_entry,
+                    unique_id,
                 )
+            )
         else:
             _LOGGER.warning("AirQualityMonitor model '%s' is not yet supported", model)
 
