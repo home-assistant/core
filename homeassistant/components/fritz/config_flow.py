@@ -44,7 +44,20 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
 
     def __init__(self):
         """Initialize FRITZ!Box Tools flow."""
-        pass
+        self._host = None
+        self._entry = None
+        self._name = None
+        self._password = None
+        self._port = None
+        self._profiles = None
+        self._use_deflections = None
+        self._use_port = None
+        self._use_profiles = None
+        self._use_tracker = None
+        self._use_wifi = None
+        self._username = None
+        self.import_schema = None
+        self.fritz_tools = None
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a flow initialized by discovery."""
@@ -220,23 +233,23 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         if self._use_profiles:
             errors = {}
             return self._show_setup_form_profiles(errors)
-        else:
-            profiles = []
-            return self.async_create_entry(
-                title=self._name,
-                data={
-                    CONF_HOST: self.fritz_tools.host,
-                    CONF_PASSWORD: self.fritz_tools.password,
-                    CONF_PORT: self.fritz_tools.port,
-                    CONF_USERNAME: self.fritz_tools.username,
-                    CONF_PROFILES: profiles,
-                    CONF_USE_TRACKER: self._use_tracker,
-                    CONF_USE_WIFI: self._use_wifi,
-                    CONF_USE_DEFLECTIONS: self._use_deflections,
-                    CONF_USE_PORT: self._use_port,
-                    CONF_USE_PROFILES: self._use_profiles,
-                },
-            )
+
+        profiles = []
+        return self.async_create_entry(
+            title=self._name,
+            data={
+                CONF_HOST: self.fritz_tools.host,
+                CONF_PASSWORD: self.fritz_tools.password,
+                CONF_PORT: self.fritz_tools.port,
+                CONF_USERNAME: self.fritz_tools.username,
+                CONF_PROFILES: profiles,
+                CONF_USE_TRACKER: self._use_tracker,
+                CONF_USE_WIFI: self._use_wifi,
+                CONF_USE_DEFLECTIONS: self._use_deflections,
+                CONF_USE_PORT: self._use_port,
+                CONF_USE_PROFILES: self._use_profiles,
+            },
+        )
 
     async def async_step_setup_profiles(self, user_input=None):
         """Handle flow setup profiles."""

@@ -5,6 +5,12 @@ import logging
 import socket
 from typing import Any, Dict, Optional
 
+# pylint: disable=import-error
+from fritzconnection import FritzConnection
+from fritzconnection.core.exceptions import FritzConnectionException
+from fritzconnection.lib.fritzhosts import FritzHosts
+from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzprofiles import FritzProfileSwitch
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -112,13 +118,6 @@ class FritzBoxTools:
         use_tracker=DEFAULT_USE_TRACKER,
     ):
         """Initialize FritzboxTools class."""
-        # pylint: disable=import-error
-        from fritzconnection import FritzConnection
-        from fritzconnection.core.exceptions import FritzConnectionException
-        from fritzconnection.lib.fritzhosts import FritzHosts
-        from fritzconnection.lib.fritzstatus import FritzStatus
-        from fritzprofiles import FritzProfileSwitch
-
         # general timeout for all requests to the router. Some calls need quite some time.
 
         try:
@@ -270,6 +269,7 @@ class FritzScannerEntity:
         self._ip_address = None
         self._last_activity = None
         self._connected = False
+        self._icon = None
 
     def update(self, dev_info, dev_home):
         """Update device info."""
