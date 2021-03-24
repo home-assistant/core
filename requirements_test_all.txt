@@ -1219,6 +1219,9 @@ wakeonlan==2.0.1
 # homeassistant.components.folder_watcher
 watchdog==2.0.2
 
+# homeassistant.components.whirlpool
+whirlpool-sixth-sense==0.15
+
 # homeassistant.components.wiffi
 wiffi==1.0.1
 

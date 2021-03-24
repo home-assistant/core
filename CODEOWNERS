@@ -536,6 +536,7 @@ homeassistant/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @esev
+homeassistant/components/whirlpool/* @abmantis
 homeassistant/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj
 homeassistant/components/withings/* @vangorra

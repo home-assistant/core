@@ -264,6 +264,7 @@ FLOWS = [
     "volumio",
     "waze_travel_time",
     "wemo",
+    "whirlpool",
     "wiffi",
     "wilight",
     "withings",
