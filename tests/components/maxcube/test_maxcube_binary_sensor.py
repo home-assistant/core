@@ -1,5 +1,5 @@
 """Test EQ3 Max! Window Shutters."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from maxcube.cube import MaxCube
 from maxcube.windowshutter import MaxWindowShutter
@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
 
@@ -27,7 +28,7 @@ async def test_window_shuttler(hass, cube: MaxCube, windowshutter: MaxWindowShut
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_WINDOW
 
     windowshutter.is_open = False
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)

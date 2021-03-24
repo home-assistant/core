@@ -1,5 +1,5 @@
 """Test EQ3 Max! Thermostats."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from maxcube.cube import MaxCube
 from maxcube.device import (
@@ -50,6 +50,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
 )
+from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
 
@@ -118,7 +119,7 @@ async def test_thermostat_set_hvac_mode_off(
     thermostat.target_temperature = OFF_TEMPERATURE
     thermostat.valve_position = 0
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -146,7 +147,7 @@ async def test_thermostat_set_hvac_mode_heat(
     )
     thermostat.mode = MAX_DEVICE_MODE_MANUAL
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
@@ -168,7 +169,7 @@ async def test_thermostat_set_temperature(
     thermostat.target_temperature = 10.0
     thermostat.valve_position = 0
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -192,7 +193,7 @@ async def test_thermostat_set_preset_on(hass, cube: MaxCube, thermostat: MaxTher
     thermostat.mode = MAX_DEVICE_MODE_MANUAL
     thermostat.target_temperature = ON_TEMPERATURE
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -217,7 +218,7 @@ async def test_thermostat_set_preset_comfort(
     thermostat.mode = MAX_DEVICE_MODE_MANUAL
     thermostat.target_temperature = thermostat.comfort_temperature
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -242,7 +243,7 @@ async def test_thermostat_set_preset_eco(
     thermostat.mode = MAX_DEVICE_MODE_MANUAL
     thermostat.target_temperature = thermostat.eco_temperature
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -267,7 +268,7 @@ async def test_thermostat_set_preset_away(
     thermostat.mode = MAX_DEVICE_MODE_VACATION
     thermostat.target_temperature = thermostat.eco_temperature
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -292,7 +293,7 @@ async def test_thermostat_set_preset_boost(
     thermostat.mode = MAX_DEVICE_MODE_BOOST
     thermostat.target_temperature = thermostat.eco_temperature
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
@@ -331,7 +332,7 @@ async def test_wallthermostat_set_hvac_mode_heat(
     )
     wallthermostat.target_temperature = MIN_TEMPERATURE
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(WALL_ENTITY_ID)
@@ -355,7 +356,7 @@ async def test_wallthermostat_set_hvac_mode_auto(
     wallthermostat.mode = MAX_DEVICE_MODE_AUTOMATIC
     wallthermostat.target_temperature = 23.0
 
-    async_fire_time_changed(hass, datetime.now() + timedelta(minutes=5))
+    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
     state = hass.states.get(WALL_ENTITY_ID)
