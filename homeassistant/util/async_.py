@@ -40,7 +40,7 @@ def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
 
 def run_callback_threadsafe(
     loop: AbstractEventLoop, callback: Callable[..., T], *args: Any
-) -> concurrent.futures.Future[T]:
+) -> concurrent.futures.Future[T]:  # pylint: disable=unsubscriptable-object
     """Submit a callback object to a given event loop.
 
     Return a concurrent.futures.Future to access the result.
