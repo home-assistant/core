@@ -130,7 +130,7 @@ def test_date_events_default_date(hass):
     midnight = astral.sun.midnight(location.observer, date=utc_today)
     noon = astral.sun.noon(location.observer, date=utc_today)
     sunrise = astral.sun.sunrise(location.observer, date=utc_today)
-    sunset = astral.sunset(location.observer, date=utc_today)
+    sunset = astral.sun.sunset(location.observer, date=utc_today)
 
     with patch("homeassistant.util.dt.now", return_value=utc_now):
         assert dawn == sun.get_astral_event_date(hass, "dawn", utc_today)
@@ -194,7 +194,7 @@ def test_norway_in_june(hass):
     print(sun.get_astral_event_date(hass, SUN_EVENT_SUNSET, datetime(2017, 7, 26)))
 
     assert sun.get_astral_event_next(hass, SUN_EVENT_SUNRISE, june) == datetime(
-        2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC
+        2016, 7, 24, 22, 59, 45, 689645, tzinfo=dt_util.UTC
     )
     assert sun.get_astral_event_next(hass, SUN_EVENT_SUNSET, june) == datetime(
         2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC
