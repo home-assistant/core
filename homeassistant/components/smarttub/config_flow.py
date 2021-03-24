@@ -24,6 +24,11 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self) -> None:
+        """Instantiate config flow."""
+        super().__init__()
+        self._reauth_input = None
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         errors = {}
@@ -54,6 +59,8 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Get new credentials if the current ones don't work anymore."""
+        if user_input is not None:
+            self._reauth_input = dict(user_input)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None):
@@ -61,6 +68,7 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                description_placeholders={"email": self._reauth_input[CONF_EMAIL]},
+                data_schema=DATA_SCHEMA,
             )
         return await self.async_step_user()

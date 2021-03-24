@@ -79,14 +79,16 @@ async def test_reauth(hass, smarttub_api):
     config_entry = result["result"]
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data={"config_entry_id": config_entry.entry_id, **config_entry.data},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
