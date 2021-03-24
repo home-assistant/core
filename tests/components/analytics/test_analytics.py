@@ -101,8 +101,9 @@ async def test_send_base(hass, caplog, aioclient_mock):
     assert "'integrations':" not in caplog.text
 
 
-async def test_send_base_with_supervisor(hass, caplog):
+async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
 
     analytics = Analytics(hass)
     await analytics.save_preferences([AnalyticsPreference.BASE])
