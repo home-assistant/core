@@ -9,14 +9,24 @@ from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, GROUPS
+from .const import (
+    CONF_CUSTOM,
+    CONF_FACTOR,
+    CONF_GROUP,
+    CONF_KEY,
+    CONF_UNIT,
+    DEVICE_INFO,
+    GROUPS,
+)
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,10 +141,46 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config=None):
         """Import a config flow from configuration."""
         device_info = await validate_input(self.hass, import_config)
-        await self.async_set_unique_id(device_info["serial"])
+        config_entry_unique_id = device_info["serial"]
+
+        await self.async_set_unique_id(config_entry_unique_id)
         self._abort_if_unique_id_configured(import_config)
 
         import_config[DEVICE_INFO] = device_info
+
+        entity_registry = await er.async_get_registry(self.hass)
+        config_sensors = list(
+            set(import_config[CONF_SENSORS] + list(import_config[CONF_CUSTOM]))
+        )
+        # Init all default sensors
+        sensor_def = pysma.Sensors()
+
+        # Sensor from the custom config
+        sensor_def.add(
+            [
+                pysma.Sensor(
+                    o[CONF_KEY], n, o[CONF_UNIT], o[CONF_FACTOR], o.get(CONF_PATH)
+                )
+                for n, o in import_config[CONF_CUSTOM].items()
+            ]
+        )
+
+        # Find entity_id using previous format of unique ID and change to new unique ID
+        for sensor in config_sensors:
+            try:
+                pysma_sensor = sensor_def[sensor]
+            except KeyError:
+                continue
+
+            entity_id = entity_registry.async_get_entity_id(
+                "sensor", "sma", f"sma-{pysma_sensor.key}-{sensor}"
+            )
+            if entity_id:
+                new_unique_id = f"{config_entry_unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
+                entity_registry.async_update_entity(
+                    entity_id, new_unique_id=new_unique_id
+                )
+
         return self.async_create_entry(
             title=import_config[CONF_HOST], data=import_config
         )
