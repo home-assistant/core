@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "unknown": "Beklenmeyen hata",
+            "unknown_authorize_url_generation": "Yetkilendirme url'si olu\u015fturulurken bilinmeyen hata."
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                }
+            }
+        }
+    }
+}

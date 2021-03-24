@@ -1,5 +1,7 @@
 """Device automation helpers for toggle entity."""
-from typing import Any, Dict, List
+from __future__ import annotations
+
+from typing import Any
 
 import voluptuous as vol
 
@@ -170,10 +172,10 @@ async def async_attach_trigger(
 
 
 async def _async_get_automations(
-    hass: HomeAssistant, device_id: str, automation_templates: List[dict], domain: str
-) -> List[dict]:
+    hass: HomeAssistant, device_id: str, automation_templates: list[dict], domain: str
+) -> list[dict]:
     """List device automations."""
-    automations: List[Dict[str, Any]] = []
+    automations: list[dict[str, Any]] = []
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     entries = [
@@ -198,21 +200,21 @@ async def _async_get_automations(
 
 async def async_get_actions(
     hass: HomeAssistant, device_id: str, domain: str
-) -> List[dict]:
+) -> list[dict]:
     """List device actions."""
     return await _async_get_automations(hass, device_id, ENTITY_ACTIONS, domain)
 
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str, domain: str
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     """List device conditions."""
     return await _async_get_automations(hass, device_id, ENTITY_CONDITIONS, domain)
 
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
-) -> List[dict]:
+) -> list[dict]:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 

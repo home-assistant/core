@@ -65,16 +65,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
     # If using a requests-based API lib
-    hass.data[DOMAIN][entry.entry_id] = api.ConfigEntryAuth(hass, entry, session)
+    hass.data[DOMAIN][entry.entry_id] = api.ConfigEntryAuth(hass, session)
 
     # If using an aiohttp-based API lib
     hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -85,8 +85,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -1,6 +1,8 @@
 """Support for the DirecTV receivers."""
+from __future__ import annotations
+
 import logging
-from typing import Callable, List, Optional
+from typing import Callable
 
 from directv import DIRECTV
 
@@ -64,7 +66,7 @@ SUPPORT_DTV_CLIENT = (
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List, bool], None],
+    async_add_entities: Callable[[list, bool], None],
 ) -> bool:
     """Set up the DirecTV config entry."""
     dtv = hass.data[DOMAIN][entry.entry_id]
@@ -124,7 +126,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
             self._assumed_state = self._is_recorded
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if self._is_standby:
             return {}
@@ -141,7 +143,7 @@ class DIRECTVMediaPlayer(DIRECTVEntity, MediaPlayerEntity):
         return self._name
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the class of this device."""
         return DEVICE_CLASS_RECEIVER
 

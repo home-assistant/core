@@ -149,9 +149,9 @@ class ZWaveListSensor(ZwaveSensorBase):
         return self.values.primary.value["Selected_id"]
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        attributes = super().device_state_attributes
+        attributes = super().extra_state_attributes
         # add the value's label as property
         attributes["label"] = self.values.primary.value["Selected"]
         return attributes

@@ -345,12 +345,12 @@ async def mock_api_object_fixture(hass, config_entry, get_request_return_values)
 
 
 async def test_unload_config_entry(hass, config_entry, mock_api_object):
-    """Test the player is removed when the config entry is unloaded."""
+    """Test the player is set unavailable when the config entry is unloaded."""
     assert hass.states.get(TEST_MASTER_ENTITY_NAME)
     assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
     await config_entry.async_unload(hass)
-    assert not hass.states.get(TEST_MASTER_ENTITY_NAME)
-    assert not hass.states.get(TEST_ZONE_ENTITY_NAMES[0])
+    assert hass.states.get(TEST_MASTER_ENTITY_NAME).state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_ZONE_ENTITY_NAMES[0]).state == STATE_UNAVAILABLE
 
 
 def test_master_state(hass, mock_api_object):

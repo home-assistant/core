@@ -116,6 +116,7 @@ async def test_setup_when_certificate_changed(
     plex_server_default,
     plextv_account,
     plextv_resources,
+    plextv_shared_users,
 ):
     """Test setup component when the Plex certificate has changed."""
     await async_setup_component(hass, "persistent_notification", {})
@@ -140,6 +141,9 @@ async def test_setup_when_certificate_changed(
         options=DEFAULT_OPTIONS,
         unique_id=DEFAULT_DATA["server_id"],
     )
+
+    requests_mock.get("https://plex.tv/api/users/", text=plextv_shared_users)
+    requests_mock.get("https://plex.tv/api/invites/requested", text=empty_payload)
 
     requests_mock.get("https://plex.tv/users/account", text=plextv_account)
     requests_mock.get("https://plex.tv/api/resources", text=plextv_resources)

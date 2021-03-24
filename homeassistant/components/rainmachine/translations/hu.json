@@ -1,5 +1,11 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
         "step": {
             "user": {
                 "data": {
@@ -16,7 +22,8 @@
             "init": {
                 "data": {
                     "zone_run_time": "Alap\u00e9rtelmezett z\u00f3nafut\u00e1si id\u0151 (m\u00e1sodpercben)"
-                }
+                },
+                "title": "RainMachine konfigur\u00e1l\u00e1sa"
             }
         }
     }

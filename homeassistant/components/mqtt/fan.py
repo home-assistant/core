@@ -1,6 +1,5 @@
 """Support for MQTT fans."""
 import functools
-import logging
 
 import voluptuous as vol
 
@@ -16,13 +15,11 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
     CONF_STATE,
-    CONF_UNIQUE_ID,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -40,15 +37,7 @@ from . import (
 )
 from .. import mqtt
 from .debug_info import log_messages
-from .mixins import (
-    MQTT_AVAILABILITY_SCHEMA,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    MQTT_JSON_ATTRS_SCHEMA,
-    MqttEntity,
-    async_setup_entry_helper,
-)
-
-_LOGGER = logging.getLogger(__name__)
+from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"
@@ -75,41 +64,35 @@ OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
 OSCILLATION = "oscillation"
 
-PLATFORM_SCHEMA = (
-    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
-            vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
-            vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
-            ): cv.string,
-            vol.Optional(
-                CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
-            ): cv.string,
-            vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(
-                CONF_SPEED_LIST,
-                default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
-            ): cv.ensure_list,
-            vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(MQTT_AVAILABILITY_SCHEMA.schema)
-    .extend(MQTT_JSON_ATTRS_SCHEMA.schema)
-)
+PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
+        vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
+        vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
+        vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+        vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
+        ): cv.string,
+        vol.Optional(
+            CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
+        ): cv.string,
+        vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(
+            CONF_SPEED_LIST,
+            default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+        ): cv.ensure_list,
+        vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
 async def async_setup_platform(
@@ -122,7 +105,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT fan dynamically through MQTT discovery."""
-
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -162,7 +144,6 @@ class MqttFan(MqttEntity, FanEntity):
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
-        self._config = config
         self._topic = {
             key: config.get(key)
             for key in (
@@ -293,11 +274,6 @@ class MqttFan(MqttEntity, FanEntity):
         return self._state
 
     @property
-    def name(self) -> str:
-        """Get entity name."""
-        return self._config[CONF_NAME]
-
-    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._config[CONF_SPEED_LIST]
@@ -317,7 +293,20 @@ class MqttFan(MqttEntity, FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    #
+    # The fan entity model has changed to use percentages and preset_modes
+    # instead of speeds.
+    #
+    # Please review
+    # https://developers.home-assistant.io/docs/core/entity/fan/
+    #
+    async def async_turn_on(
+        self,
+        speed: str = None,
+        percentage: int = None,
+        preset_mode: str = None,
+        **kwargs,
+    ) -> None:
         """Turn on the entity.
 
         This method is a coroutine.

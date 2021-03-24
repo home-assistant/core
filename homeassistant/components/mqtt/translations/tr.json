@@ -1,9 +1,50 @@
 {
     "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
         "step": {
+            "broker": {
+                "data": {
+                    "password": "Parola",
+                    "port": "Port"
+                }
+            },
             "hassio_confirm": {
                 "data": {
                     "discovery": "Ke\u015ffetmeyi etkinle\u015ftir"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "turn_off": "Kapat",
+            "turn_on": "A\u00e7"
+        },
+        "trigger_type": {
+            "button_double_press": "\" {subtype} \" \u00e7ift t\u0131kland\u0131",
+            "button_long_press": "\" {subtype} \" s\u00fcrekli olarak bas\u0131ld\u0131",
+            "button_quadruple_press": "\" {subtype} \" d\u00f6rt kez t\u0131kland\u0131",
+            "button_quintuple_press": "\" {subtype} \" be\u015fli t\u0131kland\u0131",
+            "button_short_press": "\" {subtype} \" bas\u0131ld\u0131",
+            "button_short_release": "\" {subtype} \" yay\u0131nland\u0131",
+            "button_triple_press": "\" {subtype} \" \u00fc\u00e7 kez t\u0131kland\u0131"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
                 }
             }
         }

@@ -1,6 +1,6 @@
 {
   "domain": "zwave",
-  "name": "Z-Wave",
+  "name": "Z-Wave (deprecated)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave",
   "requirements": ["homeassistant-pyozw==0.1.10", "pydispatcher==2.0.5"],

@@ -131,7 +131,7 @@ async def test_login(hass):
         result["flow_id"], {"pin": "123456"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"].id == "mock-user"
+    assert result["data"].id == "mock-id"
 
 
 async def test_setup_flow(hass):

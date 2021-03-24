@@ -16,6 +16,7 @@ from . import NotionEntity
 from .const import (
     DATA_COORDINATOR,
     DOMAIN,
+    LOGGER,
     SENSOR_BATTERY,
     SENSOR_DOOR,
     SENSOR_GARAGE_DOOR,
@@ -81,8 +82,11 @@ class NotionBinarySensor(NotionEntity, BinarySensorEntity):
 
         if "value" in task["status"]:
             self._state = task["status"]["value"]
-        elif task["task_type"] == SENSOR_BATTERY:
-            self._state = task["status"]["data"]["to_state"]
+        elif task["status"].get("insights", {}).get("primary"):
+            self._state = task["status"]["insights"]["primary"]["to_state"]
+        else:
+            LOGGER.warning("Unknown data payload: %s", task["status"])
+            self._state = None
 
     @property
     def is_on(self) -> bool:

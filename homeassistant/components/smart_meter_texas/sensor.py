@@ -65,7 +65,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
         attributes = {
             METER_NUMBER: self.meter.meter,

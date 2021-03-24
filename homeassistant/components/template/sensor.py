@@ -1,5 +1,5 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
-from typing import Optional
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -59,7 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def _async_create_entities(hass, config):
     """Create the template sensors."""
-
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -96,7 +95,6 @@ async def _async_create_entities(hass, config):
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template sensors."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -140,7 +138,6 @@ class SensorTemplate(TemplateEntity, Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         self.add_template_attribute("_state", self._template, None, self._update_state)
         if self._friendly_name_template is not None:
             self.add_template_attribute("_name", self._friendly_name_template)
@@ -168,7 +165,7 @@ class SensorTemplate(TemplateEntity, Entity):
         return self._state
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

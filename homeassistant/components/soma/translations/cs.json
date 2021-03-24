@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_setup": "M\u016f\u017eete nastavit pouze jeden \u00fa\u010det Soma.",
-            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el",
+            "authorize_url_timeout": "\u010casov\u00fd limit autoriza\u010dn\u00edho URL vypr\u0161el.",
             "connection_error": "P\u0159ipojen\u00ed k za\u0159\u00edzen\u00ed SOMA Connect se nezda\u0159ilo.",
             "missing_configuration": "Integrace Soma nen\u00ed nastavena. Postupujte podle dokumentace.",
             "result_error": "SOMA Connect odpov\u011bd\u011blo chybov\u00fdm stavem."

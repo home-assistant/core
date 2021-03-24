@@ -124,7 +124,7 @@ class AirSensor(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attrs = {}
         attrs["updated"] = self._updated

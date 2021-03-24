@@ -1,5 +1,7 @@
 """Home Assistant Switcher Component Switch platform."""
-from typing import Callable, Dict
+from __future__ import annotations
+
+from typing import Callable
 
 from aioswitcher.api import SwitcherV2Api
 from aioswitcher.api.messages import SwitcherV2ControlResponseMSG
@@ -52,9 +54,9 @@ SERVICE_TURN_ON_WITH_TIMER_SCHEMA = {
 
 async def async_setup_platform(
     hass: HomeAssistantType,
-    config: Dict,
+    config: dict,
     async_add_entities: Callable,
-    discovery_info: Dict,
+    discovery_info: dict,
 ) -> None:
     """Set up the switcher platform for the switch component."""
     if discovery_info is None:
@@ -62,7 +64,6 @@ async def async_setup_platform(
 
     async def async_set_auto_off_service(entity, service_call: ServiceCallType) -> None:
         """Use for handling setting device auto-off service calls."""
-
         async with SwitcherV2Api(
             hass.loop,
             device_data.ip_addr,
@@ -76,7 +77,6 @@ async def async_setup_platform(
         entity, service_call: ServiceCallType
     ) -> None:
         """Use for handling turning device on with a timer service calls."""
-
         async with SwitcherV2Api(
             hass.loop,
             device_data.ip_addr,
@@ -133,7 +133,6 @@ class SwitcherControl(SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-
         return self._state == SWITCHER_STATE_ON
 
     @property
@@ -142,9 +141,8 @@ class SwitcherControl(SwitchEntity):
         return self._device_data.power_consumption
 
     @property
-    def device_state_attributes(self) -> Dict:
+    def extra_state_attributes(self) -> dict:
         """Return the optional state attributes."""
-
         attribs = {}
 
         for prop, attr in DEVICE_PROPERTIES_TO_HA_ATTRIBUTES.items():
@@ -157,7 +155,6 @@ class SwitcherControl(SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-
         return self._state in [SWITCHER_STATE_ON, SWITCHER_STATE_OFF]
 
     async def async_added_to_hass(self) -> None:
@@ -178,17 +175,16 @@ class SwitcherControl(SwitchEntity):
                 self._state = self._device_data.state
                 self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs: Dict) -> None:
+    async def async_turn_on(self, **kwargs: dict) -> None:
         """Turn the entity on."""
         await self._control_device(True)
 
-    async def async_turn_off(self, **kwargs: Dict) -> None:
+    async def async_turn_off(self, **kwargs: dict) -> None:
         """Turn the entity off."""
         await self._control_device(False)
 
     async def _control_device(self, send_on: bool) -> None:
         """Turn the entity on or off."""
-
         response: SwitcherV2ControlResponseMSG = None
         async with SwitcherV2Api(
             self.hass.loop,

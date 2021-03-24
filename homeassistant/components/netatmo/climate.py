@@ -1,7 +1,9 @@
 """Support for Netatmo Smart thermostats."""
-import logging
-from typing import List, Optional
+from __future__ import annotations
 
+import logging
+
+import pyatmo
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -25,13 +27,16 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    DATA_DEVICE_IDS,
     DATA_HANDLER,
     DATA_HOMES,
     DATA_SCHEDULES,
@@ -79,6 +84,7 @@ NETATMO_MAP_PRESET = {
     STATE_NETATMO_AWAY: PRESET_AWAY,
     STATE_NETATMO_OFF: STATE_NETATMO_OFF,
     STATE_NETATMO_MANUAL: STATE_NETATMO_MANUAL,
+    STATE_NETATMO_HOME: PRESET_SCHEDULE,
 }
 
 HVAC_MAP_NETATMO = {
@@ -109,18 +115,18 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
     home_data = data_handler.data.get(HOMEDATA_DATA_CLASS_NAME)
 
-    if not home_data:
-        return
+    if HOMEDATA_DATA_CLASS_NAME not in data_handler.data:
+        raise PlatformNotReady
 
     async def get_entities():
         """Retrieve Netatmo entities."""
         entities = []
 
         for home_id in get_all_home_ids(home_data):
-            _LOGGER.debug("Setting up home %s ...", home_id)
+            _LOGGER.debug("Setting up home %s", home_id)
             for room_id in home_data.rooms[home_id].keys():
                 room_name = home_data.rooms[home_id][room_id]["name"]
-                _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
+                _LOGGER.debug("Setting up room %s (%s)", room_name, room_id)
                 signal_name = f"{HOMESTATUS_DATA_CLASS_NAME}-{home_id}"
                 await data_handler.register_data_class(
                     HOMESTATUS_DATA_CLASS_NAME, signal_name, None, home_id=home_id
@@ -148,6 +154,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await get_entities(), True)
+
+    await data_handler.unregister_data_class(HOMEDATA_DATA_CLASS_NAME, None)
 
     platform = entity_platform.current_platform.get()
 
@@ -237,11 +245,15 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 )
             )
 
+        registry = await async_get_registry(self.hass)
+        device = registry.async_get_device({(DOMAIN, self._id)}, set())
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self._home_id] = device.id
+
     async def handle_event(self, event):
         """Handle webhook events."""
         data = event["data"]
 
-        if not data.get("home"):
+        if data.get("home") is None:
             return
 
         home = data["home"]
@@ -309,7 +321,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return self._target_temperature
 
     @property
-    def target_temperature_step(self) -> Optional[float]:
+    def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
         return PRECISION_HALVES
 
@@ -324,7 +336,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         return self._operation_list
 
     @property
-    def hvac_action(self) -> Optional[str]:
+    def hvac_action(self) -> str | None:
         """Return the current running hvac operation if supported."""
         if self._model == NA_THERM and self._boilerstatus is not None:
             return CURRENT_HVAC_MAP_NETATMO[self._boilerstatus]
@@ -346,6 +358,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        if self.hvac_mode == HVAC_MODE_OFF:
+            self.turn_on()
+
         if self.target_temperature == 0:
             self._home_status.set_room_thermpoint(
                 self._id,
@@ -386,12 +401,12 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def preset_mode(self) -> Optional[str]:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return self._preset
 
     @property
-    def preset_modes(self) -> Optional[List[str]]:
+    def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
@@ -405,7 +420,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the thermostat."""
         attr = {}
 
@@ -556,7 +571,9 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 schedule_id = sid
 
         if not schedule_id:
-            _LOGGER.error("You passed an invalid schedule")
+            _LOGGER.error(
+                "%s is not a invalid schedule", kwargs.get(ATTR_SCHEDULE_NAME)
+            )
             return
 
         self._data.switch_home_schedule(home_id=self._home_id, schedule_id=schedule_id)
@@ -567,8 +584,13 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             schedule_id,
         )
 
+    @property
+    def device_info(self):
+        """Return the device info for the thermostat."""
+        return {**super().device_info, "suggested_area": self._room_data["name"]}
 
-def interpolate(batterylevel, module_type):
+
+def interpolate(batterylevel: int, module_type: str) -> int:
     """Interpolate battery level depending on device type."""
     na_battery_levels = {
         NA_THERM: {
@@ -610,7 +632,7 @@ def interpolate(batterylevel, module_type):
     return int(pct)
 
 
-def get_all_home_ids(home_data):
+def get_all_home_ids(home_data: pyatmo.HomeData) -> list[str]:
     """Get all the home ids returned by NetAtmo API."""
     if home_data is None:
         return []

@@ -1,6 +1,4 @@
 """Support for Rheem EcoNet water heaters."""
-import logging
-
 from pyeconet.equipment import EquipmentType
 
 from homeassistant.components.binary_sensor import (
@@ -14,6 +12,7 @@ from homeassistant.components.binary_sensor import (
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
 
+SENSOR_NAME_RUNNING = "running"
 SENSOR_NAME_SHUTOFF_VALVE = "shutoff_valve"
 SENSOR_NAME_RUNNING = "running"
 SENSOR_NAME_SCREEN_LOCKED = "screen_locked"
@@ -36,8 +35,6 @@ SENSORS = {
         DEVICE_CLASS: DEVICE_CLASS_SOUND,
     },
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

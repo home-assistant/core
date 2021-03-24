@@ -16,7 +16,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.json import load_json
 
-from . import config_flow  # noqa: F401
 from .const import (
     ATTR_TRADFRI_GATEWAY,
     ATTR_TRADFRI_GATEWAY_MODEL,
@@ -149,9 +148,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         sw_version=gateway_info.firmware_version,
     )
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     async def async_keep_alive(now):
@@ -175,8 +174,8 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -1,15 +1,20 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
             "site_exists": "Deze site_id is al geconfigureerd"
         },
         "error": {
-            "site_exists": "Deze site_id is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "could_not_connect": "Kon geen verbinding maken met de solaredge API",
+            "invalid_api_key": "Ongeldige API-sleutel",
+            "site_exists": "Deze site_id is al geconfigureerd",
+            "site_not_active": "De site is niet actief"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "De API-sleutel voor deze site",
+                    "api_key": "API-sleutel",
                     "name": "De naam van deze installatie",
                     "site_id": "De SolarEdge site-id"
                 },

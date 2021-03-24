@@ -1,8 +1,8 @@
 """Tests for the Hyperion config flow."""
+from __future__ import annotations
 
-import logging
-from typing import Any, Dict, Optional
-from unittest.mock import AsyncMock, patch  # type: ignore[attr-defined]
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from hyperion import const
 
@@ -14,12 +14,7 @@ from homeassistant.components.hyperion.const import (
     DOMAIN,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_IMPORT,
-    SOURCE_REAUTH,
-    SOURCE_SSDP,
-    SOURCE_USER,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -46,10 +41,8 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
 TEST_IP_ADDRESS = "192.168.0.1"
-TEST_HOST_PORT: Dict[str, Any] = {
+TEST_HOST_PORT: dict[str, Any] = {
     CONF_HOST: TEST_HOST,
     CONF_PORT: TEST_PORT,
 }
@@ -131,7 +124,7 @@ async def _create_mock_entry(hass: HomeAssistantType) -> MockConfigEntry:
 async def _init_flow(
     hass: HomeAssistantType,
     source: str = SOURCE_USER,
-    data: Optional[Dict[str, Any]] = None,
+    data: dict[str, Any] | None = None,
 ) -> Any:
     """Initialize a flow."""
     data = data or {}
@@ -142,7 +135,7 @@ async def _init_flow(
 
 
 async def _configure_flow(
-    hass: HomeAssistantType, result: Dict, user_input: Optional[Dict[str, Any]] = None
+    hass: HomeAssistantType, result: dict, user_input: dict[str, Any] | None = None
 ) -> Any:
     """Provide input to a flow."""
     user_input = user_input or {}
@@ -537,7 +530,7 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistantType) -> None:
     """Check an SSDP flow with bad json port."""
 
     client = create_mock_client()
-    bad_data: Dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
+    bad_data: dict[str, Any] = {**TEST_SSDP_SERVICE_INFO}
     bad_data["ports"]["jsonServer"] = "not_a_port"
 
     with patch(
@@ -606,56 +599,6 @@ async def test_ssdp_abort_duplicates(hass: HomeAssistantType) -> None:
     assert result_2["reason"] == "already_in_progress"
 
 
-async def test_import_success(hass: HomeAssistantType) -> None:
-    """Check an import flow from the old-style YAML."""
-
-    client = create_mock_client()
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    # No human interaction should be required.
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["handler"] == DOMAIN
-    assert result["title"] == TEST_TITLE
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_PORT: TEST_PORT,
-    }
-
-
-async def test_import_cannot_connect(hass: HomeAssistantType) -> None:
-    """Check an import flow that cannot connect."""
-
-    client = create_mock_client()
-    client.async_client_connect = AsyncMock(return_value=False)
-
-    with patch(
-        "homeassistant.components.hyperion.client.HyperionClient", return_value=client
-    ):
-        result = await _init_flow(
-            hass,
-            source=SOURCE_IMPORT,
-            data={
-                CONF_HOST: TEST_HOST,
-                CONF_PORT: TEST_PORT,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 async def test_options(hass: HomeAssistantType) -> None:
     """Check an options flow."""
 
@@ -689,6 +632,7 @@ async def test_options(hass: HomeAssistantType) -> None:
             {ATTR_ENTITY_ID: TEST_ENTITY_ID_1},
             blocking=True,
         )
+        # pylint: disable=unsubscriptable-object
         assert client.async_send_set_color.call_args[1][CONF_PRIORITY] == new_priority
 
 

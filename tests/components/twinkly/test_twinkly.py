@@ -1,6 +1,6 @@
 """Tests for the integration of a twinly device."""
+from __future__ import annotations
 
-from typing import Tuple
 from unittest.mock import patch
 
 from homeassistant.components.twinkly.const import (
@@ -12,6 +12,7 @@ from homeassistant.components.twinkly.const import (
 )
 from homeassistant.components.twinkly.light import TwinklyLight
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
@@ -190,7 +191,7 @@ async def test_unload(hass: HomeAssistant):
 
 async def _create_entries(
     hass: HomeAssistant, client=None
-) -> Tuple[RegistryEntry, DeviceEntry, ClientMock]:
+) -> tuple[RegistryEntry, DeviceEntry, ClientMock]:
     client = ClientMock() if client is None else client
 
     def get_client_mock(client, _):
@@ -211,8 +212,8 @@ async def _create_entries(
         assert await hass.config_entries.async_setup(client.id)
         await hass.async_block_till_done()
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
     entity = entity_registry.async_get(entity_id)

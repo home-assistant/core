@@ -1,20 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Dieser Panasonic Viera TV ist bereits konfiguriert.",
-            "cannot_connect": "Verbindungsfehler",
-            "unknown": "Ein unbekannter Fehler ist aufgetreten. Weitere Informationen finden Sie in den Logs."
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
-            "cannot_connect": "Verbindungsfehler",
-            "invalid_pin_code": "Der von Ihnen eingegebene PIN-Code war ung\u00fcltig"
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_pin_code": "Der eingegebene PIN-Code war ung\u00fcltig"
         },
         "step": {
             "pairing": {
                 "data": {
-                    "pin": "PIN"
+                    "pin": "PIN-Code"
                 },
-                "description": "Geben Sie die auf Ihrem Fernseher angezeigte PIN ein",
+                "description": "Gib den auf deinem TV angezeigten PIN-Code ein",
                 "title": "Kopplung"
             },
             "user": {
@@ -22,7 +22,7 @@
                     "host": "IP-Adresse",
                     "name": "Name"
                 },
-                "description": "Geben Sie die IP-Adresse Ihres Panasonic Viera TV ein",
+                "description": "Gib die IP-Adresse deines Panasonic Viera TV ein",
                 "title": "Richten Sie Ihr Fernsehger\u00e4t ein"
             }
         }

@@ -1,10 +1,18 @@
 """Convert the HA config to the dynalite config."""
+from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from dynalite_devices_lib import const as dyn_const
 
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_ROOM, CONF_TYPE
+from homeassistant.const import (
+    CONF_DEFAULT,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_ROOM,
+    CONF_TYPE,
+)
 
 from .const import (
     ACTIVE_INIT,
@@ -16,7 +24,6 @@ from .const import (
     CONF_CHANNEL,
     CONF_CHANNEL_COVER,
     CONF_CLOSE_PRESET,
-    CONF_DEFAULT,
     CONF_DEVICE_CLASS,
     CONF_DURATION,
     CONF_FADE,
@@ -56,7 +63,7 @@ def convert_with_map(config, conf_map):
     return result
 
 
-def convert_channel(config: Dict[str, Any]) -> Dict[str, Any]:
+def convert_channel(config: dict[str, Any]) -> dict[str, Any]:
     """Convert the config for a channel."""
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,
@@ -66,7 +73,7 @@ def convert_channel(config: Dict[str, Any]) -> Dict[str, Any]:
     return convert_with_map(config, my_map)
 
 
-def convert_preset(config: Dict[str, Any]) -> Dict[str, Any]:
+def convert_preset(config: dict[str, Any]) -> dict[str, Any]:
     """Convert the config for a preset."""
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,
@@ -76,7 +83,7 @@ def convert_preset(config: Dict[str, Any]) -> Dict[str, Any]:
     return convert_with_map(config, my_map)
 
 
-def convert_area(config: Dict[str, Any]) -> Dict[str, Any]:
+def convert_area(config: dict[str, Any]) -> dict[str, Any]:
     """Convert the config for an area."""
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,
@@ -108,12 +115,12 @@ def convert_area(config: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-def convert_default(config: Dict[str, Any]) -> Dict[str, Any]:
+def convert_default(config: dict[str, Any]) -> dict[str, Any]:
     """Convert the config for the platform defaults."""
     return convert_with_map(config, {CONF_FADE: dyn_const.CONF_FADE})
 
 
-def convert_template(config: Dict[str, Any]) -> Dict[str, Any]:
+def convert_template(config: dict[str, Any]) -> dict[str, Any]:
     """Convert the config for a template."""
     my_map = {
         CONF_ROOM_ON: dyn_const.CONF_ROOM_ON,
@@ -129,7 +136,7 @@ def convert_template(config: Dict[str, Any]) -> Dict[str, Any]:
     return convert_with_map(config, my_map)
 
 
-def convert_config(config: Dict[str, Any]) -> Dict[str, Any]:
+def convert_config(config: dict[str, Any]) -> dict[str, Any]:
     """Convert a config dict by replacing component consts with library consts."""
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,

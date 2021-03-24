@@ -2,7 +2,12 @@
     "config": {
         "abort": {
             "addon_info_failed": "OpenZWave eklenti bilgileri al\u0131namad\u0131.",
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "addon_install_failed": "OpenZWave eklentisi y\u00fcklenemedi.",
+            "addon_set_config_failed": "OpenZWave yap\u0131land\u0131rmas\u0131 ayarlanamad\u0131.",
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
         "progress": {
             "install_addon": "OpenZWave eklenti kurulumu bitene kadar l\u00fctfen bekleyin. Bu birka\u00e7 dakika s\u00fcrebilir."
@@ -10,6 +15,18 @@
         "step": {
             "install_addon": {
                 "title": "OpenZWave eklenti kurulumu ba\u015flad\u0131"
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "OpenZWave Supervisor eklentisini kullan\u0131n"
+                },
+                "description": "OpenZWave Supervisor eklentisini kullanmak istiyor musunuz?",
+                "title": "Ba\u011flant\u0131 y\u00f6ntemini se\u00e7in"
+            },
+            "start_addon": {
+                "data": {
+                    "network_key": "A\u011f Anahtar\u0131"
+                }
             }
         }
     }

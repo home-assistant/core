@@ -16,7 +16,7 @@
                     "host": "Servidor",
                     "password": "Palavra-passe"
                 },
-                "description": "Introduza o endere\u00e7o IP do seu Daikin AC.",
+                "description": "Introduza Endere\u00e7o IP do seu Daikin AC.\n\nAten\u00e7\u00e3o que [%chave:common::config_flow::data::api_key%] e Palavra-passe s\u00f3 s\u00e3o utilizador pelos dispositivos BRP072Cxx e SKYFi, respectivamente.",
                 "title": "Configurar o Daikin AC"
             }
         }

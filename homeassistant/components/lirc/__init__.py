@@ -1,5 +1,5 @@
 """Support for LIRC devices."""
-# pylint: disable=no-member, import-error
+# pylint: disable=import-error
 import logging
 import threading
 import time

@@ -193,6 +193,19 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "media_player.kitchen",
+        "name": {"name": "Kitchen"},
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+            "action.devices.traits.TransportControl",
+            "action.devices.traits.MediaState",
+        ],
+        "type": "action.devices.types.SETTOP",
+        "willReportState": False,
+    },
+    {
         "id": "media_player.living_room",
         "name": {"name": "Living Room"},
         "traits": [
@@ -246,6 +259,27 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
+        "id": "fan.percentage_full_fan",
+        "name": {"name": "Percentage Full Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.percentage_limited_fan",
+        "name": {"name": "Percentage Limited Fan"},
+        "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
+        "id": "fan.preset_only_limited_fan",
+        "name": {"name": "Preset Only Limited Fan"},
+        "traits": ["action.devices.traits.OnOff"],
+        "type": "action.devices.types.FAN",
+        "willReportState": False,
+    },
+    {
         "id": "climate.hvac",
         "name": {"name": "Hvac"},
         "traits": [
@@ -255,7 +289,15 @@ DEMO_DEVICES = [
         "type": "action.devices.types.THERMOSTAT",
         "willReportState": False,
         "attributes": {
-            "availableThermostatModes": "off,heat,cool,heatcool,auto,dry,fan-only",
+            "availableThermostatModes": [
+                "off",
+                "heat",
+                "cool",
+                "heatcool",
+                "auto",
+                "dry",
+                "fan-only",
+            ],
             "thermostatTemperatureUnit": "C",
         },
     },

@@ -6,18 +6,9 @@ import async_timeout
 from roombapy import Roomba, RoombaConnectionError
 
 from homeassistant import exceptions
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 
-from .const import (
-    BLID,
-    COMPONENTS,
-    CONF_BLID,
-    CONF_CONTINUOUS,
-    CONF_DELAY,
-    CONF_NAME,
-    DOMAIN,
-    ROOMBA_SESSION,
-)
+from .const import BLID, CONF_BLID, CONF_CONTINUOUS, DOMAIN, PLATFORMS, ROOMBA_SESSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,9 +51,9 @@ async def async_setup_entry(hass, config_entry):
         BLID: config_entry.data[CONF_BLID],
     }
 
-    for component in COMPONENTS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     if not config_entry.update_listeners:
@@ -114,8 +105,8 @@ async def async_unload_entry(hass, config_entry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in COMPONENTS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

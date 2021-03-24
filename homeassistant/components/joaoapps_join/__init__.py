@@ -12,14 +12,13 @@ from pyjoin import (
 )
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "joaoapps_join"
 
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_IDS = "device_ids"
 CONF_DEVICE_NAMES = "device_names"
 
@@ -115,7 +114,6 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
 
 def setup(hass, config):
     """Set up the Join services."""
-
     for device in config[DOMAIN]:
         api_key = device.get(CONF_API_KEY)
         device_id = device.get(CONF_DEVICE_ID)

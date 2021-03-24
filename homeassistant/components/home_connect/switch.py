@@ -4,8 +4,10 @@ import logging
 from homeconnect.api import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_DEVICE, CONF_ENTITIES
 
 from .const import (
+    ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
     BSH_OPERATION_STATE,
     BSH_POWER_ON,
@@ -25,9 +27,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
         hc_api = hass.data[DOMAIN][config_entry.entry_id]
         for device_dict in hc_api.devices:
-            entity_dicts = device_dict.get("entities", {}).get("switch", [])
+            entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
             entity_list = [HomeConnectProgramSwitch(**d) for d in entity_dicts]
-            entity_list += [HomeConnectPowerSwitch(device_dict["device"])]
+            entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
             entities += entity_list
         return entities
 
@@ -78,7 +80,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     async def async_update(self):
         """Update the switch's status."""
         state = self.device.appliance.status.get(BSH_ACTIVE_PROGRAM, {})
-        if state.get("value") == self.program_name:
+        if state.get(ATTR_VALUE) == self.program_name:
             self._state = True
         else:
             self._state = False
@@ -103,9 +105,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         _LOGGER.debug("Tried to switch on %s", self.name)
         try:
             await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting,
-                BSH_POWER_STATE,
-                BSH_POWER_ON,
+                self.device.appliance.set_setting, BSH_POWER_STATE, BSH_POWER_ON
             )
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn on device: %s", err)
@@ -129,17 +129,17 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     async def async_update(self):
         """Update the switch's status."""
         if (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value")
+            self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == BSH_POWER_ON
         ):
             self._state = True
         elif (
-            self.device.appliance.status.get(BSH_POWER_STATE, {}).get("value")
+            self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == self.device.power_off_state
         ):
             self._state = False
         elif self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(
-            "value", None
+            ATTR_VALUE, None
         ) in [
             "BSH.Common.EnumType.OperationState.Ready",
             "BSH.Common.EnumType.OperationState.DelayedStart",
@@ -151,7 +151,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         ]:
             self._state = True
         elif (
-            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get("value")
+            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(ATTR_VALUE)
             == "BSH.Common.EnumType.OperationState.Inactive"
         ):
             self._state = False

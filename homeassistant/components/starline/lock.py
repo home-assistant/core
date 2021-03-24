@@ -8,7 +8,6 @@ from .entity import StarlineEntity
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the StarLine lock."""
-
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for device in account.api.devices.values():
@@ -32,7 +31,7 @@ class StarlineLock(StarlineEntity, LockEntity):
         return super().available and self._device.online
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the lock.
 
         Possible dictionary keys:

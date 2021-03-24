@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ID,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_MAXIMUM,
@@ -21,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SORT_BY = "sort_by"
 CONF_SUBREDDITS = "subreddits"
 
-ATTR_ID = "id"
 ATTR_BODY = "body"
 ATTR_COMMENTS_NUMBER = "comms_num"
 ATTR_CREATED = "created"
@@ -105,7 +105,7 @@ class RedditSensor(Entity):
         return len(self._subreddit_data)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_SUBREDDIT: self._subreddit,

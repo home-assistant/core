@@ -192,3 +192,16 @@ async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
         google_default_expose=["sensor"],
     )
     assert not mock_conf.should_expose(state)
+
+
+def test_enabled_requires_valid_sub(hass, mock_expired_cloud_login, cloud_prefs):
+    """Test that google config enabled requires a valid Cloud sub."""
+    assert cloud_prefs.google_enabled
+    assert hass.data["cloud"].is_logged_in
+    assert hass.data["cloud"].subscription_expired
+
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
+    )
+
+    assert not config.enabled

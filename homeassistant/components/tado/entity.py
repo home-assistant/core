@@ -1,7 +1,7 @@
 """Base class for Tado entity."""
 from homeassistant.helpers.entity import Entity
 
-from .const import DEFAULT_NAME, DOMAIN, TADO_ZONE
+from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
 
 
 class TadoDeviceEntity(Entity):
@@ -32,6 +32,26 @@ class TadoDeviceEntity(Entity):
         return False
 
 
+class TadoHomeEntity(Entity):
+    """Base implementation for Tado home."""
+
+    def __init__(self, tado):
+        """Initialize a Tado home."""
+        super().__init__()
+        self.home_name = tado.home_name
+        self.home_id = tado.home_id
+
+    @property
+    def device_info(self):
+        """Return the device_info of the device."""
+        return {
+            "identifiers": {(DOMAIN, self.home_id)},
+            "name": self.home_name,
+            "manufacturer": DEFAULT_NAME,
+            "model": TADO_HOME,
+        }
+
+
 class TadoZoneEntity(Entity):
     """Base implementation for Tado zone."""
 
@@ -50,6 +70,7 @@ class TadoZoneEntity(Entity):
             "name": self.zone_name,
             "manufacturer": DEFAULT_NAME,
             "model": TADO_ZONE,
+            "suggested_area": self.zone_name,
         }
 
     @property

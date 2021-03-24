@@ -1,0 +1,79 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "duplicate_persistence_file": "File di persistenza gi\u00e0 in uso",
+            "duplicate_topic": "Argomento gi\u00e0 in uso",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_device": "Dispositivo non valido",
+            "invalid_ip": "Indirizzo IP non valido",
+            "invalid_persistence_file": "File di persistenza non valido",
+            "invalid_port": "Numero di porta non valido",
+            "invalid_publish_topic": "Argomento di pubblicazione non valido",
+            "invalid_serial": "Porta seriale non valida",
+            "invalid_subscribe_topic": "Argomento di sottoscrizione non valido",
+            "invalid_version": "Versione di MySensors non valida",
+            "not_a_number": "Per favore inserisci un numero",
+            "port_out_of_range": "Il numero di porta deve essere almeno 1 e al massimo 65535",
+            "same_topic": "Gli argomenti di sottoscrizione e pubblicazione sono gli stessi",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "cannot_connect": "Impossibile connettersi",
+            "duplicate_persistence_file": "File di persistenza gi\u00e0 in uso",
+            "duplicate_topic": "Argomento gi\u00e0 in uso",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_device": "Dispositivo non valido",
+            "invalid_ip": "Indirizzo IP non valido",
+            "invalid_persistence_file": "File di persistenza non valido",
+            "invalid_port": "Numero di porta non valido",
+            "invalid_publish_topic": "Argomento di pubblicazione non valido",
+            "invalid_serial": "Porta seriale non valida",
+            "invalid_subscribe_topic": "Argomento di sottoscrizione non valido",
+            "invalid_version": "Versione di MySensors non valida",
+            "not_a_number": "Per favore inserisci un numero",
+            "port_out_of_range": "Il numero di porta deve essere almeno 1 e al massimo 65535",
+            "same_topic": "Gli argomenti di sottoscrizione e pubblicazione sono gli stessi",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "gw_mqtt": {
+                "data": {
+                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
+                    "retain": "mqtt conserva",
+                    "topic_in_prefix": "prefisso per argomenti di input (topic_in_prefix)",
+                    "topic_out_prefix": "prefisso per argomenti di output (topic_out_prefix)",
+                    "version": "Versione MySensors"
+                },
+                "description": "Configurazione del gateway MQTT"
+            },
+            "gw_serial": {
+                "data": {
+                    "baud_rate": "velocit\u00e0 di trasmissione",
+                    "device": "Porta seriale",
+                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
+                    "version": "Versione MySensors"
+                },
+                "description": "Configurazione del gateway seriale"
+            },
+            "gw_tcp": {
+                "data": {
+                    "device": "Indirizzo IP del gateway",
+                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
+                    "tcp_port": "porta",
+                    "version": "Versione MySensors"
+                },
+                "description": "Configurazione del gateway Ethernet"
+            },
+            "user": {
+                "data": {
+                    "gateway_type": "Tipo di gateway"
+                },
+                "description": "Scegli il metodo di connessione al gateway"
+            }
+        }
+    },
+    "title": "MySensors"
+}

@@ -3,5 +3,5 @@
   "name": "Wake on LAN",
   "documentation": "https://www.home-assistant.io/integrations/wake_on_lan",
   "requirements": ["wakeonlan==1.1.6"],
-  "codeowners": []
+  "codeowners": ["@ntilley905"]
 }

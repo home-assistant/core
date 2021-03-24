@@ -269,7 +269,7 @@ class EDL21Entity(Entity):
         return self._telegram.get("value")
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Enumerate supported attributes."""
         return {
             self._state_attrs[k]: v

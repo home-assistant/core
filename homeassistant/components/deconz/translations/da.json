@@ -13,8 +13,8 @@
         "flow_title": "deCONZ Zigbee gateway ({host})",
         "step": {
             "hassio_confirm": {
-                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til deCONZ-gateway'en leveret af Hass.io-tilf\u00f8jelsen {addon}?",
-                "title": "deCONZ Zigbee-gateway via Hass.io-tilf\u00f8jelse"
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til deCONZ-gateway'en leveret af Supervisor-tilf\u00f8jelsen {addon}?",
+                "title": "deCONZ Zigbee-gateway via Supervisor-tilf\u00f8jelse"
             },
             "link": {
                 "description": "L\u00e5s din deCONZ-gateway op for at registrere dig med Home Assistant. \n\n 1. G\u00e5 til deCONZ settings -> Gateway -> Advanced\n 2. Tryk p\u00e5 knappen \"Authenticate app\"",

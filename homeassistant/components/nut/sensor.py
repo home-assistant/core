@@ -67,7 +67,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 )
             )
         else:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "Sensor type: %s does not appear in the NUT status "
                 "output, cannot add",
                 sensor_type,
@@ -160,7 +160,7 @@ class NUTSensor(CoordinatorEntity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the sensor attributes."""
         return {ATTR_STATE: _format_display_state(self._data.status)}
 

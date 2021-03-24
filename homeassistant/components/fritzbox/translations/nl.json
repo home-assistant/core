@@ -1,9 +1,14 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Deze AVM FRITZ!Box is al geconfigureerd.",
-            "already_in_progress": "AVM FRITZ!Box configuratie is al bezig.",
-            "not_supported": "Verbonden met AVM FRITZ! Box, maar het kan geen Smart Home-apparaten bedienen."
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk",
+            "not_supported": "Verbonden met AVM FRITZ! Box, maar het kan geen Smart Home-apparaten bedienen.",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie"
         },
         "flow_title": "AVM FRITZ!Box: {name}",
         "step": {
@@ -14,9 +19,16 @@
                 },
                 "description": "Wilt u {name} instellen?"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Gelieve uw logingegevens voor {name} te actualiseren."
+            },
             "user": {
                 "data": {
-                    "host": "Host of IP-adres",
+                    "host": "Host",
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 },

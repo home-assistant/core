@@ -200,7 +200,7 @@ class VenstarThermostat(ClimateEntity):
         return FAN_AUTO
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         return {
             ATTR_FAN_STATE: self._client.fanstate,

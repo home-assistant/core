@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "insufficient_permissions": "User has insufficient permissions to access AVM FRITZ!Box settings and its phonebooks.",
+            "no_devices_found": "No devices found on the network"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "AVM FRITZ!Box call monitor: {name}",
+        "step": {
+            "phonebook": {
+                "data": {
+                    "phonebook": "Phonebook"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "malformed_prefixes": "Prefixes are malformed, please check their format."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "prefixes": "Prefixes (comma separated list)"
+                },
+                "title": "Configure Prefixes"
+            }
+        }
+    }
+}
