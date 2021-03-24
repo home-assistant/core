@@ -422,22 +422,25 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
 @contextlib.contextmanager
 def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generator:
     """Keep track of when setup starts and finishes."""
-    hass.data.setdefault(DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
     unique_components = {}
     for domain in components:
-        unique = ensure_unique_string(domain, hass.data[DATA_SETUP_STARTED])
+        unique = ensure_unique_string(domain, setup_started)
         unique_components[unique] = domain
-        hass.data[DATA_SETUP_STARTED][unique] = started
+        setup_started[unique] = started
 
     yield
 
-    hass.data.setdefault(DATA_SETUP_TIME, {})
+    setup_time = hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
     for unique, domain in unique_components.items():
-        del hass.data[DATA_SETUP_STARTED][unique]
+        del setup_started[unique]
         if "." in domain:
             _, integration = domain.split(".", 1)
-            hass.data[DATA_SETUP_TIME][integration] += time_taken
         else:
-            hass.data[DATA_SETUP_TIME][domain] += time_taken
+            integration = domain
+        if integration in setup_time:
+            setup_time[integration] += time_taken
+        else:
+            setup_time[integration] = time_taken
