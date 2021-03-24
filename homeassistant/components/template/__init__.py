@@ -3,8 +3,13 @@ import logging
 from typing import Optional
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.core import callback
-from homeassistant.helpers import discovery, trigger, update_coordinator
+from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import CoreState, callback
+from homeassistant.helpers import (
+    discovery,
+    trigger as trigger_helper,
+    update_coordinator,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from .const import DOMAIN, PLATFORMS
@@ -40,18 +45,12 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
 
     async def async_setup(self, hass_config):
         """Set up the trigger and create entities."""
-        home_assistant_start = True
-
-        self._unsub_trigger = await trigger.async_initialize_triggers(
-            self.hass,
-            self.config["trigger"],
-            self._handle_triggered,
-            DOMAIN,
-            self.name,
-            self.logger.log,
-            home_assistant_start,
-            self.config.get("variables"),
-        )
+        if self.hass.state == CoreState.running:
+            await self._attach_triggers()
+        else:
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, self._attach_triggers
+            )
 
         self.hass.async_create_task(
             discovery.async_load_platform(
@@ -61,6 +60,19 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 {"coordinator": self, "entities": self.config[SENSOR_DOMAIN]},
                 hass_config,
             )
+        )
+
+    async def _attach_triggers(self, start_event=None) -> None:
+        """Attach the triggers."""
+        self._unsub_trigger = await trigger_helper.async_initialize_triggers(
+            self.hass,
+            self.config["trigger"],
+            self._handle_triggered,
+            DOMAIN,
+            self.name,
+            self.logger.log,
+            start_event is not None,
+            self.config.get("variables"),
         )
 
     @callback
