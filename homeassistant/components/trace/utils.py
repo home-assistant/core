@@ -1,4 +1,4 @@
-"""Helpers for automation and script tracing and debugging."""
+"""Helpers for script and automation tracing and debugging."""
 from collections import OrderedDict
 from datetime import timedelta
 from typing import Any
