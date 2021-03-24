@@ -161,7 +161,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
 
         Needs to be one of HVAC_MODE_*.
         """
-        econet_mode = self.econet.mode
+        econet_mode = self._econet.mode
         _current_op = HVAC_MODE_OFF
         if econet_mode is not None:
             _current_op = ECONET_STATE_TO_HA[econet_mode]
@@ -171,16 +171,18 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         hvac_mode_to_set = HA_STATE_TO_ECONET.get(hvac_mode)
-        self.econet.set_mode(hvac_mode_to_set)
+        if hvac_mode_to_set is None:
+            raise ValueError(f"{hvac_mode} is not a valid mode.")
+        self._econet.set_mode(hvac_mode_to_set)
 
     def set_humidity(self, humidity: int):
         """Set new target humidity."""
-        self.econet.set_dehumidifier_set_point(humidity)
+        self._econet.set_dehumidifier_set_point(humidity)
 
     @property
     def fan_mode(self):
         """Return the current fan mode."""
-        econet_fan_mode = self.econet.fan_mode
+        econet_fan_mode = self._econet.fan_mode
 
         # Remove this after we figure out how to handle med lo and med hi
         if econet_fan_mode in [ThermostatFanMode.MEDHI, ThermostatFanMode.MEDLO]:
@@ -194,7 +196,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     @property
     def fan_modes(self):
         """Return the fan modes."""
-        econet_fan_modes = self.econet.fan_modes
+        econet_fan_modes = self._econet.fan_modes
         fan_list = []
         for mode in econet_fan_modes:
             # Remove the MEDLO MEDHI once we figure out how to handle it

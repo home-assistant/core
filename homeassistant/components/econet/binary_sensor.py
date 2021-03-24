@@ -43,16 +43,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     binary_sensors = []
     all_equipment = equipment[EquipmentType.WATER_HEATER].copy()
     all_equipment.extend(equipment[EquipmentType.THERMOSTAT].copy())
+    attributes = []
+    for sensor in SENSORS.values():
+        attributes.append(sensor[ATTR])
     for _equip in all_equipment:
-        attributes = []
-        for sensor in SENSORS.values():
-            attributes.append(sensor[ATTR])
         for name, attribute in attributes:
             if getattr(_equip, attribute, None) is not None:
                 binary_sensors.append(EcoNetBinarySensor(_equip, name))
-    async_add_entities(
-        binary_sensors,
-    )
+
+    async_add_entities(binary_sensors)
 
 
 class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
