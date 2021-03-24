@@ -195,13 +195,11 @@ class MqttFan(MqttEntity, FanEntity):
                 )
         if (
             CONF_PRESET_MODE_COMMAND_TOPIC in config
-            and CONF_PRESET_MODE_COMMAND_TOPIC in config
-            and (
-                not config[CONF_PRESET_MODES_LIST]
-                or not isinstance(config[CONF_PRESET_MODES_LIST], list)
-            )
+            and not config[CONF_PRESET_MODES_LIST]
         ):
-            raise ValueError("No preset_modes configured, preset mode feature disabled")
+            raise ValueError(
+                "No valid preset_modes configured, preset mode feature disabled"
+            )
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
