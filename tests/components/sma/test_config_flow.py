@@ -13,8 +13,6 @@ from homeassistant.data_entry_flow import (
 )
 
 from . import (
-    MOCK_CUSTOM_SENSOR,
-    MOCK_CUSTOM_SENSOR2,
     MOCK_DEVICE,
     MOCK_IMPORT,
     MOCK_SETUP_DATA,
@@ -47,31 +45,10 @@ async def test_form(hass, aioclient_mock):
     assert result["step_id"] == "sensors"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "add_custom": True,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "custom_sensor"
-    assert result["errors"] == {}
-
     with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], dict({"add_another": True}, **MOCK_CUSTOM_SENSOR)
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "custom_sensor"
-    assert result["errors"] == {}
-
-    with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], dict({"add_another": False}, **MOCK_CUSTOM_SENSOR2)
+            result["flow_id"],
+            {},
         )
         await hass.async_block_till_done()
 
@@ -168,9 +145,7 @@ async def test_form_already_configured(hass):
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {
-            "add_custom": False,
-        },
+        {},
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == MOCK_DEVICE["serial"]

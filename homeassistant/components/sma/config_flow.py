@@ -8,9 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
-    CONF_PATH,
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
@@ -18,15 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_CUSTOM,
-    CONF_FACTOR,
-    CONF_GROUP,
-    CONF_KEY,
-    CONF_UNIT,
-    DEVICE_INFO,
-    GROUPS,
-)
+from .const import CONF_CUSTOM, CONF_GROUP, DEVICE_INFO, GROUPS
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -124,10 +114,6 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             self._data[CONF_SENSORS] = user_input[CONF_SENSORS]
-
-            if user_input.get("add_custom", False):
-                return await self.async_step_custom_sensor()
-
             return self.async_create_entry(title=self._data[CONF_HOST], data=self._data)
 
         return self.async_show_form(
@@ -136,41 +122,7 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Optional(
                         CONF_SENSORS, default=self._data[CONF_SENSORS]
-                    ): cv.multi_select({s.name: s.name for s in pysma.Sensors()}),
-                    vol.Optional("add_custom"): cv.boolean,
-                }
-            ),
-            errors=errors,
-        )
-
-    async def async_step_custom_sensor(self, user_input=None):
-        """Third step in config flow to create custom sensors."""
-        errors = {}
-        if user_input is not None:
-            self._data[CONF_CUSTOM][user_input[CONF_NAME]] = {
-                CONF_KEY: user_input[CONF_KEY],
-                CONF_UNIT: user_input[CONF_UNIT],
-                CONF_FACTOR: user_input.get(CONF_FACTOR, 1),
-                CONF_PATH: user_input.get(CONF_PATH),
-            }
-
-            if user_input.get("add_another", False):
-                return await self.async_step_custom_sensor()
-
-            return self.async_create_entry(title=self._data[CONF_HOST], data=self._data)
-
-        return self.async_show_form(
-            step_id="custom_sensor",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME): cv.string,
-                    vol.Required(CONF_KEY): vol.All(
-                        cv.string, vol.Length(min=13, max=15)
-                    ),
-                    vol.Required(CONF_UNIT): cv.string,
-                    vol.Optional(CONF_FACTOR, default=1): vol.Coerce(float),
-                    vol.Optional(CONF_PATH): cv.string,
-                    vol.Optional("add_another"): cv.boolean,
+                    ): cv.multi_select({s.name: s.name for s in pysma.Sensors()})
                 }
             ),
             errors=errors,

@@ -53,6 +53,15 @@ MOCK_CUSTOM_SENSOR2 = {
 
 MOCK_SETUP_DATA = dict(
     {
+        "custom": {},
+        "device_info": MOCK_DEVICE,
+        "sensors": [],
+    },
+    **MOCK_USER_INPUT,
+)
+
+MOCK_CUSTOM_SETUP_DATA = dict(
+    {
         "custom": {
             MOCK_CUSTOM_SENSOR["name"]: {
                 "factor": MOCK_CUSTOM_SENSOR["factor"],
@@ -80,7 +89,7 @@ async def init_integration(hass):
         domain=DOMAIN,
         title=MOCK_DEVICE["name"],
         unique_id=MOCK_DEVICE["serial"],
-        data=MOCK_SETUP_DATA,
+        data=MOCK_CUSTOM_SETUP_DATA,
     )
     entry.add_to_hass(hass)
 
