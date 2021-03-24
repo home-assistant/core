@@ -26,7 +26,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 
-from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE, CONF_TRIGGER
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
@@ -51,8 +51,26 @@ SENSOR_SCHEMA = vol.All(
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA)}
+
+def trigger_warning(val):
+    """Warn if a trigger is defined."""
+    if CONF_TRIGGER in val:
+        raise vol.Invalid(
+            "You can only add triggers to template entities if they are defined under `template:`. "
+            "See the template documentation for more information: https://www.home-assistant.io/integrations/template/"
+        )
+
+    return val
+
+
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_TRIGGER): cv.match_all,
+            vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
+        }
+    ),
+    trigger_warning,
 )
 
 

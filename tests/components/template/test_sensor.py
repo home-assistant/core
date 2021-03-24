@@ -1082,3 +1082,32 @@ async def test_trigger_entity_render_error(hass):
     ent_reg = entity_registry.async_get(hass)
     assert len(ent_reg.entities) == 1
     assert ent_reg.entities["sensor.hello"].unique_id == "no-base-id"
+
+
+async def test_trigger_not_allowed_platform_config(hass, caplog):
+    """Test it works."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            "sensor": {
+                "platform": "template",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ states.sensor.test_state.state }}",
+                        "friendly_name_template": "{{ states.sensor.test_state.state }}",
+                    }
+                },
+            }
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_template_sensor")
+    assert state is None
+    assert (
+        "You can only add triggers to template entities if they are defined under `template:`."
+        in caplog.text
+    )
