@@ -43,8 +43,6 @@ from .const import (
     AnalyticsPreference,
 )
 
-DEFAULT_DATA = {ATTR_ONBOARDED: False, ATTR_PREFERENCES: []}
-
 
 class Analytics:
     """Analytics helper class for the analytics integration."""
@@ -53,38 +51,37 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = DEFAULT_DATA
+        self._data = {}
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
         self._supervisor: Optional[HassIO] = self.hass.data.get(HASSIO_DOMAIN)
 
     @property
     def preferences(self) -> List[AnalyticsPreference]:
         """Return the current active preferences."""
-        return self._data[ATTR_PREFERENCES]
+        return self._data.get(ATTR_PREFERENCES, [])
 
     @property
     def onboarded(self) -> bool:
         """Return bool if the user has made a choice."""
-        return self._data[ATTR_ONBOARDED]
+        return self._data.get(ATTR_ONBOARDED, False)
 
     async def load(self) -> None:
         """Load preferences."""
-        self._data = await self._store.async_load() or DEFAULT_DATA
+        self._data = await self._store.async_load() or {}
         if self._supervisor:
             supervisor_info = await self._supervisor.get_supervisor_info()
             if not self.onboarded:
                 # User have not configured analytics, get this setting from the supervisor
                 if (
                     supervisor_info[ATTR_DIAGNOSTICS]
-                    and AnalyticsPreference.DIAGNOSTICS
-                    not in self._data[ATTR_PREFERENCES]
+                    and AnalyticsPreference.DIAGNOSTICS not in self.preferences
                 ):
-                    self._data[ATTR_PREFERENCES].append(ATTR_DIAGNOSTICS)
+                    self._data.setdefault(ATTR_PREFERENCES, []).append(ATTR_DIAGNOSTICS)
                 elif (
                     not supervisor_info[ATTR_DIAGNOSTICS]
-                    and AnalyticsPreference.DIAGNOSTICS in self._data[ATTR_PREFERENCES]
+                    and AnalyticsPreference.DIAGNOSTICS in self.preferences
                 ):
-                    self._data[ATTR_PREFERENCES].remove(ATTR_DIAGNOSTICS)
+                    self._data.setdefault(ATTR_PREFERENCES, []).remove(ATTR_DIAGNOSTICS)
 
     async def save_preferences(self, preferences: List[AnalyticsPreference]) -> None:
         """Save preferences."""
@@ -94,7 +91,7 @@ class Analytics:
 
         if self._supervisor:
             await self._supervisor.update_diagnostics(
-                AnalyticsPreference.DIAGNOSTICS in self._data[ATTR_PREFERENCES]
+                AnalyticsPreference.DIAGNOSTICS in self.preferences
             )
 
     async def send_analytics(self, _=None) -> None:

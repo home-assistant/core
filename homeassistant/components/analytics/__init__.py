@@ -28,8 +28,8 @@ async def async_setup(hass: HomeAssistant, _):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 
+    websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
-    websocket_api.async_register_command(hass, websocket_analytics_preferences_update)
 
     hass.data[DOMAIN] = analytics
     return True
@@ -38,7 +38,7 @@ async def async_setup(hass: HomeAssistant, _):
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "analytics"})
-async def websocket_analytics_preferences(
+async def websocket_analytics(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict,
@@ -60,7 +60,7 @@ async def websocket_analytics_preferences(
         vol.Required("preferences"): cv.ensure_list,
     }
 )
-async def websocket_analytics_preferences_update(
+async def websocket_analytics_preferences(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
     msg: dict,
