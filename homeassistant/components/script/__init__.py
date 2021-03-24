@@ -340,8 +340,6 @@ class ScriptEntity(ToggleEntity):
         await self._changed.wait()
 
     async def _async_run(self, variables, context):
-        # TODO: Do we need a new context here?
-        # Where is the result of the self.hass.async_create_task(coro) checked?
         with trace_script(
             self.hass, self.object_id, self._raw_config, context
         ) as script_trace:
