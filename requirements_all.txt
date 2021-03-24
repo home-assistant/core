@@ -625,9 +625,6 @@ freesms==0.1.2
 # homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.4.2
 
-# homeassistant.components.fritz
-fritzprofiles==0.5.2
-
 # homeassistant.components.google_translate
 gTTS==2.2.2
 

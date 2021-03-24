@@ -14,23 +14,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from .common import CONFIG_SCHEMA, FritzBoxTools
-from .const import (
-    CONF_PROFILES,
-    CONF_USE_DEFLECTIONS,
-    CONF_USE_PORT,
-    CONF_USE_PROFILES,
-    CONF_USE_TRACKER,
-    CONF_USE_WIFI,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_PROFILES,
-    DEFAULT_USE_DEFLECTIONS,
-    DEFAULT_USE_PORT,
-    DEFAULT_USE_PROFILES,
-    DEFAULT_USE_TRACKER,
-    DEFAULT_USE_WIFI,
-    DOMAIN,
-)
+from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,12 +33,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._name = None
         self._password = None
         self._port = None
-        self._profiles = None
-        self._use_deflections = None
-        self._use_port = None
-        self._use_profiles = None
-        self._use_tracker = None
-        self._use_wifi = None
         self._username = None
         self.import_schema = None
         self.fritz_tools = None
@@ -109,7 +87,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 port=port,
                 username=username,
                 password=password,
-                profile_list=[],
             )
         )
         success, error = await self.hass.async_add_executor_job(self.fritz_tools.is_ok)
@@ -118,7 +95,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             errors["base"] = error
             return self._show_setup_form_confirm(errors)
 
-        return self._show_setup_form_options(errors)
+        return self.async_create_entry(
+            title=self._name,
+            data={
+                CONF_HOST: self.fritz_tools.host,
+                CONF_PASSWORD: self.fritz_tools.password,
+                CONF_PORT: self.fritz_tools.port,
+                CONF_USERNAME: self.fritz_tools.username,
+            },
+        )
 
     def _show_setup_form_init(self, errors=None):
         """Show the setup form to the user."""
@@ -149,36 +134,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             errors=errors or {},
         )
 
-    def _show_setup_form_profiles(self, errors=None):
-        """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id="setup_profiles",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_PROFILES): str,
-                }
-            ),
-            errors=errors or {},
-        )
-
-    def _show_setup_form_options(self, errors=None):
-        """Show the setup form to the user."""
-        return self.async_show_form(
-            step_id="setup_options",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USE_TRACKER, default=DEFAULT_USE_TRACKER): bool,
-                    vol.Required(CONF_USE_WIFI, default=DEFAULT_USE_WIFI): bool,
-                    vol.Required(CONF_USE_PORT, default=DEFAULT_USE_PORT): bool,
-                    vol.Required(CONF_USE_PROFILES, default=DEFAULT_USE_PROFILES): bool,
-                    vol.Required(
-                        CONF_USE_DEFLECTIONS, default=DEFAULT_USE_DEFLECTIONS
-                    ): bool,
-                }
-            ),
-            errors=errors or {},
-        )
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self.async_step_start_config()
@@ -202,7 +157,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 port=port,
                 username=username,
                 password=password,
-                profile_list=[],
             )
         )
 
@@ -218,23 +172,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
             errors["base"] = error
             return self._show_setup_form_init(errors)
 
-        return self._show_setup_form_options(errors)
-
-    async def async_step_setup_options(self, user_input=None):
-        """Handle flow setup options."""
-        self._use_port = user_input.get(CONF_USE_PORT, DEFAULT_USE_PORT)
-        self._use_deflections = user_input.get(
-            CONF_USE_DEFLECTIONS, DEFAULT_USE_DEFLECTIONS
-        )
-        self._use_tracker = user_input.get(CONF_USE_TRACKER, DEFAULT_USE_TRACKER)
-        self._use_wifi = user_input.get(CONF_USE_WIFI, DEFAULT_USE_WIFI)
-        self._use_profiles = user_input.get(CONF_USE_PROFILES, DEFAULT_USE_PROFILES)
-
-        if self._use_profiles:
-            errors = {}
-            return self._show_setup_form_profiles(errors)
-
-        profiles = []
         return self.async_create_entry(
             title=self._name,
             data={
@@ -242,51 +179,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 CONF_PASSWORD: self.fritz_tools.password,
                 CONF_PORT: self.fritz_tools.port,
                 CONF_USERNAME: self.fritz_tools.username,
-                CONF_PROFILES: profiles,
-                CONF_USE_TRACKER: self._use_tracker,
-                CONF_USE_WIFI: self._use_wifi,
-                CONF_USE_DEFLECTIONS: self._use_deflections,
-                CONF_USE_PORT: self._use_port,
-                CONF_USE_PROFILES: self._use_profiles,
-            },
-        )
-
-    async def async_step_setup_profiles(self, user_input=None):
-        """Handle flow setup profiles."""
-        profiles = user_input.get(CONF_PROFILES, DEFAULT_PROFILES)
-        if isinstance(profiles, str):
-            profiles = profiles.replace(", ", ",").split(",")
-
-        self.fritz_tools = await self.hass.async_add_executor_job(
-            lambda: FritzBoxTools(
-                hass=self.hass,
-                host=self.fritz_tools.host,
-                port=self.fritz_tools.port,
-                username=self.fritz_tools.username,
-                password=self.fritz_tools.password,
-                profile_list=profiles,
-            )
-        )
-        success, error = await self.hass.async_add_executor_job(self.fritz_tools.is_ok)
-
-        errors = {}
-        if not success:
-            errors["base"] = error
-            return self._show_setup_form_profiles(errors)
-
-        return self.async_create_entry(
-            title=self._name,
-            data={
-                CONF_HOST: self.fritz_tools.host,
-                CONF_PASSWORD: self.fritz_tools.password,
-                CONF_PORT: self.fritz_tools.port,
-                CONF_USERNAME: self.fritz_tools.username,
-                CONF_PROFILES: profiles,
-                CONF_USE_TRACKER: self._use_tracker,
-                CONF_USE_WIFI: self._use_wifi,
-                CONF_USE_DEFLECTIONS: self._use_deflections,
-                CONF_USE_PORT: self._use_port,
-                CONF_USE_PROFILES: self._use_profiles,
             },
         )
 
@@ -306,10 +198,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         port = import_config.get(CONF_PORT, DEFAULT_PORT)
         username = import_config.get(CONF_USERNAME)
         password = import_config.get(CONF_PASSWORD)
-        profiles = import_config.get(CONF_PROFILES, DEFAULT_PROFILES)
-
-        if isinstance(profiles, str):
-            profiles = profiles.replace(" ", "").split(",")
 
         fritz_tools = await self.hass.async_add_executor_job(
             lambda: FritzBoxTools(
@@ -318,7 +206,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 port=port,
                 username=username,
                 password=password,
-                profile_list=profiles,
             )
         )
         success, error = await self.hass.async_add_executor_job(fritz_tools.is_ok)
@@ -340,12 +227,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 CONF_PASSWORD: password,
                 CONF_PORT: port,
                 CONF_USERNAME: username,
-                CONF_PROFILES: profiles,
-                CONF_USE_TRACKER: DEFAULT_USE_TRACKER,
-                CONF_USE_WIFI: DEFAULT_USE_WIFI,
-                CONF_USE_DEFLECTIONS: DEFAULT_USE_DEFLECTIONS,
-                CONF_USE_PORT: DEFAULT_USE_PORT,
-                CONF_USE_PROFILES: DEFAULT_USE_PROFILES,
             },
         )
 
@@ -356,15 +237,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
         self._port = entry.data.get(CONF_PORT, DEFAULT_PORT)
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data.get(CONF_PASSWORD)
-        self._profiles = entry.data.get(CONF_PROFILES, DEFAULT_PROFILES)
-        self._use_port = entry.data.get(CONF_USE_PORT, DEFAULT_USE_PORT)
-        self._use_deflections = entry.data.get(
-            CONF_USE_DEFLECTIONS, DEFAULT_USE_DEFLECTIONS
-        )
-        self._use_tracker = entry.data.get(CONF_USE_TRACKER, DEFAULT_USE_TRACKER)
-        self._use_wifi = entry.data.get(CONF_USE_WIFI, DEFAULT_USE_WIFI)
-        self._use_profiles = entry.data.get(CONF_USE_PROFILES, DEFAULT_USE_PROFILES)
-
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(self, user_input, errors=None):
@@ -404,7 +276,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 port=port,
                 username=username,
                 password=password,
-                profile_list=[],
             )
         )
 
@@ -422,12 +293,6 @@ class FritzBoxToolsFlowHandler(ConfigFlow):
                 CONF_PASSWORD: password,
                 CONF_PORT: port,
                 CONF_USERNAME: username,
-                CONF_PROFILES: self._profiles,
-                CONF_USE_TRACKER: self._use_tracker,
-                CONF_USE_WIFI: self._use_wifi,
-                CONF_USE_DEFLECTIONS: self._use_deflections,
-                CONF_USE_PORT: self._use_port,
-                CONF_USE_PROFILES: self._use_profiles,
             },
         )
         await self.hass.config_entries.async_reload(self._entry.entry_id)

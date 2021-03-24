@@ -13,21 +13,9 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import FritzBoxTools
 from .const import (
-    CONF_PROFILES,
-    CONF_USE_DEFLECTIONS,
-    CONF_USE_PORT,
-    CONF_USE_PROFILES,
-    CONF_USE_TRACKER,
-    CONF_USE_WIFI,
     DATA_FRITZ_TOOLS_INSTANCE,
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_PROFILES,
-    DEFAULT_USE_DEFLECTIONS,
-    DEFAULT_USE_PORT,
-    DEFAULT_USE_PROFILES,
-    DEFAULT_USE_TRACKER,
-    DEFAULT_USE_WIFI,
     DOMAIN,
     ERROR_CONNECTION_ERROR,
     SUPPORTED_DOMAINS,
@@ -56,12 +44,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
     username = entry.data.get(CONF_USERNAME)
     password = entry.data.get(CONF_PASSWORD)
-    profile_list = entry.data.get(CONF_PROFILES, DEFAULT_PROFILES)
-    use_profiles = entry.data.get(CONF_USE_PROFILES, DEFAULT_USE_PROFILES)
-    use_wifi = entry.data.get(CONF_USE_WIFI, DEFAULT_USE_WIFI)
-    use_port = entry.data.get(CONF_USE_PORT, DEFAULT_USE_PORT)
-    use_deflections = entry.data.get(CONF_USE_DEFLECTIONS, DEFAULT_USE_DEFLECTIONS)
-    use_tracker = entry.data.get(CONF_USE_TRACKER, DEFAULT_USE_TRACKER)
 
     fritz_tools = await hass.async_add_executor_job(
         lambda: FritzBoxTools(
@@ -70,12 +52,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             port=port,
             username=username,
             password=password,
-            profile_list=profile_list,
-            use_wifi=use_wifi,
-            use_deflections=use_deflections,
-            use_port=use_port,
-            use_profiles=use_profiles,
-            use_tracker=use_tracker,
         )
     )
 

@@ -10,7 +10,6 @@ from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
-from fritzprofiles import FritzProfileSwitch
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -27,25 +26,11 @@ from homeassistant.util import dt as dt_util, get_local_ip
 
 from .const import (
     ATTR_HOST,
-    CONF_PROFILES,
-    CONF_USE_DEFLECTIONS,
-    CONF_USE_PORT,
-    CONF_USE_PROFILES,
-    CONF_USE_TRACKER,
-    CONF_USE_WIFI,
     DEFAULT_HOST,
     DEFAULT_PORT,
-    DEFAULT_PROFILES,
-    DEFAULT_USE_DEFLECTIONS,
-    DEFAULT_USE_PORT,
-    DEFAULT_USE_PROFILES,
-    DEFAULT_USE_TRACKER,
-    DEFAULT_USE_WIFI,
     DEFAULT_USERNAME,
     DOMAIN,
     ERROR_CONNECTION_ERROR,
-    ERROR_CONNECTION_ERROR_PROFILES,
-    ERROR_PROFILE_NOT_FOUND,
     TRACKER_SCAN_INTERVAL,
 )
 
@@ -77,14 +62,6 @@ CONFIG_SCHEMA = vol.Schema(
                                     vol.Optional(CONF_PORT): cv.port,
                                     vol.Required(CONF_USERNAME): cv.string,
                                     vol.Required(CONF_PASSWORD): cv.string,
-                                    vol.Optional(CONF_PROFILES): vol.All(
-                                        cv.ensure_list, [cv.string]
-                                    ),
-                                    vol.Optional(CONF_USE_TRACKER): cv.string,
-                                    vol.Optional(CONF_USE_PROFILES): cv.string,
-                                    vol.Optional(CONF_USE_PORT): cv.string,
-                                    vol.Optional(CONF_USE_WIFI): cv.string,
-                                    vol.Optional(CONF_USE_DEFLECTIONS): cv.string,
                                 }
                             )
                         ],
@@ -110,12 +87,6 @@ class FritzBoxTools:
         username=DEFAULT_USERNAME,
         host=DEFAULT_HOST,
         port=DEFAULT_PORT,
-        profile_list=DEFAULT_PROFILES,
-        use_port=DEFAULT_USE_PORT,
-        use_deflections=DEFAULT_USE_DEFLECTIONS,
-        use_wifi=DEFAULT_USE_WIFI,
-        use_profiles=DEFAULT_USE_PROFILES,
-        use_tracker=DEFAULT_USE_TRACKER,
     ):
         """Initialize FritzboxTools class."""
         # general timeout for all requests to the router. Some calls need quite some time.
@@ -124,15 +95,6 @@ class FritzBoxTools:
             self.connection = FritzConnection(
                 address=host, port=port, user=username, password=password, timeout=60.0
             )
-            if profile_list != DEFAULT_PROFILES:
-                self.profile_switch = {
-                    profile: FritzProfileSwitch(
-                        "http://" + host, username, password, profile
-                    )
-                    for profile in profile_list
-                }
-            else:
-                self.profile_switch = {}
 
             self.fritzstatus = FritzStatus(fc=self.connection)
             self._unique_id = self.connection.call_action("DeviceInfo:1", "GetInfo")[
@@ -145,27 +107,14 @@ class FritzBoxTools:
         except FritzConnectionException:
             self.success = False
             self.error = ERROR_CONNECTION_ERROR
-        except PermissionError:
-            self.success = False
-            self.error = ERROR_CONNECTION_ERROR_PROFILES
-        except AttributeError:
-            self.success = False
-            self.error = ERROR_PROFILE_NOT_FOUND
 
         self.hass = hass
         self.ha_ip = get_local_ip()
-        self.profile_list = profile_list
 
         self.username = username
         self.password = password
         self.port = port
         self.host = host
-
-        self.use_wifi = use_wifi
-        self.use_port = use_port
-        self.use_deflections = use_deflections
-        self.use_profiles = use_profiles
-        self.use_tracker = use_tracker
 
         self._devices: Dict[str, Any] = {}
         self.scan_devices()
