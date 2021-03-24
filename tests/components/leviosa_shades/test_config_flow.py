@@ -60,8 +60,8 @@ async def test_config_flow_one_zone_success(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.leviosa_shades.config_flow.LeviosaZoneHub.getHubInfo",
-        return_value=TEST_ZONE_FW_ALT,
+        "homeassistant.components.leviosa_shades.config_flow.validate_zone",
+        return_value=TEST_ZONE_FW,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT_1
@@ -71,7 +71,7 @@ async def test_config_flow_one_zone_success(hass):
     assert result["title"] == TEST_USER_INPUT_1[CONF_NAME]
     assert result["data"] == {
         CONF_HOST: TEST_HOST1,
-        DEVICE_FW_V: TEST_ZONE_FW_ALT,
+        DEVICE_FW_V: TEST_ZONE_FW,
         DEVICE_MAC: TEST_MAC1,
         BLIND_GROUPS: [
             "All Zone 1",
@@ -81,33 +81,6 @@ async def test_config_flow_one_zone_success(hass):
             "Z1 Group 4",
         ],
     }
-
-
-async def test_config_flow_one_zone_failure(hass):
-    """Flow started, one Zone discovered, not responding afterwards."""
-    with patch(
-        "homeassistant.components.leviosa_shades.config_flow.discover_leviosa_zones",
-        return_value=TEST_DISCOVERY_1,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.leviosa_shades.config_flow.LeviosaZoneHub.fwVer",
-        return_value="invalid",
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_INPUT_1
-        )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "connect"
-    assert result["errors"] != {}
 
 
 async def test_config_flow_two_zone_success(hass):
