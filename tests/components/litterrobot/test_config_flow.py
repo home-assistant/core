@@ -20,7 +20,10 @@ async def test_form(hass, mock_account):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("pylitterbot.Account", return_value=mock_account), patch(
+    with patch(
+        "homeassistant.components.litterrobot.hub.Account",
+        return_value=mock_account,
+    ), patch(
         "homeassistant.components.litterrobot.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.litterrobot.async_setup_entry",

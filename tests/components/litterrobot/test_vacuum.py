@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.components.litterrobot.hub import REFRESH_WAIT_TIME
+from homeassistant.components.litterrobot.entity import REFRESH_WAIT_TIME_SECONDS
 from homeassistant.components.vacuum import (
     ATTR_PARAMS,
     DOMAIN as PLATFORM_DOMAIN,
@@ -70,6 +70,22 @@ async def test_vacuum_with_error(hass, mock_account_with_error):
                 ATTR_PARAMS: {"enabled": True, "sleep_time": None},
             },
         ),
+        (
+            SERVICE_SEND_COMMAND,
+            "set_sleep_mode",
+            {
+                ATTR_COMMAND: "set_sleep_mode",
+                ATTR_PARAMS: {"enabled": False},
+            },
+        ),
+        (
+            SERVICE_SEND_COMMAND,
+            "set_wait_time",
+            {
+                ATTR_COMMAND: "set_wait_time",
+                ATTR_PARAMS: {"wait_time": 3},
+            },
+        ),
     ],
 )
 async def test_commands(hass, mock_account, service, command, extra):
@@ -90,6 +106,28 @@ async def test_commands(hass, mock_account, service, command, extra):
         data,
         blocking=True,
     )
-    future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME)
+    future = utcnow() + timedelta(seconds=REFRESH_WAIT_TIME_SECONDS)
     async_fire_time_changed(hass, future)
     getattr(mock_account.robots[0], command).assert_called_once()
+
+
+async def test_invalid_commands(hass, caplog, mock_account_with_side_effects):
+    """Test sending invalid commands to the vacuum."""
+    await setup_integration(hass, mock_account_with_side_effects, PLATFORM_DOMAIN)
+
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == STATE_DOCKED
+
+    await hass.services.async_call(
+        PLATFORM_DOMAIN,
+        SERVICE_SEND_COMMAND,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_COMMAND: "set_wait_time",
+            ATTR_PARAMS: {"wait_time": 1},
+        },
+        blocking=True,
+    )
+    mock_account_with_side_effects.robots[0].set_wait_time.assert_called_once()
+    assert "Invalid command: oops" in caplog.text
