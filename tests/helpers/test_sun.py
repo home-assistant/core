@@ -11,8 +11,8 @@ import homeassistant.util.dt as dt_util
 def test_next_events(hass):
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    import astral.sun
     from astral import LocationInfo
+    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -87,8 +87,8 @@ def test_next_events(hass):
 def test_date_events(hass):
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    import astral.sun
     from astral import LocationInfo
+    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -115,8 +115,8 @@ def test_date_events(hass):
 def test_date_events_default_date(hass):
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    import astral.sun
     from astral import LocationInfo
+    import astral.sun
 
     utc_today = utc_now.date()
 
@@ -144,8 +144,8 @@ def test_date_events_default_date(hass):
 def test_date_events_accepts_datetime(hass):
     """Test retrieving next sun events."""
     utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
-    import astral.sun
     from astral import LocationInfo
+    import astral.sun
 
     utc_today = utc_now.date()
 

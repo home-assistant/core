@@ -22,8 +22,8 @@ async def test_setting_rising(hass, legacy_patchable_time):
     await hass.async_block_till_done()
     state = hass.states.get(sun.ENTITY_ID)
 
-    import astral.sun
     from astral import LocationInfo
+    import astral.sun
 
     utc_today = utc_now.date()
 
