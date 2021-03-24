@@ -129,8 +129,6 @@ class CloudClient(Interface):
 
         async def enable_google(_):
             """Enable Google."""
-            nonlocal is_new_user
-
             gconf = await self.get_google_config()
 
             gconf.async_enable_local_sdk()
