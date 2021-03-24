@@ -241,6 +241,10 @@ async def _async_get_db_log_settings_info(hass, call):
             ais_global.G_DB_SETTINGS_INFO = db_settings
             if "dbKeepDays" not in ais_global.G_DB_SETTINGS_INFO:
                 ais_global.G_DB_SETTINGS_INFO["dbKeepDays"] = 10
+            if "dbShowHistory" not in ais_global.G_DB_SETTINGS_INFO:
+                ais_global.G_DB_SETTINGS_INFO["dbShowHistory"] = False
+            if "dbShowLogbook" not in ais_global.G_DB_SETTINGS_INFO:
+                ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"] = False
         except Exception as e:
             _LOGGER.info("Error get db settings info " + str(e))
     else:
@@ -422,6 +426,8 @@ class AisDbConfigView(HomeAssistantView):
             "dbServerIp": message.get("dbServerIp", ""),
             "dbServerName": message.get("dbServerName", ""),
             "dbKeepDays": message.get("dbKeepDays", 10),
+            "dbShowLogbook": message.get("dbShowLogbook", False),
+            "dbShowHistory": message.get("dbShowHistory", False),
             "dbUrl": "",
         }
         # 1. calculate url
