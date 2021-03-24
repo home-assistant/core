@@ -1,5 +1,7 @@
 """Light support for switch entities."""
-from typing import Any, Callable, Optional, Sequence, cast
+from __future__ import annotations
+
+from typing import Any, Callable, Sequence, cast
 
 import voluptuous as vol
 
@@ -38,7 +40,7 @@ async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
     async_add_entities: Callable[[Sequence[Entity]], None],
-    discovery_info: Optional[DiscoveryInfoType] = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize Light Switch platform."""
 
@@ -65,7 +67,7 @@ class LightSwitch(LightEntity):
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._unique_id = unique_id
-        self._switch_state: Optional[State] = None
+        self._switch_state: State | None = None
 
     @property
     def name(self) -> str:
@@ -120,13 +122,11 @@ class LightSwitch(LightEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        assert self.hass is not None
         self._switch_state = self.hass.states.get(self._switch_entity_id)
 
         @callback
         def async_state_changed_listener(*_: Any) -> None:
             """Handle child updates."""
-            assert self.hass is not None
             self._switch_state = self.hass.states.get(self._switch_entity_id)
             self.async_write_ha_state()
 

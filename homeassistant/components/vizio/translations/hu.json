@@ -2,9 +2,21 @@
     "config": {
         "abort": {
             "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "updated_entry": "Ez a bejegyz\u00e9s m\u00e1r be van \u00e1ll\u00edtva, de a konfigur\u00e1ci\u00f3ban defini\u00e1lt n\u00e9v, appok \u00e9s/vagy be\u00e1ll\u00edt\u00e1sok nem egyeznek meg a kor\u00e1bban import\u00e1lt konfigur\u00e1ci\u00f3val, \u00edgy a konfigur\u00e1ci\u00f3s bejegyz\u00e9s ennek megfelel\u0151en friss\u00fclt."
         },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+        },
         "step": {
+            "pair_tv": {
+                "data": {
+                    "pin": "PIN-k\u00f3d"
+                }
+            },
+            "pairing_complete": {
+                "description": "A VIZIO SmartCast Eszk\u00f6z mostant\u00f3l csatlakozik a Home Assistant-hoz."
+            },
             "user": {
                 "data": {
                     "access_token": "Hozz\u00e1f\u00e9r\u00e9si token",
@@ -12,7 +24,7 @@
                     "host": "Hoszt",
                     "name": "N\u00e9v"
                 },
-                "title": "A Vizio SmartCast Client be\u00e1ll\u00edt\u00e1sa"
+                "title": "VIZIO SmartCast Eszk\u00f6z"
             }
         }
     },
@@ -22,7 +34,7 @@
                 "data": {
                     "volume_step": "Hanger\u0151 l\u00e9p\u00e9s nagys\u00e1ga"
                 },
-                "title": "Friss\u00edtse a Vizo SmartCast be\u00e1ll\u00edt\u00e1sokat"
+                "title": "VIZIO SmartCast Eszk\u00f6z be\u00e1ll\u00edt\u00e1sok friss\u00edt\u00e9se"
             }
         }
     }

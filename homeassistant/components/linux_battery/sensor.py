@@ -5,10 +5,9 @@ import os
 from batinfo import Batteries
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY, PERCENTAGE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([LinuxBatterySensor(name, battery_id, system)], True)
 
 
-class LinuxBatterySensor(Entity):
+class LinuxBatterySensor(SensorEntity):
     """Representation of a Linux Battery sensor."""
 
     def __init__(self, name, battery_id, system):

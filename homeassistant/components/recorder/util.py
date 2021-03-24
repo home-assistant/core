@@ -175,7 +175,7 @@ def validate_sqlite_database(dbpath: str, db_integrity_check: bool) -> bool:
         run_checks_on_open_db(dbpath, conn.cursor(), db_integrity_check)
         conn.close()
     except sqlite3.DatabaseError:
-        _LOGGER.exception("The database at %s is corrupt or malformed.", dbpath)
+        _LOGGER.exception("The database at %s is corrupt or malformed", dbpath)
         return False
 
     return True
@@ -210,7 +210,7 @@ def run_checks_on_open_db(dbpath, cursor, db_integrity_check):
 
     if not last_run_was_clean:
         _LOGGER.warning(
-            "The system could not validate that the sqlite3 database at %s was shutdown cleanly.",
+            "The system could not validate that the sqlite3 database at %s was shutdown cleanly",
             dbpath,
         )
 

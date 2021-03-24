@@ -319,7 +319,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 if "name" in wlan
             }
         )
-        ssid_filter = {ssid: ssid for ssid in sorted(list(ssids))}
+        ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
         return self.async_show_form(
             step_id="device_tracker",

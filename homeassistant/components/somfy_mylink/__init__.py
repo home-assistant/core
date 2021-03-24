@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     if not mylink_status or "error" in mylink_status:
         _LOGGER.error(
-            "mylink failed to setup because of an error: %s",
+            "Somfy Mylink failed to setup because of an error: %s",
             mylink_status.get("error", {}).get(
                 "message", "Empty response from mylink device"
             ),

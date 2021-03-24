@@ -1,8 +1,9 @@
 """MQTT component mixins and helpers."""
+from __future__ import annotations
+
 from abc import abstractmethod
 import json
 import logging
-from typing import Optional
 
 import voluptuous as vol
 
@@ -63,6 +64,7 @@ CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_version"
 CONF_VIA_DEVICE = "via_device"
 CONF_DEPRECATED_VIA_HUB = "via_hub"
+CONF_SUGGESTED_AREA = "suggested_area"
 
 MQTT_AVAILABILITY_SINGLE_SCHEMA = vol.Schema(
     {
@@ -129,6 +131,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
+            vol.Optional(CONF_SUGGESTED_AREA): cv.string,
         }
     ),
     validate_device_has_at_least_one_identifier,
@@ -491,13 +494,16 @@ def device_info_from_config(config):
     if CONF_VIA_DEVICE in config:
         info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
 
+    if CONF_SUGGESTED_AREA in config:
+        info["suggested_area"] = config[CONF_SUGGESTED_AREA]
+
     return info
 
 
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
-    def __init__(self, device_config: Optional[ConfigType], config_entry=None) -> None:
+    def __init__(self, device_config: ConfigType | None, config_entry=None) -> None:
         """Initialize the device mixin."""
         self._device_config = device_config
         self._config_entry = config_entry

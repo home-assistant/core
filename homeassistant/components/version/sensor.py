@@ -10,11 +10,10 @@ from pyhaversion import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_SOURCE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 ALL_IMAGES = [
@@ -94,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([VersionSensor(haversion, name)], True)
 
 
-class VersionSensor(Entity):
+class VersionSensor(SensorEntity):
     """Representation of a Home Assistant version sensor."""
 
     def __init__(self, haversion, name):

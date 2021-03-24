@@ -1,7 +1,10 @@
 """Support for UPnP/IGD Sensors."""
-from datetime import timedelta
-from typing import Any, Mapping, Optional
+from __future__ import annotations
 
+from datetime import timedelta
+from typing import Any, Mapping
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.helpers import device_registry as dr
@@ -115,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class UpnpSensor(CoordinatorEntity):
+class UpnpSensor(CoordinatorEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
     def __init__(
@@ -176,7 +179,7 @@ class RawUpnpSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the device."""
         device_value_key = self._sensor_type["device_value_key"]
         value = self.coordinator.data[device_value_key]
@@ -214,7 +217,7 @@ class DerivedUpnpSensor(UpnpSensor):
         return current_value < self._last_value
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
         device_value_key = self._sensor_type["device_value_key"]

@@ -1,7 +1,8 @@
 {
     "device_automation": {
         "action_type": {
-            "clean": "\u4f7f {entity_name} \u5f00\u59cb\u6e05\u626b"
+            "clean": "\u4f7f {entity_name} \u5f00\u59cb\u6e05\u626b",
+            "dock": "\u4f7f {entity_name} \u8fd4\u56de\u5e95\u5ea7"
         },
         "condition_type": {
             "is_cleaning": "{entity_name} \u6b63\u5728\u6e05\u626b",

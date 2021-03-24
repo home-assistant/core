@@ -6,6 +6,7 @@ from meteofrance_api.helpers import (
     readeable_phenomenoms_dict,
 )
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.typing import HomeAssistantType
@@ -74,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-class MeteoFranceSensor(CoordinatorEntity):
+class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteo-France sensor."""
 
     def __init__(self, sensor_type: str, coordinator: DataUpdateCoordinator):

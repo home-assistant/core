@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
@@ -53,7 +54,7 @@ MODE_EXCLUDE = "exclude"
 
 INCLUDE_EXCLUDE_MODES = [MODE_EXCLUDE, MODE_INCLUDE]
 
-DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN]
+DOMAINS_NEED_ACCESSORY_MODE = [CAMERA_DOMAIN, MEDIA_PLAYER_DOMAIN, REMOTE_DOMAIN]
 NEVER_BRIDGED_DOMAINS = [CAMERA_DOMAIN]
 
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
@@ -74,7 +75,7 @@ SUPPORTED_DOMAINS = [
     "lock",
     MEDIA_PLAYER_DOMAIN,
     "person",
-    "remote",
+    REMOTE_DOMAIN,
     "scene",
     "script",
     "sensor",
@@ -93,6 +94,7 @@ DEFAULT_DOMAINS = [
     "light",
     "lock",
     MEDIA_PLAYER_DOMAIN,
+    REMOTE_DOMAIN,
     "switch",
     "vacuum",
     "water_heater",
@@ -221,7 +223,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return a set of bridge names."""
         return {
             entry.data[CONF_NAME]
-            for entry in self._async_current_entries()
+            for entry in self._async_current_entries(include_ignore=False)
             if CONF_NAME in entry.data
         }
 
@@ -247,10 +249,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Determine is a name or port is already used."""
         name = user_input[CONF_NAME]
         port = user_input[CONF_PORT]
-        for entry in self._async_current_entries():
-            if entry.data[CONF_NAME] == name or entry.data[CONF_PORT] == port:
-                return False
-        return True
+        return not any(
+            entry.data[CONF_NAME] == name or entry.data[CONF_PORT] == port
+            for entry in self._async_current_entries(include_ignore=False)
+        )
 
     @staticmethod
     @callback

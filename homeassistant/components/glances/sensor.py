@@ -1,8 +1,8 @@
 """Support gathering system information of hosts which are running glances."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
 
@@ -15,7 +15,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = []
 
     for sensor_type, sensor_details in SENSOR_TYPES.items():
-        if not sensor_details[0] in client.api.data:
+        if sensor_details[0] not in client.api.data:
             continue
         if sensor_details[0] in client.api.data:
             if sensor_details[0] == "fs":
@@ -60,7 +60,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(dev, True)
 
 
-class GlancesSensor(Entity):
+class GlancesSensor(SensorEntity):
     """Implementation of a Glances sensor."""
 
     def __init__(

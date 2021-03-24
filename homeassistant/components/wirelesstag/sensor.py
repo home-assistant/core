@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class WirelessTagSensor(WirelessTagBaseSensor):
+class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(self, api, tag, sensor_type, config):

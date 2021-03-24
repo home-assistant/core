@@ -1,5 +1,6 @@
 """Support to interface with Sonos players."""
 import asyncio
+from contextlib import suppress
 import datetime
 import functools as ft
 import logging
@@ -790,7 +791,7 @@ class SonosEntity(MediaPlayerEntity):
             coordinator_uid = self.unique_id
             slave_uids = []
 
-            try:
+            with suppress(SoCoException):
                 if self.soco.group and self.soco.group.coordinator:
                     coordinator_uid = self.soco.group.coordinator.uid
                     slave_uids = [
@@ -798,8 +799,6 @@ class SonosEntity(MediaPlayerEntity):
                         for p in self.soco.group.members
                         if p.uid != coordinator_uid
                     ]
-            except SoCoException:
-                pass
 
             return [coordinator_uid] + slave_uids
 
@@ -1330,7 +1329,7 @@ class SonosEntity(MediaPlayerEntity):
             if one_alarm._alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("did not find alarm with id %s", alarm_id)
+            _LOGGER.warning("Did not find alarm with id %s", alarm_id)
             return
         if time is not None:
             alarm.start_time = time

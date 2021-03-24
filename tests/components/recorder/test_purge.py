@@ -12,7 +12,11 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import dt as dt_util
 
-from .common import async_recorder_block_till_done, async_wait_recording_done
+from .common import (
+    async_recorder_block_till_done,
+    async_wait_purge_done,
+    async_wait_recording_done,
+)
 from .conftest import SetupRecorderInstanceT
 
 
@@ -105,6 +109,8 @@ async def test_purge_method(
     await _add_test_events(hass, instance)
     await _add_test_states(hass, instance)
     await _add_test_recorder_runs(hass, instance)
+    await hass.async_block_till_done()
+    await async_wait_recording_done(hass, instance)
 
     # make sure we start with 6 states
     with session_scope(hass=hass) as session:
@@ -116,16 +122,17 @@ async def test_purge_method(
 
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
+        runs_before_purge = recorder_runs.all()
 
         await hass.async_block_till_done()
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         # run purge method - no service data, use defaults
         await hass.services.async_call("recorder", "purge")
         await hass.async_block_till_done()
 
         # Small wait for recorder thread
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         # only purged old events
         assert states.count() == 4
@@ -136,7 +143,7 @@ async def test_purge_method(
         await hass.async_block_till_done()
 
         # Small wait for recorder thread
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         # we should only have 2 states left after purging
         assert states.count() == 2
@@ -145,15 +152,18 @@ async def test_purge_method(
         assert events.count() == 2
 
         # now we should only have 3 recorder runs left
-        assert recorder_runs.count() == 3
+        runs = recorder_runs.all()
+        assert runs[0] == runs_before_purge[0]
+        assert runs[1] == runs_before_purge[5]
+        assert runs[2] == runs_before_purge[6]
 
-        assert not ("EVENT_TEST_PURGE" in (event.event_type for event in events.all()))
+        assert "EVENT_TEST_PURGE" not in (event.event_type for event in events.all())
 
         # run purge method - correct service data, with repack
         service_data["repack"] = True
         await hass.services.async_call("recorder", "purge", service_data=service_data)
         await hass.async_block_till_done()
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
         assert "Vacuuming SQL DB to free space" in caplog.text
 
 
@@ -189,7 +199,7 @@ async def test_purge_edge_case(
             )
 
     instance = await async_setup_recorder_instance(hass, None)
-    await async_wait_recording_done(hass, instance)
+    await async_wait_purge_done(hass, instance)
 
     service_data = {"keep_days": 2}
     timestamp = dt_util.utcnow() - timedelta(days=2, minutes=1)
@@ -208,7 +218,7 @@ async def test_purge_edge_case(
         await hass.async_block_till_done()
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         assert states.count() == 0
         assert events.count() == 0
@@ -326,7 +336,7 @@ async def test_purge_filtered_states(
         await hass.async_block_till_done()
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         assert states.count() == 74
         assert events_state_changed.count() == 70
@@ -340,10 +350,10 @@ async def test_purge_filtered_states(
         await hass.async_block_till_done()
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         assert states.count() == 13
         assert events_state_changed.count() == 10
@@ -354,9 +364,9 @@ async def test_purge_filtered_states(
         )
         assert states_sensor_excluded.count() == 0
 
-        session.query(States).get(71).old_state_id is None
-        session.query(States).get(72).old_state_id is None
-        session.query(States).get(73).old_state_id == 62  # should have been keeped
+        assert session.query(States).get(72).old_state_id is None
+        assert session.query(States).get(73).old_state_id is None
+        assert session.query(States).get(74).old_state_id == 62  # should have been kept
 
 
 async def test_purge_filtered_events(
@@ -416,7 +426,7 @@ async def test_purge_filtered_events(
         await hass.async_block_till_done()
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         assert events_purge.count() == 60
         assert events_keep.count() == 10
@@ -430,10 +440,10 @@ async def test_purge_filtered_events(
         await hass.async_block_till_done()
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         assert events_purge.count() == 0
         assert events_keep.count() == 10
@@ -531,18 +541,18 @@ async def test_purge_filtered_events_state_changed(
         await hass.async_block_till_done()
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         await async_recorder_block_till_done(hass, instance)
-        await async_wait_recording_done(hass, instance)
+        await async_wait_purge_done(hass, instance)
 
         assert events_keep.count() == 10
         assert events_purge.count() == 0
         assert states.count() == 3
 
-        session.query(States).get(61).old_state_id is None
-        session.query(States).get(62).old_state_id is None
-        session.query(States).get(63).old_state_id == 62  # should have been keeped
+        assert session.query(States).get(61).old_state_id is None
+        assert session.query(States).get(62).old_state_id is None
+        assert session.query(States).get(63).old_state_id == 62  # should have been kept
 
 
 async def _add_test_states(hass: HomeAssistantType, instance: recorder.Recorder):

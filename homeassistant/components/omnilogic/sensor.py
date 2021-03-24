@@ -1,5 +1,5 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE
+from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     MASS_GRAMS,
@@ -59,7 +59,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(entities)
 
 
-class OmnilogicSensor(OmniLogicEntity):
+class OmnilogicSensor(OmniLogicEntity, SensorEntity):
     """Defines an Omnilogic sensor entity."""
 
     def __init__(

@@ -1,5 +1,6 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
+from contextlib import suppress
 from datetime import timedelta
 import logging
 
@@ -525,7 +526,7 @@ class RachioSchedule(RachioSwitch):
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Handle incoming webhook schedule data."""
         # Schedule ID not passed when running individual zones, so we catch that error
-        try:
+        with suppress(KeyError):
             if args[0][KEY_SCHEDULE_ID] == self._schedule_id:
                 if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
                     self._state = True
@@ -534,8 +535,6 @@ class RachioSchedule(RachioSwitch):
                     SUBTYPE_SCHEDULE_COMPLETED,
                 ]:
                     self._state = False
-        except KeyError:
-            pass
 
         self.async_write_ha_state()
 

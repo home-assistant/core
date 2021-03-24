@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "DirecTV-ontvanger is al geconfigureerd",
+            "already_configured": "Apparaat is al geconfigureerd",
             "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Verbinding mislukt, probeer het opnieuw"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "DirecTV: {name}",
         "step": {
@@ -18,7 +18,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host- of IP-adres"
+                    "host": "Host"
                 }
             }
         }

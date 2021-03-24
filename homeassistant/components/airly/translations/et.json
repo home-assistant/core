@@ -23,8 +23,8 @@
     "system_health": {
         "info": {
             "can_reach_server": "\u00dchendus Airly serveriga",
-            "requests_per_day": "Lubatud taotlusi p\u00e4evas",
-            "requests_remaining": "J\u00e4\u00e4nud lubatud taotlusi"
+            "requests_per_day": "Lubatud p\u00e4ringuid p\u00e4evas",
+            "requests_remaining": "Lubatud p\u00e4ringute arv"
         }
     }
 }

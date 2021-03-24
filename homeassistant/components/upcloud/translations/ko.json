@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "\uc5c5\ub370\uc774\ud2b8 \uac04\uaca9 (\ucd08, \ucd5c\uc19f\uac12 30)"
+                }
+            }
+        }
     }
 }

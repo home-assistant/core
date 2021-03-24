@@ -13,5 +13,6 @@
         "action_type": {
             "notify": "Saada teavitus"
         }
-    }
+    },
+    "title": "Mobiilirakendus"
 }

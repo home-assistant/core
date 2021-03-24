@@ -1,7 +1,8 @@
 """The awair component."""
+from __future__ import annotations
 
 from asyncio import gather
-from typing import Any, Optional
+from typing import Any
 
 from async_timeout import timeout
 from python_awair import Awair
@@ -70,7 +71,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
-    async def _async_update_data(self) -> Optional[Any]:
+    async def _async_update_data(self) -> Any | None:
         """Update data via Awair client library."""
         with timeout(API_TIMEOUT):
             try:

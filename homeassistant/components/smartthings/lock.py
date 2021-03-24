@@ -1,5 +1,7 @@
 """Support for locks through the SmartThings cloud API."""
-from typing import Optional, Sequence
+from __future__ import annotations
+
+from typing import Sequence
 
 from pysmartthings import Attribute, Capability
 
@@ -31,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     """Return all capabilities supported if minimum required are present."""
     if Capability.lock in capabilities:
         return [Capability.lock]

@@ -1,4 +1,5 @@
 """Initialization of ATAG One sensor platform."""
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
@@ -29,7 +30,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([AtagSensor(coordinator, sensor) for sensor in SENSORS])
 
 
-class AtagSensor(AtagEntity):
+class AtagSensor(AtagEntity, SensorEntity):
     """Representation of a AtagOne Sensor."""
 
     def __init__(self, coordinator, sensor):
