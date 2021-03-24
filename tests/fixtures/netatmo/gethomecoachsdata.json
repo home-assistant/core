@@ -1,0 +1,202 @@
+{
+    "body": {
+        "devices": [
+            {
+                "_id": "12:34:56:26:69:0c",
+                "cipher_id": "enc:16:1UqwQlYV5AY2pfyEi5H47dmmFOOL3mCUo+KAkchL4A2CLI5u0e45Xr5jeAswO+XO",
+                "date_setup": 1544560184,
+                "last_setup": 1544560184,
+                "type": "NHC",
+                "last_status_store": 1558268332,
+                "firmware": 45,
+                "last_upgrade": 1544560186,
+                "wifi_status": 58,
+                "reachable": false,
+                "co2_calibrating": false,
+                "station_name": "Bedroom",
+                "data_type": [
+                    "Temperature",
+                    "CO2",
+                    "Humidity",
+                    "Noise",
+                    "Pressure",
+                    "health_idx"
+                ],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin",
+                    "location": [
+                        52.516263,
+                        13.377726
+                    ]
+                }
+            },
+            {
+                "_id": "12:34:56:25:cf:a8",
+                "cipher_id": "enc:16:A+Jm0yFWBwUyKinFDutPZK7I2PuHN1fqaE9oB/KF+McbFs3oN9CKpR/dYbqL4om2",
+                "date_setup": 1544562192,
+                "last_setup": 1544562192,
+                "type": "NHC",
+                "last_status_store": 1559198922,
+                "firmware": 45,
+                "last_upgrade": 1544562194,
+                "wifi_status": 41,
+                "reachable": true,
+                "co2_calibrating": false,
+                "station_name": "Kitchen",
+                "data_type": [
+                    "Temperature",
+                    "CO2",
+                    "Humidity",
+                    "Noise",
+                    "Pressure",
+                    "health_idx"
+                ],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin",
+                    "location": [
+                        52.516263,
+                        13.377726
+                    ]
+                }
+            },
+            {
+                "_id": "12:34:56:26:65:14",
+                "cipher_id": "enc:16:7kK6ZzG4L7NgfZZ6+dMvNxw4l6vXu+88SEJkCUklNdPa4KYIHmsfa1moOilEK61i",
+                "date_setup": 1544564061,
+                "last_setup": 1544564061,
+                "type": "NHC",
+                "last_status_store": 1559067159,
+                "firmware": 45,
+                "last_upgrade": 1544564302,
+                "wifi_status": 66,
+                "reachable": true,
+                "co2_calibrating": false,
+                "station_name": "Livingroom",
+                "data_type": [
+                    "Temperature",
+                    "CO2",
+                    "Humidity",
+                    "Noise",
+                    "Pressure",
+                    "health_idx"
+                ],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin",
+                    "location": [
+                        52.516263,
+                        13.377726
+                    ]
+                }
+            },
+            {
+                "_id": "12:34:56:3e:c5:46",
+                "station_name": "Parents Bedroom",
+                "date_setup": 1570732241,
+                "last_setup": 1570732241,
+                "type": "NHC",
+                "last_status_store": 1572073818,
+                "module_name": "Indoor",
+                "firmware": 45,
+                "wifi_status": 67,
+                "reachable": true,
+                "co2_calibrating": false,
+                "data_type": [
+                    "Temperature",
+                    "CO2",
+                    "Humidity",
+                    "Noise",
+                    "Pressure",
+                    "health_idx"
+                ],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin",
+                    "location": [
+                        52.516263,
+                        13.377726
+                    ]
+                },
+                "dashboard_data": {
+                    "time_utc": 1572073816,
+                    "Temperature": 20.3,
+                    "CO2": 494,
+                    "Humidity": 63,
+                    "Noise": 42,
+                    "Pressure": 1014.5,
+                    "AbsolutePressure": 1004.1,
+                    "health_idx": 1,
+                    "min_temp": 20.3,
+                    "max_temp": 21.6,
+                    "date_max_temp": 1572059333,
+                    "date_min_temp": 1572073816
+                }
+            },
+            {
+                "_id": "12:34:56:26:68:92",
+                "station_name": "Baby Bedroom",
+                "date_setup": 1571342643,
+                "last_setup": 1571342643,
+                "type": "NHC",
+                "last_status_store": 1572073995,
+                "module_name": "Indoor",
+                "firmware": 45,
+                "wifi_status": 68,
+                "reachable": true,
+                "co2_calibrating": false,
+                "data_type": [
+                    "Temperature",
+                    "CO2",
+                    "Humidity",
+                    "Noise",
+                    "Pressure",
+                    "health_idx"
+                ],
+                "place": {
+                    "city": "Frankfurt",
+                    "country": "DE",
+                    "timezone": "Europe/Berlin",
+                    "location": [
+                        52.516263,
+                        13.377726
+                    ]
+                },
+                "dashboard_data": {
+                    "time_utc": 1572073994,
+                    "Temperature": 21.6,
+                    "CO2": 1053,
+                    "Humidity": 66,
+                    "Noise": 45,
+                    "Pressure": 1021.4,
+                    "AbsolutePressure": 1011,
+                    "health_idx": 1,
+                    "min_temp": 20.9,
+                    "max_temp": 21.6,
+                    "date_max_temp": 1572073690,
+                    "date_min_temp": 1572064254
+                }
+            }
+        ],
+        "user": {
+            "mail": "john@doe.com",
+            "administrative": {
+                "lang": "de-DE",
+                "reg_locale": "de-DE",
+                "country": "DE",
+                "unit": 0,
+                "windunit": 0,
+                "pressureunit": 0,
+                "feel_like_algo": 0
+            }
+        }
+    },
+    "status": "ok",
+    "time_exec": 0.095954179763794,
+    "time_server": 1559463229
+}
