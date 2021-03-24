@@ -424,16 +424,20 @@ def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generat
     """Keep track of when setup starts and finishes."""
     hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()
-    unique_components = []
+    unique_components = {}
     for domain in components:
         unique = ensure_unique_string(domain, hass.data[DATA_SETUP_STARTED])
-        unique_components.append(unique)
+        unique_components[unique] = domain
         hass.data[DATA_SETUP_STARTED][unique] = started
 
     yield
 
     hass.data.setdefault(DATA_SETUP_TIME, {})
     time_taken = dt_util.utcnow() - started
-    for domain in unique_components:
-        del hass.data[DATA_SETUP_STARTED][domain]
-        hass.data[DATA_SETUP_TIME][domain] = time_taken
+    for unique, domain in unique_components.items():
+        del hass.data[DATA_SETUP_STARTED][unique]
+        if "." in domain:
+            _, integration = domain.split(".", 1)
+            hass.data[DATA_SETUP_TIME][integration] += time_taken
+        else:
+            hass.data[DATA_SETUP_TIME][domain] += time_taken
