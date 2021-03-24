@@ -2,9 +2,8 @@
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config import async_log_exception, config_without_domain
-from homeassistant.const import CONF_UNIQUE_ID
+from homeassistant.const import CONF_SENSORS, CONF_UNIQUE_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
@@ -19,7 +18,7 @@ TRIGGER_ENTITY_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_TRIGGER): cv.TRIGGER_SCHEMA,
-        vol.Required(SENSOR_DOMAIN): vol.All(cv.ensure_list, [SENSOR_SCHEMA]),
+        vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
     }
 )
 

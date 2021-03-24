@@ -2,8 +2,7 @@
 import logging
 from typing import Optional
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.const import CONF_SENSORS, EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, callback
 from homeassistant.helpers import (
     discovery,
@@ -57,7 +56,7 @@ class TriggerUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
                 self.hass,
                 "sensor",
                 DOMAIN,
-                {"coordinator": self, "entities": self.config[SENSOR_DOMAIN]},
+                {"coordinator": self, "entities": self.config[CONF_SENSORS]},
                 hass_config,
             )
         )

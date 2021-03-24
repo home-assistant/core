@@ -13,8 +13,9 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template, update_coordinator
+from homeassistant.helpers.entity import async_generate_entity_id
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
@@ -23,12 +24,29 @@ from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
 class TriggerEntity(update_coordinator.CoordinatorEntity):
     """Sensor entity based on trigger data."""
 
+    domain = ""
     extra_template_keys: tuple | None = None
 
-    def __init__(self, coordinator: TriggerUpdateCoordinator, config: dict):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        coordinator: TriggerUpdateCoordinator,
+        device_id: str,
+        config: dict,
+    ):
         """Initialize the entity."""
         super().__init__(coordinator)
+
+        self.entity_id = async_generate_entity_id(
+            self.domain + ".{}", device_id, hass=hass
+        )
+
+        self._name = config.get(CONF_FRIENDLY_NAME, device_id)
+
         entity_unique_id = config.get(CONF_UNIQUE_ID)
+
+        if entity_unique_id is None and coordinator.unique_id:
+            entity_unique_id = device_id
 
         if entity_unique_id and coordinator.unique_id:
             self._unique_id = f"{coordinator.unique_id}-{entity_unique_id}"
@@ -63,7 +81,7 @@ class TriggerEntity(update_coordinator.CoordinatorEntity):
             and name is not None
         ):
             return name
-        return self._config.get(CONF_FRIENDLY_NAME)
+        return self._name
 
     @property
     def unique_id(self):

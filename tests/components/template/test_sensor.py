@@ -1002,17 +1002,19 @@ async def test_trigger_entity(hass):
                 {
                     "unique_id": "listening-test-event",
                     "trigger": {"platform": "event", "event_type": "test_event"},
-                    "sensor": {
-                        "friendly_name": "Hello",
-                        "unique_id": "just_a_test",
-                        "device_class": "battery",
-                        "unit_of_measurement": "%",
-                        "value_template": "{{ trigger.event.data.beer }}",
-                        "entity_picture_template": "{{ '/local/dogs.png' }}",
-                        "icon_template": "{{ 'mdi:pirate' }}",
-                        "attribute_templates": {
-                            "plus_one": "{{ trigger.event.data.beer + 1 }}"
-                        },
+                    "sensors": {
+                        "hello": {
+                            "friendly_name": "Hello Name",
+                            "unique_id": "just_a_test",
+                            "device_class": "battery",
+                            "unit_of_measurement": "%",
+                            "value_template": "{{ trigger.event.data.beer }}",
+                            "entity_picture_template": "{{ '/local/dogs.png' }}",
+                            "icon_template": "{{ 'mdi:pirate' }}",
+                            "attribute_templates": {
+                                "plus_one": "{{ trigger.event.data.beer + 1 }}"
+                            },
+                        }
                     },
                 },
             ],
@@ -1050,10 +1052,12 @@ async def test_trigger_entity_render_error(hass):
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "sensor": {
-                    "unique_id": "no-base-id",
-                    "friendly_name": "Hello",
-                    "value_template": "{{ non_existing + 1 }}",
+                "sensors": {
+                    "hello": {
+                        "unique_id": "no-base-id",
+                        "friendly_name": "Hello",
+                        "value_template": "{{ non_existing + 1 }}",
+                    }
                 },
             },
         },
