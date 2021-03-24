@@ -37,7 +37,6 @@ async def test_light_setup_and_services(hass, light_entry):
 
     # Trigger light mode change with erroneous webhook data
     response = {
-        "user_id": "91763b24c43d3e344f424e8d",
         "event_type": "light_mode",
         "device_id": "12:34:56:00:a5:a4",
     }
