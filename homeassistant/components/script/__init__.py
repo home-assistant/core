@@ -36,7 +36,10 @@ from homeassistant.helpers.script import (
     make_script_schema,
 )
 from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.helpers.trace import trace_get, trace_path
 from homeassistant.loader import bind_hass
+
+from .trace import trace_script
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,7 +224,7 @@ async def _async_process_config(hass, config, component):
         )
 
     script_entities = [
-        ScriptEntity(hass, object_id, cfg)
+        ScriptEntity(hass, object_id, cfg, cfg.raw_config)
         for object_id, cfg in config.get(DOMAIN, {}).items()
     ]
 
@@ -253,7 +256,7 @@ class ScriptEntity(ToggleEntity):
 
     icon = None
 
-    def __init__(self, hass, object_id, cfg):
+    def __init__(self, hass, object_id, cfg, raw_config):
         """Initialize the script."""
         self.object_id = object_id
         self.icon = cfg.get(CONF_ICON)
@@ -272,6 +275,7 @@ class ScriptEntity(ToggleEntity):
             variables=cfg.get(CONF_VARIABLES),
         )
         self._changed = asyncio.Event()
+        self._raw_config = raw_config
 
     @property
     def should_poll(self):
@@ -323,7 +327,7 @@ class ScriptEntity(ToggleEntity):
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        coro = self.script.async_run(variables, context)
+        coro = self._async_run(variables, context)
         if wait:
             await coro
             return
@@ -334,6 +338,16 @@ class ScriptEntity(ToggleEntity):
         self._changed.clear()
         self.hass.async_create_task(coro)
         await self._changed.wait()
+
+    async def _async_run(self, variables, context):
+        with trace_script(
+            self.hass, self.object_id, self._raw_config, context
+        ) as script_trace:
+            script_trace.set_variables(variables)
+            # Prepare tracing the execution of the script's sequence
+            script_trace.set_action_trace(trace_get())
+            with trace_path("sequence"):
+                return await self.script.async_run(variables, context)
 
     async def async_turn_off(self, **kwargs):
         """Stop running the script.

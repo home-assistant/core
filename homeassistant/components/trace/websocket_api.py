@@ -28,7 +28,7 @@ from .utils import TraceJSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-TRACE_DOMAINS = ["automation"]
+TRACE_DOMAINS = ["automation", "script"]
 
 
 @callback
