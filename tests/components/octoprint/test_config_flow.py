@@ -19,25 +19,22 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert not result["errors"]
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "username": "testuser",
-            "host": "1.1.1.1",
-            "name": "Printer",
-            "port": 81,
-            "ssl": True,
-            "path": "/",
-        },
-    )
-    assert result["type"] == "progress"
-
     with patch(
         "pyoctoprintapi.OctoprintClient.request_app_key", return_value="test-key"
     ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+            },
+        )
         await hass.async_block_till_done()
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",

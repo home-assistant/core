@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.api_key_task = None
         return await self.async_step_get_api_key(user_input)
 
-    async def async_step_get_api_key(self, user_input=None):
+    async def async_step_get_api_key(self, user_input):
         """Get an Application Api Key."""
         if not self.api_key_task:
             self.api_key_task = self.hass.async_create_task(
@@ -105,8 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_progress_done(next_step_id="auth_failed")
 
         # store this off here to pick back up in the user step
-        if user_input:
-            self._user_input = user_input
+        self._user_input = user_input
         return self.async_show_progress_done(next_step_id="user")
 
     async def _finish_config(self, user_input):
