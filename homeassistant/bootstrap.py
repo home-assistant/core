@@ -440,7 +440,7 @@ async def _async_set_up_integrations(
 ) -> None:
     """Set up all the integrations."""
     hass.data[DATA_SETUP_STARTED] = {}
-    hass.data[DATA_SETUP_TIME] = {}
+    setup_time = hass.data[DATA_SETUP_TIME] = {}
 
     domains_to_setup = _get_domains(hass, config)
 
@@ -562,3 +562,5 @@ async def _async_set_up_integrations(
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+
+    _LOGGER.debug("Setup times: %s", setup_time)
