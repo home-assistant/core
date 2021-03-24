@@ -71,7 +71,7 @@ trace_path_stack_cv: ContextVar[list[str] | None] = ContextVar(
 )
 # Copy of last variables
 variables_cv: ContextVar[Any | None] = ContextVar("variables_cv", default=None)
-# Automation ID + Run ID
+# (domain, item_id) + Run ID
 trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "trace_id_cv", default=None
 )
