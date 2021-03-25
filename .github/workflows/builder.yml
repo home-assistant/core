@@ -190,7 +190,8 @@ jobs:
       - name: Update version file
         uses: home-assistant/actions/helpers/version-push@master
         with:
-          key: ${{ env.BUILD_NAME }}
+          key: "homeassistant[]"
+          key-description: "Home Assistant Core"
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
 
