@@ -20,30 +20,30 @@ jobs:
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-      uses: actions/setup-python@v2.2.1
-      with:
-        python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v2.2.1
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
 
-    - name: Get information
-      id: info
-      uses: home-assistant/actions/helpers/info@master
+      - name: Get information
+        id: info
+        uses: home-assistant/actions/helpers/info@master
 
-    - name: Get version
-      id: version
-      uses: home-assistant/actions/helpers/version@master
-      with:
-        type: ${{ env.BUILD_TYPE }}
+      - name: Get version
+        id: version
+        uses: home-assistant/actions/helpers/version@master
+        with:
+          type: ${{ env.BUILD_TYPE }}
 
-    - name: Verify version
-      uses: home-assistant/actions/helpers/verify-version@master
-      with:
-        ignore-dev: true
+      - name: Verify version
+        uses: home-assistant/actions/helpers/verify-version@master
+        with:
+          ignore-dev: true
 
   build_python:
     name: Build PIPY package
