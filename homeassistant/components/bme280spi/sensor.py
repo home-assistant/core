@@ -79,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config[CONF_NAME]
     spi_dev = config[CONF_SPI_DEV]
     spi_bus = config[CONF_SPI_BUS]
-    _LOGGER.info(f"BME280 sensor initialize at {spi_bus}-{spi_dev}")
+    _LOGGER.info("BME280 sensor initialize at %s.%s", spi_bus, spi_dev)
     sensor = await hass.async_add_executor_job(
         partial(
             BME280,
@@ -93,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
     )
     if not sensor.sample_ok:
-        _LOGGER.error(f"BME280 sensor not detected at {spi_bus}-{spi_dev}")
+        _LOGGER.error("BME280 sensor not detected at %s.%s", spi_bus, spi_dev)
         return False
 
     sensor_handler = await hass.async_add_executor_job(BME280Handler, sensor)
