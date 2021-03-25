@@ -86,6 +86,7 @@ async def test_user_flow_show_form(hass):
     assert result["step_id"] == "user"
 
 
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[]))
 async def test_user_flow_show_manual(hass):
     """Test user flow manual entry when no comport detected."""
     result = await hass.config_entries.flow.async_init(
