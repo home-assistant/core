@@ -67,5 +67,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
         )
         self.discovered_ip = dhcp_discovery[IP_ADDRESS]
-        self.context["title_placeholders"] = {"name": f"Emonitor {mac_address[-6:]}"}
+        self.context["title_placeholders"] = {
+            "name": f"Emonitor {short_mac(mac_address)}"
+        }
         return await self.async_step_user()
+
+
+def short_mac(mac):
+    """Short version of the mac."""
+    return "-".join(mac.split(":")[3:]).upper()
