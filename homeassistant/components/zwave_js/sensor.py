@@ -80,10 +80,15 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         """Initialize a ZWaveSensorBase entity."""
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(include_value_name=True)
+        self._device_class = self._get_device_class()
 
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
+    def _get_device_class(self) -> str | None:
+        """
+        Get the device class of the sensor.
+
+        This should be run once during initialization so we don't have to calculate
+        this value on every state update.
+        """
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
@@ -101,6 +106,11 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
         if self.info.primary_value.metadata.unit == "Lux":
             return DEVICE_CLASS_ILLUMINANCE
         return None
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def entity_registry_enabled_default(self) -> bool:
