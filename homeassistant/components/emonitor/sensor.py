@@ -102,5 +102,6 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return {
             "name": f"Emonitor {self.mac_address[-6:]}",
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            "manufacturer": "Powerhouse Dynamics, Inc.",
             "sw_version": self.coordinator.data.hardware.firmware_version,
         }
