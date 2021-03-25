@@ -4,11 +4,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .analytics import Analytics
-from .const import ATTR_HUUID, ATTR_PREFERENCES, DOMAIN, INTERVAL
+from .const import ATTR_HUUID, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 
 
 async def async_setup(hass: HomeAssistant, _):
@@ -57,7 +56,7 @@ async def websocket_analytics(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "analytics/preferences",
-        vol.Required("preferences"): cv.ensure_list,
+        vol.Required("preferences", default={}): PREFERENCE_SCHEMA,
     }
 )
 async def websocket_analytics_preferences(

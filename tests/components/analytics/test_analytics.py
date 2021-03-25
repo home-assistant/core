@@ -1,13 +1,16 @@
 """The tests for the analytics ."""
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
+    ATTR_BASE,
+    ATTR_DIAGNOSTICS,
     ATTR_PREFERENCES,
-    AnalyticsPreference,
+    ATTR_STATISTICS,
+    ATTR_USAGE,
 )
 from homeassistant.const import __version__ as HA_VERSION
 
@@ -18,11 +21,15 @@ async def test_no_send(hass, caplog, aioclient_mock):
     """Test send when no prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    await analytics.load()
-    assert analytics.preferences == []
+    with patch(
+        "homeassistant.components.hassio.is_hassio",
+        side_effect=Mock(return_value=False),
+    ), patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
+        await analytics.load()
+        assert not analytics.preferences[ATTR_BASE]
 
-    with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()
+
     assert "Nothing to submit" in caplog.text
     assert len(aioclient_mock.mock_calls) == 0
 
@@ -30,43 +37,43 @@ async def test_no_send(hass, caplog, aioclient_mock):
 async def test_load_with_supervisor_diagnostics(hass):
     """Test loading with a supervisor that has diagnostics enabled."""
     analytics = Analytics(hass)
-    assert AnalyticsPreference.DIAGNOSTICS not in analytics.preferences
+    assert not analytics.preferences[ATTR_DIAGNOSTICS]
     with patch(
         "homeassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(return_value={"diagnostics": True}),
     ), patch(
-        "homeassistant.components.analytics.analytics.Analytics.supervisor",
-        PropertyMock(return_value=True),
+        "homeassistant.components.hassio.is_hassio",
+        side_effect=Mock(return_value=True),
     ):
         await analytics.load()
-    assert AnalyticsPreference.DIAGNOSTICS in analytics.preferences
+    assert analytics.preferences[ATTR_DIAGNOSTICS]
 
 
 async def test_load_with_supervisor_without_diagnostics(hass):
     """Test loading with a supervisor that has not diagnostics enabled."""
     analytics = Analytics(hass)
-    analytics._data[ATTR_PREFERENCES] = [AnalyticsPreference.DIAGNOSTICS]
+    analytics._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = True
 
-    assert AnalyticsPreference.DIAGNOSTICS in analytics.preferences
+    assert analytics.preferences[ATTR_DIAGNOSTICS]
 
     with patch(
         "homeassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(return_value={"diagnostics": False}),
     ), patch(
-        "homeassistant.components.analytics.analytics.Analytics.supervisor",
-        PropertyMock(return_value=True),
+        "homeassistant.components.hassio.is_hassio",
+        side_effect=Mock(return_value=True),
     ):
         await analytics.load()
 
-    assert AnalyticsPreference.DIAGNOSTICS not in analytics.preferences
+    assert not analytics.preferences[ATTR_DIAGNOSTICS]
 
 
 async def test_failed_to_send(hass, caplog, aioclient_mock):
     """Test failed to send payload."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=400)
     analytics = Analytics(hass)
-    await analytics.save_preferences([AnalyticsPreference.BASE])
-    assert analytics.preferences == ["base"]
+    await analytics.save_preferences({ATTR_BASE: True})
+    assert analytics.preferences[ATTR_BASE]
 
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()
@@ -77,8 +84,8 @@ async def test_failed_to_send_raises(hass, caplog, aioclient_mock):
     """Test raises when failed to send payload."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, exc=aiohttp.ClientError())
     analytics = Analytics(hass)
-    await analytics.save_preferences([AnalyticsPreference.BASE])
-    assert analytics.preferences == ["base"]
+    await analytics.save_preferences({ATTR_BASE: True})
+    assert analytics.preferences[ATTR_BASE]
 
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()
@@ -89,8 +96,8 @@ async def test_send_base(hass, caplog, aioclient_mock):
     """Test send base prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    await analytics.save_preferences([AnalyticsPreference.BASE])
-    assert analytics.preferences == ["base"]
+    await analytics.save_preferences({ATTR_BASE: True})
+    assert analytics.preferences[ATTR_BASE]
 
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()
@@ -106,15 +113,21 @@ async def test_send_base_with_supervisor(hass, caplog, aioclient_mock):
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
 
     analytics = Analytics(hass)
-    await analytics.save_preferences([AnalyticsPreference.BASE])
-    assert analytics.preferences == ["base"]
+    await analytics.save_preferences({ATTR_BASE: True})
+    assert analytics.preferences[ATTR_BASE]
 
     with patch(
         "homeassistant.components.hassio.get_supervisor_info",
         side_effect=Mock(return_value={"supported": True, "healthy": True}),
     ), patch(
-        "homeassistant.components.analytics.analytics.Analytics.supervisor",
-        PropertyMock(return_value=True),
+        "homeassistant.components.hassio.get_info",
+        side_effect=Mock(return_value={}),
+    ), patch(
+        "homeassistant.components.hassio.get_host_info",
+        side_effect=Mock(return_value={}),
+    ), patch(
+        "homeassistant.components.hassio.is_hassio",
+        side_effect=Mock(return_value=True),
     ), patch(
         "homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID
     ):
@@ -131,11 +144,10 @@ async def test_send_usage(hass, caplog, aioclient_mock):
     """Test send usage prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    await analytics.save_preferences(
-        [AnalyticsPreference.BASE, AnalyticsPreference.USAGE]
-    )
-    assert analytics.preferences == ["base", "usage"]
-    hass.config.components = ["default_config", "api"]
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_USAGE]
+    hass.config.components = ["default_config"]
 
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
         await analytics.send_analytics()
@@ -148,10 +160,9 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
 
     analytics = Analytics(hass)
-    await analytics.save_preferences(
-        [AnalyticsPreference.BASE, AnalyticsPreference.USAGE]
-    )
-    assert analytics.preferences == ["base", "usage"]
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_USAGE]
     hass.config.components = ["default_config"]
 
     with patch(
@@ -164,6 +175,12 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
+        "homeassistant.components.hassio.get_info",
+        side_effect=Mock(return_value={}),
+    ), patch(
+        "homeassistant.components.hassio.get_host_info",
+        side_effect=Mock(return_value={}),
+    ), patch(
         "homeassistant.components.hassio.async_get_addon_info",
         side_effect=AsyncMock(
             return_value={
@@ -174,8 +191,8 @@ async def test_send_usage_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
-        "homeassistant.components.analytics.analytics.Analytics.supervisor",
-        PropertyMock(return_value=True),
+        "homeassistant.components.hassio.is_hassio",
+        side_effect=Mock(return_value=True),
     ), patch(
         "homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID
     ):
@@ -191,10 +208,9 @@ async def test_send_statistics(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    await analytics.save_preferences(
-        [AnalyticsPreference.BASE, AnalyticsPreference.STATISTICS]
-    )
-    assert analytics.preferences == ["base", "statistics"]
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
     hass.config.components = ["default_config"]
 
     with patch("homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID):
@@ -210,10 +226,9 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
     """Test send statistics prefrences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
-    await analytics.save_preferences(
-        [AnalyticsPreference.BASE, AnalyticsPreference.STATISTICS]
-    )
-    assert analytics.preferences == ["base", "statistics"]
+    await analytics.save_preferences({ATTR_BASE: True, ATTR_STATISTICS: True})
+    assert analytics.preferences[ATTR_BASE]
+    assert analytics.preferences[ATTR_STATISTICS]
 
     with patch(
         "homeassistant.components.hassio.get_supervisor_info",
@@ -225,6 +240,12 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
+        "homeassistant.components.hassio.get_info",
+        side_effect=Mock(return_value={}),
+    ), patch(
+        "homeassistant.components.hassio.get_host_info",
+        side_effect=Mock(return_value={}),
+    ), patch(
         "homeassistant.components.hassio.async_get_addon_info",
         side_effect=AsyncMock(
             return_value={
@@ -235,8 +256,8 @@ async def test_send_statistics_with_supervisor(hass, caplog, aioclient_mock):
             }
         ),
     ), patch(
-        "homeassistant.components.analytics.analytics.Analytics.supervisor",
-        PropertyMock(return_value=True),
+        "homeassistant.components.hassio.is_hassio",
+        side_effect=Mock(return_value=True),
     ), patch(
         "homeassistant.helpers.instance_id.async_get", return_value=MOCK_HUUID
     ):

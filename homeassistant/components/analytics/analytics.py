@@ -1,6 +1,5 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
-from typing import List
 
 import aiohttp
 import async_timeout
@@ -21,6 +20,7 @@ from .const import (
     ATTR_ADDONS,
     ATTR_AUTO_UPDATE,
     ATTR_AUTOMATION_COUNT,
+    ATTR_BASE,
     ATTR_DIAGNOSTICS,
     ATTR_HEALTHY,
     ATTR_HUUID,
@@ -31,15 +31,16 @@ from .const import (
     ATTR_PROTECTED,
     ATTR_SLUG,
     ATTR_STATE_COUNT,
+    ATTR_STATISTICS,
     ATTR_SUPERVISOR,
     ATTR_SUPPORTED,
+    ATTR_USAGE,
     ATTR_USER_COUNT,
     ATTR_VERSION,
-    INGORED_DOMAINS,
     LOGGER,
+    PREFERENCE_SCHEMA,
     STORAGE_KEY,
     STORAGE_VERSION,
-    AnalyticsPreference,
 )
 
 
@@ -50,58 +51,66 @@ class Analytics:
         """Initialize the Analytics class."""
         self.hass: HomeAssistant = hass
         self.session = async_get_clientsession(hass)
-        self._data = {}
+        self._data = {ATTR_PREFERENCES: {}, ATTR_ONBOARDED: False}
         self._store: Store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @property
-    def preferences(self) -> List[AnalyticsPreference]:
+    def preferences(self) -> dict:
         """Return the current active preferences."""
-        return self._data.get(ATTR_PREFERENCES, [])
+        preferences = self._data[ATTR_PREFERENCES]
+        return {
+            ATTR_BASE: preferences.get(ATTR_BASE, False),
+            ATTR_DIAGNOSTICS: preferences.get(ATTR_DIAGNOSTICS, False),
+            ATTR_USAGE: preferences.get(ATTR_USAGE, False),
+            ATTR_STATISTICS: preferences.get(ATTR_STATISTICS, False),
+        }
 
     @property
     def onboarded(self) -> bool:
         """Return bool if the user has made a choice."""
-        return self._data.get(ATTR_ONBOARDED, False)
+        return self._data[ATTR_ONBOARDED]
 
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return hassio.DOMAIN in self.hass.data
+        return hassio.is_hassio(self.hass)
 
     async def load(self) -> None:
         """Load preferences."""
-        self._data = await self._store.async_load() or {}
+        stored = await self._store.async_load()
+        if stored:
+            self._data = stored
         if self.supervisor:
             supervisor_info = hassio.get_supervisor_info(self.hass)
             if not self.onboarded:
                 # User have not configured analytics, get this setting from the supervisor
-                if (
-                    supervisor_info[ATTR_DIAGNOSTICS]
-                    and AnalyticsPreference.DIAGNOSTICS not in self.preferences
+                if supervisor_info[ATTR_DIAGNOSTICS] and not self.preferences.get(
+                    ATTR_DIAGNOSTICS, False
                 ):
-                    self._data.setdefault(ATTR_PREFERENCES, []).append(ATTR_DIAGNOSTICS)
-                elif (
-                    not supervisor_info[ATTR_DIAGNOSTICS]
-                    and AnalyticsPreference.DIAGNOSTICS in self.preferences
+                    self._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = True
+                elif not supervisor_info[ATTR_DIAGNOSTICS] and self.preferences.get(
+                    ATTR_DIAGNOSTICS, False
                 ):
-                    self._data.setdefault(ATTR_PREFERENCES, []).remove(ATTR_DIAGNOSTICS)
+                    self._data[ATTR_PREFERENCES][ATTR_DIAGNOSTICS] = False
 
-    async def save_preferences(self, preferences: List[AnalyticsPreference]) -> None:
+    async def save_preferences(self, preferences: dict) -> None:
         """Save preferences."""
-        self._data[ATTR_PREFERENCES] = preferences
+        preferences = PREFERENCE_SCHEMA(preferences)
+        for key in preferences:
+            self._data[ATTR_PREFERENCES][key] = preferences[key]
         self._data[ATTR_ONBOARDED] = True
         await self._store.async_save(self._data)
 
         if self.supervisor:
             await hassio.async_update_diagnostics(
-                self.hass, AnalyticsPreference.DIAGNOSTICS in self.preferences
+                self.hass, self.preferences.get(ATTR_DIAGNOSTICS, False)
             )
 
     async def send_analytics(self, _=None) -> None:
         """Send analytics."""
         supervisor_info = None
 
-        if not self.onboarded or AnalyticsPreference.BASE not in self.preferences:
+        if not self.onboarded or not self.preferences.get(ATTR_BASE, False):
             LOGGER.debug("Nothing to submit")
             return
 
@@ -125,9 +134,8 @@ class Analytics:
                 ATTR_SUPPORTED: supervisor_info[ATTR_SUPPORTED],
             }
 
-        if (
-            AnalyticsPreference.USAGE in self.preferences
-            or AnalyticsPreference.STATISTICS in self.preferences
+        if self.preferences.get(ATTR_USAGE, False) or self.preferences.get(
+            ATTR_STATISTICS, False
         ):
             configured_integrations = await asyncio.gather(
                 *[
@@ -139,11 +147,7 @@ class Analytics:
             )
 
             for integration in configured_integrations:
-                if (
-                    integration.disabled
-                    or integration.domain in INGORED_DOMAINS
-                    or not integration.is_built_in
-                ):
+                if integration.disabled or not integration.is_built_in:
                     continue
 
                 integrations.append(integration.domain)
@@ -165,12 +169,12 @@ class Analytics:
                         }
                     )
 
-        if AnalyticsPreference.USAGE in self.preferences:
+        if self.preferences.get(ATTR_USAGE, False):
             payload[ATTR_INTEGRATIONS] = integrations
             if supervisor_info is not None:
                 payload[ATTR_ADDONS] = addons
 
-        if AnalyticsPreference.STATISTICS in self.preferences:
+        if self.preferences.get(ATTR_STATISTICS, False):
             payload[ATTR_STATE_COUNT] = len(self.hass.states.async_all())
             payload[ATTR_AUTOMATION_COUNT] = len(
                 self.hass.states.async_all(AUTOMATION_DOMAIN)

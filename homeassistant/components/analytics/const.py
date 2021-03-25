@@ -1,7 +1,8 @@
 """Constants for the analytics integration."""
 from datetime import timedelta
-from enum import Enum
 import logging
+
+import voluptuous as vol
 
 ANALYTICS_ENDPOINT_URL = "https://analytics-api.home-assistant.io"
 DOMAIN = "analytics"
@@ -14,8 +15,9 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 
 ATTR_ADDON_COUNT = "addon_count"
 ATTR_ADDONS = "addons"
-ATTR_AUTOMATION_COUNT = "automation_count"
 ATTR_AUTO_UPDATE = "auto_update"
+ATTR_AUTOMATION_COUNT = "automation_count"
+ATTR_BASE = "base"
 ATTR_DIAGNOSTICS = "diagnostics"
 ATTR_HEALTHY = "healthy"
 ATTR_HUUID = "huuid"
@@ -27,62 +29,19 @@ ATTR_PREFERENCES = "preferences"
 ATTR_PROTECTED = "protected"
 ATTR_SLUG = "slug"
 ATTR_STATE_COUNT = "state_count"
+ATTR_STATISTICS = "statistics"
 ATTR_SUPERVISOR = "supervisor"
 ATTR_SUPPORTED = "supported"
+ATTR_USAGE = "usage"
 ATTR_USER_COUNT = "user_count"
 ATTR_VERSION = "version"
 
 
-class AnalyticsPreference(str, Enum):
-    """Analytics prefrences."""
-
-    BASE = "base"
-    DIAGNOSTICS = "diagnostics"
-    STATISTICS = "statistics"
-    USAGE = "usage"
-
-
-INGORED_DOMAINS = [
-    "air_quality",
-    "alarm_control_panel",
-    "analytics",
-    "api",
-    "auth",
-    "binary_sensor",
-    "calendar",
-    "camera",
-    "climate",
-    "config",
-    "conversation",
-    "cover",
-    "demo",
-    "device_automation",
-    "device_tracker",
-    "fan",
-    "hassio",
-    "homeassistant",
-    "http",
-    "humidifier",
-    "image_processing",
-    "image",
-    "light",
-    "lock",
-    "logger",
-    "lovelace",
-    "media_player",
-    "notify",
-    "number",
-    "onboarding",
-    "persistent_notification",
-    "recorder",
-    "search",
-    "sensor",
-    "stt",
-    "switch",
-    "system_log",
-    "tts",
-    "vacuum",
-    "water_heater",
-    "weather",
-    "websocket_api",
-]
+PREFERENCE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_BASE): bool,
+        vol.Optional(ATTR_DIAGNOSTICS): bool,
+        vol.Optional(ATTR_STATISTICS): bool,
+        vol.Optional(ATTR_USAGE): bool,
+    }
+)
