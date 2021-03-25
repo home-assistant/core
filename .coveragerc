@@ -221,6 +221,7 @@ omit =
     homeassistant/components/ecobee/weather.py
     homeassistant/components/econet/__init__.py
     homeassistant/components/econet/binary_sensor.py
+    homeassistant/components/econet/climate.py
     homeassistant/components/econet/const.py
     homeassistant/components/econet/sensor.py
     homeassistant/components/econet/water_heater.py
