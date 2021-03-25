@@ -373,6 +373,7 @@ class MqttFan(MqttEntity, FanEntity):
                     msg.topic,
                 )
                 return
+            self._percentage = percentage
             self.async_write_ha_state()
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
