@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Timeout generating authorize URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "single_instance_allowed": "Integration is already being configured in another instance. Only one is allowed at any one time.",
+            "oauth_error": "Error in the authentication flow."
+        },
+        "create_entry": {
+            "default": "Successfully authenticated"
+        }
+    },
+    "title": "Legrand Home+ Control"
+}
