@@ -240,8 +240,6 @@ class MqttFan(MqttEntity, FanEntity):
                 CONF_PERCENTAGE_COMMAND_TOPIC,
                 CONF_PRESET_MODE_STATE_TOPIC,
                 CONF_PRESET_MODE_COMMAND_TOPIC,
-                # CONF_SPEED_STATE_TOPIC and CONF_SPEED_STATE_TOPIC are deprecated in the schema,
-                # support will be removed after a quarter (2021.7)
                 CONF_SPEED_STATE_TOPIC,
                 CONF_SPEED_COMMAND_TOPIC,
                 CONF_OSCILLATION_STATE_TOPIC,
