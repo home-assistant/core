@@ -75,3 +75,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+def name_short_mac(short_mac):
+    """Name from short mac."""
+    return f"Emonitor {short_mac}"
