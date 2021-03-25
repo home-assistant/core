@@ -1,0 +1,7 @@
+{
+  "domain": "bme280spi",
+  "name": "BME280 sensor using spi",
+  "documentation": "",
+  "requirements": ["bme280spi==0.2.0"],
+  "codeowners": []
+}
