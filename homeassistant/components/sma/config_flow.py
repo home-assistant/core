@@ -143,15 +143,24 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_info = await validate_input(self.hass, import_config)
         config_entry_unique_id = device_info["serial"]
 
+        config_sensors = list(
+            set(import_config[CONF_SENSORS] + list(import_config[CONF_CUSTOM]))
+        )
+
+        # find and replace sensors removed from pysma
+        for sensor in import_config[CONF_SENSORS].copy():
+            if sensor in pysma.LEGACY_MAP:
+                import_config[CONF_SENSORS].remove(sensor)
+                import_config[CONF_SENSORS].append(
+                    pysma.LEGACY_MAP[sensor]["new_sensor"]
+                )
+
         await self.async_set_unique_id(config_entry_unique_id)
         self._abort_if_unique_id_configured(import_config)
 
         import_config[DEVICE_INFO] = device_info
 
         entity_registry = await er.async_get_registry(self.hass)
-        config_sensors = list(
-            set(import_config[CONF_SENSORS] + list(import_config[CONF_CUSTOM]))
-        )
         # Init all default sensors
         sensor_def = pysma.Sensors()
 
@@ -167,13 +176,20 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Find entity_id using previous format of unique ID and change to new unique ID
         for sensor in config_sensors:
-            try:
+            if sensor in sensor_def:
                 pysma_sensor = sensor_def[sensor]
-            except KeyError:
+                original_key = pysma_sensor.key
+            elif sensor in pysma.LEGACY_MAP:
+                # is sensor was removed from pysma we will remap it to the new sensor
+                legacy_sensor = pysma.LEGACY_MAP[sensor]
+                pysma_sensor = sensor_def[legacy_sensor["new_sensor"]]
+                original_key = legacy_sensor["old_key"]
+            else:
+                _LOGGER.error(f"{sensor} does not exist")
                 continue
 
             entity_id = entity_registry.async_get_entity_id(
-                "sensor", "sma", f"sma-{pysma_sensor.key}-{sensor}"
+                "sensor", "sma", f"sma-{original_key}-{sensor}"
             )
             if entity_id:
                 new_unique_id = f"{config_entry_unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"

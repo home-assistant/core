@@ -45,7 +45,7 @@ def _check_sensor_schema(conf):
     """Check sensors and attributes are valid."""
     try:
         valid = [s.name for s in pysma.Sensors()]
-        valid += [alias for s in pysma.Sensors() for alias in s.aliases]
+        valid += pysma.LEGACY_MAP.keys()
     except (ImportError, AttributeError):
         return conf
 
