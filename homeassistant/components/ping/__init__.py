@@ -41,7 +41,7 @@ def async_get_next_ping_id(hass):
 def can_use_icmp_lib_with_privilege() -> None | bool:
     """Verify we can create a raw socket."""
     try:
-        icmp_ping("127.0.0.1", count=0, timeout=0)
+        icmp_ping("127.0.0.1", count=0, timeout=0, privileged=True)
     except SocketPermissionError:
         try:
             icmp_ping("127.0.0.1", count=0, timeout=0, privileged=False)
