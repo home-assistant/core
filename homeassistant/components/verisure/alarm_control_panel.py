@@ -113,7 +113,7 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
             self.coordinator.data["alarm"]["statusType"]
         )
         self._changed_by = self.coordinator.data["alarm"]["name"]
-        super().async_write_ha_state()
+        super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
