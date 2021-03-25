@@ -42,6 +42,11 @@ DHCP = [
         "macaddress": "B85F98*"
     },
     {
+        "domain": "emonitor",
+        "hostname": "emonitor*",
+        "macaddress": "0090C2*"
+    },
+    {
         "domain": "flume",
         "hostname": "flume-gw-*",
         "macaddress": "ECFABC*"
