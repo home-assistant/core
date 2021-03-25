@@ -1049,11 +1049,13 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         }
 
     @callback
-    def _async_in_progress(self) -> list[dict]:
+    def _async_in_progress(self, include_uninitialized: bool = False) -> list[dict]:
         """Return other in progress flows for current domain."""
         return [
             flw
-            for flw in self.hass.config_entries.flow.async_progress()
+            for flw in self.hass.config_entries.flow.async_progress(
+                include_uninitialized=include_uninitialized
+            )
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
 
@@ -1093,7 +1095,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self._abort_if_unique_id_configured()
 
         # Abort if any other flow for this handler is already in progress
-        if self._async_in_progress():
+        if self._async_in_progress(include_uninitialized=True):
             raise data_entry_flow.AbortFlow("already_in_progress")
 
     async def async_step_discovery(

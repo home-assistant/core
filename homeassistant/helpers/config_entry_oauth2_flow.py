@@ -245,8 +245,10 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         if not implementations:
             return self.async_abort(reason="missing_configuration")
 
-        if len(implementations) == 1:
-            # Pick first implementation as we have only one.
+        req = http.current_request.get()
+        if len(implementations) == 1 and req is not None:
+            # Pick first implementation if we have only one, but only
+            # if this is triggered by a user interaction (request).
             self.flow_impl = list(implementations.values())[0]
             return await self.async_step_auth()
 
@@ -313,23 +315,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
-    async def async_step_discovery(
-        self, discovery_info: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Handle a flow initialized by discovery."""
-        await self.async_set_unique_id(self.DOMAIN)
-
-        if self.hass.config_entries.async_entries(self.DOMAIN):
-            return self.async_abort(reason="already_configured")
-
-        return await self.async_step_pick_implementation()
-
     async_step_user = async_step_pick_implementation
-    async_step_mqtt = async_step_discovery
-    async_step_ssdp = async_step_discovery
-    async_step_zeroconf = async_step_discovery
-    async_step_homekit = async_step_discovery
-    async_step_dhcp = async_step_discovery
 
     @classmethod
     def async_register_implementation(

@@ -113,7 +113,9 @@ async def test_abort_if_no_implementation(hass, flow_handler):
     assert result["reason"] == "missing_configuration"
 
 
-async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
+async def test_abort_if_authorization_timeout(
+    hass, flow_handler, local_impl, current_request_with_host
+):
     """Check timeout generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
 
@@ -129,7 +131,9 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
     assert result["reason"] == "authorize_url_timeout"
 
 
-async def test_abort_if_no_url_available(hass, flow_handler, local_impl):
+async def test_abort_if_no_url_available(
+    hass, flow_handler, local_impl, current_request_with_host
+):
     """Check no_url_available generating authorization url."""
     flow_handler.async_register_implementation(hass, local_impl)
 

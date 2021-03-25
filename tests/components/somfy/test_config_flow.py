@@ -123,7 +123,9 @@ async def test_full_flow(
     assert entry.state == config_entries.ENTRY_STATE_NOT_LOADED
 
 
-async def test_abort_if_authorization_timeout(hass, mock_impl):
+async def test_abort_if_authorization_timeout(
+    hass, mock_impl, current_request_with_host
+):
     """Check Somfy authorization timeout."""
     flow = config_flow.SomfyFlowHandler()
     flow.hass = hass
