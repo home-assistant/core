@@ -1,4 +1,5 @@
 """The tests for Netatmo camera."""
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components import camera
@@ -9,8 +10,11 @@ from homeassistant.components.netatmo.const import (
     SERVICE_SET_PERSONS_HOME,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.util import dt
 
-from .common import simulate_webhook
+from .common import fake_post_request, simulate_webhook
+
+from tests.common import async_fire_time_changed
 
 
 async def test_setup_component_with_webhook(hass, camera_entry):
@@ -205,3 +209,47 @@ async def test_service_set_camera_light(hass, camera_entry):
             camera_id="12:34:56:00:a5:a4",
             floodlight="on",
         )
+
+
+async def test_camera_reconnect_webhook(hass, config_entry):
+    """Test webhook event on camera reconnect."""
+    with patch(
+        "homeassistant.components.netatmo.api.ConfigEntryNetatmoAuth.post_request"
+    ) as mock_post, patch(
+        "homeassistant.components.netatmo.PLATFORMS", ["camera"]
+    ), patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ), patch(
+        "homeassistant.components.webhook.async_generate_url"
+    ) as mock_webhook:
+        mock_post.side_effect = fake_post_request
+        mock_webhook.return_value = "https://example.com"
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+        # Fake webhook activation
+        response = {
+            "push_type": "webhook_activation",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
+
+        mock_post.assert_called()
+        mock_post.reset_mock()
+
+        # Fake camera reconnect
+        response = {
+            "push_type": "NACamera-connection",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(seconds=60),
+        )
+        await hass.async_block_till_done()
+        mock_post.assert_called()
