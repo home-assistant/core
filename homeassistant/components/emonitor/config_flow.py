@@ -71,7 +71,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.discovered_info = await fetch_mac_and_title(
                 self.hass, self.discovered_ip
             )
-        except Exception:  # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.debug(
+                "Unable to fetch status, falling back to manual entry", exc_info=ex
+            )
             return await self.async_step_user()
         return await self.async_step_confirm()
 

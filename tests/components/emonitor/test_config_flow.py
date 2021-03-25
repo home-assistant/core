@@ -116,6 +116,10 @@ async def test_dhcp_can_confirm(hass):
 
     assert result["type"] == "form"
     assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "host": "1.2.3.4",
+        "name": "Emonitor DDEEFF",
+    }
 
     with patch(
         "homeassistant.components.emonitor.async_setup", return_value=True
