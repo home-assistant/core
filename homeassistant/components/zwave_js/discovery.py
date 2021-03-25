@@ -89,7 +89,7 @@ class ZWaveDiscoverySchema:
 
 
 def get_config_parameter_discovery_schema(
-    property: set[str | int] | None = None,
+    property_: set[str | int] | None = None,
     property_name: set[str] | None = None,
     property_key: set[str | int] | None = None,
     property_key_name: set[str] | None = None,
@@ -106,7 +106,7 @@ def get_config_parameter_discovery_schema(
         hint="config_parameter",
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.CONFIGURATION},
-            property=property,
+            property=property_,
             property_name=property_name,
             property_key=property_key,
             property_key_name=property_key_name,
