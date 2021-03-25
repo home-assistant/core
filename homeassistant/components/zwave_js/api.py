@@ -46,6 +46,10 @@ FILENAME = "filename"
 ENABLED = "enabled"
 FORCE_CONSOLE = "force_console"
 
+# constants for setting config parameters
+VALUE_ID = "value_id"
+STATUS = "status"
+
 
 @callback
 def async_register_api(hass: HomeAssistant) -> None:
@@ -321,7 +325,7 @@ async def websocket_set_config_parameter(
     client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
     node = client.driver.controller.nodes[node_id]
     try:
-        result = await async_set_config_parameter(
+        zwave_value, cmd_status = await async_set_config_parameter(
             node, value, property_, property_key=property_key
         )
     except (InvalidNewValue, NotFoundError, NotImplementedError, SetValueFailed) as err:
@@ -340,7 +344,10 @@ async def websocket_set_config_parameter(
 
     connection.send_result(
         msg[ID],
-        str(result),
+        {
+            VALUE_ID: zwave_value.value_id,
+            STATUS: cmd_status,
+        },
     )
 
 
