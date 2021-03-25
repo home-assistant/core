@@ -4,7 +4,7 @@ import logging
 import subprocess
 import sys
 
-from icmplib import SocketPermissionError, ping as icmp_ping
+from icmplib import NameLookupError, ping as icmp_ping
 import voluptuous as vol
 
 from homeassistant import const, util
@@ -18,8 +18,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.process import kill_subprocess
 
-from . import async_get_next_ping_id
-from .const import PING_ATTEMPTS_COUNT, PING_TIMEOUT
+from . import async_get_next_ping_id, can_use_icmp_lib_with_privilege
+from .const import ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,19 +34,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-class HostSubProcess:
-    """Host object with ping detection."""
+class Host:
+    """A single host to track."""
 
-    def __init__(self, ip_address, dev_id, hass, config):
+    def __init__(self, ip_address, dev_id, hass, config, privileged):
         """Initialize the Host pinger."""
         self.hass = hass
         self.ip_address = ip_address
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
+
+
+class HostSubProcess(Host):
+    """Host object with ping detection."""
+
+    def __init__(self, ip_address, dev_id, hass, config, privileged):
+        """Initialize the Host pinger."""
+        super().__init__(ip_address, dev_id, hass, config)
         if sys.platform == "win32":
-            self._ping_cmd = ["ping", "-n", "1", "-w", "1000", self.ip_address]
+            self._ping_cmd = ["ping", "-n", "1", "-w", "1000", ip_address]
         else:
-            self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", self.ip_address]
+            self._ping_cmd = ["ping", "-n", "-q", "-c1", "-W1", ip_address]
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
@@ -75,15 +83,13 @@ class HostSubProcess:
         _LOGGER.debug("No response from %s failed=%d", self.ip_address, failed)
 
 
-class HostICMPLib:
+class HostICMPLib(Host):
     """Host object with ping detection."""
 
-    def __init__(self, ip_address, dev_id, hass, config):
+    def __init__(self, ip_address, dev_id, hass, config, privileged):
         """Initialize the Host pinger."""
-        self.hass = hass
-        self.ip_address = ip_address
-        self.dev_id = dev_id
-        self._count = config[CONF_PING_COUNT]
+        super().__init__(ip_address, dev_id, hass, config)
+        self._privileged = privileged
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
@@ -91,9 +97,18 @@ class HostICMPLib:
             self.hass.loop, async_get_next_ping_id, self.hass
         ).result()
 
-        return icmp_ping(
-            self.ip_address, count=PING_ATTEMPTS_COUNT, timeout=1, id=next_id
-        ).is_alive
+        try:
+            data = icmp_ping(
+                self.ip_address,
+                count=PING_ATTEMPTS_COUNT,
+                timeout=ICMP_TIMEOUT,
+                privileged=self._privileged,
+                id=next_id,
+            )
+        except NameLookupError:
+            return False
+
+        return data.is_alive
 
     def update(self, see):
         """Update device state by sending one or more ping messages."""
@@ -112,16 +127,14 @@ class HostICMPLib:
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Host objects and return the update function."""
 
-    try:
-        # Verify we can create a raw socket, or
-        # fallback to using a subprocess
-        icmp_ping("127.0.0.1", count=0, timeout=0)
-        host_cls = HostICMPLib
-    except SocketPermissionError:
+    privileged = can_use_icmp_lib_with_privilege()
+    if privileged is None:
         host_cls = HostSubProcess
+    else:
+        host_cls = HostICMPLib
 
     hosts = [
-        host_cls(ip, dev_id, hass, config)
+        host_cls(ip, dev_id, hass, config, privileged)
         for (dev_id, ip) in config[const.CONF_HOSTS].items()
     ]
     interval = config.get(

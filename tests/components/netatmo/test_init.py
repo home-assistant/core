@@ -152,7 +152,7 @@ async def test_setup_without_https(hass, config_entry):
         "homeassistant.components.webhook.async_generate_url"
     ) as mock_webhook:
         mock_auth.return_value.post_request.side_effect = fake_post_request
-        mock_webhook.return_value = "http://example.com"
+        mock_webhook.return_value = "https://example.com"
         assert await async_setup_component(
             hass, "netatmo", {"netatmo": {"client_id": "123", "client_secret": "abc"}}
         )
@@ -166,7 +166,8 @@ async def test_setup_without_https(hass, config_entry):
     climate_entity_livingroom = "climate.netatmo_livingroom"
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK)
-    assert hass.states.get(climate_entity_livingroom).state == "auto"
+    await hass.async_block_till_done()
+    assert hass.states.get(climate_entity_livingroom).state == "heat"
 
 
 async def test_setup_with_cloud(hass, config_entry):

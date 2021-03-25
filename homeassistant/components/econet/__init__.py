@@ -13,7 +13,7 @@ from pyeconet.errors import (
     PyeconetError,
 )
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -24,7 +24,7 @@ from .const import API_CLIENT, DOMAIN, EQUIPMENT
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor", "water_heater"]
+PLATFORMS = ["climate", "binary_sensor", "sensor", "water_heater"]
 PUSH_UPDATE = "econet.push_update"
 
 INTERVAL = timedelta(minutes=60)
@@ -54,7 +54,9 @@ async def async_setup_entry(hass, config_entry):
         raise ConfigEntryNotReady from err
 
     try:
-        equipment = await api.get_equipment_by_type([EquipmentType.WATER_HEATER])
+        equipment = await api.get_equipment_by_type(
+            [EquipmentType.WATER_HEATER, EquipmentType.THERMOSTAT]
+        )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
     hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
@@ -72,6 +74,9 @@ async def async_setup_entry(hass, config_entry):
         dispatcher_send(hass, PUSH_UPDATE)
 
     for _eqip in equipment[EquipmentType.WATER_HEATER]:
+        _eqip.set_update_callback(update_published)
+
+    for _eqip in equipment[EquipmentType.THERMOSTAT]:
         _eqip.set_update_callback(update_published)
 
     async def resubscribe(now):
@@ -148,6 +153,11 @@ class EcoNetEntity(Entity):
     def unique_id(self):
         """Return the unique ID of the entity."""
         return f"{self._econet.device_id}_{self._econet.device_name}"
+
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_FAHRENHEIT
 
     @property
     def should_poll(self) -> bool:

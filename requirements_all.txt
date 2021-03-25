@@ -774,6 +774,9 @@ homeconnect==0.6.3
 # homeassistant.components.homematicip_cloud
 homematicip==0.13.1
 
+# homeassistant.components.home_plus_control
+homepluscontrol==0.0.5
+
 # homeassistant.components.horizon
 horimote==0.4.1
 
@@ -811,7 +814,7 @@ ibm-watson==4.0.1
 ibmiotf==0.3.4
 
 # homeassistant.components.ping
-icmplib==2.0.2
+icmplib==2.1.1
 
 # homeassistant.components.iglo
 iglo==1.2.7
@@ -1134,13 +1137,13 @@ pillow==8.1.2
 pizzapi==0.0.3
 
 # homeassistant.components.plex
-plexapi==4.5.0
+plexapi==4.5.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.12
+plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
 plugwise==0.8.5
@@ -1355,7 +1358,7 @@ pydroid-ipcam==0.8
 pyebox==1.1.4
 
 # homeassistant.components.econet
-pyeconet==0.1.12
+pyeconet==0.1.13
 
 # homeassistant.components.edimax
 pyedimax==0.2.1

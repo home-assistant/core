@@ -1,4 +1,6 @@
 """Models for permissions."""
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import attr
@@ -14,5 +16,5 @@ if TYPE_CHECKING:
 class PermissionLookup:
     """Class to hold data for permission lookups."""
 
-    entity_registry: "ent_reg.EntityRegistry" = attr.ib()
-    device_registry: "dev_reg.DeviceRegistry" = attr.ib()
+    entity_registry: ent_reg.EntityRegistry = attr.ib()
+    device_registry: dev_reg.DeviceRegistry = attr.ib()

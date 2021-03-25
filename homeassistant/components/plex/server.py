@@ -257,11 +257,7 @@ class PlexServer:
 
     async def async_update_session(self, payload):
         """Process a session payload received from a websocket callback."""
-        try:
-            session_payload = payload["PlaySessionStateNotification"][0]
-        except KeyError:
-            await self.async_update_platforms()
-            return
+        session_payload = payload["PlaySessionStateNotification"][0]
 
         state = session_payload["state"]
         if state == "buffering":
