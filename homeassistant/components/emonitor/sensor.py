@@ -70,7 +70,6 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         """Device class of the sensor."""
         return DEVICE_CLASS_POWER
 
-    @property
     def _paired_attr(self, attr_name: str) -> float:
         """Cumulative attributes for channel and paired channel."""
         attr_val = getattr(self.channel_data, attr_name)
