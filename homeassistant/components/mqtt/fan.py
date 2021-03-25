@@ -61,8 +61,6 @@ CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
 CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
 CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
 CONF_PRESET_MODES_LIST = "preset_modes"
-# CONF_SPEED_STATE_TOPIC, CONF_SPEED_STATE_TOPIC and CONF_SPEED_VALUE_TEMPLATE
-# are deprecated in the schema, support will be removed after a quarter (2021.7)
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"
 CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
 CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
