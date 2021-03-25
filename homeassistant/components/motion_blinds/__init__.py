@@ -39,8 +39,8 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         gateway,
         *,
         name,
-        update_interval = None,
-        update_method = None,
+        update_interval=None,
+        update_method=None,
     ):
         """Initialize global data updater."""
         super().__init__(
