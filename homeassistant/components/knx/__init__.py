@@ -303,7 +303,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 class KNXModule:
     """Representation of KNX Object."""
 
-    def __init__(self, hass: HomeAssistantType, config: ConfigType):
+    def __init__(self, hass: HomeAssistantType, config: ConfigType) -> None:
         """Initialize KNX module."""
         self.hass = hass
         self.config = config
