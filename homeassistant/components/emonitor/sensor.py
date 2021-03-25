@@ -20,7 +20,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         seen_channels.add(channel_number)
         if not channel.active:
             continue
-        if channel.paried_with_channel in seen_channels:
+        if channel.paired_with_channel in seen_channels:
             continue
 
         entities.append(EmonitorPowerSensor(coordinator, channel_number))
@@ -44,7 +44,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     @property
     def paired_channel_data(self):
         """Channel data."""
-        return self.coordinator.data.channels[self.channel_data.paried_with_channel]
+        return self.coordinator.data.channels[self.channel_data.paired_with_channel]
 
     @property
     def name(self):
@@ -62,23 +62,22 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         return DEVICE_CLASS_POWER
 
     @property
+    def _paired_attr(self, attr_name):
+        attr_val = getattr(self.channel_data, attr_name)
+        if self.channel_data.paired_with_channel:
+            attr_val += getattr(self.paired_channel_data, attr_name)
+        return attr_val
+
+    @property
     def state(self):
         """State of the sensor."""
-        inst_power = self.channel_data.inst_power
-        if self.channel_data.paried_with_channel:
-            inst_power += self.paired_channel_data.inst_power
+        return self._paired_attr("inst_power")
 
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
-        avg_power = self.channel_data.avg_power
-        if self.channel_data.paried_with_channel:
-            avg_power += self.paired_channel_data.avg_power
-        max_power = self.channel_data.inst_power
-        if self.channel_data.paried_with_channel:
-            max_power += self.paired_channel_data.max_power
         return {
             "channel": self.channel_number,
-            "avg_power": avg_power,
-            "max_power": max_power,
+            "avg_power": self._paired_attr("avg_power"),
+            "max_power": self._paired_attr("max_power"),
         }
