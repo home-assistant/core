@@ -5,7 +5,7 @@ import pytest
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import fan
-from homeassistant.components.fan import NotValidPresetModeError, NotValidSpeedError
+from homeassistant.components.fan import NotValidPresetModeError
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -60,7 +60,7 @@ async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
     assert hass.states.get("fan.test") is None
 
 
-async def test_controlling_state_via_topic(hass, mqtt_mock):
+async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -142,15 +142,13 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
 
-    with pytest.raises(NotValidSpeedError):
-        async_fire_mqtt_message(hass, "percentage-state-topic", "202")
-        state = hass.states.get("fan.test")
-        assert state.attributes.get(fan.ATTR_PERCENTAGE)
+    async_fire_mqtt_message(hass, "percentage-state-topic", "202")
+    assert "not a valid speed within the speed range" in caplog.text
+    caplog.clear()
 
-    with pytest.raises(NotValidSpeedError):
-        async_fire_mqtt_message(hass, "percentage-state-topic", "invalid")
-        state = hass.states.get("fan.test")
-        assert state.attributes.get(fan.ATTR_PERCENTAGE)
+    async_fire_mqtt_message(hass, "percentage-state-topic", "invalid")
+    assert "not a valid speed within the speed range" in caplog.text
+    caplog.clear()
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "low")
     state = hass.states.get("fan.test")
@@ -168,10 +166,9 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.attributes.get("preset_mode") == "silent"
 
-    with pytest.raises(NotValidPresetModeError):
-        async_fire_mqtt_message(hass, "preset-mode-state-topic", "ModeUnknown")
-        state = hass.states.get("fan.test")
-        assert state.attributes.get(fan.ATTR_PERCENTAGE) == "ModeUnknown"
+    async_fire_mqtt_message(hass, "preset-mode-state-topic", "ModeUnknown")
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
 
     # use of speeds is deprecated, support will be removed after a quarter (2021.7)
     assert state.attributes.get("speed") == fan.SPEED_OFF
@@ -180,18 +177,83 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.attributes.get("speed") == fan.SPEED_LOW
 
-    with pytest.raises(NotValidSpeedError):
-        async_fire_mqtt_message(hass, "speed-state-topic", "speed_mEdium")
+    async_fire_mqtt_message(hass, "speed-state-topic", "speed_mEdium")
+    assert "not a valid speed" in caplog.text
+    caplog.clear()
 
-    with pytest.raises(NotValidSpeedError):
-        async_fire_mqtt_message(hass, "speed-state-topic", "speed_High")
+    async_fire_mqtt_message(hass, "speed-state-topic", "speed_High")
+    assert "not a valid speed" in caplog.text
+    caplog.clear()
 
     async_fire_mqtt_message(hass, "speed-state-topic", "speed_OfF")
     state = hass.states.get("fan.test")
     assert state.attributes.get("speed") == fan.SPEED_OFF
 
-    with pytest.raises(NotValidSpeedError):
-        async_fire_mqtt_message(hass, "speed-state-topic", "speed_very_high")
+    async_fire_mqtt_message(hass, "speed-state-topic", "speed_very_high")
+    assert "not a valid speed" in caplog.text
+    caplog.clear()
+
+
+async def test_controlling_state_via_topic_with_different_speed_range(
+    hass, mqtt_mock, caplog
+):
+    """Test the controlling state via topic using an alternate speed range."""
+    assert await async_setup_component(
+        hass,
+        fan.DOMAIN,
+        {
+            fan.DOMAIN: [
+                {
+                    "platform": "mqtt",
+                    "name": "test1",
+                    "command_topic": "command-topic",
+                    "percentage_state_topic": "percentage-state-topic1",
+                    "percentage_command_topic": "percentage-command-topic1",
+                    "speed_range_min": 1,
+                    "speed_range_max": 100,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test2",
+                    "command_topic": "command-topic",
+                    "percentage_state_topic": "percentage-state-topic2",
+                    "percentage_command_topic": "percentage-command-topic2",
+                    "speed_range_min": 1,
+                    "speed_range_max": 200,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test3",
+                    "command_topic": "command-topic",
+                    "percentage_state_topic": "percentage-state-topic3",
+                    "percentage_command_topic": "percentage-command-topic3",
+                    "speed_range_min": 81,
+                    "speed_range_max": 1023,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "percentage-state-topic1", "100")
+    state = hass.states.get("fan.test1")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
+
+    async_fire_mqtt_message(hass, "percentage-state-topic2", "100")
+    state = hass.states.get("fan.test2")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 50
+
+    async_fire_mqtt_message(hass, "percentage-state-topic3", "1023")
+    state = hass.states.get("fan.test3")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
+    async_fire_mqtt_message(hass, "percentage-state-topic3", "80")
+    state = hass.states.get("fan.test3")
+    assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
+
+    state = hass.states.get("fan.test3")
+    async_fire_mqtt_message(hass, "percentage-state-topic3", "79")
+    assert "not a valid speed within the speed range" in caplog.text
+    caplog.clear()
 
 
 async def test_controlling_state_via_topic_no_percentage_topics(hass, mqtt_mock):
@@ -281,7 +343,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(hass, mqtt_mock)
     assert state.attributes.get("speed") == fan.SPEED_OFF
 
 
-async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
+async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
     """Test the controlling state via topic and JSON message (percentage mode)."""
     assert await async_setup_component(
         hass,
@@ -346,8 +408,9 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock):
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 100
 
-    with pytest.raises(NotValidPresetModeError):
-        async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "low"}')
+    async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "low"}')
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", '{"val": "medium"}')
     state = hass.states.get("fan.test")
@@ -571,7 +634,95 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock):
+async def test_sending_mqtt_commands_with_alternate_speed_range(hass, mqtt_mock):
+    """Test the controlling state via topic using an alternate speed range."""
+    assert await async_setup_component(
+        hass,
+        fan.DOMAIN,
+        {
+            fan.DOMAIN: [
+                {
+                    "platform": "mqtt",
+                    "name": "test1",
+                    "command_topic": "command-topic",
+                    "percentage_state_topic": "percentage-state-topic1",
+                    "percentage_command_topic": "percentage-command-topic1",
+                    "speed_range_min": 1,
+                    "speed_range_max": 100,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test2",
+                    "command_topic": "command-topic",
+                    "percentage_state_topic": "percentage-state-topic2",
+                    "percentage_command_topic": "percentage-command-topic2",
+                    "speed_range_min": 1,
+                    "speed_range_max": 200,
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "test3",
+                    "command_topic": "command-topic",
+                    "percentage_state_topic": "percentage-state-topic3",
+                    "percentage_command_topic": "percentage-command-topic3",
+                    "speed_range_min": 81,
+                    "speed_range_max": 1023,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    await common.async_set_percentage(hass, "fan.test1", 0)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic1", "0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test1")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test1", 100)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic1", "100", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test1")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test2", 0)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic2", "0", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test2")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test2", 100)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic2", "200", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test2")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test3", 0)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic3", "80", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test3")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await common.async_set_percentage(hass, "fan.test3", 100)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "percentage-command-topic3", "1023", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("fan.test3")
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, caplog):
     """Test optimistic mode without state topic without legacy speed command topic."""
     assert await async_setup_component(
         hass,
@@ -638,11 +789,13 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock):
     assert state.attributes.get(fan.ATTR_SPEED) is None
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    with pytest.raises(NotValidPresetModeError):
-        await common.async_set_preset_mode(hass, "fan.test", "low")
+    await common.async_set_preset_mode(hass, "fan.test", "low")
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
 
-    with pytest.raises(NotValidPresetModeError):
-        await common.async_set_preset_mode(hass, "fan.test", "medium")
+    await common.async_set_preset_mode(hass, "fan.test", "medium")
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
 
     await common.async_set_preset_mode(hass, "fan.test", "high")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -888,7 +1041,9 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
 
 
 # use of speeds is deprecated, support will be removed after a quarter (2021.7)
-async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(hass, mqtt_mock):
+async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(
+    hass, mqtt_mock, caplog
+):
     """Test optimistic mode without state topics with legacy speeds."""
     assert await async_setup_component(
         hass,
@@ -925,8 +1080,9 @@ async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(hass, mqt
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    with pytest.raises(NotValidPresetModeError):
-        await common.async_set_preset_mode(hass, "fan.test", "low")
+    await common.async_set_preset_mode(hass, "fan.test", "low")
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
 
     await common.async_set_speed(hass, "fan.test", fan.SPEED_LOW)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -997,7 +1153,7 @@ async def test_sending_mqtt_commands_and_optimistic_legacy_speeds_only(hass, mqt
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
+async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, caplog):
     """Test optimistic mode with state topic and turn on attributes."""
     assert await async_setup_component(
         hass,
@@ -1290,8 +1446,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    with pytest.raises(NotValidPresetModeError):
-        await common.async_set_preset_mode(hass, "fan.test", "ModeX")
+    await common.async_set_preset_mode(hass, "fan.test", "ModeX")
+    assert "not a valid preset mode" in caplog.text
+    caplog.clear()
 
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1326,11 +1483,12 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    with pytest.raises(NotValidSpeedError):
-        await common.async_set_speed(hass, "fan.test", "cUsToM")
+    await common.async_set_speed(hass, "fan.test", "cUsToM")
+    assert "not a valid speed" in caplog.text
+    caplog.clear()
 
 
-async def test_attributes(hass, mqtt_mock):
+async def test_attributes(hass, mqtt_mock, caplog):
     """Test attributes."""
     assert await async_setup_component(
         hass,
@@ -1425,8 +1583,9 @@ async def test_attributes(hass, mqtt_mock):
     assert state.attributes.get(fan.ATTR_SPEED) == "off"
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
 
-    with pytest.raises(NotValidSpeedError):
-        await common.async_set_speed(hass, "fan.test", "cUsToM")
+    await common.async_set_speed(hass, "fan.test", "cUsToM")
+    assert "not a valid speed" in caplog.text
+    caplog.clear()
 
 
 # use of speeds is deprecated, support will be removed after a quarter (2021.7)

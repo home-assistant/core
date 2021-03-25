@@ -1,5 +1,6 @@
 """Support for MQTT fans."""
 import functools
+import logging
 
 import voluptuous as vol
 
@@ -16,8 +17,6 @@ from homeassistant.components.fan import (
     SUPPORT_PRESET_MODE,
     SUPPORT_SET_SPEED,
     FanEntity,
-    NotValidPresetModeError,
-    NotValidSpeedError,
     speed_list_without_preset_modes,
 )
 from homeassistant.const import (
@@ -86,6 +85,8 @@ OSCILLATE_ON_PAYLOAD = "oscillate_on"
 OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
 OSCILLATION = "oscillation"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def valid_fan_speed_configuration(config):
@@ -362,14 +363,22 @@ class MqttFan(MqttEntity, FanEntity):
                 percentage = ranged_value_to_percentage(
                     self._speed_range, int(numeric_val_str)
                 )
-            except Exception as ex:
-                raise NotValidSpeedError(
-                    f"{msg.payload} is not a valid percentage"
-                ) from ex
+            except ValueError:
+                _LOGGER.warning(
+                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    msg.payload,
+                    msg.topic,
+                )
+                return
             if 0 <= percentage <= 100:
                 self._percentage = percentage
             else:
-                raise NotValidSpeedError(f"{msg.payload} is not a valid percentage")
+                _LOGGER.warning(
+                    "'%s' received on topic %s is not a valid speed within the speed range",
+                    msg.payload,
+                    msg.topic,
+                )
+                return
             self.async_write_ha_state()
 
         if self._topic[CONF_PERCENTAGE_STATE_TOPIC] is not None:
@@ -394,9 +403,12 @@ class MqttFan(MqttEntity, FanEntity):
                         self.speed_list, preset_mode
                     )
             else:
-                raise NotValidPresetModeError(
-                    f"{msg.payload} is not a valid preset mode"
+                _LOGGER.warning(
+                    "'%s' received on topic %s is not a valid preset mode",
+                    msg.payload,
+                    msg.topic,
                 )
+                return
 
             self.async_write_ha_state()
 
@@ -428,7 +440,12 @@ class MqttFan(MqttEntity, FanEntity):
             if speed and speed in self._legacy_speeds_list:
                 self._speed = speed
             else:
-                raise NotValidSpeedError(f"'{msg.payload}' is not a valid speed.")
+                _LOGGER.warning(
+                    "'%s' received on topic %s is not a valid speed",
+                    msg.payload,
+                    msg.topic,
+                )
+                return
 
             if not self._implemented_percentage:
                 if speed in self._speeds_list:
@@ -635,9 +652,8 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         if preset_mode not in self.preset_modes:
-            raise NotValidPresetModeError(
-                f"Preset mode {preset_mode} is not a valid preset mode within the range of {self.preset_modes}."
-            )
+            _LOGGER.warning("'%s'is not a valid preset mode", preset_mode)
+            return
         # Legacy are deprecated in the schema, support will be removed after a quarter (2021.7)
         if preset_mode in self._legacy_speeds_list:
             await self.async_set_speed(speed=preset_mode)
@@ -676,7 +692,8 @@ class MqttFan(MqttEntity, FanEntity):
             elif speed == SPEED_OFF:
                 speed_payload = self._payload["SPEED_OFF"]
             else:
-                raise NotValidSpeedError(f"{speed} is not a valid speed.")
+                _LOGGER.warning("'%s'is not a valid speed", speed)
+                return
 
         if speed_payload:
             mqtt.async_publish(
