@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
 from homeassistant.const import POWER_WATT
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -35,6 +36,11 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
         """Initialize the channel sensor."""
         self.channel_number = channel_number
         super().__init__(coordinator)
+
+    @property
+    def unique_id(self):
+        """Channel unique id."""
+        return f"{self.mac_address}_{self.channel_number}"
 
     @property
     def channel_data(self):
@@ -80,4 +86,18 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
             "channel": self.channel_number,
             "avg_power": self._paired_attr("avg_power"),
             "max_power": self._paired_attr("max_power"),
+        }
+
+    @property
+    def mac_address(self):
+        """Return the mac address of the device."""
+        return self.coordinator.data.network.mac_address
+
+    @property
+    def device_info(self):
+        """Return info about the emonitor device."""
+        return {
+            "name": f"Emonitor {self.mac_address[-6:]}",
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            "sw_version": self.coordinator.data.hardware.firmware_version,
         }
