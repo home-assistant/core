@@ -30,11 +30,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up SiteSage Emonitor from a config entry."""
 
-    conf = entry.data
-    host = conf[CONF_HOST]
-
     session = aiohttp_client.async_get_clientsession(hass)
-    emonitor = Emonitor(host, session)
+    emonitor = Emonitor(entry.data[CONF_HOST], session)
 
     coordinator = DataUpdateCoordinator(
         hass,
