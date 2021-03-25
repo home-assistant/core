@@ -423,7 +423,7 @@ def filename_is_present_if_logging_to_file(obj: dict) -> dict:
                         cv.string,
                         vol.Lower,
                         vol.In([log_level.value for log_level in LogLevel]),
-                        lambda val: LogLevel(val),
+                        lambda val: LogLevel(val),  # pylint: disable=unnecessary-lambda
                     ),
                     vol.Optional(LOG_TO_FILE): cv.boolean,
                     vol.Optional(FILENAME): cv.string,
