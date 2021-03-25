@@ -10,6 +10,13 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
+            "pair": {
+                "data": {
+                    "pin": "Kod PIN"
+                },
+                "description": "Wprowad\u017a kod PIN wy\u015bwietlony na Twoim telewizorze",
+                "title": "Paruj"
+            },
             "user": {
                 "data": {
                     "api_version": "Wersja API",
