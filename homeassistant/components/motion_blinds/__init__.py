@@ -32,11 +32,67 @@ _LOGGER = logging.getLogger(__name__)
 class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
     """Class to manage fetching data from single endpoint."""
 
+    def __init__(
+        self,
+        hass,
+        logger,
+        gateway,
+        *,
+        name,
+        update_interval = None,
+        update_method = None,
+    ):
+        """Initialize global data updater."""
+        super().__init__(
+            hass,
+            logger,
+            name=name,
+            update_method=update_method,
+            update_interval=update_interval,
+        )
+
+        self._gateway = gateway
+
+    def update_gateway(self):
+        """Call all updates using one async_add_executor_job."""
+        data = {}
+
+        try:
+            self._gateway.Update()
+        except (timeout, ParseException):
+            # let the error be logged and handled by the motionblinds library
+            data[KEY_GATEWAY] = {ATTR_AVAILABLE: False}
+            return data
+        else:
+            data[KEY_GATEWAY] = {ATTR_AVAILABLE: True}
+
+        for blind in self._gateway.device_list.values():
+            try:
+                blind.Update()
+            except (timeout, ParseException):
+                # let the error be logged and handled by the motionblinds library
+                data[blind.mac] = {ATTR_AVAILABLE: False}
+            else:
+                data[blind.mac] = {ATTR_AVAILABLE: True}
+
+        return data
+
     async def _async_update_data(self):
-        """Fetch the latest data from the source."""
-        if self.update_method is None:
-            raise NotImplementedError("Update method not implemented")
-        return await self.update_method(self)
+        """Fetch the latest data from the gateway and blinds."""
+        data = await self.hass.async_add_executor_job(self.update_gateway)
+
+        all_available = True
+        for device in data.values():
+            if not device[ATTR_AVAILABLE]:
+                all_available = False
+                break
+
+        if all_available:
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
+        else:
+            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
+
+        return data
 
 
 def setup(hass: core.HomeAssistant, config: dict):
@@ -74,52 +130,12 @@ async def async_setup_entry(
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
 
-    def update_gateway():
-        """Call all updates using one async_add_executor_job."""
-        data = {}
-
-        try:
-            motion_gateway.Update()
-        except (timeout, ParseException):
-            # let the error be logged and handled by the motionblinds library
-            data[KEY_GATEWAY] = {ATTR_AVAILABLE: False}
-        else:
-            data[KEY_GATEWAY] = {ATTR_AVAILABLE: True}
-
-        for blind in motion_gateway.device_list.values():
-            try:
-                blind.Update()
-            except (timeout, ParseException):
-                # let the error be logged and handled by the motionblinds library
-                data[blind.mac] = {ATTR_AVAILABLE: False}
-            else:
-                data[blind.mac] = {ATTR_AVAILABLE: True}
-
-        return data
-
-    async def async_update_data(self):
-        """Fetch data from the gateway and blinds."""
-        data = await hass.async_add_executor_job(update_gateway)
-
-        all_available = True
-        for device in data.values():
-            if not device[ATTR_AVAILABLE]:
-                all_available = False
-                break
-
-        if all_available:
-            self.update_interval = timedelta(seconds=UPDATE_INTERVAL)
-        else:
-            self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
-
-        return data
-
     coordinator = DataUpdateCoordinatorMotionBlinds(
         hass,
         _LOGGER,
+        motion_gateway,
         # Name of the data. For logging purposes.
         name=entry.title,
-        update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
