@@ -157,7 +157,7 @@ aiodns==2.0.0
 aioeafm==0.1.2
 
 # homeassistant.components.emonitor
-aioemonitor==1.0.4
+aioemonitor==1.0.5
 
 # homeassistant.components.esphome
 aioesphomeapi==2.6.6
