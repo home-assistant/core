@@ -98,7 +98,8 @@ class NetatmoDataHandler:
 
         self._queue.rotate(BATCH_SIZE)
 
-    async def async_force_update(self, data_class_entry):
+    @callback
+    def async_force_update(self, data_class_entry):
         """Prioritize data retrieval for given data class entry."""
         self._data_classes[data_class_entry][NEXT_SCAN] = time()
         self._queue.rotate(-(self._queue.index(self._data_classes[data_class_entry])))
