@@ -81,7 +81,7 @@ class DeconzFan(DeconzDevice, FanEntity):
         if self._device.speed == 0:
             return 0
         if self._device.speed not in ORDERED_NAMED_FAN_SPEEDS:
-            return
+            return None
         return ordered_list_item_to_percentage(
             ORDERED_NAMED_FAN_SPEEDS, self._device.speed
         )
