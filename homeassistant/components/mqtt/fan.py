@@ -398,9 +398,7 @@ class MqttFan(MqttEntity, FanEntity):
                 return
 
             self._preset_mode = preset_mode
-            if not self._implemented_percentage and (
-                preset_mode in self.speed_list
-            ):
+            if not self._implemented_percentage and (preset_mode in self.speed_list):
                 self._percentage = ordered_list_item_to_percentage(
                     self.speed_list, preset_mode
                 )
