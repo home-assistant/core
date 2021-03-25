@@ -263,7 +263,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._home_id
             ].get(data["schedule_id"])
             self.async_write_ha_state()
-            await self.data_handler.async_force_update(self._home_status_class)
+            self.data_handler.async_force_update(self._home_status_class)
             return
 
         home = data["home"]
@@ -280,7 +280,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._target_temperature = self._away_temperature
             elif self._preset == PRESET_SCHEDULE:
                 self.async_update_callback()
-                await self.data_handler.async_force_update(self._home_status_class)
+                self.data_handler.async_force_update(self._home_status_class)
             self.async_write_ha_state()
             return
 
