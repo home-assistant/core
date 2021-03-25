@@ -36,14 +36,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     session = aiohttp_client.async_get_clientsession(hass)
     emonitor = Emonitor(host, session)
 
-    async def _async_update_data():
-        return await emonitor.async_get_status()
-
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="Emonitor power update",
-        update_method=_async_update_data,
+        update_method=emonitor.async_get_status,
         update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
     )
 
