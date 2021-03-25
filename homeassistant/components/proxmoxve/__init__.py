@@ -122,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
                 hass.data[PROXMOX_CLIENTS][host] = None
                 continue
             except ConnectTimeout:
-                _LOGGER.warning("Connection to host %s timed out during setup.", host)
+                _LOGGER.warning("Connection to host %s timed out during setup", host)
                 hass.data[PROXMOX_CLIENTS][host] = None
                 continue
 
