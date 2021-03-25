@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from . import name_short_mac
 from .const import DOMAIN
 
 
@@ -100,7 +101,7 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> dict:
         """Return info about the emonitor device."""
         return {
-            "name": f"Emonitor {self.mac_address[-6:]}",
+            "name": name_short_mac(self.mac_address[-6:]),
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             "manufacturer": "Powerhouse Dynamics, Inc.",
             "sw_version": self.coordinator.data.hardware.firmware_version,
