@@ -133,22 +133,22 @@ jobs:
     strategy:
       matrix:
         machine:
-        - generic-x86-64
-        - intel-nuc
-        - odroid-c4
-        - odroid-n2
-        - odroid-xu
-        - qemuarm
-        - qemuarm-64
-        - qemux86
-        - qemux86-64
-        - raspberrypi
-        - raspberrypi2
-        - raspberrypi3
-        - raspberrypi3-64
-        - raspberrypi4
-        - raspberrypi4-64
-        - tinker
+          - generic-x86-64
+          - intel-nuc
+          - odroid-c4
+          - odroid-n2
+          - odroid-xu
+          - qemuarm
+          - qemuarm-64
+          - qemux86
+          - qemux86-64
+          - raspberrypi
+          - raspberrypi2
+          - raspberrypi3
+          - raspberrypi3-64
+          - raspberrypi4
+          - raspberrypi4-64
+          - tinker
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v2
