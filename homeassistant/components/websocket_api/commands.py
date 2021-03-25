@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import TrackTemplate, async_track_template_result
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.setup import async_get_loaded_integrations
+from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
 
@@ -36,6 +36,7 @@ def async_register_commands(hass, async_reg):
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
     async_reg(hass, handle_manifest_get)
+    async_reg(hass, handle_integration_setup)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
@@ -276,6 +277,19 @@ async def handle_manifest_get(hass, connection, msg):
         connection.send_result(msg["id"], integration.manifest)
     except IntegrationNotFound:
         connection.send_error(msg["id"], const.ERR_NOT_FOUND, "Integration not found")
+
+
+@decorators.websocket_command({vol.Required("type"): "integration/setup"})
+@decorators.async_response
+async def handle_integration_setup(hass, connection, msg):
+    """Handle integrations command."""
+    connection.send_result(
+        msg["id"],
+        [
+            {"domain": integration, "seconds": timedelta.total_seconds()}
+            for integration, timedelta in hass.data[DATA_SETUP_TIME].items()
+        ],
+    )
 
 
 @callback
