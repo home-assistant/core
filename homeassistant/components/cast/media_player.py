@@ -1,7 +1,6 @@
 """Provide functionality to interact with Cast devices on the network."""
 from __future__ import annotations
 
-import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import functools as ft
@@ -52,19 +51,19 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
 
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
+    CONF_IGNORE_CEC,
+    CONF_UUID,
     DOMAIN as CAST_DOMAIN,
-    KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -74,8 +73,6 @@ from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_IGNORE_CEC = "ignore_cec"
-CONF_UUID = "uuid"
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
 SUPPORT_CAST = (
@@ -129,45 +126,20 @@ def _async_create_cast_device(hass: HomeAssistantType, info: ChromecastInfo):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
-    config = hass.data[CAST_DOMAIN].get("media_player") or {}
-    if not isinstance(config, list):
-        config = [config]
-
-    # no pending task
-    done, _ = await asyncio.wait(
-        [
-            _async_setup_platform(
-                hass, ENTITY_SCHEMA(cfg), async_add_entities, config_entry
-            )
-            for cfg in config
-        ]
-    )
-    if any(task.exception() for task in done):
-        exceptions = [task.exception() for task in done]
-        for exception in exceptions:
-            _LOGGER.debug("Failed to setup chromecast", exc_info=exception)
-        raise PlatformNotReady
-
-
-async def _async_setup_platform(
-    hass: HomeAssistantType, config: ConfigType, async_add_entities, config_entry
-):
-    """Set up the cast platform."""
-    # Import CEC IGNORE attributes
-    pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
-    hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, {})
 
-    wanted_uuid = None
-    if CONF_UUID in config:
-        wanted_uuid = config[CONF_UUID]
+    # Import CEC IGNORE attributes
+    pychromecast.IGNORE_CEC += config_entry.data.get(CONF_IGNORE_CEC) or []
+
+    wanted_uuids = config_entry.data.get(CONF_UUID) or None
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
         """Handle discovery of a new chromecast."""
-        # If wanted_uuid is set, we're handling a specific cast device identified by UUID
-        if wanted_uuid is not None and wanted_uuid != discover.uuid:
-            # UUID not matching, this is not it.
+        # If wanted_uuids is set, we're only accepting specific cast devices identified
+        # by UUID
+        if wanted_uuids is not None and discover.uuid not in wanted_uuids:
+            # UUID not matching, ignore.
             return
 
         cast_device = _async_create_cast_device(hass, discover)
@@ -175,11 +147,6 @@ async def _async_setup_platform(
             async_add_entities([cast_device])
 
     async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
-    # Re-play the callback for all past chromecasts, store the objects in
-    # a list to avoid concurrent modification resulting in exception.
-    for chromecast in hass.data[KNOWN_CHROMECAST_INFO_KEY].values():
-        async_cast_discovered(chromecast)
-
     ChromeCastZeroconf.set_zeroconf(await zeroconf.async_get_instance(hass))
     hass.async_add_executor_job(setup_internal_discovery, hass, config_entry)
 
