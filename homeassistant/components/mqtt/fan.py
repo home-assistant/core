@@ -388,15 +388,7 @@ class MqttFan(MqttEntity, FanEntity):
         def preset_mode_received(msg):
             """Handle new received MQTT message for preset mode."""
             preset_mode = self._templates[ATTR_PRESET_MODE](msg.payload)
-            if preset_mode in self.preset_modes:
-                self._preset_mode = preset_mode
-                if not self._implemented_percentage and (
-                    preset_mode in self.speed_list
-                ):
-                    self._percentage = ordered_list_item_to_percentage(
-                        self.speed_list, preset_mode
-                    )
-            else:
+            if preset_mode not in self.preset_modes:
                 _LOGGER.warning(
                     "'%s' received on topic %s is not a valid preset mode",
                     msg.payload,
@@ -404,6 +396,13 @@ class MqttFan(MqttEntity, FanEntity):
                 )
                 return
 
+            self._preset_mode = preset_mode
+            if not self._implemented_percentage and (
+                preset_mode in self.speed_list
+            ):
+                self._percentage = ordered_list_item_to_percentage(
+                    self.speed_list, preset_mode
+                )
             self.async_write_ha_state()
 
         if self._topic[CONF_PRESET_MODE_STATE_TOPIC] is not None:
