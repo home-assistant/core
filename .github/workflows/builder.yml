@@ -200,6 +200,15 @@ jobs:
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
 
+      - name: Update version file (stable -> beta)
+        if: needs.init.outputs.channel == "stable"
+        uses: home-assistant/actions/helpers/version-push@master
+        with:
+          key: "homeassistant[]"
+          key-description: "Home Assistant Core"
+          version: ${{ needs.init.outputs.version }}
+          channel: beta
+
   publish_container:
     name: Publish release
     needs: ["init", "build_base"]
