@@ -22,7 +22,6 @@ async def fetch_mac_and_title(hass: core.HomeAssistant, host):
     emonitor = Emonitor(host, session)
     status = await emonitor.async_get_status()
     mac_address = status.network.mac_address
-    # Return info that you want to store in the config entry.
     return {"title": name_short_mac(mac_address[-6:]), "mac_address": mac_address}
 
 
