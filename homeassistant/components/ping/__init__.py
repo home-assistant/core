@@ -43,8 +43,11 @@ def can_use_icmp_lib_with_privilege() -> None | bool:
         try:
             icmp_ping("127.0.0.1", count=0, timeout=0, privileged=False)
         except SocketPermissionError:
+            # Cannot use icmplib even with privileged=False
             return None
         else:
+            # Can use icmplib with privileged=False
             return False
     else:
+        # Can use icmplib privileged=True
         return True
