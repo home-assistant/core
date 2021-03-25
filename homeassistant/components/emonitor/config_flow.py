@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
         mac_address = dhcp_discovery[MAC_ADDRESS]
-        await self.async_set_unique_id(mac_address)
+        await self.async_set_unique_id(format_mac(mac_address))
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
         )
