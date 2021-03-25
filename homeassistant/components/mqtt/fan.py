@@ -4,9 +4,6 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import fan
-
-# ATTR_SPEED, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM and SPEED_LOW
-# are deprecated in the schema, support will be removed after a quarter (2021.7)
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
