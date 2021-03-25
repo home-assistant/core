@@ -26,7 +26,10 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
     CONF_SERVER,
@@ -38,6 +41,7 @@ from .const import (
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
+    PLEX_UPDATE_LIBRARY_SIGNAL,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
     WEBSOCKETS,
@@ -179,12 +183,20 @@ async def async_setup_entry(hass, entry):
 
         elif msgtype == "playing":
             hass.async_create_task(plex_server.async_update_session(data))
+        elif msgtype == "status":
+            if data["StatusNotification"][0]["title"] == "Library scan complete":
+                async_dispatcher_send(
+                    hass,
+                    PLEX_UPDATE_LIBRARY_SIGNAL.format(server_id),
+                )
 
     session = async_get_clientsession(hass)
+    subscriptions = ["playing", "status"]
     verify_ssl = server_config.get(CONF_VERIFY_SSL)
     websocket = PlexWebsocket(
         plex_server.plex_server,
         plex_websocket_callback,
+        subscriptions=subscriptions,
         session=session,
         verify_ssl=verify_ssl,
     )
