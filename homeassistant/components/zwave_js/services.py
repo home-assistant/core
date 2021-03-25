@@ -116,8 +116,8 @@ class ZWaveServices:
                 msg = "Set configuration parameter %s on Node %s with value %s"
             else:
                 msg = (
-                    "Added command to set configuration parameter %s on Node %s with "
-                    "value %s to queue. Parameter will be set when the device wakes up."
+                    "Added command to queue to set configuration parameter %s on Node "
+                    "%s with value %s. Parameter will be set when the device wakes up."
                 )
 
             _LOGGER.info(msg, zwave_value, node, new_value)
