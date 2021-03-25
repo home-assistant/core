@@ -9,12 +9,15 @@
         },
         "flow_title": "SiteSage {name}",
         "step": {
+            "confirm": {
+                "description": "Do you want to setup {name} ({host})?",
+                "title": "Setup SiteSage Emonitor"
+            },
             "user": {
                 "data": {
                     "host": "Host"
                 }
             }
         }
-    },
-    "title": "SiteSage Emonitor"
+    }
 }
