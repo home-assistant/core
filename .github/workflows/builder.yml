@@ -45,31 +45,31 @@ jobs:
     needs: init
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout the repository
-      if: needs.init.outputs.publish == "true"
-      uses: actions/checkout@v2
+      - name: Checkout the repository
+        if: needs.init.outputs.publish == "true"
+        uses: actions/checkout@v2
 
-    - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-      if: needs.init.outputs.publish == "true"
-      uses: actions/setup-python@v2.2.1
-      with:
-        python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        if: needs.init.outputs.publish == "true"
+        uses: actions/setup-python@v2.2.1
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
 
-    - name: Build package
-      if: needs.init.outputs.publish == "true"
-      shell: bash
-      run: |
-        pip install twine wheel
-        python setup.py sdist bdist_wheel
+      - name: Build package
+        if: needs.init.outputs.publish == "true"
+        shell: bash
+        run: |
+          pip install twine wheel
+          python setup.py sdist bdist_wheel
 
-    - name: Upload package
-      if: needs.init.outputs.publish == "true"
-      shell: bash
-      run: |
-        export TWINE_USERNAME="$(twineUser)"
-        export TWINE_PASSWORD="$(twinePassword)"
+      - name: Upload package
+        if: needs.init.outputs.publish == "true"
+        shell: bash
+        run: |
+          export TWINE_USERNAME="$(twineUser)"
+          export TWINE_PASSWORD="$(twinePassword)"
 
-        twine upload dist/* --skip-existing
+          twine upload dist/* --skip-existing
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
@@ -79,47 +79,47 @@ jobs:
       matrix:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v2
 
-    - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-      if: needs.init.outputs.channel == "dev"
-      uses: actions/setup-python@v2.2.1
-      with:
-        python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        if: needs.init.outputs.channel == "dev"
+        uses: actions/setup-python@v2.2.1
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
 
-    - name: Adjust nightly version
-      if: needs.init.outputs.channel == "dev"
-      shell: bash
-      run: |
-        python3 -m pip install packaging
-        python3 -m pip install .
-        python3 script/version_bump.py nightly
-        version="$(python setup.py -V)"
+      - name: Adjust nightly version
+        if: needs.init.outputs.channel == "dev"
+        shell: bash
+        run: |
+          python3 -m pip install packaging
+          python3 -m pip install .
+          python3 script/version_bump.py nightly
+          version="$(python setup.py -V)"
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ secrets.GIT_USER }}
-        password: ${{ secrets.GIT_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GIT_USER }}
+          password: ${{ secrets.GIT_TOKEN }}
 
-    - name: Build base image
-      uses: home-assistant/builder@2021.03.3
-      with:
-        args: |
-          $BUILD_ARGS \
-          --${{ matrix.arch }} \
-          --target /data \
-          --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
-          --validate-from "${{ secrets.VCN_ORG }}" \
-          --generic ${{ needs.init.outputs.version }}
+      - name: Build base image
+        uses: home-assistant/builder@2021.03.3
+        with:
+          args: |
+            $BUILD_ARGS \
+            --${{ matrix.arch }} \
+            --target /data \
+            --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
+            --validate-from "${{ secrets.VCN_ORG }}" \
+            --generic ${{ needs.init.outputs.version }}
 
   build_machine:
     name: Build ${{ matrix.arch }} machine core image
@@ -145,150 +145,150 @@ jobs:
         - raspberrypi4-64
         - tinker
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v2
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ secrets.GIT_USER }}
-        password: ${{ secrets.GIT_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GIT_USER }}
+          password: ${{ secrets.GIT_TOKEN }}
 
-    - name: Build base image
-      uses: home-assistant/builder@2021.03.3
-      with:
-        args: |
-          $BUILD_ARGS \
-          --${{ matrix.arch }} \
-          --target /data/machine \
-          --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
-          --validate-from "${{ secrets.VCN_ORG }}" \
-          --homeassistant-machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}""
+      - name: Build base image
+        uses: home-assistant/builder@2021.03.3
+        with:
+          args: |
+            $BUILD_ARGS \
+            --${{ matrix.arch }} \
+            --target /data/machine \
+            --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
+            --validate-from "${{ secrets.VCN_ORG }}" \
+            --homeassistant-machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}""
 
   publish_ha:
     name: Publish release
     needs: ["init", "build_machine"]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v2
 
-    - name: Initialize git
-      uses: home-assistant/actions/helpers/git-init@master
-      with:
-        name: ${{ secrets.GIT_NAME }}
-        email: ${{ secrets.GIT_EMAIL }}
-        token: ${{ secrets.GIT_TOKEN }}
+      - name: Initialize git
+        uses: home-assistant/actions/helpers/git-init@master
+        with:
+          name: ${{ secrets.GIT_NAME }}
+          email: ${{ secrets.GIT_EMAIL }}
+          token: ${{ secrets.GIT_TOKEN }}
 
-    - name: Update version file
-      uses: home-assistant/actions/helpers/version-push@master
-      with:
-        key: ${{ env.BUILD_NAME }}
-        version: ${{ needs.init.outputs.version }}
-        channel: ${{ needs.init.outputs.channel }}
+      - name: Update version file
+        uses: home-assistant/actions/helpers/version-push@master
+        with:
+          key: ${{ env.BUILD_NAME }}
+          version: ${{ needs.init.outputs.version }}
+          channel: ${{ needs.init.outputs.channel }}
 
   publish_container:
     name: Publish release
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v2
 
-    - name: Login to DockerHub
-      uses: docker/login-action@v1
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ secrets.GIT_USER }}
-        password: ${{ secrets.GIT_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GIT_USER }}
+          password: ${{ secrets.GIT_TOKEN }}
 
-    - name: Build Meta Image
-      shell: bash
-      run: |
-        bash <(curl https://getvcn.codenotary.com -L)
+      - name: Build Meta Image
+        shell: bash
+        run: |
+          bash <(curl https://getvcn.codenotary.com -L)
 
-        export DOCKER_CLI_EXPERIMENTAL=enabled
+          export DOCKER_CLI_EXPERIMENTAL=enabled
 
-        function create_manifest() {
-          local tag_l=${1}
-          local tag_r=${2}
+          function create_manifest() {
+            local tag_l=${1}
+            local tag_r=${2}
 
-          docker manifest create homeassistant/home-assistant:${tag_l} \
-            homeassistant/amd64-homeassistant:${tag_r} \
-            homeassistant/i386-homeassistant:${tag_r} \
-            homeassistant/armhf-homeassistant:${tag_r} \
-            homeassistant/armv7-homeassistant:${tag_r} \
-            homeassistant/aarch64-homeassistant:${tag_r}
+            docker manifest create homeassistant/home-assistant:${tag_l} \
+              homeassistant/amd64-homeassistant:${tag_r} \
+              homeassistant/i386-homeassistant:${tag_r} \
+              homeassistant/armhf-homeassistant:${tag_r} \
+              homeassistant/armv7-homeassistant:${tag_r} \
+              homeassistant/aarch64-homeassistant:${tag_r}
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
-            homeassistant/amd64-homeassistant:${tag_r} \
-            --os linux --arch amd64
+            docker manifest annotate homeassistant/home-assistant:${tag_l} \
+              homeassistant/amd64-homeassistant:${tag_r} \
+              --os linux --arch amd64
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
-            homeassistant/i386-homeassistant:${tag_r} \
-            --os linux --arch 386
+            docker manifest annotate homeassistant/home-assistant:${tag_l} \
+              homeassistant/i386-homeassistant:${tag_r} \
+              --os linux --arch 386
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
-            homeassistant/armhf-homeassistant:${tag_r} \
-            --os linux --arch arm --variant=v6
+            docker manifest annotate homeassistant/home-assistant:${tag_l} \
+              homeassistant/armhf-homeassistant:${tag_r} \
+              --os linux --arch arm --variant=v6
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
-            homeassistant/armv7-homeassistant:${tag_r} \
-            --os linux --arch arm --variant=v7
+            docker manifest annotate homeassistant/home-assistant:${tag_l} \
+              homeassistant/armv7-homeassistant:${tag_r} \
+              --os linux --arch arm --variant=v7
 
-          docker manifest annotate homeassistant/home-assistant:${tag_l} \
-            homeassistant/aarch64-homeassistant:${tag_r} \
-            --os linux --arch arm64 --variant=v8
+            docker manifest annotate homeassistant/home-assistant:${tag_l} \
+              homeassistant/aarch64-homeassistant:${tag_r} \
+              --os linux --arch arm64 --variant=v8
 
-          docker manifest push --purge homeassistant/home-assistant:${tag_l}
-        }
+            docker manifest push --purge homeassistant/home-assistant:${tag_l}
+          }
 
-        function validate_image() {
-          local image={1}
-          state="$(vcn authenticate --org home-assistant.io --output json docker://${image} | jq '.verification.status // 2')"
-          if [[ "${state}" != "0" ]]; then
-            echo "Invalid signature!"
-            exit 1
+          function validate_image() {
+            local image={1}
+            state="$(vcn authenticate --org home-assistant.io --output json docker://${image} | jq '.verification.status // 2')"
+            if [[ "${state}" != "0" ]]; then
+              echo "Invalid signature!"
+              exit 1
+            fi
+          }
+
+          docker pull homeassistant/amd64-homeassistant:${{ needs.init.outputs.version }}
+          docker pull homeassistant/i386-homeassistant:${{ needs.init.outputs.version }}
+          docker pull homeassistant/armhf-homeassistant:${{ needs.init.outputs.version }}
+          docker pull homeassistant/armv7-homeassistant:${{ needs.init.outputs.version }}
+          docker pull homeassistant/aarch64-homeassistant:${{ needs.init.outputs.version }}
+
+          validate_image homeassistant/amd64-homeassistant:${{ needs.init.outputs.version }}
+          validate_image homeassistant/i386-homeassistant:${{ needs.init.outputs.version }}
+          validate_image homeassistant/armhf-homeassistant:${{ needs.init.outputs.version }}
+          validate_image homeassistant/armv7-homeassistant:${{ needs.init.outputs.version }}
+          validate_image homeassistant/aarch64-homeassistant:${{ needs.init.outputs.version }}
+
+          # Create version tag
+          create_manifest "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
+
+          # Create general tags
+          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
+            create_manifest "dev" "${{ needs.init.outputs.version }}"
+          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
+            create_manifest "beta" "${{ needs.init.outputs.version }}"
+            create_manifest "rc" "${{ needs.init.outputs.version }}"
+          else
+            create_manifest "stable" "${{ needs.init.outputs.version }}"
+            create_manifest "latest" "${{ needs.init.outputs.version }}"
+            create_manifest "beta" "${{ needs.init.outputs.version }}"
+            create_manifest "rc" "${{ needs.init.outputs.version }}"
           fi
-        }
-
-        docker pull homeassistant/amd64-homeassistant:${{ needs.init.outputs.version }}
-        docker pull homeassistant/i386-homeassistant:${{ needs.init.outputs.version }}
-        docker pull homeassistant/armhf-homeassistant:${{ needs.init.outputs.version }}
-        docker pull homeassistant/armv7-homeassistant:${{ needs.init.outputs.version }}
-        docker pull homeassistant/aarch64-homeassistant:${{ needs.init.outputs.version }}
-
-        validate_image homeassistant/amd64-homeassistant:${{ needs.init.outputs.version }}
-        validate_image homeassistant/i386-homeassistant:${{ needs.init.outputs.version }}
-        validate_image homeassistant/armhf-homeassistant:${{ needs.init.outputs.version }}
-        validate_image homeassistant/armv7-homeassistant:${{ needs.init.outputs.version }}
-        validate_image homeassistant/aarch64-homeassistant:${{ needs.init.outputs.version }}
-
-        # Create version tag
-        create_manifest "${{ needs.init.outputs.version }}" "${{ needs.init.outputs.version }}"
-
-        # Create general tags
-        if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
-          create_manifest "dev" "${{ needs.init.outputs.version }}"
-        elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
-          create_manifest "beta" "${{ needs.init.outputs.version }}"
-          create_manifest "rc" "${{ needs.init.outputs.version }}"
-        else
-          create_manifest "stable" "${{ needs.init.outputs.version }}"
-          create_manifest "latest" "${{ needs.init.outputs.version }}"
-          create_manifest "beta" "${{ needs.init.outputs.version }}"
-          create_manifest "rc" "${{ needs.init.outputs.version }}"
-        fi
