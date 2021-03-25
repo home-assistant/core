@@ -172,6 +172,13 @@ class GlancesSensor(SensorEntity):
                     if sensor["type"] == "temperature_core":
                         if sensor["label"] == self._sensor_name_prefix:
                             self._state = sensor["value"]
+            elif self.type == "temperature_hdd":
+                for sensor in value["sensors"]:
+                    if (
+                        sensor["type"] == "temperature_hdd"
+                        and sensor["label"] == self._sensor_name_prefix
+                    ):
+                        self._state = sensor["value"]
             elif self.type == "memory_use_percent":
                 self._state = value["mem"]["percent"]
             elif self.type == "memory_use":
