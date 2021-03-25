@@ -1,10 +1,13 @@
 """Light platform support for yeelight."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
 import voluptuous as vol
 import yeelight
 from yeelight import (
+    Bulb,
     BulbException,
     Flow,
     RGBTransition,
@@ -529,9 +532,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return the current effect."""
         return self._effect
 
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> "Bulb":  # noqa: F821
+    def _bulb(self) -> Bulb:
         return self.device.bulb
 
     @property

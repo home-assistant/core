@@ -1,6 +1,5 @@
 """Support for deCONZ fans."""
-
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.fan import (
     DOMAIN,
@@ -76,7 +75,7 @@ class DeconzFan(DeconzDevice, FanEntity):
         return self._device.speed != 0
 
     @property
-    def percentage(self) -> Optional[int]:
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         if self._device.speed == 0:
             return 0
