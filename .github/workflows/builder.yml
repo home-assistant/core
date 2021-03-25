@@ -47,7 +47,7 @@ jobs:
           ignore-dev: true
 
   build_python:
-    name: Build PIPY package
+    name: Build PyPi package
     needs: init
     runs-on: ubuntu-latest
     steps:
