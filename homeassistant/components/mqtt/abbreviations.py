@@ -1,5 +1,4 @@
 """Abbreviations supported by MQTT discovery."""
-# speeds for mqtt fan are deprecated in the schema, support will be removed after a quarter (2021.7)
 
 ABBREVIATIONS = {
     "act_t": "action_topic",
