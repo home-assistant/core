@@ -122,7 +122,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         await self._ping.async_update()
 
     async def async_added_to_hass(self):
-        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        """Restore previous state on restart to avoid blocking startup."""
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
@@ -141,7 +141,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 
 
 class PingData:
-    """The Class for handling the data retrieval using icmplib."""
+    """The base class for handling the data retrieval."""
 
     def __init__(self, hass, host, count, privileged) -> None:
         """Initialize the data object."""
