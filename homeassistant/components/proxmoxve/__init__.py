@@ -200,7 +200,7 @@ def create_coordinator_container_vm(
 
         if vm_status is None:
             _LOGGER.warning(
-                "Vm/Container %s unable to be found in node %s.", vm_id, node_name
+                "Vm/Container %s unable to be found in node %s", vm_id, node_name
             )
             return None
 
