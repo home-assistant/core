@@ -96,8 +96,7 @@ class Analytics:
     async def save_preferences(self, preferences: dict) -> None:
         """Save preferences."""
         preferences = PREFERENCE_SCHEMA(preferences)
-        for key in preferences:
-            self._data[ATTR_PREFERENCES][key] = preferences[key]
+        self._data[ATTR_PREFERENCES].update(preferences)
         self._data[ATTR_ONBOARDED] = True
         await self._store.async_save(self._data)
 
