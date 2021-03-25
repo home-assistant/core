@@ -244,10 +244,10 @@ class AsusWrtRouter:
             raise ConfigEntryNotReady
 
         # System
-        model = await self._get_nvram_info("MODEL")
+        model = await _get_nvram_info(self._api, "MODEL")
         if model:
             self._model = model["model"]
-        firmware = await self._get_nvram_info("FIRMWARE")
+        firmware = await _get_nvram_info(self._api, "FIRMWARE")
         if firmware:
             self._sw_v = f"{firmware['firmver']} (build {firmware['buildno']})"
 
@@ -332,37 +332,21 @@ class AsusWrtRouter:
         self._sensors_data_handler = AsusWrtSensorDataHandler(self.hass, self._api)
         self._sensors_data_handler.update_device_count(self._connected_devices)
 
-        conn_dev_coordinator = await self._sensors_data_handler.get_coordinator(
-            SENSORS_TYPE_COUNT, False
-        )
-        self._sensors_coordinator[SENSORS_TYPE_COUNT] = {
-            KEY_COORDINATOR: conn_dev_coordinator,
-            KEY_SENSORS: SENSORS_CONNECTED_DEVICE,
+        sensors_types = {
+            SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
+            SENSORS_TYPE_BYTES: SENSORS_BYTES,
+            SENSORS_TYPE_RATES: SENSORS_RATES,
+            SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
         }
 
-        bytes_coordinator = await self._sensors_data_handler.get_coordinator(
-            SENSORS_TYPE_BYTES
-        )
-        self._sensors_coordinator[SENSORS_TYPE_BYTES] = {
-            KEY_COORDINATOR: bytes_coordinator,
-            KEY_SENSORS: SENSORS_BYTES,
-        }
-
-        rates_coordinator = await self._sensors_data_handler.get_coordinator(
-            SENSORS_TYPE_RATES
-        )
-        self._sensors_coordinator[SENSORS_TYPE_RATES] = {
-            KEY_COORDINATOR: rates_coordinator,
-            KEY_SENSORS: SENSORS_RATES,
-        }
-
-        avg_coordinator = await self._sensors_data_handler.get_coordinator(
-            SENSORS_TYPE_LOAD_AVG
-        )
-        self._sensors_coordinator[SENSORS_TYPE_LOAD_AVG] = {
-            KEY_COORDINATOR: avg_coordinator,
-            KEY_SENSORS: SENSORS_LOAD_AVG,
-        }
+        for sensor_type, sensor_names in sensors_types.items():
+            coordinator = await self._sensors_data_handler.get_coordinator(
+                sensor_type, sensor_type != SENSORS_TYPE_COUNT
+            )
+            self._sensors_coordinator[sensor_type] = {
+                KEY_COORDINATOR: coordinator,
+                KEY_SENSORS: sensor_names,
+            }
 
     async def _update_unpolled_sensors(self) -> None:
         """Request refresh for AsusWrt unpolled sensors."""
@@ -373,18 +357,6 @@ class AsusWrtRouter:
             coordinator = self._sensors_coordinator[SENSORS_TYPE_COUNT][KEY_COORDINATOR]
             if self._sensors_data_handler.update_device_count(self._connected_devices):
                 await coordinator.async_refresh()
-
-    async def _get_nvram_info(self, info_type):
-        """Get AsusWrt router info from nvram."""
-        info = {}
-        try:
-            info = await self._api.async_get_nvram(info_type)
-        except OSError as exc:
-            _LOGGER.warning(
-                "Error calling method async_get_nvram(%s): %s", info_type, exc
-            )
-
-        return info
 
     async def close(self) -> None:
         """Close the connection."""
@@ -454,6 +426,17 @@ class AsusWrtRouter:
     def api(self) -> AsusWrt:
         """Return router API."""
         return self._api
+
+
+async def _get_nvram_info(api: AsusWrt, info_type):
+    """Get AsusWrt router info from nvram."""
+    info = {}
+    try:
+        info = await api.async_get_nvram(info_type)
+    except OSError as exc:
+        _LOGGER.warning("Error calling method async_get_nvram(%s): %s", info_type, exc)
+
+    return info
 
 
 def get_api(conf: dict, options: dict | None = None) -> AsusWrt:
