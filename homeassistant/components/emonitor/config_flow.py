@@ -11,6 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
+from . import name_short_mac
 from .const import DOMAIN  # pylint:disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,11 +94,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-def name_short_mac(short_mac):
-    """Name from mac."""
-    return f"Emonitor {short_mac}"
-
-
 def short_mac(mac):
     """Short version of the mac."""
-    return "-".join(mac.split(":")[3:]).upper()
+    return "".join(mac.split(":")[3:]).upper()
