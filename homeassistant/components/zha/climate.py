@@ -31,6 +31,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_BOOST,
+    PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -49,6 +52,8 @@ from .core.const import (
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    PRESET_COMPLEX,
+    PRESET_SCHEDULE,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -595,3 +600,88 @@ class ZenWithinThermostat(Thermostat):
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    manufacturers={
+        "_TZE200_ckud7u2l",
+        "_TZE200_ywdxldoj",
+        "_TYST11_ckud7u2l",
+        "_TYST11_ywdxldoj",
+    },
+)
+class MoesThermostat(Thermostat):
+    """Moes Thermostat implementation."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Initialize ZHA Thermostat instance."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._presets = [
+            PRESET_NONE,
+            PRESET_AWAY,
+            PRESET_SCHEDULE,
+            PRESET_COMFORT,
+            PRESET_ECO,
+            PRESET_BOOST,
+            PRESET_COMPLEX,
+        ]
+        self._supported_flags |= SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_modes(self) -> tuple[str, ...]:
+        """Return only the heat mode, because the device can't be turned off."""
+        return (HVAC_MODE_HEAT,)
+
+    async def async_attribute_updated(self, record):
+        """Handle attribute update from device."""
+        if record.attr_name == "operation_preset":
+            if record.value == 0:
+                self._preset = PRESET_AWAY
+            if record.value == 1:
+                self._preset = PRESET_SCHEDULE
+            if record.value == 2:
+                self._preset = PRESET_NONE
+            if record.value == 3:
+                self._preset = PRESET_COMFORT
+            if record.value == 4:
+                self._preset = PRESET_ECO
+            if record.value == 5:
+                self._preset = PRESET_BOOST
+            if record.value == 6:
+                self._preset = PRESET_COMPLEX
+        await super().async_attribute_updated(record)
+
+    async def async_preset_handler(self, preset: str, enable: bool = False) -> bool:
+        """Set the preset mode."""
+        mfg_code = self._zha_device.manufacturer_code
+        if not enable:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 2}, manufacturer=mfg_code
+            )
+        if preset == PRESET_AWAY:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 0}, manufacturer=mfg_code
+            )
+        if preset == PRESET_SCHEDULE:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 1}, manufacturer=mfg_code
+            )
+        if preset == PRESET_COMFORT:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 3}, manufacturer=mfg_code
+            )
+        if preset == PRESET_ECO:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 4}, manufacturer=mfg_code
+            )
+        if preset == PRESET_BOOST:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 5}, manufacturer=mfg_code
+            )
+        if preset == PRESET_COMPLEX:
+            return await self._thrm.write_attributes(
+                {"operation_preset": 6}, manufacturer=mfg_code
+            )
+
+        return False

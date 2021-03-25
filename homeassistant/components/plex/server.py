@@ -34,6 +34,7 @@ from .const import (
     DEBOUNCE_TIMEOUT,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    GDM_DEBOUNCER,
     GDM_SCANNER,
     PLAYER_SOURCE,
     PLEX_NEW_MP_SIGNAL,
@@ -323,6 +324,8 @@ class PlexServer:
         """Update the platform entities."""
         _LOGGER.debug("Updating devices")
 
+        await self.hass.data[DOMAIN][GDM_DEBOUNCER]()
+
         available_clients = {}
         ignored_clients = set()
         new_clients = set()
@@ -395,9 +398,10 @@ class PlexServer:
                 client = PlexClient(
                     server=self._plex_server,
                     baseurl=baseurl,
+                    identifier=machine_identifier,
                     token=self._plex_server.createToken(),
                 )
-            except requests.exceptions.ConnectionError:
+            except (NotFound, requests.exceptions.ConnectionError):
                 _LOGGER.error(
                     "Direct client connection failed, will try again: %s (%s)",
                     name,
@@ -418,9 +422,11 @@ class PlexServer:
             """Connect to a plex.tv resource and return a Plex client."""
             try:
                 client = resource.connect(timeout=3)
-                _LOGGER.debug("plex.tv resource connection successful: %s", client)
+                _LOGGER.debug("Resource connection successful to plex.tv: %s", client)
             except NotFound:
-                _LOGGER.error("plex.tv resource connection failed: %s", resource.name)
+                _LOGGER.error(
+                    "Resource connection failed to plex.tv: %s", resource.name
+                )
             else:
                 client.proxyThroughServer(value=False, server=self._plex_server)
                 self._client_device_cache[client.machineIdentifier] = client

@@ -179,7 +179,7 @@ def _setup_test_switch(hass):
 def test_name(hass):
     """Test the name."""
     switch, body_on, body_off = _setup_test_switch(hass)
-    assert NAME == switch.name
+    assert switch.name == NAME
 
 
 def test_is_on_before_update(hass):

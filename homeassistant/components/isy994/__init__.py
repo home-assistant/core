@@ -144,7 +144,7 @@ async def async_setup_entry(
         https = True
         port = host.port or 443
     else:
-        _LOGGER.error("isy994 host value in configuration is invalid")
+        _LOGGER.error("The isy994 host value in configuration is invalid")
         return False
 
     # Connect to ISY controller.

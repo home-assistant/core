@@ -16,11 +16,9 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
-from .const import CONF_UUID, KEY_MAC, TIMEOUT
+from .const import CONF_UUID, DOMAIN, KEY_MAC, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "daikin"
 
 PARALLEL_UPDATES = 0
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)

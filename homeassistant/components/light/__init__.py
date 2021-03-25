@@ -6,7 +6,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import os
-from typing import cast
+from typing import cast, final
 
 import voluptuous as vol
 
@@ -478,7 +478,7 @@ class Profiles:
 
 
 class LightEntity(ToggleEntity):
-    """Representation of a light."""
+    """Base class for light entities."""
 
     @property
     def brightness(self) -> int | None:
@@ -610,7 +610,7 @@ class LightEntity(ToggleEntity):
             data[ATTR_EFFECT_LIST] = self.effect_list
 
         data[ATTR_SUPPORTED_COLOR_MODES] = sorted(
-            list(self._light_internal_supported_color_modes)
+            self._light_internal_supported_color_modes
         )
 
         return data
@@ -634,6 +634,7 @@ class LightEntity(ToggleEntity):
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
         return data
 
+    @final
     @property
     def state_attributes(self):
         """Return state attributes."""

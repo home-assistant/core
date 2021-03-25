@@ -1,5 +1,6 @@
 """The motion_blinds component."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -64,19 +65,13 @@ async def async_setup_entry(
         """Call all updates using one async_add_executor_job."""
         motion_gateway.Update()
         for blind in motion_gateway.device_list.values():
-            try:
+            with suppress(timeout):
                 blind.Update()
-            except timeout:
-                # let the error be logged and handled by the motionblinds library
-                pass
 
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
-        try:
+        with suppress(timeout):  # Let the error be handled by the motionblinds
             await hass.async_add_executor_job(update_gateway)
-        except timeout:
-            # let the error be logged and handled by the motionblinds library
-            pass
 
     coordinator = DataUpdateCoordinator(
         hass,

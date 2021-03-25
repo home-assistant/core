@@ -48,7 +48,7 @@ class TriggerInstance:
 
     action: AutomationActionType = attr.ib()
     automation_info: dict = attr.ib()
-    trigger: "Trigger" = attr.ib()
+    trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
     async def async_attach_trigger(self):

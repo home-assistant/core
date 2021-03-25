@@ -10,9 +10,9 @@ from garminconnect import (
     GarminConnectTooManyRequestsError,
 )
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .alarm_util import calculate_next_active_alarms
@@ -70,7 +70,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class GarminConnectSensor(Entity):
+class GarminConnectSensor(SensorEntity):
     """Representation of a Garmin Connect Sensor."""
 
     def __init__(

@@ -5,6 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
+from contextlib import suppress
 from datetime import datetime, timedelta
 from functools import partial, wraps
 import json
@@ -513,10 +514,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        try:
+        with suppress(ValueError, TypeError):
             variables["value_json"] = json.loads(value)
-        except (ValueError, TypeError):
-            pass
 
         try:
             return self._compiled.render(variables).strip()
@@ -982,7 +981,7 @@ def distance(hass, *args):
         else:
             if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
-                    "distance:State does not contain valid location: %s", point_state
+                    "Distance:State does not contain valid location: %s", point_state
                 )
                 return None
 
@@ -1318,7 +1317,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def __init__(self, hass, limited=False):
         """Initialise template environment."""
-        super().__init__()
+        super().__init__(undefined=jinja2.make_logging_undefined(logger=_LOGGER))
         self.hass = hass
         self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
@@ -1439,7 +1438,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(obj, (AllStates, DomainStates, TemplateState)):
-            return not attr[0] == "_"
+            return attr[0] != "_"
 
         if isinstance(obj, Namespace):
             return True

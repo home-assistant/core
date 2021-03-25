@@ -4,7 +4,7 @@ from datetime import timedelta
 from pytautulli import Tautulli
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 CONF_MONITORED_USERS = "monitored_users"
@@ -72,7 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensor, True)
 
 
-class TautulliSensor(Entity):
+class TautulliSensor(SensorEntity):
     """Representation of a Tautulli sensor."""
 
     def __init__(self, tautulli, name, monitored_conditions, users):

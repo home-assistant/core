@@ -5,6 +5,7 @@ from datetime import timedelta
 import functools as ft
 import logging
 import math
+from typing import final
 
 import voluptuous as vol
 
@@ -220,7 +221,7 @@ def _fan_native(method):
 
 
 class FanEntity(ToggleEntity):
-    """Representation of a fan."""
+    """Base class for fan entities."""
 
     @_fan_native
     def set_speed(self, speed: str) -> None:
@@ -230,7 +231,7 @@ class FanEntity(ToggleEntity):
     async def async_set_speed_deprecated(self, speed: str):
         """Set the speed of the fan."""
         _LOGGER.warning(
-            "fan.set_speed is deprecated, use fan.set_percentage or fan.set_preset_mode instead."
+            "The fan.set_speed service is deprecated, use fan.set_percentage or fan.set_preset_mode instead"
         )
         await self.async_set_speed(speed)
 
@@ -368,7 +369,7 @@ class FanEntity(ToggleEntity):
             percentage = None
         elif speed is not None:
             _LOGGER.warning(
-                "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead."
+                "Calling fan.turn_on with the speed argument is deprecated, use percentage or preset_mode instead"
             )
             if speed in self.preset_modes:
                 preset_mode = speed
@@ -586,6 +587,7 @@ class FanEntity(ToggleEntity):
                 f"The speed_list {speed_list} does not contain any valid speeds."
             ) from ex
 
+    @final
     @property
     def state_attributes(self) -> dict:
         """Return optional state attributes."""

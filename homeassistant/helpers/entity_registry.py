@@ -222,7 +222,7 @@ class EntityRegistry:
         # To disable an entity if it gets created
         disabled_by: str | None = None,
         # Data that we want entry to have
-        config_entry: "ConfigEntry" | None = None,
+        config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
         area_id: str | None = None,
         capabilities: dict[str, Any] | None = None,
@@ -628,7 +628,7 @@ def async_entries_for_config_entry(
 
 @callback
 def async_config_entry_disabled_by_changed(
-    registry: EntityRegistry, config_entry: "ConfigEntry"
+    registry: EntityRegistry, config_entry: ConfigEntry
 ) -> None:
     """Handle a config entry being disabled or enabled.
 

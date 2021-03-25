@@ -360,7 +360,7 @@ async def test_whitelist_no_match(mock_debug, hass):
         await hass.async_block_till_done()
         debug_log_call = mock_debug.call_args_list[-3]
 
-        assert not ("Event pilight_received" in debug_log_call)
+        assert "Event pilight_received" not in debug_log_call
 
 
 async def test_call_rate_delay_throttle_enabled(hass):

@@ -86,13 +86,11 @@ class FlowManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_finish_flow(
-        self, flow: "FlowHandler", result: dict[str, Any]
+        self, flow: FlowHandler, result: dict[str, Any]
     ) -> dict[str, Any]:
         """Finish a config flow and add an entry."""
 
-    async def async_post_init(
-        self, flow: "FlowHandler", result: dict[str, Any]
-    ) -> None:
+    async def async_post_init(self, flow: FlowHandler, result: dict[str, Any]) -> None:
         """Entry has finished executing its first step asynchronously."""
 
     @callback

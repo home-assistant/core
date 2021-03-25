@@ -245,7 +245,7 @@ class InputText(RestoreEntity):
         return self._config[CONF_ID]
 
     @property
-    def state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_EDITABLE: self.editable,

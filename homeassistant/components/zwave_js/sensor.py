@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DOMAIN as SENSOR_DOMAIN,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -67,7 +68,7 @@ async def async_setup_entry(
     )
 
 
-class ZwaveSensorBase(ZWaveBaseEntity):
+class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     """Basic Representation of a Z-Wave sensor."""
 
     def __init__(
@@ -79,10 +80,15 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         """Initialize a ZWaveSensorBase entity."""
         super().__init__(config_entry, client, info)
         self._name = self.generate_name(include_value_name=True)
+        self._device_class = self._get_device_class()
 
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the sensor."""
+    def _get_device_class(self) -> str | None:
+        """
+        Get the device class of the sensor.
+
+        This should be run once during initialization so we don't have to calculate
+        this value on every state update.
+        """
         if self.info.primary_value.command_class == CommandClass.BATTERY:
             return DEVICE_CLASS_BATTERY
         if self.info.primary_value.command_class == CommandClass.METER:
@@ -100,6 +106,11 @@ class ZwaveSensorBase(ZWaveBaseEntity):
         if self.info.primary_value.metadata.unit == "Lux":
             return DEVICE_CLASS_ILLUMINANCE
         return None
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -197,8 +208,8 @@ class ZWaveListSensor(ZwaveSensorBase):
         if self.info.primary_value.value is None:
             return None
         if (
-            not str(self.info.primary_value.value)
-            in self.info.primary_value.metadata.states
+            str(self.info.primary_value.value)
+            not in self.info.primary_value.metadata.states
         ):
             return str(self.info.primary_value.value)
         return str(

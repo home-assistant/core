@@ -36,7 +36,7 @@ def async_register_info(
     Deprecated.
     """
     _LOGGER.warning(
-        "system_health.async_register_info is deprecated. Add a system_health platform instead."
+        "Calling system_health.async_register_info is deprecated; Add a system_health platform instead"
     )
     hass.data.setdefault(DOMAIN, {})
     SystemHealthRegistration(hass, domain).async_register_info(info_callback)
@@ -60,7 +60,7 @@ async def _register_system_health_platform(hass, integration_domain, platform):
 
 
 async def get_integration_info(
-    hass: HomeAssistant, registration: "SystemHealthRegistration"
+    hass: HomeAssistant, registration: SystemHealthRegistration
 ):
     """Get integration system health."""
     try:

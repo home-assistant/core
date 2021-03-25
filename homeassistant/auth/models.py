@@ -43,10 +43,10 @@ class User:
     groups: list[Group] = attr.ib(factory=list, eq=False, order=False)
 
     # List of credentials of a user.
-    credentials: list["Credentials"] = attr.ib(factory=list, eq=False, order=False)
+    credentials: list[Credentials] = attr.ib(factory=list, eq=False, order=False)
 
     # Tokens associated with a user.
-    refresh_tokens: dict[str, "RefreshToken"] = attr.ib(
+    refresh_tokens: dict[str, RefreshToken] = attr.ib(
         factory=dict, eq=False, order=False
     )
 
@@ -109,7 +109,7 @@ class RefreshToken:
     last_used_at: datetime | None = attr.ib(default=None)
     last_used_ip: str | None = attr.ib(default=None)
 
-    credential: "Credentials" | None = attr.ib(default=None)
+    credential: Credentials | None = attr.ib(default=None)
 
     version: str | None = attr.ib(default=__version__)
 

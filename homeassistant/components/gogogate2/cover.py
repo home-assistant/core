@@ -33,8 +33,8 @@ async def async_setup_platform(
 ) -> None:
     """Convert old style file configs to new style configs."""
     _LOGGER.warning(
-        "Loading gogogate2 via platform config is deprecated. The configuration"
-        " has been migrated to a config entry and can be safely removed."
+        "Loading gogogate2 via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
