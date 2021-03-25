@@ -366,9 +366,7 @@ class MqttFan(MqttEntity, FanEntity):
                     msg.topic,
                 )
                 return
-            if 0 <= percentage <= 100:
-                self._percentage = percentage
-            else:
+            if percentage < 0 or percentage > 100:
                 _LOGGER.warning(
                     "'%s' received on topic %s is not a valid speed within the speed range",
                     msg.payload,
