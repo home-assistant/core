@@ -708,7 +708,7 @@ pydexcom==0.2.0
 pydispatcher==2.0.5
 
 # homeassistant.components.econet
-pyeconet==0.1.12
+pyeconet==0.1.13
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
