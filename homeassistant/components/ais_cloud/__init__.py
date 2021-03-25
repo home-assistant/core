@@ -143,6 +143,8 @@ async def async_setup(hass, config):
     )
     hass.components.websocket_api.async_register_command(websocket_report_ais_problem)
 
+    hass.components.websocket_api.async_register_command(websocket_add_ais_media_source)
+
     def device_discovered(service):
         """ Called when a device has been discovered. """
         if ais_global.G_AIS_START_IS_DONE:
@@ -415,6 +417,41 @@ async def websocket_check_ais_media_source(hass, connection, msg):
     await hass.services.async_call("ais_ai_service", "say_it", {"text": info})
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "ais_cloud/add_ais_media_source",
+        vol.Required("mediaCategory"): str,
+        vol.Required("mediaName"): str,
+        vol.Required("mediaType"): str,
+        vol.Required("mediaStreamUrl"): str,
+        vol.Optional("mediaImageUrl"): str,
+        vol.Optional("mediaShare"): bool,
+    }
+)
+@websocket_api.async_response
+async def websocket_add_ais_media_source(hass, connection, msg):
+    """
+    Check the media source in AIS
+    """
+    # 1. get ORIGIN_URL from AIS
+    ws = AisCloudWS(hass)
+    ais_answer = await ws.async_add_ais_media(
+        media_category=msg["mediaCategory"],
+        name=msg["mediaName"],
+        media_type=msg["mediaType"],
+        media_url=msg["mediaStreamUrl"],
+        image_url=msg["mediaImageUrl"],
+        share=msg["mediaShare"],
+    )
+    if ais_answer.get("error", False):
+        _LOGGER.error(ais_answer["message"])
+
+    connection.send_result(msg["id"], ais_answer)
+    await hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": ais_answer["message"]}
+    )
+
+
 class AisCloudWS:
     def __init__(self, hass):
         """Initialize the cloud WS connections."""
@@ -528,6 +565,30 @@ class AisCloudWS:
                     + " "
                     + str(e)
                 )
+
+    async def async_add_ais_media(
+        self, media_category, name, media_type, media_url, image_url, share
+    ):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "add_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {
+                    "media_category": media_category,
+                    "name": name,
+                    "media_type": media_type,
+                    "media_url": media_url,
+                    "image_url": image_url,
+                    "share": share,
+                }
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.post(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't add the: " + name + " " + str(e))
+            return {"error": True, "message": str(e)}
 
     async def async_check_ais_media(self, name, source, current_url):
         web_session = aiohttp_client.async_get_clientsession(self.hass)
