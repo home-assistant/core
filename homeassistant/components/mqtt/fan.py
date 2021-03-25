@@ -71,8 +71,6 @@ CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
 CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
 CONF_PAYLOAD_OSCILLATION_ON = "payload_oscillation_on"
 CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
-# CONF_PAYLOAD_OFF_SPEED, CONF_PAYLOAD_LOW_SPEED, CONF_PAYLOAD_MEDIUM_SPEED, CONF_PAYLOAD_HIGH_SPEED
-# and CONF_SPEED_LIST are deprecated in the schema, support will be removed after a quarter (2021.7)
 CONF_PAYLOAD_OFF_SPEED = "payload_off_speed"
 CONF_PAYLOAD_LOW_SPEED = "payload_low_speed"
 CONF_PAYLOAD_MEDIUM_SPEED = "payload_medium_speed"
