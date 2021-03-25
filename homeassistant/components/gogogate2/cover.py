@@ -1,6 +1,8 @@
 """Support for Gogogate2 garage Doors."""
+from __future__ import annotations
+
 import logging
-from typing import Callable, List, Optional
+from typing import Callable
 
 from gogogate2_api.common import AbstractDoor, DoorStatus, get_configured_doors
 
@@ -31,8 +33,8 @@ async def async_setup_platform(
 ) -> None:
     """Convert old style file configs to new style configs."""
     _LOGGER.warning(
-        "Loading gogogate2 via platform config is deprecated. The configuration"
-        " has been migrated to a config entry and can be safely removed."
+        "Loading gogogate2 via platform config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -44,7 +46,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], Optional[bool]], None],
+    async_add_entities: Callable[[list[Entity], bool | None], None],
 ) -> None:
     """Set up the config entry."""
     data_update_coordinator = get_data_update_coordinator(hass, config_entry)

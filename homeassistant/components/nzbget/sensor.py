@@ -1,8 +1,11 @@
 """Monitor the NZBGet API."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Callable, List, Optional
+from typing import Callable
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -41,7 +44,7 @@ SENSOR_TYPES = {
 async def async_setup_entry(
     hass: HomeAssistantType,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: Callable[[list[Entity], bool], None],
 ) -> None:
     """Set up NZBGet sensor based on a config entry."""
     coordinator: NZBGetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
@@ -64,7 +67,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class NZBGetSensor(NZBGetEntity):
+class NZBGetSensor(NZBGetEntity, SensorEntity):
     """Representation of a NZBGet sensor."""
 
     def __init__(
@@ -74,7 +77,7 @@ class NZBGetSensor(NZBGetEntity):
         entry_name: str,
         sensor_type: str,
         sensor_name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ):
         """Initialize a new NZBGet sensor."""
         self._sensor_type = sensor_type

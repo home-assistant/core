@@ -1,7 +1,8 @@
 """All constants related to the ZHA component."""
+from __future__ import annotations
+
 import enum
 import logging
-from typing import List
 
 import bellows.zigbee.application
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
@@ -172,6 +173,9 @@ MFG_CLUSTER_ID_START = 0xFC00
 POWER_MAINS_POWERED = "Mains"
 POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 
+PRESET_SCHEDULE = "schedule"
+PRESET_COMPLEX = "complex"
+
 
 class RadioType(enum.Enum):
     # pylint: disable=invalid-name
@@ -203,7 +207,7 @@ class RadioType(enum.Enum):
     )
 
     @classmethod
-    def list(cls) -> List[str]:
+    def list(cls) -> list[str]:
         """Return a list of descriptions."""
         return [e.description for e in RadioType]
 

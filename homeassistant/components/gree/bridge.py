@@ -1,7 +1,8 @@
 """Helper and wrapper classes for Gree module."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import List
 
 from greeclimate.device import Device, DeviceInfo
 from greeclimate.discovery import Discovery
@@ -86,7 +87,7 @@ class DeviceHelper:
         return device
 
     @staticmethod
-    async def find_devices() -> List[DeviceInfo]:
+    async def find_devices() -> list[DeviceInfo]:
         """Gather a list of device infos from the local network."""
         return await Discovery.search_devices()
 

@@ -7,7 +7,6 @@ import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
-    SIGNAL_DATA,
     STATE_CONNECTED,
     STATE_DISCONNECTED,
     STATE_STOPPED,
@@ -61,12 +60,16 @@ async def async_setup(hass, config):
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
+    def gdm_scan():
+        _LOGGER.debug("Scanning for GDM clients")
+        gdm.scan(scan_for_clients=True)
+
     hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
         hass,
         _LOGGER,
         cooldown=10,
         immediate=True,
-        function=partial(gdm.scan, scan_for_clients=True),
+        function=gdm_scan,
     ).async_call
 
     return True
@@ -145,26 +148,22 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
-    async def async_update_plex():
-        await hass.data[PLEX_DOMAIN][GDM_DEBOUNCER]()
-        await plex_server.async_update_platforms()
-
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        async_update_plex,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     @callback
-    def plex_websocket_callback(signal, data, error):
+    def plex_websocket_callback(msgtype, data, error):
         """Handle callbacks from plexwebsocket library."""
-        if signal == SIGNAL_CONNECTION_STATE:
+        if msgtype == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
-                hass.async_create_task(async_update_plex())
+                hass.async_create_task(plex_server.async_update_platforms())
             elif data == STATE_DISCONNECTED:
                 _LOGGER.debug(
                     "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
@@ -178,7 +177,7 @@ async def async_setup_entry(hass, entry):
                 )
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-        elif signal == SIGNAL_DATA:
+        elif msgtype == "playing":
             hass.async_create_task(plex_server.async_update_session(data))
 
     session = async_get_clientsession(hass)

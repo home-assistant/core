@@ -1,13 +1,19 @@
 """Support for Modbus Register sensors."""
+from __future__ import annotations
+
 import logging
 import struct
-from typing import Any, Optional, Union
+from typing import Any
 
 from pymodbus.exceptions import ConnectionException, ModbusException
 from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
-from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -44,7 +50,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def number(value: Any) -> Union[int, float]:
+def number(value: Any) -> int | float:
     """Coerce a value to number without losing precision."""
     if isinstance(value, int):
         return value
@@ -156,7 +162,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors)
 
 
-class ModbusRegisterSensor(RestoreEntity):
+class ModbusRegisterSensor(RestoreEntity, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -217,7 +223,7 @@ class ModbusRegisterSensor(RestoreEntity):
         return self._unit_of_measurement
 
     @property
-    def device_class(self) -> Optional[str]:
+    def device_class(self) -> str | None:
         """Return the device class of the sensor."""
         return self._device_class
 

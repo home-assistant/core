@@ -55,6 +55,7 @@ from .schema import (
     WeatherSchema,
     ga_validator,
     ia_validator,
+    sensor_type_validator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,7 +163,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
                 [ga_validator],
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            vol.Required(SERVICE_KNX_ATTR_TYPE): vol.Any(int, float, str),
+            vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
         }
     ),
     vol.Schema(
@@ -199,7 +200,7 @@ SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
 )
 
 SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
-    ExposeSchema.SCHEMA.extend(
+    ExposeSchema.EXPOSE_SENSOR_SCHEMA.extend(
         {
             vol.Optional(SERVICE_KNX_ATTR_REMOVE, default=False): cv.boolean,
         }
@@ -372,11 +373,15 @@ class KNXModule:
         local_ip = self.config[DOMAIN][CONF_KNX_TUNNELING].get(
             ConnectionSchema.CONF_KNX_LOCAL_IP
         )
+        route_back = self.config[DOMAIN][CONF_KNX_TUNNELING][
+            ConnectionSchema.CONF_KNX_ROUTE_BACK
+        ]
         return ConnectionConfig(
             connection_type=ConnectionType.TUNNELING,
             gateway_ip=gateway_ip,
             gateway_port=gateway_port,
             local_ip=local_ip,
+            route_back=route_back,
             auto_reconnect=True,
         )
 

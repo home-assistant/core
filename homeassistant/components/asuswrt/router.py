@@ -1,7 +1,9 @@
 """Represent the AsusWrt router."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from aioasuswrt.asuswrt import AsusWrt
 
@@ -74,7 +76,7 @@ class AsusWrtSensorDataHandler:
 
     async def _get_bytes(self):
         """Fetch byte information from the router."""
-        ret_dict: Dict[str, Any] = {}
+        ret_dict: dict[str, Any] = {}
         try:
             datas = await self._api.async_get_bytes_total()
         except OSError as exc:
@@ -87,7 +89,7 @@ class AsusWrtSensorDataHandler:
 
     async def _get_rates(self):
         """Fetch rates information from the router."""
-        ret_dict: Dict[str, Any] = {}
+        ret_dict: dict[str, Any] = {}
         try:
             rates = await self._api.async_get_current_transfer_rates()
         except OSError as exc:
@@ -194,12 +196,12 @@ class AsusWrtRouter:
         self._protocol = entry.data[CONF_PROTOCOL]
         self._host = entry.data[CONF_HOST]
 
-        self._devices: Dict[str, Any] = {}
+        self._devices: dict[str, Any] = {}
         self._connected_devices = 0
         self._connect_error = False
 
         self._sensors_data_handler: AsusWrtSensorDataHandler = None
-        self._sensors_coordinator: Dict[str, Any] = {}
+        self._sensors_coordinator: dict[str, Any] = {}
 
         self._on_close = []
 
@@ -245,7 +247,7 @@ class AsusWrtRouter:
             async_track_time_interval(self.hass, self.update_all, SCAN_INTERVAL)
         )
 
-    async def update_all(self, now: Optional[datetime] = None) -> None:
+    async def update_all(self, now: datetime | None = None) -> None:
         """Update all AsusWrt platforms."""
         await self.update_devices()
 
@@ -353,7 +355,7 @@ class AsusWrtRouter:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    def update_options(self, new_options: Dict) -> bool:
+    def update_options(self, new_options: dict) -> bool:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
@@ -367,7 +369,7 @@ class AsusWrtRouter:
         return req_reload
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return the device information."""
         return {
             "identifiers": {(DOMAIN, "AsusWRT")},
@@ -392,12 +394,12 @@ class AsusWrtRouter:
         return self._host
 
     @property
-    def devices(self) -> Dict[str, Any]:
+    def devices(self) -> dict[str, Any]:
         """Return devices."""
         return self._devices
 
     @property
-    def sensors_coordinator(self) -> Dict[str, Any]:
+    def sensors_coordinator(self) -> dict[str, Any]:
         """Return sensors coordinators."""
         return self._sensors_coordinator
 
@@ -407,7 +409,7 @@ class AsusWrtRouter:
         return self._api
 
 
-def get_api(conf: Dict, options: Optional[Dict] = None) -> AsusWrt:
+def get_api(conf: dict, options: dict | None = None) -> AsusWrt:
     """Get the AsusWrt API."""
     opt = options or {}
 

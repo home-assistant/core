@@ -7,10 +7,10 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import solaredge
 from stringcase import snakecase
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_API_KEY, DEVICE_CLASS_BATTERY, DEVICE_CLASS_POWER
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -117,7 +117,7 @@ class SolarEdgeSensorFactory:
         return sensor_class(self.platform_name, sensor_key, service)
 
 
-class SolarEdgeSensor(CoordinatorEntity, Entity):
+class SolarEdgeSensor(CoordinatorEntity, SensorEntity):
     """Abstract class for a solaredge sensor."""
 
     def __init__(self, platform_name, sensor_key, data_service):

@@ -153,7 +153,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             title = entity.plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = entity.plex_server.library.sectionByID(
-                media_content_id
+                int(media_content_id)
             )
             title = library_or_section.title
             try:
@@ -193,7 +193,7 @@ def browse_media(entity, is_internal, media_content_type=None, media_content_id=
             return server_payload(entity.plex_server)
 
         if media_content_type == "library":
-            return library_payload(media_content_id)
+            return library_payload(int(media_content_id))
 
     except UnknownMediaType as err:
         raise BrowseError(
@@ -223,7 +223,7 @@ def library_section_payload(section):
     return BrowseMedia(
         title=section.title,
         media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=section.key,
+        media_content_id=str(section.key),
         media_content_type="library",
         can_play=False,
         can_expand=True,

@@ -107,7 +107,7 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         _LOGGER.debug("Using subarulink %s", self.controller.version)
         _LOGGER.debug(
-            "Setting up first time connection to Subuaru API.  This may take up to 20 seconds."
+            "Setting up first time connection to Subuaru API; This may take up to 20 seconds"
         )
         if await self.controller.connect():
             _LOGGER.debug("Successfully authenticated and authorized with Subaru API")

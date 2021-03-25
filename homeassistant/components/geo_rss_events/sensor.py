@@ -12,7 +12,7 @@ from georss_client import UPDATE_OK, UPDATE_OK_NO_DATA
 from georss_generic_client import GenericFeed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -23,7 +23,6 @@ from homeassistant.const import (
     LENGTH_KILOMETERS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +95,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices, True)
 
 
-class GeoRssServiceSensor(Entity):
+class GeoRssServiceSensor(SensorEntity):
     """Representation of a Sensor."""
 
     def __init__(

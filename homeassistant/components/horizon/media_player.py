@@ -184,9 +184,7 @@ class HorizonDevice(MediaPlayerEntity):
             elif channel:
                 self._client.select_channel(channel)
         except OSError as msg:
-            _LOGGER.error(
-                "%s disconnected: %s. Trying to reconnect...", self._name, msg
-            )
+            _LOGGER.error("%s disconnected: %s. Trying to reconnect", self._name, msg)
 
             # for reconnect, first gracefully disconnect
             self._client.disconnect()

@@ -6,7 +6,7 @@ import re
 import WazeRouteCalculator
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -20,7 +20,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,7 +125,7 @@ def _get_location_from_attributes(state):
     return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
-class WazeTravelTime(Entity):
+class WazeTravelTime(SensorEntity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, waze_data):

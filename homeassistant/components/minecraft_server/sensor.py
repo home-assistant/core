@@ -1,6 +1,9 @@
 """The Minecraft Server sensor platform."""
-from typing import Any, Dict
+from __future__ import annotations
 
+from typing import Any
+
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TIME_MILLISECONDS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -45,7 +48,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class MinecraftServerSensorEntity(MinecraftServerEntity):
+class MinecraftServerSensorEntity(MinecraftServerEntity, SensorEntity):
     """Representation of a Minecraft Server sensor base entity."""
 
     def __init__(
@@ -151,7 +154,7 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         self._extra_state_attributes = extra_state_attributes
 
     @property
-    def extra_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return players list in device state attributes."""
         return self._extra_state_attributes
 
