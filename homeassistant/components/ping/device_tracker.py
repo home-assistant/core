@@ -115,12 +115,14 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 privileged=privileged,
                 id=next_id,
             )
-            for host in responses:
-                if host.is_alive:
+            idx = 0
+            for dev_id in ip_to_dev_id.values():
+                if responses[idx].is_alive:
                     see(
-                        dev_id=ip_to_dev_id[host.address],
+                        dev_id=dev_id,
                         source_type=SOURCE_TYPE_ROUTER,
                     )
+                idx += 1
 
     def _update_interval(now):
         try:
