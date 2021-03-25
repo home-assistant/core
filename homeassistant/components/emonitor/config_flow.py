@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import format_mac
 
@@ -23,7 +23,7 @@ async def fetch_mac_and_title(hass: core.HomeAssistant, host):
     status = await emonitor.async_get_status()
     mac_address = status.network.mac_address
     # Return info that you want to store in the config entry.
-    return {"title": f"Emonitor {mac_address[-6:]}", "mac_address": mac_address}
+    return {"title": name_short_mac(mac_address[-6:]), "mac_address": mac_address}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,6 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize Emonitor ConfigFlow."""
         self.discovered_ip = None
+        self.discovered_info = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -61,16 +62,41 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
-        mac_address = dhcp_discovery[MAC_ADDRESS]
-        await self.async_set_unique_id(format_mac(mac_address))
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: dhcp_discovery[IP_ADDRESS]}
-        )
         self.discovered_ip = dhcp_discovery[IP_ADDRESS]
-        self.context["title_placeholders"] = {
-            "name": f"Emonitor {short_mac(mac_address)}"
-        }
-        return await self.async_step_user()
+        await self.async_set_unique_id(format_mac(dhcp_discovery[MAC_ADDRESS]))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self.discovered_ip})
+        name = name_short_mac(short_mac(dhcp_discovery[MAC_ADDRESS]))
+        self.context["title_placeholders"] = {"name": name}
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(self, user_input=None):
+        """Attempt to confim."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.discovered_info["title"],
+                data={CONF_HOST: self.discovered_ip},
+            )
+
+        try:
+            self.discovered_info = await fetch_mac_and_title(
+                self.hass, self.discovered_ip
+            )
+        except Exception:  # pylint: disable=broad-except
+            return await self.async_step_user()
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={
+                CONF_HOST: self.discovered_ip,
+                CONF_NAME: self.discovered_info["title"],
+            },
+        )
+
+
+def name_short_mac(short_mac):
+    """Name from mac."""
+    return f"Emonitor {short_mac}"
 
 
 def short_mac(mac):
