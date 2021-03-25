@@ -7,7 +7,6 @@ import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
-    SIGNAL_DATA,
     STATE_CONNECTED,
     STATE_DISCONNECTED,
     STATE_STOPPED,
@@ -158,9 +157,9 @@ async def async_setup_entry(hass, entry):
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     @callback
-    def plex_websocket_callback(signal, data, error):
+    def plex_websocket_callback(msgtype, data, error):
         """Handle callbacks from plexwebsocket library."""
-        if signal == SIGNAL_CONNECTION_STATE:
+        if msgtype == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
@@ -178,7 +177,7 @@ async def async_setup_entry(hass, entry):
                 )
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-        elif signal == SIGNAL_DATA:
+        elif msgtype == "playing":
             hass.async_create_task(plex_server.async_update_session(data))
 
     session = async_get_clientsession(hass)
