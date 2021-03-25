@@ -88,19 +88,15 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
             coordinator, unique_id, name, icon, host_name, node_name, vm_id
         )
 
-        self._state = None
-
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
         data = self.coordinator.data
 
         if data is None:
-            self._state = None
-        else:
-            self._state = data["status"] == "running"
+            return None
 
-        return self._state
+        return data["status"] == "running"
 
     @property
     def available(self):
