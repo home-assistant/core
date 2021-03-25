@@ -129,7 +129,7 @@ ABBREVIATIONS = {
     "pow_stat_tpl": "power_state_template",
     "pr_mode_cmd_t": "preset_mode_command_topic",
     "pr_mode_stat_t": "preset_mode_state_topic",
-    "pr_mode_value_tpl": "preset_mode_value_template",
+    "pr_mode_val_tpl": "preset_mode_value_template",
     "pr_modes": "preset_modes",
     "r_tpl": "red_template",
     "ret": "retain",
