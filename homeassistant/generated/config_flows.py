@@ -95,6 +95,7 @@ FLOWS = [
     "hive",
     "hlk_sw16",
     "home_connect",
+    "home_plus_control",
     "homekit",
     "homekit_controller",
     "homematicip_cloud",
