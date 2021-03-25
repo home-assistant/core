@@ -273,9 +273,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._legacy_speeds_list = []
 
         self._feature_percentage = CONF_PERCENTAGE_COMMAND_TOPIC in config
-        self._feature_preset_mode = (
-            not self._topic[CONF_PRESET_MODE_COMMAND_TOPIC] is None
-        )
+        self._feature_preset_mode = CONF_PRESET_MODE_COMMAND_TOPIC in config
         if self._feature_preset_mode:
             self._speeds_list = speed_list_without_preset_modes(
                 self._legacy_speeds_list + config[CONF_PRESET_MODES_LIST]
