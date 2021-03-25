@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        name="Emonitor power update",
+        name=entry.title,
         update_method=emonitor.async_get_status,
         update_interval=timedelta(seconds=DEFAULT_UPDATE_RATE),
     )
