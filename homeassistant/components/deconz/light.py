@@ -283,6 +283,11 @@ class DeconzGroup(DeconzBaseLight):
         return self._unique_id
 
     @property
+    def icon(self):
+        """Return the light group icon."""
+        return "mdi:lightbulb-group"
+
+    @property
     def device_info(self):
         """Return a device description for device registry."""
         bridgeid = self.gateway.api.config.bridgeid
