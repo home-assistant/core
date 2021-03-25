@@ -174,16 +174,21 @@ class ZWaveServices:
         new_value = service.data[const.ATTR_CONFIG_VALUE]
 
         for node in nodes:
-            await async_bulk_set_partial_config_parameters(
+            cmd_status = await async_bulk_set_partial_config_parameters(
                 node,
                 property_,
                 new_value,
             )
-            _LOGGER.info(
-                "Bulk set partials for configuration parameter %s on Node %s",
-                property_,
-                node,
-            )
+
+            if cmd_status == CommandStatus.ACCEPTED:
+                msg = "Bulk set partials for configuration parameter %s on Node %s"
+            else:
+                msg = (
+                    "Added command to queue to bulk set partials for configuration "
+                    "parameter %s on Node %s"
+                )
+
+            _LOGGER.info(msg, property_, node)
 
     async def async_poll_value(self, service: ServiceCall) -> None:
         """Poll value on a node."""
