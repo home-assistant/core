@@ -1,5 +1,6 @@
 """Arcam component."""
 import asyncio
+from contextlib import suppress
 import logging
 
 from arcam.fmj import ConnectionFailed
@@ -28,10 +29,8 @@ CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
 async def _await_cancel(task):
     task.cancel()
-    try:
+    with suppress(asyncio.CancelledError):
         await task
-    except asyncio.CancelledError:
-        pass
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):

@@ -1,5 +1,7 @@
 """Support for Homekit device discovery."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 import aiohomekit
 from aiohomekit.model import Accessory
@@ -77,7 +79,7 @@ class HomeKitEntity(Entity):
             signal_remove()
         self._signals.clear()
 
-    async def async_put_characteristics(self, characteristics: Dict[str, Any]):
+    async def async_put_characteristics(self, characteristics: dict[str, Any]):
         """
         Write characteristics to the device.
 
@@ -181,6 +183,21 @@ class AccessoryEntity(HomeKitEntity):
         """Return the ID of this device."""
         serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
         return f"homekit-{serial}-aid:{self._aid}"
+
+
+class CharacteristicEntity(HomeKitEntity):
+    """
+    A HomeKit entity that is related to an single characteristic rather than a whole service.
+
+    This is typically used to expose additional sensor, binary_sensor or number entities that don't belong with
+    the service entity.
+    """
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this device."""
+        serial = self.accessory_info.value(CharacteristicsTypes.SERIAL_NUMBER)
+        return f"homekit-{serial}-aid:{self._aid}-sid:{self._iid}-cid:{self._iid}"
 
 
 async def async_setup_entry(hass, entry):

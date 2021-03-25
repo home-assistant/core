@@ -1,6 +1,8 @@
 """Platform for Garmin Connect integration."""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from garminconnect import (
     GarminConnectAuthenticationError,
@@ -8,9 +10,9 @@ from garminconnect import (
     GarminConnectTooManyRequestsError,
 )
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .alarm_util import calculate_next_active_alarms
@@ -68,7 +70,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class GarminConnectSensor(Entity):
+class GarminConnectSensor(SensorEntity):
     """Representation of a Garmin Connect Sensor."""
 
     def __init__(
@@ -120,7 +122,7 @@ class GarminConnectSensor(Entity):
         return self._unit
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for sensor."""
         if not self._data.data:
             return {}
@@ -136,7 +138,7 @@ class GarminConnectSensor(Entity):
         return attributes
 
     @property
-    def device_info(self) -> Dict[str, Any]:
+    def device_info(self) -> dict[str, Any]:
         """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},

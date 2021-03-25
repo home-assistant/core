@@ -1,8 +1,11 @@
 """Helper for aiohttp webclient stuff."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 from ssl import SSLContext
 import sys
-from typing import Any, Awaitable, Optional, Union, cast
+from typing import Any, Awaitable, cast
 
 import aiohttp
 from aiohttp import web
@@ -35,10 +38,9 @@ def async_get_clientsession(
 
     This method must be run in the event loop.
     """
+    key = DATA_CLIENTSESSION_NOTVERIFY
     if verify_ssl:
         key = DATA_CLIENTSESSION
-    else:
-        key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
         hass.data[key] = async_create_clientsession(hass, verify_ssl)
@@ -87,7 +89,7 @@ async def async_aiohttp_proxy_web(
     web_coro: Awaitable[aiohttp.ClientResponse],
     buffer_size: int = 102400,
     timeout: int = 10,
-) -> Optional[web.StreamResponse]:
+) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
         with async_timeout.timeout(timeout):
@@ -118,7 +120,7 @@ async def async_aiohttp_proxy_stream(
     hass: HomeAssistantType,
     request: web.BaseRequest,
     stream: aiohttp.StreamReader,
-    content_type: Optional[str],
+    content_type: str | None,
     buffer_size: int = 102400,
     timeout: int = 10,
 ) -> web.StreamResponse:
@@ -128,18 +130,15 @@ async def async_aiohttp_proxy_stream(
         response.content_type = content_type
     await response.prepare(request)
 
-    try:
-        while True:
+    # Suppressing something went wrong fetching data, closed connection
+    with suppress(asyncio.TimeoutError, aiohttp.ClientError):
+        while hass.is_running:
             with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:
                 break
             await response.write(data)
-
-    except (asyncio.TimeoutError, aiohttp.ClientError):
-        # Something went wrong fetching data, closed connection
-        pass
 
     return response
 
@@ -175,7 +174,7 @@ def _async_get_connector(
         return cast(aiohttp.BaseConnector, hass.data[key])
 
     if verify_ssl:
-        ssl_context: Union[bool, SSLContext] = ssl_util.client_context()
+        ssl_context: bool | SSLContext = ssl_util.client_context()
     else:
         ssl_context = False
 

@@ -121,7 +121,7 @@ class SignalUpdateCallback:
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
-        device_entry = device_registry.async_get_device({(DOMAIN, device_id)}, ())
+        device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
         for event in events:
@@ -198,9 +198,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -211,14 +211,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if DATA_SDM not in entry.data:
         # Legacy API
         return True
-
+    _LOGGER.debug("Stopping nest subscriber")
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

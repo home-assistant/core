@@ -279,7 +279,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         return self._total_matches
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -336,14 +336,13 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         """Process the image."""
         model = self.hass.data[DOMAIN][CONF_MODEL]
         if not model:
-            _LOGGER.debug("Model not yet ready.")
+            _LOGGER.debug("Model not yet ready")
             return
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-error, import-outside-toplevel
+            import cv2  # pylint: disable=import-outside-toplevel
 
-            # pylint: disable=no-member
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)

@@ -850,7 +850,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             _LOGGER.error("Master not found %s", master_device)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """List members in group."""
         attributes = {}
         if self._group_list:

@@ -67,7 +67,7 @@ async def test_devices(
     zha_device_joined_restored,
 ):
     """Test device discovery."""
-    entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
+    entity_registry = homeassistant.helpers.entity_registry.async_get(
         hass_disable_services
     )
 
@@ -96,7 +96,7 @@ async def test_devices(
     entity_ids = hass_disable_services.states.async_entity_ids()
     await hass_disable_services.async_block_till_done()
     zha_entity_ids = {
-        ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
+        ent for ent in entity_ids if ent.split(".")[0] in zha_const.PLATFORMS
     }
 
     if cluster_identify:

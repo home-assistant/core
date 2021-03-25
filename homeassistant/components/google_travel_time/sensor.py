@@ -5,7 +5,7 @@ import logging
 import googlemaps
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -180,7 +179,7 @@ def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-class GoogleTravelTimeSensor(Entity):
+class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
     def __init__(self, hass, name, api_key, origin, destination, options):
@@ -230,7 +229,7 @@ class GoogleTravelTimeSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._matrix is None:
             return None

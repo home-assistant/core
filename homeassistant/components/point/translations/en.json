@@ -6,7 +6,7 @@
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "external_setup": "Point successfully configured from another flow.",
             "no_flows": "The component is not configured. Please follow the documentation.",
-            "unknown_authorize_url_generation": "Unknown error generating an authorize url."
+            "unknown_authorize_url_generation": "Unknown error generating an authorize URL."
         },
         "create_entry": {
             "default": "Successfully authenticated"

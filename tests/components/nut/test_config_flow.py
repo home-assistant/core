@@ -212,14 +212,40 @@ async def test_form_user_multiple_ups(hass):
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_form_import(hass):
-    """Test we get the form with import source."""
+async def test_form_user_one_ups_with_ignored_entry(hass):
+    """Test we can setup a new one when there is an ignored one."""
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
+    )
+    ignored_entry.add_to_hass(hass)
+
     await setup.async_setup_component(hass, "persistent_notification", {})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
 
     mock_pynut = _get_mock_pynutclient(
-        list_vars={"battery.voltage": "serial"},
-        list_ups={"ups1": "UPS 1", "ups2": "UPS2"},
+        list_vars={"battery.voltage": "voltage", "ups.status": "OL"}, list_ups=["ups1"]
     )
+
+    with patch(
+        "homeassistant.components.nut.PyNUTClient",
+        return_value=mock_pynut,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+                "port": 2222,
+            },
+        )
+
+    assert result2["step_id"] == "resources"
+    assert result2["type"] == "form"
 
     with patch(
         "homeassistant.components.nut.PyNUTClient",
@@ -230,60 +256,23 @@ async def test_form_import(hass):
         "homeassistant.components.nut.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={
-                "host": "localhost",
-                "port": 123,
-                "name": "name",
-                "resources": ["battery.charge"],
-            },
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"resources": ["battery.voltage", "ups.status", "ups.status.display"]},
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "create_entry"
-    assert result["title"] == "localhost:123"
-    assert result["data"] == {
-        "host": "localhost",
-        "port": 123,
-        "name": "name",
-        "resources": ["battery.charge"],
+    assert result3["type"] == "create_entry"
+    assert result3["title"] == "1.1.1.1:2222"
+    assert result3["data"] == {
+        "host": "1.1.1.1",
+        "password": "test-password",
+        "port": 2222,
+        "resources": ["battery.voltage", "ups.status", "ups.status.display"],
+        "username": "test-username",
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_import_dupe(hass):
-    """Test we get abort on duplicate import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=VALID_CONFIG
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_form_import_with_ignored_entry(hass):
-    """Test we get abort on duplicate import when there is an ignored one."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-
-    entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG)
-    entry.add_to_hass(hass)
-    ignored_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
-    )
-    ignored_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=VALID_CONFIG
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_form_cannot_connect(hass):

@@ -3,11 +3,35 @@
     "step": {
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "config": {
+        "title": "Google Cast",
+        "description": "Please enter the Google Cast configuration.",
+        "data": {
+          "known_hosts": "Optional list of known hosts if mDNS discovery is not working."
+        }
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+    }
+  },
+  "options": {
+    "step": {
+      "options": {
+        "description": "Please enter the Google Cast configuration.",
+        "data": {
+          "ignore_cec": "Optional list which will be passed to pychromecast.IGNORE_CEC.",
+          "known_hosts": "Optional list of known hosts if mDNS discovery is not working.",
+          "uuid": "Optional list of UUIDs. Casts not listed will not be added."
+        }
+      }
+    },
+    "error": {
+      "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
     }
   }
 }

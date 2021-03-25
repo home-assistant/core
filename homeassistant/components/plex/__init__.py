@@ -7,31 +7,23 @@ import plexapi.exceptions
 from plexapi.gdm import GDM
 from plexwebsocket import (
     SIGNAL_CONNECTION_STATE,
-    SIGNAL_DATA,
     STATE_CONNECTED,
     STATE_DISCONNECTED,
     STATE_STOPPED,
     PlexWebsocket,
 )
 import requests.exceptions
-import voluptuous as vol
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-)
 from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY, SOURCE_REAUTH
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_SOURCE,
     CONF_URL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -48,12 +40,11 @@ from .const import (
     PLEX_SERVER_CONFIG,
     PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
-    SERVICE_PLAY_ON_SONOS,
     WEBSOCKETS,
 )
 from .errors import ShouldUpdateConfigEntry
 from .server import PlexServer
-from .services import async_setup_services, lookup_plex_media
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -69,12 +60,16 @@ async def async_setup(hass, config):
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
+    def gdm_scan():
+        _LOGGER.debug("Scanning for GDM clients")
+        gdm.scan(scan_for_clients=True)
+
     hass.data[PLEX_DOMAIN][GDM_DEBOUNCER] = Debouncer(
         hass,
         _LOGGER,
         cooldown=10,
         immediate=True,
-        function=partial(gdm.scan, scan_for_clients=True),
+        function=gdm_scan,
     ).async_call
 
     return True
@@ -153,26 +148,22 @@ async def async_setup_entry(hass, entry):
 
     entry.add_update_listener(async_options_updated)
 
-    async def async_update_plex():
-        await hass.data[PLEX_DOMAIN][GDM_DEBOUNCER]()
-        await plex_server.async_update_platforms()
-
     unsub = async_dispatcher_connect(
         hass,
         PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
-        async_update_plex,
+        plex_server.async_update_platforms,
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
 
     @callback
-    def plex_websocket_callback(signal, data, error):
+    def plex_websocket_callback(msgtype, data, error):
         """Handle callbacks from plexwebsocket library."""
-        if signal == SIGNAL_CONNECTION_STATE:
+        if msgtype == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_CONNECTED:
                 _LOGGER.debug("Websocket to %s successful", entry.data[CONF_SERVER])
-                hass.async_create_task(async_update_plex())
+                hass.async_create_task(plex_server.async_update_platforms())
             elif data == STATE_DISCONNECTED:
                 _LOGGER.debug(
                     "Websocket to %s disconnected, retrying", entry.data[CONF_SERVER]
@@ -186,7 +177,7 @@ async def async_setup_entry(hass, entry):
                 )
                 hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
 
-        elif signal == SIGNAL_DATA:
+        elif msgtype == "playing":
             hass.async_create_task(plex_server.async_update_session(data))
 
     session = async_get_clientsession(hass)
@@ -218,31 +209,13 @@ async def async_setup_entry(hass, entry):
         )
         task.add_done_callback(partial(start_websocket_session, platform))
 
-    async def async_play_on_sonos_service(service_call):
-        await hass.async_add_executor_job(play_on_sonos, hass, service_call)
-
-    play_on_sonos_schema = vol.Schema(
-        {
-            vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-            vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): vol.In("music"),
-        }
-    )
-
     def get_plex_account(plex_server):
         try:
             return plex_server.account
         except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             return None
 
-    plex_account = await hass.async_add_executor_job(get_plex_account, plex_server)
-    if plex_account:
-        hass.services.async_register(
-            PLEX_DOMAIN,
-            SERVICE_PLAY_ON_SONOS,
-            async_play_on_sonos_service,
-            schema=play_on_sonos_schema,
-        )
+    await hass.async_add_executor_job(get_plex_account, plex_server)
 
     return True
 
@@ -276,30 +249,3 @@ async def async_options_updated(hass, entry):
     # Guard incomplete setup during reauth flows
     if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
         hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
-
-
-def play_on_sonos(hass, service_call):
-    """Play Plex media on a linked Sonos device."""
-    entity_id = service_call.data[ATTR_ENTITY_ID]
-    content_id = service_call.data[ATTR_MEDIA_CONTENT_ID]
-    content_type = service_call.data.get(ATTR_MEDIA_CONTENT_TYPE)
-
-    sonos = hass.components.sonos
-    try:
-        sonos_name = sonos.get_coordinator_name(entity_id)
-    except HomeAssistantError as err:
-        _LOGGER.error("Cannot get Sonos device: %s", err)
-        return
-
-    media, plex_server = lookup_plex_media(hass, content_type, content_id)
-    if media is None:
-        return
-
-    sonos_speaker = plex_server.account.sonos_speaker(sonos_name)
-    if sonos_speaker is None:
-        _LOGGER.error(
-            "Sonos speaker '%s' could not be found on this Plex account", sonos_name
-        )
-        return
-
-    sonos_speaker.playMedia(media)

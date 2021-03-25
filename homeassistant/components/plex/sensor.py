@@ -1,9 +1,9 @@
 """Support for Plex media server monitoring."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     CONF_SERVER_IDENTIFIER,
@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities([sensor])
 
 
-class PlexSensor(Entity):
+class PlexSensor(SensorEntity):
     """Representation of a Plex now playing sensor."""
 
     def __init__(self, hass, plex_server):
@@ -89,7 +89,7 @@ class PlexSensor(Entity):
         return "mdi:plex"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._server.sensor_attributes
 

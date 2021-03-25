@@ -1,8 +1,11 @@
 """Support for HomematicIP Cloud switches."""
-from typing import Any, Dict
+from __future__ import annotations
+
+from typing import Any
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
+    AsyncDinRailSwitch,
     AsyncDinRailSwitch4,
     AsyncFullFlushInputSwitch,
     AsyncFullFlushSwitchMeasuring,
@@ -45,6 +48,8 @@ async def async_setup_entry(
         elif isinstance(device, AsyncWiredSwitch8):
             for channel in range(1, 9):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
+        elif isinstance(device, AsyncDinRailSwitch):
+            entities.append(HomematicipMultiSwitch(hap, device, channel=1))
         elif isinstance(device, AsyncDinRailSwitch4):
             for channel in range(1, 5):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
@@ -138,9 +143,9 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
         return True
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch-group."""
-        state_attr = super().device_state_attributes
+        state_attr = super().extra_state_attributes
 
         if self._device.unreach:
             state_attr[ATTR_GROUP_MEMBER_UNREACHABLE] = True

@@ -1,10 +1,13 @@
 """Light platform support for yeelight."""
+from __future__ import annotations
+
 from functools import partial
 import logging
 
 import voluptuous as vol
 import yeelight
 from yeelight import (
+    Bulb,
     BulbException,
     Flow,
     RGBTransition,
@@ -261,7 +264,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up Yeelight from a config entry."""
-
     custom_effects = _parse_custom_effects(hass.data[DOMAIN][DATA_CUSTOM_EFFECTS])
 
     device = hass.data[DOMAIN][DATA_CONFIG_ENTRIES][config_entry.entry_id][DATA_DEVICE]
@@ -426,7 +428,6 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
         self.config = device.config
 
-        self._brightness = None
         self._color_temp = None
         self._hs = None
         self._effect = None
@@ -487,10 +488,14 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1..255."""
-        temp = self._get_property(self._brightness_property)
-        if temp:
-            self._brightness = temp
-        return round(255 * (int(self._brightness) / 100))
+        # Always use "bright" as property name in music mode
+        # Since music mode states are only caches in upstream library
+        # and the cache key is always "bright" for brightness
+        brightness_property = (
+            "bright" if self._bulb.music_mode else self._brightness_property
+        )
+        brightness = self._get_property(brightness_property)
+        return round(255 * (int(brightness) / 100))
 
     @property
     def min_mireds(self):
@@ -527,9 +532,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Return the current effect."""
         return self._effect
 
-    # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
-    def _bulb(self) -> "Bulb":  # noqa: F821
+    def _bulb(self) -> Bulb:
         return self.device.bulb
 
     @property
@@ -558,9 +562,8 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the device specific state attributes."""
-
         attributes = {
             "flowing": self.device.is_color_flow_enabled,
             "music_mode": self._bulb.music_mode,

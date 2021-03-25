@@ -103,7 +103,7 @@ async def _update_duckdns(session, domain, token, *, txt=_SENTINEL, clear=False)
 def async_track_time_interval_backoff(hass, action, intervals) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
     if not iscoroutinefunction:
-        _LOGGER.error("action needs to be a coroutine and return True/False")
+        _LOGGER.error("Action needs to be a coroutine and return True/False")
         return
 
     if not isinstance(intervals, (list, tuple)):

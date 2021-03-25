@@ -9,13 +9,13 @@
             "old_firmware": "Bondi seadme ei toeta vana p\u00fcsivara - uuenda enne j\u00e4tkamist",
             "unknown": "Tundmatu viga"
         },
-        "flow_title": "Bond: {bond_id} ( {host} )",
+        "flow_title": "Bond: {name} ( {host} )",
         "step": {
             "confirm": {
                 "data": {
                     "access_token": "Juurdep\u00e4\u00e4sut\u00f5end"
                 },
-                "description": "Kas soovid seadistada teenuse {bond_id} ?"
+                "description": "Kas soovid seadistada teenust {name} ?"
             },
             "user": {
                 "data": {

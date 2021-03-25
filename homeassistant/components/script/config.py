@@ -25,8 +25,21 @@ async def async_validate_config_item(hass, config, full_config=None):
     return config
 
 
+class ScriptConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    raw_config = None
+
+
 async def _try_async_validate_config_item(hass, object_id, config, full_config=None):
     """Validate config item."""
+    raw_config = None
+    try:
+        raw_config = dict(config)
+    except ValueError:
+        # Invalid config
+        pass
+
     try:
         cv.slug(object_id)
         config = await async_validate_config_item(hass, config, full_config)
@@ -34,6 +47,8 @@ async def _try_async_validate_config_item(hass, object_id, config, full_config=N
         async_log_exception(ex, DOMAIN, full_config or config, hass)
         return None
 
+    config = ScriptConfig(config)
+    config.raw_config = raw_config
     return config
 
 

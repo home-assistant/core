@@ -5,7 +5,7 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -17,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([TcpSensor(hass, config)])
 
 
-class TcpSensor(Entity):
+class TcpSensor(SensorEntity):
     """Implementation of a TCP socket based sensor."""
 
     required = ()
@@ -78,10 +77,7 @@ class TcpSensor(Entity):
     @property
     def name(self):
         """Return the name of this sensor."""
-        name = self._config[CONF_NAME]
-        if name is not None:
-            return name
-        return super().name
+        return self._config[CONF_NAME]
 
     @property
     def state(self):

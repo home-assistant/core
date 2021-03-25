@@ -1,4 +1,5 @@
 """Insteon base entity."""
+import functools
 import logging
 
 from pyinsteon import devices
@@ -74,7 +75,7 @@ class InsteonEntity(Entity):
         return f"{description} {self._insteon_device.address}{extension}"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Provide attributes for display on device card."""
         return {"insteon_address": self.address, "insteon_group": self.group}
 
@@ -84,7 +85,7 @@ class InsteonEntity(Entity):
         return {
             "identifiers": {(DOMAIN, str(self._insteon_device.address))},
             "name": f"{self._insteon_device.description} {self._insteon_device.address}",
-            "model": f"{self._insteon_device.model} (0x{self._insteon_device.cat:02x}, 0x{self._insteon_device.subcat:02x})",
+            "model": f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
             "sw_version": f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
             "manufacturer": "Smart Home",
             "via_device": (DOMAIN, str(devices.modem.address)),
@@ -122,7 +123,11 @@ class InsteonEntity(Entity):
         )
         remove_signal = f"{self._insteon_device.address.id}_{SIGNAL_REMOVE_ENTITY}"
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, remove_signal, self.async_remove)
+            async_dispatcher_connect(
+                self.hass,
+                remove_signal,
+                functools.partial(self.async_remove, force_remove=True),
+            )
         )
 
     async def async_will_remove_from_hass(self):

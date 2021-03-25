@@ -53,7 +53,7 @@ class ActiontecDeviceScanner(DeviceScanner):
         self.last_results = []
         data = self.get_actiontec_data()
         self.success_init = data is not None
-        _LOGGER.info("canner initialized")
+        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""

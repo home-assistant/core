@@ -31,7 +31,7 @@ async def test_remote_setup_works(hass):
         mock_api, mock_entry = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
-            {(DOMAIN, mock_entry.unique_id)}, set()
+            {(DOMAIN, mock_entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
         remotes = {entry for entry in entries if entry.domain == REMOTE_DOMAIN}
@@ -51,7 +51,7 @@ async def test_remote_send_command(hass):
         mock_api, mock_entry = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
-            {(DOMAIN, mock_entry.unique_id)}, set()
+            {(DOMAIN, mock_entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
         remotes = {entry for entry in entries if entry.domain == REMOTE_DOMAIN}
@@ -78,7 +78,7 @@ async def test_remote_turn_off_turn_on(hass):
         mock_api, mock_entry = await device.setup_entry(hass)
 
         device_entry = device_registry.async_get_device(
-            {(DOMAIN, mock_entry.unique_id)}, set()
+            {(DOMAIN, mock_entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
         remotes = {entry for entry in entries if entry.domain == REMOTE_DOMAIN}

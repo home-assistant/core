@@ -1,4 +1,6 @@
 """Support for the SpaceAPI."""
+from contextlib import suppress
+
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -6,6 +8,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_LOCATION,
+    ATTR_NAME,
     ATTR_STATE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
@@ -35,7 +38,6 @@ ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
 ATTR_LOGO = "logo"
-ATTR_NAME = "name"
 ATTR_OPEN = "open"
 ATTR_SENSORS = "sensors"
 ATTR_SPACE = "space"
@@ -287,13 +289,11 @@ class APISpaceApiView(HomeAssistantView):
         else:
             state = {ATTR_OPEN: "null", ATTR_LASTCHANGE: 0}
 
-        try:
+        with suppress(KeyError):
             state[ATTR_ICON] = {
                 ATTR_OPEN: spaceapi["state"][CONF_ICON_OPEN],
                 ATTR_CLOSE: spaceapi["state"][CONF_ICON_CLOSED],
             }
-        except KeyError:
-            pass
 
         data = {
             ATTR_API: SPACEAPI_VERSION,
@@ -306,40 +306,26 @@ class APISpaceApiView(HomeAssistantView):
             ATTR_URL: spaceapi[CONF_URL],
         }
 
-        try:
+        with suppress(KeyError):
             data[ATTR_CAM] = spaceapi[CONF_CAM]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_SPACEFED] = spaceapi[CONF_SPACEFED]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_STREAM] = spaceapi[CONF_STREAM]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_FEEDS] = spaceapi[CONF_FEEDS]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_CACHE] = spaceapi[CONF_CACHE]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_PROJECTS] = spaceapi[CONF_PROJECTS]
-        except KeyError:
-            pass
 
-        try:
+        with suppress(KeyError):
             data[ATTR_RADIO_SHOW] = spaceapi[CONF_RADIO_SHOW]
-        except KeyError:
-            pass
 
         if is_sensors is not None:
             sensors = {}

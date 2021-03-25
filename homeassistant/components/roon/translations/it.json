@@ -17,7 +17,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Inserisci il nome host o l'IP del tuo server Roon."
+                "description": "Impossibile individuare il server Roon, inserire l'hostname o l'IP."
             }
         }
     }

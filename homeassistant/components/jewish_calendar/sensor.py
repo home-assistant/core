@@ -3,8 +3,8 @@ import logging
 
 import hdate
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 
@@ -30,7 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(sensors)
 
 
-class JewishCalendarSensor(Entity):
+class JewishCalendarSensor(SensorEntity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(self, data, sensor, sensor_info):
@@ -111,7 +111,7 @@ class JewishCalendarSensor(Entity):
         )
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._type != "holiday":
             return {}
@@ -153,7 +153,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
         return DEVICE_CLASS_TIMESTAMP
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 

@@ -5,12 +5,11 @@ import logging
 from pyaftership.tracker import Tracking
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, HTTP_OK
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -108,7 +107,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class AfterShipSensor(Entity):
+class AfterShipSensor(SensorEntity):
     """Representation of a AfterShip sensor."""
 
     def __init__(self, aftership, name):
@@ -134,7 +133,7 @@ class AfterShipSensor(Entity):
         return "packages"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return attributes for the sensor."""
         return self._attributes
 
@@ -181,8 +180,8 @@ class AfterShipSensor(Entity):
                 track["tracking_number"] if track["title"] is None else track["title"]
             )
             last_checkpoint = (
-                "Shipment pending"
-                if track["tag"] == "Pending"
+                f"Shipment {track['tag'].lower()}"
+                if not track["checkpoints"]
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1

@@ -1,4 +1,7 @@
 """Support for exposing Home Assistant via Zeroconf."""
+from __future__ import annotations
+
+from contextlib import suppress
 import fnmatch
 from functools import partial
 import ipaddress
@@ -45,11 +48,15 @@ ATTR_TYPE = "type"
 ATTR_PROPERTIES = "properties"
 
 ZEROCONF_TYPE = "_home-assistant._tcp.local."
-HOMEKIT_TYPE = "_hap._tcp.local."
+HOMEKIT_TYPES = [
+    "_hap._tcp.local.",
+    # Thread based devices
+    "_hap._udp.local.",
+]
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
-DEFAULT_DEFAULT_INTERFACE = False
+DEFAULT_DEFAULT_INTERFACE = True
 DEFAULT_IPV6 = True
 
 HOMEKIT_PROPERTIES = "properties"
@@ -103,7 +110,7 @@ async def _async_get_instance(hass, **zcargs):
 class HaServiceBrowser(ServiceBrowser):
     """ServiceBrowser that only consumes DNSPointer records."""
 
-    def update_record(self, zc: "Zeroconf", now: float, record: DNSRecord) -> None:
+    def update_record(self, zc: Zeroconf, now: float, record: DNSRecord) -> None:
         """Pre-Filter update_record to DNSPointers for the configured type."""
 
         #
@@ -181,15 +188,11 @@ def _register_hass_zc_service(hass, zeroconf, uuid):
     }
 
     # Get instance URL's
-    try:
+    with suppress(NoURLAvailableError):
         params["external_url"] = get_url(hass, allow_internal=False)
-    except NoURLAvailableError:
-        pass
 
-    try:
+    with suppress(NoURLAvailableError):
         params["internal_url"] = get_url(hass, allow_external=False)
-    except NoURLAvailableError:
-        pass
 
     # Set old base URL based on external or internal
     params["base_url"] = params["external_url"] or params["internal_url"]
@@ -229,15 +232,16 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
 
     types = list(zeroconf_types)
 
-    if HOMEKIT_TYPE not in zeroconf_types:
-        types.append(HOMEKIT_TYPE)
+    for hk_type in HOMEKIT_TYPES:
+        if hk_type not in zeroconf_types:
+            types.append(hk_type)
 
     def service_update(zeroconf, service_type, name, state_change):
         """Service state changed."""
         nonlocal zeroconf_types
         nonlocal homekit_models
 
-        if state_change != ServiceStateChange.Added:
+        if state_change == ServiceStateChange.Removed:
             return
 
         try:
@@ -261,7 +265,7 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
         _LOGGER.debug("Discovered new device %s %s", name, info)
 
         # If we can handle it as a HomeKit discovery, we do that here.
-        if service_type == HOMEKIT_TYPE:
+        if service_type in HOMEKIT_TYPES:
             discovery_was_forwarded = handle_homekit(hass, homekit_models, info)
             # Continue on here as homekit_controller
             # still needs to get updates on devices
@@ -294,7 +298,9 @@ async def _async_start_zeroconf_browser(hass, zeroconf):
         else:
             uppercase_mac = None
 
-        for entry in zeroconf_types[service_type]:
+        # Not all homekit types are currently used for discovery
+        # so not all service type exist in zeroconf_types
+        for entry in zeroconf_types.get(service_type, []):
             if len(entry) > 1:
                 if (
                     uppercase_mac is not None
@@ -371,11 +377,9 @@ def info_from_service(service):
 
         properties["_raw"][key] = value
 
-        try:
+        with suppress(UnicodeDecodeError):
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
-        except UnicodeDecodeError:
-            pass
 
     if not service.addresses:
         return None

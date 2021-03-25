@@ -1,5 +1,6 @@
 """Support for Broadlink devices."""
 import asyncio
+from contextlib import suppress
 from functools import partial
 import logging
 
@@ -22,9 +23,9 @@ from .updater import get_update_manager
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_domains(device_type):
+def get_domains(dev_type):
     """Return the domains available for a device type."""
-    return {domain for domain, types in DOMAINS_AND_TYPES if device_type in types}
+    return {d for d, t in DOMAINS_AND_TYPES.items() if dev_type in t}
 
 
 class BroadlinkDevice:
@@ -57,9 +58,7 @@ class BroadlinkDevice:
         Triggered when the device is renamed on the frontend.
         """
         device_registry = await dr.async_get_registry(hass)
-        device_entry = device_registry.async_get_device(
-            {(DOMAIN, entry.unique_id)}, set()
-        )
+        device_entry = device_registry.async_get_device({(DOMAIN, entry.unique_id)})
         device_registry.async_update_device(device_entry.id, name=entry.title)
         await hass.config_entries.async_reload(entry.entry_id)
 
@@ -104,10 +103,8 @@ class BroadlinkDevice:
         self.hass.data[DOMAIN].devices[config.entry_id] = self
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
-        try:
+        with suppress(BroadlinkException, OSError):
             self.fw_version = await self.hass.async_add_executor_job(api.get_fwversion)
-        except (BroadlinkException, OSError):
-            pass
 
         # Forward entry setup to related domains.
         tasks = (

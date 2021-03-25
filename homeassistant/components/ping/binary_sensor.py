@@ -1,11 +1,14 @@
 """Tracks the latency of a host by sending ICMP echo requests (ping)."""
+from __future__ import annotations
+
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
 import re
 import sys
-from typing import Any, Dict
+from typing import Any
 
 from icmplib import SocketPermissionError, ping as icmp_ping
 import voluptuous as vol
@@ -105,7 +108,7 @@ class PingBinarySensor(BinarySensorEntity):
         return self._ping.available
 
     @property
-    def device_state_attributes(self) -> Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the ICMP checo request."""
         if self._ping.data is not False:
             return {
@@ -240,10 +243,8 @@ class PingDataSubProcess(PingData):
                 self._count + PING_TIMEOUT,
             )
             if pinger:
-                try:
+                with suppress(TypeError):
                     await pinger.kill()
-                except TypeError:
-                    pass
                 del pinger
 
             return False

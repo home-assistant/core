@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         for device in cube.devices:
             name = f"{cube.room_by_id(device.room_id).name} {device.name}"
 
-            if cube.is_thermostat(device) or cube.is_wallthermostat(device):
+            if device.is_thermostat() or device.is_wallthermostat():
                 devices.append(MaxCubeClimate(handler, name, device.rf_address))
 
     if devices:
@@ -107,7 +107,9 @@ class MaxCubeClimate(ClimateEntity):
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         if device.min_temperature is None:
             return MIN_TEMPERATURE
-        return device.min_temperature
+        # OFF_TEMPERATURE (always off) a is valid temperature to maxcube but not to Home Assistant.
+        # We use HVAC_MODE_OFF instead to represent a turned off thermostat.
+        return max(device.min_temperature, MIN_TEMPERATURE)
 
     @property
     def max_temp(self):
@@ -155,14 +157,10 @@ class MaxCubeClimate(ClimateEntity):
 
         if hvac_mode == HVAC_MODE_OFF:
             temp = OFF_TEMPERATURE
-        elif hvac_mode != HVAC_MODE_HEAT:
-            # Reset the temperature to a sane value.
-            # Ideally, we should send 0 and the device will set its
-            # temperature according to the schedule. However, current
-            # version of the library has a bug which causes an
-            # exception when setting values below 8.
-            if temp in [OFF_TEMPERATURE, ON_TEMPERATURE]:
-                temp = device.eco_temperature
+        elif hvac_mode == HVAC_MODE_HEAT:
+            temp = max(temp, self.min_temp)
+        else:
+            temp = None
             mode = MAX_DEVICE_MODE_AUTOMATIC
 
         cube = self._cubehandle.cube
@@ -180,11 +178,11 @@ class MaxCubeClimate(ClimateEntity):
         device = cube.device_by_rf(self._rf_address)
         valve = 0
 
-        if cube.is_thermostat(device):
+        if device.is_thermostat():
             valve = device.valve_position
-        elif cube.is_wallthermostat(device):
+        elif device.is_wallthermostat():
             for device in cube.devices_by_room(cube.room_by_id(device.room_id)):
-                if cube.is_thermostat(device) and device.valve_position > 0:
+                if device.is_thermostat() and device.valve_position > 0:
                     valve = device.valve_position
                     break
         else:
@@ -260,7 +258,7 @@ class MaxCubeClimate(ClimateEntity):
     def set_preset_mode(self, preset_mode):
         """Set new operation mode."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-        temp = device.target_temperature
+        temp = None
         mode = MAX_DEVICE_MODE_AUTOMATIC
 
         if preset_mode in [PRESET_COMFORT, PRESET_ECO, PRESET_ON]:
@@ -282,12 +280,12 @@ class MaxCubeClimate(ClimateEntity):
                 return
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the optional state attributes."""
         cube = self._cubehandle.cube
         device = cube.device_by_rf(self._rf_address)
 
-        if not cube.is_thermostat(device):
+        if not device.is_thermostat():
             return {}
         return {ATTR_VALVE_POSITION: device.valve_position}
 

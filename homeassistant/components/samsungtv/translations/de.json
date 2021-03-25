@@ -2,9 +2,9 @@
     "config": {
         "abort": {
             "already_configured": "Dieser Samsung TV ist bereits konfiguriert",
-            "already_in_progress": "Der Konfigurationsablauf f\u00fcr Samsung TV wird bereits ausgef\u00fchrt.",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "auth_missing": "Home Assistant ist nicht berechtigt, eine Verbindung zu diesem Samsung TV herzustellen. \u00dcberpr\u00fcfe die Einstellungen deines Fernsehger\u00e4ts, um Home Assistant zu autorisieren.",
-            "cannot_connect": "Verbindungsfehler",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "not_supported": "Dieses Samsung TV-Ger\u00e4t wird derzeit nicht unterst\u00fctzt."
         },
         "flow_title": "Samsung TV: {model}",

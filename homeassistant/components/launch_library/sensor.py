@@ -1,16 +1,16 @@
 """A sensor platform that give you information about the next space launch."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from pylaunches import PyLaunches, PyLaunchesException
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_AGENCY,
@@ -39,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([LaunchLibrarySensor(launches, name)], True)
 
 
-class LaunchLibrarySensor(Entity):
+class LaunchLibrarySensor(SensorEntity):
     """Representation of a launch_library Sensor."""
 
     def __init__(self, launches: PyLaunches, name: str) -> None:
@@ -64,7 +64,7 @@ class LaunchLibrarySensor(Entity):
         return self._name
 
     @property
-    def state(self) -> Optional[str]:
+    def state(self) -> str | None:
         """Return the state of the sensor."""
         if self.next_launch:
             return self.next_launch.name
@@ -76,7 +76,7 @@ class LaunchLibrarySensor(Entity):
         return "mdi:rocket"
 
     @property
-    def device_state_attributes(self) -> Optional[dict]:
+    def extra_state_attributes(self) -> dict | None:
         """Return attributes for the sensor."""
         if self.next_launch:
             return {

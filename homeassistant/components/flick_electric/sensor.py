@@ -5,10 +5,10 @@ import logging
 import async_timeout
 from pyflick import FlickAPI, FlickPrice
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utcnow
 
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT, DOMAIN
@@ -33,7 +33,7 @@ async def async_setup_entry(
     async_add_entities([FlickPricingSensor(api)], True)
 
 
-class FlickPricingSensor(Entity):
+class FlickPricingSensor(SensorEntity):
     """Entity object for Flick Electric sensor."""
 
     def __init__(self, api: FlickAPI):
@@ -61,7 +61,7 @@ class FlickPricingSensor(Entity):
         return UNIT_NAME
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
 

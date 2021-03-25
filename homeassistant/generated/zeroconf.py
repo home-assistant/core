@@ -59,6 +59,11 @@ ZEROCONF = {
             "domain": "esphome"
         }
     ],
+    "_fbx-api._tcp.local.": [
+        {
+            "domain": "freebox"
+        }
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast"
@@ -88,6 +93,17 @@ ZEROCONF = {
     "_ipps._tcp.local.": [
         {
             "domain": "ipp"
+        }
+    ],
+    "_kizbox._tcp.local.": [
+        {
+            "domain": "somfy",
+            "name": "gateway*"
+        }
+    ],
+    "_leap._tcp.local.": [
+        {
+            "domain": "lutron_caseta"
         }
     ],
     "_mediaremotetv._tcp.local.": [
@@ -165,6 +181,7 @@ HOMEKIT = {
     "Abode": "abode",
     "BSB002": "hue",
     "C105X": "roku",
+    "C135X": "roku",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
@@ -172,10 +189,12 @@ HOMEKIT = {
     "PowerView": "hunterdouglas_powerview",
     "Presence": "netatmo",
     "Rachio": "rachio",
+    "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "iSmartGate": "gogogate2",
+    "iZone": "izone",
     "tado": "tado"
 }

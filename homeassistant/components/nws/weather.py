@@ -1,6 +1,5 @@
 """Support for NWS weather service."""
 from datetime import timedelta
-import logging
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -46,8 +45,6 @@ from .const import (
     HOURLY,
     NWS_DATA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 

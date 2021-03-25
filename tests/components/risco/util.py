@@ -17,7 +17,7 @@ TEST_SITE_UUID = "test-site-uuid"
 TEST_SITE_NAME = "test-site-name"
 
 
-async def setup_risco(hass, options={}):
+async def setup_risco(hass, events=[], options={}):
     """Set up a Risco integration for testing."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, options=options)
     config_entry.add_to_hass(hass)
@@ -33,6 +33,9 @@ async def setup_risco(hass, options={}):
         new_callable=PropertyMock(return_value=TEST_SITE_NAME),
     ), patch(
         "homeassistant.components.risco.RiscoAPI.close"
+    ), patch(
+        "homeassistant.components.risco.RiscoAPI.get_events",
+        return_value=events,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

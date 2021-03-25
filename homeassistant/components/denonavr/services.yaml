@@ -1,7 +1,7 @@
 # Describes the format for available webostv services
 
 get_command:
-  description: "Send a generic http get command."
+  description: "Send a generic HTTP get command."
   fields:
     entity_id:
       description: Name(s) of the denonavr entities where to run the API method.

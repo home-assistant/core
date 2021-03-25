@@ -1,5 +1,6 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
+from contextlib import suppress
 import logging
 
 from homeassistant.components.media_player import MediaPlayerEntity
@@ -306,7 +307,7 @@ class DenonDevice(MediaPlayerEntity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
         if (
             self._sound_mode_raw is not None
@@ -372,11 +373,9 @@ class DenonDevice(MediaPlayerEntity):
         volume_denon = float((volume * 100) - 80)
         if volume_denon > 18:
             volume_denon = float(18)
-        try:
+        with suppress(ValueError):
             if self._receiver.set_volume(volume_denon):
                 self._volume = volume_denon
-        except ValueError:
-            pass
 
     def mute_volume(self, mute):
         """Send mute command."""

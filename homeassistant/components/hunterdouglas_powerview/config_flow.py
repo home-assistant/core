@@ -79,10 +79,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input=None):
-        """Handle the initial step."""
-        return await self.async_step_user(user_input)
-
     async def async_step_homekit(self, homekit_info):
         """Handle HomeKit discovery."""
 
@@ -126,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _host_already_configured(self, host):
         """See if we already have a hub with the host address configured."""
         existing_hosts = {
-            entry.data[CONF_HOST]
+            entry.data.get(CONF_HOST)
             for entry in self._async_current_entries()
             if CONF_HOST in entry.data
         }

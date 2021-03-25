@@ -25,7 +25,7 @@ async def test_config_update(gogogate2api_mock, hass: HomeAssistant) -> None:
     """Test config setup where the config is updated."""
 
     api = MagicMock(GogoGate2Api)
-    api.info.side_effect = Exception("Error")
+    api.async_info.side_effect = Exception("Error")
     gogogate2api_mock.return_value = api
 
     config_entry = MockConfigEntry(
@@ -53,7 +53,7 @@ async def test_config_update(gogogate2api_mock, hass: HomeAssistant) -> None:
 async def test_config_no_update(ismartgateapi_mock, hass: HomeAssistant) -> None:
     """Test config setup where the data is not updated."""
     api = MagicMock(GogoGate2Api)
-    api.info.side_effect = Exception("Error")
+    api.async_info.side_effect = Exception("Error")
     ismartgateapi_mock.return_value = api
 
     config_entry = MockConfigEntry(

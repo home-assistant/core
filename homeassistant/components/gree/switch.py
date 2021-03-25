@@ -1,14 +1,11 @@
 """Support for interface with a Gree climate systems."""
-import logging
-from typing import Optional
+from __future__ import annotations
 
 from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -41,7 +38,7 @@ class GreeSwitchEntity(CoordinatorEntity, SwitchEntity):
         return f"{self._mac}-panel-light"
 
     @property
-    def icon(self) -> Optional[str]:
+    def icon(self) -> str | None:
         """Return the icon for the device."""
         return "mdi:lightbulb"
 

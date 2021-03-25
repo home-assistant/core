@@ -1,5 +1,6 @@
 """The motion_blinds component."""
 import asyncio
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from socket import timeout
@@ -18,7 +19,7 @@ from .const import (
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     MANUFACTURER,
-    MOTION_PLATFORMS,
+    PLATFORMS,
 )
 from .gateway import ConnectMotionGateway
 
@@ -54,6 +55,7 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
 
     # Connect to motion gateway
+    multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
     connect_gateway_class = ConnectMotionGateway(hass, multicast)
     if not await connect_gateway_class.async_connect_gateway(host, key):
         raise ConfigEntryNotReady
@@ -63,19 +65,13 @@ async def async_setup_entry(
         """Call all updates using one async_add_executor_job."""
         motion_gateway.Update()
         for blind in motion_gateway.device_list.values():
-            try:
+            with suppress(timeout):
                 blind.Update()
-            except timeout:
-                # let the error be logged and handled by the motionblinds library
-                pass
 
     async def async_update_data():
         """Fetch data from the gateway and blinds."""
-        try:
+        with suppress(timeout):  # Let the error be handled by the motionblinds
             await hass.async_add_executor_job(update_gateway)
-        except timeout:
-            # let the error be logged and handled by the motionblinds library
-            pass
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -106,9 +102,9 @@ async def async_setup_entry(
         sw_version=motion_gateway.protocol,
     )
 
-    for component in MOTION_PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -121,8 +117,8 @@ async def async_unload_entry(
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(config_entry, component)
-                for component in MOTION_PLATFORMS
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )

@@ -2,6 +2,8 @@
     "device_automation": {
         "condition_type": {
             "is_battery_level": "Praegune {entity_name} aku tase",
+            "is_carbon_dioxide": "{entity_name} praegune s\u00fcsihappegaasi tase",
+            "is_carbon_monoxide": "{entity_name} praegune vingugaasi tase",
             "is_current": "Praegune {entity_name} voolutugevus",
             "is_energy": "Praegune {entity_name} v\u00f5imsus",
             "is_humidity": "Praegune {entity_name} niiskus",
@@ -17,6 +19,8 @@
         },
         "trigger_type": {
             "battery_level": "{entity_name} aku tase muutub",
+            "carbon_dioxide": "{entity_name} s\u00fcsihappegaasi tase muutus",
+            "carbon_monoxide": "{entity_name} vingugaasi tase muutus",
             "current": "{entity_name} voolutugevus muutub",
             "energy": "{entity_name} v\u00f5imsus muutub",
             "humidity": "{entity_name} niiskus muutub",
