@@ -121,7 +121,7 @@ class NotifyEventsNotificationService(BaseNotificationService):
 
         msg = self.prepare_message(message, data)
 
-        if ATTR_TOKEN in data and data[ATTR_TOKEN] and not data[ATTR_TOKEN].isspace():
+        if data.get(ATTR_TOKEN, "").trim():
             token = data[ATTR_TOKEN]
 
         msg.send(token)
