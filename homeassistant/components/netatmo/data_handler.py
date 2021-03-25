@@ -121,7 +121,7 @@ class NetatmoDataHandler:
 
         elif event["data"]["push_type"] == "NACamera-connection":
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
-            await self.async_force_update(CAMERA_DATA_CLASS_NAME)
+            self.async_force_update(CAMERA_DATA_CLASS_NAME)
 
     async def async_fetch_data(self, data_class, data_class_entry, **kwargs):
         """Fetch data and notify."""
