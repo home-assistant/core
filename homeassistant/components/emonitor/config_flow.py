@@ -67,6 +67,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.discovered_ip})
         name = name_short_mac(short_mac(dhcp_discovery[MAC_ADDRESS]))
         self.context["title_placeholders"] = {"name": name}
+        try:
+            self.discovered_info = await fetch_mac_and_title(
+                self.hass, self.discovered_ip
+            )
+        except Exception:  # pylint: disable=broad-except
+            return await self.async_step_user()
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
@@ -76,13 +82,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self.discovered_info["title"],
                 data={CONF_HOST: self.discovered_ip},
             )
-
-        try:
-            self.discovered_info = await fetch_mac_and_title(
-                self.hass, self.discovered_ip
-            )
-        except Exception:  # pylint: disable=broad-except
-            return await self.async_step_user()
 
         self._set_confirm_only()
         return self.async_show_form(
