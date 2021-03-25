@@ -200,6 +200,7 @@ async def test_option_flow(hass, parameter_data):
     data[parameter] = initial
     config_entry = MockConfigEntry(domain="cast", data=data)
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Test ignore_cec and uuid options are hidden if advanced options are disabled
