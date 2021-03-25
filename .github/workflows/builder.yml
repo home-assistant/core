@@ -46,24 +46,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout the repository
-      if: setps.version.outputs.publish == "true"
+      if: needs.init.outputs.publish == "true"
       uses: actions/checkout@v2
 
     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-      if: setps.version.outputs.publish == "true"
+      if: needs.init.outputs.publish == "true"
       uses: actions/setup-python@v2.2.1
       with:
         python-version: ${{ env.DEFAULT_PYTHON }}
 
     - name: Build package
-      if: setps.version.outputs.publish == "true"
+      if: needs.init.outputs.publish == "true"
       shell: bash
       run: |
         pip install twine wheel
         python setup.py sdist bdist_wheel
 
     - name: Upload package
-      if: setps.version.outputs.publish == "true"
+      if: needs.init.outputs.publish == "true"
       shell: bash
       run: |
         export TWINE_USERNAME="$(twineUser)"
@@ -83,13 +83,13 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-      if: setps.version.outputs.channel == "dev"
+      if: needs.init.outputs.channel == "dev"
       uses: actions/setup-python@v2.2.1
       with:
         python-version: ${{ env.DEFAULT_PYTHON }}
 
     - name: Adjust nightly version
-      if: setps.version.outputs.channel == "dev"
+      if: needs.init.outputs.channel == "dev"
       shell: bash
       run: |
         python3 -m pip install packaging
