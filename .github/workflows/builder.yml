@@ -40,6 +40,11 @@ jobs:
       with:
         type: ${{ env.BUILD_TYPE }}
 
+    - name: Verify version
+      uses: home-assistant/actions/helpers/verify-version@master
+      with:
+        ignore-dev: true
+
   build_python:
     name: Build PIPY package
     needs: init
