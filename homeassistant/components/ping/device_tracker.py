@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 class Host:
     """A single host to track."""
 
-    def __init__(self, ip_address, dev_id, hass, config, privileged):
+    def __init__(self, ip_address, dev_id, hass, config):
         """Initialize the Host pinger."""
         self.hass = hass
         self.ip_address = ip_address
