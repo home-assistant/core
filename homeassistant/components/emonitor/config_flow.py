@@ -87,6 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         self._set_confirm_only()
+        self.context["title_placeholders"] = {"name": self.discovered_info["title"]}
         return self.async_show_form(
             step_id="confirm",
             description_placeholders={
