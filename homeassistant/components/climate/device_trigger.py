@@ -113,7 +113,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     trigger_type = config[CONF_TYPE]
 
     if trigger_type == "hvac_mode_changed":
