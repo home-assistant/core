@@ -24,9 +24,7 @@ from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.reload import async_setup_reload_service
 
-from .const import DOMAIN, PLATFORMS
 from .template_entity import TemplateEntity
 
 CONDITION_CLASSES = {
@@ -71,7 +69,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Template weather."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     name = config[CONF_NAME]
     condition_template = config[CONF_CONDITION_TEMPLATE]

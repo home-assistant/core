@@ -25,7 +25,7 @@ class HomeAssistantTCPSite(web.BaseSite):
 
     def __init__(
         self,
-        runner: "web.BaseRunner",
+        runner: web.BaseRunner,
         host: None | str | list[str],
         port: int,
         *,

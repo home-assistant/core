@@ -67,9 +67,13 @@ async def async_setup(hass, config):
 
 async def async_migrate_entry(hass, entry):
     """Handle migration of a previous version config entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
     data = {**entry.data}
     if entry.version == 1:
         data.pop("login_response", None)
+        await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
+        return False
+    if entry.version == 2:
         await hass.async_add_executor_job(_reauth_flow_wrapper, hass, data)
         return False
     return True
@@ -148,7 +152,7 @@ async def async_unload_entry(hass, entry):
         return True
 
     hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO_SCHEMA)
+    hass.services.async_remove(DOMAIN, SERVICE_SAVE_VIDEO)
     hass.services.async_remove(DOMAIN, SERVICE_SEND_PIN)
 
     return True

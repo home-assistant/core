@@ -7,7 +7,7 @@ from pytz import timezone
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -26,7 +26,6 @@ from homeassistant.const import (
     HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([RadarrSensor(hass, config, sensor) for sensor in conditions], True)
 
 
-class RadarrSensor(Entity):
+class RadarrSensor(SensorEntity):
     """Implementation of the Radarr sensor."""
 
     def __init__(self, hass, conf, sensor_type):

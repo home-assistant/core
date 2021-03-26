@@ -108,6 +108,12 @@ def library_music_sort_fixture():
     return load_fixture("plex/library_music_sort.xml")
 
 
+@pytest.fixture(name="library_movies_filtertypes", scope="session")
+def library_movies_filtertypes_fixture():
+    """Load filtertypes payload for movie library and return it."""
+    return load_fixture("plex/library_movies_filtertypes.xml")
+
+
 @pytest.fixture(name="library", scope="session")
 def library_fixture():
     """Load library payload and return it."""

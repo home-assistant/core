@@ -5,7 +5,7 @@ import logging
 import magicseaweed
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
@@ -90,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(sensors, True)
 
 
-class MagicSeaweedSensor(Entity):
+class MagicSeaweedSensor(SensorEntity):
     """Implementation of a MagicSeaweed sensor."""
 
     def __init__(self, forecast_data, sensor_type, name, unit_system, hour=None):

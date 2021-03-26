@@ -54,14 +54,14 @@ async def test_arm_home_success(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_ARM_HOME, DATA, blocking=True
         )
 
         await hass.async_block_till_done()
-        assert STATE_ALARM_ARMED_HOME == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_HOME
 
 
 async def test_arm_home_failure(hass):
@@ -72,7 +72,7 @@ async def test_arm_home_failure(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
@@ -80,7 +80,7 @@ async def test_arm_home_failure(hass):
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm home test."
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
 
 async def test_arm_home_invalid_usercode(hass):
@@ -91,7 +91,7 @@ async def test_arm_home_invalid_usercode(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
@@ -99,7 +99,7 @@ async def test_arm_home_invalid_usercode(hass):
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm home test."
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
 
 async def test_arm_away_success(hass):
@@ -110,13 +110,13 @@ async def test_arm_away_success(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_ARM_AWAY, DATA, blocking=True
         )
         await hass.async_block_till_done()
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
 
 
 async def test_arm_away_failure(hass):
@@ -127,7 +127,7 @@ async def test_arm_away_failure(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
@@ -135,7 +135,7 @@ async def test_arm_away_failure(hass):
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to arm away test."
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
 
 async def test_disarm_success(hass):
@@ -146,13 +146,13 @@ async def test_disarm_success(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
 
         await hass.services.async_call(
             ALARM_DOMAIN, SERVICE_ALARM_DISARM, DATA, blocking=True
         )
         await hass.async_block_till_done()
-        assert STATE_ALARM_DISARMED == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_DISARMED
 
 
 async def test_disarm_failure(hass):
@@ -163,7 +163,7 @@ async def test_disarm_failure(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
 
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
@@ -171,7 +171,7 @@ async def test_disarm_failure(hass):
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to disarm test."
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
 
 
 async def test_disarm_invalid_usercode(hass):
@@ -182,7 +182,7 @@ async def test_disarm_invalid_usercode(hass):
         side_effect=responses,
     ):
         await setup_platform(hass, ALARM_DOMAIN)
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY
 
         with pytest.raises(HomeAssistantError) as err:
             await hass.services.async_call(
@@ -190,4 +190,4 @@ async def test_disarm_invalid_usercode(hass):
             )
             await hass.async_block_till_done()
         assert f"{err.value}" == "TotalConnect failed to disarm test."
-        assert STATE_ALARM_ARMED_AWAY == hass.states.get(ENTITY_ID).state
+        assert hass.states.get(ENTITY_ID).state == STATE_ALARM_ARMED_AWAY

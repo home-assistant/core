@@ -55,11 +55,6 @@ class OneWireBaseEntity(Entity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {"device_file": self._device_file, "raw_value": self._value_raw}

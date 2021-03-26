@@ -170,8 +170,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     if config[CONF_TYPE] in STATE_TRIGGER_TYPES:
         if config[CONF_TYPE] == "opened":
             to_state = STATE_OPEN

@@ -5,6 +5,7 @@ import logging
 
 import av
 
+from . import STREAM_SOURCE_RE
 from .const import (
     AUDIO_CODECS,
     MAX_MISSING_DTS,
@@ -127,7 +128,9 @@ def stream_worker(source, options, segment_buffer, quit_event):
     try:
         container = av.open(source, options=options, timeout=STREAM_TIMEOUT)
     except av.AVError:
-        _LOGGER.error("Error opening stream %s", source)
+        _LOGGER.error(
+            "Error opening stream %s", STREAM_SOURCE_RE.sub("//", str(source))
+        )
         return
     try:
         video_stream = container.streams.video[0]

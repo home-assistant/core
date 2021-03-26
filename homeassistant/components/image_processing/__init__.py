@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import final
 
 import voluptuous as vol
 
@@ -175,6 +176,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return "face"
 
+    @final
     @property
     def state_attributes(self):
         """Return device specific state attributes."""

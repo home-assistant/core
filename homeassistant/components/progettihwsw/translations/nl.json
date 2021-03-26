@@ -33,7 +33,8 @@
                 "data": {
                     "host": "Host",
                     "port": "Poort"
-                }
+                },
+                "title": "Stel het bord in"
             }
         }
     }

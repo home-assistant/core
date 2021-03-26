@@ -35,17 +35,35 @@ async def test_creating_entry_sets_up_media_player(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_configuring_cast_creates_entry(hass):
+async def test_import(hass, caplog):
     """Test that specifying config will create an entry."""
     with patch(
         "homeassistant.components.cast.async_setup_entry", return_value=True
     ) as mock_setup:
         await async_setup_component(
-            hass, cast.DOMAIN, {"cast": {"some_config": "to_trigger_import"}}
+            hass,
+            cast.DOMAIN,
+            {
+                "cast": {
+                    "media_player": [
+                        {"uuid": "abcd"},
+                        {"uuid": "abcd", "ignore_cec": "milk"},
+                        {"uuid": "efgh", "ignore_cec": "beer"},
+                        {"incorrect": "config"},
+                    ]
+                }
+            },
         )
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 1
+
+    assert len(hass.config_entries.async_entries("cast")) == 1
+    entry = hass.config_entries.async_entries("cast")[0]
+    assert set(entry.data["ignore_cec"]) == {"milk", "beer"}
+    assert set(entry.data["uuid"]) == {"abcd", "efgh"}
+
+    assert "Invalid config '{'incorrect': 'config'}'" in caplog.text
 
 
 async def test_not_configuring_cast_not_creates_entry(hass):
@@ -72,7 +90,7 @@ async def test_single_instance(hass, source):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_user_setup(hass, mqtt_mock):
+async def test_user_setup(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": "user"}
@@ -85,12 +103,14 @@ async def test_user_setup(hass, mqtt_mock):
     assert len(users) == 1
     assert result["type"] == "create_entry"
     assert result["result"].data == {
+        "ignore_cec": [],
         "known_hosts": [],
+        "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
 
 
-async def test_user_setup_options(hass, mqtt_mock):
+async def test_user_setup_options(hass):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": "user"}
@@ -105,7 +125,9 @@ async def test_user_setup_options(hass, mqtt_mock):
     assert len(users) == 1
     assert result["type"] == "create_entry"
     assert result["result"].data == {
+        "ignore_cec": [],
         "known_hosts": ["192.168.0.1", "192.168.0.2"],
+        "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
 
@@ -123,7 +145,9 @@ async def test_zeroconf_setup(hass):
     assert len(users) == 1
     assert result["type"] == "create_entry"
     assert result["result"].data == {
-        "known_hosts": None,
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
         "user_id": users[0].id,  # Home Assistant cast user
     }
 
@@ -137,27 +161,90 @@ def get_suggested(schema, key):
             return k.description["suggested_value"]
 
 
-async def test_option_flow(hass):
+@pytest.mark.parametrize(
+    "parameter_data",
+    [
+        (
+            "known_hosts",
+            ["192.168.0.10", "192.168.0.11"],
+            "192.168.0.10,192.168.0.11",
+            "192.168.0.1,  ,  192.168.0.2 ",
+            ["192.168.0.1", "192.168.0.2"],
+        ),
+        (
+            "uuid",
+            ["bla", "blu"],
+            "bla,blu",
+            "foo,  ,  bar ",
+            ["foo", "bar"],
+        ),
+        (
+            "ignore_cec",
+            ["cast1", "cast2"],
+            "cast1,cast2",
+            "other_cast,  ,  some_cast ",
+            ["other_cast", "some_cast"],
+        ),
+    ],
+)
+async def test_option_flow(hass, parameter_data):
     """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain="cast", data={"known_hosts": ["192.168.0.10", "192.168.0.11"]}
-    )
+    all_parameters = ["ignore_cec", "known_hosts", "uuid"]
+    parameter, initial, suggested, user_input, updated = parameter_data
+
+    data = {
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
+    }
+    data[parameter] = initial
+    config_entry = MockConfigEntry(domain="cast", data=data)
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # Test ignore_cec and uuid options are hidden if advanced options are disabled
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "options"
     data_schema = result["data_schema"].schema
-    assert get_suggested(data_schema, "known_hosts") == "192.168.0.10,192.168.0.11"
+    assert set(data_schema) == {"known_hosts"}
+
+    # Reconfigure ignore_cec, known_hosts, uuid
+    context = {"source": "user", "show_advanced_options": True}
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context=context
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "options"
+    data_schema = result["data_schema"].schema
+    for other_param in all_parameters:
+        if other_param == parameter:
+            continue
+        assert get_suggested(data_schema, other_param) == ""
+    assert get_suggested(data_schema, parameter) == suggested
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"known_hosts": "192.168.0.1,  ,  192.168.0.2 "},
+        user_input={parameter: user_input},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] is None
-    assert config_entry.data == {"known_hosts": ["192.168.0.1", "192.168.0.2"]}
+    for other_param in all_parameters:
+        if other_param == parameter:
+            continue
+        assert config_entry.data[other_param] == []
+    assert config_entry.data[parameter] == updated
+
+    # Clear known_hosts
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"known_hosts": ""},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] is None
+    assert config_entry.data == {"ignore_cec": [], "known_hosts": [], "uuid": []}
 
 
 async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock):

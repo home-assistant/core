@@ -8,10 +8,9 @@ from fints.client import FinTS3PinTanClient
 from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,7 +153,7 @@ class FinTsClient:
         return balance_accounts, holdings_accounts
 
 
-class FinTsAccount(Entity):
+class FinTsAccount(SensorEntity):
     """Sensor for a FinTS balance account.
 
     A balance account contains an amount of money (=balance). The amount may
@@ -206,7 +205,7 @@ class FinTsAccount(Entity):
         return ICON
 
 
-class FinTsHoldingsAccount(Entity):
+class FinTsHoldingsAccount(SensorEntity):
     """Sensor for a FinTS holdings account.
 
     A holdings account does not contain money but rather some financial
