@@ -560,7 +560,7 @@ async def _async_set_up_integrations(
         "Integration setup times: %s",
         {
             integration: timedelta.total_seconds()
-            for integration, timedelta in setup_time
+            for integration, timedelta in setup_time.items()
         },
     )
 
