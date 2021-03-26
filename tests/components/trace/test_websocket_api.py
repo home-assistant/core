@@ -26,12 +26,6 @@ def _find_traces(traces, trace_type, item_id):
     ]
 
 
-# TODO: Remove
-def _find_traces_for_automation(traces, item_id):
-    """Find traces for an automation."""
-    return [trace for trace in traces if trace["item_id"] == item_id]
-
-
 @pytest.mark.parametrize(
     "domain, prefix", [("automation", "action"), ("script", "sequence")]
 )
@@ -513,6 +507,78 @@ async def test_list_traces(hass, hass_ws_client, domain, prefix):
     if domain == "automation":
         assert trace["last_condition"] == "condition/0"
         assert trace["trigger"] == "event 'test_event2'"
+
+
+@pytest.mark.parametrize(
+    "domain, prefix", [("automation", "action"), ("script", "sequence")]
+)
+async def test_nested_traces(hass, hass_ws_client, domain, prefix):
+    """Test nested automation and script traces."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    sun_config = {
+        "id": "sun",
+        "trigger": {"platform": "event", "event_type": "test_event"},
+        "action": {"service": "script.moon"},
+    }
+    moon_config = {
+        "sequence": {"event": "another_event"},
+    }
+    if domain == "script":
+        sun_config = {"sequence": sun_config["action"]}
+
+    if domain == "automation":
+        assert await async_setup_component(hass, domain, {domain: [sun_config]})
+        assert await async_setup_component(
+            hass, "script", {"script": {"moon": moon_config}}
+        )
+    else:
+        assert await async_setup_component(
+            hass, domain, {domain: {"sun": sun_config, "moon": moon_config}}
+        )
+
+    client = await hass_ws_client()
+
+    # Trigger "sun" automation / run "sun" script
+    if domain == "automation":
+        hass.bus.async_fire("test_event")
+    else:
+        await hass.services.async_call("script", "sun")
+    await hass.async_block_till_done()
+
+    # List traces
+    await client.send_json({"id": next_id(), "type": "trace/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 2
+    assert len(_find_traces(response["result"], domain, "sun")) == 1
+    assert len(_find_traces(response["result"], "script", "moon")) == 1
+    sun_run_id = _find_run_id(response["result"], domain, "sun")
+    moon_run_id = _find_run_id(response["result"], "script", "moon")
+    assert sun_run_id != moon_run_id
+
+    # Get trace
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/get",
+            "domain": domain,
+            "item_id": "sun",
+            "run_id": sun_run_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    trace = response["result"]
+    assert len(trace["action_trace"]) == 1
+    assert len(trace["action_trace"][f"{prefix}/0"]) == 1
+    child_id = trace["action_trace"][f"{prefix}/0"][0]["child_id"]
+    assert child_id == {"domain": "script", "item_id": "moon", "run_id": moon_run_id}
 
 
 @pytest.mark.parametrize(
