@@ -1,5 +1,6 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
+from datetime import timedelta
 from functools import wraps
 import logging
 from typing import Coroutine
@@ -76,6 +77,9 @@ SUPPORT_MEDIA_MODES = (
     | SUPPORT_VOLUME_SET
     | SUPPORT_PLAY
 )
+
+SCAN_INTERVAL = timedelta(seconds=10)
+PARALLEL_UPDATES = 2
 
 
 async def async_setup_entry(
@@ -408,7 +412,7 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_select_sound_mode(self, sound_mode: str):
         """Select sound mode."""
-        await self._receiver.soundmode.async_set_sound_mode(sound_mode)
+        await self._receiver.async_set_sound_mode(sound_mode)
 
     @async_log_errors
     async def async_turn_on(self):
