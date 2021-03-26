@@ -277,7 +277,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     platform.async_register_entity_service(
         SERVICE_SET_HUMIDIFIER_MODE,
-        {vol.Optional(ATTR_HUMIDIFIER_MODE): cv.string},
+        {vol.Required(ATTR_HUMIDIFIER_MODE): cv.string},
         "set_humidifier_mode",
     )
 
@@ -419,10 +419,7 @@ class Thermostat(ClimateEntity):
     @property
     def has_humidifier_control(self):
         """Return true if humidifier connected to thermostat and set to manual/on mode."""
-        return (
-            self.thermostat["settings"]["hasHumidifier"]
-            and self.thermostat["settings"]["humidifierMode"] == HUMIDIFIER_MANUAL_MODE
-        )
+        return self.humidifier_mode == HUMIDIFIER_MANUAL_MODE
 
     @property
     def humidifier_modes(self):
