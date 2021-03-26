@@ -403,56 +403,64 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 and value.node.manufacturer_id not in schema.manufacturer_id
             ):
                 continue
+
             # check product_id
             if (
                 schema.product_id is not None
                 and value.node.product_id not in schema.product_id
             ):
                 continue
+
             # check product_type
             if (
                 schema.product_type is not None
                 and value.node.product_type not in schema.product_type
             ):
                 continue
+
             # check firmware_version
             if (
                 schema.firmware_version is not None
                 and value.node.firmware_version not in schema.firmware_version
             ):
                 continue
+
             # check device_class_basic
             if not check_device_class(
                 value.node.device_class.basic, schema.device_class_basic
             ):
                 continue
+
             # check device_class_generic
             if not check_device_class(
                 value.node.device_class.generic, schema.device_class_generic
             ):
                 continue
+
             # check device_class_specific
             if not check_device_class(
                 value.node.device_class.specific, schema.device_class_specific
             ):
                 continue
+
             # check primary value
             if not check_value(value, schema.primary_value):
                 continue
+
             # check additional required values
-            if schema.required_values is not None:
-                if not all(
-                    any(check_value(val, val_scheme) for val in node.values.values())
-                    for val_scheme in schema.required_values
-                ):
-                    continue
+            if schema.required_values is not None and not all(
+                any(check_value(val, val_scheme) for val in node.values.values())
+                for val_scheme in schema.required_values
+            ):
+                continue
+
             # check for values that may not be present
-            if schema.absent_values is not None:
-                if any(
-                    any(check_value(val, val_scheme) for val in node.values.values())
-                    for val_scheme in schema.absent_values
-                ):
-                    continue
+            if schema.absent_values is not None and any(
+                any(check_value(val, val_scheme) for val in node.values.values())
+                for val_scheme in schema.absent_values
+            ):
+                continue
+
             # all checks passed, this value belongs to an entity
             yield ZwaveDiscoveryInfo(
                 node=value.node,
@@ -460,6 +468,7 @@ def async_discover_values(node: ZwaveNode) -> Generator[ZwaveDiscoveryInfo, None
                 platform=schema.platform,
                 platform_hint=schema.hint,
             )
+
             if not schema.allow_multi:
                 # break out of loop, this value may not be discovered by other schemas/platforms
                 break
