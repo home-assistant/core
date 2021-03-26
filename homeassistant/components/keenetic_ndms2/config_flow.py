@@ -42,11 +42,15 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> KeeneticOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KeeneticOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict = None):
+    async def async_step_user(
+        self, user_input: dict[str, any] | None = None
+    ) -> dict[str, any]:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
@@ -86,11 +90,13 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict = None):
+    async def async_step_import(
+        self, user_input: dict[str, any] | None = None
+    ) -> dict[str, any]:
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info: dict):
+    async def async_step_ssdp(self, discovery_info: dict[str, any]) -> dict[str, any]:
         """Handle a discovered device."""
         # Filter out items not having "keenetic' in their name
         if (
@@ -123,7 +129,9 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self._interface_options = {}
 
-    async def async_step_init(self, _user_input: dict = None):
+    async def async_step_init(
+        self, _user_input: dict[str, any] | None = None
+    ) -> dict[str, any]:
         """Manage the options."""
         router: KeeneticRouter = self.hass.data[DOMAIN][self.config_entry.entry_id][
             ROUTER
@@ -140,7 +148,9 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
         }
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input: dict = None):
+    async def async_step_user(
+        self, user_input: dict[str, any] | None = None
+    ) -> dict[str, any]:
         """Manage the device tracker options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
