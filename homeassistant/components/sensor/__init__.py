@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -26,13 +27,16 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity, EntityDescription, MeasurableUnitEntity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -105,7 +109,7 @@ class SensorEntityDescription(EntityDescription):
     native_unit_of_measurement: str | None = None
 
 
-class SensorEntity(MeasurableUnitEntity):
+class SensorEntity(Entity):
     """Base class for sensor entities."""
 
     entity_description: SensorEntityDescription
@@ -148,11 +152,58 @@ class SensorEntity(MeasurableUnitEntity):
         return None
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
         return None
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         return None
+
+    @property
+    def unit_of_measurement(self) -> str | None:
+        """Return the unit of measurement of the entity, after unit conversion."""
+        native_unit_of_measurement = self.native_unit_of_measurement
+
+        if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+            # Suppress AttributeError to handle tests testing directly on entity objects
+            with suppress(ValueError, AttributeError):
+                return self.hass.config.units.temperature_unit
+
+        return native_unit_of_measurement
+
+    @property
+    def state(self) -> Any:
+        """Return the state of the sensor and perform unit conversions, if needed."""
+
+        unit_of_measurement = self.native_unit_of_measurement
+        value = self.native_value
+
+        # Convert temperature if we detect one
+        # Suppress ValueError (Could not convert sensor_value to float)
+        # Suppress AttributeError (Handle tests testing directly on entity objects)
+        with suppress(ValueError, AttributeError):
+            units = self.hass.config.units
+            if (
+                value is not None
+                and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+                and unit_of_measurement != units.temperature_unit
+            ):
+                if self.device_class != DEVICE_CLASS_TEMPERATURE:
+                    self._temperature_conversion_reported = True
+                    _LOGGER.warning(
+                        "Entity %s with device_class %s reports a temperature in %s "
+                        "which is being converted to %s, this is deprecated and will be"
+                        " removed from Home Assistant Core 2021.10",
+                        self.entity_id,
+                        self.device_class,
+                        unit_of_measurement,
+                        units.temperature_unit,
+                    )
+                value_s = STATE_UNKNOWN if value is None else str(value)
+                prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+                temp = units.temperature(float(value), unit_of_measurement)
+                value = str(round(temp) if prec == 0 else round(temp, prec))
+
+        return value

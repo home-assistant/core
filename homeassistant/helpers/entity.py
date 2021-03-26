@@ -580,10 +580,12 @@ class Entity(ABC):
                 if not self._temperature_conversion_reported:
                     self._temperature_conversion_reported = True
                     _LOGGER.warning(
-                        "Entity %s reports a temperature, but it doesn't extend "
-                        "MeasurableUnitEntity, this is deprecated and will be "
-                        "unsupported from Home Assistant 2021.10",
+                        "Entity %s reports a temperature in %s which is being converted"
+                        " to %s, this is deprecated for entities which are not sensors "
+                        "and will be removed from Home Assistant Core 2021.10",
                         self.entity_id,
+                        unit_of_measure,
+                        units.temperature_unit,
                     )
                 prec = len(state) - state.index(".") - 1 if "." in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
@@ -921,53 +923,3 @@ class ToggleEntity(Entity):
             await self.async_turn_off(**kwargs)
         else:
             await self.async_turn_on(**kwargs)
-
-
-class MeasurableUnitEntity(Entity):
-    """An abstract class for entities which state is a measurable unit."""
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the value reported by the entity."""
-        raise NotImplementedError()
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the native unit of measurement of the entity, if any."""
-        raise NotImplementedError()
-
-    @property
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the entity, after unit conversion."""
-        native_unit_of_measurement = self.native_unit_of_measurement
-
-        if native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-            # Suppress AttributeError to handle tests testing directly on entity objects
-            with suppress(ValueError, AttributeError):
-                return self.hass.config.units.temperature_unit
-
-        return native_unit_of_measurement
-
-    @property
-    def state(self) -> Any:
-        """Return the state of the sensor and perform unit conversions, if needed."""
-
-        unit_of_measurement = self.native_unit_of_measurement
-        value = self.native_value
-
-        # Convert temperature if we detect one
-        # Suppress ValueError (Could not convert sensor_value to float)
-        # Suppress AttributeError (Handle tests testing directly on entity objects)
-        with suppress(ValueError, AttributeError):
-            units = self.hass.config.units
-            if (
-                value is not None
-                and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-                and unit_of_measurement != units.temperature_unit
-            ):
-                value_s = STATE_UNKNOWN if value is None else str(value)
-                prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
-                temp = units.temperature(float(value), unit_of_measurement)
-                value = str(round(temp) if prec == 0 else round(temp, prec))
-
-        return value
