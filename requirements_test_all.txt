@@ -1209,7 +1209,7 @@ xbox-webapi==2.0.8
 xmltodict==0.12.0
 
 # homeassistant.components.august
-yalexs==1.1.5
+yalexs==1.1.6
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
