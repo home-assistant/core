@@ -320,12 +320,12 @@ class TPLinkSmartBulb(LightEntity):
                 light_state_params[LIGHT_STATE_BRIGHTNESS]
             )
 
-        if light_features.supported_features & SUPPORT_COLOR_TEMP:
-            if (
-                light_state_params.get(LIGHT_STATE_COLOR_TEMP) is not None
-                and light_state_params[LIGHT_STATE_COLOR_TEMP] != 0
-            ):
-                color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
+        if (
+            light_features.supported_features & SUPPORT_COLOR_TEMP
+            and light_state_params.get(LIGHT_STATE_COLOR_TEMP) is not None
+            and light_state_params[LIGHT_STATE_COLOR_TEMP] != 0
+        ):
+            color_temp = kelvin_to_mired(light_state_params[LIGHT_STATE_COLOR_TEMP])
 
         if light_features.supported_features & SUPPORT_COLOR:
             hue_saturation = (

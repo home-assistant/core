@@ -164,17 +164,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Initialize the sensor argument if none was provided.
         # For disk monitoring default to "/" (root) to prevent runtime errors, if argument was not specified.
         if CONF_ARG not in resource:
+            resource[CONF_ARG] = ""
             if resource[CONF_TYPE].startswith("disk_"):
                 resource[CONF_ARG] = "/"
-            else:
-                resource[CONF_ARG] = ""
 
         # Verify if we can retrieve CPU / processor temperatures.
         # If not, do not create the entity and add a warning to the log
-        if resource[CONF_TYPE] == "processor_temperature":
-            if SystemMonitorSensor.read_cpu_temperature() is None:
-                _LOGGER.warning("Cannot read CPU / processor temperature information")
-                continue
+        if (
+            resource[CONF_TYPE] == "processor_temperature"
+            and SystemMonitorSensor.read_cpu_temperature() is None
+        ):
+            _LOGGER.warning("Cannot read CPU / processor temperature information")
+            continue
 
         dev.append(SystemMonitorSensor(resource[CONF_TYPE], resource[CONF_ARG]))
 
@@ -272,23 +273,20 @@ class SystemMonitorSensor(SensorEntity):
                         err.name,
                     )
             self._state = STATE_OFF
-        elif self.type == "network_out" or self.type == "network_in":
+        elif self.type in ["network_out", "network_in"]:
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
                 self._state = round(counter / 1024 ** 2, 1)
             else:
                 self._state = None
-        elif self.type == "packets_out" or self.type == "packets_in":
+        elif self.type in ["packets_out", "packets_in"]:
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 self._state = counters[self.argument][IO_COUNTER[self.type]]
             else:
                 self._state = None
-        elif (
-            self.type == "throughput_network_out"
-            or self.type == "throughput_network_in"
-        ):
+        elif self.type in ["throughput_network_out", "throughput_network_in"]:
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 counter = counters[self.argument][IO_COUNTER[self.type]]
@@ -306,7 +304,7 @@ class SystemMonitorSensor(SensorEntity):
                 self._last_value = counter
             else:
                 self._state = None
-        elif self.type == "ipv4_address" or self.type == "ipv6_address":
+        elif self.type in ["ipv4_address", "ipv6_address"]:
             addresses = psutil.net_if_addrs()
             if self.argument in addresses:
                 for addr in addresses[self.argument]:
@@ -333,16 +331,9 @@ class SystemMonitorSensor(SensorEntity):
         temps = psutil.sensors_temperatures()
 
         for name, entries in temps.items():
-            i = 1
-            for entry in entries:
+            for i, entry in enumerate(entries, start=1):
                 # In case the label is empty (e.g. on Raspberry PI 4),
                 # construct it ourself here based on the sensor key name.
-                if not entry.label:
-                    _label = f"{name} {i}"
-                else:
-                    _label = entry.label
-
+                _label = f"{name} {i}" if not entry.label else entry.label
                 if _label in CPU_SENSOR_PREFIXES:
                     return round(entry.current, 1)
-
-                i += 1
