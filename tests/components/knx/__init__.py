@@ -1,1 +1,1 @@
-"""The tests for KNX integration."""
+"""Tests for the KNX integration."""
