@@ -169,7 +169,7 @@ async def test_extra_state_attributes(ecobee_fixture, thermostat):
         "equipment_running": "auxHeat2",
         "humidifier_modes": ["off", "auto", "manual"],
         "humidifier_mode": "off",
-    } == thermostat.device_state_attributes
+    } == thermostat.extra_state_attributes
 
     ecobee_fixture["settings"]["humidifierMode"] = "auto"
     assert {
