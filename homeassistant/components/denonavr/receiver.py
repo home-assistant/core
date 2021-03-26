@@ -3,6 +3,7 @@ import logging
 
 from denonavr import DenonAVR
 from denonavr.exceptions import AvrTimoutError
+import httpx
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,8 +18,10 @@ class ConnectDenonAVR:
         show_all_inputs: bool,
         zone2: bool,
         zone3: bool,
+        async_client: httpx.AsyncClient,
     ):
         """Initialize the class."""
+        self._async_client = async_client
         self._receiver = None
         self._host = host
         self._show_all_inputs = show_all_inputs
@@ -75,6 +78,8 @@ class ConnectDenonAVR:
             timeout=self._timeout,
             add_zones=self._zones,
         )
+        # Use httpx.AsyncClient provided by Home Assistant
+        self._receiver.set_async_client(self._async_client)
         try:
             await self._receiver.async_setup()
         except AvrTimoutError:

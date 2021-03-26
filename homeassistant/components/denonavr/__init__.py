@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_COMMAND, ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .config_flow import (
     CONF_SHOW_ALL_SOURCES,
@@ -66,6 +67,7 @@ async def async_setup_entry(
         entry.options.get(CONF_SHOW_ALL_SOURCES, DEFAULT_SHOW_SOURCES),
         entry.options.get(CONF_ZONE2, DEFAULT_ZONE2),
         entry.options.get(CONF_ZONE3, DEFAULT_ZONE3),
+        get_async_client(hass),
     )
     if not await connect_denonavr.async_connect_receiver():
         raise ConfigEntryNotReady
