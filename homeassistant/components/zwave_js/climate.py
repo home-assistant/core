@@ -152,6 +152,8 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             add_to_watched_value_ids=True,
             check_all_endpoints=True,
         )
+        if not self._unit_value:
+            self._unit_value = self._current_temp
         self._current_humidity = self.get_zwave_value(
             "Humidity",
             command_class=CommandClass.SENSOR_MULTILEVEL,
