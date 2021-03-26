@@ -147,9 +147,8 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         extra_state_attributes = None
         players_list = self._server.players_list
 
-        if players_list is not None:
-            if len(players_list) != 0:
-                extra_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
+        if players_list is not None and len(players_list) != 0:
+            extra_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
 
         self._extra_state_attributes = extra_state_attributes
 

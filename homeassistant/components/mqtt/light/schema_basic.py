@@ -600,9 +600,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         # If brightness is being used instead of an on command, make sure
         # there is a brightness input.  Either set the brightness to our
         # saved value or the maximum value if this is the first call
-        elif on_command_type == "brightness":
-            if ATTR_BRIGHTNESS not in kwargs:
-                kwargs[ATTR_BRIGHTNESS] = self._brightness if self._brightness else 255
+        elif on_command_type == "brightness" and ATTR_BRIGHTNESS not in kwargs:
+            kwargs[ATTR_BRIGHTNESS] = self._brightness if self._brightness else 255
 
         if ATTR_HS_COLOR in kwargs and self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 

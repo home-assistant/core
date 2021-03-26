@@ -312,10 +312,12 @@ class KeyboardRemote:
                                     self.emulate_key_hold_repeat,
                                 )
                             )
-                        elif event.value == KEY_VALUE["key_up"]:
-                            if event.code in repeat_tasks:
-                                repeat_tasks[event.code].cancel()
-                                del repeat_tasks[event.code]
+                        elif (
+                            event.value == KEY_VALUE["key_up"]
+                            and event.code in repeat_tasks
+                        ):
+                            repeat_tasks[event.code].cancel()
+                            del repeat_tasks[event.code]
             except (OSError, PermissionError, asyncio.CancelledError):
                 # cancel key repeat tasks
                 for task in repeat_tasks.values():
