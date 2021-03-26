@@ -560,7 +560,9 @@ async def _async_set_up_integrations(
         "Integration setup times: %s",
         {
             integration: timedelta.total_seconds()
-            for integration, timedelta in setup_time.items()
+            for integration, timedelta in sorted(
+                setup_time.items(), key=lambda item: item[1].total_seconds()  # type: ignore
+            )
         },
     )
 
