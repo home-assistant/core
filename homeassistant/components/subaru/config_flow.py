@@ -28,8 +28,11 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
-    config_data = {CONF_PIN: None}
-    controller = None
+
+    def __init__(self):
+        """Initialize config flow."""
+        self.config_data = {CONF_PIN: None}
+        self.controller = None
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
@@ -105,9 +108,8 @@ class SubaruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device_name=device_name,
             country=data[CONF_COUNTRY],
         )
-        _LOGGER.debug("Using subarulink %s", self.controller.version)
         _LOGGER.debug(
-            "Setting up first time connection to Subuaru API; This may take up to 20 seconds"
+            "Setting up first time connection to Subaru API.  This may take up to 20 seconds"
         )
         if await self.controller.connect():
             _LOGGER.debug("Successfully authenticated and authorized with Subaru API")
