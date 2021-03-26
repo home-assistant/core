@@ -38,8 +38,8 @@ class HuisbaasjeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except HuisbaasjeException as exception:
             _LOGGER.warning(exception)
             errors["base"] = "invalid_auth"
-        except AbortFlow as exception:
-            raise exception
+        except AbortFlow:
+            raise
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
