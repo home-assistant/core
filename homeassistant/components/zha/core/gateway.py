@@ -728,9 +728,8 @@ class LogRelayHandler(logging.Handler):
     def emit(self, record):
         """Relay log message via dispatcher."""
         stack = []
-        if record.levelno >= logging.WARN:
-            if not record.exc_info:
-                stack = [f for f, _, _, _ in traceback.extract_stack()]
+        if record.levelno >= logging.WARN and not record.exc_info:
+            stack = [f for f, _, _, _ in traceback.extract_stack()]
 
         entry = LogEntry(record, stack, _figure_out_source(record, stack, self.hass))
         async_dispatcher_send(

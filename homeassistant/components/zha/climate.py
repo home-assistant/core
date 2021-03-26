@@ -448,15 +448,22 @@ class Thermostat(ZhaEntity, ClimateEntity):
             self.debug("preset mode '%s' is not supported", preset_mode)
             return
 
-        if self.preset_mode not in (preset_mode, PRESET_NONE):
-            if not await self.async_preset_handler(self.preset_mode, enable=False):
-                self.debug("Couldn't turn off '%s' preset", self.preset_mode)
-                return
+        if (
+            self.preset_mode
+            not in (
+                preset_mode,
+                PRESET_NONE,
+            )
+            and not await self.async_preset_handler(self.preset_mode, enable=False)
+        ):
+            self.debug("Couldn't turn off '%s' preset", self.preset_mode)
+            return
 
-        if preset_mode != PRESET_NONE:
-            if not await self.async_preset_handler(preset_mode, enable=True):
-                self.debug("Couldn't turn on '%s' preset", preset_mode)
-                return
+        if preset_mode != PRESET_NONE and not await self.async_preset_handler(
+            preset_mode, enable=True
+        ):
+            self.debug("Couldn't turn on '%s' preset", preset_mode)
+            return
         self._preset = preset_mode
         self.async_write_ha_state()
 
