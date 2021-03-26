@@ -113,7 +113,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
         async def async_update(now):
             """Update all the hosts on every interval time."""
-            next_id = async_get_next_ping_id()
+            next_id = async_get_next_ping_id(hass)
             responses = await hass.async_add_executor_job(
                 partial(
                     multiping,
