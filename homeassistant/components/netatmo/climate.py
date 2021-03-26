@@ -284,7 +284,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             self.async_write_ha_state()
             return
 
-        for room in home.get("rooms"):
+        for room in home.get("rooms", []):
             if data["event_type"] == EVENT_TYPE_SET_POINT and self._id == room["id"]:
                 if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
                     self._hvac_mode = HVAC_MODE_OFF
