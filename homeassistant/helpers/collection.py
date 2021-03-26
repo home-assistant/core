@@ -28,8 +28,6 @@ CHANGE_ADDED = "added"
 CHANGE_UPDATED = "updated"
 CHANGE_REMOVED = "removed"
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass
 class CollectionChangeSet:
@@ -331,32 +329,31 @@ def sync_entity_lifecycle(
     entities = {}
     ent_reg = entity_registry.async_get(hass)
 
+    async def _add_entity(change_set: CollectionChangeSet) -> Entity:
+        entities[change_set.item_id] = create_entity(change_set.item)
+        return entities[change_set.item_id]
+
+    async def _remove_entity(change_set: CollectionChangeSet) -> None:
+        ent_to_remove = ent_reg.async_get_entity_id(
+            domain, platform, change_set.item_id
+        )
+        if ent_to_remove is not None:
+            ent_reg.async_remove(ent_to_remove)
+        else:
+            await entities[change_set.item_id].async_remove(force_remove=True)
+        entities.pop(change_set.item_id)
+
+    async def _update_entity(change_set: CollectionChangeSet) -> None:
+        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore
+
+    _func_map = {
+        CHANGE_ADDED: _add_entity,
+        CHANGE_REMOVED: _remove_entity,
+        CHANGE_UPDATED: _update_entity,
+    }
+
     async def _collection_changed(change_sets: Iterable[CollectionChangeSet]) -> None:
         """Handle a collection change."""
-        _LOGGER.debug("_collection_changed: %s", change_sets)
-
-        async def _add_entity(change_set: CollectionChangeSet) -> Entity:
-            entities[change_set.item_id] = create_entity(change_set.item)
-            return entities[change_set.item_id]
-
-        async def _remove_entity(change_set: CollectionChangeSet) -> None:
-            ent_to_remove = ent_reg.async_get_entity_id(
-                domain, platform, change_set.item_id
-            )
-            if ent_to_remove is not None:
-                ent_reg.async_remove(ent_to_remove)
-            else:
-                await entities[change_set.item_id].async_remove(force_remove=True)
-            entities.pop(change_set.item_id)
-
-        async def _update_entity(change_set: CollectionChangeSet) -> None:
-            await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore
-
-        _func_map = {
-            CHANGE_ADDED: _add_entity,
-            CHANGE_REMOVED: _remove_entity,
-            CHANGE_UPDATED: _update_entity,
-        }
         # Create a new bucket every time we have a different change type
         # to ensure operations happen in order. We only group
         # the same change type.
