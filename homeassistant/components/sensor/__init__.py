@@ -180,29 +180,36 @@ class SensorEntity(Entity):
         unit_of_measurement = self.native_unit_of_measurement
         value = self.native_value
 
-        # Convert temperature if we detect one
-        # Suppress ValueError (Could not convert sensor_value to float)
-        # Suppress AttributeError (Handle tests testing directly on entity objects)
-        with suppress(ValueError, AttributeError):
-            units = self.hass.config.units
-            if (
-                value is not None
-                and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
-                and unit_of_measurement != units.temperature_unit
-            ):
-                if self.device_class != DEVICE_CLASS_TEMPERATURE:
-                    self._temperature_conversion_reported = True
-                    _LOGGER.warning(
-                        "Entity %s with device_class %s reports a temperature in %s "
-                        "which is being converted to %s, this is deprecated and will be"
-                        " removed from Home Assistant Core 2021.10",
-                        self.entity_id,
-                        self.device_class,
-                        unit_of_measurement,
-                        units.temperature_unit,
-                    )
-                value_s = STATE_UNKNOWN if value is None else str(value)
-                prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+        # Handle tests testing directly on entity objects without setting hass
+        if not self.hass:
+            return value
+
+        units = self.hass.config.units
+        if (
+            value is not None
+            and unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            and unit_of_measurement != units.temperature_unit
+        ):
+            if self.device_class != DEVICE_CLASS_TEMPERATURE:
+                self._temperature_conversion_reported = True
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) with device_class %s reports a temperature in "
+                    "%s which will be converted to %s, this is deprecated and will"
+                    " be removed from Home Assistant Core 2021.10. Please update "
+                    "your configuration if device_class is manually configured, "
+                    "otherwise %s",
+                    self.entity_id,
+                    type(self),
+                    self.device_class,
+                    unit_of_measurement,
+                    units.temperature_unit,
+                    report_issue,
+                )
+            value_s = STATE_UNKNOWN if value is None else str(value)
+            prec = len(value_s) - value_s.index(".") - 1 if "." in value_s else 0
+            # Suppress ValueError (Could not convert sensor_value to float)
+            with suppress(ValueError):
                 temp = units.temperature(float(value), unit_of_measurement)
                 value = str(round(temp) if prec == 0 else round(temp, prec))
 

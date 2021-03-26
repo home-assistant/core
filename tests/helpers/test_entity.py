@@ -7,7 +7,12 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import Context, HomeAssistantError
 from homeassistant.helpers import entity, entity_registry
 
@@ -788,3 +793,52 @@ async def test_float_conversion(hass):
     state = hass.states.get("hello.world")
     assert state is not None
     assert state.state == "3.6"
+
+
+async def test_warn_temperature_conversion(hass, caplog):
+    """Check that we log a warning for deprecated temperature conversion."""
+
+    mock_entity = MockEntity(state="0.0", unit_of_measurement=TEMP_FAHRENHEIT)
+    mock_entity.hass = hass
+    mock_entity.entity_id = "number.test_entity"
+    mock_entity.platform = MagicMock(platform_name="hue")
+
+    mock_entity.async_write_ha_state()
+
+    assert (
+        "Entity number.test_entity "
+        "(<class 'tests.common.MockEntity'>) "
+        "reports a temperature in °F which will be converted to °C, this is deprecated "
+        "for entities which are not sensors and will be removed from Home Assistant "
+        "Core 2021.10. Please update your configuration if unit_of_measurement is "
+        "manually configured, otherwise create a bug report at "
+        "https://github.com/home-assistant/core/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
+    ) in caplog.text
+
+
+async def test_warn_temperature_conversion_custom_component(hass, caplog):
+    """Check that we log a warning for deprecated temperature conversion."""
+
+    class CustomComponentEntity(MockEntity):
+        """Custom component entity."""
+
+        __module__ = "custom_components.bla.number"
+
+    mock_entity = CustomComponentEntity(
+        state="0.0", unit_of_measurement=TEMP_FAHRENHEIT
+    )
+    mock_entity.hass = hass
+    mock_entity.entity_id = "number.test_entity"
+    mock_entity.platform = MagicMock(platform_name="hue")
+
+    mock_entity.async_write_ha_state()
+
+    assert (
+        "Entity number.test_entity "
+        "(<class 'custom_components.bla.number.test_warn_temperature_conversion_custom_component.<locals>.CustomComponentEntity'>) "
+        "reports a temperature in °F which will be converted to °C, this is deprecated "
+        "for entities which are not sensors and will be removed from Home Assistant "
+        "Core 2021.10. Please update your configuration if unit_of_measurement is "
+        "manually configured, otherwise report it to the custom component author."
+    ) in caplog.text
