@@ -427,7 +427,7 @@ class Thermostat(ClimateEntity):
         return self._humidifier_modes
 
     @property
-    def humidifier_mode(self) -> Optional[str]:
+    def humidifier_mode(self) -> str | None:
         """Return the humidifier mode."""
         if not self.thermostat["settings"]["hasHumidifier"]:
             return None
@@ -435,7 +435,7 @@ class Thermostat(ClimateEntity):
         return self.thermostat["settings"]["humidifierMode"]
 
     @property
-    def target_humidity(self) -> Optional[int]:
+    def target_humidity(self) -> int | None:
         """Return the desired humidity set point."""
         if self.has_humidifier_control:
             return self.thermostat["runtime"]["desiredHumidity"]
