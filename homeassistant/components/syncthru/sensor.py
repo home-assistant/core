@@ -187,8 +187,26 @@ class SyncThruMainSensor(SyncThruSensor):
             )
             self._active = False
         self._state = self.syncthru.is_online()
+
+
+class SyncThruDetailedStateSensor(SyncThruSensor):
+    """Implementation of a sensor that checks whether the printer works correctly."""
+
+    def __init__(self, syncthru, name):
+        """Initialize the sensor."""
+        super().__init__(syncthru, name)
+        self._id_suffix = "_detailed_state"
+        self._active = True
+        self._enabled = False
+
+    @property
+    def enabled(self) -> bool:
+        return self._enabled
+
+    async def async_update(self):
+        """Get the latest data from SyncThru and update the state."""
+        self._state = SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()]
         self._attributes = {
-            "detailed_state": SYNCTHRU_STATE_HUMAN[self.syncthru.device_status()],
             "display_text": self.syncthru.device_status_details(),
         }
 
