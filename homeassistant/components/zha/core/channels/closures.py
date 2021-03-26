@@ -59,58 +59,48 @@ class DoorLockChannel(ZigbeeChannel):
     async def async_set_user_code(self, code_slot: int, user_code: str) -> None:
         """Set the user code for the code slot."""
 
-        set_pin_code = self.__getattr__("set_pin_code")
-        await set_pin_code(
-            *(
-                code_slot - 1,  # start code slots at 1, Zigbee internals use 0
-                closures.DoorLock.UserStatus.Enabled,
-                closures.DoorLock.UserType.Unrestricted,
-                user_code,
-            ),
+        await self.set_pin_code(
+            code_slot - 1,  # start code slots at 1, Zigbee internals use 0
+            closures.DoorLock.UserStatus.Enabled,
+            closures.DoorLock.UserType.Unrestricted,
+            user_code,
         )
 
     async def async_enable_user_code(self, code_slot: int) -> None:
         """Enable the code slot."""
 
-        set_user_status = self.__getattr__("set_user_status")
-        await set_user_status(*(code_slot - 1, closures.DoorLock.UserStatus.Enabled))
+        await self.set_user_status(code_slot - 1, closures.DoorLock.UserStatus.Enabled)
 
     async def async_disable_user_code(self, code_slot: int) -> None:
         """Disable the code slot."""
 
-        set_user_status = self.__getattr__("set_user_status")
-        await set_user_status(*(code_slot - 1, closures.DoorLock.UserStatus.Disabled))
+        await self.set_user_status(code_slot - 1, closures.DoorLock.UserStatus.Disabled)
 
     async def async_get_user_code(self, code_slot: int) -> int:
         """Get the user code from the code slot."""
 
-        get_pin_code = self.__getattr__("get_pin_code")
-        result = await get_pin_code(*(code_slot - 1,))
+        result = await self.get_pin_code(code_slot - 1)
         return result
 
     async def async_clear_user_code(self, code_slot: int) -> None:
         """Clear the code slot."""
 
-        clear_pin_code = self.__getattr__("clear_pin_code")
-        await clear_pin_code(*(code_slot - 1,))
+        await self.clear_pin_code(code_slot - 1)
 
     async def async_clear_all_user_codes(self) -> None:
         """Clear all code slots."""
 
-        clear_all_pin_codes = self.__getattr__("clear_all_pin_codes")
-        await clear_all_pin_codes(*())
+        await self.clear_all_pin_codes()
 
     async def async_set_user_type(self, code_slot: int, user_type: str) -> None:
         """Set user type."""
 
-        set_user_type = self.__getattr__("set_user_type")
-        await set_user_type(*(code_slot - 1, user_type))
+        await self.set_user_type(code_slot - 1, user_type)
 
     async def async_get_user_type(self, code_slot: int) -> str:
         """Get user type."""
 
-        get_user_type = self.__getattr__("get_user_type")
-        result = await get_user_type(*(code_slot - 1))
+        result = await self.get_user_type(code_slot - 1)
         return result
 
 
