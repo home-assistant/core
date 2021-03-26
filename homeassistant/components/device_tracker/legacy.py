@@ -222,7 +222,7 @@ class DeviceTrackerPlatform:
     async def async_setup_legacy(self, hass, tracker, discovery_info=None):
         """Set up a legacy platform."""
         full_name = f"{DOMAIN}.{self.name}"
-        LOGGER.info("Setting up %s.%s", full_name)
+        LOGGER.info("Setting up %s", full_name)
         with async_start_setup(hass, [full_name]):
             try:
                 scanner = None
