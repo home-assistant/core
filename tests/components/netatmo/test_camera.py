@@ -5,17 +5,17 @@ from unittest.mock import patch
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
 from homeassistant.components.netatmo.const import (
+    NETATMO_EVENT,
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
 )
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import callback
 from homeassistant.util import dt
 
 from .common import fake_post_request, simulate_webhook
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 
 async def test_setup_component_with_webhook(hass, camera_entry):
@@ -258,14 +258,8 @@ async def test_camera_reconnect_webhook(hass, config_entry):
 
 async def test_webhook_person_event(hass, camera_entry):
     """Test that person events are handled."""
-    calls = []
-
-    @callback
-    def listener(event):
-        calls.append(event)
-
-    hass.bus.async_listen_once("netatmo_event", listener)
-    assert not calls
+    test_netatmo_event = async_capture_events(hass, NETATMO_EVENT)
+    assert not test_netatmo_event
 
     fake_webhook_event = {
         "persons": [
@@ -291,4 +285,4 @@ async def test_webhook_person_event(hass, camera_entry):
     webhook_id = camera_entry.data[CONF_WEBHOOK_ID]
     await simulate_webhook(hass, webhook_id, fake_webhook_event)
 
-    assert calls
+    assert test_netatmo_event
