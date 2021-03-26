@@ -35,10 +35,9 @@ def get_service(hass, config, discovery_info=None):
     device_id = config.get(CONF_DEVICE_ID)
     device_ids = config.get(CONF_DEVICE_IDS)
     device_names = config.get(CONF_DEVICE_NAMES)
-    if api_key:
-        if not get_devices(api_key):
-            _LOGGER.error("Error connecting to Join. Check the API key")
-            return False
+    if api_key and not get_devices(api_key):
+        _LOGGER.error("Error connecting to Join. Check the API key")
+        return False
     if device_id is None and device_ids is None and device_names is None:
         _LOGGER.error(
             "No device was provided. Please specify device_id"

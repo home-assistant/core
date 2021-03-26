@@ -258,9 +258,8 @@ class HERETravelTimeSensor(SensorEntity):
     @property
     def state(self) -> str | None:
         """Return the state of the sensor."""
-        if self._here_data.traffic_mode:
-            if self._here_data.traffic_time is not None:
-                return str(round(self._here_data.traffic_time / 60))
+        if self._here_data.traffic_mode and self._here_data.traffic_time is not None:
+            return str(round(self._here_data.traffic_time / 60))
         if self._here_data.base_time is not None:
             return str(round(self._here_data.base_time / 60))
 

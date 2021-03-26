@@ -241,8 +241,9 @@ class HyperionBaseLight(LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             for item in self._client.adjustment or []:
-                if const.KEY_ID in item:
-                    if not await self._client.async_send_set_adjustment(
+                if (
+                    const.KEY_ID in item
+                    and not await self._client.async_send_set_adjustment(
                         **{
                             const.KEY_ADJUSTMENT: {
                                 const.KEY_BRIGHTNESS: int(
@@ -251,8 +252,9 @@ class HyperionBaseLight(LightEntity):
                                 const.KEY_ID: item[const.KEY_ID],
                             }
                         }
-                    ):
-                        return
+                    )
+                ):
+                    return
 
         # == Set an external source
         if (
