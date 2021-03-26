@@ -24,18 +24,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import (
-    ConfigType,
-    EventType,
-    HomeAssistantType,
-    ServiceCallType,
-)
+from homeassistant.helpers.typing import ConfigType, EventType, HomeAssistantType
 
 from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
@@ -275,7 +271,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
     )
 
-    async def reload_service_handler(service_call: ServiceCallType) -> None:
+    async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all KNX components and load new ones from config."""
 
         # First check for config file. If for some reason it is no longer there
@@ -418,7 +414,7 @@ class KNXModule:
             match_for_outgoing=True,
         )
 
-    async def service_event_register_modify(self, call: ServiceCallType) -> None:
+    async def service_event_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing a GroupAddress to the knx_event filter."""
         attr_address = call.data[KNX_ADDRESS]
         group_addresses = map(GroupAddress, attr_address)
@@ -441,7 +437,7 @@ class KNXModule:
                         str(group_address),
                     )
 
-    async def service_exposure_register_modify(self, call: ServiceCallType) -> None:
+    async def service_exposure_register_modify(self, call: ServiceCall) -> None:
         """Service for adding or removing an exposure to KNX bus."""
         group_address = call.data[KNX_ADDRESS]
 
@@ -473,7 +469,7 @@ class KNXModule:
             exposure.device.name,
         )
 
-    async def service_send_to_knx_bus(self, call: ServiceCallType) -> None:
+    async def service_send_to_knx_bus(self, call: ServiceCall) -> None:
         """Service for sending an arbitrary KNX message to the KNX bus."""
         attr_address = call.data[KNX_ADDRESS]
         attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
@@ -497,7 +493,7 @@ class KNXModule:
             )
             await self.xknx.telegrams.put(telegram)
 
-    async def service_read_to_knx_bus(self, call: ServiceCallType) -> None:
+    async def service_read_to_knx_bus(self, call: ServiceCall) -> None:
         """Service for sending a GroupValueRead telegram to the KNX bus."""
         for address in call.data[KNX_ADDRESS]:
             telegram = Telegram(
