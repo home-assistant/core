@@ -7,7 +7,7 @@ from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from .common import fake_post_request, simulate_webhook
+from .common import FAKE_WEBHOOK_ACTIVATION, fake_post_request, simulate_webhook
 
 from tests.common import MockConfigEntry
 from tests.components.cloud import mock_cloud
@@ -35,10 +35,6 @@ FAKE_WEBHOOK = {
     "mode": "max",
     "event_type": "set_point",
     "push_type": "display_change",
-}
-
-FAKE_WEBHOOK_ACTIVATION = {
-    "push_type": "webhook_activation",
 }
 
 
