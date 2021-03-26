@@ -22,8 +22,8 @@ from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import async_can_use_icmp_lib_with_privilege, async_get_next_ping_id
-from .const import ICMP_TIMEOUT, PING_TIMEOUT
+from . import async_get_next_ping_id
+from .const import DOMAIN, ICMP_TIMEOUT, PING_PRIVS, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,8 +70,7 @@ async def async_setup_platform(
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
-
-    privileged = await async_can_use_icmp_lib_with_privilege(hass)
+    privileged = hass.data[DOMAIN][PING_PRIVS]
     if privileged is None:
         ping_cls = PingDataSubProcess
     else:
