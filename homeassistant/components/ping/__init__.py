@@ -7,6 +7,7 @@ import logging
 from icmplib import SocketPermissionError, ping as icmp_ping
 
 from homeassistant.core import callback
+from homeassistant.helpers.reload import async_setup_reload_service
 
 DOMAIN = "ping"
 PLATFORMS = ["binary_sensor"]
@@ -16,6 +17,13 @@ DEFAULT_START_ID = 129
 MAX_PING_ID = 65534
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass, config):
+    """Set up the template integration."""
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+
+    return True
 
 
 @callback
@@ -34,6 +42,13 @@ def async_get_next_ping_id(hass):
     hass.data[DOMAIN][PING_ID] = next_id
 
     return next_id
+
+
+# In python 3.9 and later, this can be converted to just be `cache`
+@lru_cache(maxsize=None)
+async def async_can_use_icmp_lib_with_privilege(hass) -> None | bool:
+    """Verify we can create a raw socket."""
+    return await hass.async_add_executor_job(can_use_icmp_lib_with_privilege)
 
 
 # In python 3.9 and later, this can be converted to just be `cache`
