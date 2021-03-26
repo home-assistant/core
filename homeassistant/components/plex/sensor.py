@@ -186,6 +186,11 @@ class PlexLibrarySectionSensor(SensorEntity):
         self.async_write_ha_state()
 
     @property
+    def entity_registry_enabled_default(self):
+        """Return if sensor should be enabled by default."""
+        return False
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
