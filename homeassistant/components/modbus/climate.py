@@ -276,7 +276,7 @@ class ModbusThermostat(ClimateEntity):
     def _write_register(self, register, value):
         """Write holding register using the Modbus hub slave."""
         try:
-            self._hub.write_registers(self._slave, register, [value, 0])
+            self._hub.write_registers(self._slave, register, value)
         except ConnectionException:
             self._available = False
             return
