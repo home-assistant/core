@@ -19,8 +19,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
-from . import async_can_use_icmp_lib_with_privilege, async_get_next_ping_id
-from .const import ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_TIMEOUT
+from . import async_get_next_ping_id
+from .const import DOMAIN, ICMP_TIMEOUT, PING_ATTEMPTS_COUNT, PING_PRIVS, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class HostSubProcess:
 async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up the Host objects and return the update function."""
 
-    privileged = async_can_use_icmp_lib_with_privilege()
+    privileged = hass.data[DOMAIN][PING_PRIVS]
     ip_to_dev_id = {ip: dev_id for (dev_id, ip) in config[const.CONF_HOSTS].items()}
     interval = config.get(
         CONF_SCAN_INTERVAL,

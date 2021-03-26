@@ -1,7 +1,6 @@
 """The ping component."""
 from __future__ import annotations
 
-from functools import lru_cache
 import logging
 
 from icmplib import SocketPermissionError, ping as icmp_ping
@@ -9,12 +8,7 @@ from icmplib import SocketPermissionError, ping as icmp_ping
 from homeassistant.core import callback
 from homeassistant.helpers.reload import async_setup_reload_service
 
-DOMAIN = "ping"
-PLATFORMS = ["binary_sensor"]
-
-PING_ID = "ping_id"
-DEFAULT_START_ID = 129
-MAX_PING_ID = 65534
+from .const import DEFAULT_START_ID, DOMAIN, MAX_PING_ID, PING_ID, PING_PRIVS, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +16,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass, config):
     """Set up the template integration."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-
+    hass.data[DOMAIN] = {
+        PING_PRIVS: await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege),
+        PING_ID: DEFAULT_START_ID,
+    }
     return True
 
 
@@ -32,8 +29,7 @@ def async_get_next_ping_id(hass):
 
     Must be called in async
     """
-    current_id = hass.data.setdefault(DOMAIN, {}).get(PING_ID, DEFAULT_START_ID)
-
+    current_id = hass.data[DOMAIN][PING_ID]
     if current_id == MAX_PING_ID:
         next_id = DEFAULT_START_ID
     else:
@@ -42,13 +38,6 @@ def async_get_next_ping_id(hass):
     hass.data[DOMAIN][PING_ID] = next_id
 
     return next_id
-
-
-# In python 3.9 and later, this can be converted to just be `cache`
-@lru_cache(maxsize=None)
-async def async_can_use_icmp_lib_with_privilege(hass) -> None | bool:
-    """Verify we can create a raw socket."""
-    return await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege)
 
 
 def _can_use_icmp_lib_with_privilege() -> None | bool:
