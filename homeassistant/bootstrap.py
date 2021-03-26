@@ -555,6 +555,9 @@ async def _async_set_up_integrations(
         except asyncio.TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
+    log_task.cancel()
+    _LOGGER.debug("Setup times: %s", setup_time)
+
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
     try:
@@ -562,6 +565,3 @@ async def _async_set_up_integrations(
             await hass.async_block_till_done()
     except asyncio.TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
-
-    _LOGGER.debug("Setup times: %s", setup_time)
-    log_task.cancel()
