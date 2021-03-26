@@ -123,6 +123,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
                     id=next_id,
                 )
             )
+            _LOGGER.debug("Multiping responses: %s", responses)
             for idx, dev_id in enumerate(ip_to_dev_id.values()):
                 if responses[idx].is_alive:
                     async_see(
