@@ -16,6 +16,7 @@ from homeassistant.components.device_tracker.const import (
     SOURCE_TYPE_ROUTER,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.process import kill_subprocess
 
@@ -135,8 +136,8 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
         try:
             await async_update(now)
         finally:
-            hass.helpers.event.track_point_in_utc_time(
-                _async_update_interval, util.dt.utcnow() + interval
+            async_track_point_in_utc_time(
+                hass, _async_update_interval, util.dt.utcnow() + interval
             )
 
     await _async_update_interval(None)
