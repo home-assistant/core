@@ -1,5 +1,5 @@
 """The tests for the Netatmo climate platform."""
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -394,30 +394,50 @@ async def test_webhook_event_handling_no_data(hass, climate_entry):
 
 async def test_service_schedule_thermostats(hass, climate_entry, caplog):
     """Test service for selecting Netatmo schedule with thermostats."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.netatmo_livingroom"
 
     # Test setting a valid schedule
-    await hass.services.async_call(
-        "netatmo",
-        SERVICE_SET_SCHEDULE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "Winter"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "pyatmo.thermostat.HomeData.switch_home_schedule"
+    ) as mock_switch_home_schedule:
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_SCHEDULE,
+            {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "Winter"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_switch_home_schedule.assert_called_once_with(
+            home_id="91763b24c43d3e344f424e8b", schedule_id="b1b54a2f45795764f59d50d8"
+        )
+
+    # Fake backend response for valve being turned on
+    response = {
+        "event_type": "schedule",
+        "schedule_id": "b1b54a2f45795764f59d50d8",
+        "previous_schedule_id": "59d32176d183948b05ab4dce",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
 
     assert (
-        "Setting 91763b24c43d3e344f424e8b schedule to Winter (b1b54a2f45795764f59d50d8)"
-        in caplog.text
+        hass.states.get(climate_entity_livingroom).attributes["selected_schedule"]
+        == "Winter"
     )
 
     # Test setting an invalid schedule
-    await hass.services.async_call(
-        "netatmo",
-        SERVICE_SET_SCHEDULE,
-        {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "summer"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "pyatmo.thermostat.HomeData.switch_home_schedule"
+    ) as mock_switch_home_schedule:
+        await hass.services.async_call(
+            "netatmo",
+            SERVICE_SET_SCHEDULE,
+            {ATTR_ENTITY_ID: climate_entity_livingroom, ATTR_SCHEDULE_NAME: "summer"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock_switch_home_schedule.assert_not_called()
 
     assert "summer is not a invalid schedule" in caplog.text
 
@@ -668,3 +688,69 @@ async def test_get_all_home_ids():
     }
     expected = ["123", "987"]
     assert climate.get_all_home_ids(home_data) == expected
+
+
+async def test_webhook_home_id_mismatch(hass, climate_entry):
+    """Test service turn on for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_entrada = "climate.netatmo_entrada"
+
+    assert hass.states.get(climate_entity_entrada).state == "auto"
+
+    # Fake backend response for valve being turned on
+    response = {
+        "room_id": "2833524037",
+        "home": {
+            "id": "123",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "home",
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "home",
+        "event_type": "cancel_set_point",
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_entrada).state == "auto"
+
+
+async def test_webhook_set_point(hass, climate_entry):
+    """Test service turn on for valves."""
+    webhook_id = climate_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_entrada = "climate.netatmo_entrada"
+
+    # Fake backend response for valve being turned on
+    response = {
+        "room_id": "2746182631",
+        "home": {
+            "id": "91763b24c43d3e344f424e8b",
+            "name": "MYHOME",
+            "country": "DE",
+            "rooms": [
+                {
+                    "id": "2833524037",
+                    "name": "Entrada",
+                    "type": "lobby",
+                    "therm_setpoint_mode": "home",
+                    "therm_setpoint_temperature": 30,
+                }
+            ],
+            "modules": [{"id": "12:34:56:00:01:ae", "name": "Entrada", "type": "NRV"}],
+        },
+        "mode": "home",
+        "event_type": "set_point",
+        "temperature": 21,
+        "push_type": "display_change",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_entrada).state == "heat"
