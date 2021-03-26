@@ -19,6 +19,8 @@ UPDATE_PAYLOAD = {
     ]
 }
 
+LIBRARY_UPDATE_PAYLOAD = {"StatusNotification": [{"title": "Library scan complete"}]}
+
 
 def websocket_connected(mock_websocket):
     """Call the websocket callback method to signal successful connection."""
@@ -30,6 +32,12 @@ def trigger_plex_update(mock_websocket, payload=UPDATE_PAYLOAD):
     """Call the websocket callback method with a Plex update."""
     callback = mock_websocket.call_args[0][1]
     callback("playing", payload, None)
+
+
+def trigger_library_update(mock_websocket, payload=LIBRARY_UPDATE_PAYLOAD):
+    """Call the websocket callback method with a library update."""
+    callback = mock_websocket.call_args[0][1]
+    callback("status", payload, None)
 
 
 async def wait_for_debouncer(hass):

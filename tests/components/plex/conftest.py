@@ -120,6 +120,24 @@ def library_fixture():
     return load_fixture("plex/library.xml")
 
 
+@pytest.fixture(name="library_tvshows_size", scope="session")
+def library_tvshows_size_fixture():
+    """Load tvshow library size payload and return it."""
+    return load_fixture("plex/library_tvshows_size.xml")
+
+
+@pytest.fixture(name="library_tvshows_size_episodes", scope="session")
+def library_tvshows_size_episodes_fixture():
+    """Load tvshow library size in episodes payload and return it."""
+    return load_fixture("plex/library_tvshows_size_episodes.xml")
+
+
+@pytest.fixture(name="library_tvshows_size_seasons", scope="session")
+def library_tvshows_size_seasons_fixture():
+    """Load tvshow library size in seasons payload and return it."""
+    return load_fixture("plex/library_tvshows_size_seasons.xml")
+
+
 @pytest.fixture(name="library_sections", scope="session")
 def library_sections_fixture():
     """Load library sections payload and return it."""

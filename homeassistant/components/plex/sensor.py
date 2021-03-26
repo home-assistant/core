@@ -29,6 +29,13 @@ LIBRARY_PRIMARY_LIBTYPE = {
     "artist": "track",
 }
 
+LIBRARY_ICON_LOOKUP = {
+    "artist": "mdi:music",
+    "movie": "mdi:movie",
+    "photo": "mdi:image",
+    "show": "mdi:television",
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -206,15 +213,7 @@ class PlexLibrarySectionSensor(SensorEntity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        if self.library_type == "movie":
-            return "mdi:movie"
-        elif self.library_type == "show":
-            return "mdi:television"
-        elif self.library_type == "artist":
-            return "mdi:music"
-        elif self.library_type == "photo":
-            return "mdi:image"
-        return "mdi:plex"
+        return LIBRARY_ICON_LOOKUP.get(self.library_type, "mdi:plex")
 
     @property
     def extra_state_attributes(self):
