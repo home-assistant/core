@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.components import camera
 from homeassistant.components.camera import STATE_STREAMING
 from homeassistant.components.netatmo.const import (
+    NETATMO_EVENT,
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
@@ -14,7 +15,7 @@ from homeassistant.util import dt
 
 from .common import fake_post_request, simulate_webhook
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 
 async def test_setup_component_with_webhook(hass, camera_entry):
@@ -253,3 +254,35 @@ async def test_camera_reconnect_webhook(hass, config_entry):
         )
         await hass.async_block_till_done()
         mock_post.assert_called()
+
+
+async def test_webhook_person_event(hass, camera_entry):
+    """Test that person events are handled."""
+    test_netatmo_event = async_capture_events(hass, NETATMO_EVENT)
+    assert not test_netatmo_event
+
+    fake_webhook_event = {
+        "persons": [
+            {
+                "id": "91827374-7e04-5298-83ad-a0cb8372dff1",
+                "face_id": "a1b2c3d4e5",
+                "face_key": "9876543",
+                "is_known": True,
+                "face_url": "https://netatmocameraimage.blob.core.windows.net/production/12345",
+            }
+        ],
+        "snapshot_id": "123456789abc",
+        "snapshot_key": "foobar123",
+        "snapshot_url": "https://netatmocameraimage.blob.core.windows.net/production/12346",
+        "event_type": "person",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "event_id": "1234567890",
+        "message": "MYHOME: John Doe has been seen by Indoor Camera ",
+        "push_type": "NACamera-person",
+    }
+
+    webhook_id = camera_entry.data[CONF_WEBHOOK_ID]
+    await simulate_webhook(hass, webhook_id, fake_webhook_event)
+
+    assert test_netatmo_event
