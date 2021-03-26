@@ -1,10 +1,13 @@
 """The tests for NEW_NAME device conditions."""
+from __future__ import annotations
+
 import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -18,24 +21,28 @@ from tests.common import (
 
 
 @pytest.fixture
-def device_reg(hass):
+def device_reg(hass: HomeAssistant) -> device_registry.DeviceRegistry:
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def entity_reg(hass):
+def entity_reg(hass: HomeAssistant) -> entity_registry.EntityRegistry:
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_conditions(
+    hass: HomeAssistant,
+    device_reg: device_registry.DeviceRegistry,
+    entity_reg: entity_registry.EntityRegistry,
+) -> None:
     """Test we get the expected conditions from a NEW_DOMAIN."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -64,7 +71,7 @@ async def test_get_conditions(hass, device_reg, entity_reg):
     assert_lists_same(conditions, expected_conditions)
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for turn_on and turn_off conditions."""
     hass.states.async_set("NEW_DOMAIN.entity", STATE_ON)
 
