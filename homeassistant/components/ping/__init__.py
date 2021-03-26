@@ -48,12 +48,10 @@ def async_get_next_ping_id(hass):
 @lru_cache(maxsize=None)
 async def async_can_use_icmp_lib_with_privilege(hass) -> None | bool:
     """Verify we can create a raw socket."""
-    return await hass.async_add_executor_job(can_use_icmp_lib_with_privilege)
+    return await hass.async_add_executor_job(_can_use_icmp_lib_with_privilege)
 
 
-# In python 3.9 and later, this can be converted to just be `cache`
-@lru_cache(maxsize=None)
-def can_use_icmp_lib_with_privilege() -> None | bool:
+def _can_use_icmp_lib_with_privilege() -> None | bool:
     """Verify we can create a raw socket."""
     try:
         icmp_ping("127.0.0.1", count=0, timeout=0, privileged=True)
