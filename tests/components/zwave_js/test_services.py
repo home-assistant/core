@@ -426,6 +426,40 @@ async def test_bulk_set_config_parameters(hass, client, multisensor_6, integrati
     }
     assert args["value"] == 241
 
+    client.async_send_command_no_wait.reset_mock()
+
+    # Test that when a device is awake, we call async_send_command instead of
+    # async_send_command_no_wait
+    multisensor_6.handle_wake_up(None)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_BULK_SET_PARTIAL_CONFIG_PARAMETERS,
+        {
+            ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+            ATTR_CONFIG_PARAMETER: 102,
+            ATTR_CONFIG_VALUE: {
+                1: 1,
+                16: 1,
+                32: 1,
+                64: 1,
+                128: 1,
+            },
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 52
+    assert args["valueId"] == {
+        "commandClass": 112,
+        "property": 102,
+    }
+    assert args["value"] == 241
+
+    client.async_send_command.reset_mock()
+
 
 async def test_poll_value(
     hass, client, climate_radio_thermostat_ct100_plus_different_endpoints, integration
