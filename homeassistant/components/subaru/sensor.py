@@ -200,6 +200,7 @@ class SubaruSensor(SubaruEntity):
         """Return the icon of the sensor."""
         if not self.device_class:
             return ICONS.get(self.entity_type)
+        return None
 
     @property
     def state(self):

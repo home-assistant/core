@@ -250,7 +250,7 @@ async def pin_form(hass, user_form):
 @pytest.fixture
 async def options_form(hass):
     """Return options form for Subaru config flow."""
-    await async_setup_component(hass, DOMAIN, {})
     entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
     entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {})
     return await hass.config_entries.options.async_init(entry.entry_id)
