@@ -56,7 +56,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
     job = HassJob(action)
 
     if config[CONF_TYPE] == "turn_on":
