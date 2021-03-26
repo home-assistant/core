@@ -141,7 +141,7 @@ def _get_cumulative_value(
     :param source_type: The source of energy (electricity or gas)
     :param period_type: The period for which cumulative value should be given.
     """
-    if source_type in current_measurements.keys():
+    if source_type in current_measurements:
         if (
             period_type in current_measurements[source_type]
             and current_measurements[source_type][period_type] is not None
