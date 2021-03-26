@@ -6,7 +6,12 @@ from itertools import count
 from typing import Any, Deque
 
 from homeassistant.core import Context
-from homeassistant.helpers.trace import TraceElement, trace_id_set
+from homeassistant.helpers.trace import (
+    TraceElement,
+    trace_id_get,
+    trace_id_set,
+    trace_set_child_id,
+)
 import homeassistant.util.dt as dt_util
 
 from . import websocket_api
@@ -55,6 +60,8 @@ class ActionTrace:
         self._timestamp_start: dt.datetime = dt_util.utcnow()
         self.key: tuple[str, str] = key
         self._variables: dict[str, Any] | None = None
+        if trace_id_get():
+            trace_set_child_id(self.key, self.run_id)
         trace_id_set((key, self.run_id))
 
     def set_action_trace(self, trace: dict[str, Deque[TraceElement]]) -> None:
