@@ -88,6 +88,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 
     def __init__(self, name: str, ping) -> None:
         """Initialize the Ping Binary sensor."""
+        self._available = False
         self._name = name
         self._ping = ping
 
@@ -97,6 +98,11 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         return self._name
 
     @property
+    def available(self) -> str:
+        """Return if we have done the first ping."""
+        return self._available
+
+    @property
     def device_class(self) -> str:
         """Return the class of this sensor."""
         return DEVICE_CLASS_CONNECTIVITY
@@ -104,7 +110,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self._ping.available
+        return self._ping.is_alive
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -120,18 +126,22 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     async def async_update(self) -> None:
         """Get the latest data."""
         await self._ping.async_update()
+        self._available = True
 
     async def async_added_to_hass(self):
         """Restore previous state on restart to avoid blocking startup."""
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
+        if last_state is not None:
+            self._available = True
+
         if last_state is None or last_state.state != STATE_ON:
             self._ping.data = False
             return
 
         attributes = last_state.attributes
-        self._ping.available = True
+        self._ping.is_alive = True
         self._ping.data = {
             "min": attributes[ATTR_ROUND_TRIP_TIME_AVG],
             "max": attributes[ATTR_ROUND_TRIP_TIME_MAX],
@@ -149,7 +159,7 @@ class PingData:
         self._ip_address = host
         self._count = count
         self.data = {}
-        self.available = False
+        self.is_alive = False
         self._privileged = privileged
 
 
@@ -171,11 +181,11 @@ class PingDataICMPLib(PingData):
                 )
             )
         except NameLookupError:
-            self.available = False
+            self.is_alive = False
             return
 
-        self.available = data.is_alive
-        if not self.available:
+        self.is_alive = data.is_alive
+        if not self.is_alive:
             self.data = False
             return
 
@@ -278,4 +288,4 @@ class PingDataSubProcess(PingData):
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         self.data = await self.async_ping()
-        self.available = bool(self.data)
+        self.is_alive = bool(self.data)
