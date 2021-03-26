@@ -107,7 +107,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             )
             for idx, host in enumerate(hosts):
                 if results[idx]:
-                    async_see(dev_id=host.dev_id, source_type=SOURCE_TYPE_ROUTER)
+                    await async_see(dev_id=host.dev_id, source_type=SOURCE_TYPE_ROUTER)
 
     else:
 
@@ -127,7 +127,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
             _LOGGER.debug("Multiping responses: %s", responses)
             for idx, dev_id in enumerate(ip_to_dev_id.values()):
                 if responses[idx].is_alive:
-                    async_see(
+                    await async_see(
                         dev_id=dev_id,
                         source_type=SOURCE_TYPE_ROUTER,
                     )
