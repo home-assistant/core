@@ -220,9 +220,6 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
-    # If we reported this entity is is falling back on deprecated temperature conversion
-    _temperature_conversion_reported = False
-
     # Protect for multiple updates
     _update_staged = False
 
@@ -557,33 +554,20 @@ class Entity(ABC):
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
         # Convert temperature if we detect one
-        # Suppress ValueError (Could not convert state to float)
-        with suppress(ValueError, AttributeError):
+        try:
             unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
             units = self.hass.config.units
             if (
                 unit_of_measure in (TEMP_CELSIUS, TEMP_FAHRENHEIT)
                 and unit_of_measure != units.temperature_unit
             ):
-                if not self._temperature_conversion_reported:
-                    self._temperature_conversion_reported = True
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        "Entity %s (%s) reports a temperature in %s which will be "
-                        "converted to %s, this is deprecated for entities which are "
-                        "not sensors and will be removed from Home Assistant Core "
-                        "2021.10. Please update your configuration if "
-                        "unit_of_measurement is manually configured, otherwise %s",
-                        self.entity_id,
-                        type(self),
-                        unit_of_measure,
-                        units.temperature_unit,
-                        report_issue,
-                    )
                 prec = len(state) - state.index(".") - 1 if "." in state else 0
                 temp = units.temperature(float(state), unit_of_measure)
                 state = str(round(temp) if prec == 0 else round(temp, prec))
                 attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
+        except ValueError:
+            # Could not convert state to float
+            pass
 
         if (
             self._context_set is not None
