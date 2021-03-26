@@ -39,7 +39,7 @@ async def async_setup_platform(
 class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
-    def __init__(self, hass: HomeAssistantType, device: XknxSensor):
+    def __init__(self, hass: HomeAssistantType, device: XknxSensor) -> None:
         """Initialize a KNX sensor."""
         self._device: XknxSensor
         if device.ha_value_template is not None:
@@ -53,7 +53,7 @@ class KNXSensor(KnxEntity, SensorEntity):
         template = self._device.ha_value_template
         if template is not None and state is not None:
             try:
-                return template.async_render({"value": state})
+                return template.async_render({"value": state})  # type: ignore[no-any-return]
             except TemplateError as ex:
                 _LOGGER.error(
                     "Error while rendering template for '%s'. %s", self.name, ex
