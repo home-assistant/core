@@ -72,7 +72,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.temperature.value  # type: ignore[no-any-return]
+        return self._device.temperature.value
 
     @property
     def target_temperature_step(self) -> float:
@@ -82,7 +82,7 @@ class KNXClimate(KnxEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._device.target_temperature.value  # type: ignore[no-any-return]
+        return self._device.target_temperature.value
 
     @property
     def min_temp(self) -> float:
