@@ -155,7 +155,7 @@ class ConfigManagerFlowResourceView(FlowManagerResourceView):
             return super()._prepare_result_json(result)
 
         data = result.copy()
-        data["result"] = data["result"].entry_id
+        data["result"] = entry_json(result["result"])
         data.pop("data")
         return data
 
