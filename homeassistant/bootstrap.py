@@ -556,7 +556,13 @@ async def _async_set_up_integrations(
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
     log_task.cancel()
-    _LOGGER.debug("Setup times: %s", setup_time)
+    _LOGGER.info(
+        "Integration setup times: %s",
+        {
+            integration: timedelta.total_seconds()
+            for integration, timedelta in setup_time
+        },
+    )
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
