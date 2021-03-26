@@ -151,18 +151,22 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
 class PingData:
     """The base class for handling the data retrieval."""
 
-    def __init__(self, hass, host, count, privileged) -> None:
+    def __init__(self, hass, host, count) -> None:
         """Initialize the data object."""
         self.hass = hass
         self._ip_address = host
         self._count = count
         self.data = {}
         self.is_alive = False
-        self._privileged = privileged
 
 
 class PingDataICMPLib(PingData):
     """The Class for handling the data retrieval using icmplib."""
+
+    def __init__(self, hass, host, count, privileged) -> None:
+        """Initialize the data object."""
+        super().__init__(hass, host, count)
+        self._privileged = privileged
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
