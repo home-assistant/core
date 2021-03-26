@@ -177,7 +177,8 @@ def trace_clear() -> None:
 def trace_set_child_id(child_key: tuple[str, str], child_run_id: str) -> None:
     """Set child trace_id of TraceElement at the top of the stack."""
     node = cast(TraceElement, trace_stack_top(trace_stack_cv))
-    node.set_child_id(child_key, child_run_id)
+    if node:
+        node.set_child_id(child_key, child_run_id)
 
 
 def trace_set_result(**kwargs: Any) -> None:
