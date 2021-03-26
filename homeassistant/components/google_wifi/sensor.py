@@ -175,9 +175,10 @@ class GoogleWifiAPI:
                             sensor_value = "Online"
                         else:
                             sensor_value = "Offline"
-                    elif attr_key == ATTR_LOCAL_IP:
-                        if not self.raw_data["wan"]["online"]:
-                            sensor_value = STATE_UNKNOWN
+                    elif (
+                        attr_key == ATTR_LOCAL_IP and not self.raw_data["wan"]["online"]
+                    ):
+                        sensor_value = STATE_UNKNOWN
 
                     self.data[attr_key] = sensor_value
             except KeyError:
