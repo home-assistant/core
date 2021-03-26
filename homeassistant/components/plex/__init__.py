@@ -35,6 +35,7 @@ from .const import (
     DOMAIN as PLEX_DOMAIN,
     GDM_DEBOUNCER,
     GDM_SCANNER,
+    IGNORED_DEVICE_MODELS,
     PLATFORMS,
     PLATFORMS_COMPLETED,
     PLEX_SERVER_CONFIG,
@@ -209,6 +210,8 @@ async def async_setup_entry(hass, entry):
         )
         task.add_done_callback(partial(start_websocket_session, platform))
 
+    await cleanup_plex_devices(hass, entry)
+
     def get_plex_account(plex_server):
         try:
             return plex_server.account
@@ -249,3 +252,18 @@ async def async_options_updated(hass, entry):
     # Guard incomplete setup during reauth flows
     if server_id in hass.data[PLEX_DOMAIN][SERVERS]:
         hass.data[PLEX_DOMAIN][SERVERS][server_id].options = entry.options
+
+
+async def cleanup_plex_devices(hass, entry):
+    """Clean up old and invalid devices from the registry."""
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    )
+
+    for device_entry in device_entries:
+        if device_entry.model in IGNORED_DEVICE_MODELS:
+            _LOGGER.debug(
+                "Removing device: %s / %s", device_entry.name, device_entry.identifiers
+            )
+            device_registry.async_remove_device(device_entry.id)

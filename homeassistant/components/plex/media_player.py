@@ -35,6 +35,7 @@ from .const import (
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
+    IGNORED_DEVICE_MODELS,
     NAME_FORMAT,
     PLEX_NEW_MP_SIGNAL,
     PLEX_UPDATE_MEDIA_PLAYER_SESSION_SIGNAL,
@@ -542,6 +543,9 @@ class PlexMediaPlayer(MediaPlayerEntity):
     def device_info(self):
         """Return a device description for device registry."""
         if self.machine_identifier is None:
+            return None
+
+        if self.device_product in IGNORED_DEVICE_MODELS:
             return None
 
         return {
