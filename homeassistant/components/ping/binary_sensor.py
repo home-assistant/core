@@ -20,10 +20,9 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, PLATFORMS, async_get_next_ping_id, can_use_icmp_lib_with_privilege
+from . import async_can_use_icmp_lib_with_privilege, async_get_next_ping_id
 from .const import ICMP_TIMEOUT, PING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,23 +63,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the Ping Binary sensor."""
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
-
     host = config[CONF_HOST]
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
 
-    privileged = can_use_icmp_lib_with_privilege()
+    privileged = await async_can_use_icmp_lib_with_privilege(hass)
     if privileged is None:
         ping_cls = PingDataSubProcess
     else:
         ping_cls = PingDataICMPLib
 
-    ping_data = ping_cls(hass, host, count, privileged)
-
-    add_entities([PingBinarySensor(name, ping_data)])
+    async_add_entities(
+        [PingBinarySensor(name, ping_cls(hass, host, count, privileged))]
+    )
 
 
 class PingBinarySensor(RestoreEntity, BinarySensorEntity):
