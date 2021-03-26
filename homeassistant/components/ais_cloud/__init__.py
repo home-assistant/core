@@ -450,6 +450,8 @@ async def websocket_add_ais_media_source(hass, connection, msg):
     await hass.services.async_call(
         "ais_ai_service", "say_it", {"text": ais_answer["message"]}
     )
+    # sync with AIS
+    await hass.services.async_call("ais_cloud", "get_radio_types")
 
 
 class AisCloudWS:
@@ -580,6 +582,7 @@ class AisCloudWS:
                     "media_url": media_url,
                     "image_url": image_url,
                     "share": share,
+                    "gate_id": ais_global.get_sercure_android_id_dom(),
                 }
                 with async_timeout.timeout(5):
                     ws_resp = await web_session.post(
@@ -588,6 +591,41 @@ class AisCloudWS:
                     return await ws_resp.json()
         except Exception as e:
             _LOGGER.warning("Couldn't add the: " + name + " " + str(e))
+            return {"error": True, "message": str(e)}
+
+    def remove_ais_media(self, media_category, name):
+        rest_url = self.url + "add_ais_media"
+        try:
+            payload = {
+                "media_category": media_category,
+                "name": name,
+                "gate_id": ais_global.get_sercure_android_id_dom(),
+            }
+            ws_resp = requests.delete(
+                rest_url, json=payload, headers=self.cloud_ws_header, timeout=5
+            )
+            json_resp = ws_resp.json()
+            return json_resp
+        except Exception as e:
+            _LOGGER.warning("Couldn't fetch data for: add_ais_media " + str(e))
+
+    async def async_remove_ais_media(self, media_category, name):
+        web_session = aiohttp_client.async_get_clientsession(self.hass)
+        rest_url = self.url + "add_ais_media"
+        try:
+            with async_timeout.timeout(5):
+                payload = {
+                    "media_category": media_category,
+                    "name": name,
+                    "gate_id": ais_global.get_sercure_android_id_dom(),
+                }
+                with async_timeout.timeout(5):
+                    ws_resp = await web_session.delete(
+                        rest_url, json=payload, headers=self.cloud_ws_header
+                    )
+                    return await ws_resp.json()
+        except Exception as e:
+            _LOGGER.warning("Couldn't remove the: " + name + " " + str(e))
             return {"error": True, "message": str(e)}
 
     async def async_check_ais_media(self, name, source, current_url):
@@ -888,6 +926,11 @@ class AisColudData:
             list_info[list_idx]["mediasource"] = ais_global.G_AN_RADIO
             list_info[list_idx]["audio_type"] = ais_global.G_AN_RADIO
             list_info[list_idx]["icon"] = "mdi:play"
+            if item.get("CAN_EDIT", 0) == 1:
+                list_info[list_idx]["editable"] = True
+                list_info[list_idx]["icon_remove"] = "mdi:delete-forever"
+            else:
+                list_info[list_idx]["editable"] = False
             list_idx = list_idx + 1
 
         # create lists
@@ -1170,6 +1213,26 @@ class AisColudData:
                     list_idx = list_idx + 1
                     new_attr[list_idx] = attr[itm]
             self.hass.states.async_set("sensor.spotifylist", state, new_attr)
+
+        if media_source == ais_global.G_AN_RADIO:
+            radio_id = int(call.data["id"])
+            state = self.hass.states.get("sensor.radiolist")
+            attr = state.attributes
+            state = state.state
+            new_attr = {}
+            list_idx = -1
+            for itm in attr:
+                if not itm == radio_id:
+                    list_idx = list_idx + 1
+                    new_attr[list_idx] = attr[itm]
+                else:
+                    ws = AisCloudWS(self.hass)
+                    ais_answer = ws.remove_ais_media(
+                        media_category="radio", name=attr[itm]["name"]
+                    )
+                    if ais_answer.get("error", False):
+                        _LOGGER.error(ais_answer["message"])
+            self.hass.states.async_set("sensor.radiolist", state, new_attr)
 
     def process_play_audio(self, call):
         media_source = call.data["media_source"]
