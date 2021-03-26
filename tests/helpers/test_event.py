@@ -2525,7 +2525,7 @@ async def test_track_sunrise_update_location(hass, legacy_patchable_time):
         await hass.config.async_update(latitude=40.755931, longitude=-73.984606)
         await hass.async_block_till_done()
 
-    #update location for astral
+    # update location for astral
     location = LocationInfo(
         latitude=hass.config.latitude, longitude=hass.config.longitude
     )
