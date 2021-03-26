@@ -1,12 +1,13 @@
 """Component to manage a shopping list."""
 import asyncio
+import json
 import logging
 import uuid
-import json
+
+import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.core import callback
 from homeassistant.helpers import intent
 from homeassistant.util.json import load_json, save_json
-import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_bookmarks"
 DEPENDENCIES = ["http"]
@@ -73,6 +74,7 @@ def async_setup(hass, config):
             list_info[list_idx]["media_source"] = item["source"]
             list_info[list_idx]["icon"] = "mdi:bookmark-music"
             list_info[list_idx]["icon_remove"] = "mdi:delete-forever"
+            list_info[list_idx]["editable"] = True
             list_info[list_idx]["id"] = item["id"]
             list_info[list_idx][
                 "media_position"
@@ -120,6 +122,7 @@ def async_setup(hass, config):
                     item["source"], "mdi:play"
                 )
                 list_info[list_idx]["icon_remove"] = "mdi:delete-forever"
+                list_info[list_idx]["editable"] = True
                 if audio_source == ais_global.G_AN_PODCAST:
                     list_info[list_idx]["icon"] = "mdi:podcast"
                 else:
@@ -383,7 +386,7 @@ class BookmarksData:
         if bookmark:
             # type validation
             if audio_type == ais_global.G_AN_RADIO:
-                message = "Nie można dodać zakładki do {}".format(audio_type_pl, name)
+                message = f"Nie można dodać zakładki do {audio_type_pl}"
                 self.hass.async_add_job(
                     self.hass.services.async_call(
                         "ais_ai_service", "say_it", {"text": message}
@@ -412,9 +415,9 @@ class BookmarksData:
             if item is not None:
                 # delete the old bookmark
                 self.async_remove_bookmark(item["id"], True)
-                message = "Przesuwam zakładkę {}".format(full_name)
+                message = f"Przesuwam zakładkę {full_name}"
             else:
-                message = "Dodaję nową zakładkę {}".format(full_name)
+                message = f"Dodaję nową zakładkę {full_name}"
 
             # add the bookmark
             item = {
@@ -439,7 +442,7 @@ class BookmarksData:
         else:
             # validation
             if source == ais_global.G_AN_FAVORITE:
-                message = "{}, {} jest już w ulubionych.".format(audio_type_pl, name)
+                message = f"{audio_type_pl}, {name} jest już w ulubionych."
                 self.hass.async_add_job(
                     self.hass.services.async_call(
                         "ais_ai_service", "say_it", {"text": message}
@@ -463,7 +466,7 @@ class BookmarksData:
                 None,
             )
             if item is not None:
-                message = "{}, {} jest już w ulubionych.".format(audio_type_pl, name)
+                message = f"{audio_type_pl}, {name} jest już w ulubionych."
                 self.hass.async_add_job(
                     self.hass.services.async_call(
                         "ais_ai_service", "say_it", {"text": message}
@@ -566,7 +569,7 @@ class AddFavoriteIntent(intent.IntentHandler):
                 "Nie można dodać do ulubionych - brak informacji o odtwarzanym audio."
             )
         else:
-            answer = "Dobrze zapamiętam - dodaje {} do Twoich ulubionych".format(name)
+            answer = f"Dobrze zapamiętam - dodaje {name} do Twoich ulubionych"
             # hass.data[DOMAIN].async_add(state.attributes, False)
             yield from hass.services.async_call(
                 "ais_bookmarks", "add_favorite", {"voice_call": True}
@@ -593,7 +596,7 @@ class AddBookmarkIntent(intent.IntentHandler):
         if name is None or source is None or media_content_id is None:
             answer = "Nie można dodać zakładki - brak informacji o odtwarzanym audio."
         else:
-            answer = "Dobrze dodaję zakładkę {}".format(name)
+            answer = f"Dobrze dodaję zakładkę {name}"
             yield from hass.services.async_call(
                 "ais_bookmarks", "add_bookmark", {"voice_call": True}
             )
@@ -642,7 +645,7 @@ class PlayLastBookmarkIntent(intent.IntentHandler):
             answer = "Nie ma żadnych zakładek"
         else:
             bookmark = bookmarks[0]["source"] + "; " + bookmarks[0]["name"]
-            answer = "Włączam ostatnią zakładkę {}".format(bookmark)
+            answer = f"Włączam ostatnią zakładkę {bookmark}"
             yield from hass.services.async_call(
                 "ais_bookmarks", "play_bookmark", {"bookmark": bookmark}
             )

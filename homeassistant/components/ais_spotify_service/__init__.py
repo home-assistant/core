@@ -285,6 +285,7 @@ class SpotifyData:
                         "thumbnail": thumbnail,
                         "icon": icon,
                         "audio_type": ais_global.G_AN_SPOTIFY_SEARCH,
+                        "editable": True,
                     }
                     list_idx = list_idx + 1
             except Exception as e:
@@ -311,6 +312,7 @@ class SpotifyData:
                 items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = "mdi:play"
+                items_info[idx]["editable"] = True
                 idx = idx + 1
         elif (item_type == "artist") or (item_type == "user_artists"):
             response = self._spotify.artist_top_tracks(item_uri)
@@ -326,6 +328,7 @@ class SpotifyData:
                 items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = track["type"]
                 items_info[idx]["icon"] = "mdi:play"
+                items_info[idx]["editable"] = True
                 idx = idx + 1
         elif (item_type == "playlist") or (item_type == "user_playlists"):
             response = self._spotify.user_playlist(item_owner_id, item_uri)
@@ -343,6 +346,7 @@ class SpotifyData:
                 items_info[idx]["audio_type"] = ais_global.G_AN_SPOTIFY
                 items_info[idx]["type"] = items["track"]["type"]
                 items_info[idx]["icon"] = "mdi:play"
+                items_info[idx]["editable"] = True
                 idx = idx + 1
 
         # update list
@@ -453,6 +457,7 @@ class SpotifyData:
             list_info[list_idx]["media_source"] = table_after
             list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
             list_info[list_idx]["icon"] = "mdi:page-next"
+            list_info[list_idx]["editable"] = True
             list_info[list_idx]["type"] = search_type
 
         # update lists

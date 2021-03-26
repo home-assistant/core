@@ -183,6 +183,7 @@ class YouTubeData:
             list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
             list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
             list_info[list_idx]["icon"] = "mdi:page-previous"
+            list_info[list_idx]["editable"] = True
             list_info[list_idx]["query"] = query
             list_idx = list_idx + 1
 
@@ -199,6 +200,7 @@ class YouTubeData:
                 list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
                 list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
                 list_info[list_idx]["icon"] = "mdi:play"
+                list_info[list_idx]["editable"] = True
                 list_idx = list_idx + 1
 
         if "nextPageToken" in data:
@@ -212,6 +214,7 @@ class YouTubeData:
             list_info[list_idx]["media_source"] = ais_global.G_AN_MUSIC
             list_info[list_idx]["audio_type"] = ais_global.G_AN_MUSIC
             list_info[list_idx]["icon"] = "mdi:page-next"
+            list_info[list_idx]["editable"] = True
             list_info[list_idx]["query"] = query
 
         # update list
