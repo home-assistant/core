@@ -875,7 +875,7 @@ class Entity(ABC):
             )
             if self.platform:
                 report_issue += (
-                    "+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                    f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
                 )
 
         return report_issue
