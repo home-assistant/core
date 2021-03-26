@@ -8,7 +8,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
 
-from .common import simulate_webhook
+from .common import FAKE_WEBHOOK_ACTIVATION, simulate_webhook
 
 
 async def test_light_setup_and_services(hass, light_entry):
@@ -16,10 +16,7 @@ async def test_light_setup_and_services(hass, light_entry):
     webhook_id = light_entry.data[CONF_WEBHOOK_ID]
 
     # Fake webhook activation
-    webhook_data = {
-        "push_type": "webhook_activation",
-    }
-    await simulate_webhook(hass, webhook_id, webhook_data)
+    await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
     await hass.async_block_till_done()
 
     light_entity = "light.netatmo_garden"
@@ -40,7 +37,6 @@ async def test_light_setup_and_services(hass, light_entry):
 
     # Trigger light mode change with erroneous webhook data
     response = {
-        "user_id": "91763b24c43d3e344f424e8d",
         "event_type": "light_mode",
         "device_id": "12:34:56:00:a5:a4",
     }
