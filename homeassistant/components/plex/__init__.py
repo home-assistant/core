@@ -256,7 +256,11 @@ async def async_options_updated(hass, entry):
 
 async def cleanup_plex_devices(hass, entry):
     """Clean up old and invalid devices from the registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry, entity_registry = await asyncio.gather(
+        hass.helpers.device_registry.async_get_registry(),
+        hass.helpers.entity_registry.async_get_registry(),
+    )
+
     device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
         device_registry, entry.entry_id
     )
@@ -265,5 +269,20 @@ async def cleanup_plex_devices(hass, entry):
         if device_entry.model in IGNORED_DEVICE_MODELS:
             _LOGGER.debug(
                 "Removing device: %s / %s", device_entry.name, device_entry.identifiers
+            )
+            device_registry.async_remove_device(device_entry.id)
+
+        if (
+            len(
+                hass.helpers.entity_registry.async_entries_for_device(
+                    entity_registry, device_entry.id, include_disabled_entities=True
+                )
+            )
+            == 0
+        ):
+            _LOGGER.debug(
+                "Removing orphaned device: %s / %s",
+                device_entry.name,
+                device_entry.identifiers,
             )
             device_registry.async_remove_device(device_entry.id)
