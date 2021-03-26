@@ -18,7 +18,12 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dev_reg,
+    entity_registry as ent_reg,
+    service,
+)
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -298,8 +303,8 @@ class EntityPlatform:
 
         hass = self.hass
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        device_registry = dev_reg.async_get(hass)
+        entity_registry = ent_reg.async_get(hass)
         tasks = [
             self._async_add_entity(  # type: ignore
                 entity, update_before_add, entity_registry, device_registry
