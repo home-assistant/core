@@ -6,7 +6,7 @@ from typing import Callable, Iterable
 
 from xknx.devices import Sensor as XknxSensor
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
@@ -36,7 +36,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class KNXSensor(KnxEntity, Entity):
+class KNXSensor(KnxEntity, SensorEntity):
     """Representation of a KNX sensor."""
 
     def __init__(self, hass: HomeAssistantType, device: XknxSensor):

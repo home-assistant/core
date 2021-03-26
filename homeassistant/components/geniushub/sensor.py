@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
@@ -38,7 +39,7 @@ async def async_setup_platform(
     async_add_entities(sensors + issues, update_before_add=True)
 
 
-class GeniusBattery(GeniusDevice):
+class GeniusBattery(GeniusDevice, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, device, state_attr) -> None:
@@ -88,7 +89,7 @@ class GeniusBattery(GeniusDevice):
         return level if level != 255 else 0
 
 
-class GeniusIssue(GeniusEntity):
+class GeniusIssue(GeniusEntity, SensorEntity):
     """Representation of a Genius Hub sensor."""
 
     def __init__(self, broker, level) -> None:

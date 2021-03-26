@@ -21,7 +21,9 @@
             "init": {
                 "data": {
                     "floor_temperature": "Vloertemperatuur",
-                    "precision": "Precisie"
+                    "precision": "Precisie",
+                    "read_precision": "Lees Precisie",
+                    "set_precision": "Precisie instellen"
                 },
                 "description": "Opties voor de OpenTherm Gateway"
             }

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, final
 
 import voluptuous as vol
 
@@ -99,7 +99,7 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
 
 
 class HumidifierEntity(ToggleEntity):
-    """Representation of a humidifier device."""
+    """Base class for humidifier entities."""
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -115,6 +115,7 @@ class HumidifierEntity(ToggleEntity):
 
         return data
 
+    @final
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""

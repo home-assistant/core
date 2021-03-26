@@ -5,7 +5,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.homekit.const import DOMAIN, SHORT_BRIDGE_NAME
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -229,6 +229,8 @@ async def test_import(hass):
     """Test we can import instance."""
     await setup.async_setup_component(hass, "persistent_notification", {})
 
+    ignored_entry = MockConfigEntry(domain=DOMAIN, data={}, source=SOURCE_IGNORE)
+    ignored_entry.add_to_hass(hass)
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )

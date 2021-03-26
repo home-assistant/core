@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, Mapping
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_BYTES, DATA_RATE_KIBIBYTES_PER_SECOND
 from homeassistant.helpers import device_registry as dr
@@ -117,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class UpnpSensor(CoordinatorEntity):
+class UpnpSensor(CoordinatorEntity, SensorEntity):
     """Base class for UPnP/IGD sensors."""
 
     def __init__(

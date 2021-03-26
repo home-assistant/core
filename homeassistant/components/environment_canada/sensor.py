@@ -6,7 +6,7 @@ import re
 from env_canada import ECData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_LOCATION,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([ECSensor(sensor_type, ec_data) for sensor_type in sensor_list], True)
 
 
-class ECSensor(Entity):
+class ECSensor(SensorEntity):
     """Implementation of an Environment Canada sensor."""
 
     def __init__(self, sensor_type, ec_data):

@@ -1,5 +1,7 @@
 """Support for Fibaro sensors."""
-from homeassistant.components.sensor import DOMAIN
+from contextlib import suppress
+
+from homeassistant.components.sensor import DOMAIN, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_CO2,
@@ -11,7 +13,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.helpers.entity import Entity
 
 from . import FIBARO_DEVICES, FibaroDevice
 
@@ -55,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
-class FibaroSensor(FibaroDevice, Entity):
+class FibaroSensor(FibaroDevice, SensorEntity):
     """Representation of a Fibaro Sensor."""
 
     def __init__(self, fibaro_device):
@@ -72,7 +73,7 @@ class FibaroSensor(FibaroDevice, Entity):
             self._unit = None
             self._icon = None
             self._device_class = None
-        try:
+        with suppress(KeyError, ValueError):
             if not self._unit:
                 if self.fibaro_device.properties.unit == "lux":
                     self._unit = LIGHT_LUX
@@ -82,8 +83,6 @@ class FibaroSensor(FibaroDevice, Entity):
                     self._unit = TEMP_FAHRENHEIT
                 else:
                     self._unit = self.fibaro_device.properties.unit
-        except (KeyError, ValueError):
-            pass
 
     @property
     def state(self):
@@ -107,7 +106,5 @@ class FibaroSensor(FibaroDevice, Entity):
 
     def update(self):
         """Update the state."""
-        try:
+        with suppress(KeyError, ValueError):
             self.current_value = float(self.fibaro_device.properties.value)
-        except (KeyError, ValueError):
-            pass

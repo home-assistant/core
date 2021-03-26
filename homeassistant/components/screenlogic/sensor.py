@@ -1,7 +1,13 @@
 """Support for a ScreenLogic Sensor."""
 import logging
 
-from homeassistant.components.sensor import DEVICE_CLASSES
+from screenlogicpy.const import DEVICE_TYPE
+
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    SensorEntity,
+)
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
@@ -9,6 +15,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
+
+SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
+    DEVICE_TYPE.TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
+    DEVICE_TYPE.ENERGY: DEVICE_CLASS_POWER,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -19,14 +30,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Generic sensors
     for sensor in data["devices"]["sensor"]:
         entities.append(ScreenLogicSensor(coordinator, sensor))
+    # Pump sensors
     for pump in data["devices"]["pump"]:
         for pump_key in PUMP_SENSORS:
             entities.append(ScreenLogicPumpSensor(coordinator, pump, pump_key))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class ScreenLogicSensor(ScreenlogicEntity):
+class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
     """Representation of a ScreenLogic sensor entity."""
 
     @property
@@ -42,10 +54,8 @@ class ScreenLogicSensor(ScreenlogicEntity):
     @property
     def device_class(self):
         """Device class of the sensor."""
-        device_class = self.sensor.get("hass_type")
-        if device_class in DEVICE_CLASSES:
-            return device_class
-        return None
+        device_class = self.sensor.get("device_type")
+        return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_class)
 
     @property
     def state(self):
@@ -56,15 +66,10 @@ class ScreenLogicSensor(ScreenlogicEntity):
     @property
     def sensor(self):
         """Shortcut to access the sensor data."""
-        return self.sensor_data[self._data_key]
-
-    @property
-    def sensor_data(self):
-        """Shortcut to access the sensors data."""
-        return self.coordinator.data["sensors"]
+        return self.coordinator.data["sensors"][self._data_key]
 
 
-class ScreenLogicPumpSensor(ScreenlogicEntity):
+class ScreenLogicPumpSensor(ScreenlogicEntity, SensorEntity):
     """Representation of a ScreenLogic pump sensor entity."""
 
     def __init__(self, coordinator, pump, key):
@@ -86,10 +91,8 @@ class ScreenLogicPumpSensor(ScreenlogicEntity):
     @property
     def device_class(self):
         """Return the device class."""
-        device_class = self.pump_sensor.get("hass_type")
-        if device_class in DEVICE_CLASSES:
-            return device_class
-        return None
+        device_class = self.pump_sensor.get("device_type")
+        return SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS.get(device_class)
 
     @property
     def state(self):
@@ -99,9 +102,4 @@ class ScreenLogicPumpSensor(ScreenlogicEntity):
     @property
     def pump_sensor(self):
         """Shortcut to access the pump sensor data."""
-        return self.pumps_data[self._pump_id][self._key]
-
-    @property
-    def pumps_data(self):
-        """Shortcut to access the pump data."""
-        return self.coordinator.data["pumps"]
+        return self.coordinator.data["pumps"][self._pump_id][self._key]

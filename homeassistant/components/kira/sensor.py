@@ -1,8 +1,8 @@
 """KIRA interface to receive UDP packets from an IR-IP bridge."""
 import logging
 
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_DEVICE, CONF_NAME, STATE_UNKNOWN
-from homeassistant.helpers.entity import Entity
 
 from . import CONF_SENSOR, DOMAIN
 
@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities([KiraReceiver(device, kira)])
 
 
-class KiraReceiver(Entity):
+class KiraReceiver(SensorEntity):
     """Implementation of a Kira Receiver."""
 
     def __init__(self, name, kira):

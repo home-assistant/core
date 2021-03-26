@@ -1,5 +1,6 @@
 """Webhook handlers for mobile_app."""
 import asyncio
+from contextlib import suppress
 from functools import wraps
 import logging
 import secrets
@@ -551,10 +552,8 @@ async def webhook_get_config(hass, config_entry, data):
     if CONF_CLOUDHOOK_URL in config_entry.data:
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
-    try:
+    with suppress(hass.components.cloud.CloudNotAvailable):
         resp[CONF_REMOTE_UI_URL] = hass.components.cloud.async_remote_ui_url()
-    except hass.components.cloud.CloudNotAvailable:
-        pass
 
     return webhook_response(resp, registration=config_entry.data)
 

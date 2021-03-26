@@ -1,5 +1,6 @@
 """Config flow for UPB PIM integration."""
 import asyncio
+from contextlib import suppress
 import logging
 from urllib.parse import urlparse
 
@@ -43,11 +44,8 @@ async def _validate_input(data):
 
     upb.connect(_connected_callback)
 
-    try:
-        with async_timeout.timeout(VALIDATE_TIMEOUT):
-            await connected_event.wait()
-    except asyncio.TimeoutError:
-        pass
+    with suppress(asyncio.TimeoutError), async_timeout.timeout(VALIDATE_TIMEOUT):
+        await connected_event.wait()
 
     upb.disconnect()
 
