@@ -55,14 +55,18 @@ def hwtest(cloud_id, install_code, ip_address):
     response = reader.get_network_info()
 
     # Branch to test if target is Legacy Model
-    if "NetworkInfo" in response:
-        if response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE":
-            return reader
+    if (
+        "NetworkInfo" in response
+        and response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE"
+    ):
+        return reader
 
     # Branch to test if target is Eagle-200 Model
-    if "Response" in response:
-        if response["Response"].get("Command", None) == "get_network_info":
-            return EagleReader(ip_address, cloud_id, install_code)
+    if (
+        "Response" in response
+        and response["Response"].get("Command", None) == "get_network_info"
+    ):
+        return EagleReader(ip_address, cloud_id, install_code)
 
     # Catch-all if hardware ID tests fail
     raise ValueError("Couldn't determine device model.")
