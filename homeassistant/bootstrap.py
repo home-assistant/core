@@ -421,9 +421,7 @@ async def async_setup_multi_components(
         domain: hass.async_create_task(async_setup_component(hass, domain, config))
         for domain in domains
     }
-    log_task = asyncio.create_task(_async_watch_pending_setups(hass))
     await asyncio.wait(futures.values())
-    log_task.cancel()
     errors = [domain for domain in domains if futures[domain].exception()]
     for domain in errors:
         exception = futures[domain].exception()
@@ -441,6 +439,8 @@ async def _async_set_up_integrations(
     """Set up all the integrations."""
     hass.data[DATA_SETUP_STARTED] = {}
     setup_time = hass.data[DATA_SETUP_TIME] = {}
+
+    log_task = asyncio.create_task(_async_watch_pending_setups(hass))
 
     domains_to_setup = _get_domains(hass, config)
 
@@ -564,3 +564,4 @@ async def _async_set_up_integrations(
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     _LOGGER.debug("Setup times: %s", setup_time)
+    log_task.cancel()
