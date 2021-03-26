@@ -27,7 +27,9 @@
         "step": {
             "options": {
                 "data": {
-                    "known_hosts": "Llista opcional d'amfitrions coneguts per si el descobriment mDNS deixa de funcionar."
+                    "ignore_cec": "Llista opcional que es passar\u00e0 a pychromecast.IGNORE_CEC.",
+                    "known_hosts": "Llista opcional d'amfitrions coneguts per si el descobriment mDNS deixa de funcionar.",
+                    "uuid": "Llista opcional d'UUIDs. No s'afegiran 'casts' que no siguin a la llista."
                 },
                 "description": "Introdueix la configuraci\u00f3 de Google Cast."
             }
