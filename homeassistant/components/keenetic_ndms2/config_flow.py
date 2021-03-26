@@ -112,9 +112,9 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
         unique_id = discovery_info[ssdp.ATTR_UPNP_UDN]
 
-        self._async_abort_entries_match({CONF_HOST: host})
-
         await self.async_set_unique_id(unique_id)
+
+        self._async_abort_entries_match({CONF_HOST: host})
 
         self.context[CONF_HOST] = host
 
