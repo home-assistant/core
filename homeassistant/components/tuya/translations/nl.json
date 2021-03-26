@@ -40,6 +40,7 @@
                     "max_temp": "Maximale doeltemperatuur (gebruik min en max = 0 voor standaardwaarde)",
                     "min_kelvin": "Minimaal ondersteunde kleurtemperatuur in kelvin",
                     "min_temp": "Min. gewenste temperatuur (gebruik min en max = 0 voor standaard)",
+                    "set_temp_divided": "Gedeelde temperatuurwaarde gebruiken voor ingestelde temperatuuropdracht",
                     "support_color": "Forceer kleurenondersteuning",
                     "temp_divider": "Temperatuurwaarde deler (0 = standaardwaarde)",
                     "temp_step_override": "Doeltemperatuur stap",
@@ -56,6 +57,7 @@
                     "query_device": "Selecteer apparaat dat query-methode zal gebruiken voor snellere statusupdate",
                     "query_interval": "Peilinginterval van het apparaat in seconden"
                 },
+                "description": "Stel de waarden voor het pollinginterval niet te laag in, anders zullen de oproepen geen foutmelding in het logboek genereren",
                 "title": "Configureer Tuya opties"
             }
         }

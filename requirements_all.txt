@@ -949,7 +949,7 @@ minio==4.0.9
 mitemp_bt==0.0.3
 
 # homeassistant.components.motion_blinds
-motionblinds==0.4.8
+motionblinds==0.4.10
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -2335,7 +2335,7 @@ xbox-webapi==2.0.8
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.17.3
+xknx==0.17.4
 
 # homeassistant.components.bluesound
 # homeassistant.components.rest

@@ -94,7 +94,7 @@ async def test_form_cannot_connect(hass):
         )
 
     assert form_result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert form_result["errors"] == {"base": "connection_exception"}
+    assert form_result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_error(hass):
