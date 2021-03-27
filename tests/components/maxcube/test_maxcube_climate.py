@@ -28,6 +28,7 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_OFF,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
+    HVAC_MODE_DRY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
@@ -156,6 +157,20 @@ async def test_thermostat_set_hvac_mode_heat(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVAC_MODE_HEAT
+
+
+async def test_thermostat_set_invalid_hvac_mode(
+    hass, cube: MaxCube, thermostat: MaxThermostat
+):
+    """Set hvac mode to heat."""
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVAC_MODE_DRY},
+            blocking=True,
+        )
+    cube.set_temperature_mode.assert_not_called()
 
 
 async def test_thermostat_set_temperature(
@@ -336,6 +351,20 @@ async def test_thermostat_set_preset_none(
     cube.set_temperature_mode.assert_called_once_with(
         thermostat, None, MAX_DEVICE_MODE_AUTOMATIC
     )
+
+
+async def test_thermostat_set_invalid_preset(
+    hass, cube: MaxCube, thermostat: MaxThermostat
+):
+    """Set hvac mode to heat."""
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "invalid"},
+            blocking=True,
+        )
+    cube.set_temperature_mode.assert_not_called()
 
 
 async def test_wallthermostat_set_hvac_mode_heat(

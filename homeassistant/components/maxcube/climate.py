@@ -138,6 +138,8 @@ class MaxCubeClimate(ClimateEntity):
             self._set_target(MAX_DEVICE_MODE_MANUAL, temp)
         elif hvac_mode == HVAC_MODE_AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
+        else:
+            raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
         """
@@ -242,6 +244,8 @@ class MaxCubeClimate(ClimateEntity):
             self._set_target(MAX_DEVICE_MODE_BOOST, None)
         elif preset_mode == PRESET_NONE:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
+        else:
+            raise ValueError(f"unsupported preset mode {preset_mode}")
 
     @property
     def extra_state_attributes(self):
