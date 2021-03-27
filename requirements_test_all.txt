@@ -1215,7 +1215,7 @@ xknx==0.17.4
 xmltodict==0.12.0
 
 # homeassistant.components.august
-yalexs==1.1.6
+yalexs==1.1.9
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
