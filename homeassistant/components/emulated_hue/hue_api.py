@@ -504,25 +504,24 @@ class HueOneLightChangeView(HomeAssistantView):
                 data[ATTR_TEMPERATURE] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a humidifier, set the humidity
-        elif (
-            entity.domain == humidifier.DOMAIN and parsed[STATE_BRIGHTNESS] is not None
-        ):
-            turn_on_needed = True
-            domain = entity.domain
-            service = SERVICE_SET_HUMIDITY
-            data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
+        elif entity.domain == humidifier.DOMAIN:
+            if parsed[STATE_BRIGHTNESS] is not None:
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_SET_HUMIDITY
+                data[ATTR_HUMIDITY] = parsed[STATE_BRIGHTNESS]
 
         # If the requested entity is a media player, convert to volume
-        elif (
-            entity.domain == media_player.DOMAIN
-            and entity_features & SUPPORT_VOLUME_SET
-            and parsed[STATE_BRIGHTNESS] is not None
-        ):
-            turn_on_needed = True
-            domain = entity.domain
-            service = SERVICE_VOLUME_SET
-            # Convert 0-100 to 0.0-1.0
-            data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
+        elif entity.domain == media_player.DOMAIN:
+            if (
+                entity_features & SUPPORT_VOLUME_SET
+                and parsed[STATE_BRIGHTNESS] is not None
+            ):
+                turn_on_needed = True
+                domain = entity.domain
+                service = SERVICE_VOLUME_SET
+                # Convert 0-100 to 0.0-1.0
+                data[ATTR_MEDIA_VOLUME_LEVEL] = parsed[STATE_BRIGHTNESS] / 100.0
 
         # If the requested entity is a cover, convert to open_cover/close_cover
         elif entity.domain == cover.DOMAIN:

@@ -1420,15 +1420,14 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if (
-            self.state.domain == media_player.DOMAIN
-            and media_player.ATTR_SOUND_MODE_LIST in attrs
-        ):
-            mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+        if self.state.domain == media_player.DOMAIN:
+            if media_player.ATTR_SOUND_MODE_LIST in attrs:
+                mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
         elif self.state.domain == input_select.DOMAIN:
             mode_settings["option"] = self.state.state
-        elif self.state.domain == humidifier.DOMAIN and ATTR_MODE in attrs:
-            mode_settings["mode"] = attrs.get(ATTR_MODE)
+        elif self.state.domain == humidifier.DOMAIN:
+            if ATTR_MODE in attrs:
+                mode_settings["mode"] = attrs.get(ATTR_MODE)
         elif self.state.domain == light.DOMAIN and light.ATTR_EFFECT in attrs:
             mode_settings["effect"] = attrs.get(light.ATTR_EFFECT)
 
