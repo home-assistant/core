@@ -129,11 +129,9 @@ class UnifiVideoCamera(Camera):
         if "recordingIndicator" in self._caminfo:
             recording_state = self._caminfo["recordingIndicator"]
 
-        return (
-            self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
-            or recording_state == "MOTION_INPROGRESS"
-            or recording_state == "MOTION_FINISHED"
-        )
+        return self._caminfo["recordingSettings"][
+            "fullTimeRecordEnabled"
+        ] or recording_state in ["MOTION_INPROGRESS", "MOTION_FINISHED"]
 
     @property
     def motion_detection_enabled(self):
@@ -198,9 +196,8 @@ class UnifiVideoCamera(Camera):
 
     def camera_image(self):
         """Return the image of this camera."""
-        if not self._camera:
-            if not self._login():
-                return
+        if not self._camera and not self._login():
+            return
 
         def _get_image(retry=True):
             try:

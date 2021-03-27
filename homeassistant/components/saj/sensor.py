@@ -103,18 +103,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         for sensor in hass_sensors:
             state_unknown = False
-            if not values:
-                # SAJ inverters are powered by DC via solar panels and thus are
-                # offline after the sun has set. If a sensor resets on a daily
-                # basis like "today_yield", this reset won't happen automatically.
-                # Code below checks if today > day when sensor was last updated
-                # and if so: set state to None.
-                # Sensors with live values like "temperature" or "current_power"
-                # will also be reset to None.
-                if (sensor.per_day_basis and date.today() > sensor.date_updated) or (
-                    not sensor.per_day_basis and not sensor.per_total_basis
-                ):
-                    state_unknown = True
+            # SAJ inverters are powered by DC via solar panels and thus are
+            # offline after the sun has set. If a sensor resets on a daily
+            # basis like "today_yield", this reset won't happen automatically.
+            # Code below checks if today > day when sensor was last updated
+            # and if so: set state to None.
+            # Sensors with live values like "temperature" or "current_power"
+            # will also be reset to None.
+            if not values and (
+                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                or (not sensor.per_day_basis and not sensor.per_total_basis)
+            ):
+                state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
 
         return values
