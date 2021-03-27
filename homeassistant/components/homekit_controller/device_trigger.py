@@ -257,8 +257,6 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    config = TRIGGER_SCHEMA(config)
-
     device_id = config[CONF_DEVICE_ID]
     device = hass.data[TRIGGERS][device_id]
     return await device.async_attach_trigger(config, action, automation_info)

@@ -420,6 +420,9 @@ homeconnect==0.6.3
 # homeassistant.components.homematicip_cloud
 homematicip==0.13.1
 
+# homeassistant.components.home_plus_control
+homepluscontrol==0.0.5
+
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.19.0
@@ -488,7 +491,7 @@ millheater==0.4.0
 minio==4.0.9
 
 # homeassistant.components.motion_blinds
-motionblinds==0.4.8
+motionblinds==0.4.10
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -531,7 +534,7 @@ oauth2client==4.0.0
 objgraph==3.4.1
 
 # homeassistant.components.omnilogic
-omnilogic==0.4.2
+omnilogic==0.4.3
 
 # homeassistant.components.ondilo_ico
 ondilo==0.2.0
@@ -577,13 +580,13 @@ pilight==0.1.1
 pillow==8.1.2
 
 # homeassistant.components.plex
-plexapi==4.5.0
+plexapi==4.5.1
 
 # homeassistant.components.plex
 plexauth==0.0.6
 
 # homeassistant.components.plex
-plexwebsocket==0.0.12
+plexwebsocket==0.0.13
 
 # homeassistant.components.plugwise
 plugwise==0.8.5
@@ -705,7 +708,7 @@ pydexcom==0.2.0
 pydispatcher==2.0.5
 
 # homeassistant.components.econet
-pyeconet==0.1.12
+pyeconet==0.1.13
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1198,6 +1201,9 @@ wolf_smartset==0.1.8
 # homeassistant.components.xbox
 xbox-webapi==2.0.8
 
+# homeassistant.components.knx
+xknx==0.17.4
+
 # homeassistant.components.bluesound
 # homeassistant.components.rest
 # homeassistant.components.startca
@@ -1206,7 +1212,7 @@ xbox-webapi==2.0.8
 xmltodict==0.12.0
 
 # homeassistant.components.august
-yalexs==1.1.5
+yalexs==1.1.6
 
 # homeassistant.components.yeelight
 yeelight==0.5.4
@@ -1215,7 +1221,7 @@ yeelight==0.5.4
 zeep[async]==4.0.0
 
 # homeassistant.components.zeroconf
-zeroconf==0.28.8
+zeroconf==0.29.0
 
 # homeassistant.components.zha
 zha-quirks==0.0.54

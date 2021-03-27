@@ -319,7 +319,6 @@ async def async_attach_trigger(
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
-    config = TRIGGER_SCHEMA(config)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
 

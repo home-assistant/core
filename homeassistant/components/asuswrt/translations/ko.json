@@ -32,7 +32,7 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "\uae30\uae30\uac00 \uc678\ucd9c \uc0c1\ud0dc\ub85c \uac04\uc8fc\ub418\uae30 \uc804\uc5d0 \uae30\ub2e4\ub9ac\ub294 \uc2dc\uac04(\ucd08)",
+                    "consider_home": "\uae30\uae30\uac00 \uc678\ucd9c \uc0c1\ud0dc\ub85c \uac04\uc8fc\ub418\uae30 \uc804\uc5d0 \uae30\ub2e4\ub9ac\ub294 \uc2dc\uac04 (\ucd08)",
                     "dnsmasq": "dnsmasq.lease \ud30c\uc77c\uc758 \ub77c\uc6b0\ud130 \uc704\uce58",
                     "interface": "\ud1b5\uacc4\ub97c \uc6d0\ud558\ub294 \uc778\ud130\ud398\uc774\uc2a4 (\uc608: eth0, eth1 \ub4f1)",
                     "require_ip": "\uae30\uae30\uc5d0\ub294 IP\uac00 \uc788\uc5b4\uc57c \ud569\ub2c8\ub2e4 (\uc561\uc138\uc2a4 \ud3ec\uc778\ud2b8 \ubaa8\ub4dc\uc778 \uacbd\uc6b0)",

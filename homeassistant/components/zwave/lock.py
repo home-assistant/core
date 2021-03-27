@@ -291,17 +291,17 @@ class ZwaveLock(ZWaveDeviceEntity, LockEntity):
             if self._state_workaround:
                 self._state = LOCK_STATUS.get(str(notification_data))
                 _LOGGER.debug("workaround: lock state set to %s", self._state)
-            if self._v2btze:
-                if (
-                    self.values.v2btze_advanced
-                    and self.values.v2btze_advanced.data == CONFIG_ADVANCED
-                ):
-                    self._state = LOCK_STATUS.get(str(notification_data))
-                    _LOGGER.debug(
-                        "Lock state set from Access Control value and is %s, get=%s",
-                        str(notification_data),
-                        self.state,
-                    )
+            if (
+                self._v2btze
+                and self.values.v2btze_advanced
+                and self.values.v2btze_advanced.data == CONFIG_ADVANCED
+            ):
+                self._state = LOCK_STATUS.get(str(notification_data))
+                _LOGGER.debug(
+                    "Lock state set from Access Control value and is %s, get=%s",
+                    str(notification_data),
+                    self.state,
+                )
 
         if self._track_message_workaround:
             this_message = self.node.stats["lastReceivedMessage"][5]

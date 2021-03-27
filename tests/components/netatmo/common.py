@@ -31,6 +31,10 @@ COMMON_RESPONSE = {
 
 TEST_TIME = 1559347200.0
 
+FAKE_WEBHOOK_ACTIVATION = {
+    "push_type": "webhook_activation",
+}
+
 
 def fake_post_request(**args):
     """Return fake data."""
