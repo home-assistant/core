@@ -20,9 +20,6 @@ ENTITY_ID = "binary_sensor.testroom_testshutter"
 
 async def test_window_shuttler(hass, cube: MaxCube, windowshutter: MaxWindowShutter):
     """Test a successful setup with a shuttler device."""
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
-    await hass.async_block_till_done()
-
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
