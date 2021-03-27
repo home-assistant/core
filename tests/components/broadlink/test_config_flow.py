@@ -896,7 +896,7 @@ async def test_dhcp_unreachable(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "abort"
-    assert result["reason"] == "invalid_host"
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_dhcp_connect_einval(hass):
