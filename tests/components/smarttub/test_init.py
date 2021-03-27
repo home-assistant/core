@@ -6,7 +6,7 @@ from unittest.mock import patch
 from smarttub import LoginFailed
 
 from homeassistant.components import smarttub
-from homeassistant.components.smarttub.const import DOMAIN
+from homeassistant.components.smarttub.const import CONF_CONFIG_ENTRY, DOMAIN
 from homeassistant.config_entries import (
     ENTRY_STATE_SETUP_ERROR,
     ENTRY_STATE_SETUP_RETRY,
@@ -42,7 +42,9 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
         await hass.config_entries.async_setup(config_entry.entry_id)
         assert config_entry.state == ENTRY_STATE_SETUP_ERROR
         mock_flow_init.assert_called_with(
-            DOMAIN, context={"source": SOURCE_REAUTH}, data=config_entry.data
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data={CONF_CONFIG_ENTRY: config_entry, **config_entry.data},
         )
 
 
