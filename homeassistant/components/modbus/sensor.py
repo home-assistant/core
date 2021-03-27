@@ -131,7 +131,7 @@ async def async_setup_platform(
             "Sensor configuration is deprecated, will be removed in a future release"
         )
         discovery_info = {
-            CONF_NAME: "noName",
+            CONF_NAME: "no name",
             CONF_SENSORS: config[CONF_REGISTERS],
         }
         for entry in discovery_info[CONF_SENSORS]:
