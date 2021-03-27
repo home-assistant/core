@@ -281,15 +281,17 @@ class ISYInsteonBinarySensorEntity(ISYBinarySensorEntity):
         """
         self._negative_node = child
 
-        if self._negative_node.status != ISY_VALUE_UNKNOWN:
-            # If the negative node has a value, it means the negative node is
-            # in use for this device. Next we need to check to see if the
-            # negative and positive nodes disagree on the state (both ON or
-            # both OFF).
-            if self._negative_node.status == self._node.status:
-                # The states disagree, therefore we cannot determine the state
-                # of the sensor until we receive our first ON event.
-                self._computed_state = None
+        # If the negative node has a value, it means the negative node is
+        # in use for this device. Next we need to check to see if the
+        # negative and positive nodes disagree on the state (both ON or
+        # both OFF).
+        if (
+            self._negative_node.status != ISY_VALUE_UNKNOWN
+            and self._negative_node.status == self._node.status
+        ):
+            # The states disagree, therefore we cannot determine the state
+            # of the sensor until we receive our first ON event.
+            self._computed_state = None
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""

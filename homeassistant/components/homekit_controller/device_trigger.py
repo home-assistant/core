@@ -99,9 +99,11 @@ def enumerate_stateless_switch(service):
 
     # A stateless switch that has a SERVICE_LABEL_INDEX is part of a group
     # And is handled separately
-    if service.has(CharacteristicsTypes.SERVICE_LABEL_INDEX):
-        if len(service.linked) > 0:
-            return []
+    if (
+        service.has(CharacteristicsTypes.SERVICE_LABEL_INDEX)
+        and len(service.linked) > 0
+    ):
+        return []
 
     char = service[CharacteristicsTypes.INPUT_EVENT]
 
@@ -109,17 +111,15 @@ def enumerate_stateless_switch(service):
     # manufacturer might not - clamp options to what they say.
     all_values = clamp_enum_to_char(InputEventValues, char)
 
-    results = []
-    for event_type in all_values:
-        results.append(
-            {
-                "characteristic": char.iid,
-                "value": event_type,
-                "type": "button1",
-                "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
-            }
-        )
-    return results
+    return [
+        {
+            "characteristic": char.iid,
+            "value": event_type,
+            "type": "button1",
+            "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
+        }
+        for event_type in all_values
+    ]
 
 
 def enumerate_stateless_switch_group(service):
@@ -234,20 +234,16 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
 
     device = hass.data[TRIGGERS][device_id]
 
-    triggers = []
-
-    for trigger, subtype in device.async_get_triggers():
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_TYPE: trigger,
-                CONF_SUBTYPE: subtype,
-            }
-        )
-
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: trigger,
+            CONF_SUBTYPE: subtype,
+        }
+        for trigger, subtype in device.async_get_triggers()
+    ]
 
 
 async def async_attach_trigger(
