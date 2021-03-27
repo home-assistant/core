@@ -1,4 +1,4 @@
-# Describes the format for available webostv services
+# Describes the format for available denonavr services
 
 get_command:
   description: "Send a generic HTTP get command."

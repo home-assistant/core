@@ -1,7 +1,10 @@
 """Code to handle a DenonAVR receiver."""
 import logging
+from typing import Optional
 
-import denonavr
+from denonavr import DenonAVR
+from denonavr.exceptions import AvrTimoutError
+import httpx
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -9,9 +12,17 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectDenonAVR:
     """Class to async connect to a DenonAVR receiver."""
 
-    def __init__(self, hass, host, timeout, show_all_inputs, zone2, zone3):
+    def __init__(
+        self,
+        host: str,
+        timeout: float,
+        show_all_inputs: bool,
+        zone2: bool,
+        zone3: bool,
+        async_client: httpx.AsyncClient,
+    ):
         """Initialize the class."""
-        self._hass = hass
+        self._async_client = async_client
         self._receiver = None
         self._host = host
         self._show_all_inputs = show_all_inputs
@@ -24,13 +35,13 @@ class ConnectDenonAVR:
             self._zones["Zone3"] = None
 
     @property
-    def receiver(self):
+    def receiver(self) -> Optional[DenonAVR]:
         """Return the class containing all connections to the receiver."""
         return self._receiver
 
-    async def async_connect_receiver(self):
+    async def async_connect_receiver(self) -> bool:
         """Connect to the DenonAVR receiver."""
-        if not await self._hass.async_add_executor_job(self.init_receiver_class):
+        if not await self.async_init_receiver_class():
             return False
 
         if (
@@ -60,18 +71,21 @@ class ConnectDenonAVR:
 
         return True
 
-    def init_receiver_class(self):
-        """Initialize the DenonAVR class in a way that can called by async_add_executor_job."""
+    async def async_init_receiver_class(self) -> bool:
+        """Initialize the DenonAVR class asynchronously."""
+        self._receiver = DenonAVR(
+            host=self._host,
+            show_all_inputs=self._show_all_inputs,
+            timeout=self._timeout,
+            add_zones=self._zones,
+        )
+        # Use httpx.AsyncClient provided by Home Assistant
+        self._receiver.set_async_client(self._async_client)
         try:
-            self._receiver = denonavr.DenonAVR(
-                host=self._host,
-                show_all_inputs=self._show_all_inputs,
-                timeout=self._timeout,
-                add_zones=self._zones,
-            )
-        except ConnectionError:
+            await self._receiver.async_setup()
+        except AvrTimoutError:
             _LOGGER.error(
-                "ConnectionError during setup of denonavr with host %s", self._host
+                "Timeout error during setup of denonavr on host %s", self._host
             )
             return False
 
