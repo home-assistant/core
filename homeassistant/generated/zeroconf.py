@@ -155,6 +155,11 @@ ZEROCONF = {
             "domain": "apple_tv"
         }
     ],
+    "_tube_zb_gw._tcp.local.": [
+        {
+            "domain": "zha"
+        }
+    ],
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio"

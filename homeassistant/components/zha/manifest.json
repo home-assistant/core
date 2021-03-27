@@ -15,5 +15,7 @@
     "zigpy-zigate==0.7.3",
     "zigpy-znp==0.4.0"
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga"]
+  "codeowners": ["@dmulcahey", "@adminiuga"],
+  "zeroconf": [{ "type": "_tube_zb_gw._tcp.local." }],
+  "after_dependencies": ["zeroconf"]
 }
