@@ -5,8 +5,8 @@ import voluptuous as vol
 from homeassistant.components.modbus import number
 
 
-async def test_config_modbus():
-    """Run test for modbus init."""
+async def test_number_validator():
+    """Test number validator."""
 
     # positive tests
     value = number(15)
