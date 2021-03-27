@@ -1,7 +1,7 @@
 """Support for Modbus switches."""
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from datetime import timedelta
 import logging
 from typing import Any
