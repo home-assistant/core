@@ -18,6 +18,15 @@
                 },
                 "title": "Connect to Ezviz Cloud"
             },
+            "user_custom_region_url": {
+                "data": {
+                    "username": "username",
+                    "password": "password",
+                    "URL": "Ezviz Server URL"
+                },
+                "title": "Connect to custom Ezviz URL",
+                "description": "Manually specify your region URL"
+            },
             "user_camera": {
                 "data": {
                     "username": "username",

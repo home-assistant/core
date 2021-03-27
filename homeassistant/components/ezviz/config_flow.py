@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import (
+    CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_REGION,
@@ -29,6 +30,7 @@ from .const import (  # pylint: disable=unused-import
     DEFAULT_REGION,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    RUSSIA_REGION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +58,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self.hass.async_add_executor_job(client.login)
 
-        except (PyEzvizError, HTTPError) as err:
+        except (PyEzvizError, HTTPError, ConnectionError) as err:
             raise InvalidAuth from err
 
         auth_data = {
@@ -109,6 +111,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+
+            if user_input[CONF_REGION] == CONF_CUSTOMIZE:
+                return await self.async_step_user_custom_region_url(user_input)
+
             if CONF_TIMEOUT not in user_input:
                 user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
 
@@ -118,9 +124,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except AbortFlow:
-                raise
-
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
@@ -129,12 +132,45 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_REGION, default=DEFAULT_REGION): str,
+                vol.Required(CONF_REGION, default=DEFAULT_REGION): vol.In(
+                    [DEFAULT_REGION, RUSSIA_REGION, CONF_CUSTOMIZE]
+                ),
             }
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors or {}
+            step_id="user", data_schema=data_schema, errors=errors
+        )
+
+    async def async_step_user_custom_region_url(self, user_input):
+        """Handle a flow initiated by the user for custom region url."""
+
+        errors = {}
+
+        if user_input[CONF_REGION] != CONF_CUSTOMIZE:
+            if CONF_TIMEOUT not in user_input:
+                user_input[CONF_TIMEOUT] = DEFAULT_TIMEOUT
+
+            try:
+                return await self._validate_and_create_auth(user_input)
+
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
+
+        data_schema_custom_url = vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=user_input[CONF_USERNAME]): str,
+                vol.Required(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                vol.Required(CONF_REGION, default=DEFAULT_REGION): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="user", data_schema=data_schema_custom_url, errors=errors
         )
 
     async def async_step_user_camera(self, user_input=None):
@@ -152,9 +188,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except AbortFlow:
-                raise
-
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
@@ -169,7 +202,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user_camera", data_schema=camera_schema, errors=errors or {}
+            step_id="user_camera", data_schema=camera_schema, errors=errors
         )
 
     async def async_step_discovery(self, discovery_info):
@@ -196,9 +229,6 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-
-            except AbortFlow:
-                raise
 
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")

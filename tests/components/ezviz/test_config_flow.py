@@ -4,14 +4,18 @@ from unittest.mock import patch
 from pyezviz.client import PyEzvizError
 
 from homeassistant.components.ezviz.const import (
-    ATTR_TYPE_CAMERA,
     CONF_FFMPEG_ARGUMENTS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_TYPE, CONF_USERNAME
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_PASSWORD,
+    CONF_TIMEOUT,
+    CONF_USERNAME,
+)
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
@@ -144,20 +148,18 @@ async def test_async_step_discovery(hass, ezviz_config_flow):
     with _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: "test-user", CONF_PASSWORD: "test-pass"},
+            {
+                CONF_USERNAME: "test-user",
+                CONF_PASSWORD: "test-pass",
+                CONF_IP_ADDRESS: "test-ip",
+            },
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "C666666"
-    assert result["data"] == {
-        CONF_PASSWORD: "test-pass",
-        CONF_USERNAME: "test-user",
-        CONF_TYPE: ATTR_TYPE_CAMERA,
-    }
+    assert result["type"] == RESULT_TYPE_ABORT
 
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup.mock_calls) == 0
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_options_flow(hass, ezviz):

@@ -10,6 +10,15 @@
           "URL": "Ezviz Server URL"
         }
       },
+      "user_custom_region_url": {
+        "title": "Connect to custom Ezviz URL",
+        "description": "Manually specify your region URL",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "URL": "Ezviz Server URL"
+        }
+      },
       "user_camera": {
         "title": "Add Ezviz Camera",
         "data": {

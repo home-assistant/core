@@ -31,6 +31,7 @@ ATTR_TYPE_CAMERA = "CAMERA_ACCOUNT"
 
 # Defaults
 DEFAULT_REGION = "apiieu.ezvizlife.com"
+RUSSIA_REGION = "apirus.ezvizru.com"
 DEFAULT_CAMERA_USERNAME = "admin"
 DEFAULT_RTSP_PORT = "554"
 DEFAULT_TIMEOUT = 25
