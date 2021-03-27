@@ -23,29 +23,30 @@ from .conftest import base_config_test
 
 @pytest.mark.parametrize("do_discovery", [False, True])
 @pytest.mark.parametrize("do_options", [False, True])
-@pytest.mark.parametrize("do_type", ["tcp", "serial"])
-async def test_config_modbus(hass, do_discovery, do_options, do_type):
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_TYPE: "tcp",
+            CONF_HOST: "modbusTestHost",
+            CONF_PORT: 5501,
+        },
+        {
+            CONF_TYPE: "serial",
+            CONF_BAUDRATE: 9600,
+            CONF_BYTESIZE: 8,
+            CONF_METHOD: "rtu",
+            CONF_PORT: "usb01",
+            CONF_PARITY: "E",
+            CONF_STOPBITS: 1,
+        },
+    ],
+)
+async def test_config_modbus(hass, do_discovery, do_options, do_config):
     """Run test for modbus."""
-    if do_type == "tcp":
-        config = {
-            DOMAIN: {
-                CONF_TYPE: do_type,
-                CONF_HOST: "modbusTestHost",
-                CONF_PORT: 5501,
-            },
-        }
-    else:
-        config = {
-            DOMAIN: {
-                CONF_TYPE: do_type,
-                CONF_BAUDRATE: 9600,
-                CONF_BYTESIZE: 8,
-                CONF_METHOD: "rtu",
-                CONF_PORT: "usb01",
-                CONF_PARITY: "E",
-                CONF_STOPBITS: 1,
-            },
-        }
+    config = {
+        DOMAIN: do_config,
+    }
     if do_options:
         config.update(
             {
