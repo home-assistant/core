@@ -42,7 +42,7 @@ async def validate_input(hass: core.HomeAssistant, data: dict):
 
     hostname = data[CONF_HOST]
     try:
-        async with async_timeout.timeout(10):
+        async with async_timeout.timeout(30):
             bridge_os: Os = await bridge.async_get_os()
             bridge_network: Network = await bridge.async_get_network()
             if bridge_os.hostname is not None:

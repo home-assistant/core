@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_update_data() -> Bridge:
         """Fetch data from Bridge."""
         try:
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(60):
                 await asyncio.gather(
                     *[
                         client.async_get_battery(),
