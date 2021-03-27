@@ -90,9 +90,11 @@ class BanSensor(SensorEntity):
                     if len(self.ban_dict[STATE_ALL_BANS]) > 10:
                         self.ban_dict[STATE_ALL_BANS].pop(0)
 
-                elif entry[0] == "Unban":
-                    if current_ip in self.ban_dict[STATE_CURRENT_BANS]:
-                        self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
+                elif (
+                    entry[0] == "Unban"
+                    and current_ip in self.ban_dict[STATE_CURRENT_BANS]
+                ):
+                    self.ban_dict[STATE_CURRENT_BANS].remove(current_ip)
 
         if self.ban_dict[STATE_CURRENT_BANS]:
             self.last_ban = self.ban_dict[STATE_CURRENT_BANS][-1]

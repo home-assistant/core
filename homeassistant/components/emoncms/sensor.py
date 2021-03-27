@@ -92,13 +92,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for elem in data.data:
 
-        if exclude_feeds is not None:
-            if int(elem["id"]) in exclude_feeds:
-                continue
+        if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
+            continue
 
-        if include_only_feeds is not None:
-            if int(elem["id"]) not in include_only_feeds:
-                continue
+        if include_only_feeds is not None and int(elem["id"]) not in include_only_feeds:
+            continue
 
         name = None
         if sensor_names is not None:
