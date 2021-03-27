@@ -102,7 +102,6 @@ async def cube(hass, hass_config, room, thermostat, wallthermostat, windowshutte
         cube.devices = [thermostat, wallthermostat, windowshutter]
         cube.room_by_id.return_value = room
         cube.devices_by_room.return_value = [thermostat, wallthermostat, windowshutter]
-        cube.device_by_rf.side_effect = {d.rf_address: d for d in cube.devices}.get
         assert await async_setup_component(hass, DOMAIN, hass_config)
         await hass.async_block_till_done()
         gateway = hass_config[DOMAIN]["gateways"][0]
