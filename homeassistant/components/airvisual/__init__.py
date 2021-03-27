@@ -195,7 +195,7 @@ async def async_setup_entry(hass, config_entry):
             """Reevaluate interval since all coordinators are created at same time on reboot,"""
             """And so the 1rst evaluation may be wrong."""
             async_sync_geo_coordinator_update_intervals(
-                    hass, config_entry.data[CONF_API_KEY]
+                hass, config_entry.data[CONF_API_KEY]
             )
 
             """Get new data from the API."""
