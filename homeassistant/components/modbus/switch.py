@@ -97,7 +97,7 @@ async def async_setup_platform(
     #  check for old config:
     if discovery_info is None:
         _LOGGER.warning(
-            "Switch configuration depreciated, will be removed in a future release"
+            "Switch configuration is deprecated, will be removed in a future release"
         )
         discovery_info = {
             CONF_NAME: "noName",
