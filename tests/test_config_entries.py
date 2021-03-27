@@ -1221,12 +1221,11 @@ async def test_init_custom_integration(hass):
         None,
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
-    with pytest.raises(data_entry_flow.UnknownHandler):
-        with patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=integration,
-        ):
-            await hass.config_entries.flow.async_init("bla")
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        await hass.config_entries.flow.async_init("bla")
 
 
 async def test_support_entry_unload(hass):
