@@ -25,14 +25,20 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 from homeassistant.util.yaml import load_yaml
 
-from .typing import UNDEFINED, HomeAssistantType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
@@ -109,7 +115,7 @@ class RegistryEntry:
         return self.disabled_by is not None
 
     @callback
-    def write_unavailable_state(self, hass: HomeAssistantType) -> None:
+    def write_unavailable_state(self, hass: HomeAssistant) -> None:
         """Write the unavailable state to the state machine."""
         attrs: dict[str, Any] = {ATTR_RESTORED: True}
 
@@ -139,7 +145,7 @@ class RegistryEntry:
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
-    def __init__(self, hass: HomeAssistantType):
+    def __init__(self, hass: HomeAssistant):
         """Initialize the registry."""
         self.hass = hass
         self.entities: dict[str, RegistryEntry]
@@ -572,12 +578,12 @@ class EntityRegistry:
 
 
 @callback
-def async_get(hass: HomeAssistantType) -> EntityRegistry:
+def async_get(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry."""
     return cast(EntityRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistantType) -> None:
+async def async_load(hass: HomeAssistant) -> None:
     """Load entity registry."""
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = EntityRegistry(hass)
@@ -585,7 +591,7 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 
 @bind_hass
-async def async_get_registry(hass: HomeAssistantType) -> EntityRegistry:
+async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
     """Get entity registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
@@ -666,9 +672,7 @@ async def _async_migrate(entities: dict[str, Any]) -> dict[str, list[dict[str, A
 
 
 @callback
-def async_setup_entity_restore(
-    hass: HomeAssistantType, registry: EntityRegistry
-) -> None:
+def async_setup_entity_restore(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Set up the entity restore mechanism."""
 
     @callback
@@ -710,7 +714,7 @@ def async_setup_entity_restore(
 
 
 async def async_migrate_entries(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry_id: str,
     entry_callback: Callable[[RegistryEntry], dict | None],
 ) -> None:

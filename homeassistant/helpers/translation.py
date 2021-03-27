@@ -6,7 +6,7 @@ from collections import ChainMap
 import logging
 from typing import Any
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import (
     MAX_LOAD_CONCURRENTLY,
     Integration,
@@ -16,8 +16,6 @@ from homeassistant.loader import (
 )
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
-
-from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +146,7 @@ def _build_resources(
 
 
 async def async_get_component_strings(
-    hass: HomeAssistantType, language: str, components: set[str]
+    hass: HomeAssistant, language: str, components: set[str]
 ) -> dict[str, Any]:
     """Load translations."""
     domains = list({loaded.split(".")[-1] for loaded in components})
@@ -204,7 +202,7 @@ async def async_get_component_strings(
 class _TranslationCache:
     """Cache for flattened translations."""
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the cache."""
         self.hass = hass
         self.loaded: dict[str, set[str]] = {}
@@ -282,7 +280,7 @@ class _TranslationCache:
 
 @bind_hass
 async def async_get_translations(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     language: str,
     category: str,
     integration: str | None = None,
