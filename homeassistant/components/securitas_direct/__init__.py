@@ -33,27 +33,11 @@ def _connect(client):
 async def async_setup(hass, config) -> bool:
     """Set up securitas direct."""
 
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=deepcopy(conf)
-        )
-    )
-
     return True
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up securitas direct entry."""
-
-    if config_entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=config_entry.data[CONF_INSTALLATION]
-        )
 
     try:
         client = SecuritasClient(config_entry.data)
