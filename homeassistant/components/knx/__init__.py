@@ -24,14 +24,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.typing import ConfigType, EventType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, KNX_ADDRESS, SupportedPlatforms
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
@@ -212,7 +212,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the KNX integration."""
     try:
         knx_module = KNXModule(hass, config)
@@ -299,7 +299,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 class KNXModule:
     """Representation of KNX Object."""
 
-    def __init__(self, hass: HomeAssistantType, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
         """Initialize KNX module."""
         self.hass = hass
         self.config = config
@@ -328,7 +328,7 @@ class KNXModule:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 
-    async def stop(self, event: EventType) -> None:
+    async def stop(self, event: Event) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
         await self.xknx.stop()
 
