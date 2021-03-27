@@ -86,7 +86,7 @@ async def async_setup_platform(
             "Binary_sensor configuration is deprecated, will be removed in a future release"
         )
         discovery_info = {
-            CONF_NAME: "noName",
+            CONF_NAME: "no name",
             CONF_BINARY_SENSORS: config[CONF_INPUTS],
         }
         config = None
