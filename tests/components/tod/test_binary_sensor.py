@@ -689,7 +689,7 @@ async def test_norwegian_case_summer(hass):
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
 
-    testtime = sunrise + timedelta(seconds=1)
+    testtime = sunrise
     with patch(
         "homeassistant.components.tod.binary_sensor.dt_util.utcnow",
         return_value=testtime,
