@@ -33,7 +33,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import ATTR_COMMAND, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN
+from homeassistant.const import ATTR_COMMAND, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 
@@ -219,8 +219,6 @@ class DenonDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._receiver.state is None:
-            return STATE_UNKNOWN
         return self._receiver.state
 
     @property
