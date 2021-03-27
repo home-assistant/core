@@ -108,7 +108,7 @@ adafruit-blinka==3.9.0
 adafruit-circuitpython-bmp280==3.1.1
 
 # homeassistant.components.dht
-adafruit-circuitpython-dht==3.5.1
+adafruit-circuitpython-dht==3.5.8
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
