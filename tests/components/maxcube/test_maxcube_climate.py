@@ -165,7 +165,7 @@ async def test_thermostat_set_temperature(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 10.0},
         blocking=True,
     )
-    cube.set_target_temperature.assert_called_once_with(thermostat, 10.0)
+    cube.set_temperature_mode.assert_called_once_with(thermostat, 10.0, None)
     thermostat.target_temperature = 10.0
     thermostat.valve_position = 0
 
