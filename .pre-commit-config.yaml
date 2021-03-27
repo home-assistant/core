@@ -27,12 +27,10 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies:
-          - flake8-docstrings==1.5.0
-          # Temporarily every now and then for noqa cleanup; not done by
-          # default yet due to https://github.com/plinss/flake8-noqa/issues/1
-          # - flake8-noqa==1.1.0
+          - flake8-docstrings==1.6.0
           - pydocstyle==6.0.0
           - flake8-comprehensions==3.4.0
+          - flake8-noqa==1.1.0
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.0
