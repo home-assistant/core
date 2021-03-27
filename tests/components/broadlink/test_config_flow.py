@@ -987,8 +987,4 @@ async def test_dhcp_updates_host(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-
-    import pprint
-
-    pprint.pprint(mock_entry.data)
     assert mock_entry.data["host"] == "4.5.6.7"
