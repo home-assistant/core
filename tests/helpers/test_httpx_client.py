@@ -80,6 +80,19 @@ async def test_get_async_client_patched_close(hass):
         assert mock_aclose.call_count == 0
 
 
+async def test_get_async_client_context_manager(hass):
+    """Test using the async client with a context manager does not close the session."""
+
+    with patch("httpx.AsyncClient.aclose") as mock_aclose:
+        httpx_session = client.get_async_client(hass)
+        assert isinstance(hass.data[client.DATA_ASYNC_CLIENT], httpx.AsyncClient)
+
+        async with httpx_session:
+            pass
+
+        assert mock_aclose.call_count == 0
+
+
 async def test_warning_close_session_integration(hass, caplog):
     """Test log warning message when closing the session from integration context."""
     with patch(
