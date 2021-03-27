@@ -22,7 +22,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
-import homeassistant.core as ha
+from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
@@ -36,7 +36,7 @@ from homeassistant.helpers import (
     entity_registry,
     template,
 )
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import (
     MAX_LOAD_CONCURRENTLY,
     Integration,
@@ -72,7 +72,7 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
-    def __init__(self, service_call: ha.ServiceCall):
+    def __init__(self, service_call: ServiceCall):
         """Extract ids from service call data."""
         entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
         device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
@@ -129,7 +129,7 @@ class SelectedEntities:
 
 @bind_hass
 def call_from_config(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     blocking: bool = False,
     variables: TemplateVarsType = None,
@@ -144,12 +144,12 @@ def call_from_config(
 
 @bind_hass
 async def async_call_from_config(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     blocking: bool = False,
     variables: TemplateVarsType = None,
     validate_config: bool = True,
-    context: ha.Context | None = None,
+    context: Context | None = None,
 ) -> None:
     """Call a service based on a config hash."""
     try:
@@ -164,10 +164,10 @@ async def async_call_from_config(
         await hass.services.async_call(**params, blocking=blocking, context=context)
 
 
-@ha.callback
+@callback
 @bind_hass
 def async_prepare_call_from_config(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     variables: TemplateVarsType = None,
     validate_config: bool = False,
@@ -246,7 +246,7 @@ def async_prepare_call_from_config(
 
 @bind_hass
 def extract_entity_ids(
-    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a list of entity ids from a service call.
 
@@ -259,9 +259,9 @@ def extract_entity_ids(
 
 @bind_hass
 async def async_extract_entities(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entities: Iterable[Entity],
-    service_call: ha.ServiceCall,
+    service_call: ServiceCall,
     expand_group: bool = True,
 ) -> list[Entity]:
     """Extract a list of entity objects from a service call.
@@ -298,7 +298,7 @@ async def async_extract_entities(
 
 @bind_hass
 async def async_extract_entity_ids(
-    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a set of entity ids from a service call.
 
@@ -317,7 +317,7 @@ def _has_match(ids: str | list | None) -> bool:
 
 @bind_hass
 async def async_extract_referenced_entity_ids(
-    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
     selector = ServiceTargetSelector(service_call)
@@ -367,7 +367,7 @@ async def async_extract_referenced_entity_ids(
 
 @bind_hass
 async def async_extract_config_entry_ids(
-    hass: HomeAssistantType, service_call: ha.ServiceCall, expand_group: bool = True
+    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> set:
     """Extract referenced config entry ids from a service call."""
     referenced = await async_extract_referenced_entity_ids(
@@ -392,7 +392,7 @@ async def async_extract_config_entry_ids(
     return config_entry_ids
 
 
-def _load_services_file(hass: HomeAssistantType, integration: Integration) -> JSON_TYPE:
+def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
         return load_yaml(str(integration.file_path / "services.yaml"))
@@ -409,7 +409,7 @@ def _load_services_file(hass: HomeAssistantType, integration: Integration) -> JS
 
 
 def _load_services_files(
-    hass: HomeAssistantType, integrations: Iterable[Integration]
+    hass: HomeAssistant, integrations: Iterable[Integration]
 ) -> list[JSON_TYPE]:
     """Load service files for multiple intergrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
@@ -417,7 +417,7 @@ def _load_services_files(
 
 @bind_hass
 async def async_get_all_descriptions(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
 ) -> dict[str, dict[str, Any]]:
     """Return descriptions (i.e. user documentation) for all service calls."""
     descriptions_cache = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
@@ -482,10 +482,10 @@ async def async_get_all_descriptions(
     return descriptions
 
 
-@ha.callback
+@callback
 @bind_hass
 def async_set_service_schema(
-    hass: HomeAssistantType, domain: str, service: str, schema: dict[str, Any]
+    hass: HomeAssistant, domain: str, service: str, schema: dict[str, Any]
 ) -> None:
     """Register a description for a service."""
     hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
@@ -504,10 +504,10 @@ def async_set_service_schema(
 
 @bind_hass
 async def entity_service_call(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     platforms: Iterable[EntityPlatform],
     func: str | Callable[..., Any],
-    call: ha.ServiceCall,
+    call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> None:
     """Handle an entity service call.
@@ -536,7 +536,7 @@ async def entity_service_call(
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data: dict | ha.ServiceCall = {
+        data: dict | ServiceCall = {
             key: val
             for key, val in call.data.items()
             if key not in cv.ENTITY_SERVICE_FIELDS
@@ -662,11 +662,11 @@ async def entity_service_call(
 
 
 async def _handle_entity_call(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entity: Entity,
     func: str | Callable[..., Any],
-    data: dict | ha.ServiceCall,
-    context: ha.Context,
+    data: dict | ServiceCall,
+    context: Context,
 ) -> None:
     """Handle calling service method."""
     entity.async_set_context(context)
@@ -690,18 +690,18 @@ async def _handle_entity_call(
 
 
 @bind_hass
-@ha.callback
+@callback
 def async_register_admin_service(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     domain: str,
     service: str,
-    service_func: Callable[[ha.ServiceCall], Awaitable | None],
+    service_func: Callable[[ServiceCall], Awaitable | None],
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
 
     @wraps(service_func)
-    async def admin_handler(call: ha.ServiceCall) -> None:
+    async def admin_handler(call: ServiceCall) -> None:
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
             if user is None:
@@ -717,20 +717,20 @@ def async_register_admin_service(
 
 
 @bind_hass
-@ha.callback
+@callback
 def verify_domain_control(
-    hass: HomeAssistantType, domain: str
-) -> Callable[[Callable[[ha.ServiceCall], Any]], Callable[[ha.ServiceCall], Any]]:
+    hass: HomeAssistant, domain: str
+) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
     def decorator(
-        service_handler: Callable[[ha.ServiceCall], Any]
-    ) -> Callable[[ha.ServiceCall], Any]:
+        service_handler: Callable[[ServiceCall], Any]
+    ) -> Callable[[ServiceCall], Any]:
         """Decorate."""
         if not asyncio.iscoroutinefunction(service_handler):
             raise HomeAssistantError("Can only decorate async functions.")
 
-        async def check_permissions(call: ha.ServiceCall) -> Any:
+        async def check_permissions(call: ServiceCall) -> Any:
             """Check user permission and raise before call if unauthorized."""
             if not call.context.user_id:
                 return await service_handler(call)

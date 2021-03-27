@@ -9,12 +9,12 @@ from typing import TYPE_CHECKING, Any, cast
 import attr
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
-from .typing import UNDEFINED, HomeAssistantType, UndefinedType
+from .typing import UNDEFINED, UndefinedType
 
 # mypy: disallow_any_generics
 
@@ -139,7 +139,7 @@ class DeviceRegistry:
     deleted_devices: dict[str, DeletedDeviceEntry]
     _devices_index: dict[str, dict[str, dict[tuple[str, str], str]]]
 
-    def __init__(self, hass: HomeAssistantType) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
@@ -617,12 +617,12 @@ class DeviceRegistry:
 
 
 @callback
-def async_get(hass: HomeAssistantType) -> DeviceRegistry:
+def async_get(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry."""
     return cast(DeviceRegistry, hass.data[DATA_REGISTRY])
 
 
-async def async_load(hass: HomeAssistantType) -> None:
+async def async_load(hass: HomeAssistant) -> None:
     """Load device registry."""
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
@@ -630,7 +630,7 @@ async def async_load(hass: HomeAssistantType) -> None:
 
 
 @bind_hass
-async def async_get_registry(hass: HomeAssistantType) -> DeviceRegistry:
+async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
     """Get device registry.
 
     This is deprecated and will be removed in the future. Use async_get instead.
@@ -686,7 +686,7 @@ def async_config_entry_disabled_by_changed(
 
 @callback
 def async_cleanup(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     dev_reg: DeviceRegistry,
     ent_reg: entity_registry.EntityRegistry,
 ) -> None:
@@ -723,7 +723,7 @@ def async_cleanup(
 
 
 @callback
-def async_setup_cleanup(hass: HomeAssistantType, dev_reg: DeviceRegistry) -> None:
+def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
     from . import entity_registry  # pylint: disable=import-outside-toplevel
 

@@ -9,9 +9,9 @@ from typing import Any, Callable
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 _PLATFORM_ALIASES = {
@@ -20,9 +20,7 @@ _PLATFORM_ALIASES = {
 }
 
 
-async def _async_get_trigger_platform(
-    hass: HomeAssistantType, config: ConfigType
-) -> Any:
+async def _async_get_trigger_platform(hass: HomeAssistant, config: ConfigType) -> Any:
     platform = config[CONF_PLATFORM]
     for alias, triggers in _PLATFORM_ALIASES.items():
         if platform in triggers:
@@ -41,7 +39,7 @@ async def _async_get_trigger_platform(
 
 
 async def async_validate_trigger_config(
-    hass: HomeAssistantType, trigger_config: list[ConfigType]
+    hass: HomeAssistant, trigger_config: list[ConfigType]
 ) -> list[ConfigType]:
     """Validate triggers."""
     config = []
@@ -56,7 +54,7 @@ async def async_validate_trigger_config(
 
 
 async def async_initialize_triggers(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     trigger_config: list[ConfigType],
     action: Callable,
     domain: str,

@@ -7,9 +7,8 @@ from typing import Any, Callable
 import httpx
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
-from homeassistant.core import Event, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.frame import warn_use
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 
 DATA_ASYNC_CLIENT = "httpx_async_client"
@@ -22,9 +21,7 @@ USER_AGENT = "User-Agent"
 
 @callback
 @bind_hass
-def get_async_client(
-    hass: HomeAssistantType, verify_ssl: bool = True
-) -> httpx.AsyncClient:
+def get_async_client(hass: HomeAssistant, verify_ssl: bool = True) -> httpx.AsyncClient:
     """Return default httpx AsyncClient.
 
     This method must be run in the event loop.
@@ -52,7 +49,7 @@ class HassHttpXAsyncClient(httpx.AsyncClient):
 
 @callback
 def create_async_httpx_client(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     verify_ssl: bool = True,
     auto_cleanup: bool = True,
     **kwargs: Any,
@@ -84,7 +81,7 @@ def create_async_httpx_client(
 
 @callback
 def _async_register_async_client_shutdown(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     client: httpx.AsyncClient,
     original_aclose: Callable[..., Any],
 ) -> None:
