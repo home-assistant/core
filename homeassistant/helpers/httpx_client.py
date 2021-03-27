@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sys
+from types import TracebackType
 from typing import Any, Callable
 
 import httpx
@@ -42,11 +43,16 @@ def get_async_client(
 class HassHttpXAsyncClient(httpx.AsyncClient):
     """httpx AsyncClient that suppresses context management."""
 
-    async def __aenter__(self, *args: Any, **kwargs: Any) -> HassHttpXAsyncClient:
+    async def __aenter__(self: HassHttpXAsyncClient) -> HassHttpXAsyncClient:
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
-    async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
+    async def __aexit__(  # type: ignore
+        self,
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        traceback: TracebackType,
+    ) -> None:
         """Prevent an integration from close of the client via context manager."""
         pass
 
