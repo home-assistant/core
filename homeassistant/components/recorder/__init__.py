@@ -304,11 +304,7 @@ class Recorder(threading.Thread):
             return False
 
         entity_id = event.data.get(ATTR_ENTITY_ID)
-        if entity_id is not None:
-            if not self.entity_filter(entity_id):
-                return False
-
-        return True
+        return bool(entity_id is None or self.entity_filter(entity_id))
 
     def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""

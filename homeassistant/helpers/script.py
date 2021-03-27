@@ -737,7 +737,7 @@ class _ScriptRun:
 
         if choose_data["default"]:
             trace_set_result(choice="default")
-            with trace_path(["default", "sequence"]):
+            with trace_path(["default"]):
                 await self._async_run_script(choose_data["default"])
 
     async def _async_wait_for_trigger_step(self):

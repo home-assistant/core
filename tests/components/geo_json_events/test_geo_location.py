@@ -198,60 +198,59 @@ async def test_setup_race_condition(hass, legacy_patchable_time):
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "geojson_client.generic_feed.GenericFeed"
-    ) as mock_feed:
-        with assert_setup_component(1, geo_location.DOMAIN):
-            assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
-            await hass.async_block_till_done()
+    ) as mock_feed, assert_setup_component(1, geo_location.DOMAIN):
+        assert await async_setup_component(hass, geo_location.DOMAIN, CONFIG)
+        await hass.async_block_till_done()
 
-            mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 
-            # Artificially trigger update.
-            hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-            # Collect events.
-            await hass.async_block_till_done()
+        # Artificially trigger update.
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        # Collect events.
+        await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 1
-            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
-            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
+        all_states = hass.states.async_all()
+        assert len(all_states) == 1
+        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
+        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
-            # Simulate an update - empty data, removes all entities
-            mock_feed.return_value.update.return_value = "ERROR", None
-            async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
-            await hass.async_block_till_done()
+        # Simulate an update - empty data, removes all entities
+        mock_feed.return_value.update.return_value = "ERROR", None
+        async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 0
-            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
-            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
+        all_states = hass.states.async_all()
+        assert len(all_states) == 0
+        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
+        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
 
-            # Simulate an update - 1 entry
-            mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
-            async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
-            await hass.async_block_till_done()
+        # Simulate an update - 1 entry
+        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 1
-            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
-            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
+        all_states = hass.states.async_all()
+        assert len(all_states) == 1
+        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
+        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
-            # Simulate an update - 1 entry
-            mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
-            async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
-            await hass.async_block_till_done()
+        # Simulate an update - 1 entry
+        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 1
-            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
-            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
+        all_states = hass.states.async_all()
+        assert len(all_states) == 1
+        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 1
+        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 1
 
-            # Simulate an update - empty data, removes all entities
-            mock_feed.return_value.update.return_value = "ERROR", None
-            async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
-            await hass.async_block_till_done()
+        # Simulate an update - empty data, removes all entities
+        mock_feed.return_value.update.return_value = "ERROR", None
+        async_fire_time_changed(hass, utcnow + 4 * SCAN_INTERVAL)
+        await hass.async_block_till_done()
 
-            all_states = hass.states.async_all()
-            assert len(all_states) == 0
-            # Ensure that delete and update signal targets are now empty.
-            assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
-            assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0
+        all_states = hass.states.async_all()
+        assert len(all_states) == 0
+        # Ensure that delete and update signal targets are now empty.
+        assert len(hass.data[DATA_DISPATCHER][delete_signal]) == 0
+        assert len(hass.data[DATA_DISPATCHER][update_signal]) == 0

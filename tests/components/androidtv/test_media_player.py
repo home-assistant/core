@@ -933,12 +933,11 @@ async def test_update_lock_not_acquired(hass):
     with patch(
         "androidtv.androidtv.androidtv_async.AndroidTVAsync.update",
         side_effect=LockNotAcquiredException,
-    ):
-        with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
-            await hass.helpers.entity_component.async_update_entity(entity_id)
-            state = hass.states.get(entity_id)
-            assert state is not None
-            assert state.state == STATE_OFF
+    ), patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
+        await hass.helpers.entity_component.async_update_entity(entity_id)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_OFF
 
     with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[patch_key]:
         await hass.helpers.entity_component.async_update_entity(entity_id)
@@ -1206,19 +1205,18 @@ async def test_connection_closed_on_ha_stop(hass):
     """Test that the ADB socket connection is closed when HA stops."""
     patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
 
-    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[patch_key]:
-        with patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
-            assert await async_setup_component(
-                hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER
-            )
-            await hass.async_block_till_done()
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell(SHELL_RESPONSE_OFF)[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+        await hass.async_block_till_done()
 
-            with patch(
-                "androidtv.androidtv.androidtv_async.AndroidTVAsync.adb_close"
-            ) as adb_close:
-                hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-                await hass.async_block_till_done()
-                assert adb_close.called
+        with patch(
+            "androidtv.androidtv.androidtv_async.AndroidTVAsync.adb_close"
+        ) as adb_close:
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+            await hass.async_block_till_done()
+            assert adb_close.called
 
 
 async def test_exception(hass):

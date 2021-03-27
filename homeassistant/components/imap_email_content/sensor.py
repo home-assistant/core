@@ -220,9 +220,11 @@ class EmailContentSensor(SensorEntity):
             elif part.get_content_type() == "text/html":
                 if message_html is None:
                     message_html = part.get_payload()
-            elif part.get_content_type().startswith("text"):
-                if message_untyped_text is None:
-                    message_untyped_text = part.get_payload()
+            elif (
+                part.get_content_type().startswith("text")
+                and message_untyped_text is None
+            ):
+                message_untyped_text = part.get_payload()
 
         if message_text is not None:
             return message_text
