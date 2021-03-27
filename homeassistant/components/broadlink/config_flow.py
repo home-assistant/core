@@ -70,8 +70,15 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             hello = partial(blk.discover, discover_ip_address=host)
             device = (await self.hass.async_add_executor_job(hello))[0]
-        except Exception:  # pylint: disable=broad-except
+        except IndexError:
             return self.async_abort(reason="cannot_connect")
+        except OSError as err:
+            if err.errno == errno.ENETUNREACH:
+                return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="invalid_host")
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error("Failed to connect to the device at %s", host, exc_info=ex)
+            return self.async_abort(reason="unknown")
 
         await self.async_set_device(device)
         return await self.async_step_auth()
