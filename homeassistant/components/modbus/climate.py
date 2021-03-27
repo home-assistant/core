@@ -115,7 +115,7 @@ class ModbusThermostat(ClimateEntity):
         """Initialize the modbus thermostat."""
         self._hub: ModbusHub = hub
         self._name = config[CONF_NAME]
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._current_temperature_register = config[CONF_CURRENT_TEMP]
         self._current_temperature_register_type = config[

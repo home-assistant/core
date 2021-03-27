@@ -71,7 +71,7 @@ class ModbusCover(CoverEntity, RestoreEntity):
         self._device_class = config.get(CONF_DEVICE_CLASS)
         self._name = config[CONF_NAME]
         self._register = config.get(CONF_REGISTER)
-        self._slave = config[CONF_SLAVE]
+        self._slave = config.get(CONF_SLAVE)
         self._state_closed = config[CONF_STATE_CLOSED]
         self._state_closing = config[CONF_STATE_CLOSING]
         self._state_open = config[CONF_STATE_OPEN]
