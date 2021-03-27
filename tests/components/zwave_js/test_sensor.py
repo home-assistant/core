@@ -83,4 +83,5 @@ async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration)
     """Test config parameter sensor is created."""
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(ID_LOCK_CONFIG_PARAMETER_SENSOR)
+    assert entity_entry
     assert entity_entry.disabled
