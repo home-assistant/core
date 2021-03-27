@@ -1,14 +1,15 @@
 """Config flow for ezviz."""
 import logging
 
-from pyezviz import EzvizClient
-from pyezviz.client import PyEzvizError
+from pyezviz import EzvizClient, PyEzvizError
+from pyezviz.test_cam_rtsp import AuthTestResultFailed, TestRTSPAuth
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigFlow, OptionsFlow
 from homeassistant.const import (
+    CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_REGION,
     CONF_TIMEOUT,
@@ -67,6 +68,29 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=data[CONF_USERNAME], data=auth_data)
 
+    async def _validate_and_create_camera_rtsp(self, data):
+        """Try DESCRIBE on RTSP camera with credentials."""
+
+        camera_rtsp_test = TestRTSPAuth(
+            data[CONF_IP_ADDRESS], data[CONF_USERNAME], data[CONF_PASSWORD]
+        )
+
+        # Attempts a authenticated RTSP DESCRIBE request.
+        try:
+            await self.hass.async_add_executor_job(camera_rtsp_test.main)
+
+        except AuthTestResultFailed as err:
+            raise InvalidAuth from err
+
+        return self.async_create_entry(
+            title=data[ATTR_SERIAL],
+            data={
+                CONF_USERNAME: data[CONF_USERNAME],
+                CONF_PASSWORD: data[CONF_PASSWORD],
+                CONF_TYPE: ATTR_TYPE_CAMERA,
+            },
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -122,20 +146,25 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[ATTR_SERIAL])
             self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(
-                title=user_input[ATTR_SERIAL],
-                data={
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_TYPE: ATTR_TYPE_CAMERA,
-                },
-            )
+            try:
+                return await self._validate_and_create_camera_rtsp(user_input)
+
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+
+            except AbortFlow:
+                raise
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
 
         camera_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
                 vol.Required(ATTR_SERIAL): str,
+                vol.Required(CONF_IP_ADDRESS): str,
             }
         )
 
@@ -149,7 +178,10 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[ATTR_SERIAL])
         self._abort_if_unique_id_configured()
 
-        self.context["title_placeholders"] = {"host": self.unique_id}
+        self.context["title_placeholders"] = {
+            "serial": self.unique_id,
+            CONF_IP_ADDRESS: discovery_info[CONF_IP_ADDRESS],
+        }
 
         return await self.async_step_confirm()
 
@@ -158,19 +190,28 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            return self.async_create_entry(
-                title=self.unique_id,
-                data={
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_TYPE: ATTR_TYPE_CAMERA,
-                },
-            )
+            user_input[ATTR_SERIAL] = self.unique_id
+            try:
+                return await self._validate_and_create_camera_rtsp(user_input)
+
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+
+            except AbortFlow:
+                raise
+
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                return self.async_abort(reason="unknown")
 
         discovered_camera_schema = vol.Schema(
             {
                 vol.Required(CONF_USERNAME, default=DEFAULT_CAMERA_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
+                vol.Required(
+                    CONF_IP_ADDRESS,
+                    default=self.context["title_placeholders"][CONF_IP_ADDRESS],
+                ): str,
             }
         )
 

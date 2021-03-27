@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -123,6 +123,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     context={"source": SOURCE_DISCOVERY},
                     data={
                         ATTR_SERIAL: camera[ATTR_SERIAL],
+                        CONF_IP_ADDRESS: camera["local_ip"],
                     },
                 )
             )
@@ -249,11 +250,7 @@ class EzvizCamera(CoordinatorEntity, Camera, RestoreEntity):
         ffmpeg = ImageFrame(self._ffmpeg.binary)
 
         image = await asyncio.shield(
-            ffmpeg.get_image(
-                self._rtsp_stream,
-                output_format=IMAGE_JPEG,
-                extra_cmd=self._ffmpeg_arguments,
-            )
+            ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG)
         )
         return image
 
