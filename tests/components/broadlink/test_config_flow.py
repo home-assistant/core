@@ -6,8 +6,9 @@ from unittest.mock import call, patch
 import broadlink.exceptions as blke
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, setup
 from homeassistant.components.broadlink.const import DOMAIN
+from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 
 from . import get_device
 
@@ -819,3 +820,84 @@ async def test_flow_reauth_valid_host(hass):
     assert mock_entry.data["host"] == device.host
     assert mock_discover.call_count == 1
     assert mock_api.auth.call_count == 1
+
+
+async def test_dhcp_can_finish(hass):
+    """Test DHCP discovery flow can finish right away."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+
+    device = get_device("Living Room")
+    device.host = "1.2.3.4"
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "dhcp"},
+            data={
+                HOSTNAME: "broadlink",
+                IP_ADDRESS: "1.2.3.4",
+                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "finish"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Living Room"
+    assert result2["data"] == {
+        "host": "1.2.3.4",
+        "mac": "34ea34b43b5a",
+        "timeout": 10,
+        "type": 24374,
+    }
+
+
+async def test_dhcp_fails_to_connect(hass):
+    """Test DHCP discovery flow that fails to connect."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    with patch(DEVICE_DISCOVERY, side_effect=OSError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "dhcp"},
+            data={
+                HOSTNAME: "broadlink",
+                IP_ADDRESS: "1.2.3.4",
+                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
+
+
+async def test_dhcp_already_exists(hass):
+    """Test DHCP discovery flow that fails to connect."""
+    await setup.async_setup_component(hass, "persistent_notification", {})
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+    device.host = "1.2.3.4"
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_DISCOVERY, return_value=[mock_api]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "dhcp"},
+            data={
+                HOSTNAME: "broadlink",
+                IP_ADDRESS: "1.2.3.4",
+                MAC_ADDRESS: "aa:bb:cc:dd:ee:ff",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "abort"
