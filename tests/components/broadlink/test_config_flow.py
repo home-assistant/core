@@ -883,7 +883,9 @@ async def test_dhcp_fails_to_connect(hass):
 async def test_dhcp_unreachable(hass):
     """Test DHCP discovery flow that fails to connect."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.ENETUNREACH)):
+    enetunreach_exception = OSError(errno.ENETUNREACH)
+    enetunreach_exception.errno = errno.ENETUNREACH
+    with patch(DEVICE_DISCOVERY, side_effect=enetunreach_exception):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "dhcp"},
@@ -902,7 +904,9 @@ async def test_dhcp_unreachable(hass):
 async def test_dhcp_connect_einval(hass):
     """Test DHCP discovery flow that fails to connect with EINVAL."""
     await setup.async_setup_component(hass, "persistent_notification", {})
-    with patch(DEVICE_DISCOVERY, side_effect=OSError(errno.EINVAL)):
+    einval_exception = OSError(errno.EINVAL)
+    einval_exception.errno = errno.EINVAL
+    with patch(DEVICE_DISCOVERY, side_effect=einval_exception):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "dhcp"},
