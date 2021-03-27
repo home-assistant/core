@@ -31,7 +31,7 @@
                 "data": {
                     "librespot_java_port": "librespot-java \ud30c\uc774\ud504 \ucee8\ud2b8\ub864\uc6a9 \ud3ec\ud2b8 (\uc0ac\uc6a9\ud558\ub294 \uacbd\uc6b0)",
                     "max_playlists": "\uc18c\uc2a4\ub85c \uc0ac\uc6a9\ub41c \ucd5c\ub300 \uc7ac\uc0dd \ubaa9\ub85d \uc218",
-                    "tts_pause_time": "TTS \uc804\ud6c4\uc5d0 \uc77c\uc2dc\uc911\uc9c0\ud560 \uc2dc\uac04(\ucd08)",
+                    "tts_pause_time": "TTS \uc804\ud6c4\uc5d0 \uc77c\uc2dc\uc911\uc9c0\ud560 \uc2dc\uac04 (\ucd08)",
                     "tts_volume": "TTS \ubcfc\ub968 (0~1 \uc758 \uc2e4\uc218\uac12)"
                 },
                 "description": "forked-daapd \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\uc5d0 \ub300\ud55c \ub2e4\uc591\ud55c \uc635\uc158\uc744 \uc124\uc815\ud574\uc8fc\uc138\uc694.",
