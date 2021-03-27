@@ -136,6 +136,10 @@ def check_loop() -> None:
         found_frame.lineno,
         found_frame.line.strip(),
     )
+    raise RuntimeError(
+        f"I/O must be done in the executor; Use `await hass.async_add_executor_job()` "
+        f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
+    )
 
 
 def protect_loop(func: Callable) -> Callable:
