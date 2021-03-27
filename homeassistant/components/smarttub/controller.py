@@ -21,6 +21,7 @@ from .const import (
     ATTR_PUMPS,
     ATTR_REMINDERS,
     ATTR_STATUS,
+    CONF_CONFIG_ENTRY,
     DOMAIN,
     POLLING_TIMEOUT,
     SCAN_INTERVAL,
@@ -57,7 +58,9 @@ class SmartTubController:
             # credentials were changed or invalidated, we need new ones
             self._hass.async_create_task(
                 self._hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
+                    DOMAIN,
+                    context={"source": SOURCE_REAUTH},
+                    data={CONF_CONFIG_ENTRY: entry, **entry.data},
                 )
             )
             return False

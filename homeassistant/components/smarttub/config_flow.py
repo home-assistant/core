@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_CONFIG_ENTRY, DOMAIN
 from .controller import SmartTubController
 
 DATA_SCHEMA = vol.Schema(
@@ -49,11 +49,24 @@ class SmartTubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=DATA_SCHEMA, errors=errors
             )
 
+        import pdb
+
+        pdb.set_trace()
         existing_entry = await self.async_set_unique_id(account.id)
-        if existing_entry:
-            self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+        if self._reauth_input is not None:
+            # this is a reauth attempt
+            if existing_entry:
+                if (
+                    existing_entry.unique_id
+                    != self._reauth_input[CONF_CONFIG_ENTRY].unique_id
+                ):
+                    # there is a config entry matching this account, but it is not the one we were trying to reauth
+                    return self.async_abort(reason="already_configured")
+                self.hass.config_entries.async_update_entry(
+                    existing_entry, data=user_input
+                )
+                await self.hass.config_entries.async_reload(existing_entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(title=user_input[CONF_EMAIL], data=user_input)
 

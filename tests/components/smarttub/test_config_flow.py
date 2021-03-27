@@ -4,7 +4,7 @@ from unittest.mock import patch
 from smarttub import LoginFailed
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.smarttub.const import DOMAIN
+from homeassistant.components.smarttub.const import CONF_CONFIG_ENTRY, DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 
@@ -37,16 +37,6 @@ async def test_form(hass):
         mock_setup.assert_called_once()
         mock_setup_entry.assert_called_once()
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_EMAIL: "test-email2", CONF_PASSWORD: "test-password2"}
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "reauth_successful"
-
 
 async def test_form_invalid_auth(hass, smarttub_api):
     """Test we handle invalid auth."""
@@ -65,7 +55,7 @@ async def test_form_invalid_auth(hass, smarttub_api):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_reauth(hass, smarttub_api):
+async def test_reauth_success(hass, smarttub_api):
     """Test reauthentication flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -81,7 +71,7 @@ async def test_reauth(hass, smarttub_api):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_REAUTH},
-        data={"config_entry_id": config_entry.entry_id, **config_entry.data},
+        data={CONF_CONFIG_ENTRY: config_entry, **config_entry.data},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -103,3 +93,57 @@ async def test_reauth(hass, smarttub_api):
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[CONF_EMAIL] == "test-email3"
     assert config_entry.data[CONF_PASSWORD] == "test-password3"
+
+
+async def test_reauth_wrong_account(hass, smarttub_api, account):
+    """Test reauthentication flow."""
+    account.id = "mockaccount1"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "test-email"
+    config_entry = result["result"]
+
+    # second entry with a different account
+    account.id = "mockaccount2"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
+    )
+    assert result["type"] == "create_entry"
+    assert result["title"] == "test-email"
+    config_entry = result["result"]
+
+    # we try to reauth this account, and the user successfully authenticates to the other account
+    account.id = "mockaccount1"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data={CONF_CONFIG_ENTRY: config_entry, **config_entry.data},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_EMAIL: "test-email", CONF_PASSWORD: "test-password"}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_EMAIL: "test-email3", CONF_PASSWORD: "test-password3"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
