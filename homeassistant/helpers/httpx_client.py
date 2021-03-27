@@ -39,6 +39,18 @@ def get_async_client(
     return client
 
 
+class HassHttpXAsyncClient(httpx.AsyncClient):
+    """httpx AsyncClient that suppresses context management."""
+
+    async def __aenter__(self, *args: Any, **kwargs: Any) -> HassHttpXAsyncClient:
+        """Prevent an integration from reopen of the client via context manager."""
+        return self
+
+    async def __aexit__(self, *args: Any, **kwargs: Any) -> None:
+        """Prevent an integration from close of the client via context manager."""
+        pass
+
+
 @callback
 def create_async_httpx_client(
     hass: HomeAssistantType,
@@ -53,7 +65,7 @@ def create_async_httpx_client(
 
     This method must be run in the event loop.
     """
-    client = httpx.AsyncClient(
+    client = HassHttpXAsyncClient(
         verify=verify_ssl,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
