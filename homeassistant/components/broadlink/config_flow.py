@@ -23,7 +23,7 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
     DOMAINS_AND_TYPES,
 )
-from .helpers import format_mac, mac_address
+from .helpers import format_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,9 +63,8 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, dhcp_discovery):
         """Handle dhcp discovery."""
         host = dhcp_discovery[IP_ADDRESS]
-        await self.async_set_unique_id(
-            format_mac(mac_address(dhcp_discovery[MAC_ADDRESS]))
-        )
+        unique_id = dhcp_discovery[MAC_ADDRESS].lower().replace(":", "")
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         try:
             hello = partial(blk.discover, discover_ip_address=host)
