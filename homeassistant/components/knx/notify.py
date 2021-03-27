@@ -6,17 +6,14 @@ from typing import Any
 from xknx.devices import Notification as XknxNotification
 
 from homeassistant.components.notify import BaseNotificationService
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    HomeAssistantType,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 
 
 async def async_get_service(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> KNXNotificationService | None:

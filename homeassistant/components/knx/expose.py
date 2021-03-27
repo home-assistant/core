@@ -13,14 +13,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.typing import (
-    ConfigType,
-    EventType,
-    HomeAssistantType,
-    StateType,
-)
+from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import KNX_ADDRESS
 from .schema import ExposeSchema
@@ -28,7 +23,7 @@ from .schema import ExposeSchema
 
 @callback
 def create_knx_exposure(
-    hass: HomeAssistantType, xknx: XKNX, config: ConfigType
+    hass: HomeAssistant, xknx: XKNX, config: ConfigType
 ) -> KNXExposeSensor | KNXExposeTime:
     """Create exposures from config."""
     address = config[KNX_ADDRESS]
@@ -61,7 +56,7 @@ class KNXExposeSensor:
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         xknx: XKNX,
         expose_type: int | str,
         entity_id: str,
@@ -106,7 +101,7 @@ class KNXExposeSensor:
             self._remove_listener = None
         self.device.shutdown()
 
-    async def _async_entity_changed(self, event: EventType) -> None:
+    async def _async_entity_changed(self, event: Event) -> None:
         """Handle entity change."""
         new_state = event.data.get("new_state")
         if new_state is None:
