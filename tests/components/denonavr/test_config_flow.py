@@ -16,12 +16,11 @@ from homeassistant.components.denonavr.config_flow import (
     DOMAIN,
 )
 from homeassistant.components.denonavr.receiver import AvrTimoutError
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
-TEST_MAC = "ab:cd:ef:gh"
 TEST_HOST2 = "5.6.7.8"
 TEST_NAME = "Test_Receiver"
 TEST_MODEL = "model5"
@@ -63,9 +62,6 @@ def denonavr_connect_fixture():
         "homeassistant.components.denonavr.receiver.DenonAVR.receiver_type",
         TEST_RECEIVER_TYPE,
     ), patch(
-        "homeassistant.components.denonavr.config_flow.get_mac_address",
-        return_value=TEST_MAC,
-    ), patch(
         "homeassistant.components.denonavr.async_setup_entry", return_value=True
     ):
         yield
@@ -94,7 +90,6 @@ async def test_config_flow_manual_host_success(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -129,7 +124,6 @@ async def test_config_flow_manual_discover_1_success(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -173,7 +167,6 @@ async def test_config_flow_manual_discover_2_success(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST2,
-        CONF_MAC: TEST_MAC,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -236,118 +229,6 @@ async def test_config_flow_manual_host_no_serial(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
-        CONF_MODEL: TEST_MODEL,
-        CONF_TYPE: TEST_RECEIVER_TYPE,
-        CONF_MANUFACTURER: TEST_MANUFACTURER,
-        CONF_SERIAL_NUMBER: None,
-    }
-
-
-async def test_config_flow_manual_host_no_mac(hass):
-    """
-    Successful flow manually initialized by the user.
-
-    Host specified and an error getting the mac address.
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.denonavr.config_flow.get_mac_address",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: TEST_HOST},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_MAC: None,
-        CONF_MODEL: TEST_MODEL,
-        CONF_TYPE: TEST_RECEIVER_TYPE,
-        CONF_MANUFACTURER: TEST_MANUFACTURER,
-        CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
-    }
-
-
-async def test_config_flow_manual_host_no_serial_no_mac(hass):
-    """
-    Successful flow manually initialized by the user.
-
-    Host specified and an error getting the serial number and mac address.
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
-        None,
-    ), patch(
-        "homeassistant.components.denonavr.config_flow.get_mac_address",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: TEST_HOST},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_MAC: None,
-        CONF_MODEL: TEST_MODEL,
-        CONF_TYPE: TEST_RECEIVER_TYPE,
-        CONF_MANUFACTURER: TEST_MANUFACTURER,
-        CONF_SERIAL_NUMBER: None,
-    }
-
-
-async def test_config_flow_manual_host_no_serial_no_mac_exception(hass):
-    """
-    Successful flow manually initialized by the user.
-
-    Host specified and an error getting the serial number and exception getting mac address.
-    """
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR.serial_number",
-        None,
-    ), patch(
-        "homeassistant.components.denonavr.config_flow.get_mac_address",
-        side_effect=OSError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: TEST_HOST},
-        )
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_MAC: None,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -437,7 +318,6 @@ async def test_config_flow_ssdp(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -513,7 +393,6 @@ async def test_options_flow(hass):
         unique_id=TEST_UNIQUE_ID,
         data={
             CONF_HOST: TEST_HOST,
-            CONF_MAC: TEST_MAC,
             CONF_MODEL: TEST_MODEL,
             CONF_TYPE: TEST_RECEIVER_TYPE,
             CONF_MANUFACTURER: TEST_MANUFACTURER,
@@ -571,7 +450,6 @@ async def test_config_flow_manual_host_no_serial_double_config(hass):
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
-        CONF_MAC: TEST_MAC,
         CONF_MODEL: TEST_MODEL,
         CONF_TYPE: TEST_RECEIVER_TYPE,
         CONF_MANUFACTURER: TEST_MANUFACTURER,
