@@ -192,7 +192,7 @@ async def async_setup_entry(hass, config_entry):
         cloud_api = CloudAPI(config_entry.data[CONF_API_KEY], session=websession)
 
         async def async_update_data():
-            """reevaluate interval since all coordinators are created at same time on reboot (and so do see each other), and so the 1rst evaluation may be wrong """
+            """reevaluate interval since all coordinators are created at same time on reboot (and so do not see each other), and so the 1rst evaluation may be wrong """
             if  CONF_API_KEY in config_entry.data:
                 async_sync_geo_coordinator_update_intervals(
                     hass, config_entry.data[CONF_API_KEY]
