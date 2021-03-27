@@ -22,7 +22,17 @@ from .conftest import base_config_test
 
 
 @pytest.mark.parametrize("do_discovery", [False, True])
-@pytest.mark.parametrize("do_options", [False, True])
+@pytest.mark.parametrize(
+    "do_options",
+    [
+        {},
+        {
+            CONF_NAME: "modbusTest",
+            CONF_TIMEOUT: 30,
+            CONF_DELAY: 10,
+        },
+    ],
+)
 @pytest.mark.parametrize(
     "do_config",
     [
@@ -47,14 +57,7 @@ async def test_config_modbus(hass, do_discovery, do_options, do_config):
     config = {
         DOMAIN: do_config,
     }
-    if do_options:
-        config.update(
-            {
-                CONF_NAME: "modbusTest",
-                CONF_TIMEOUT: 30,
-                CONF_DELAY: 10,
-            }
-        )
+    config.update(do_options)
     await base_config_test(
         hass,
         None,
