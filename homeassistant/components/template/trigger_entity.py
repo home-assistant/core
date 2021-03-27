@@ -23,7 +23,7 @@ from .const import CONF_ATTRIBUTE_TEMPLATES, CONF_AVAILABILITY_TEMPLATE
 
 
 class TriggerEntity(update_coordinator.CoordinatorEntity):
-    """Sensor entity based on trigger data."""
+    """Template entity based on trigger data."""
 
     domain = ""
     extra_template_keys: tuple | None = None

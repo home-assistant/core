@@ -35,9 +35,11 @@ async def async_validate_config(hass, config):
             cfg[CONF_TRIGGER] = await async_validate_trigger_config(
                 hass, cfg[CONF_TRIGGER]
             )
-            trigger_entity_configs.append(cfg)
         except vol.Invalid as err:
             async_log_exception(err, DOMAIN, cfg, hass)
+
+        else:
+            trigger_entity_configs.append(cfg)
 
     # Create a copy of the configuration with all config for current
     # component removed and add validated config back in.

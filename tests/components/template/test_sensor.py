@@ -1048,7 +1048,7 @@ async def test_trigger_entity(hass):
 
 
 async def test_trigger_entity_render_error(hass):
-    """Test it works."""
+    """Test trigger entity handles render error."""
     assert await async_setup_component(
         hass,
         "template",
@@ -1085,7 +1085,7 @@ async def test_trigger_entity_render_error(hass):
 
 
 async def test_trigger_not_allowed_platform_config(hass, caplog):
-    """Test it works."""
+    """Test we throw a helpful warning if a trigger is configured in platform config."""
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,

@@ -66,7 +66,7 @@ def trigger_warning(val):
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
         {
-            vol.Optional(CONF_TRIGGER): cv.match_all,
+            vol.Optional(CONF_TRIGGER): cv.match_all,  # to raise custom warning
             vol.Required(CONF_SENSORS): cv.schema_with_slug_keys(SENSOR_SCHEMA),
         }
     ),
