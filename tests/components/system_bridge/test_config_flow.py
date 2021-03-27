@@ -79,6 +79,47 @@ FIXTURE_NETWORK = {
     "stats": {},
 }
 
+FIXTURE_SYSTEM = {
+    "baseboard": {
+        "manufacturer": "System manufacturer",
+        "model": "Model",
+        "version": "Rev X.0x",
+        "serial": "1234567",
+        "assetTag": "",
+        "memMax": 134217728,
+        "memSlots": 4,
+    },
+    "bios": {
+        "vendor": "System vendor",
+        "version": "12345",
+        "releaseDate": "2019-11-13",
+        "revision": "",
+    },
+    "chassis": {
+        "manufacturer": "Default string",
+        "model": "",
+        "type": "Desktop",
+        "version": "Default string",
+        "serial": "Default string",
+        "assetTag": "",
+        "sku": "",
+    },
+    "system": {
+        "manufacturer": "System manufacturer",
+        "model": "System Product Name",
+        "version": "System Version",
+        "serial": "System Serial Number",
+        "uuid": "abc123-def456",
+        "sku": "SKU",
+        "virtual": False,
+    },
+    "uuid": {
+        "os": FIXTURE_UUID,
+        "hardware": "abc123-def456",
+        "macs": [FIXTURE_MAC_ADDRESS],
+    },
+}
+
 
 FIXTURE_BASE_URL = (
     f"http://{FIXTURE_USER_INPUT[CONF_HOST]}:{FIXTURE_USER_INPUT[CONF_PORT]}"
@@ -102,6 +143,7 @@ async def test_user_flow(
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", json=FIXTURE_OS)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", json=FIXTURE_NETWORK)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", json=FIXTURE_SYSTEM)
 
     with patch(
         "homeassistant.components.system_bridge.async_setup", return_value=True
@@ -134,6 +176,7 @@ async def test_form_invalid_auth(
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=BridgeAuthenticationException)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=BridgeAuthenticationException)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=BridgeAuthenticationException)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT
@@ -158,6 +201,7 @@ async def test_form_cannot_connect(
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=ClientConnectionError)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=ClientConnectionError)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_USER_INPUT
@@ -180,8 +224,9 @@ async def test_reauth_authorization_error(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth"
 
-    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=BridgeAuthenticationException)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=BridgeAuthenticationException)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=BridgeAuthenticationException)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=BridgeAuthenticationException)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
@@ -206,6 +251,7 @@ async def test_reauth_connection_error(
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", exc=ClientConnectionError)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", exc=ClientConnectionError)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
@@ -235,6 +281,7 @@ async def test_reauth_flow(
 
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/os", json=FIXTURE_OS)
     aioclient_mock.get(f"{FIXTURE_BASE_URL}/network", json=FIXTURE_NETWORK)
+    aioclient_mock.get(f"{FIXTURE_BASE_URL}/system", json=FIXTURE_SYSTEM)
 
     with patch(
         "homeassistant.components.system_bridge.async_setup_entry",
@@ -267,6 +314,7 @@ async def test_zeroconf_flow(
 
     aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/os", json=FIXTURE_OS)
     aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/network", json=FIXTURE_NETWORK)
+    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/system", json=FIXTURE_SYSTEM)
 
     with patch(
         "homeassistant.components.system_bridge.async_setup", return_value=True
@@ -304,6 +352,7 @@ async def test_zeroconf_cannot_connect(
     aioclient_mock.get(
         f"{FIXTURE_ZEROCONF_BASE_URL}/network", exc=ClientConnectionError
     )
+    aioclient_mock.get(f"{FIXTURE_ZEROCONF_BASE_URL}/system", exc=ClientConnectionError)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], FIXTURE_AUTH_INPUT
