@@ -904,11 +904,11 @@ async def websocket_get_configuration(hass, connection, msg):
 
     data = {
         "schemas": {
-            "options": voluptuous_serialize.convert(
+            "zha_options": voluptuous_serialize.convert(
                 CONF_OPTIONS_SCHEMA, custom_serializer=custom_serializer
             )
         },
-        "data": {"options": {}},
+        "data": {"zha_options": {}},
     }
     connection.send_result(msg[ID], data)
 
@@ -921,16 +921,20 @@ async def websocket_get_configuration(hass, connection, msg):
 async def websocket_update_zha_configuration(hass, connection, msg):
     """Update the ZHA configuration."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    old_config_entry_data = zha_gateway.config_entry.data
-    data_to_save = msg["data"]
+    options = zha_gateway.config_entry.options
+    data_to_save = {**options, **{"custom_configuration": msg["data"]}}
 
     _LOGGER.info(
-        "Updating ZHA configuration from %s to %s", old_config_entry_data, data_to_save
+        "Updating ZHA custom configuration options from %s to %s",
+        options,
+        data_to_save,
     )
 
-    # hass.config_entries.async_update_entry(zha_gateway.config_entry, data=data_to_save)
-    # status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
-    # connection.send_result(msg[ID], status)
+    hass.config_entries.async_update_entry(
+        zha_gateway.config_entry, options=data_to_save
+    )
+    status = await hass.config_entries.async_reload(zha_gateway.config_entry.entry_id)
+    connection.send_result(msg[ID], status)
 
 
 @callback
