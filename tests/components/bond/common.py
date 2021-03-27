@@ -72,20 +72,23 @@ async def setup_platform(
     )
     mock_entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.bond.PLATFORMS", [platform]):
-        with patch_bond_version(return_value=bond_version), patch_bond_bridge(
-            return_value=bridge
-        ), patch_bond_token(return_value=token), patch_bond_device_ids(
-            return_value=[bond_device_id]
-        ), patch_start_bpup(), patch_bond_device(
-            return_value=discovered_device
-        ), patch_bond_device_properties(
-            return_value=props
-        ), patch_bond_device_state(
-            return_value=state
-        ):
-            assert await async_setup_component(hass, BOND_DOMAIN, {})
-            await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.bond.PLATFORMS", [platform]
+    ), patch_bond_version(return_value=bond_version), patch_bond_bridge(
+        return_value=bridge
+    ), patch_bond_token(
+        return_value=token
+    ), patch_bond_device_ids(
+        return_value=[bond_device_id]
+    ), patch_start_bpup(), patch_bond_device(
+        return_value=discovered_device
+    ), patch_bond_device_properties(
+        return_value=props
+    ), patch_bond_device_state(
+        return_value=state
+    ):
+        assert await async_setup_component(hass, BOND_DOMAIN, {})
+        await hass.async_block_till_done()
 
     return mock_entry
 

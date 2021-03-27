@@ -162,12 +162,11 @@ class TestHistoryStatsSensor(unittest.TestCase):
         with patch(
             "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
-        ):
-            with patch("homeassistant.components.history.get_state", return_value=None):
-                sensor1.update()
-                sensor2.update()
-                sensor3.update()
-                sensor4.update()
+        ), patch("homeassistant.components.history.get_state", return_value=None):
+            sensor1.update()
+            sensor2.update()
+            sensor3.update()
+            sensor4.update()
 
         assert sensor1.state == 0.5
         assert sensor2.state is None
@@ -246,12 +245,11 @@ class TestHistoryStatsSensor(unittest.TestCase):
         with patch(
             "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
-        ):
-            with patch("homeassistant.components.history.get_state", return_value=None):
-                sensor1.update()
-                sensor2.update()
-                sensor3.update()
-                sensor4.update()
+        ), patch("homeassistant.components.history.get_state", return_value=None):
+            sensor1.update()
+            sensor2.update()
+            sensor3.update()
+            sensor4.update()
 
         assert sensor1.state == 0.5
         assert sensor2.state is None

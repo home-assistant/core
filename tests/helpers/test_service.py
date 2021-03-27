@@ -561,22 +561,21 @@ async def test_call_context_target_specific_no_auth(
     hass, mock_handle_entity_call, mock_entities
 ):
     """Check targeting specific entities without auth."""
-    with pytest.raises(exceptions.Unauthorized) as err:
-        with patch(
-            "homeassistant.auth.AuthManager.async_get_user",
-            return_value=Mock(permissions=PolicyPermissions({}, None)),
-        ):
-            await service.entity_service_call(
-                hass,
-                [Mock(entities=mock_entities)],
-                Mock(),
-                ha.ServiceCall(
-                    "test_domain",
-                    "test_service",
-                    {"entity_id": "light.kitchen"},
-                    context=ha.Context(user_id="mock-id"),
-                ),
-            )
+    with pytest.raises(exceptions.Unauthorized) as err, patch(
+        "homeassistant.auth.AuthManager.async_get_user",
+        return_value=Mock(permissions=PolicyPermissions({}, None)),
+    ):
+        await service.entity_service_call(
+            hass,
+            [Mock(entities=mock_entities)],
+            Mock(),
+            ha.ServiceCall(
+                "test_domain",
+                "test_service",
+                {"entity_id": "light.kitchen"},
+                context=ha.Context(user_id="mock-id"),
+            ),
+        )
 
     assert err.value.context.user_id == "mock-id"
     assert err.value.entity_id == "light.kitchen"

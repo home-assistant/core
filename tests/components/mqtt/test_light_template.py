@@ -298,39 +298,38 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     with patch(
         "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
         return_value=fake_state,
-    ):
-        with assert_setup_component(1, light.DOMAIN):
-            assert await async_setup_component(
-                hass,
-                light.DOMAIN,
-                {
-                    light.DOMAIN: {
-                        "platform": "mqtt",
-                        "schema": "template",
-                        "name": "test",
-                        "command_topic": "test_light_rgb/set",
-                        "command_on_template": "on,"
-                        "{{ brightness|d }},"
-                        "{{ color_temp|d }},"
-                        "{{ white_value|d }},"
-                        "{{ red|d }}-"
-                        "{{ green|d }}-"
-                        "{{ blue|d }}",
-                        "command_off_template": "off",
-                        "effect_list": ["colorloop", "random"],
-                        "optimistic": True,
-                        "state_template": '{{ value.split(",")[0] }}',
-                        "color_temp_template": '{{ value.split(",")[2] }}',
-                        "white_value_template": '{{ value.split(",")[3] }}',
-                        "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
-                        "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
-                        "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
-                        "effect_template": '{{ value.split(",")[5] }}',
-                        "qos": 2,
-                    }
-                },
-            )
-            await hass.async_block_till_done()
+    ), assert_setup_component(1, light.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            light.DOMAIN,
+            {
+                light.DOMAIN: {
+                    "platform": "mqtt",
+                    "schema": "template",
+                    "name": "test",
+                    "command_topic": "test_light_rgb/set",
+                    "command_on_template": "on,"
+                    "{{ brightness|d }},"
+                    "{{ color_temp|d }},"
+                    "{{ white_value|d }},"
+                    "{{ red|d }}-"
+                    "{{ green|d }}-"
+                    "{{ blue|d }}",
+                    "command_off_template": "off",
+                    "effect_list": ["colorloop", "random"],
+                    "optimistic": True,
+                    "state_template": '{{ value.split(",")[0] }}',
+                    "color_temp_template": '{{ value.split(",")[2] }}',
+                    "white_value_template": '{{ value.split(",")[3] }}',
+                    "red_template": '{{ value.split(",")[4].' 'split("-")[0] }}',
+                    "green_template": '{{ value.split(",")[4].' 'split("-")[1] }}',
+                    "blue_template": '{{ value.split(",")[4].' 'split("-")[2] }}',
+                    "effect_template": '{{ value.split(",")[5] }}',
+                    "qos": 2,
+                }
+            },
+        )
+        await hass.async_block_till_done()
 
     state = hass.states.get("light.test")
     assert state.state == STATE_ON
