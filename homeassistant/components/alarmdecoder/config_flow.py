@@ -349,12 +349,18 @@ def _device_already_added(current_entries, user_input, protocol):
         entry_path = entry.data.get(CONF_DEVICE_PATH)
         entry_baud = entry.data.get(CONF_DEVICE_BAUD)
 
-        if protocol == PROTOCOL_SOCKET:
-            if user_host == entry_host and user_port == entry_port:
-                return True
+        if (
+            protocol == PROTOCOL_SOCKET
+            and user_host == entry_host
+            and user_port == entry_port
+        ):
+            return True
 
-        if protocol == PROTOCOL_SERIAL:
-            if user_baud == entry_baud and user_path == entry_path:
-                return True
+        if (
+            protocol == PROTOCOL_SERIAL
+            and user_baud == entry_baud
+            and user_path == entry_path
+        ):
+            return True
 
     return False
