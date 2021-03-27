@@ -22,7 +22,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -134,7 +133,7 @@ async def async_setup_platform(
     async_add_entities(switches)
 
 
-class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
+class ModbusBaseSwitch(SwitchEntity, RestoreEntity, ABC):
     """Base class representing a Modbus switch."""
 
     def __init__(self, hub: ModbusHub, config: dict[str, Any]):
@@ -156,6 +155,7 @@ class ModbusBaseSwitch(ToggleEntity, RestoreEntity, ABC):
             self.hass, lambda arg: self._update(), self._scan_interval
         )
 
+    @abstractmethod
     def _update(self):
         """Please the function above (real update is in the inherited classes."""
 
