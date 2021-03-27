@@ -162,7 +162,7 @@ class Entity(ABC):
         return None
 
     @property
-    def state_attributes(self) -> Mapping[str, Any] | None:
+    def state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes.
 
         Implemented by component base class, should not be extended by integrations.
