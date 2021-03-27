@@ -16,7 +16,7 @@
                 "other": "Leeg"
             },
             "ssdp_confirm": {
-                "description": "Wilt u [%%] instellen?"
+                "description": "Wilt u dit UPnP/IGD-apparaat instellen?"
             },
             "user": {
                 "data": {

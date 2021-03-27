@@ -14,8 +14,8 @@
                 "data": {
                     "flow_type": "Verbindingstype"
                 },
-                "description": "Details",
-                "title": "Maak verbinding met de Smile"
+                "description": "Product:",
+                "title": "Plugwise type"
             },
             "user_gateway": {
                 "data": {
